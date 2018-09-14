@@ -855,7 +855,7 @@ namespace UnityEngine.Experimental.Input
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
 
-            NoiseFilter interactionFilter = device.userInteractionFilter;
+            InputNoiseFilter interactionFilter = device.userInteractionFilter;
             interactionFilter.Apply(device);
 
             // Notify device.
@@ -2098,7 +2098,7 @@ namespace UnityEngine.Experimental.Input
                         // change after processors are applied.  These are used to detect actual user interaction
                         // with a device instead of simply sensor noise.
                         InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
-                        NoiseFilter filter = device.userInteractionFilter;
+                        InputNoiseFilter filter = device.userInteractionFilter;
                         bool hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
                         doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
@@ -2497,7 +2497,7 @@ namespace UnityEngine.Experimental.Input
         internal struct NoiseFilterElementState
         {
             public int index;
-            public NoiseFilter.ElementType type;
+            public InputNoiseFilter.ElementType type;
         }
 
         // Domain reload survival logic. Also used for pushing and popping input system
@@ -2540,8 +2540,8 @@ namespace UnityEngine.Experimental.Input
                 if (noisyElements == null || noisyElements.Length == 0)
                     return;
 
-                NoiseFilter newUserInteractionFilter = new NoiseFilter();
-                var index = ArrayHelpers.Append(ref newUserInteractionFilter.elements, noisyElements.Select(filterElement => new NoiseFilter.FilterElement { controlIndex = filterElement.index, type = filterElement.type}));
+                InputNoiseFilter newUserInteractionFilter = new InputNoiseFilter();
+                var index = ArrayHelpers.Append(ref newUserInteractionFilter.elements, noisyElements.Select(filterElement => new InputNoiseFilter.FilterElement { controlIndex = filterElement.index, type = filterElement.type}));
                 device.userInteractionFilter = newUserInteractionFilter;
             }
         }

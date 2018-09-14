@@ -41,6 +41,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// If the action map is part of an asset, this refers to the asset. Otherwise it is <c>null</c>.
+        /// </summary>
+        public InputActionAsset asset
+        {
+            get { return m_Asset; }
+        }
+
+        /// <summary>
         /// A stable, unique identifier for the map.
         /// </summary>
         /// <remarks>
@@ -124,6 +132,16 @@ namespace UnityEngine.Experimental.Input
         public ReadOnlyArray<InputDevice> devices
         {
             get { throw new NotImplementedException(); }
+        }
+
+        public InputBinding? bindingMask
+        {
+            get
+            {
+                if (m_BindingMask.isEmpty)
+                    return null;
+                return m_BindingMask;
+            }
         }
 
         ////REVIEW: should this operate by binding path or by action name?
@@ -266,6 +284,29 @@ namespace UnityEngine.Experimental.Input
             m_ActionCallbacks.Remove(receiver);
         }
 
+        public void SetBindingMask(InputBinding bindingMask)
+        {
+            if (bindingMask == m_BindingMask)
+                return;
+
+            m_BindingMask = bindingMask;
+
+            if (m_State != null)
+                ResolveBindings();
+        }
+
+        public void SetBindingMask(string bindingGroups)
+        {
+            if (string.IsNullOrEmpty(bindingGroups))
+                bindingGroups = null;
+            SetBindingMask(new InputBinding {groups = bindingGroups});
+        }
+
+        public void ClearBindingMask()
+        {
+            SetBindingMask(new InputBinding());
+        }
+
         /// <summary>
         /// Enable all the actions in the map.
         /// </summary>
@@ -339,13 +380,12 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        #region Configuration Data
-
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
         [SerializeField] internal string m_Name;
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
+        [SerializeField] internal InputActionAsset m_Asset;
 
         /// <summary>
         /// List of actions in this map.
@@ -379,6 +419,20 @@ namespace UnityEngine.Experimental.Input
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
+
+        [NonSerialized] internal int m_MapIndexInState = InputActionMapState.kInvalidIndex;
+
+        /// <summary>
+        /// Current execution state.
+        /// </summary>
+        /// <remarks>
+        /// Initialized when map (or any action in it) is first enabled.
+        /// </remarks>
+        [NonSerialized] internal InputActionMapState m_State;
+        [NonSerialized] internal InputBinding m_BindingMask;
+
+        ////TODO: nuke this and come up with a better solution to responding to actions en bloc
+        [NonSerialized] internal InlinedArray<IInputActionCallbackReceiver> m_ActionCallbacks;
 
         /// <summary>
         /// Return the list of bindings for just the given actions.
@@ -422,7 +476,7 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InputDevice> GetDevicesForSingleAction(InputAction action)
         {
             Debug.Assert(m_State != null);
-            Debug.Assert(m_MapIndex != InputActionMapState.kInvalidIndex);
+            Debug.Assert(m_MapIndexInState != InputActionMapState.kInvalidIndex);
             Debug.Assert(m_Actions != null);
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap == this);
@@ -516,7 +570,7 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InputControl> GetControlsForSingleAction(InputAction action)
         {
             Debug.Assert(m_State != null);
-            Debug.Assert(m_MapIndex != InputActionMapState.kInvalidIndex);
+            Debug.Assert(m_MapIndexInState != InputActionMapState.kInvalidIndex);
             Debug.Assert(m_Actions != null);
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap == this);
@@ -733,6 +787,33 @@ namespace UnityEngine.Experimental.Input
         internal void ClearPerActionCachedBindingData()
         {
             m_BindingsForEachAction = null;
+            m_ControlsForEachAction = null;
+            m_DevicesForEachAction = null;
+            m_ActionForEachBinding = null;
+        }
+
+        ////FIXME: this needs to be able to handle the case where two maps share state and one is enabled and one isn't
+        internal void InvalidateResolvedData()
+        {
+            Debug.Assert(m_EnabledActionsCount == 0);
+
+            if (m_State == null)
+                return;
+
+            ////TODO: keep state instance around for re-use
+
+            if (m_Asset != null)
+            {
+                foreach (var map in m_Asset.m_ActionMaps)
+                    map.m_State = null;
+                m_Asset.m_ActionMapState = null;
+            }
+            else
+            {
+                m_State = null;
+            }
+
+            ClearPerActionCachedBindingData();
         }
 
         internal void ThrowIfModifyingBindingsIsNotAllowed()
@@ -742,46 +823,81 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Cannot modify bindings on action map '{0}' while the map is enabled", this));
         }
 
-        #endregion
-
-        #region Execution Data
-
-        [NonSerialized] internal int m_MapIndex = InputActionMapState.kInvalidIndex;
-
-        /// <summary>
-        /// Current execution state.
-        /// </summary>
-        /// <remarks>
-        /// Initialized when map (or any action in it) is first enabled.
-        /// </remarks>
-        [NonSerialized] internal InputActionMapState m_State;
-
-        [NonSerialized] internal InlinedArray<IInputActionCallbackReceiver> m_ActionCallbacks;
-
         internal void ResolveBindingsIfNecessary()
         {
             if (m_State == null)
                 ResolveBindings();
         }
 
-        ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them
-        // Resolve all bindings to their controls and also add any action interactions
-        // from the bindings. The best way is for this to happen once for each action
-        // set at the beginning of the game and to then enable and disable the sets
-        // as needed. However, the system will also re-resolve bindings if the control
-        // setup in the system changes (i.e. if devices are added or removed or if
-        // layouts in the system are changed).
+        /// <summary>
+        /// Resolve all bindings to their controls and also add any action interactions
+        /// from the bindings.
+        /// </summary>
+        /// <remarks>
+        /// The best way is for this to happen once for each action map at the beginning of the game
+        /// and to then enable and disable the maps as needed. However, the system will also re-resolve
+        /// bindings if the control setup in the system changes (i.e. if devices are added or removed
+        /// or if layouts in the system are changed).
+        /// </remarks>
         internal void ResolveBindings()
         {
-            Debug.Assert(m_State == null);
+            // If we're part of an asset, we share state and thus binding resolution with
+            // all maps in the asset.
+            if (m_Asset)
+            {
+                var actionMaps = m_Asset.m_ActionMaps;
+                Debug.Assert(actionMaps != null); // Should have at least us in the array.
+                var actionMapCount = actionMaps.Length;
 
-            // Resolve all source paths.
-            var resolver = new InputBindingResolver();
-            resolver.AddActionMap(this);
+                // Start resolving.
+                var resolver = new InputBindingResolver();
 
-            // Transfer final arrays into state.
-            m_State = new InputActionMapState();
-            m_State.Initialize(resolver);
+                // If there's a control scheme set on the asset, apply its binding mask.
+                if (m_Asset.m_CurrentControlSchemeIndex != -1)
+                    resolver.bindingMask = new InputBinding
+                    {
+                        groups = m_Asset.m_ControlSchemes[m_Asset.m_CurrentControlSchemeIndex].bindingGroup
+                    };
+
+                // Resolve all maps in the asset.
+                for (var i = 0; i < actionMapCount; ++i)
+                    resolver.AddActionMap(actionMaps[i]);
+
+                // Install state.
+                if (m_Asset.m_ActionMapState == null)
+                {
+                    var state = new InputActionMapState();
+                    for (var i = 0; i < m_Asset.m_ActionMaps.Length; ++i)
+                        m_Asset.m_ActionMaps[i].m_State = state;
+                    m_Asset.m_ActionMapState = state;
+                    m_State.Initialize(resolver);
+                }
+                else
+                {
+                    m_State.ClaimDataFrom(resolver);
+                }
+            }
+            else
+            {
+                // Standalone action map (possibly a hidden one created for a singleton action).
+                // We get our own private state.
+
+                // Resolve all source paths.
+                var resolver = new InputBindingResolver();
+                resolver.AddActionMap(this);
+
+                // Transfer final arrays into state.
+                if (m_State == null)
+                {
+                    m_State = new InputActionMapState();
+                    m_State.Initialize(resolver);
+                }
+                else
+                {
+                    m_State.ClaimDataFrom(resolver);
+                    ClearPerActionCachedBindingData();
+                }
+            }
         }
 
         private class ActionListenerWrapper : IInputActionCallbackReceiver
@@ -792,8 +908,6 @@ namespace UnityEngine.Experimental.Input
                 listener(context);
             }
         }
-
-        #endregion
 
         #region Serialization
 
@@ -1158,7 +1272,7 @@ namespace UnityEngine.Experimental.Input
         public void OnAfterDeserialize()
         {
             m_State = null;
-            m_MapIndex = InputActionMapState.kInvalidIndex;
+            m_MapIndexInState = InputActionMapState.kInvalidIndex;
 
             // Restore references of actions linking back to us.
             if (m_Actions != null)

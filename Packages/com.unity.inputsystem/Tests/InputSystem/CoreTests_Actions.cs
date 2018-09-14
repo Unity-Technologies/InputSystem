@@ -18,7 +18,7 @@ partial class CoreTests
     public void Actions_CanTargetSingleControl()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/leftStick");
+        var action = new InputAction(binding: "<Gamepad>/leftStick");
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -29,7 +29,7 @@ partial class CoreTests
     public void Actions_CanTargetMultipleControls()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/*stick");
+        var action = new InputAction(binding: "<Gamepad>/*stick");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -54,9 +54,9 @@ partial class CoreTests
         InputSystem.AddDevice<Touchscreen>(); // Noise.
 
         var action = new InputAction();
-        action.AppendBinding("<Gamepad>/buttonSouth");
-        action.AppendBinding("<Keyboard>/a");
-        action.AppendBinding("<Mouse>/doesNotExist");
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.AddBinding("<Keyboard>/a");
+        action.AddBinding("<Mouse>/doesNotExist");
 
         Assert.That(action.devices, Has.Count.EqualTo(2));
         Assert.That(action.devices, Has.Exactly(1).SameAs(gamepad));
@@ -74,11 +74,11 @@ partial class CoreTests
 
         var map = new InputActionMap();
         var action1 = map.AddAction("action1");
-        action1.AppendBinding("<Gamepad>/buttonSouth");
-        action1.AppendBinding("<Keyboard>/a");
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Keyboard>/a");
         var action2 = map.AddAction("action2");
-        action2.AppendBinding("<Gamepad>/buttonNorth");
-        action2.AppendBinding("<Keyboard>/b");
+        action2.AddBinding("<Gamepad>/buttonNorth");
+        action2.AddBinding("<Keyboard>/b");
 
         Assert.That(action1.devices, Has.Count.EqualTo(2));
         Assert.That(action1.devices, Has.Exactly(1).SameAs(gamepad));
@@ -100,9 +100,9 @@ partial class CoreTests
 
         var map = new InputActionMap();
         var action1 = map.AddAction("action1");
-        action1.AppendBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Gamepad>/buttonSouth");
         var action2 = map.AddAction("action2");
-        action2.AppendBinding("<Keyboard>/b");
+        action2.AddBinding("<Keyboard>/b");
 
         Assert.That(action1.devices, Has.Count.EqualTo(1));
         Assert.That(action1.devices, Has.Exactly(1).SameAs(gamepad));
@@ -121,32 +121,14 @@ partial class CoreTests
         InputSystem.AddDevice<Touchscreen>(); // Noise.
 
         var map = new InputActionMap();
-        map.AppendBinding("<Gamepad>/buttonSouth");
-        map.AppendBinding("<Keyboard>/a");
-        map.AppendBinding("<Mouse>/doesNotExist");
+        map.AddBinding("<Gamepad>/buttonSouth");
+        map.AddBinding("<Keyboard>/a");
+        map.AddBinding("<Mouse>/doesNotExist");
 
         Assert.That(map.devices, Has.Count.EqualTo(2));
         Assert.That(map.devices, Has.Exactly(1).SameAs(gamepad));
         Assert.That(map.devices, Has.Exactly(1).SameAs(keyboard));
     }
-
-    //if the editor automatically adds groups based on bindings (e.g. "<Keyboard>/a" binding -> "Keyboard" group is added),
-    //we can use that to represent control schemes (e.g. "Keyboard;Mouse").
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanDefineControlSchemesUsingGroups()
-    {
-        Assert.Fail();
-    }
-
-    // What is an action? It is an *endpoint* that can optionally expect a certain kind of input connecting to it.
-    // What is a binding? It is a connection (with associated behavior) leading from inputs *to* an endpoint.
-    // What is an action map? A bundling of actions and bindings. Either set may be empty.
-    // What is an action asset? A bundling of action maps.
-
-    // What is a control scheme?
 
     [Test]
     [Category("Actions")]
@@ -162,7 +144,7 @@ partial class CoreTests
         var scopeAction = sniperControls.AddAction("scope");
         var swapScopeControls = new InputActionMap("swapScope", extend: sniperControls);
         /*
-        swapScopeControls.AppendBinding();
+        swapScopeControls.AddBinding();
 
         // Information from 'baseMap' coming through on 'derivedMap'.
         Assert.That(sniperControls.actions, Has.Count.EqualTo(1));
@@ -242,7 +224,7 @@ partial class CoreTests
         var action = baseMap.AddAction("action", binding: "<Gamepad>/buttonSouth");
 
         var derivedMap = new InputActionMap("Derived", extend: baseMap);
-        derivedMap.AppendBinding("<Gamepad>/buttonNorth", action: "action");
+        derivedMap.AddBinding("<Gamepad>/buttonNorth", action: "action");
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -338,6 +320,55 @@ partial class CoreTests
         action.Enable();
 
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReadValueFromAction()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        float? receivedValue = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValue<float>();
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
+
+        Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ReadingValueOfIncorrectType_ThrowsHelpfulException()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        var receivedCall = false;
+        action.performed +=
+            ctx =>
+        {
+            receivedCall = true;
+            Assert.That(() => ctx.ReadValue<Vector2>(),
+                Throws.InvalidOperationException.With.Message.Contains("buttonSouth")
+                    .And.With.Message.Contains("float")
+                    .And.With.Message.Contains("Vector2"));
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
+
+        Assert.That(receivedCall, Is.True);
     }
 
     [Test]
@@ -544,7 +575,7 @@ partial class CoreTests
 
         var map = new InputActionMap();
         var action = map.AddAction("action");
-        action.AppendCompositeBinding("Dpad")
+        action.AddCompositeBinding("Dpad")
             .With("Left", "<Keyboard>/a")
             .With("Right", "<Keyboard>/d")
             .With("Up", "<Keyboard>/w")
@@ -876,7 +907,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
-        action.AppendCompositeBinding("dpad", interactions: "stick")
+        action.AddCompositeBinding("dpad", interactions: "stick")
             .With("up", "<Keyboard>/w")
             .With("down", "<Keyboard>/s")
             .With("left", "<Keyboard>/a")
@@ -947,8 +978,8 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        action1.AppendBinding("/gamepad/leftStick");
-        action2.AppendBinding("/gamepad/rightStick");
+        action1.AddBinding("/gamepad/leftStick");
+        action2.AddBinding("/gamepad/rightStick");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action2.bindings, Has.Count.EqualTo(1));
@@ -1001,7 +1032,7 @@ partial class CoreTests
         var map = new InputActionMap("test");
 
         map.AddAction(name: "action1", expectedControlLayout: "Button", binding: "/gamepad/leftStick")
-            .AppendBinding("/gamepad/rightStick")
+            .AddBinding("/gamepad/rightStick")
             .WithGroup("group")
             .WithProcessor("deadzone");
         map.AddAction(name: "action2", binding: "/gamepad/buttonSouth", interactions: "tap,slowTap(duration=0.1)");
@@ -1159,6 +1190,8 @@ partial class CoreTests
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps[0].name, Is.EqualTo("map1"));
         Assert.That(asset.actionMaps[1].name, Is.EqualTo("map2"));
+        Assert.That(asset.actionMaps[0].asset, Is.SameAs(asset));
+        Assert.That(asset.actionMaps[1].asset, Is.SameAs(asset));
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps[1].actions, Has.Count.EqualTo(1));
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
@@ -1249,8 +1282,8 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(name: "test");
 
-        action.AppendBinding("/gamepad/leftStick");
-        action.AppendBinding("/gamepad/rightStick");
+        action.AddBinding("/gamepad/leftStick");
+        action.AddBinding("/gamepad/rightStick");
 
         action.Enable();
 
@@ -1301,7 +1334,7 @@ partial class CoreTests
 
         InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
-        action.AppendBinding("/<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
+        action.AddBinding("/<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();
 
         Vector2? receivedVector = null;
@@ -1554,7 +1587,7 @@ partial class CoreTests
         var fire = map.AddAction("fire");
         var reload = map.AddAction("reload");
 
-        map.AppendBinding("<Keyboard>/space")
+        map.AddBinding("<Keyboard>/space")
             .WithChild("<Mouse>/leftButton").Triggering(fire)
             .And.WithChild("<Mouse>/rightButton").Triggering(reload);
 
@@ -1605,10 +1638,10 @@ partial class CoreTests
         var fire = map.AddAction("fire");
         var reload = map.AddAction("reload");
 
-        map.AppendBinding("<Keyboard>/space")
+        map.AddBinding("<Keyboard>/space")
             .WithChild("<Mouse>/leftButton").Triggering(fire)
             .And.WithChild("<Mouse>/rightButton").Triggering(reload);
-        map.AppendBinding("<Keyboard>/leftCtrl").Triggering(fire);
+        map.AddBinding("<Keyboard>/leftCtrl").Triggering(fire);
 
         Assert.That(map.bindings.Count, Is.EqualTo(3));
         Assert.That(fire.bindings.Count, Is.EqualTo(2));
@@ -1628,7 +1661,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(name: "Test");
-        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
+        action.AddBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -1656,7 +1689,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(name: "Test");
-        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
+        action.AddBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -1677,7 +1710,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(name: "Test");
-        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
+        action.AddBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -1705,7 +1738,7 @@ partial class CoreTests
 
         // Tap or slow tap on A button when left trigger is held.
         var action = new InputAction(name: "Test");
-        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth", interactions: "tap,slowTap");
+        action.AddBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth", interactions: "tap,slowTap");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -1932,8 +1965,8 @@ partial class CoreTests
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        var map1 = new InputActionMap("set1");
-        var map2 = new InputActionMap("set2");
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
 
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
@@ -1941,6 +1974,21 @@ partial class CoreTests
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(map1));
         Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(map2));
+        Assert.That(map1.asset, Is.SameAs(asset));
+        Assert.That(map2.asset, Is.SameAs(asset));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotAddSameMapToTwoDifferentAssets()
+    {
+        var asset1 = ScriptableObject.CreateInstance<InputActionAsset>();
+        var asset2 = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+
+        asset1.AddActionMap(map);
+
+        Assert.That(() => asset2.AddActionMap(map), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -2022,6 +2070,19 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanFindControlSchemeInAssetByName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+
+        Assert.That(asset.GetControlScheme("SCHEme1").name, Is.EqualTo("scheme1"));
+        Assert.That(asset.GetControlScheme("scheme2").name, Is.EqualTo("scheme2"));
+        Assert.That(asset.TryGetControlScheme("doesNotExist"), Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_CanRemoveControlSchemeFromAsset()
     {
@@ -2072,20 +2133,138 @@ partial class CoreTests
         Assert.That(asset.GetControlScheme("scheme").devices[2].isOptional, Is.True);
     }
 
+    // The bindings targeting an action can be masked out such that only specific
+    // bindings take effect and others are ignored.
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanEnableSpecificControlScheme()
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnAction()
     {
-        Assert.Fail();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction();
+
+        action.AddBinding("<Gamepad>/buttonSouth").WithGroup("gamepad");
+        action.AddBinding("<Keyboard>/a").WithGroup("keyboard");
+        action.AddBinding("<Mouse>/leftButton");
+
+        Assert.That(action.controls, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+
+        action.SetBindingMask("gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.bindingMask, Is.EqualTo(new InputBinding {groups = "gamepad"}));
+
+        action.ClearBindingMask();
+
+        Assert.That(action.controls, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnActionMap()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddBinding("<Gamepad>/buttonSouth").WithGroup("gamepad");
+        action1.AddBinding("<Keyboard>/a").WithGroup("keyboard");
+        action2.AddBinding("<Mouse>/leftButton");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(2));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+
+        map.SetBindingMask("gamepad");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Count.Zero);
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
     }
 
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
-    public void TODO_Actions_AllMapsInAssetShareSingleState()
+    public void TODO_Actions_CanSwitchControlScheme()
     {
-        Assert.Fail();
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddBinding("<Gamepad>/leftStick").WithGroup("gamepad");
+        action2.AddBinding("<Gamepad>/rightStick").WithGroup("gamepad");
+        action1.AddBinding("<Keyboard>/a").WithGroup("keyboard");
+        action2.AddBinding("<Keyboard>/b").WithGroup("keyboard)");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        asset.AddControlScheme("gamepad")
+            .WithRequiredDevice("<Gamepad>")
+            .WithBindingGroup("gamepad");
+        asset.AddControlScheme("keyboard")
+            .WithRequiredDevice("<Keyboard>")
+            .WithBindingGroup("keyboard");
+
+        asset.SwitchControlScheme("gamepad");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(1));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
+
+        asset.SwitchControlScheme("keyboard");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(1));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
+    }
+
+    // When we have an .inputactions asset, at runtime we should end up with a single array of resolved
+    // controls, single array of trigger states, and so on. The expectation is that users won't generally
+    // go and configure each map in an asset in a wildly different way. Rather, the maps will usually perform
+    // different actions based against the same set of devices. So combining all state into one will give
+    // us the most efficient representation.
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_AllMapsInAssetShareSingleExecutionState()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+
+        map1.AddAction("action1");
+        map2.AddAction("action2");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map1.Enable();
+        map2.Enable();
+
+        Assert.That(map1.m_State, Is.SameAs(map2.m_State));
     }
 
     [Test]
@@ -2160,7 +2339,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction();
-        action.AppendCompositeBinding("Axis")
+        action.AddCompositeBinding("Axis")
             .With("Negative", "/<Gamepad>/leftShoulder")
             .With("Positive", "/<Gamepad>/rightShoulder");
         action.Enable();
@@ -2190,7 +2369,7 @@ partial class CoreTests
 
         // Set up classic WASD control.
         var action = new InputAction();
-        action.AppendCompositeBinding("Dpad")
+        action.AddCompositeBinding("Dpad")
             .With("Up", "/<Keyboard>/w")
             .With("Down", "/<Keyboard>/s")
             .With("Left", "/<Keyboard>/a")
@@ -2284,7 +2463,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
-        action.AppendCompositeBinding("Dpad(normalize=false)")
+        action.AddCompositeBinding("Dpad(normalize=false)")
             .With("Up", "/<Keyboard>/w")
             .With("Down", "/<Keyboard>/s")
             .With("Left", "/<Keyboard>/a")
@@ -2324,7 +2503,7 @@ partial class CoreTests
     {
         var map = new InputActionMap(name: "test");
         map.AddAction("test")
-            .AppendCompositeBinding("ButtonVector")
+            .AddCompositeBinding("ButtonVector")
             .With("Up", "/<Keyboard>/w")
             .With("Down", "/<Keyboard>/s")
             .With("Left", "/<Keyboard>/a")
@@ -2378,8 +2557,8 @@ partial class CoreTests
     {
         var action = new InputAction(name: "test");
 
-        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger").WithGroup("b");
+        action.AddBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/rightTrigger").WithGroup("b");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth");
 
@@ -2393,8 +2572,8 @@ partial class CoreTests
     {
         var action = new InputAction();
 
-        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger").WithGroup("b");
+        action.AddBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/rightTrigger").WithGroup("b");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth", @group: "a");
 
@@ -2408,9 +2587,9 @@ partial class CoreTests
     {
         var action = new InputAction();
 
-        action.AppendBinding("/gamepad/buttonNorth");
-        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/buttonNorth");
+        action.AddBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/rightTrigger").WithGroup("a");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth", path: "/gamepad/rightTrigger");
 
@@ -2425,9 +2604,9 @@ partial class CoreTests
     {
         var action = new InputAction();
 
-        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger");
+        action.AddBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/rightTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/rightTrigger");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth", @group: "a", path: "/gamepad/rightTrigger");
 
@@ -2443,8 +2622,8 @@ partial class CoreTests
     {
         var action = new InputAction(name: "test");
 
-        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AddBinding("/gamepad/rightTrigger").WithGroup("a");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth", @group: "a");
 
@@ -2473,6 +2652,22 @@ partial class CoreTests
         action.ApplyBindingOverride(new InputBinding());
         Assert.That(action.bindings[0].overridePath, Is.Null);
         Assert.That(action.bindings[0].overrideInteractions, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ApplyingOverride_UpdatesControls()
+    {
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
+
+        action.ApplyBindingOverride("<Gamepad>/rightTrigger");
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightTrigger));
     }
 
     [Test]
@@ -2514,7 +2709,7 @@ partial class CoreTests
     {
         // Action that matches leftStick on *any* gamepad in the system.
         var action = new InputAction(binding: "/<gamepad>/leftStick");
-        action.AppendBinding("/keyboard/enter"); // Add unrelated binding which should not be touched.
+        action.AddBinding("/keyboard/enter"); // Add unrelated binding which should not be touched.
 
         InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
@@ -2603,8 +2798,8 @@ partial class CoreTests
     public void Actions_CanCloneAction()
     {
         var action = new InputAction(name: "action");
-        action.AppendBinding("/gamepad/leftStick").WithInteraction("tap").WithGroup("group");
-        action.AppendBinding("/gamepad/rightStick");
+        action.AddBinding("/gamepad/leftStick").WithInteraction("tap").WithGroup("group");
+        action.AddBinding("/gamepad/rightStick");
 
         var clone = action.Clone();
 
@@ -2804,8 +2999,8 @@ partial class CoreTests
 
         var action = new InputAction();
 
-        action.AppendBinding("/<Gamepad>/leftStick");
-        action.AppendBinding("/<Pointer>/delta");
+        action.AddBinding("/<Gamepad>/leftStick");
+        action.AddBinding("/<Pointer>/delta");
 
         Vector2? movement = null;
         action.performed +=
@@ -3089,7 +3284,7 @@ partial class CoreTests
     {
         var map = new InputActionMap();
         var action = map.AddAction("action");
-        map.AppendBinding("<Gamepad>/leftStick", action: action.id);
+        map.AddBinding("<Gamepad>/leftStick", action: action.id);
 
         Assert.That(action.bindings, Has.Count.EqualTo(1));
         Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));

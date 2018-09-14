@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////REVIEW: nuke MakeCurrent() and replace with (optional) device tracking on InputPlayer?
+
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
 ////        the heap objects of devices he doesn't use?
 
@@ -187,7 +189,7 @@ namespace UnityEngine.Experimental.Input
             get { return typeof(byte[]); }
         }
 
-        public NoiseFilter userInteractionFilter
+        public InputNoiseFilter userInteractionFilter
         {
             get
             {
@@ -195,7 +197,7 @@ namespace UnityEngine.Experimental.Input
             }
             set
             {
-                m_UserInteractionFilter.Reset(this);        
+                m_UserInteractionFilter.Reset(this);
                 m_UserInteractionFilter = value;
                 m_UserInteractionFilter.Apply(this);
             }
@@ -365,7 +367,7 @@ namespace UnityEngine.Experimental.Input
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
 
-        internal NoiseFilter m_UserInteractionFilter;
+        internal InputNoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

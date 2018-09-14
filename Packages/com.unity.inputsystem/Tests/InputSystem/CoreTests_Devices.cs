@@ -1033,6 +1033,29 @@ partial class CoreTests
         Assert.That(gamepad1WasRemoved, Is.True);
     }
 
+    //Keep weak ref to device when getting disconnect event
+    [Test]
+    [Category("Devices")]
+    [Ignore("TODO")]
+    public void TODO_Devices_WhenRemovedThroughEvent_AreReusedWhenReconnectedAndNotReclaimedYet()
+    {
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad"
+        }.ToJson());
+        InputSystem.Update();
+
+        var gamepad = (Gamepad)InputSystem.devices[0];
+
+        var inputEvent = DeviceRemoveEvent.Create(gamepad.id, testRuntime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.Zero);
+
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
@@ -3119,7 +3142,7 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
 
-        device1.userInteractionFilter = new NoiseFilter();
+        device1.userInteractionFilter = new InputNoiseFilter();
 
         Assert.That(NoisyInputDevice.current == device2);
 
@@ -3152,19 +3175,19 @@ partial class CoreTests
         var device2 = InputSystem.AddDevice("MyDevice");
 
         // Tag the entire device as noisy
-        device1.userInteractionFilter = new NoiseFilter
+        device1.userInteractionFilter = new InputNoiseFilter
         {
-            elements = new NoiseFilter.FilterElement[]
+            elements = new InputNoiseFilter.FilterElement[]
             {
-                new NoiseFilter.FilterElement
+                new InputNoiseFilter.FilterElement
                 {
                     controlIndex = 0,
-                    type = NoiseFilter.ElementType.EntireControl
+                    type = InputNoiseFilter.ElementType.EntireControl
                 },
-                new NoiseFilter.FilterElement
+                new InputNoiseFilter.FilterElement
                 {
                     controlIndex = 1,
-                    type = NoiseFilter.ElementType.EntireControl
+                    type = InputNoiseFilter.ElementType.EntireControl
                 },
             }
         };

@@ -6,7 +6,9 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
-    // A collection of utility functions to work with arrays.
+    /// <summary>
+    /// A collection of utility functions for working with arrays.
+    /// </summary>
     internal static class ArrayHelpers
     {
         public static bool Contains<TValue>(TValue[] array, TValue value)

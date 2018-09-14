@@ -7,6 +7,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: nuke Clone()
 
+////REVIEW: rename this from "InputActionAsset" to something else that emphasizes the asset aspect less
+////        and instead emphasizes the map collection aspect more?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -14,6 +17,26 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// Usually imported from JSON using <see cref="Editor.InputActionImporter"/>.
+    ///
+    /// Be aware that input action assets do not separate between static data and dynamic
+    /// (instance) data. For audio, for example, <see cref="AudioClip"/> represents the static,
+    /// shared data portion of audio playback whereas <see cref="AudioSource"/> represents the
+    /// dynamic, per-instance audio playback portion (referencing the clip through <see
+    /// cref="AudioSource.clip"/>.
+    ///
+    /// For input, such a split is less beneficial as the same input is generally not exercised
+    /// multiple times in parallel. Keeping both static and dynamic data together simplifies
+    /// using the system.
+    ///
+    /// However, there are scenarios where you indeed want to take the same input action and
+    /// exercise it multiple times in parallel. A prominent example of such a use case is
+    /// local multiplayer where each player gets the same set of actions but is controllering
+    /// them with a different device (or devices) each. This is easily achieved by simply
+    /// <see cref="UnityEngine.Object.Instantiate">instantiating</see> the input action
+    /// asset multiple times.
+    ///
+    /// Note also that all action maps in an asset share binding state. This means that if
+    /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable
     {
@@ -85,12 +108,17 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException("map");
             if (string.IsNullOrEmpty(map.name))
                 throw new InvalidOperationException("Maps added to an input action asset must be named");
+            if (map.asset != null)
+                throw new InvalidOperationException(string.Format(
+                    "Cannot add map '{0}' to asset '{1}' as it has already been added to asset '{2}'", map, this,
+                    map.asset));
             ////REVIEW: some of the rules here seem stupid; just replace?
             if (TryGetActionMap(map.name) != null)
                 throw new InvalidOperationException(
                     string.Format("An action map called '{0}' already exists in the asset", map.name));
 
             ArrayHelpers.Append(ref m_ActionMaps, map);
+            map.m_Asset = this;
         }
 
         public void RemoveActionMap(InputActionMap map)
@@ -98,7 +126,12 @@ namespace UnityEngine.Experimental.Input
             if (map == null)
                 throw new ArgumentNullException("map");
 
+            // Ignore if not part of this asset.
+            if (map.m_Asset != this)
+                return;
+
             ArrayHelpers.Erase(ref m_ActionMaps, map);
+            map.m_Asset = null;
         }
 
         public void RemoveActionMap(string name)
@@ -106,9 +139,9 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
 
-            var set = TryGetActionMap(name);
-            if (set != null)
-                RemoveActionMap(set);
+            var map = TryGetActionMap(name);
+            if (map != null)
+                RemoveActionMap(map);
         }
 
         public InputActionMap TryGetActionMap(string name)
@@ -173,31 +206,54 @@ namespace UnityEngine.Experimental.Input
             ArrayHelpers.Append(ref m_ControlSchemes, controlScheme);
         }
 
-        public InputControlScheme? TryGetControlScheme(string name)
+        public int TryGetControlSchemeIndex(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
 
             if (m_ControlSchemes == null)
-                return null;
+                return -1;
 
             for (var i = 0; i < m_ControlSchemes.Length; ++i)
                 if (string.Compare(name, m_ControlSchemes[i].name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                    return m_ControlSchemes[i];
+                    return i;
 
-            return null;
+            return -1;
+        }
+
+        public int GetControlSchemeIndex(string name)
+        {
+            var index = TryGetControlSchemeIndex(name);
+            if (index == -1)
+                throw new Exception(string.Format("No control scheme called '{0}' in '{1}'", name, this.name));
+            return index;
+        }
+
+        public InputControlScheme? TryGetControlScheme(string name)
+        {
+            var index = TryGetControlSchemeIndex(name);
+            if (index == -1)
+                return null;
+
+            return m_ControlSchemes[index];
         }
 
         public InputControlScheme GetControlScheme(string name)
         {
+            var index = GetControlSchemeIndex(name);
+            return m_ControlSchemes[index];
+        }
+
+        public void SwitchControlScheme(InputControlScheme scheme)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SwitchControlScheme(string name)
+        {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
-
-            var scheme = TryGetControlScheme(name);
-            if (!scheme.HasValue)
-                throw new Exception(string.Format("No control scheme called '{0}' in '{1}'", name, this.name));
-
-            return scheme.Value;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -226,11 +282,12 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
 
-        ////TODO: make this one happen and also persist it across domain reloads
+        ////TODO: make this persistent across domain reloads
         /// <summary>
         /// Shared state for all action maps in the asset.
         /// </summary>
         [NonSerialized] internal InputActionMapState m_ActionMapState;
+        [NonSerialized] internal int m_CurrentControlSchemeIndex = -1;
 
         [Serializable]
         internal struct FileJson
@@ -244,6 +301,11 @@ namespace UnityEngine.Experimental.Input
                 asset.name = name;
                 asset.m_ActionMaps = new InputActionMap.ReadFileJson {maps = maps}.ToMaps();
                 asset.m_ControlSchemes = InputControlScheme.SchemeJson.ToSchemes(controlSchemes);
+
+                // Link maps to their asset.
+                if (asset.m_ActionMaps != null)
+                    foreach (var map in asset.m_ActionMaps)
+                        map.m_Asset = asset;
             }
         }
     }

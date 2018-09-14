@@ -16,7 +16,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!property.hasChildren)
                 yield break;
 
-
             // Go to first child.
             var iter = property.Copy();
             if (!iter.Next(true))

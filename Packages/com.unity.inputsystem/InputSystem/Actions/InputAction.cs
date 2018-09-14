@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Serialization;
 
 ////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls', 'devices', and 'bindings')
 
@@ -29,39 +28,12 @@ using UnityEngine.Serialization;
 
 ////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
 
+////TODO: allow changing bindings without having to disable
+
 ////TODO: nuke Clone()
 
-// So, actions are set up to not have a contract. They just monitor state changes and then fire
-// in response to those.
-//
-// However, as a user, this is only half the story I'm interested in. Yeah, I want to monitor
-// state changes but I also want to control what values come in as a result.
-//
-// Actions don't carry values themselves. As such they don't have a value type. As a user, however,
-// in by far most of the cases, I will think of an action as giving me a specific type of value.
-// A "move" action, for example, is likely top represent a 2D planar motion vector. It can come from
-// a gamepad thumbstick, from pointer deltas, or from a combination of keyboard keys (usually WASD).
-// So the "move" action already has an aspect about it that's very much on my mind as a user but which
-// is not represented anywhere in the action itself.
-//
-// There are probably cases where I want an action to be "polymorphic" but those I think are far and
-// few between.
-//
-// Right now, actions just have a flat list of bindings. This works sufficiently well for bindings that
-// are going to controls that already generate values that both match the expected value as well as
-// the expected value *characteristics* (even with the right value type, if the value ranges and change
-// rates are not what's expected, binding to a control may have undesired behavior).
-//
-// When bindings are supposed to work in unison (as with WASD, for example), a flat list of bindings
-// is insufficient. A WASD setup is four distinct bindings that together form a single value. Also, even
-// when bindings are independent, to properly work across devices of different types, it is often necessary
-// to apply custom processing to values coming in through one binding and not to values coming in through
-// a different binding.
-//
-// It is possible to offload all this responsibility to the code running in action callbacks but I think
-// this will make for a very hard to use system at best. The promise of actions is that they abstract away
-// from the types of devices being used. If actions are to live up to that promise, they need to be able
-// to handle the above cases internally in their processing.
+////REVIEW: should actions basically be handles to data that is stored in an array in the map?
+////        (with this, we could also implement more efficient duplication where we duplicate all the binding data but not the action data)
 
 namespace UnityEngine.Experimental.Input
 {
@@ -172,6 +144,16 @@ namespace UnityEngine.Experimental.Input
         public InputActionMap actionMap
         {
             get { return isSingletonAction ? null : m_ActionMap; }
+        }
+
+        public InputBinding? bindingMask
+        {
+            get
+            {
+                if (m_BindingMask.isEmpty)
+                    return null;
+                return m_BindingMask;
+            }
         }
 
         ////TODO: add support for turning binding array into displayable info
@@ -291,7 +273,7 @@ namespace UnityEngine.Experimental.Input
                     return default(InputBinding);
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
-                var bindingStartIndex = m_ActionMap.m_State.mapIndices[m_ActionMap.m_MapIndex].bindingStartIndex;
+                var bindingStartIndex = m_ActionMap.m_State.mapIndices[m_ActionMap.m_MapIndexInState].bindingStartIndex;
                 return m_ActionMap.m_Bindings[bindingIndex - bindingStartIndex];
             }
         }
@@ -396,15 +378,14 @@ namespace UnityEngine.Experimental.Input
 
             // For singleton actions, we create an internal-only InputActionMap
             // private to the action.
-            if (m_ActionMap == null)
-                CreateInternalActionMapForSingletonAction();
+            var map = GetOrCreateActionMap();
 
             // First time we're enabled, find all controls.
-            m_ActionMap.ResolveBindingsIfNecessary();
+            map.ResolveBindingsIfNecessary();
 
             // Go live.
-            m_ActionMap.m_State.EnableSingleAction(this);
-            ++m_ActionMap.m_EnabledActionsCount;
+            map.m_State.EnableSingleAction(this);
+            ++map.m_EnabledActionsCount;
         }
 
         public void Disable()
@@ -414,6 +395,32 @@ namespace UnityEngine.Experimental.Input
 
             m_ActionMap.m_State.DisableSingleAction(this);
             --m_ActionMap.m_EnabledActionsCount;
+        }
+
+        public void SetBindingMask(InputBinding bindingMask)
+        {
+            if (m_BindingMask == bindingMask)
+                return;
+
+            m_BindingMask = bindingMask;
+            if (!m_BindingMask.isEmpty)
+                m_BindingMask.action = name;
+
+            var map = GetOrCreateActionMap();
+            if (map.m_State != null)
+                map.ResolveBindings();
+        }
+
+        public void SetBindingMask(string bindingGroups)
+        {
+            if (string.IsNullOrEmpty(bindingGroups))
+                bindingGroups = null;
+            SetBindingMask(new InputBinding {groups = bindingGroups});
+        }
+
+        public void ClearBindingMask()
+        {
+            SetBindingMask(new InputBinding());
         }
 
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
@@ -438,9 +445,9 @@ namespace UnityEngine.Experimental.Input
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
-        [FormerlySerializedAs("m_Bindings")]
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
 
+        [NonSerialized] internal InputBinding m_BindingMask;
         [NonSerialized] internal int m_BindingsStartIndex;
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
@@ -493,8 +500,13 @@ namespace UnityEngine.Experimental.Input
                     return new InputActionMapState.TriggerState();
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.FetchActionState(this);
+                return m_ActionMap.m_State.FetchTriggerState(this);
             }
+        }
+
+        internal bool HaveBindingFilterMatching(ref InputBinding bindingFilter)
+        {
+            throw new NotImplementedException();
         }
 
         internal InputActionMap GetOrCreateActionMap()
@@ -548,7 +560,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (m_State == null)
                         return InputActionPhase.Disabled;
-                    return m_State.actionStates[actionIndex].phase;
+                    return m_State.triggerStates[actionIndex].phase;
                 }
             }
 

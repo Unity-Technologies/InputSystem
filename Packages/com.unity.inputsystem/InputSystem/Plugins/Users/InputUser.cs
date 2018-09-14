@@ -104,8 +104,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <remarks>
         /// This is optional and may be <c>null</c>. User management can be used without
         /// also using action maps.
+        ///
+        /// To set actions on a user, call <see cref="SwitchActions"/>.
         /// </remarks>
-        public InputActionMap activeActions
+        public InputActionMap actions
         {
             get { throw new NotImplementedException(); }
         }
@@ -124,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// or by automatic switching), a notification is sent on <see cref="onChange"/> with
         /// <see cref="InputUserChange.ControlSchemeChanged"/>.
         /// </remarks>
-        public InputControlScheme? activeControlScheme
+        public InputControlScheme? controlScheme
         {
             get { throw new NotImplementedException(); }
         }
@@ -136,11 +138,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             set { throw new NotImplementedException(); }
         }
 
+        /// <summary>
+        /// Change the set of actions active for the user.
+        /// </summary>
+        /// <param name="actions"></param>
         public void SwitchActions(InputActionMap actions)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="controlScheme"></param>
         public void SwitchControlScheme(InputControlScheme controlScheme)
         {
             throw new NotImplementedException();
@@ -182,7 +192,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 ArrayHelpers.MoveSlice(s_AllDevices, m_DeviceStartIndex, s_AllDeviceCount - m_DeviceCount,
                     m_DeviceCount);
 
-                // Adjust user that have been impacted by the change.
+                // Adjust users that have been impacted by the change.
                 for (var i = 0; i < s_AllUserCount; ++i)
                 {
                     var user = s_AllUsers[i];
@@ -257,7 +267,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <remarks>
         /// Adding a user sends a notification with <see cref="InputUserChange.Added"/> through <see cref="onChange"/>.
         ///
-        /// The user will start out with no devices or actions assigned.
+        /// The user will start out with no devices and no actions assigned.
         ///
         /// The user is added to <see cref="all"/>.
         /// </remarks>
@@ -279,6 +289,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return user;
         }
 
+        /// <summary>
+        /// Remove an active user.
+        /// </summary>
+        /// <param name="user">An active user.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="user"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// Removing a user also unassigns all currently assigned devices from the user. On completion of this
+        /// method, <see cref="devices"/> of <paramref name="user"/> will be empty.
+        /// </remarks>
         public static void Remove(InputUser user)
         {
             if (user == null)
