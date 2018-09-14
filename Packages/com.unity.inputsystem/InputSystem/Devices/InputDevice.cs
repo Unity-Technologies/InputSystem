@@ -195,16 +195,9 @@ namespace UnityEngine.Experimental.Input
             }
             set
             {
-                if (added)
-                {
-                    if (m_UserInteractionFilter != null)
-                        m_UserInteractionFilter.Reset(this);
-
-                    if (value != null)
-                        value.Apply(this);
-                }
-
+                m_UserInteractionFilter.Reset(this);        
                 m_UserInteractionFilter = value;
+                m_UserInteractionFilter.Apply(this);
             }
         }
 

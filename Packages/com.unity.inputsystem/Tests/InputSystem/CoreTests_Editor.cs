@@ -121,6 +121,36 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
+    {
+        NoiseFilter filter = new NoiseFilter
+        {
+            elements = new NoiseFilter.FilterElement[]
+            {
+                new NoiseFilter.FilterElement
+                {
+                    controlIndex = 0,
+                    type = NoiseFilter.ElementType.EntireControl
+                }
+            }
+        };
+
+        var device = InputSystem.AddDevice<Gamepad>();
+        device.userInteractionFilter = filter;
+
+        InputSystem.SaveAndReset();
+        InputSystem.Restore();
+
+        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+
+        Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
+        Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
+        Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
+        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(NoiseFilter.ElementType.EntireControl));
+    }
+
+    [Test]
+    [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
     {
