@@ -138,10 +138,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
+        [InputControl(name ="IsIMESelected", layout = "Button", bit = (int)Key.IsIMESelected)]
         public fixed byte keys[kSizeInBytes];
-
-        [InputControl(name = "isIMESelected", layout = "Button")]
-        public bool isIMESelected;
 
         public KeyboardState(params Key[] pressedKeys)
         {
@@ -153,8 +151,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     MemoryHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
                 }
             }
-
-            isIMESelected = false;
         }
 
         public FourCC GetFormat()
@@ -309,6 +305,9 @@ namespace UnityEngine.Experimental.Input
         OEM3,
         OEM4,
         OEM5,
+
+        // Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
+        IsIMESelected
     }
 
     /// <summary>
