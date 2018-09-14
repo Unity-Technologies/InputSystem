@@ -1275,7 +1275,6 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
             RegisterControlLayout("Keyboard", typeof(Keyboard));
-            RegisterControlLayout("IMEDevice", typeof(IMEDevice));
             RegisterControlLayout("Pointer", typeof(Pointer));
             RegisterControlLayout("Mouse", typeof(Mouse));
             RegisterControlLayout("Pen", typeof(Pen));

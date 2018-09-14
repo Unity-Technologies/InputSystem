@@ -5,59 +5,40 @@ using UnityEngine.Experimental.Input;
 
 public class IMETest : MonoBehaviour
 {
-    public UnityEngine.Experimental.Input.IMECompositionMode mode;
+    public bool enableIME;
     public Vector2 cursorPosition;
 
     public string outputString;
     public string compositionString;
 
-    private bool m_AddedTextListener = false;
-    private bool m_AddedIMEListener = false;
+    private bool m_AddedTextListeners = false;
 
     // Use this for initialization
     void OnEnable ()
     {
-        if(!m_AddedTextListener)
+        if(!m_AddedTextListeners)
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
             {
                 keyboard.onTextInput += OnTextEvent;
-                m_AddedTextListener = true;
-            }
-        }
-
-        if(!m_AddedIMEListener)
-        {
-            IMEDevice ime = IMEDevice.current;
-            if(ime != null)
-            {
-                ime.onIMECompositionChange += OnIMECompositionChange;
-                m_AddedIMEListener = true;
+                keyboard.onIMECompositionChange += OnIMECompositionChange;
+                m_AddedTextListeners = true;
             }
         }
 	}
 
     void OnDisable()
     {
-        if(m_AddedTextListener)
+        if(m_AddedTextListeners)
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
             {
                 keyboard.onTextInput -= OnTextEvent;
+                keyboard.onIMECompositionChange -= OnIMECompositionChange;
             }
-            m_AddedTextListener = false;
-        }
-
-        if (m_AddedIMEListener)
-        {
-            IMEDevice ime = IMEDevice.current;
-            if (ime != null)
-            {
-                ime.onIMECompositionChange += OnIMECompositionChange;
-                m_AddedIMEListener = false;
-            }
+            m_AddedTextListeners = false;
         }
     }
 
@@ -72,30 +53,20 @@ public class IMETest : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
-        if (!m_AddedTextListener)
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
         {
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard != null)
+            if (!m_AddedTextListeners)
             {
                 keyboard.onTextInput += OnTextEvent;
-                m_AddedTextListener = true;
+                keyboard.onIMECompositionChange += OnIMECompositionChange;
+                m_AddedTextListeners = true;
             }
-        }
 
-        if (!m_AddedIMEListener)
-        {
-            IMEDevice ime = IMEDevice.current;
-            if (ime != null)
-            {
-                ime.onIMECompositionChange += OnIMECompositionChange;
-                m_AddedIMEListener = true;
-            }
+            keyboard.imeEnabled = enableIME;
+            keyboard.imeCursorPosition = cursorPosition;
         }
-
-        IMEDevice device = IMEDevice.current;
-        device.mode = mode;
-        device.position = cursorPosition;
 	}
 }

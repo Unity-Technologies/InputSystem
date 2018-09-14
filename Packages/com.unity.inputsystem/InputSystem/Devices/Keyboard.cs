@@ -140,6 +140,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
         public fixed byte keys[kSizeInBytes];
 
+        [InputControl(name = "isIMESelected", layout = "Button")]
+        public bool isIMESelected;
+
         public KeyboardState(params Key[] pressedKeys)
         {
             fixed(byte* keysPtr = keys)
@@ -150,6 +153,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     MemoryHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
                 }
             }
+
+            isIMESelected = false;
         }
 
         public FourCC GetFormat()
@@ -333,6 +338,40 @@ namespace UnityEngine.Experimental.Input
             remove { m_TextInputListeners.Remove(value); }
         }
 
+        public event Action<string> onIMECompositionChange
+        {
+            add { m_ImeCompositionStringListeners.Append(value); }
+            remove { m_ImeCompositionStringListeners.Remove(value); }
+        }
+
+        public bool imeEnabled
+        {
+            set
+            {
+                if (m_imeEnabled != value)
+                {
+                    SetIMECompositionModeCommand command = SetIMECompositionModeCommand.Create(value);
+                    if (ExecuteCommand(ref command) >= 0)
+                        m_imeEnabled = value;
+                }
+            }
+            get { return m_imeEnabled; }
+        }
+
+        public Vector2 imeCursorPosition
+        {
+            set
+            {
+                if (m_ImePosition != value)
+                {
+                    SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
+                    if (ExecuteCommand(ref command) >= 0)
+                        m_ImePosition = value;
+                }
+            }
+            get { return m_ImePosition; }
+        }
+
         /// <summary>
         /// The name of the layout currently used by the keyboard.
         /// </summary>
@@ -354,6 +393,8 @@ namespace UnityEngine.Experimental.Input
             }
             protected set { m_KeyboardLayoutName = value; }
         }
+
+
 
         /// <summary>
         /// A synthetic button control that is considered pressed if any key on the keyboard is pressed.
@@ -514,6 +555,8 @@ namespace UnityEngine.Experimental.Input
         public KeyControl oem3Key { get; private set; }
         public KeyControl oem4Key { get; private set; }
         public KeyControl oem5Key { get; private set; }
+
+        public ButtonControl isIMESelected { get; private set; }
 
         public static Keyboard current { get; internal set; }
 
@@ -805,6 +848,8 @@ namespace UnityEngine.Experimental.Input
             oem4Key = builder.GetControl<KeyControl>("OEM4");
             oem5Key = builder.GetControl<KeyControl>("OEM5");
 
+            isIMESelected = builder.GetControl<ButtonControl>("isIMESelected");
+
             ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
             ////        and it just seems somewhat dirty to jam the data into the control here
 
@@ -829,7 +874,21 @@ namespace UnityEngine.Experimental.Input
                 m_TextInputListeners[i](character);
         }
 
+        public override void OnIMEStringEvent(IMECompositionStringEvent imeEvent)
+        {
+            if (m_ImeCompositionStringListeners.length > 0)
+            {
+                string imeString = imeEvent.AsString();
+                for (var i = 0; i < m_ImeCompositionStringListeners.length; ++i)
+                    m_ImeCompositionStringListeners[i](imeString);
+            }
+        }
+
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
+
+        internal InlinedArray<Action<string>> m_ImeCompositionStringListeners;
+        bool m_imeEnabled;
+        Vector2 m_ImePosition;
     }
 }

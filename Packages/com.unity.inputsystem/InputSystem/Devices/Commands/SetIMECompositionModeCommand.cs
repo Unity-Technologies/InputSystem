@@ -15,19 +15,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        uint compositionMode;
+        byte imeEnabled;
 
         public FourCC GetTypeStatic()
         {
             return Type;
         }
 
-        public static SetIMECompositionModeCommand Create(IMECompositionMode mode)
+        public static SetIMECompositionModeCommand Create(bool enabled)
         {
             return new SetIMECompositionModeCommand
             {
                 baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + sizeof(uint)),
-                compositionMode = (uint)mode
+                imeEnabled = enabled ? byte.MaxValue : (byte)0
             };
         }
     }
