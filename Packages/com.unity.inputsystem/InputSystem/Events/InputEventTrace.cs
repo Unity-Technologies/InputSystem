@@ -8,6 +8,8 @@ using UnityEngine.Profiling;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 
+////TODO: Use InputEventBuffer
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     // Helper to simplify recording events. Can record events for a specific device
