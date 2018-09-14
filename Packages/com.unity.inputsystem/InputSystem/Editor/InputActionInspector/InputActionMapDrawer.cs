@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var property = (SerializedProperty)propertyObj;
             var actionMapProperty = (SerializedProperty)propertyObj;
             var action = m_TreeView.GetSelectedAction();
-            InputActionSerializationHelpers.AppendBinding(action.elementProperty, actionMapProperty);
+            InputActionSerializationHelpers.AddBinding(action.elementProperty, actionMapProperty);
             property.serializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }
@@ -67,7 +67,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var property = (SerializedProperty)((List<object>)paramList)[1];
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
             var action = m_TreeView.GetSelectedAction();
-            InputActionSerializationHelpers.AppendCompositeBinding(action.elementProperty, property, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(action.elementProperty, property, compositeName, compositeType);
             property.serializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }

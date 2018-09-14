@@ -150,8 +150,8 @@ namespace UnityEngine.Experimental.Input.Editor
             actionsArrayProperty.DeleteArrayElementAtIndex(actionIndex);
         }
 
-        // Equivalent to InputAction.AppendBinding().
-        public static SerializedProperty AppendBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        // Equivalent to InputAction.AddBinding().
+        public static SerializedProperty AddBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
         {
             var bindingsArrayProperty = actionMapProperty != null
                 ? actionMapProperty.FindPropertyRelative("m_Bindings")
@@ -185,9 +185,9 @@ namespace UnityEngine.Experimental.Input.Editor
             ////FIXME: this likely leaves m_Bindings in the map for singleton actions unsync'd in some cases
         }
 
-        public static void AppendBindingFromSavedProperties(Dictionary<string, string> values, SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        public static void AddBindingFromSavedProperties(Dictionary<string, string> values, SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
         {
-            var newBindingProperty = AppendBinding(actionProperty, actionMapProperty);
+            var newBindingProperty = AddBinding(actionProperty, actionMapProperty);
             newBindingProperty.FindPropertyRelative("m_Path").stringValue = values["path"];
             newBindingProperty.FindPropertyRelative("m_Name").stringValue = values["name"];
             newBindingProperty.FindPropertyRelative("m_Groups").stringValue = values["groups"];
@@ -300,9 +300,9 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = newName;
         }
 
-        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type)
+        public static void AddCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type)
         {
-            var newProperty = AppendBinding(actionProperty, actionMapProperty);
+            var newProperty = AddBinding(actionProperty, actionMapProperty);
             newProperty.FindPropertyRelative("m_Name").stringValue = compositeName;
             newProperty.FindPropertyRelative("m_Path").stringValue = compositeName;
             newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.Composite;
@@ -314,7 +314,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
                     continue;
 
-                newProperty = AppendBinding(actionProperty, actionMapProperty);
+                newProperty = AddBinding(actionProperty, actionMapProperty);
                 newProperty.FindPropertyRelative("m_Name").stringValue = field.Name;
                 newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.PartOfComposite;
             }

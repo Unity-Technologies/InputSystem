@@ -260,7 +260,7 @@ partial class CoreTests
         var binding = new InputBinding();
         binding.path = "some path";
         var action = map.AddAction("action");
-        action.AppendBinding(binding);
+        action.AddBinding(binding);
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
@@ -320,7 +320,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendBinding(action1Property, mapProperty);
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         // Maps and actions aren't UnityEngine.Objects so the modifications will not
@@ -374,7 +374,7 @@ partial class CoreTests
         parameters.Add("flags", "" + flags);
         parameters.Add("action", sourceActionName);
 
-        InputActionSerializationHelpers.AppendBindingFromSavedProperties(parameters, action1Property, mapProperty);
+        InputActionSerializationHelpers.AddBindingFromSavedProperties(parameters, action1Property, mapProperty);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 
@@ -389,7 +389,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAppendCompositeBinding()
+    public void Editor_InputAsset_CanAddCompositeBinding()
     {
         var map = new InputActionMap("set");
         map.AddAction(name: "action1");
@@ -400,7 +400,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
+        InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");

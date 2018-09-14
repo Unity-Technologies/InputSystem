@@ -235,20 +235,20 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return Styles.actionItemStyle; }
         }
 
-        public void AppendCompositeBinding(string compositeName)
+        public void AddCompositeBinding(string compositeName)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
         }
 
-        public void AppendBinding()
+        public void AddBinding()
         {
-            InputActionSerializationHelpers.AppendBinding(elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty);
         }
 
-        public void AppendBindingFromObject(Dictionary<string, string> values)
+        public void AddBindingFromSavedProperties(Dictionary<string, string> values)
         {
-            InputActionSerializationHelpers.AppendBindingFromSavedProperties(values, elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBindingFromSavedProperties(values, elementProperty, m_ActionMapProperty);
         }
 
         public void RemoveBinding(int compositeIndex)

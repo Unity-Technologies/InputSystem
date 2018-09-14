@@ -29,7 +29,7 @@ public class SimpleController : MonoBehaviour
         ////TODO: this currently falls over due to missing support for composites in InputActionManager
         ////TEMP: we don't yet have support for setting up composite bindings in the UI; hack
         ////      in WASD keybindings as a temp workaround
-        controls.gameplay.move.AppendCompositeBinding("Dpad")
+        controls.gameplay.move.AddCompositeBinding("Dpad")
             .With("Left", "<Keyboard>/a")
             .With("Right", "<Keyboard>/d")
             .With("Up", "<Keyboard>/w")

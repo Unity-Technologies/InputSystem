@@ -7,9 +7,6 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: nuke Clone()
 
-////REVIEW: I think the action stuff may be conflating configuration and execution data in a bad way
-////        However, separating the two completely may lead to a blown-up, cumbersome API
-
 ////REVIEW: rename this from "InputActionAsset" to something else that emphasizes the asset aspect less
 ////        and instead emphasizes the map collection aspect more?
 
