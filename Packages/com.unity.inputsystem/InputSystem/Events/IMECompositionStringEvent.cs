@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     public unsafe struct IMECompositionStringEvent : IInputEventTypeInfo
     {
         // These needs to match the native ImeCompositionStringInputEventData settings
-        public const int kIMECharBufferSize = 16;
+        public const int kIMECharBufferSize = 64;
         public const int Type = 0x494D4553;
 
         [FieldOffset(0)]
