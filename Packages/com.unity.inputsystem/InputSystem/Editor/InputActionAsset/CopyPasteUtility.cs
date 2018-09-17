@@ -19,7 +19,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
         private readonly GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
         private readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        private readonly GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
+        private readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
+        private readonly GUIContent m_RenameGUI = EditorGUIUtility.TrTextContent("Rename");
 
         public CopyPasteUtility(Action apply, InputActionListTreeView tree, SerializedObject serializedObject)
         {
@@ -311,15 +312,24 @@ namespace UnityEngine.Experimental.Input.Editor
                 menu.AddDisabledItem(m_CopyGUI, false);
             }
             menu.AddItem(m_PasteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
-            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
-            if (canCopySelection)
+            menu.AddSeparator("");
+            if (m_TreeView.CanRenameCurrentSelection())
             {
-                menu.AddItem(m_Duplicate, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+                menu.AddItem(m_RenameGUI, false, () => { m_TreeView.BeginRename(m_TreeView.GetSelectedRow()); });
             }
             else
             {
-                menu.AddDisabledItem(m_Duplicate, false);
+                menu.AddDisabledItem(new GUIContent(m_RenameGUI));
             }
+            if (canCopySelection)
+            {
+                menu.AddItem(m_DuplicateGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+            }
+            else
+            {
+                menu.AddDisabledItem(m_DuplicateGUI, false);
+            }
+            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
         }
     }
 }

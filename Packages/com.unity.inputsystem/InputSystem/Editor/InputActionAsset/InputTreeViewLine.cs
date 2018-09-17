@@ -347,7 +347,7 @@ namespace UnityEngine.Experimental.Input.Editor
             displayName = InputControlPath.ToHumanReadableString(path);
             if (string.IsNullOrEmpty(displayName))
             {
-                displayName = "<empty>";
+                displayName = "Empty Binding";
             }
 
             m_ActionMapName = actionMapName;

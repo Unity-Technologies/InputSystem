@@ -120,11 +120,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
         private readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        private readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
+        private readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add/Binding");
         private readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
-        private readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
+        private readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add/Action");
         private readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
+        private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add/Action map");
 
         public void OnEnable()
         {
@@ -236,7 +236,10 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_TreeView == null)
                 return;
 
+            // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
+            // We need to make sure we dirty the state only in case of changes to the asset. 
             m_IsDirty = m_AssetObjectForEditing.ToJson() != m_ImportedAssetObject.ToJson();
+
             m_TreeView.Reload();
             OnSelectionChanged();
         }
@@ -425,12 +428,12 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
 
-            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Add composite") : EditorGUIUtility.TrTextContent("Composite");
+            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Add/Composite") : EditorGUIUtility.TrTextContent("Composite");
             if (canAddBinding)
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
                 {
-                    menu.AddItem(new GUIContent(compositeString.text + "/" + composite), false, OnAddCompositeBinding, composite);
+                    menu.AddItem(new GUIContent(compositeString.text + " " + composite), false, OnAddCompositeBinding, composite);
                 }
             }
             else if (!isContextMenu)

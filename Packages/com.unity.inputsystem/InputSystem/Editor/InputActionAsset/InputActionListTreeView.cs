@@ -254,6 +254,14 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return 18;
         }
+        
+        internal bool CanRenameCurrentSelection()
+        {
+            var selection = GetSelectedRows();
+            if (selection.Count() != 1)
+                return false;
+            return CanRename(selection.Single());
+        }
 
         protected override bool CanRename(TreeViewItem item)
         {
