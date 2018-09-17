@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input
         /// relevant trigger information to surface in event list later on.
         /// </summary>
         /// <param name="context"></param>
-        unsafe void IInputActionCallbackReceiver.OnActionTriggered(ref InputAction.CallbackContext context)
+        unsafe void IInputActionCallbackReceiver.OnActionTriggered(InputAction.CallbackContext context)
         {
             var controlIndex = context.m_ControlIndex;
             var control = context.control;
@@ -630,6 +630,7 @@ namespace UnityEngine.Experimental.Input
             /// <typeparam name="TValue">Type of value to read. Must match the value type of the control.</typeparam>
             /// <returns>Value of <see cref="control"/> at the time it triggered.</returns>
             public unsafe TValue ReadValue<TValue>()
+                where TValue : struct
             {
                 ////TODO: this here should be moved into a general helper method; "read control value from chunk of memory" is generally useful
 

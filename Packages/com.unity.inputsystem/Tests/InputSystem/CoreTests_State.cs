@@ -552,14 +552,16 @@ partial class CoreTests
         var monitorFired = false;
         InputControl receivedControl = null;
         double? receivedTime = null;
+        InputEventPtr? receivedEventPtr = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 receivedControl = control;
                 receivedTime = time;
+                receivedEventPtr = eventPtr;
             });
 
         // Left stick only.
@@ -569,10 +571,12 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         // Left stick again but with no value change.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)}, 0.6);
@@ -588,10 +592,12 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         // Right stick only.
         InputSystem.QueueStateEvent(gamepad,
@@ -608,6 +614,7 @@ partial class CoreTests
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         // Remove state monitor and change leftStick again.
         InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor);
@@ -615,6 +622,7 @@ partial class CoreTests
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.0f, 0.0f)}, 1.0);
         InputSystem.Update();
@@ -669,8 +677,8 @@ partial class CoreTests
 
         var monitorFired = false;
         InputControl receivedControl = null;
-        Action<InputControl, double, long> action =
-            (control, time, monitorIndex) =>
+        Action<InputControl, double, InputEventPtr, long> action =
+            (control, time, eventPtr, monitorIndex) =>
         {
             Assert.That(!monitorFired);
             monitorFired = true;
@@ -708,7 +716,7 @@ partial class CoreTests
         var monitorFired = false;
         long? receivedMonitorIndex = null;
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -767,7 +775,7 @@ partial class CoreTests
         InputControl receivedControl = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -836,7 +844,7 @@ partial class CoreTests
 
         IInputStateChangeMonitor monitor = null;
         monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;

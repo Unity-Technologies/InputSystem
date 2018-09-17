@@ -7,10 +7,6 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      per device, multiple devices per stack, etc.); should also resolve the problem of having
 ////      two bindings stack on top of each other and making the one on top suppress the one below
 
-////REVIEW: have an optional reference to an InputActionMap?
-
-////TODO: nuke Clone()
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -168,7 +164,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.started"/>
         /// <seealso cref="InputAction.performed"/>
         /// <seealso cref="InputAction.cancelled"/>
-        public event InputActionListener actionTriggered
+        public event Action<InputAction.CallbackContext> actionTriggered
         {
             add { AddActionCallbackReceiver(new ActionListenerWrapper { listener = value }); }
             remove
@@ -902,8 +898,8 @@ namespace UnityEngine.Experimental.Input
 
         private class ActionListenerWrapper : IInputActionCallbackReceiver
         {
-            public InputActionListener listener;
-            public void OnActionTriggered(ref InputAction.CallbackContext context)
+            public Action<InputAction.CallbackContext> listener;
+            public void OnActionTriggered(InputAction.CallbackContext context)
             {
                 listener(context);
             }

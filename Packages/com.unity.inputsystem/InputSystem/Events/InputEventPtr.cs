@@ -9,6 +9,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
     /// the unsafe operations necessary to work with events.
     /// </summary>
+    /// <remarks>
+    /// Note that event pointers generally refer to event buffers that are continually reused. This means
+    /// that event pointers should not be held on to. Instead, to hold onto event data, manually copy
+    /// an event to a buffer using <see cref="CopyTo"/>.
+    /// </remarks>
     public unsafe struct InputEventPtr : IEquatable<InputEventPtr>
     {
         // C# does not allow us to have pointers to structs that have managed data members. Since
@@ -140,6 +145,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
             return m_EventPtr->type == otherEventTypeCode;
+        }
+
+        public void CopyTo(void* buffer, int bufferSize)
+        {
+            throw new NotImplementedException();
         }
 
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.

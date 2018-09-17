@@ -34,6 +34,21 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
+
+        // Make sure that if we actuate both controls in a single event, we still
+        // get them to come through as two separate triggers.
+
+        var receivedControls = new List<InputControl>();
+        action.performed += ctx => { receivedControls.Add(ctx.control); };
+
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.left, rightStick = Vector2.right});
+        InputSystem.Update();
+
+        Assert.That(receivedControls, Has.Count.EqualTo(2));
+        Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.rightStick));
     }
 
     [Test]
@@ -345,6 +360,63 @@ partial class CoreTests
         Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
     }
 
+    // Some code needs to be able to just generically transfer values from A to B. For this, the
+    // generic ReadValue<TValue>() API isn't sufficient.
+    [Test]
+    [Category("Actions")]
+    public unsafe void Actions_CanReadValueFromAction_WithoutKnowingValueType()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        action.Enable();
+
+        byte[] receivedValueData = null;
+
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedValueData, Is.Null);
+            Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+            Assert.That(ctx.valueSizeInBytes, Is.EqualTo(sizeof(Vector2)));
+
+            var sizeInBytes = ctx.valueSizeInBytes;
+            receivedValueData = new byte[sizeInBytes];
+            fixed(byte* dataPtr = receivedValueData)
+            {
+                ctx.ReadValue(dataPtr, sizeInBytes);
+            }
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)});
+        InputSystem.Update();
+
+        Assert.That(receivedValueData, Has.Length.EqualTo(sizeof(Vector2)));
+        Assert.That(BitConverter.ToSingle(receivedValueData, 0),
+            Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.123f, 0.234f), gamepad.leftStick).x).Within(0.00001));
+        Assert.That(BitConverter.ToSingle(receivedValueData, 4),
+            Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.123f, 0.234f), gamepad.leftStick).y).Within(0.00001));
+
+        receivedValueData = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(receivedValueData, Has.Length.EqualTo(sizeof(Vector2)));
+        Assert.That(BitConverter.ToSingle(receivedValueData, 0),
+            Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(BitConverter.ToSingle(receivedValueData, 4),
+            Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ReadingValueOfIncorrectType_ThrowsHelpfulException()
@@ -524,19 +596,59 @@ partial class CoreTests
         Assert.That(manager.actionMaps, Has.Exactly(1).SameAs(map2));
     }
 
+    // WIP: This will replace InputActionManager.
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanRecordActionsAsEvents()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Gamepad>/rightStick");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        using (var queue = new InputActionEventQueue())
+        {
+            action.performed += queue.OnActionTriggered;
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)}, 0.1234);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = new Vector2(0.345f, 0.456f)}, 0.2345);
+            InputSystem.Update();
+
+            Assert.That(queue.count, Is.EqualTo(2));
+
+            var events = queue.ToArray();
+
+            Assert.That(events, Has.Length.EqualTo(2));
+            Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(events[1].control, Is.SameAs(gamepad.rightStick));
+            Assert.That(events[0].time, Is.EqualTo(0.1234).Within(0.00001));
+            Assert.That(events[1].time, Is.EqualTo(0.2345).Within(0.00001));
+            Assert.That(events[0].action, Is.SameAs(action));
+            Assert.That(events[1].action, Is.SameAs(action));
+            Assert.That(events[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(events[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(events[0].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
+            Assert.That(events[1].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
+        }
+    }
+
     // An alternative to putting callbacks on InputActions is to process them on-demand
     // as events. This also allows putting additional logic in-between the bindings
     // and actions getting triggered (useful, for example, if there's two actions triggered
     // from the same control and only one should result in the action getting triggered).
     [Test]
     [Category("Actions")]
-    public void Actions_CanProcessActionsAsEvents()
+    [Ignore("TODO")]
+    public void TODO_Actions_CanProcessActionsAsEvents()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", binding: "/<Gamepad>/leftStick");
-        var action2 = map.AddAction("action2", binding: "/<Gamepad>/leftStick");
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/leftStick");
+        var action2 = map.AddAction("action2", binding: "<Gamepad>/leftStick");
 
         using (var manager = new InputActionManager())
         {
@@ -2446,6 +2558,62 @@ partial class CoreTests
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
         Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    // It's somewhat counterintuitive but not sure it's worth bothering with. State monitors don't know about
+    // controls that trigger in unison and for the action machinery it'd be some extra work to reliably figure out
+    // ...
+
+    private class LogInteraction : IInputInteraction
+    {
+        public void Process(ref InputInteractionContext context)
+        {
+            Debug.LogAssertion("LogInteraction.Process");
+            context.Performed();
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    // This is a bit of edgy case. Actions trigger in response to controls they are bound to changing state.
+    // However, in the case of composites, multiple controls may act in unison so if more than one control changes
+    // state at the same time, do we trigger the the action more than once or only a single time?
+    // We err on the side of no surprises here and trigger the action only once.
+    //
+    // Note that this behavior is different from triggering the action multiple times from a single binding or
+    // multiple times from different bindings that aren't part of a composite.
+    //
+    // Meaning for any single event:
+    //      "<Keyboard>/*" -> triggers once for each pressed key
+    //      "<Keyboard>/a", "<Keyboard>/b" -> triggers for both A and B if both are pressed in the event
+    //      WASD composite -> triggers only once for the entire composite regardless of how many keys of WASD are pressed in the event
+    [Test]
+    [Category("Actions")]
+    public void Actions_DpadComposite_TriggersActionOnlyOnceWhenMultipleComponentBindingsTriggerInSingleEvent()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.RegisterInteraction<LogInteraction>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad", interactions: "log")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        var performedCount = 0;
+        action.performed += ctx => ++ performedCount;
+
+        // Interaction should be processed only once.
+        LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(performedCount, Is.EqualTo(1));
     }
 
     [Test]

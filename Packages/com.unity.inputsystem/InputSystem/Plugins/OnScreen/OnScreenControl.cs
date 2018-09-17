@@ -147,6 +147,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         }
 
         protected void SendValueToControl<TValue>(TValue value)
+            where TValue : struct
         {
             if (m_Control == null)
                 return;

@@ -1269,7 +1269,6 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
             RegisterControlLayout("Touch", typeof(TouchControl));
             RegisterControlLayout("Color", typeof(ColorControl));
-            RegisterControlLayout("Audio", typeof(AudioControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
@@ -1801,7 +1800,7 @@ namespace UnityEngine.Experimental.Input
                             if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
                                 deviceStateSize, 0))
                             {
-                                FireStateChangeNotifications(i, currentTimeExternal);
+                                FireStateChangeNotifications(i, currentTimeExternal, null);
                             }
                         }
                     }
@@ -2194,7 +2193,7 @@ namespace UnityEngine.Experimental.Input
                         // monitors fired, let the associated actions know.
                         ////FIXME: this needs to happen with player buffers active
                         if (haveSignalledMonitors)
-                            FireStateChangeNotifications(deviceIndex, currentEventTimeInternal);
+                            FireStateChangeNotifications(deviceIndex, currentEventTimeInternal, currentEventPtr);
 
                         break;
 
@@ -2331,7 +2330,7 @@ namespace UnityEngine.Experimental.Input
             return signalled;
         }
 
-        private void FireStateChangeNotifications(int deviceIndex, double internalTime)
+        private unsafe void FireStateChangeNotifications(int deviceIndex, double internalTime, InputEvent* eventPtr)
         {
             Debug.Assert(m_StateChangeMonitors != null);
             Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
@@ -2353,7 +2352,7 @@ namespace UnityEngine.Experimental.Input
                     //       add new timeouts.
                     RemoveStateChangeMonitorTimeouts(listener.control);
 
-                    listener.monitor.NotifyControlValueChanged(listener.control, time, listener.monitorIndex);
+                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr, listener.monitorIndex);
                     signals.ClearBit(i);
                 }
             }

@@ -247,15 +247,7 @@ public class UserTests : InputTestFixture
     [Test]
     [Category("Users")]
     [Ignore("TODO")]
-    public void TODO_Users_WhenDeviceIsAssigned_TriggersNotification()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Users")]
-    [Ignore("TODO")]
-    public void TODO_Users_WhenActionMapIsAssigned_TriggersNotification()
+    public void TODO_Users_CanSwitchControlSchemes()
     {
         Assert.Fail();
     }
