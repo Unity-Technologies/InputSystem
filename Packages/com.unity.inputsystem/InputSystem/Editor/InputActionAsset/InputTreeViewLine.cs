@@ -274,7 +274,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public CompositeGroupTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
         {
-            var name = elementProperty.FindPropertyRelative("name").stringValue;
+            var name = elementProperty.FindPropertyRelative("m_Name").stringValue;
             displayName = name;
         }
 
