@@ -10,14 +10,14 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Records the triggering of actions into <see cref="ActionEvent">action events</see>.
+    /// Records the triggering of actions into a sequence of events that can be replayed at will.
     /// </summary>
     /// <remarks>
     /// This is an alternate way to the callback-based responses (such as <see cref="InputAction.performed"/>)
     /// of <see cref="InputAction">input actions</see>. Instead of executing response code right away whenever
     /// an action triggers, an event is recorded which can then be queried on demand.
     /// </remarks>
-    public class InputActionEventQueue : IInputActionCallbackReceiver, IEnumerable<InputActionEventQueue.ActionEventPtr>, IDisposable
+    public class InputActionQueue : IEnumerable<InputActionQueue.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input
         /// Record the triggering of an action as an <see cref="ActionEventPtr">action event</see>.
         /// </summary>
         /// <param name="context"></param>
-        public unsafe void OnActionTriggered(InputAction.CallbackContext context)
+        public unsafe void RecordAction(InputAction.CallbackContext context)
         {
             // Find/add state.
             var stateIndex = m_ActionMapStates.IndexOf(context.m_State);
@@ -75,6 +75,7 @@ namespace UnityEngine.Experimental.Input
         public void Dispose()
         {
             m_EventBuffer.Dispose();
+            m_ActionMapStates.Clear();
         }
 
         public IEnumerator<ActionEventPtr> GetEnumerator()
@@ -182,13 +183,13 @@ namespace UnityEngine.Experimental.Input
 
         internal unsafe struct Enumerator : IEnumerator<ActionEventPtr>
         {
-            private InputActionEventQueue m_Queue;
+            private InputActionQueue m_Queue;
             private ActionEvent* m_Buffer;
             private ActionEvent* m_CurrentEvent;
             private int m_CurrentIndex;
             private int m_EventCount;
 
-            public Enumerator(InputActionEventQueue queue)
+            public Enumerator(InputActionQueue queue)
             {
                 m_Queue = queue;
                 m_Buffer = (ActionEvent*)queue.m_EventBuffer.bufferPtr.ToPointer();

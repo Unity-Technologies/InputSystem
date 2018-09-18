@@ -842,7 +842,7 @@ namespace UnityEngine.Experimental.Input
             {
                 try
                 {
-                    callbacksOnMap[i].OnActionTriggered(context);
+                    callbacksOnMap[i](context);
                 }
                 catch (Exception exception)
                 {

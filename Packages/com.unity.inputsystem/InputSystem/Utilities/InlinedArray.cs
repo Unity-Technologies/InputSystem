@@ -307,7 +307,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             --length;
         }
 
-        public bool RemoveAtByMovingTailWithCapacity(TValue value)
+        public bool RemoveByMovingTailWithCapacity(TValue value)
         {
             var index = IndexOf(value);
             if (index == -1)

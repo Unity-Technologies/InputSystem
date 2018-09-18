@@ -82,7 +82,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private void HookActions()
         {
             if (m_ActionCallback == null)
-                m_ActionCallback = m_ActionEvents.OnActionTriggered;
+                m_ActionCallback = m_ActionQueue.RecordAction;
 
             m_ActionsHooked = true;
 
@@ -153,6 +153,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// and then during <see cref="Process"/> we replay any activity that has occurred since the last
         /// call to <see cref="Process"/> and translate it into <see cref="BaseEventData">UI events</see>.
         /// </remarks>
-        [NonSerialized] private InputActionEventQueue m_ActionEvents;
+        [NonSerialized] private InputActionQueue m_ActionQueue;
     }
 }

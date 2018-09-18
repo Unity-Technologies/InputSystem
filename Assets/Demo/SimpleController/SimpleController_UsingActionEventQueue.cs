@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 
-public class SimpleController_UsingActionEventQueue : MonoBehaviour
+public class SimpleController_UsingActionQueue : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;
@@ -18,12 +18,12 @@ public class SimpleController_UsingActionEventQueue : MonoBehaviour
 
     private Vector2 m_Rotation;
 
-    private InputActionEventQueue m_EventQueue;
+    private InputActionQueue m_ActionQueue;
 
     public void Awake()
     {
-        m_EventQueue = new InputActionEventQueue();
-        controls.gameplay.Get().actionTriggered += m_EventQueue.OnActionTriggered;
+        m_ActionQueue = new InputActionQueue();
+        controls.gameplay.Get().actionTriggered += m_ActionQueue.RecordAction;
     }
 
     public void OnEnable()
@@ -44,7 +44,7 @@ public class SimpleController_UsingActionEventQueue : MonoBehaviour
 
     public void Update()
     {
-        foreach (var eventPtr in m_EventQueue)
+        foreach (var eventPtr in m_ActionQueue)
         {
             var phase = eventPtr.phase;
             var action = eventPtr.action;
@@ -85,6 +85,7 @@ public class SimpleController_UsingActionEventQueue : MonoBehaviour
                 m_Move = eventPtr.ReadValue<Vector2>();
             }
         }
+        m_ActionQueue.Flush();
 
         Move(m_Move);
         Look(m_Look);
@@ -99,9 +100,9 @@ public class SimpleController_UsingActionEventQueue : MonoBehaviour
 
     private void Look(Vector2 rotate)
     {
-        var scaledRoateSpeed = rotateSpeed * Time.deltaTime;
-        m_Rotation.y += rotate.x * scaledRoateSpeed;
-        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRoateSpeed, -89, 89);
+        var scaledRotateSpeed = rotateSpeed * Time.deltaTime;
+        m_Rotation.y += rotate.x * scaledRotateSpeed;
+        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRotateSpeed, -89, 89);
         transform.localEulerAngles = m_Rotation;
     }
 
@@ -120,7 +121,7 @@ public class SimpleController_UsingActionEventQueue : MonoBehaviour
         var newProjectile = Instantiate(projectile);
         newProjectile.transform.position = transform.position + transform.forward * 0.6f;
         newProjectile.transform.rotation = transform.rotation;
-        var size = 1;
+        const int size = 1;
         newProjectile.transform.localScale *= size;
         newProjectile.GetComponent<Rigidbody>().mass = Mathf.Pow(size, 3);
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);

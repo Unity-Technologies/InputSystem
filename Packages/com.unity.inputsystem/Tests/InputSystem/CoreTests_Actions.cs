@@ -597,9 +597,9 @@ partial class CoreTests
 
         action.Enable();
 
-        using (var queue = new InputActionEventQueue())
+        using (var queue = new InputActionQueue())
         {
-            action.performed += queue.OnActionTriggered;
+            action.performed += queue.RecordAction;
 
             var state = new GamepadState {leftStick = new Vector2(0.123f, 0.234f)};
             InputSystem.QueueStateEvent(gamepad, state, 0.1234);
@@ -2452,9 +2452,10 @@ partial class CoreTests
         }
     }
 
-    // This is a bit of edgy case. Actions trigger in response to controls they are bound to changing state.
+    // This is a bit of an edgy case. Actions trigger in response to controls they are bound to changing state.
     // However, in the case of composites, multiple controls may act in unison so if more than one control changes
-    // state at the same time, do we trigger the the action more than once or only a single time?
+    // state at the same time, each state monitor on the part controls will trigger independently one after the
+    // other (in indeterminate order). But then, do we trigger the the action more than once or only a single time?
     // We err on the side of no surprises here and trigger the action only once.
     //
     // Note that this behavior is different from triggering the action multiple times from a single binding or

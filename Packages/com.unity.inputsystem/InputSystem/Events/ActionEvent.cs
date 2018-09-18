@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: move this inside InputActionEventQueue?
+////REVIEW: move this inside InputActionQueue?
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -13,8 +13,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// Action events capture fully processed values only.
     ///
     /// This struct is internal as the data it stores requires having access to <see cref="InputActionMapState"/>.
-    /// Public access is meant to go through <see cref="InputActionEventQueue"/> which provides a wrapper around
-    /// action events in the form of <see cref="InputActionEventQueue.ActionEventPtr"/>.
+    /// Public access is meant to go through <see cref="InputActionQueue"/> which provides a wrapper around
+    /// action events in the form of <see cref="InputActionQueue.ActionEventPtr"/>.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 16 + 1)]
     internal unsafe struct ActionEvent : IInputEventTypeInfo
