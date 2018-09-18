@@ -1,5 +1,5 @@
 {
-    "name": "DemoControls",
+    "name": "SimpleControls",
     "maps": [
         {
             "name": "gameplay",
@@ -218,39 +218,21 @@
                     "modifiers": ""
                 }
             ]
-        },
-        {
-            "name": "menu",
-            "id": "612b11fd-99c4-4a58-9c10-1d1b04fb8b30",
-            "actions": [
-                {
-                    "name": "navigate",
-                    "id": "21e4672f-7da8-41ac-8a80-59e98f44610f",
-                    "expectedControlLayout": "",
-                    "bindings": []
-                },
-                {
-                    "name": "click",
-                    "id": "09cec56e-d919-461b-b769-b5f9040ab3d2",
-                    "expectedControlLayout": "",
-                    "bindings": []
-                }
-            ],
-            "bindings": []
         }
     ],
     "controlSchemes": [
         {
-            "name" : "Keyboard&Mouse",
-            "bindingGroup" : "Keyboard&Mouse",
-            "devices" : [
+            "name": "Keyboard&Mouse",
+            "basedOn": "",
+            "bindingGroup": "Keyboard&Mouse",
+            "devices": [
                 {
-                    "devicePath" : "<Keyboard>",
-                    "isOptional" : false
+                    "devicePath": "",
+                    "isOptional": false
                 },
                 {
-                    "devicePath" : "<Mouse>",
-                    "isOptional" : false
+                    "devicePath": "",
+                    "isOptional": false
                 }
             ]
         }
