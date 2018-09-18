@@ -581,31 +581,19 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddActionMapsToManager()
-    {
-        var map1 = new InputActionMap();
-        var map2 = new InputActionMap();
-
-        var manager = new InputActionManager();
-
-        manager.AddActionMap(map1);
-        manager.AddActionMap(map2);
-
-        Assert.That(manager.actionMaps.Count, Is.EqualTo(2));
-        Assert.That(manager.actionMaps, Has.Exactly(1).SameAs(map1));
-        Assert.That(manager.actionMaps, Has.Exactly(1).SameAs(map2));
-    }
-
-    // WIP: This will replace InputActionManager.
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanRecordActionsAsEvents()
+    public void Actions_CanRecordActionsAsEvents()
     {
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick");
         action.AddBinding("<Gamepad>/rightStick");
+        action.AddCompositeBinding("dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         action.Enable();
 
@@ -613,155 +601,42 @@ partial class CoreTests
         {
             action.performed += queue.OnActionTriggered;
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)}, 0.1234);
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = new Vector2(0.345f, 0.456f)}, 0.2345);
+            var state = new GamepadState {leftStick = new Vector2(0.123f, 0.234f)};
+            InputSystem.QueueStateEvent(gamepad, state, 0.1234);
+            state.rightStick = new Vector2(0.345f, 0.456f);
+            InputSystem.QueueStateEvent(gamepad, state, 0.2345);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W), 0.0987);
             InputSystem.Update();
 
-            Assert.That(queue.count, Is.EqualTo(2));
+            Assert.That(queue.count, Is.EqualTo(3));
 
             var events = queue.ToArray();
 
-            Assert.That(events, Has.Length.EqualTo(2));
+            Assert.That(events, Has.Length.EqualTo(3));
             Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
             Assert.That(events[1].control, Is.SameAs(gamepad.rightStick));
+            Assert.That(events[2].control, Is.SameAs(keyboard.wKey));
             Assert.That(events[0].time, Is.EqualTo(0.1234).Within(0.00001));
             Assert.That(events[1].time, Is.EqualTo(0.2345).Within(0.00001));
+            Assert.That(events[2].time, Is.EqualTo(0.0987).Within(0.00001));
             Assert.That(events[0].action, Is.SameAs(action));
             Assert.That(events[1].action, Is.SameAs(action));
+            Assert.That(events[2].action, Is.SameAs(action));
             Assert.That(events[0].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(events[1].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(events[0].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
-            Assert.That(events[1].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
-        }
-    }
-
-    // An alternative to putting callbacks on InputActions is to process them on-demand
-    // as events. This also allows putting additional logic in-between the bindings
-    // and actions getting triggered (useful, for example, if there's two actions triggered
-    // from the same control and only one should result in the action getting triggered).
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanProcessActionsAsEvents()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var map = new InputActionMap();
-        var action1 = map.AddAction("action1", binding: "<Gamepad>/leftStick");
-        var action2 = map.AddAction("action2", binding: "<Gamepad>/leftStick");
-
-        using (var manager = new InputActionManager())
-        {
-            manager.AddActionMap(map);
-
-            map.Enable();
-
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one}, 0.1234);
-            InputSystem.Update();
-
-            var events = manager.triggerEventsForCurrentFrame;
-
-            Assert.That(events.Count, Is.EqualTo(1));
-            Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(events[0].time, Is.EqualTo(0.1234).Within(0.000001));
+            Assert.That(events[2].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(events[0].ReadValue<Vector2>(),
-                Is.EqualTo(new DeadzoneProcessor().Process(Vector2.one, gamepad.leftStick)).Using(vector2Comparer));
-            Assert.That(events[0].actions.Count, Is.EqualTo(2));
-            Assert.That(events[0].actions,
-                Has.Exactly(1).With.Property("action").SameAs(action1)
-                    .And.With.Property("phase").EqualTo(InputActionPhase.Performed)
-                    .And.With.Property("binding").Matches((InputBinding binding) => binding.path == "/<Gamepad>/leftStick"));
-            Assert.That(events[0].actions,
-                Has.Exactly(1).With.Property("action").SameAs(action2)
-                    .And.With.Property("phase").EqualTo(InputActionPhase.Performed)
-                    .And.With.Property("binding").Matches((InputBinding binding) => binding.path == "/<Gamepad>/leftStick"));
-        }
-    }
+                Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.123f, 0.234f), gamepad.leftStick))
+                    .Using(vector2Comparer));
+            Assert.That(events[1].ReadValue<Vector2>(),
+                Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.345f, 0.456f), gamepad.rightStick))
+                    .Using(vector2Comparer));
+            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
 
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanGetCompositeBindingValuesFromActionEvents()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
+            queue.Flush();
 
-        var map = new InputActionMap();
-        var action = map.AddAction("action");
-        action.AddCompositeBinding("Dpad")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d")
-            .With("Up", "<Keyboard>/w")
-            .With("Down", "<Keyboard>/s");
-
-        using (var manager = new InputActionManager())
-        {
-            manager.AddActionMap(map);
-
-            map.Enable();
-
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
-            InputSystem.Update();
-
-            var events = manager.triggerEventsForCurrentFrame;
-
-            Assert.That(events.Count, Is.EqualTo(1));
-            Assert.That(events[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(vector2Comparer));
-        }
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_ActionManagerFlushesRecordedEventsBetweenUpdates()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var map = new InputActionMap();
-        map.AddAction("action1", binding: "/<Gamepad>/leftStick");
-
-        // In the default configuration, both fixed and dynamic updates are enabled.
-        // In that setup, flushes should happen in-between dynamic updates.
-        // The same is true if only dynamic updates are enabled.
-        // If, however, only fixed updates are enabled, flushes should happen in-between fixed updates.
-
-        using (var manager = new InputActionManager())
-        {
-            manager.AddActionMap(map);
-            map.Enable();
-
-            // Fixed update #1.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-            InputSystem.Update(InputUpdateType.Fixed);
-
-            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
-
-            // Fixed update #2. No flush.
-            InputSystem.Update(InputUpdateType.Fixed);
-
-            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
-
-            // Dynamic update #1. No flush.
-            InputSystem.Update(InputUpdateType.Dynamic);
-
-            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
-
-            // Dynamic update #1. Flush.
-            InputSystem.Update(InputUpdateType.Dynamic);
-
-            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.Zero);
-
-            // Now disable dynamic updates.
-            InputSystem.updateMask &= ~InputUpdateType.Dynamic;
-
-            // Fixed update #3.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.up});
-            InputSystem.Update(InputUpdateType.Fixed);
-
-            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
-
-            // Fixed update #4. Flush.
-            InputSystem.Update(InputUpdateType.Fixed);
-
-            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.Zero);
+            Assert.That(queue.count, Is.Zero);
+            Assert.That(queue.ToArray(), Is.Empty);
         }
     }
 

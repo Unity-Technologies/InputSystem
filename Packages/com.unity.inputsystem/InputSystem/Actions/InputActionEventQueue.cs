@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: invalidate data when associated actions re-resolve
 
@@ -17,6 +19,7 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputActionEventQueue : IInputActionCallbackReceiver, IEnumerable<InputActionEventQueue.ActionEventPtr>, IDisposable
     {
+        ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
         /// Directly access the underlying raw memory queue.
         /// </summary>
@@ -24,7 +27,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public InputEventBuffer buffer
         {
-            get { throw new NotImplementedException(); }
+            get { return m_EventBuffer; }
         }
 
         public int count
@@ -32,9 +35,51 @@ namespace UnityEngine.Experimental.Input
             get { return m_EventBuffer.eventCount; }
         }
 
+        /// <summary>
+        /// Record the triggering of an action as an <see cref="ActionEventPtr">action event</see>.
+        /// </summary>
+        /// <param name="context"></param>
+        public unsafe void OnActionTriggered(InputAction.CallbackContext context)
+        {
+            // Find/add state.
+            var stateIndex = m_ActionMapStates.IndexOf(context.m_State);
+            if (stateIndex == -1)
+                stateIndex = m_ActionMapStates.AppendWithCapacity(context.m_State);
+
+            // Allocate event.
+            var valueSizeInBytes = context.valueSizeInBytes;
+            var eventPtr =
+                (ActionEvent*)m_EventBuffer.AllocateEvent(ActionEvent.GetEventSizeWithValueSize(valueSizeInBytes));
+
+            // Initialize event.
+            eventPtr->baseEvent.type = ActionEvent.Type;
+            eventPtr->baseEvent.time = context.time;
+            eventPtr->stateIndex = stateIndex;
+            eventPtr->controlIndex = context.m_ControlIndex;
+            eventPtr->bindingIndex = context.m_BindingIndex;
+            eventPtr->interactionIndex = context.m_InteractionIndex;
+            eventPtr->startTime = context.startTime;
+            eventPtr->phase = context.phase;
+
+            // Store value.
+            var valueBuffer = eventPtr->valueData;
+            context.ReadValue(valueBuffer, valueSizeInBytes);
+        }
+
+        public void Flush()
+        {
+            m_EventBuffer.Reset();
+            m_ActionMapStates.ClearWithCapacity();
+        }
+
+        public void Dispose()
+        {
+            m_EventBuffer.Dispose();
+        }
+
         public IEnumerator<ActionEventPtr> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return new Enumerator(this);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -42,30 +87,8 @@ namespace UnityEngine.Experimental.Input
             return GetEnumerator();
         }
 
-        /// <summary>
-        /// Record the triggering of an action as an <see cref="ActionEvent">action event</see>.
-        /// </summary>
-        /// <param name="context"></param>
-        public void OnActionTriggered(InputAction.CallbackContext context)
-        {
-            //determine size of value
-            //allocate event
-            //fill out fields
-            //read value into event
-
-            throw new NotImplementedException();
-        }
-
-        public void Flush()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-        }
-
         private InputEventBuffer m_EventBuffer;
+        private InlinedArray<InputActionMapState> m_ActionMapStates;
 
         /// <summary>
         /// A wrapper around <see cref="ActionEvent"/> that automatically translates all the
@@ -75,56 +98,148 @@ namespace UnityEngine.Experimental.Input
         /// For example, instead of returning <see cref="ActionEvent.controlIndex">control indices</see>,
         /// it automatically resolves and returns the respective <see cref="InputControl">controls</see>.
         /// </remarks>
-        public struct ActionEventPtr
+        public unsafe struct ActionEventPtr
         {
+            private InputActionMapState m_State;
+            private ActionEvent* m_Ptr;
+
+            internal ActionEventPtr(InputActionMapState state, ActionEvent* eventPtr)
+            {
+                m_State = state;
+                m_Ptr = eventPtr;
+            }
+
             public InputAction action
             {
-                get { throw new NotImplementedException(); }
+                get { return m_State.GetActionOrNull(m_Ptr->bindingIndex); }
             }
 
             public InputActionPhase phase
             {
-                get { throw new NotImplementedException(); }
+                get { return m_Ptr->phase; }
             }
 
             public InputControl control
             {
-                get { throw new NotImplementedException(); }
+                get { return m_State.controls[m_Ptr->controlIndex]; }
+            }
+
+            public IInputInteraction interaction
+            {
+                get
+                {
+                    var index = m_Ptr->interactionIndex;
+                    if (index == InputActionMapState.kInvalidIndex)
+                        return null;
+
+                    return m_State.interactions[index];
+                }
             }
 
             public double time
             {
-                get { throw new NotImplementedException(); }
+                get { return m_Ptr->baseEvent.time; }
+            }
+
+            public double startTime
+            {
+                get { return m_Ptr->startTime; }
+            }
+
+            public double duration
+            {
+                get { return time - startTime; }
+            }
+
+            public int valueSizeInBytes
+            {
+                get { return m_Ptr->valueSizeInBytes; }
+            }
+
+            public void ReadValue(void* buffer, int bufferSize)
+            {
+                throw new NotImplementedException();
             }
 
             public TValue ReadValue<TValue>()
+                where TValue : struct
             {
-                throw new NotImplementedException();
+                var valueSizeInBytes = m_Ptr->valueSizeInBytes;
+
+                ////REVIEW: do we want more checking than this?
+                if (UnsafeUtility.SizeOf<TValue>() != valueSizeInBytes)
+                    throw new InvalidOperationException(string.Format(
+                        "Cannot read a value of type '{0}' with size {1} from event on action '{2}' with value size {3}",
+                        typeof(TValue).Name, UnsafeUtility.SizeOf<TValue>(), action, valueSizeInBytes));
+
+                var result = new TValue();
+                var resultPtr = UnsafeUtility.AddressOf(ref result);
+                UnsafeUtility.MemCpy(resultPtr, m_Ptr->valueData, valueSizeInBytes);
+
+                return result;
             }
         }
 
-        internal struct Enumerator : IEnumerator<ActionEventPtr>
+        internal unsafe struct Enumerator : IEnumerator<ActionEventPtr>
         {
+            private InputActionEventQueue m_Queue;
+            private ActionEvent* m_Buffer;
+            private ActionEvent* m_CurrentEvent;
+            private int m_CurrentIndex;
+            private int m_EventCount;
+
+            public Enumerator(InputActionEventQueue queue)
+            {
+                m_Queue = queue;
+                m_Buffer = (ActionEvent*)queue.m_EventBuffer.bufferPtr.ToPointer();
+                m_EventCount = queue.m_EventBuffer.eventCount;
+                m_CurrentEvent = null;
+                m_CurrentIndex = 0;
+            }
+
             public bool MoveNext()
             {
-                throw new NotImplementedException();
+                if (m_CurrentIndex == m_EventCount)
+                    return false;
+
+                if (m_CurrentEvent == null)
+                {
+                    m_CurrentEvent = m_Buffer;
+                    return m_CurrentEvent != null;
+                }
+
+                Debug.Assert(m_CurrentEvent != null);
+
+                ++m_CurrentIndex;
+                if (m_CurrentIndex == m_EventCount)
+                    return false;
+
+                m_CurrentEvent = (ActionEvent*)InputEvent.GetNextInMemory((InputEvent*)m_CurrentEvent);
+                return true;
             }
 
             public void Reset()
             {
-                throw new NotImplementedException();
-            }
-
-            public ActionEventPtr Current { get; private set; }
-
-            object IEnumerator.Current
-            {
-                get { return Current; }
+                m_CurrentEvent = null;
+                m_CurrentIndex = 0;
             }
 
             public void Dispose()
             {
-                throw new NotImplementedException();
+            }
+
+            public ActionEventPtr Current
+            {
+                get
+                {
+                    var state = m_Queue.m_ActionMapStates[m_CurrentEvent->stateIndex];
+                    return new ActionEventPtr(state, m_CurrentEvent);
+                }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return Current; }
             }
         }
     }

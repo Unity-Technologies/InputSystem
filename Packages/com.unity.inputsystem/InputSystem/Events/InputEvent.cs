@@ -18,6 +18,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public const int kBaseEventSize = 20;
         public const int kInvalidId = 0;
+        public const int kAlignment = 4;
 
         [FieldOffset(0)] private FourCC m_Type;
         [FieldOffset(4)] private ushort m_SizeInBytes;
@@ -31,6 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public FourCC type
         {
             get { return m_Type; }
+            set { m_Type = value; }
         }
 
         /// <summary>
@@ -156,7 +158,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
         {
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, 4);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, kAlignment);
             return (InputEvent*)((byte*)current + alignedSizeInBytes);
         }
     }

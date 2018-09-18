@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: batch append method
 
@@ -136,13 +137,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
                         InputEvent.kBaseEventSize, sizeInBytes),
                     "sizeInBytes");
 
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(sizeInBytes, InputEvent.kAlignment);
+
             // See if we need to enlarge our buffer.
             var currentCapacity = capacityInBytes;
-            if (currentCapacity < sizeInBytes)
+            if (currentCapacity < alignedSizeInBytes)
             {
                 // Yes, so reallocate.
                 var newCapacity = Math.Max(currentCapacity + capacityIncrementInBytes,
-                    currentCapacity + sizeInBytes);
+                    currentCapacity + alignedSizeInBytes);
                 var newSize = this.sizeInBytes + newCapacity;
                 if (newSize > int.MaxValue)
                     throw new NotImplementedException("NativeArray long support");
@@ -162,7 +165,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             var eventPtr = (InputEvent*)((byte*)m_Buffer.GetUnsafePtr() + m_BufferEnd);
             eventPtr->sizeInBytes = (uint)sizeInBytes;
-            m_BufferEnd += sizeInBytes;
+            m_BufferEnd += alignedSizeInBytes;
             ++m_EventCount;
 
             return eventPtr;
@@ -236,7 +239,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 if (m_CurrentIndex == m_EventCount)
                     return false;
 
-                m_CurrentEvent = (InputEvent*)((byte*)m_CurrentEvent + m_CurrentEvent->sizeInBytes);
+                m_CurrentEvent = InputEvent.GetNextInMemory(m_CurrentEvent);
                 return true;
             }
 
