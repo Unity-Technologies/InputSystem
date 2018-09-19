@@ -99,15 +99,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            var item = args.item as ActionTreeViewItem;
-            if (item == null)
-                return;
+            if (args.item is ActionTreeViewItem)
+            {
+                var bindingItem = (args.item as ActionTreeViewItem);
 
-            item.OnGUI(args.rowRect, args.selected, args.focused);
+                // We try to predict the indentation
+                var indent = (args.item.depth + 2) * 6 + 10;
+                bindingItem.OnGUI(args.rowRect, args.selected, args.focused, indent);
 
-            var btnRect = args.rowRect;
-            btnRect.x = btnRect.width - 20;
-            btnRect.width = 20;
+                var btnRect = args.rowRect;
+                btnRect.x = btnRect.width - 20;
+                btnRect.width = 20;
+            }
         }
 
         protected override void DoubleClickedItem(int id)

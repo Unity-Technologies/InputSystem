@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         protected static class Styles
         {
-            public static GUIStyle borderStyle;
+            public static GUIStyle backgroundStyle;
 
             public static GUIStyle actionMapItemStyle;
             public static GUIStyle actionItemStyle;
@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             static Styles()
             {
-                borderStyle = new GUIStyle("Label")
+                backgroundStyle = new GUIStyle("Label")
                 {
                     normal =
                     {
@@ -74,6 +74,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        public bool renaming;
         protected SerializedProperty m_ElementProperty;
         protected int m_Index;
 
@@ -109,23 +110,19 @@ namespace UnityEngine.Experimental.Input.Editor
             depth = 0;
         }
 
-        public void OnGUI(Rect rowRect, bool selected, bool focused)
+        public void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
         {
             if (Event.current.type != EventType.Repaint)
                 return;
 
-            // Border.
-            Styles.borderStyle.Draw(rowRect, "", false, false, selected, focused);
+            Styles.backgroundStyle.Draw(rowRect, "", false, false, selected, focused);
 
-            // Background.
             var rect = rowRect;
             rect.y += 1;
             rect.height -= 1;
 
             style.Draw(rect, "", false, false, selected, focused);
 
-            // Label.
-            var indent = (depth + 2) * 6 + 10;
             rect.x += indent;
             rect.width -= indent + 2;
             rect.y += 1;
