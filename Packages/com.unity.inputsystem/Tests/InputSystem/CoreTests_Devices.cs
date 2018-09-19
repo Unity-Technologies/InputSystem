@@ -3010,7 +3010,7 @@ partial class CoreTests
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
-        double lastUpdateTime = device1.lastUpdateTime;
+        var lastUpdateTime = device1.lastUpdateTime;
 
         Assert.That(NoisyInputDevice.current == device2);
 
@@ -3109,12 +3109,12 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<short>(device1["first"], short.MaxValue);
+        InputSystem.QueueDeltaStateEvent(device1["first"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
 
-        InputSystem.QueueDeltaStateEvent<short>(device2["second"], short.MaxValue);
+        InputSystem.QueueDeltaStateEvent(device2["second"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -3177,7 +3177,7 @@ partial class CoreTests
         // Tag the entire device as noisy
         device1.userInteractionFilter = new InputNoiseFilter
         {
-            elements = new InputNoiseFilter.FilterElement[]
+            elements = new[]
             {
                 new InputNoiseFilter.FilterElement
                 {

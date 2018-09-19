@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
-        [InputControl(name ="IsIMESelected", layout = "Button", bit = (int)Key.IsIMESelected)]
+        [InputControl(name ="imeSelected", layout = "Button", bit = (int)Key.imeSelected)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
@@ -307,7 +307,7 @@ namespace UnityEngine.Experimental.Input
         OEM5,
 
         // Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
-        IsIMESelected
+        imeSelected
     }
 
     /// <summary>
@@ -340,7 +340,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// An event that is fired to get IME composition strings.  Fired once for every change, sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
         /// </summary>
-        public event Action<string> onIMECompositionChange
+        public event Action<IMECompositionString> onIMECompositionChange
         {
             add { m_ImeCompositionStringListeners.Append(value); }
             remove { m_ImeCompositionStringListeners.Remove(value); }
@@ -353,14 +353,14 @@ namespace UnityEngine.Experimental.Input
         {
             set
             {
-                if (m_imeEnabled != value)
+                if (m_ImeEnabled != value)
                 {
                     EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
                     if (ExecuteCommand(ref command) >= 0)
-                        m_imeEnabled = value;
+                        m_ImeEnabled = value;
                 }
             }
-            get { return m_imeEnabled; }
+            get { return m_ImeEnabled; }
         }
 
         /// <summary>
@@ -566,7 +566,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// True when IME composition is enabled.  Requires imeEnabled to be set to true, and the user to enable it at hte OS level.
         /// </summary>
-        public ButtonControl isIMESelected { get; private set; }
+        public ButtonControl imeSelected { get; private set; }
 
         public static Keyboard current { get; internal set; }
 
@@ -858,7 +858,7 @@ namespace UnityEngine.Experimental.Input
             oem4Key = builder.GetControl<KeyControl>("OEM4");
             oem5Key = builder.GetControl<KeyControl>("OEM5");
 
-            isIMESelected = builder.GetControl<ButtonControl>("isIMESelected");
+            imeSelected = builder.GetControl<ButtonControl>("imeSelected");
 
             ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
             ////        and it just seems somewhat dirty to jam the data into the control here
@@ -888,17 +888,16 @@ namespace UnityEngine.Experimental.Input
         {
             if (m_ImeCompositionStringListeners.length > 0)
             {
-                string imeString = imeEvent.AsString();
                 for (var i = 0; i < m_ImeCompositionStringListeners.length; ++i)
-                    m_ImeCompositionStringListeners[i](imeString);
+                    m_ImeCompositionStringListeners[i](imeEvent.compositionString);
             }
         }
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<string>> m_ImeCompositionStringListeners;
-        bool m_imeEnabled;
+        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionStringListeners;
+        bool m_ImeEnabled;
         Vector2 m_ImePosition;
     }
 }
