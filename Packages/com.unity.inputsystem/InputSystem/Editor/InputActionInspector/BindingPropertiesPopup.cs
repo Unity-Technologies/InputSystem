@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Editor
         InputBindingPropertiesView m_BindingPropertyView;
         Action OnChange;
 
-        public static void Show(Rect btnRect, InputTreeViewLine treeViewLine, Action reload)
+        public static void Show(Rect btnRect, ActionTreeViewItem treeViewLine, Action reload)
         {
             var w = CreateInstance<BindingPropertiesPopup>();
             w.OnChange = reload;
@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Editor
             w.ShowAsDropDown(btnRect, new Vector2(250, 350));
         }
 
-        void SetProperty(InputTreeViewLine treeViewLine)
+        void SetProperty(ActionTreeViewItem treeViewLine)
         {
             m_BindingPropertyView = treeViewLine.GetPropertiesView(OnChange, new TreeViewState());
         }

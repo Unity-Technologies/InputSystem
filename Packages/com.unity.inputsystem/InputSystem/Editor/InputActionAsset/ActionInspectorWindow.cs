@@ -91,10 +91,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // When the asset is modified outside of the editor
             // and the importer settings are visible in the inspector
-            // the asset references in the importer inspector need to be force rebuild 
+            // the asset references in the importer inspector need to be force rebuild
             // (otherwise we gets lots of exceptions)
             ActiveEditorTracker.sharedTracker.ForceRebuild();
-            
+
             s_RefreshPending = false;
         }
 
@@ -141,16 +141,16 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
         }
-        
+
         void OnDestroy()
         {
             if (m_IsDirty)
             {
                 var result = EditorUtility.DisplayDialogComplex("Unsaved changes", "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
-                switch (result) 
+                switch (result)
                 {
                     case 0:
-                        // Save 
+                        // Save
                         SaveChangesToAsset();
                         break;
                     case 1:
@@ -237,7 +237,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
-            // We need to make sure we dirty the state only in case of changes to the asset. 
+            // We need to make sure we dirty the state only in case of changes to the asset.
             m_IsDirty = m_AssetObjectForEditing.ToJson() != m_ImportedAssetObject.ToJson();
 
             m_TreeView.Reload();

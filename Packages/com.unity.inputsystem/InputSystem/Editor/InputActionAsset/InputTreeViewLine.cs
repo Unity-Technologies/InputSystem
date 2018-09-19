@@ -7,7 +7,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal abstract class InputTreeViewLine : TreeViewItem
+    internal abstract class ActionTreeViewItem : TreeViewItem
     {
         protected static class Styles
         {
@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return false; }
         }
 
-        public InputTreeViewLine(SerializedProperty elementProperty, int index)
+        public ActionTreeViewItem(SerializedProperty elementProperty, int index)
         {
             m_ElementProperty = elementProperty;
             m_Index = index;
@@ -98,21 +98,21 @@ namespace UnityEngine.Experimental.Input.Editor
         public void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
         {
             var rect = rowRect;
-            if (Event.current.type == EventType.Repaint)
-            {
-                rowRect.height += 1;
-                Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
+            if (Event.current.type != EventType.Repaint)
+                return;
 
-                rect.x += indent;
-                rect.width -= indent + 2;
-                rect.y += 1;
-                rect.height -= 2;
+            rowRect.height += 1;
+            Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
 
-                if (!renaming)
-                    Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
+            rect.x += indent;
+            rect.width -= indent + 2;
+            rect.y += 1;
+            rect.height -= 2;
 
-                DrawCustomRect(rowRect);
-            }
+            if (!renaming)
+                Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
+
+            DrawCustomRect(rowRect);
         }
 
         public virtual void DrawCustomRect(Rect rowRect)
@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public abstract int GetIdForName(string argsNewName);
     }
 
-    internal class ActionMapTreeItem : InputTreeViewLine
+    internal class ActionMapTreeItem : ActionTreeViewItem
     {
         public ActionMapTreeItem(SerializedProperty actionMapProperty, int index)
             : base(actionMapProperty, index)
@@ -199,7 +199,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    internal class ActionTreeItem : InputTreeViewLine
+    internal class ActionTreeItem : ActionTreeViewItem
     {
         private SerializedProperty m_ActionMapProperty;
 
@@ -263,7 +263,7 @@ namespace UnityEngine.Experimental.Input.Editor
             builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
             return builder.ToString();
         }
-        
+
         public override int GetIdForName(string name)
         {
             var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
@@ -321,9 +321,8 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    internal class BindingTreeItem : InputTreeViewLine
+    internal class BindingTreeItem : ActionTreeViewItem
     {
-
         public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(bindingProperty, index)
         {
@@ -385,7 +384,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override string SerializeToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.AppendFormat("{0}={1}\n", "name", elementProperty.FindPropertyRelative("name").stringValue);
             builder.AppendFormat("{0}={1}\n", "path", elementProperty.FindPropertyRelative("path").stringValue);
             builder.AppendFormat("{0}={1}\n", "groups", elementProperty.FindPropertyRelative("groups").stringValue);
@@ -394,7 +393,7 @@ namespace UnityEngine.Experimental.Input.Editor
             builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("action").stringValue);
             return builder.ToString();
         }
-        
+
         public override int GetIdForName(string name)
         {
             return GetId(m_ActionMapName, index, action, path, name);
