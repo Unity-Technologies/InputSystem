@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
-        [InputControl(name ="imeSelected", layout = "Button", bit = (int)Key.imeSelected)]
+        [InputControl(name = "imeSelected", layout = "Button", bit = (int)Key.imeSelected)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)

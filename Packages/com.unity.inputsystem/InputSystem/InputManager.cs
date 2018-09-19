@@ -2582,7 +2582,7 @@ namespace UnityEngine.Experimental.Input
             {
                 var device = m_Devices[i];
                 string[] usages = null;
-                if(device.usages.Count > 0)
+                if (device.usages.Count > 0)
                     usages = device.usages.Select(x => x.ToString()).ToArray();
 
                 NoiseFilterElementState[] elements = null;

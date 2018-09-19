@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input
                 if (index >= Count || index < 0)
                     throw new IndexOutOfRangeException();
 
-                fixed (char* ptr = buffer)
+                fixed(char* ptr = buffer)
                 {
                     return *(ptr + index);
                 }
@@ -62,4 +62,3 @@ namespace UnityEngine.Experimental.Input
         fixed char buffer[LowLevel.IMECompositionStringEvent.kIMECharBufferSize];
     }
 }
-

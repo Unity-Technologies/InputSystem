@@ -3235,4 +3235,3 @@ partial class CoreTests
         Assert.AreEqual(NoisyInputDevice.current, device1);
     }
 }
-
