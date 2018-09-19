@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <summary>
     /// Device Command that enables IME Composition within the application.  Primarily handled by Keyboard devices.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(uint))]
+    [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(byte))]
     public unsafe struct EnableIMECompositionCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('I', 'M', 'E', 'M'); } }
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             return new EnableIMECompositionCommand
             {
-                baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + sizeof(uint)),
+                baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + sizeof(byte)),
                 imeEnabled = enabled ? byte.MaxValue : (byte)0
             };
         }
