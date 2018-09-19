@@ -19,27 +19,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public int size;
-
-        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
-        public fixed char buffer[kIMECharBufferSize];
-
-        /// <summary>
-        /// Returns the composition as a string.  Call this only if needed, as it generates garbage.
-        /// </summary>
-        /// <returns> The composition string at the current point in time.</returns>
-        public unsafe string AsString()
-        {
-            if (size == 0)
-                return "";
-
-            string result;
-            fixed(char* b = buffer)
-            {
-                result = new string(b, 0, size);
-            }
-            return result;
-        }
+        public IMECompositionString compositionString;
 
         public FourCC GetTypeStatic()
         {
@@ -47,3 +27,39 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
 }
+
+namespace UnityEngine.Experimental.Input
+{
+    [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + (sizeof(char) * LowLevel.IMECompositionStringEvent.kIMECharBufferSize))]
+    public unsafe struct IMECompositionString
+    {
+        public int Count
+        {
+            get
+            {
+                return size;
+            }
+        }
+
+        public unsafe char this[int index]
+        {
+            get
+            {
+                if (index >= Count || index < 0)
+                    throw new IndexOutOfRangeException();
+
+                fixed (char* ptr = buffer)
+                {
+                    return *(ptr + index);
+                }
+            }
+        }
+
+        [FieldOffset(0)]
+        int size;
+
+        [FieldOffset(sizeof(int))]
+        fixed char buffer[LowLevel.IMECompositionStringEvent.kIMECharBufferSize];
+    }
+}
+
