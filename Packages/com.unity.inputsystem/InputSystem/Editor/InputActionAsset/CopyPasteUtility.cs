@@ -69,11 +69,11 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
         }
 
-        private static void CopyChildrenItems(ActionTreeViewItem parent, StringBuilder result)
+        private static void CopyChildrenItems(InputTreeViewLine parent, StringBuilder result)
         {
             foreach (var treeViewItem in parent.children)
             {
-                var item = (ActionTreeViewItem)treeViewItem;
+                var item = (InputTreeViewLine)treeViewItem;
                 result.Append(item.GetType().Name + "\n");
                 result.Append(item.SerializeToString());
                 result.Append(k_InputAssetMarker);
@@ -292,7 +292,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Apply();
         }
 
-        static IEnumerable<T> FindRowsToDeleteOfType<T>(ActionTreeViewItem[] rows)
+        static IEnumerable<T> FindRowsToDeleteOfType<T>(InputTreeViewLine[] rows)
         {
             return rows.Where(r => r.GetType() == typeof(T)).OrderByDescending(r => r.index).Cast<T>();
         }

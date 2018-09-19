@@ -194,17 +194,17 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public ActionTreeViewItem GetSelectedRow()
+        public InputTreeViewLine GetSelectedRow()
         {
             if (!HasSelection())
                 return null;
 
-            return (ActionTreeViewItem)FindItem(GetSelection().First(), rootItem);
+            return (InputTreeViewLine)FindItem(GetSelection().First(), rootItem);
         }
 
-        public IEnumerable<ActionTreeViewItem> GetSelectedRows()
+        public IEnumerable<InputTreeViewLine> GetSelectedRows()
         {
-            return FindRows(GetSelection()).Cast<ActionTreeViewItem>();
+            return FindRows(GetSelection()).Cast<InputTreeViewLine>();
         }
 
         public ActionTreeItem GetSelectedAction()
@@ -247,7 +247,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item == null)
                 return null;
 
-            return (item as ActionTreeViewItem).elementProperty;
+            return (item as InputTreeViewLine).elementProperty;
         }
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
@@ -265,7 +265,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override bool CanRename(TreeViewItem item)
         {
-            return item is CompositeGroupTreeItem || item is ActionTreeViewItem && !(item is BindingTreeItem);
+            return item is CompositeGroupTreeItem || item is InputTreeViewLine && !(item is BindingTreeItem);
         }
 
         protected override void DoubleClickedItem(int id)
@@ -276,36 +276,39 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item is BindingTreeItem && !(item is CompositeGroupTreeItem))
                 return;
             BeginRename(item);
-            ((ActionTreeViewItem)item).renaming = true;
+            (item as InputTreeViewLine).renaming = true;
         }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {
             var item = FindItem(args.itemID, rootItem);
-            var actionItem = item as ActionTreeViewItem;
-            if (actionItem == null)
+            if (item == null)
                 return;
 
-            actionItem.renaming = false;
+            (item as InputTreeViewLine).renaming = false;
+
             if (!args.acceptedRename || args.originalName == args.newName)
+                return;
+
+            var actionItem = item as InputTreeViewLine;
+            if (actionItem == null)
                 return;
 
             if (actionItem is ActionTreeItem)
             {
-                ((ActionTreeItem)actionItem).Rename(args.newName);
+                (actionItem as ActionTreeItem).Rename(args.newName);
             }
             else if (actionItem is ActionMapTreeItem)
             {
-                ((ActionMapTreeItem)actionItem).Rename(args.newName);
+                (actionItem as ActionMapTreeItem).Rename(args.newName);
             }
             else if (actionItem is CompositeGroupTreeItem)
             {
-                ((CompositeGroupTreeItem)actionItem).Rename(args.newName);
+                (actionItem as CompositeGroupTreeItem).Rename(args.newName);
             }
             else
             {
-                Debug.Assert(false, "Cannot rename: " + actionItem);
-                return;
+                throw new NotImplementedException("Can't rename this row");
             }
 
             var newId = actionItem.GetIdForName(args.newName);
@@ -319,18 +322,19 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
+            // We try to predict the indentation
             var indent = (args.item.depth + 2) * 6 + 10;
-
-            var item = args.item as ActionTreeViewItem;
-            if (item != null)
-                item.OnGUI(args.rowRect, args.selected, args.focused, indent);
+            if (args.item is InputTreeViewLine)
+            {
+                (args.item as InputTreeViewLine).OnGUI(args.rowRect, args.selected, args.focused, indent);
+            }
         }
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
             if (args.draggedItemIDs.Count > 1)
                 return false;
-            var item = FindItem(args.draggedItemIDs[0], rootItem) as ActionTreeViewItem;
+            var item = FindItem(args.draggedItemIDs[0], rootItem) as InputTreeViewLine;
             return item.isDraggable;
         }
 
@@ -349,7 +353,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var id = Int32.Parse(DragAndDrop.paths.First());
             var item = FindItem(id, rootItem);
-            var row = (ActionTreeViewItem)item;
+            var row = (InputTreeViewLine)item;
 
             if (!row.isDraggable || args.parentItem != row.parent)
             {
