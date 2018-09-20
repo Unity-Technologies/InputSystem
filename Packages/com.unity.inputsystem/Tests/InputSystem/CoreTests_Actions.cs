@@ -633,7 +633,7 @@ partial class CoreTests
                     .Using(vector2Comparer));
             Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
 
-            queue.Flush();
+            queue.Clear();
 
             Assert.That(queue.count, Is.Zero);
             Assert.That(queue.ToArray(), Is.Empty);

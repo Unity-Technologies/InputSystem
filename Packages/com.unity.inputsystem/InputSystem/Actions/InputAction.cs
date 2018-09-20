@@ -292,21 +292,31 @@ namespace UnityEngine.Experimental.Input
             get { return phase != InputActionPhase.Disabled; }
         }
 
+        /// <summary>
+        /// Event that is triggered when the action has been started.
+        /// </summary>
+        /// <see cref="InputActionPhase.Started"/>
         public event Action<CallbackContext> started
         {
             add { m_OnStarted.Append(value); }
             remove { m_OnStarted.Remove(value); }
         }
 
+        /// <summary>
+        /// Event that is triggered when the action has been <see cref="started"/>
+        /// but then cancelled before being fully <see cref="performed"/>.
+        /// </summary>
+        /// <see cref="InputActionPhase.Cancelled"/>
         public event Action<CallbackContext> cancelled
         {
             add { m_OnCancelled.Append(value); }
             remove { m_OnCancelled.Remove(value); }
         }
 
-        // Listeners that are called when the action has been fully performed.
-        // Passes along the control that triggered the state change and the action
-        // object itself as well.
+        /// <summary>
+        /// Event that is triggered when the action has been fully performed.
+        /// </summary>
+        /// <see cref="InputActionPhase.Performed"/>
         public event Action<CallbackContext> performed
         {
             add { m_OnPerformed.Append(value); }
@@ -519,6 +529,13 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Cannot modify bindings on action '{0}' while its action map is enabled", this));
         }
 
+        /// <summary>
+        /// Information provided to action callbacks about what triggered an action.
+        /// </summary>
+        /// <seealso cref="performed"/>
+        /// <seealso cref="started"/>
+        /// <seealso cref="cancelled"/>
+        /// <seealso cref="InputActionMap.actionTriggered"/>
         public struct CallbackContext
         {
             internal InputActionMapState m_State;
@@ -547,6 +564,9 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            /// <summary>
+            /// The action that got triggered.
+            /// </summary>
             public InputAction action
             {
                 get
@@ -557,6 +577,13 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            /// <summary>
+            /// The control that triggered the action.
+            /// </summary>
+            /// <remarks>
+            /// In case of a composite binding, this is the control of the composite that activated the
+            /// composite as a whole. For example, in case of a WASD-style binding, it could be the W key.
+            /// </remarks>
             public InputControl control
             {
                 get
@@ -583,11 +610,25 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            /// <summary>
+            /// The time at which the action got triggered.
+            /// </summary>
+            /// <remarks>
+            /// This is usually determined by the timestamp of the input event that activated a control
+            /// bound to the action.
+            /// </remarks>
             public double time
             {
                 get { return m_Time; }
             }
 
+            /// <summary>
+            /// Time at which the action was started.
+            /// </summary>
+            /// <remarks>
+            /// This is only relevant for actions that go through distinct a <see cref="InputActionPhase.Started"/>
+            /// cycle as driven by <see cref="IInputInteraction">interactions</see>.
+            /// </remarks>
             public double startTime
             {
                 get
@@ -600,6 +641,9 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            /// <summary>
+            /// Time difference between <see cref="time"/> and <see cref="startTime"/>.
+            /// </summary>
             public double duration
             {
                 get { return time - startTime; }
