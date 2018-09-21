@@ -3146,7 +3146,7 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<short>(device1["first"], short.MaxValue);
+        InputSystem.QueueDeltaStateEvent(device1["first"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -3224,12 +3224,12 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<float>(device1["first"], 1.0f);
+        InputSystem.QueueDeltaStateEvent(device1["first"], 1.0f);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device2);
 
-        InputSystem.QueueDeltaStateEvent<float>(device1["second"], 1.0f);
+        InputSystem.QueueDeltaStateEvent(device1["second"], 1.0f);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
