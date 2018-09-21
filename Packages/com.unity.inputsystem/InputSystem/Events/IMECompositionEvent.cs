@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// This event contains the entire current string to date, and once a new composition is submitted will send a blank string event.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * kIMECharBufferSize))]
-    public unsafe struct IMECompositionStringEvent : IInputEventTypeInfo
+    public unsafe struct IMECompositionEvent : IInputEventTypeInfo
     {
         // These needs to match the native ImeCompositionStringInputEventData settings
         public const int kIMECharBufferSize = 64;
@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public IMECompositionString compositionString;
+        public IMEComposition composition;
 
         public FourCC GetTypeStatic()
         {
@@ -30,8 +30,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + (sizeof(char) * LowLevel.IMECompositionStringEvent.kIMECharBufferSize))]
-    public unsafe struct IMECompositionString
+    [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + (sizeof(char) * LowLevel.IMECompositionEvent.kIMECharBufferSize))]
+    public unsafe struct IMEComposition
     {
         public int Count
         {
@@ -59,6 +59,6 @@ namespace UnityEngine.Experimental.Input
         int size;
 
         [FieldOffset(sizeof(int))]
-        fixed char buffer[LowLevel.IMECompositionStringEvent.kIMECharBufferSize];
+        fixed char buffer[LowLevel.IMECompositionEvent.kIMECharBufferSize];
     }
 }

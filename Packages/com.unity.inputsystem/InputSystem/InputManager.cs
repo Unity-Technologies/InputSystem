@@ -2204,10 +2204,9 @@ namespace UnityEngine.Experimental.Input
                         device.OnTextInput((char)textEventPtr->character);
                         break;
 
-                    case IMECompositionStringEvent.Type:
-                        var imeEventPtr = (IMECompositionStringEvent*)currentEventPtr;
-                        ////TODO: handle UTF-32 to UTF-16 conversion properly
-                        device.OnIMEStringEvent(*imeEventPtr);
+                    case IMECompositionEvent.Type:
+                        var imeEventPtr = (IMECompositionEvent*)currentEventPtr;
+                        device.OnIMEStringEvent(imeEventPtr->composition);
                         break;
 
                     case DeviceRemoveEvent.Type:

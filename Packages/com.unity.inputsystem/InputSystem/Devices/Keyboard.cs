@@ -340,10 +340,10 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// An event that is fired to get IME composition strings.  Fired once for every change, sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
         /// </summary>
-        public event Action<IMECompositionString> onIMECompositionChange
+        public event Action<IMEComposition> onIMECompositionChange
         {
-            add { m_ImeCompositionStringListeners.Append(value); }
-            remove { m_ImeCompositionStringListeners.Remove(value); }
+            add { m_ImeCompositionListeners.Append(value); }
+            remove { m_ImeCompositionListeners.Remove(value); }
         }
 
         /// <summary>
@@ -884,19 +884,19 @@ namespace UnityEngine.Experimental.Input
                 m_TextInputListeners[i](character);
         }
 
-        public override void OnIMEStringEvent(IMECompositionStringEvent imeEvent)
+        public override void OnIMEStringEvent(IMEComposition composition)
         {
-            if (m_ImeCompositionStringListeners.length > 0)
+            if (m_ImeCompositionListeners.length > 0)
             {
-                for (var i = 0; i < m_ImeCompositionStringListeners.length; ++i)
-                    m_ImeCompositionStringListeners[i](imeEvent.compositionString);
+                for (var i = 0; i < m_ImeCompositionListeners.length; ++i)
+                    m_ImeCompositionListeners[i](composition);
             }
         }
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionStringListeners;
+        internal InlinedArray<Action<IMEComposition>> m_ImeCompositionListeners;
         bool m_ImeEnabled;
         Vector2 m_ImePosition;
     }

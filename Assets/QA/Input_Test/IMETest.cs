@@ -47,11 +47,11 @@ public class IMETest : MonoBehaviour
         outputString += character;
     }
 
-    void OnIMECompositionChange(IMECompositionString imeEvent)
+    void OnIMECompositionChange(IMEComposition composition)
     {
         compositionString = "";
-        for (int i = 0; i < imeEvent.Count; i++)
-            compositionString += imeEvent[i];
+        for (int i = 0; i < composition.Count; i++)
+            compositionString += composition[i];
     }
 
     // Update is called once per frame

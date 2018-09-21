@@ -264,7 +264,7 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
-        public virtual void OnIMEStringEvent(IMECompositionStringEvent imeEvent)
+        public virtual void OnIMEStringEvent(IMEComposition imeComposition)
         {
         }
 
