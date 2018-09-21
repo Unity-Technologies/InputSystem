@@ -576,7 +576,7 @@ namespace UnityEngine.Experimental.Input
         public KeyControl oem5Key { get; private set; }
 
         /// <summary>
-        /// True when IME composition is enabled.  Requires imeEnabled to be set to true, and the user to enable it at the OS level.
+        /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
         /// 
