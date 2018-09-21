@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var darkGreyBackgroundWithBorderTexture =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.ResourcesPath + "foldoutBackground.png");
+                        InputActionTreeBase.ResourcesPath + "foldoutBackground.png");
                 foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
                 foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
                 foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);

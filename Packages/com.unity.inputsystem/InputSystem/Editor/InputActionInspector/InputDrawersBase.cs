@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 actionTreeBackground.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackground.png");
+                        InputActionTreeBase.ResourcesPath + "actionTreeBackground.png");
                 actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;

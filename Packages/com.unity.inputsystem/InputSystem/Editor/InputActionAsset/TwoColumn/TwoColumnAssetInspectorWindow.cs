@@ -8,7 +8,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class ActionInspectorWindow : EditorWindow
+    internal class TwoColumnAssetInspectorWindow : EditorWindow
     {
         public static class Styles
         {
@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return false;
 
             // See if we have an existing editor window that has the asset open.
-            var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
+            var inputManagers = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
             var window = inputManagers.FirstOrDefault(w => w.m_ImportedAssetObject.Equals(obj));
             if (window != null)
             {
@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // No, so create a new window.
-            window = CreateInstance<ActionInspectorWindow>();
+            window = CreateInstance<TwoColumnAssetInspectorWindow>();
             window.titleContent = new GUIContent(obj.name + " (Input Manager)");
             window.SetAsset(obj);
             window.Show();
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static void RefreshAllInternal()
         {
-            var windows = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
+            var windows = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
             foreach (var window in windows)
                 window.Refresh();
 
@@ -106,10 +106,13 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] private string m_AssetJson;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
-        [SerializeField] private TreeViewState m_TreeViewState;
+        [SerializeField] private TreeViewState m_ActionMapsTreeState;
+        [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private TreeViewState m_PickerTreeViewState;
 
-        private InputActionListTreeView m_TreeView;
+        private ActionMapsTree m_ActionMapsTree;
+        private ActionsTree m_ActionsTree;
+        
         private SerializedObject m_SerializedObject;
         private InputBindingPropertiesView m_PropertyView;
         private CopyPasteUtility m_CopyPasteUtility;
@@ -124,14 +127,15 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
         private readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add/Action");
         private readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add/Action map");
+        private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
 
         public void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ImportedAssetObject == null)
+            {
                 return;
-
+            }
             // Initialize after assembly reload
             InitializeObjectReferences();
             InitializeTrees();
@@ -142,7 +146,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
         }
 
-        void OnDestroy()
+        void OnDestroy()    
         {
             if (m_IsDirty)
             {
@@ -164,11 +168,17 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        // Set asset would usually only be called when the window is open
         private void SetAsset(InputActionAsset referencedObject)
         {
             m_ImportedAssetObject = referencedObject;
             InitializeObjectReferences();
             InitializeTrees();
+
+            // Make sure first actions map selected and actions tree expanded
+            m_ActionMapsTree.SelectFirstRow();
+            OnActionMapSelection();
+            m_ActionsTree.ExpandAll();
         }
 
         private void InitializeObjectReferences()
@@ -201,13 +211,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void InitializeReferenceToImportedAssetObject()
         {
-            Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID));
-
-            m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            if (string.IsNullOrEmpty(m_AssetPath))
-                throw new Exception("Could not determine asset path for " + m_AssetGUID);
-
-            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
+            LoadImportedObjectFromGuid();
             if (m_AssetObjectForEditing != null)
             {
                 DestroyImmediate(m_AssetObjectForEditing);
@@ -215,16 +219,30 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        void LoadImportedObjectFromGuid()
+        {
+            Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID));
+
+            m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            if (string.IsNullOrEmpty(m_AssetPath))
+                throw new Exception("Could not determine asset path for " + m_AssetGUID);
+
+            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
+        }
+
         private void InitializeTrees()
         {
             if (m_SearchField == null)
                 m_SearchField = new SearchField();
+            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_ActionMapsTreeState);
+            m_ActionMapsTree.OnSelectionChanged = OnActionMapSelection;
+            m_ActionMapsTree.OnContextClick = OnActionMapContextClick;
 
-            m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
-            m_TreeView.OnSelectionChanged = OnSelectionChanged;
-            m_TreeView.OnContextClick = OnContextClick;
+            m_ActionsTree = ActionsTree.CreateFromSerializedObject(Apply, ref m_ActionsTreeState);
+            m_ActionsTree.OnSelectionChanged = OnActionSelection;
+            m_ActionsTree.OnContextClick = OnActionsContextClick;
 
-            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
+            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_SerializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new TreeViewState();
 
@@ -233,18 +251,26 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnUndoRedoCallback()
         {
-            if (m_TreeView == null)
+            if (m_ActionMapsTree == null)
                 return;
+
+            LoadImportedObjectFromGuid();
 
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
             m_IsDirty = m_AssetObjectForEditing.ToJson() != m_ImportedAssetObject.ToJson();
 
-            m_TreeView.Reload();
-            OnSelectionChanged();
+            m_ActionMapsTree.Reload();
+            OnActionMapSelection();
         }
 
-        private void OnSelectionChanged()
+        private void OnActionMapSelection()
+        {
+            m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
+            m_ActionsTree.Reload();
+        }
+
+        private void OnActionSelection()
         {
             LoadPropertiesForSelection();
         }
@@ -252,14 +278,22 @@ namespace UnityEngine.Experimental.Input.Editor
         private void LoadPropertiesForSelection()
         {
             m_PropertyView = null;
-            if (m_TreeView.GetSelectedProperty() == null)
+            if (m_ActionMapsTree.GetSelectedRow() != null)
             {
-                return;
+                var row = m_ActionMapsTree.GetSelectedRow();
+                if (row != null)
+                {
+                    m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
+                    m_ActionsTree.Reload();
+                }
             }
-            var p = m_TreeView.GetSelectedRow();
-            if (p.hasProperties)
+            if (m_ActionsTree.GetSelectedProperty() != null)
             {
-                m_PropertyView = p.GetPropertiesView(Apply, m_PickerTreeViewState);
+                var p = m_ActionsTree.GetSelectedRow();
+                if (p.hasProperties)
+                {
+                    m_PropertyView = p.GetPropertiesView(Apply, m_PickerTreeViewState);
+                }
             }
         }
 
@@ -267,7 +301,16 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_IsDirty = true;
             m_SerializedObject.ApplyModifiedProperties();
-            m_TreeView.Reload();
+            m_SerializedObject.Update();
+            
+            m_ActionMapsTree.Reload();
+            var selectedActionMap = m_ActionMapsTree.GetSelectedActionMap();
+            if (selectedActionMap != null)
+            {
+                m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedActionMap().elementProperty;
+            }
+            m_ActionsTree.Reload();
+            OnActionSelection();
         }
 
         private void Refresh()
@@ -278,7 +321,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 // Still need to refresh reference to imported object in case we had a re-import.
                 if (m_ImportedAssetObject == null)
-                    InitializeReferenceToImportedAssetObject();
+                    LoadImportedObjectFromGuid();
 
                 return;
             }
@@ -313,6 +356,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnGUI()
         {
+            if (Event.current.type == EventType.KeyDown)
+            {
+                if (m_ActionMapsTree.HasFocus() && Event.current.keyCode == KeyCode.RightArrow)
+                {
+                    m_ActionsTree.SetFocus();
+                }
+            }
+            
             EditorGUILayout.BeginVertical();
 
             // Toolbar.
@@ -326,15 +377,20 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
             if (EditorGUI.EndChangeCheck())
             {
-                m_TreeView.SetNameFilter(m_SearchText);
+//                m_TreeView.SetNameFilter(m_SearchText);
             }
             GUILayout.Space(5);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
-
             EditorGUILayout.BeginHorizontal();
-            DrawMainTree();
+            
+            // Use default style for margins
+            EditorGUILayout.BeginVertical(EditorStyles.label, GUILayout.ExpandHeight(true));
+            // Set width of the first two columns
+            GUILayout.Space(position.width * (2f/3f));
+            EditorGUILayout.EndVertical();
+            DrawMainTrees();
             DrawProperties();
             EditorGUILayout.EndHorizontal();
             GUILayout.Space(3);
@@ -351,28 +407,22 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
             }
+            
         }
 
-        private void DrawMainTree()
+        private void DrawMainTrees()
         {
-            EditorGUILayout.BeginVertical(Styles.actionTreeBackground);
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndVertical();
-
-            var treeViewRect = GUILayoutUtility.GetLastRect();
+            var rect = GUILayoutUtility.GetLastRect();
+            var treeViewRect = new Rect(rect);
+            treeViewRect.width /= 2;
+            
+            // Action maps tree
             var labelRect = new Rect(treeViewRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             treeViewRect.y += labelRect.height;
             treeViewRect.height -= labelRect.height;
-            treeViewRect.x += 1;
-            treeViewRect.width -= 2;
-
-            GUIContent header;
-            if (string.IsNullOrEmpty(m_SearchText))
-                header = EditorGUIUtility.TrTextContent("Action maps");
-            else
-                header = EditorGUIUtility.TrTextContent("Action maps (Searching)");
-
+            
+            var header = EditorGUIUtility.TrTextContent("Action maps");
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
             EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
@@ -382,30 +432,79 @@ namespace UnityEngine.Experimental.Input.Editor
             var plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
             if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
             {
-                ShowAddMenu();
+                ShowAddActionMapMenu();
             }
+            
+            EditorGUI.LabelField(treeViewRect, GUIContent.none, Styles.propertiesBackground);
+            treeViewRect.x += 1;
+            treeViewRect.width -= 2;
+            m_ActionMapsTree.OnGUI(treeViewRect);
 
-            m_TreeView.OnGUI(treeViewRect);
+            
+            
+            // Actions tree
+            treeViewRect = new Rect(rect);
+            treeViewRect.width /= 2;
+            treeViewRect.width -= Styles.propertiesBackground.margin.right;
+            treeViewRect.x += treeViewRect.width + Styles.propertiesBackground.margin.right * 2;
+            
+            labelRect = new Rect(treeViewRect);
+            labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
+            treeViewRect.y += labelRect.height;
+            treeViewRect.height -= labelRect.height;
+
+            if (string.IsNullOrEmpty(m_SearchText))
+                header = EditorGUIUtility.TrTextContent("Actions");
+            else
+                header = EditorGUIUtility.TrTextContent("Actions (Searching)");
+
+            EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
+            headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
+            EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
+            
+            labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+            labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
+            if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
+            {
+                ShowAddActionsMenu();
+            }
+            EditorGUI.LabelField(treeViewRect, GUIContent.none, Styles.propertiesBackground);
+            treeViewRect.x += 1;
+            treeViewRect.width -= 2;
+            m_ActionsTree.OnGUI(treeViewRect);
         }
-
-        private void ShowAddMenu()
+        
+        private void ShowAddActionMapMenu()
         {
             var menu = new GenericMenu();
-            AddAddOptionsToMenu(menu, false);
+            AddActionMapOptionsToMenu(menu, false);
             menu.ShowAsContext();
         }
 
-        private void AddAddOptionsToMenu(GenericMenu menu, bool isContextMenu)
+        private void ShowAddActionsMenu()
         {
-            var hasSelection = m_TreeView.HasSelection();
+            var menu = new GenericMenu();
+            AddActionsOptionsToMenu(menu, false);
+            menu.ShowAsContext();
+        }
+        
+        private void AddActionMapOptionsToMenu(GenericMenu menu, bool isContextMenu)
+        {
+            menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
+        }
+
+        private void AddActionsOptionsToMenu(GenericMenu menu, bool isContextMenu)
+        {
+            var hasSelection = m_ActionMapsTree.HasSelection();
             var canAddBinding = false;
-            var action = m_TreeView.GetSelectedAction();
+            var action = m_ActionsTree.GetSelectedAction();
             if (action != null && hasSelection)
             {
                 canAddBinding = true;
             }
             var canAddAction = false;
-            var actionMap = m_TreeView.GetSelectedActionMap();
+            var actionMap = m_ActionMapsTree.GetSelectedActionMap();
             if (actionMap != null && hasSelection)
             {
                 canAddAction = true;
@@ -426,7 +525,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 menu.AddDisabledItem(m_AddActionGUI, false);
             }
-            menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
 
             var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Add/Composite") : EditorGUIUtility.TrTextContent("Composite");
             if (canAddBinding)
@@ -442,10 +540,18 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void OnContextClick(SerializedProperty property)
+        private void OnActionMapContextClick(SerializedProperty property)
         {
             var menu = new GenericMenu();
-            AddAddOptionsToMenu(menu, true);
+            AddActionMapOptionsToMenu(menu, true);
+            m_CopyPasteUtility.AddOptionsToMenu(menu);
+            menu.ShowAsContext();
+        }
+
+        private void OnActionsContextClick(SerializedProperty property)
+        {
+            var menu = new GenericMenu();
+            AddActionsOptionsToMenu(menu, true);
             m_CopyPasteUtility.AddOptionsToMenu(menu);
             menu.ShowAsContext();
         }
@@ -479,7 +585,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private ActionTreeItem GetSelectedActionLine()
         {
-            TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
+            TreeViewItem selectedRow = m_ActionsTree.GetSelectedRow();
             do
             {
                 if (selectedRow is ActionTreeItem)
@@ -493,7 +599,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private ActionMapTreeItem GetSelectedActionMapLine()
         {
-            TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
+            TreeViewItem selectedRow = m_ActionMapsTree.GetSelectedRow();
             do
             {
                 if (selectedRow is ActionMapTreeItem)
@@ -507,7 +613,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DrawProperties()
         {
-            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width / 2));
+            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width * (1/3f)));
 
             var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2, GUILayout.ExpandWidth(true));
             rect.x -= 2;

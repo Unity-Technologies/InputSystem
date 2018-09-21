@@ -24,18 +24,18 @@ namespace UnityEngine.Experimental.Input.Editor
             static Styles()
             {
                 backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                    ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
+                    InputActionTreeBase.ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
 
                 actionItemRowStyle.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(ActionInspectorWindow.Styles.ResourcesPath + "row.png");
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(InputActionTreeBase.ResourcesPath + "row.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
                 actionItemRowStyle.onFocused.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.ResourcesPath + "rowSelected.png");
+                        InputActionTreeBase.ResourcesPath + "rowSelected.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
                 actionItemRowStyle.onNormal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.ResourcesPath + "rowSelected.png");
+                        InputActionTreeBase.ResourcesPath + "rowSelected.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
 
                 actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
@@ -43,19 +43,19 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 yellowRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.SharedResourcesPath + "yellow.png");
+                        InputActionTreeBase.SharedResourcesPath + "yellow.png");
                 orangeRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.SharedResourcesPath + "orange.png");
+                        InputActionTreeBase.SharedResourcesPath + "orange.png");
                 greenRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.SharedResourcesPath + "green.png");
+                        InputActionTreeBase.SharedResourcesPath + "green.png");
                 blueRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.SharedResourcesPath + "blue.png");
+                        InputActionTreeBase.SharedResourcesPath + "blue.png");
                 pinkRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.SharedResourcesPath + "pink.png");
+                        InputActionTreeBase.SharedResourcesPath + "pink.png");
             }
         }
 
@@ -119,6 +119,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var boxRect = rowRect;
             boxRect.width = (depth + 1) * 6;
+            boxRect.height -= 2;
+            boxRect.y += 1;
             rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
             if (depth == 0)
                 return;
@@ -266,7 +268,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override int GetIdForName(string name)
         {
-            var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
+            var actionMapName = "";
+            if(m_ActionMapProperty!=null)
+                actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
             return (actionMapName + "/" + name).GetHashCode();
         }
     }
@@ -372,6 +376,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var boxRect = rowRect;
             boxRect.width = (depth + 1) * 6;
+            boxRect.y += 1;
+            boxRect.height -= 2;
             rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
