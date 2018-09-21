@@ -2203,6 +2203,11 @@ namespace UnityEngine.Experimental.Input
                         device.OnTextInput((char)textEventPtr->character);
                         break;
 
+                    case IMECompositionEvent.Type:
+                        var imeEventPtr = (IMECompositionEvent*)currentEventPtr;
+                        device.OnIMEStringEvent(imeEventPtr->composition);
+                        break;
+
                     case DeviceRemoveEvent.Type:
                         RemoveDevice(device);
                         doNotMakeDeviceCurrent = true;

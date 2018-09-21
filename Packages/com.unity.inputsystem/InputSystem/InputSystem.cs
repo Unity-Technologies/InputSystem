@@ -1590,7 +1590,6 @@ namespace UnityEngine.Experimental.Input
             Destroy();
 
             // Load back previous state.
-            var index = s_SavedStateStack.Count - 1;
             var state = s_SavedStateStack.Pop();
             s_Manager = state.manager;
             s_Remote = state.remote;
