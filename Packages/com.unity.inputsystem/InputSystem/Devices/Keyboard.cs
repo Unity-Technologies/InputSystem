@@ -356,11 +356,9 @@ namespace UnityEngine.Experimental.Input
                 if (m_ImeEnabled != value)
                 {
                     EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
-                    if (ExecuteCommand(ref command) >= 0)
-                        m_ImeEnabled = value;
+                    ExecuteCommand(ref command);
                 }
             }
-            get { return m_ImeEnabled; }
         }
 
         /// <summary>
@@ -370,14 +368,9 @@ namespace UnityEngine.Experimental.Input
         {
             set
             {
-                if (m_ImePosition != value)
-                {
-                    SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
-                    if (ExecuteCommand(ref command) >= 0)
-                        m_ImePosition = value;
-                }
+                SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
+                ExecuteCommand(ref command);
             }
-            get { return m_ImePosition; }
         }
 
         /// <summary>
@@ -897,7 +890,5 @@ namespace UnityEngine.Experimental.Input
         private string m_KeyboardLayoutName;
 
         internal InlinedArray<Action<IMEComposition>> m_ImeCompositionListeners;
-        bool m_ImeEnabled;
-        Vector2 m_ImePosition;
     }
 }
