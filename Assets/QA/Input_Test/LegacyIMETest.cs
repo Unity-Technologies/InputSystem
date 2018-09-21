@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class LegacyIMETest : MonoBehaviour
 {
@@ -10,19 +10,19 @@ public class LegacyIMETest : MonoBehaviour
     public string compositionString;
 
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
-	    if (enabled)
-	    {
-		    Input.imeCompositionMode = mode;
-		    Input.compositionCursorPos = cursorPosition;
+        if (enabled)
+        {
+            Input.imeCompositionMode = mode;
+            Input.compositionCursorPos = cursorPosition;
 
-		    isSelected = Input.imeIsSelected;
-		    string newChars =  Input.inputString;
-		    if(newChars.Length > 0)
-			    outputString += Input.inputString;
-	    
-		    compositionString = Input.compositionString;
-	    }
+            isSelected = Input.imeIsSelected;
+            string newChars =  Input.inputString;
+            if (newChars.Length > 0)
+                outputString += Input.inputString;
+
+            compositionString = Input.compositionString;
+        }
     }
 }

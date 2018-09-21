@@ -341,10 +341,10 @@ namespace UnityEngine.Experimental.Input
         /// An event that is fired to get IME composition strings.  Fired once for every change, sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
         /// </summary>
         /// <remarks>
-        /// 
-        /// Some languages use complex input methods which involve opening windows to insert characters. 
-        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.  
-        /// 
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
         /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
         /// </remarks>
         public event Action<IMEComposition> onIMECompositionChange
@@ -352,16 +352,16 @@ namespace UnityEngine.Experimental.Input
             add { m_ImeCompositionListeners.Append(value); }
             remove { m_ImeCompositionListeners.Remove(value); }
         }
-        
+
         /// <summary>
-        /// Activates/deactivates IME composition while typing.  This decides whether or not to use the OS supplied IME system.     
+        /// Activates/deactivates IME composition while typing.  This decides whether or not to use the OS supplied IME system.
         /// </summary>
         /// <remarks>
-        /// 
-        /// Some languages use complex input methods which involve opening windows to insert characters. 
-        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.  
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         /// Setting this to On, will enable the OS-level IME system when the user presses keystrokes.
-        /// 
+        ///
         /// See <see cref="Keyboard.imeCursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
         /// </remarks>
         public bool imeEnabled
@@ -377,10 +377,10 @@ namespace UnityEngine.Experimental.Input
         /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
         /// </summary>
         /// <remarks>
-        /// 
-        /// Some languages use complex input methods which involve opening windows to insert characters. 
-        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.  
-        /// 
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
         /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
         /// </remarks>
         public Vector2 imeCursorPosition
@@ -579,10 +579,10 @@ namespace UnityEngine.Experimental.Input
         /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
-        /// 
-        /// Some languages use complex input methods which involve opening windows to insert characters. 
-        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.  
-        /// 
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
         /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
         /// </remarks>
         public ButtonControl imeSelected { get; private set; }
