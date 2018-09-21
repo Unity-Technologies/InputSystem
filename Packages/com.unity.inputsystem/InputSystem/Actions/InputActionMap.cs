@@ -125,12 +125,6 @@ namespace UnityEngine.Experimental.Input
             get { throw new NotImplementedException(); }
         }
 
-        ////TODO: nuke this
-        public ReadOnlyArray<InputDevice> devices
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         public InputBinding? bindingMask
         {
             get
@@ -386,7 +380,6 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InputBinding[] m_BindingsForEachAction;
 
         [NonSerialized] internal InputControl[] m_ControlsForEachAction;
-        [NonSerialized] internal InputDevice[] m_DevicesForEachAction;
 
         [NonSerialized] internal int m_EnabledActionsCount;
         [NonSerialized] internal Guid m_Guid;
@@ -438,108 +431,6 @@ namespace UnityEngine.Experimental.Input
 
             return new ReadOnlyArray<InputBinding>(m_BindingsForEachAction, action.m_BindingsStartIndex,
                 action.m_BindingsCount);
-        }
-
-        /// <summary>
-        /// For the given action, return the current list of devices used by its bound controls.
-        /// </summary>
-        /// <param name="action">Input action belonging to this action map.</param>
-        /// <returns>(Possibly empty) array of devices used by action.</returns>
-        /// <remarks>
-        /// This function may allocate whenever the control setup of the action map changes.
-        /// </remarks>
-        internal ReadOnlyArray<InputDevice> GetDevicesForSingleAction(InputAction action)
-        {
-            Debug.Assert(m_State != null);
-            Debug.Assert(m_MapIndexInState != InputActionMapState.kInvalidIndex);
-            Debug.Assert(m_Actions != null);
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap == this);
-            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
-
-            if (m_DevicesForEachAction == null)
-            {
-                if (m_State.totalDeviceCount == 0)
-                    return new ReadOnlyArray<InputDevice>();
-
-                var perActionDeviceListCorrespondsToDeviceListOfEntireState = true;
-                if (m_SingletonAction != null)
-                {
-                    // For singleton action, device list always corresponds to the list of
-                    // devices in our state.
-                    action.m_DeviceStartIndex = 0;
-                    action.m_DeviceCount = m_State.totalDeviceCount;
-                }
-                else
-                {
-                    // Try to find an action that doesn't use all of the devices in our state.
-                    // If there's none, we can still just use the same list of devices that we
-                    // have in our state.
-                    var haveActionNotUsingAllDevices = false;
-                    var deviceCount = m_State.totalDeviceCount;
-                    for (var i = 0; i < m_Actions.Length; ++i)
-                    {
-                        var currentAction = m_Actions[i];
-
-                        for (var n = 0; n < deviceCount; ++n)
-                        {
-                            // Get device.
-                            InputDevice currentDevice;
-                            if (m_DevicesForEachAction != null)
-                                currentDevice = m_DevicesForEachAction[n];
-                            else
-                                currentDevice = m_State.devices[n];
-
-                            // Try to find control that uses the device.
-                            var isUsedByControl = false;
-                            var controlsForAction = currentAction.controls;
-                            for (var k = 0; k < controlsForAction.Count; ++k)
-                            {
-                                if (controlsForAction[k].device == currentDevice)
-                                {
-                                    isUsedByControl = true;
-                                    break;
-                                }
-                            }
-
-                            if (!isUsedByControl)
-                            {
-                                haveActionNotUsingAllDevices = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // If we have at least one action that isn't using all the devices in our state,
-                    // set up a separate array. We may still end up being able to share one list of
-                    // devices between all the actions in our map.
-                    if (haveActionNotUsingAllDevices)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        for (var i = 0; i < m_Actions.Length; ++i)
-                        {
-                            var currentAction = m_Actions[i];
-                            currentAction.m_DeviceStartIndex = 0;
-                            currentAction.m_DeviceCount = m_State.totalDeviceCount;
-                        }
-                    }
-                }
-
-                // If the list of devices used by this one and every action in it corresponds
-                // to the list of devices used by our shared state, then just copy that list.
-                if (perActionDeviceListCorrespondsToDeviceListOfEntireState)
-                {
-                    m_DevicesForEachAction = new InputDevice[m_State.totalDeviceCount];
-                    for (var i = 0; i < m_State.totalDeviceCount; ++i)
-                        m_DevicesForEachAction[i] = m_State.devices[i];
-                }
-            }
-
-            return new ReadOnlyArray<InputDevice>(m_DevicesForEachAction, action.m_DeviceStartIndex,
-                action.m_DeviceCount);
         }
 
         internal ReadOnlyArray<InputControl> GetControlsForSingleAction(InputAction action)
@@ -732,7 +623,6 @@ namespace UnityEngine.Experimental.Input
         {
             m_BindingsForEachAction = null;
             m_ControlsForEachAction = null;
-            m_DevicesForEachAction = null;
         }
 
         ////FIXME: this needs to be able to handle the case where two maps share state and one is enabled and one isn't

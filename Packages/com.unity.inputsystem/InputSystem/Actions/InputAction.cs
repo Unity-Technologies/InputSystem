@@ -3,7 +3,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: have single delegate instead of separate performed/started/cancelled callbacks?
 
-////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls', 'devices', and 'bindings')
+////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls' and 'bindings')
 
 ////REVIEW: should the enable/disable API actually sit on InputSystem?
 
@@ -172,23 +172,6 @@ namespace UnityEngine.Experimental.Input
                 var map = GetOrCreateActionMap();
                 map.ResolveBindingsIfNecessary();
                 return map.GetControlsForSingleAction(this);
-            }
-        }
-
-        ////TODO: nuke this
-        /// <summary>
-        /// The set of devices used by the action.
-        /// </summary>
-        /// <remarks>
-        /// May allocate memory each time the control setup changes on the action.
-        /// </remarks>
-        public ReadOnlyArray<InputDevice> devices
-        {
-            get
-            {
-                var map = GetOrCreateActionMap();
-                map.ResolveBindingsIfNecessary();
-                return map.GetDevicesForSingleAction(this);
             }
         }
 
@@ -446,8 +429,6 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
         [NonSerialized] internal int m_ControlCount;
-        [NonSerialized] internal int m_DeviceStartIndex;
-        [NonSerialized] internal int m_DeviceCount;
         [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
