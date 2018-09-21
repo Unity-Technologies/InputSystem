@@ -175,6 +175,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        ////TODO: nuke this
         /// <summary>
         /// The set of devices used by the action.
         /// </summary>

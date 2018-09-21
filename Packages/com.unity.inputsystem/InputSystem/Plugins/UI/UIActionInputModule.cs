@@ -143,6 +143,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     throw new NotImplementedException();
                 }
             }
+            m_ActionQueue.Clear();
         }
 
         private void HookActions()

@@ -101,20 +101,6 @@ namespace UnityEngine.Experimental.Input
         public int totalCompositeCount;
 
         /// <summary>
-        /// Set of masks that decide which bindings to enable in the maps and
-        /// which to ignore.
-        /// </summary>
-        /// <remarks>
-        /// Any binding in any of the maps that <see cref="InputBinding.Matches">matches</see>
-        /// one of the masks in this list will not get resolved to controls.
-        ///
-        /// To change the set of masks, the maps in the state have to be re-resolved.
-        ///
-        /// Masks can apply either to specific maps or ...
-        /// </remarks>
-        public InlinedArray<InputBinding> bindingMasks;
-
-        /// <summary>
         /// State of all bindings in the action map.
         /// </summary>
         /// <remarks>
@@ -1199,7 +1185,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     Debug.Assert(value != kInvalidIndex);
                     if (value >= ushort.MaxValue)
-                        throw new NotSupportedException("Control count per binding cannot exceed byte.MaxValue=" + ushort.MaxValue);
+                        throw new NotSupportedException("Total control count in state cannot exceed byte.MaxValue=" + ushort.MaxValue);
                     m_ControlStartIndex = (ushort)value;
                 }
             }
