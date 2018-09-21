@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// However, there are scenarios where you indeed want to take the same input action and
     /// exercise it multiple times in parallel. A prominent example of such a use case is
-    /// local multiplayer where each player gets the same set of actions but is controllering
+    /// local multiplayer where each player gets the same set of actions but is controlling
     /// them with a different device (or devices) each. This is easily achieved by simply
     /// <see cref="UnityEngine.Object.Instantiate">instantiating</see> the input action
     /// asset multiple times.

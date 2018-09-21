@@ -147,7 +147,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 foreach (var action in map.actions)
                 {
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
-                    actionReference.Set(asset, action);
+                    actionReference.Set(action);
 
                     var objectName = action.name;
                     if (haveSetName)

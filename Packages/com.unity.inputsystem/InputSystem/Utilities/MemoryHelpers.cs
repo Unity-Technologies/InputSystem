@@ -24,10 +24,10 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 return bitOffset + sizeInBits > ((ulong)(memoryOffset - byteOffset)) * 8;
             }
-            return ((ulong)(memorySizeInBytes * 8)) > (((ulong)(byteOffset - memoryOffset)) * 8 + bitOffset);
+            return memorySizeInBytes * 8 > ((ulong)(byteOffset - memoryOffset)) * 8 + bitOffset;
         }
 
-        public static unsafe void WriteSingleBit(IntPtr ptr, uint bitOffset, bool value)
+        public static void WriteSingleBit(IntPtr ptr, uint bitOffset, bool value)
         {
             if (bitOffset < 8)
             {
@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
-        public static unsafe bool ReadSingleBit(IntPtr ptr, uint bitOffset)
+        public static bool ReadSingleBit(IntPtr ptr, uint bitOffset)
         {
             ////TODO: currently this is not actually enforced...
             // The layout code makes sure that bitfields are either 8bit or multiples
@@ -239,7 +239,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var intValue = (uint)value;
                 intValue >>= (int)bitOffset;
                 var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
-                *((uint*)ptr) |= (uint)(intValue & mask);
+                *((uint*)ptr) |= intValue & mask;
                 return;
             }
 
@@ -266,7 +266,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 sizeRemaining -= 32;
             }
 
-            uint mask = (uint)((1 << (int)sizeRemaining) - 1);
+            var mask = (uint)((1 << (int)sizeRemaining) - 1);
             if (value)
             {
                 *filterIter |= mask;
@@ -283,9 +283,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 return false;
 
             var sizeRemaining = sizeInBits;
-
             var eventIter = (uint*)eventBuffer.ToPointer();
-
             var maskIter = (uint*)(new IntPtr(maskPtr.ToInt64() + (Int64)offsetBytes).ToPointer());
 
             while (sizeRemaining >= 32)
@@ -305,8 +303,6 @@ namespace UnityEngine.Experimental.Input.Utilities
             var remainingMask = *maskIter;
 
             var mask = ((1 >> (int)sizeRemaining) - 1);
-
-
             if ((remainingState & (remainingMask & mask)) != 0)
                 return true;
 

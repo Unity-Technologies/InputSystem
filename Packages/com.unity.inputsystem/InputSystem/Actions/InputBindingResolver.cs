@@ -142,6 +142,8 @@ namespace UnityEngine.Experimental.Input
                     continue;
 
                 // Try to find action.
+                // NOTE: Technically, we allow individual bindings of composites to trigger actions independent
+                //       of the action triggered by the composite.
                 var actionIndex = InputActionMapState.kInvalidIndex;
                 var actionName = unresolvedBinding.action;
                 if (!string.IsNullOrEmpty(actionName))

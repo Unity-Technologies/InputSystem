@@ -51,21 +51,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void Set(InputActionAsset asset, InputAction action)
+        public void Set(InputAction action)
         {
-            if (asset == null)
-                throw new ArgumentNullException("asset");
+            if (action == null)
+                throw new ArgumentNullException("action");
 
-            var actionMap = action.actionMap;
-            if (!asset.actionMaps.Contains(actionMap))
-                throw new ArgumentException(
-                    string.Format("Action '{0}' is not contained in asset '{1}'", action, asset));
+            var map = action.actionMap;
+            if (map == null || map.asset == null)
+                throw new InvalidOperationException(string.Format(
+                    "Action '{0}' must be part of an InputActionAsset in order to be able to create an InputActionReference for it",
+                    action));
 
-            m_Asset = asset;
-            m_ActionMapId = actionMap.id.ToString();
-            m_ActionId = action.id.ToString();
-
-            ////REVIEW: should this dirty the asset if IDs had not been generated yet?
+            SetInternal(map.asset, action);
         }
 
         public void Set(InputActionAsset asset, string mapName, string actionName)
@@ -80,7 +77,21 @@ namespace UnityEngine.Experimental.Input
             var actionMap = asset.GetActionMap(mapName);
             var action = actionMap.GetAction(actionName);
 
-            Set(asset, action);
+            SetInternal(asset, action);
+        }
+
+        private void SetInternal(InputActionAsset asset, InputAction action)
+        {
+            var actionMap = action.actionMap;
+            if (!asset.actionMaps.Contains(actionMap))
+                throw new ArgumentException(
+                    string.Format("Action '{0}' is not contained in asset '{1}'", action, asset));
+
+            m_Asset = asset;
+            m_ActionMapId = actionMap.id.ToString();
+            m_ActionId = action.id.ToString();
+
+            ////REVIEW: should this dirty the asset if IDs had not been generated yet?
         }
 
         public override string ToString()

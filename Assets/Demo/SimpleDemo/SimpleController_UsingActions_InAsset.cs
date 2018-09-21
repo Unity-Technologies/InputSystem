@@ -11,7 +11,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     public float jumpForce = 2.0f;
     public GameObject projectile;
 
-    public DemoControls controls;
+    public SimpleControls controls;
 
     private Vector2 m_Move;
     private Vector2 m_Look;
@@ -127,7 +127,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
         var newProjectile = Instantiate(projectile);
         newProjectile.transform.position = transform.position + transform.forward * 0.6f;
         newProjectile.transform.rotation = transform.rotation;
-        var size = 1;
+        const int size = 1;
         newProjectile.transform.localScale *= size;
         newProjectile.GetComponent<Rigidbody>().mass = Mathf.Pow(size, 3);
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
@@ -6,6 +7,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: rename to "IInputCompoundBinding"?
 
 ////REVIEW: should composites be able to nest?
+
+////REVIEW: when we get blittable type constraints, we can probably do away with the pointer-based ReadValue version
 
 namespace UnityEngine.Experimental.Input
 {
@@ -34,9 +37,17 @@ namespace UnityEngine.Experimental.Input
     /// }
     /// </code>
     /// </example>
-    public interface IInputBindingComposite<TValue>
+    public interface IInputBindingComposite<TValue> : IInputBindingComposite
+        where TValue : struct
     {
         TValue ReadValue(ref InputBindingCompositeContext context);
+    }
+
+    public interface IInputBindingComposite
+    {
+        Type valueType { get; }
+        int valueSizeInBytes { get; }
+        unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize);
     }
 
     internal static class InputBindingComposite

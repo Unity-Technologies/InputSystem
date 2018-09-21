@@ -23,6 +23,8 @@ using UnityEngine.Profiling;
 
 namespace UnityEngine.Experimental.Input
 {
+    using InputActionListener = Action<InputAction.CallbackContext>;
+
     /// <summary>
     /// Dynamic execution state of one or more <see cref="InputActionMap">action maps</see>.
     /// </summary>
@@ -385,14 +387,14 @@ namespace UnityEngine.Experimental.Input
         // Tells us the time of the change *according to the state events coming in*.
         // Also tells us which control of the controls we are binding to triggered the
         // change and relays the binding index we gave it when we called AddStateChangeMonitor.
-        void IInputStateChangeMonitor.NotifyControlValueChanged(InputControl control, double time, long mapControlAndBindingIndex)
+        void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
             int controlIndex;
             int bindingIndex;
             int mapIndex;
 
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out mapIndex, out controlIndex, out bindingIndex);
-            ProcessControlValueChange(mapIndex, controlIndex, bindingIndex, time);
+            ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
         }
 
         void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long mapControlAndBindingIndex, int interactionIndex)
@@ -434,65 +436,107 @@ namespace UnityEngine.Experimental.Input
         /// <param name="controlIndex">Index of the control that changed state.</param>
         /// <param name="bindingIndex">Index of the binding associated with the given control.</param>
         /// <param name="time">The timestamp associated with the state change (comes from the state change event).</param>
+        /// <param name="eventPtr">Event (if any) that triggered the state change.</param>
         /// <remarks>
         /// This is where we end up if one of the state monitors we've put in the system has triggered.
         /// From here we go back to the associated binding and then let it figure out what the state change
         /// means for it.
         /// </remarks>
-        private void ProcessControlValueChange(int mapIndex, int controlIndex, int bindingIndex, double time)
+        private unsafe void ProcessControlStateChange(int mapIndex, int controlIndex, int bindingIndex, double time, InputEventPtr eventPtr)
         {
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
 
-            ////TODO: this is where we should filter out state changes that do not result in value changes
+            ////TODO: make sure we only pass through here if we have meaningful state changes (i.e. actual value changes)
 
-            // If the binding is part of a composite, check for interactions on the composite
-            // itself and give them a first shot at processing the value change.
-            var haveInteractionsOnComposite = false;
-            if (bindingStates[bindingIndex].isPartOfComposite)
+            fixed(BindingState* bindingStatesPtr = &bindingStates[0])
             {
-                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
-                var interactionCountOnComposite = bindingStates[compositeBindingIndex].interactionCount;
-                if (interactionCountOnComposite > 0)
+                var bindingStatePtr = &bindingStatesPtr[bindingIndex];
+
+                // If the binding is part of a composite, check for interactions on the composite
+                // itself and give them a first shot at processing the value change.
+                var haveInteractionsOnComposite = false;
+                if (bindingStatePtr->isPartOfComposite)
                 {
-                    haveInteractionsOnComposite = true;
+                    var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
+                    var compositeBindingPtr = &bindingStatesPtr[compositeBindingIndex];
+
+                    // If the composite has already been triggered from the very same event, ignore it.
+                    // Example: KeyboardState change that includes both A and W key state changes and we're looking
+                    //          at a WASD composite binding. There's a state change monitor on both the A and the W
+                    //          key and thus the manager will notify us individually of both changes. However, we
+                    //          want to perform the action only once.
+                    if (ShouldIgnoreStateChangeOnCompositeBinding(compositeBindingPtr, eventPtr))
+                        return;
+
+                    var interactionCountOnComposite = compositeBindingPtr->interactionCount;
+                    if (interactionCountOnComposite > 0)
+                    {
+                        haveInteractionsOnComposite = true;
+                        ProcessInteractions(mapIndex, controlIndex, bindingIndex, time,
+                            compositeBindingPtr->interactionStartIndex,
+                            interactionCountOnComposite);
+                    }
+                }
+
+                // If we have interactions, let them do all the processing. The presence of an interaction
+                // essentially bypasses the default phase progression logic of an action.
+                var interactionCount = bindingStatePtr->interactionCount;
+                if (interactionCount > 0)
+                {
                     ProcessInteractions(mapIndex, controlIndex, bindingIndex, time,
-                        bindingStates[compositeBindingIndex].interactionStartIndex,
-                        interactionCountOnComposite);
+                        bindingStatePtr->interactionStartIndex, interactionCount);
+                }
+                else if (!haveInteractionsOnComposite)
+                {
+                    // Default logic has no support for cancellations and won't ever go into started
+                    // phase. Will go from waiting straight to performed and then straight to waiting
+                    // again.
+                    //
+                    // Also, we perform the action on *any* value change. For buttons, this means that
+                    // if you use the default logic without an interaction, the action will be performed
+                    // both when you press and when you release the button.
+
+                    var trigger = new TriggerState
+                    {
+                        phase = InputActionPhase.Performed,
+                        mapIndex = mapIndex,
+                        controlIndex = controlIndex,
+                        bindingIndex = bindingIndex,
+                        interactionIndex = kInvalidIndex,
+                        time = time,
+                        startTime = time,
+                    };
+                    ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
                 }
             }
+        }
 
-            // If we have interactions, let them do all the processing. The precense of an interaction
-            // essentially bypasses the default phase progression logic of an action.
-            var interactionCount = bindingStates[bindingIndex].interactionCount;
-            if (interactionCount > 0)
-            {
-                ProcessInteractions(mapIndex, controlIndex, bindingIndex, time,
-                    bindingStates[bindingIndex].interactionStartIndex, interactionCount);
-            }
-            else if (!haveInteractionsOnComposite)
-            {
-                // Default logic has no support for cancellations and won't ever go into started
-                // phase. Will go from waiting straight to performed and then straight to waiting
-                // again.
-                //
-                // Also, we perform the action on *any* value change. For buttons, this means that
-                // if you use the default logic without an interaction, the action will be performed
-                // both when you press and when you release the button.
+        /// <summary>
+        /// Whether the given state change on a composite binding should be ignored.
+        /// </summary>
+        /// <param name="binding"></param>
+        /// <param name="eventPtr"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Each state event may change the state of arbitrary many controls on a device and thus may trigger
+        /// several bindings at once that are part of the same composite binding. We still want to trigger the
+        /// composite binding only once for the event.
+        ///
+        /// To do so, we store the
+        /// </remarks>
+        private unsafe bool ShouldIgnoreStateChangeOnCompositeBinding(BindingState* binding, InputEvent* eventPtr)
+        {
+            if (eventPtr == null)
+                return false;
 
-                var trigger = new TriggerState
-                {
-                    phase = InputActionPhase.Performed,
-                    mapIndex = mapIndex,
-                    controlIndex = controlIndex,
-                    bindingIndex = bindingIndex,
-                    interactionIndex = kInvalidIndex,
-                    time = time,
-                    startTime = time
-                };
-                ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
-            }
+            var eventId = eventPtr->eventId;
+            if (binding->triggerEventIdForComposite == eventId)
+                return true;
+
+            binding->triggerEventIdForComposite = eventId;
+            return false;
         }
 
         private void ProcessInteractions(int mapIndex, int controlIndex, int bindingIndex, double time, int interactionStartIndex, int interactionCount)
@@ -640,7 +684,7 @@ namespace UnityEngine.Experimental.Input
 
             ////REVIEW: If we want to defer triggering of actions, this is the point where we probably need to cut things off
             // See if it affects the phase of an associated action.
-            var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlValueChange.
+            var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
             if (actionIndex != -1)
             {
                 if (triggerStates[actionIndex].phase == InputActionPhase.Waiting)
@@ -798,7 +842,7 @@ namespace UnityEngine.Experimental.Input
             {
                 try
                 {
-                    callbacksOnMap[i].OnActionTriggered(ref context);
+                    callbacksOnMap[i](context);
                 }
                 catch (Exception exception)
                 {
@@ -918,9 +962,89 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex)
+        internal int GetValueSizeInBytes(int bindingIndex, int controlIndex)
         {
-            ////TODO: this needs to be shared with InputActionManager
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
+
+            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            {
+                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                var compositeObject = (IInputBindingComposite)composites[compositeIndex];
+                Debug.Assert(compositeObject != null);
+
+                return compositeObject.valueSizeInBytes;
+            }
+
+            var control = controls[controlIndex];
+            Debug.Assert(control != null);
+            return control.valueSizeInBytes;
+        }
+
+        internal Type GetValueType(int bindingIndex, int controlIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
+
+            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            {
+                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                var compositeObject = (IInputBindingComposite)composites[compositeIndex];
+                Debug.Assert(compositeObject != null);
+
+                return compositeObject.valueType;
+            }
+
+            var control = controls[controlIndex];
+            Debug.Assert(control != null);
+            return control.valueType;
+        }
+
+        ////REVIEW: we can unify the reading paths once we have blittable type constraints
+
+        internal unsafe void ReadValue(int bindingIndex, int controlIndex, void* buffer, int bufferSize)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
+
+            // If the binding that triggered the action is part of a composite, let
+            // the composite determine the value we return.
+            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            {
+                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                var compositeObject = (IInputBindingComposite)composites[compositeIndex];
+                Debug.Assert(compositeObject != null);
+
+                var context = new InputBindingCompositeContext();
+                compositeObject.ReadValue(ref context, buffer, bufferSize);
+            }
+            else
+            {
+                var control = controls[controlIndex];
+                Debug.Assert(control != null);
+                control.WriteValueInto(buffer, bufferSize);
+            }
+
+            /*
+            // Run value through processors, if any.
+            var processorCount = bindingStates[bindingIndex].processorCount;
+            if (processorCount > 0)
+            {
+                var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
+                for (var i = 0; i < processorCount; ++i)
+                    value = ((IInputControlProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
+            }
+            */
+        }
+
+        internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex)
+            where TValue : struct
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
 
             var value = default(TValue);
 
@@ -978,35 +1102,57 @@ namespace UnityEngine.Experimental.Input
         /// Records the current state of a single interaction attached to a binding.
         /// Each interaction keeps track of its own trigger control and phase progression.
         /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 12)]
         internal struct InteractionState
         {
-            public int triggerControlIndex;
-            public Flags flags;
-            public double startTime;
+            [FieldOffset(0)] private ushort m_TriggerControlIndex;
+            [FieldOffset(2)] private byte m_Phase;
+            [FieldOffset(3)] private byte m_Flags;
+            [FieldOffset(4)] private double m_StartTime;
 
-            [Flags]
-            public enum Flags
+            public int triggerControlIndex
             {
-                TimerRunning = 1 << 8, // Reserve first 8 bits for phase.
+                get { return m_TriggerControlIndex; }
+                set
+                {
+                    Debug.Assert(value >= 0 && value <= ushort.MaxValue);
+                    if (value < 0 || value > ushort.MaxValue)
+                        throw new NotSupportedException("Cannot have more than ushort.MaxValue controls in a single InputActionMapState");
+                    m_TriggerControlIndex = (ushort)value;
+                }
+            }
+
+            public double startTime
+            {
+                get { return m_StartTime; }
+                set { m_StartTime = value; }
             }
 
             public bool isTimerRunning
             {
-                get { return (flags & Flags.TimerRunning) == Flags.TimerRunning; }
+                get { return ((Flags)m_Flags & Flags.TimerRunning) == Flags.TimerRunning; }
                 set
                 {
                     if (value)
-                        flags |= Flags.TimerRunning;
+                        m_Flags |= (byte)Flags.TimerRunning;
                     else
-                        flags &= ~Flags.TimerRunning;
+                    {
+                        var mask = ~Flags.TimerRunning;
+                        m_Flags &= (byte)mask;
+                    }
                 }
             }
 
             public InputActionPhase phase
             {
-                // We store the phase in the low 8 bits of the flags field.
-                get { return (InputActionPhase)((int)flags & 0xf); }
-                set { flags = (Flags)(((uint)flags & 0xfffffff0) | (uint)value); }
+                get { return (InputActionPhase)m_Phase; }
+                set { m_Phase = (byte)value; }
+            }
+
+            [Flags]
+            private enum Flags
+            {
+                TimerRunning = 1 << 0,
             }
         }
 
@@ -1019,7 +1165,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// Keep references out of this struct. It should be blittable and require no GC scanning.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 16)]
+        [StructLayout(LayoutKind.Explicit, Size = 20)]
         internal struct BindingState
         {
             [FieldOffset(0)] private byte m_ControlCount;
@@ -1033,6 +1179,7 @@ namespace UnityEngine.Experimental.Input
             [FieldOffset(10)] private ushort m_ProcessorStartIndex;
             [FieldOffset(12)] private ushort m_InteractionStartIndex;
             [FieldOffset(14)] private ushort m_ControlStartIndex;
+            [FieldOffset(16)] private int m_TriggerEventIdForComposite;
 
             [Flags]
             public enum Flags
@@ -1146,6 +1293,9 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             /// <remarks>
             /// For bindings that don't trigger actions, this is <c>-1</c>.
+            ///
+            /// Note that for bindings that are part of a composite, this does not necessarily correspond to the action
+            /// triggered by the composite itself.
             /// </remarks>
             public int actionIndex
             {
@@ -1206,6 +1356,18 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            /// <summary>
+            /// <see cref="InputEvent.eventId">ID</see> of the event that last triggered the binding.
+            /// </summary>
+            /// <remarks>
+            /// We only store this for composites ATM.
+            /// </remarks>
+            public int triggerEventIdForComposite
+            {
+                get { return m_TriggerEventIdForComposite; }
+                set { m_TriggerEventIdForComposite = value; }
+            }
+
             public Flags flags
             {
                 get { return (Flags)m_Flags; }
@@ -1258,10 +1420,16 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Record of an input control change and its related data.
         /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 28)]
         public struct TriggerState
         {
-            private short m_Phase;
-            private short m_MapIndex;
+            [FieldOffset(0)] private ushort m_Phase;
+            [FieldOffset(2)] private ushort m_MapIndex;
+            [FieldOffset(4)] private double m_Time;
+            [FieldOffset(12)] private double m_StartTime;
+            [FieldOffset(20)] private int m_ControlIndex;
+            [FieldOffset(24)] private ushort m_BindingIndex;
+            [FieldOffset(26)] private ushort m_InteractionIndex;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -1269,36 +1437,87 @@ namespace UnityEngine.Experimental.Input
             public InputActionPhase phase
             {
                 get { return (InputActionPhase)m_Phase; }
-                set { m_Phase = (short)value; }
+                set { m_Phase = (ushort)value; }
             }
 
             /// <summary>
             /// The time the binding got triggered.
             /// </summary>
-            public double time;
+            public double time
+            {
+                get { return m_Time; }
+                set { m_Time = value; }
+            }
 
             /// <summary>
             /// The time when the binding moved into <see cref="InputActionPhase.Started"/>.
             /// </summary>
-            public double startTime;
+            public double startTime
+            {
+                get { return m_StartTime; }
+                set { m_StartTime = value; }
+            }
 
             public int mapIndex
             {
                 get { return m_MapIndex; }
-                set { m_MapIndex = (short)value; }
+                set
+                {
+                    Debug.Assert(value >= 0 && value <= ushort.MaxValue);
+                    if (value < 0 || value > ushort.MaxValue)
+                        throw new NotSupportedException("More than ushort.MaxValue InputActionMaps in a single InputActionMapState");
+                    m_MapIndex = (ushort)value;
+                }
             }
 
-            public int controlIndex;
+            public int controlIndex
+            {
+                get { return m_ControlIndex; }
+                set { m_ControlIndex = value; }
+            }
 
             /// <summary>
             /// Index into <see cref="bindingStates"/> for the binding that triggered.
             /// </summary>
-            public int bindingIndex;
+            public int bindingIndex
+            {
+                get { return m_BindingIndex; }
+                set
+                {
+                    Debug.Assert(value >= 0 && value <= ushort.MaxValue);
+                    if (value < 0 || value > ushort.MaxValue)
+                        throw new NotSupportedException("More than ushort.MaxValue bindings in a single InputActionMapState");
+                    m_BindingIndex = (ushort)value;
+                }
+            }
 
             /// <summary>
             /// Index into <see cref="InputActionMapState.interactionStates"/> for the interaction that triggered.
             /// </summary>
-            public int interactionIndex;
+            /// <remarks>
+            /// Is <see cref="InputActionMapState.kInvalidIndex"/> if there is no interaction present on the binding.
+            /// </remarks>
+            public int interactionIndex
+            {
+                get
+                {
+                    if (m_InteractionIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_InteractionIndex;
+                }
+                set
+                {
+                    Debug.Assert(value == kInvalidIndex || (value >= 0 && value < ushort.MaxValue));
+                    if (value == kInvalidIndex)
+                        m_InteractionIndex = ushort.MaxValue;
+                    else
+                    {
+                        if (value < 0 || value >= ushort.MaxValue)
+                            throw new NotSupportedException("More than ushort.MaxValue-1 interactions in a single InputActionMapState");
+                        m_InteractionIndex = (ushort)value;
+                    }
+                }
+            }
         }
 
         /// <summary>

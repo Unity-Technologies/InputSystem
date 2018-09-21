@@ -1,13 +1,20 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: nuke this and force raw pointers on all code using events?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
     /// the unsafe operations necessary to work with events.
     /// </summary>
-    public unsafe struct InputEventPtr
+    /// <remarks>
+    /// Note that event pointers generally refer to event buffers that are continually reused. This means
+    /// that event pointers should not be held on to. Instead, to hold onto event data, manually copy
+    /// an event to a buffer using <see cref="CopyTo"/>.
+    /// </remarks>
+    public unsafe struct InputEventPtr : IEquatable<InputEventPtr>
     {
         // C# does not allow us to have pointers to structs that have managed data members. Since
         // this can't be guaranteed for generic type parameters, they can't be used with pointers.
@@ -53,6 +60,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 if (!valid)
                     return 0;
                 return m_EventPtr->eventId;
+            }
+            set
+            {
+                if (!valid)
+                    throw new NullReferenceException();
+                m_EventPtr->eventId = value;
             }
         }
 
@@ -134,6 +147,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return m_EventPtr->type == otherEventTypeCode;
         }
 
+        public void CopyTo(void* buffer, int bufferSize)
+        {
+            throw new NotImplementedException();
+        }
+
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.
         public InputEventPtr Next()
         {
@@ -153,6 +171,43 @@ namespace UnityEngine.Experimental.Input.LowLevel
             // Writing it as a two-step operation like here makes it build cleanly.
             var eventPtr = *m_EventPtr;
             return eventPtr.ToString();
+        }
+
+        public bool Equals(InputEventPtr other)
+        {
+            return m_EventPtr == other.m_EventPtr;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            return obj is InputEventPtr && Equals((InputEventPtr)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return unchecked((int)(long)m_EventPtr);
+        }
+
+        public static bool operator==(InputEventPtr left, InputEventPtr right)
+        {
+            return left.m_EventPtr == right.m_EventPtr;
+        }
+
+        public static bool operator!=(InputEventPtr left, InputEventPtr right)
+        {
+            return left.m_EventPtr != right.m_EventPtr;
+        }
+
+        public static implicit operator InputEventPtr(InputEvent* eventPtr)
+        {
+            return new InputEventPtr(eventPtr);
+        }
+
+        public static implicit operator InputEvent*(InputEventPtr eventPtr)
+        {
+            return eventPtr.ToPointer();
         }
     }
 }

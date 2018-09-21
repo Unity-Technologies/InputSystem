@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <remarks>
     /// This is a variable-sized event.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 5)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 5)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x53544154; // 'STAT'
@@ -37,7 +37,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 fixed(byte* data = stateData)
                 {
-                    return new IntPtr((void*)data);
+                    return new IntPtr(data);
                 }
             }
         }

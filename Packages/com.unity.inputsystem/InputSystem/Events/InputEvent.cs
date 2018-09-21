@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -17,6 +18,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public const int kBaseEventSize = 20;
         public const int kInvalidId = 0;
+        public const int kAlignment = 4;
 
         [FieldOffset(0)] private FourCC m_Type;
         [FieldOffset(4)] private ushort m_SizeInBytes;
@@ -30,6 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public FourCC type
         {
             get { return m_Type; }
+            set { m_Type = value; }
         }
 
         /// <summary>
@@ -58,6 +61,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public uint sizeInBytes
         {
             get { return m_SizeInBytes; }
+            set
+            {
+                if (value > ushort.MaxValue)
+                    throw new ArgumentException("Maximum event size is " + ushort.MaxValue, "value");
+                m_SizeInBytes = (ushort)value;
+            }
         }
 
         /// <summary>
@@ -69,6 +78,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public int eventId
         {
             get { return (int)(m_EventId & kIdMask); }
+            set { m_EventId = (uint)value | (m_EventId & ~kIdMask); }
         }
 
         /// <summary>
@@ -131,7 +141,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public bool handled
         {
             get { return (m_EventId & kHandledMask) == kHandledMask; }
-            set { m_EventId |= kHandledMask; }
+            set
+            {
+                if (value)
+                    m_EventId |= kHandledMask;
+                else
+                    m_EventId &= ~kHandledMask;
+            }
         }
 
         public override string ToString()
@@ -142,7 +158,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
         {
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, 4);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, kAlignment);
             return (InputEvent*)((byte*)current + alignedSizeInBytes);
         }
     }

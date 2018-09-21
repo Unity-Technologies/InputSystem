@@ -119,7 +119,7 @@ public class DemoGame : MonoBehaviour
     public void StartMultiPlayerGame()
     {
         // Start listening for joins.
-        joinAction.Enable();
+        joinAction.action.Enable();
         ////TODO: call OnJoin when performed
         ////TODO: react when bound controls change
 

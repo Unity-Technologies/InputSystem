@@ -6,8 +6,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 
-////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
-////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
+////REVIEW: as soon as we gain the ability to have blittable type constraints, InputControl<TValue> should be constrained such
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
@@ -15,6 +14,9 @@ using UnityEngine.Experimental.Input.Layouts;
 ////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
 ////        the InputDevice reference itself.
+
+////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
+////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
 
 namespace UnityEngine.Experimental.Input
 {
@@ -217,7 +219,19 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Returns the underlying value type of this control.
         /// </summary>
+        /// <remarks>
+        /// This is the type of values that are returned when reading the current value of a control
+        /// or when reading a value of a control from an event.
+        /// </remarks>
+        /// <seealso cref="valueSizeInBytes"/>
+        /// <seealso cref="WriteValueInto"/>
         public abstract Type valueType { get; }
+
+        /// <summary>
+        /// Size in bytes of values that the control returns.
+        /// </summary>
+        /// <seealso cref="valueType"/>
+        public abstract int valueSizeInBytes { get; }
 
         public override string ToString()
         {
@@ -229,7 +243,7 @@ namespace UnityEngine.Experimental.Input
             return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
         }
 
-        ////TODO: setting value (will it also go through the processor stack?)
+        ////TODO: setting value
 
         // Current value as boxed object.
         // NOTE: Calling this will allocate.
@@ -238,6 +252,8 @@ namespace UnityEngine.Experimental.Input
         public abstract object ReadDefaultValueAsObject();
 
         public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
+
+        public abstract unsafe void WriteValueInto(void* buffer, int bufferSize);
 
         public void WriteValueFromObjectInto(InputEventPtr eventPtr, object value)
         {
@@ -251,7 +267,7 @@ namespace UnityEngine.Experimental.Input
 
         public virtual bool HasSignificantChange(InputEventPtr eventPtr)
         {
-            return (GetStatePtrFromStateEvent(eventPtr) != IntPtr.Zero);
+            return GetStatePtrFromStateEvent(eventPtr) != IntPtr.Zero;
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -487,13 +503,16 @@ namespace UnityEngine.Experimental.Input
     /// that the control has to store data in the given value format. A control that captures float
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
+        where TValue : struct
     {
         public override Type valueType
         {
-            get
-            {
-                return typeof(TValue);
-            }
+            get { return typeof(TValue); }
+        }
+
+        public override int valueSizeInBytes
+        {
+            get { return UnsafeUtility.SizeOf<TValue>(); }
         }
 
         public TValue ReadValue()
@@ -520,6 +539,18 @@ namespace UnityEngine.Experimental.Input
         public override object ReadDefaultValueAsObject()
         {
             return ReadDefaultValue();
+        }
+
+        public override unsafe void WriteValueInto(void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+            if (bufferSize < UnsafeUtility.AlignOf<TValue>())
+                throw new ArgumentException(
+                    string.Format("bufferSize={0} < sizeof(TValue)={1}", bufferSize, valueSizeInBytes), "bufferSize");
+
+            var adjustedBufferPtr = (byte*)buffer - m_StateBlock.byteOffset;
+            WriteUnprocessedValueInto(new IntPtr(adjustedBufferPtr), ReadValue());
         }
 
         public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
@@ -556,6 +587,13 @@ namespace UnityEngine.Experimental.Input
             return true;
         }
 
+        public TValue ReadUnprocessedValueFrom(InputEventPtr eventPtr)
+        {
+            var result = default(TValue);
+            ReadUnprocessedValueFrom(eventPtr, out result);
+            return result;
+        }
+
         public bool ReadUnprocessedValueFrom(InputEventPtr inputEvent, out TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
@@ -583,7 +621,7 @@ namespace UnityEngine.Experimental.Input
 
         protected virtual void WriteUnprocessedValueInto(IntPtr statePtr, TValue value)
         {
-            ////TODO: indicate propertly that this control does not support writing
+            ////TODO: indicate properly that this control does not support writing
             throw new NotSupportedException();
         }
 

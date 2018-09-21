@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: have single delegate instead of separate performed/started/cancelled callbacks?
+
 ////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls', 'devices', and 'bindings')
 
 ////REVIEW: should the enable/disable API actually sit on InputSystem?
@@ -13,33 +15,16 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: resolving as a side-effect of 'controls' and 'devices' seems pretty heavy handed
 
-////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
-
-////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
-
-////REVIEW: allow individual bindings to be enabled/disabled?
-
-////TODO: event-based processing of input actions
-
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
 ////      a single start cycle
 
-////TODO: add ability to query devices used by action
-
-////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
-
 ////TODO: allow changing bindings without having to disable
-
-////TODO: nuke Clone()
 
 ////REVIEW: should actions basically be handles to data that is stored in an array in the map?
 ////        (with this, we could also implement more efficient duplication where we duplicate all the binding data but not the action data)
 
 namespace UnityEngine.Experimental.Input
 {
-    ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas
-    public delegate void InputActionListener(InputAction.CallbackContext context);
-
     /// <summary>
     /// A named input signal that can flexibly decide which input data to tap.
     /// </summary>
@@ -307,15 +292,13 @@ namespace UnityEngine.Experimental.Input
             get { return phase != InputActionPhase.Disabled; }
         }
 
-        ////REVIEW: have single delegate that just gives you an InputAction and you get the control and phase from the action?
-
-        public event InputActionListener started
+        public event Action<CallbackContext> started
         {
             add { m_OnStarted.Append(value); }
             remove { m_OnStarted.Remove(value); }
         }
 
-        public event InputActionListener cancelled
+        public event Action<CallbackContext> cancelled
         {
             add { m_OnCancelled.Append(value); }
             remove { m_OnCancelled.Remove(value); }
@@ -324,7 +307,7 @@ namespace UnityEngine.Experimental.Input
         // Listeners that are called when the action has been fully performed.
         // Passes along the control that triggered the state change and the action
         // object itself as well.
-        public event InputActionListener performed
+        public event Action<CallbackContext> performed
         {
             add { m_OnPerformed.Append(value); }
             remove { m_OnPerformed.Remove(value); }
@@ -475,9 +458,9 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InputActionMap m_ActionMap;
 
         // Listeners. No array allocations if only a single listener.
-        [NonSerialized] internal InlinedArray<InputActionListener> m_OnStarted;
-        [NonSerialized] internal InlinedArray<InputActionListener> m_OnCancelled;
-        [NonSerialized] internal InlinedArray<InputActionListener> m_OnPerformed;
+        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnStarted;
+        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnCancelled;
+        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
         /// Whether the action is a loose action created in code (e.g. as a property on a component).
@@ -600,20 +583,6 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public TValue ReadValue<TValue>()
-            {
-                var value = default(TValue);
-                if (m_State != null)
-                    value = m_State.ReadValue<TValue>(m_BindingIndex, m_ControlIndex);
-                return value;
-            }
-
-            // really read previous value, not value from last frame
-            public TValue ReadPreviousValue<TValue>()
-            {
-                throw new NotImplementedException();
-            }
-
             public double time
             {
                 get { return m_Time; }
@@ -634,6 +603,50 @@ namespace UnityEngine.Experimental.Input
             public double duration
             {
                 get { return time - startTime; }
+            }
+
+            public Type valueType
+            {
+                get
+                {
+                    if (m_State == null)
+                        return null;
+
+                    return m_State.GetValueType(m_BindingIndex, m_ControlIndex);
+                }
+            }
+
+            public int valueSizeInBytes
+            {
+                get
+                {
+                    if (m_State == null)
+                        return 0;
+
+                    return m_State.GetValueSizeInBytes(m_BindingIndex, m_ControlIndex);
+                }
+            }
+
+            public unsafe void ReadValue(void* buffer, int bufferSize)
+            {
+                if (m_State == null)
+                    return;
+                m_State.ReadValue(m_BindingIndex, m_ControlIndex, buffer, bufferSize);
+            }
+
+            public TValue ReadValue<TValue>()
+                where TValue : struct
+            {
+                var value = default(TValue);
+                if (m_State != null)
+                    value = m_State.ReadValue<TValue>(m_BindingIndex, m_ControlIndex);
+                return value;
+            }
+
+            // really read previous value, not value from last frame
+            public TValue ReadPreviousValue<TValue>()
+            {
+                throw new NotImplementedException();
             }
         }
     }

@@ -107,8 +107,8 @@ public class DemoPlayerController : MonoBehaviour
         //       means that the UI will react only to input from that same user.
         var uiInput = ui.GetComponent<UIActionInputModule>();
         Debug.Assert(uiInput != null);
-        uiInput.moveAction.Set(controls.menu.navigate);
-        uiInput.leftClickAction.Set(controls.menu.click);
+        uiInput.move = new InputActionProperty(controls.menu.navigate);
+        uiInput.leftClick = new InputActionProperty(controls.menu.click);
     }
 
     /// <summary>

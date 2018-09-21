@@ -63,6 +63,7 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     public class InputStateHistory<TValue> : InputStateHistory, IReadOnlyList<TValue>, IDisposable
+        where TValue : struct
     {
         public InputStateHistory(InputControl<TValue> control)
             : base(control)

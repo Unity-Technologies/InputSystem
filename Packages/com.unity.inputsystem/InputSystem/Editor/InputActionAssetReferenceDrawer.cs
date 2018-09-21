@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEngine.Events;
 using UnityEngine.Experimental.Input.Utilities;
 
+////FIXME: seems like drag&drop doesn't work anymore
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>

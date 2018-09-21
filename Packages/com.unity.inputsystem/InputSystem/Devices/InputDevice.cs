@@ -189,6 +189,11 @@ namespace UnityEngine.Experimental.Input
             get { return typeof(byte[]); }
         }
 
+        public override int valueSizeInBytes
+        {
+            get { return (int)m_StateBlock.alignedSizeInBytes; }
+        }
+
         public InputNoiseFilter userInteractionFilter
         {
             get
@@ -227,6 +232,11 @@ namespace UnityEngine.Experimental.Input
         }
 
         public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override unsafe void WriteValueInto(void* buffer, int bufferSize)
         {
             throw new NotImplementedException();
         }
