@@ -2186,8 +2186,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanSwitchControlScheme()
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
@@ -2200,30 +2199,32 @@ partial class CoreTests
         action1.AddBinding("<Gamepad>/leftStick").WithGroup("gamepad");
         action2.AddBinding("<Gamepad>/rightStick").WithGroup("gamepad");
         action1.AddBinding("<Keyboard>/a").WithGroup("keyboard");
-        action2.AddBinding("<Keyboard>/b").WithGroup("keyboard)");
+        action2.AddBinding("<Keyboard>/b").WithGroup("keyboard");
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        asset.AddControlScheme("gamepad")
-            .WithRequiredDevice("<Gamepad>")
-            .WithBindingGroup("gamepad");
-        asset.AddControlScheme("keyboard")
-            .WithRequiredDevice("<Keyboard>")
-            .WithBindingGroup("keyboard");
-
-        asset.SwitchControlScheme("gamepad");
+        asset.SetBindingMask("gamepad");
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
         Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action2.controls, Has.Count.EqualTo(1));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
 
-        asset.SwitchControlScheme("keyboard");
+        asset.SetBindingMask("keyboard");
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
         Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
         Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
+
+        asset.ClearBindingMask();
+
+        Assert.That(action1.controls, Has.Count.EqualTo(2));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action2.controls, Has.Count.EqualTo(2));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
     }
 
@@ -2234,8 +2235,7 @@ partial class CoreTests
     // us the most efficient representation.
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_AllMapsInAssetShareSingleExecutionState()
+    public void Actions_AllMapsInAssetShareSingleExecutionState()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
@@ -2547,7 +2547,7 @@ partial class CoreTests
     {
         var map = new InputActionMap(name: "test");
         map.AddAction("test")
-            .AddCompositeBinding("ButtonVector")
+            .AddCompositeBinding("dpad")
             .With("Up", "/<Keyboard>/w")
             .With("Down", "/<Keyboard>/s")
             .With("Left", "/<Keyboard>/a")
@@ -2563,7 +2563,7 @@ partial class CoreTests
         Assert.That(deserialized.Length, Is.EqualTo(1));
         Assert.That(deserialized[0].actions.Count, Is.EqualTo(1));
         Assert.That(deserialized[0].actions[0].bindings.Count, Is.EqualTo(5));
-        Assert.That(deserialized[0].actions[0].bindings[0].path, Is.EqualTo("ButtonVector"));
+        Assert.That(deserialized[0].actions[0].bindings[0].path, Is.EqualTo("dpad"));
         Assert.That(deserialized[0].actions[0].bindings[0].isComposite, Is.True);
         Assert.That(deserialized[0].actions[0].bindings[0].isPartOfComposite, Is.False);
         Assert.That(deserialized[0].actions[0].bindings[1].name, Is.EqualTo("Up"));
