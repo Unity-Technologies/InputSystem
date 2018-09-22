@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -50,25 +49,50 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!path.EndsWith(k_FileExtension))
                 return false;
 
-            var obj = EditorUtility.InstanceIDToObject(instanceId) as InputActionAsset;
-            if (obj == null)
-                return false;
+            string mapToSelect = null;
+            string actionToSelect = null;
+
+            // Grab InputActionAsset.
+            var obj = EditorUtility.InstanceIDToObject(instanceId);
+            var asset = obj as InputActionAsset;
+            if (asset == null)
+            {
+                // Check if the user clicked on an action inside the asset.
+                var actionReference = obj as InputActionReference;
+                if (actionReference != null)
+                {
+                    asset = actionReference.asset;
+                    mapToSelect = actionReference.action.actionMap.name;
+                    actionToSelect = actionReference.action.name;
+                }
+                else
+                    return false;
+            }
 
             // See if we have an existing editor window that has the asset open.
             var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
-            var window = inputManagers.FirstOrDefault(w => w.m_ImportedAssetObject.Equals(obj));
+            var window = inputManagers.FirstOrDefault(w => w.m_ImportedAssetObject.Equals(asset));
             if (window != null)
             {
                 window.Show();
                 window.Focus();
-                return true;
+            }
+            else
+            {
+                // No, so create a new window.
+                window = CreateInstance<ActionInspectorWindow>();
+                window.titleContent = new GUIContent(asset.name + " (Input Manager)");
+                window.SetAsset(asset);
+                window.Show();
             }
 
-            // No, so create a new window.
-            window = CreateInstance<ActionInspectorWindow>();
-            window.titleContent = new GUIContent(obj.name + " (Input Manager)");
-            window.SetAsset(obj);
-            window.Show();
+            // If user clicked on an action inside the asset, focus on that action (if we can find it).
+            if (actionToSelect != null)
+            {
+                var item = window.m_TreeView.FindActionTreeViewItem(mapToSelect, actionToSelect);
+                if (item != null)
+                    window.m_TreeView.SetSelection(new[] { item.id });
+            }
 
             return true;
         }
