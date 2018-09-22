@@ -28,12 +28,6 @@
                     "id": "6890847e-f99c-43ac-a79d-0787d911a0a1",
                     "expectedControlLayout": "Button",
                     "bindings": []
-                },
-                {
-                    "name": "escape",
-                    "id": "4ad24240-1211-418c-9678-760c0f5e2f0f",
-                    "expectedControlLayout": "Button",
-                    "bindings": []
                 }
             ],
             "bindings": [
@@ -204,35 +198,6 @@
                     "isComposite": false,
                     "isPartOfComposite": false,
                     "modifiers": ""
-                },
-                {
-                    "name": "",
-                    "path": "<Keyboard>/escape",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "escape",
-                    "chainWithPrevious": false,
-                    "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
-                }
-            ]
-        }
-    ],
-    "controlSchemes": [
-        {
-            "name": "Keyboard&Mouse",
-            "basedOn": "",
-            "bindingGroup": "Keyboard&Mouse",
-            "devices": [
-                {
-                    "devicePath": "",
-                    "isOptional": false
-                },
-                {
-                    "devicePath": "",
-                    "isOptional": false
                 }
             ]
         }
