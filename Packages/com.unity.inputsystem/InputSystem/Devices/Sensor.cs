@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
     public class CompensateDirectionProcessor : IInputControlProcessor<Vector3>
     {
-        public Vector3 Process(Vector3 value, InputControl control)
+        public virtual Vector3 Process(Vector3 value, InputControl control)
         {
             if (!InputConfiguration.CompensateSensorsForScreenOrientation)
                 return value;
@@ -110,13 +110,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
     public class CompensateRotationProcessor : IInputControlProcessor<Quaternion>
     {
-        public Quaternion Process(Quaternion value, InputControl control)
+        public virtual Quaternion Process(Quaternion value, InputControl control)
         {
             if (!InputConfiguration.CompensateSensorsForScreenOrientation)
                 return value;
-
-            float sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
-            value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
 
             const float kSqrtOfTwo = 1.4142135623731f;
             var q = Quaternion.identity;

@@ -86,11 +86,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "distance", layout = "Axis", variants = "Proximity")]
         [InputControl(name = "gravity", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Gravity")]
         [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "LinearAcceleration")]
-        [InputControl(name = "attitude", layout = "Quaternion", processors = "CompensateRotation", variants = "RotationVector")]
+        [InputControl(name = "attitude", layout = "Quaternion", processors = "AndroidCompensateRotation", variants = "RotationVector")]
         [InputControl(name = "relativeHumidity", layout = "Axis", variants = "RelativeHumidity")]
         [InputControl(name = "ambientTemperature", layout = "Axis", variants = "AmbientTemperature")]
         [InputControl(name = "stepCounter", layout = "Integer", variants = "StepCounter")]
-        [InputControl(name = "rotation", layout = "Quaternion", processors = "CompensateRotation", variants = "GeomagneticRotationVector")]
+        [InputControl(name = "rotation", layout = "Quaternion", processors = "AndroidCompensateRotation", variants = "GeomagneticRotationVector")]
         [InputControl(name = "rate", layout = "Axis", variants = "HeartRate")]
         public fixed float data[16];
 
@@ -122,9 +122,26 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public new Vector3 Process(Vector3 vector, InputControl control)
+        public override Vector3 Process(Vector3 vector, InputControl control)
         {
             return base.Process(vector * kAccelerationMultiplier, control);
+        }
+    }
+
+    public class AndroidCompensateRotationProcessor : CompensateRotationProcessor
+    {
+        public override Quaternion Process(Quaternion value, InputControl control)
+        {
+            // https://developer.android.com/reference/android/hardware/SensorEvent#values
+            // "...The rotation vector represents the orientation of the device as a combination of an angle and an axis, in which the device has rotated through an angle theta around an axis <x, y, z>."
+            // "...The three elements of the rotation vector are < x * sin(theta / 2), y* sin(theta / 2), z* sin(theta / 2)>, such that the magnitude of the rotation vector is equal to sin(theta / 2), and the direction of the rotation vector is equal to the direction of the axis of rotation."
+            // "...The three elements of the rotation vector are equal to the last three components of a unit quaternion < cos(theta / 2), x* sin(theta/ 2), y* sin(theta / 2), z* sin(theta/ 2)>."
+            //
+            // In other words, axis + rotation is combined into Vector3, to recover the quaternion from it, we must compute 4th component as 1 - sqrt(x*x + y*y + z*z)
+            float sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
+            value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
+
+            return base.Process(value, control);
         }
     }
 }
