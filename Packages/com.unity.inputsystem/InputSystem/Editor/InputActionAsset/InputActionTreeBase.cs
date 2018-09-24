@@ -18,10 +18,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 return SharedResourcesPath + "personal/";
             }
         }
-        
+
         protected InputActionTreeBase(TreeViewState state)
-            : base(state) { }
-        
+            : base(state) {}
+
         public ActionTreeViewItem GetSelectedRow()
         {
             if (!HasSelection())
@@ -72,18 +72,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return item as ActionMapTreeItem;
         }
-
-        public SerializedProperty GetSelectedProperty()
+        
+        public void SelectFirstRow()
         {
-            if (!HasSelection())
-                return null;
-
-            var item = FindItem(GetSelection().First(), rootItem);
-
-            if (item == null)
-                return null;
-
-            return ((ActionTreeViewItem)item).elementProperty;
+            SetSelection(new[] {rootItem.children[0].id});
         }
     }
 }

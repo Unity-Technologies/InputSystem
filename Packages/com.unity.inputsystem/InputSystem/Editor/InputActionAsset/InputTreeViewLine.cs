@@ -269,7 +269,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public override int GetIdForName(string name)
         {
             var actionMapName = "";
-            if(m_ActionMapProperty!=null)
+            if (m_ActionMapProperty != null)
                 actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
             return (actionMapName + "/" + name).GetHashCode();
         }

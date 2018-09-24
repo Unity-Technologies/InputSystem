@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_TreeView = treeView;
             m_Apply = () =>
             {
-                if (m_TreeView != null) 
+                if (m_TreeView != null)
                     m_TreeView.Reload();
             };
         }
@@ -188,7 +188,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
         }
-
 
         static Dictionary<string, string> GetParameterDictionary(string data)
         {
@@ -355,11 +354,9 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
         }
 
-
-
         IEnumerable<ActionTreeViewItem> GetSelectedRows()
         {
-            if(m_TreeView!=null && m_TreeView.HasFocus())
+            if (m_TreeView != null && m_TreeView.HasFocus())
                 return m_TreeView.GetSelectedRows();
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 return m_ActionMapsTree.GetSelectedRows();
@@ -370,16 +367,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
         ActionTreeItem GetSelectedAction()
         {
-            if(m_TreeView!=null)
+            if (m_TreeView != null)
                 return m_TreeView.GetSelectedAction();
             if (m_ActionsTree != null)
                 return m_ActionsTree.GetSelectedAction();
             return null;
         }
-        
+
         ActionMapTreeItem GetSelectedActionMap()
         {
-            if (m_TreeView!=null)
+            if (m_TreeView != null)
                 return m_TreeView.GetSelectedActionMap();
             if (m_ActionMapsTree != null)
                 return m_ActionMapsTree.GetSelectedActionMap();
@@ -388,7 +385,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         bool CanRenameCurrentSelection()
         {
-            if (m_TreeView!=null && m_TreeView.HasFocus())
+            if (m_TreeView != null && m_TreeView.HasFocus())
                 return m_TreeView.CanRenameCurrentSelection();
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 return m_ActionMapsTree.CanRenameCurrentSelection();
@@ -399,17 +396,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetEmptySelection()
         {
-            if (m_TreeView!=null && m_TreeView.HasFocus())
+            if (m_TreeView != null && m_TreeView.HasFocus())
                 m_TreeView.SetSelection(new int[0]);
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 m_ActionMapsTree.SetSelection(new int[0]);
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())
-                m_ActionsTree.SetSelection(new int[0]);;
+                m_ActionsTree.SetSelection(new int[0]);
+            ;
         }
-        
+
         void BeginRename()
         {
-            if (m_TreeView!=null && m_TreeView.HasFocus())
+            if (m_TreeView != null && m_TreeView.HasFocus())
                 m_TreeView.BeginRename(m_TreeView.GetSelectedRow());
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 m_ActionMapsTree.BeginRename(m_ActionMapsTree.GetSelectedRow());

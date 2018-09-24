@@ -278,7 +278,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void LoadPropertiesForSelection()
         {
             m_PropertyView = null;
-            if (m_ActionMapsTree.GetSelectedRow() != null)
+            if (m_ActionMapsTree.HasFocus() && m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
                 if (row != null)
@@ -287,7 +287,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
-            if (m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
+            if (m_ActionsTree.HasFocus() && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p.hasProperties)
@@ -360,7 +360,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (m_ActionMapsTree.HasFocus() && Event.current.keyCode == KeyCode.RightArrow)
                 {
-                    m_ActionsTree.SetFocus();
+                    if(!m_ActionsTree.HasSelection())
+                        m_ActionsTree.SelectFirstRow();
                 }
             }
 

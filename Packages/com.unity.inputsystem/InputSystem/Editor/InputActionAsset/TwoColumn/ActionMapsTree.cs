@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 root.AddChild(actionMapItem);
             }
         }
-        
+
         protected override void ContextClicked()
         {
             OnContextClick(null);
@@ -155,11 +155,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 item.OnGUI(args.rowRect, args.selected, args.focused, indent);
             }
-        }
-
-        public void SelectFirstRow()
-        {
-            SetSelection(new []{rootItem.children[0].id});
         }
     }
 }
