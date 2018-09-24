@@ -55,10 +55,10 @@ namespace UnityEngine.Experimental.Input
                 m_CurrentIndex++;
 
                 if (m_CurrentIndex == size)
-                    return false;                
+                    return false;
 
-                fixed (char* ptr = m_Composition.buffer)
-                    m_CurrentCharacter = *(ptr + m_CurrentIndex);
+                fixed(char* ptr = m_Composition.buffer)
+                m_CurrentCharacter = *(ptr + m_CurrentIndex);
 
                 return true;
             }
@@ -117,7 +117,7 @@ namespace UnityEngine.Experimental.Input
         public override string ToString()
         {
             fixed(char* ptr = buffer)
-                return new string(ptr);
+            return new string(ptr);
         }
 
         public IEnumerator<char> GetEnumerator()
