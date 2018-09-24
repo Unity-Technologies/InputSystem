@@ -163,6 +163,16 @@ namespace UnityEngine.Experimental.Input.Editor
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
         }
 
+        public void OnDestroy()
+        {
+            ////REVIEW: this sucks; what we really want is three options with the last (default) one allowing to cancel the closing
+            ////  (also, why is "yes" made the default on the Mac???)
+            if (m_IsDirty && EditorUtility.DisplayDialog("Save Changes?",
+                "You have unsaved changes. Do you want to save them before closing the window?",
+                "Yes (Save Changes)", "No (Discard Changes)"))
+                SaveChangesToAsset();
+        }
+
         private void SetAsset(InputActionAsset referencedObject)
         {
             m_ImportedAssetObject = referencedObject;
