@@ -97,22 +97,22 @@ namespace UnityEngine.Experimental.Input.Editor
             return true;
         }
 
-        public static void RefreshAll()
+        public static void RefreshAllAfterImport()
         {
             if (s_RefreshPending)
                 return;
 
             // We don't want to refresh right away but rather wait for the next editor update
             // to then do one pass of refreshing action editor windows.
-            EditorApplication.delayCall += RefreshAllInternal;
+            EditorApplication.delayCall += RefreshAllAfterImportInternal;
             s_RefreshPending = true;
         }
 
-        private static void RefreshAllInternal()
+        private static void RefreshAllAfterImportInternal()
         {
             var windows = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
             foreach (var window in windows)
-                window.Refresh();
+                window.RefreshAfterImport();
 
             ////REVIEW: why do we need to do this? comment!
             ActiveEditorTracker.sharedTracker.ForceRebuild();
@@ -124,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] private bool m_IsDirty;
         [SerializeField] private string m_AssetGUID;
         [SerializeField] private string m_AssetPath;
-        [SerializeField] private string m_AssetJson;
+        [SerializeField] private string m_ImportedAssetJson;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private TreeViewState m_TreeViewState;
@@ -154,7 +154,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             // Initialize after assembly reload
-            InitializeObjectReferences();
+            InitializeAssetObjectForEditing();
             InitializeTrees();
         }
 
@@ -166,11 +166,11 @@ namespace UnityEngine.Experimental.Input.Editor
         private void SetAsset(InputActionAsset referencedObject)
         {
             m_ImportedAssetObject = referencedObject;
-            InitializeObjectReferences();
+            InitializeAssetObjectForEditing();
             InitializeTrees();
         }
 
-        private void InitializeObjectReferences()
+        private void InitializeAssetObjectForEditing()
         {
             // If we have an asset object, grab its path and GUID.
             if (m_ImportedAssetObject != null)
@@ -182,19 +182,21 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 // Otherwise look it up from its GUID. We're not relying on just
                 // the path here as the asset may have been moved.
-                InitializeReferenceToImportedAssetObject();
+                InitializeReferenceToImportedAssetObjectFromGUID();
             }
+
+            if (m_AssetObjectForEditing != null)
+                DestroyImmediate(m_AssetObjectForEditing);
 
             // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
             // GUIDs.
             m_AssetObjectForEditing = Instantiate(m_ImportedAssetObject);
             m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
             m_AssetObjectForEditing.name = m_ImportedAssetObject.name;
-            m_AssetJson = null;
             m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
         }
 
-        private void InitializeReferenceToImportedAssetObject()
+        private void InitializeReferenceToImportedAssetObjectFromGUID()
         {
             Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID));
 
@@ -203,11 +205,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 throw new Exception("Could not determine asset path for " + m_AssetGUID);
 
             m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
-            if (m_AssetObjectForEditing != null)
-            {
-                DestroyImmediate(m_AssetObjectForEditing);
-                m_AssetObjectForEditing = null;
-            }
+            m_ImportedAssetJson = m_ImportedAssetObject.ToJson();
         }
 
         private void InitializeTrees()
@@ -262,27 +260,50 @@ namespace UnityEngine.Experimental.Input.Editor
             m_TreeView.Reload();
         }
 
-        private void Refresh()
+        /// <summary>
+        /// After we've imported an .inputactions file, make sure our object references are in sync.
+        /// </summary>
+        private void RefreshAfterImport()
         {
-            // See if the data has actually changed.
-            var newJson = m_AssetObjectForEditing.ToJson();
-            if (newJson == m_AssetJson)
-            {
-                // Still need to refresh reference to imported object in case we had a re-import.
-                if (m_ImportedAssetObject == null)
-                    InitializeReferenceToImportedAssetObject();
+            // If we haven't lost our asset object, all is good.
+            if (m_ImportedAssetObject != null)
+                return;
 
+            // Otherwise, grab the asset object again based on its GUID and then see
+            // if the data has changed compared to what we currently have.
+            var oldJson = m_ImportedAssetJson;
+            InitializeReferenceToImportedAssetObjectFromGUID();
+            if (oldJson == m_ImportedAssetJson)
+            {
+                m_IsDirty = false;
                 return;
             }
 
-            // Perform a full refresh.
-            InitializeObjectReferences();
+            // If we have unsaved changes, ask the user what to do with them.
+            if (m_IsDirty && !EditorUtility.DisplayDialog("Discard Changes?",
+                string.Format(
+                    "'{0}' has changed on disk but you have unsaved changes. Would you like to discard those changes?",
+                    m_AssetPath), "Yes", "No"))
+            {
+                // Keep our changes. We've already re-established the connection to the m_ImportedAssetObject
+                // so we should be good to go.
+                return;
+            }
+
+            // Data may have changed. Reload.
+            InitializeAssetObjectForEditing();
             InitializeTrees();
             Repaint();
-
-            m_AssetJson = newJson;
         }
 
+        /// <summary>
+        /// Take the <see cref="m_AssetObjectForEditing">clone of the asset object</see> that we're editing
+        /// and write it back out to the .inputactions file.
+        /// </summary>
+        /// <remarks>
+        /// This will trigger a re-import as we have to make sure that the importer is getting run on the
+        /// updated JSON (for example, to pick up any newly added or removed actions).
+        /// </remarks>
         private void SaveChangesToAsset()
         {
             ////TODO: has to be made to work with version control
@@ -290,13 +311,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Update JSON.
             var asset = m_AssetObjectForEditing;
-            m_AssetJson = asset.ToJson();
+            m_ImportedAssetJson = asset.ToJson();
 
             // Write out, if changed.
             var existingJson = File.ReadAllText(m_AssetPath);
-            if (m_AssetJson != existingJson)
+            if (m_ImportedAssetJson != existingJson)
             {
-                File.WriteAllText(m_AssetPath, m_AssetJson);
+                File.WriteAllText(m_AssetPath, m_ImportedAssetJson);
                 AssetDatabase.ImportAsset(m_AssetPath);
             }
 
