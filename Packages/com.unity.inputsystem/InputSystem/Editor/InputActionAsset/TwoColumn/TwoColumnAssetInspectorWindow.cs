@@ -112,7 +112,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private ActionMapsTree m_ActionMapsTree;
         private ActionsTree m_ActionsTree;
-        
+
         private SerializedObject m_SerializedObject;
         private InputBindingPropertiesView m_PropertyView;
         private CopyPasteUtility m_CopyPasteUtility;
@@ -146,7 +146,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
         }
 
-        void OnDestroy()    
+        void OnDestroy()
         {
             if (m_IsDirty)
             {
@@ -287,7 +287,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
-            if (m_ActionsTree.GetSelectedProperty() != null)
+            if (m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p.hasProperties)
@@ -302,7 +302,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_IsDirty = true;
             m_SerializedObject.ApplyModifiedProperties();
             m_SerializedObject.Update();
-            
+
             m_ActionMapsTree.Reload();
             var selectedActionMap = m_ActionMapsTree.GetSelectedActionMap();
             if (selectedActionMap != null)
@@ -363,7 +363,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.SetFocus();
                 }
             }
-            
+
             EditorGUILayout.BeginVertical();
 
             // Toolbar.
@@ -383,16 +383,17 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
+
+            //Draw columns
             EditorGUILayout.BeginHorizontal();
-            
-            // Use default style for margins
-            EditorGUILayout.BeginVertical(EditorStyles.label, GUILayout.ExpandHeight(true));
-            // Set width of the first two columns
-            GUILayout.Space(position.width * (2f/3f));
-            EditorGUILayout.EndVertical();
-            DrawMainTrees();
-            DrawProperties();
+            var columnOneRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+            var columnTwoRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+            DrawActionMapsColumn(columnOneRect);
+            DrawActionsColumn(columnTwoRect);
+            DrawPropertiesColumn();
             EditorGUILayout.EndHorizontal();
+
+            // Bottom margin
             GUILayout.Space(3);
             EditorGUILayout.EndVertical();
 
@@ -407,21 +408,16 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
             }
-            
         }
 
-        private void DrawMainTrees()
+        void DrawActionMapsColumn(Rect columnRect)
         {
-            var rect = GUILayoutUtility.GetLastRect();
-            var treeViewRect = new Rect(rect);
-            treeViewRect.width /= 2;
-            
-            // Action maps tree
-            var labelRect = new Rect(treeViewRect);
+            var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
-            treeViewRect.y += labelRect.height;
-            treeViewRect.height -= labelRect.height;
-            
+            columnRect.y += labelRect.height;
+            columnRect.height -= labelRect.height;
+
+            // Draw header
             var header = EditorGUIUtility.TrTextContent("Action maps");
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
@@ -434,47 +430,74 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 ShowAddActionMapMenu();
             }
-            
-            EditorGUI.LabelField(treeViewRect, GUIContent.none, Styles.propertiesBackground);
-            treeViewRect.x += 1;
-            treeViewRect.width -= 2;
-            m_ActionMapsTree.OnGUI(treeViewRect);
 
-            
-            
-            // Actions tree
-            treeViewRect = new Rect(rect);
-            treeViewRect.width /= 2;
-            treeViewRect.width -= Styles.propertiesBackground.margin.right;
-            treeViewRect.x += treeViewRect.width + Styles.propertiesBackground.margin.right * 2;
-            
-            labelRect = new Rect(treeViewRect);
+            // Draw border rect
+            EditorGUI.LabelField(columnRect, GUIContent.none, Styles.propertiesBackground);
+            // Compensate for the border rect
+            columnRect.x += 1;
+            columnRect.height -= 1;
+            columnRect.width -= 2;
+            m_ActionMapsTree.OnGUI(columnRect);
+        }
+
+        void DrawActionsColumn(Rect columnRect)
+        {
+            var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
-            treeViewRect.y += labelRect.height;
-            treeViewRect.height -= labelRect.height;
+            columnRect.y += labelRect.height;
+            columnRect.height -= labelRect.height;
 
+            GUIContent header;
             if (string.IsNullOrEmpty(m_SearchText))
                 header = EditorGUIUtility.TrTextContent("Actions");
             else
                 header = EditorGUIUtility.TrTextContent("Actions (Searching)");
 
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
-            headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
+            var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
             EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
-            
+
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
-            if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, EditorGUIUtility.IconContent("Toolbar Plus"), GUIStyle.none))
             {
                 ShowAddActionsMenu();
             }
-            EditorGUI.LabelField(treeViewRect, GUIContent.none, Styles.propertiesBackground);
-            treeViewRect.x += 1;
-            treeViewRect.width -= 2;
-            m_ActionsTree.OnGUI(treeViewRect);
+
+            // Draw border rect
+            EditorGUI.LabelField(columnRect, GUIContent.none, Styles.propertiesBackground);
+            // Compensate for the border rect
+            columnRect.x += 1;
+            columnRect.height -= 1;
+            columnRect.width -= 2;
+            m_ActionsTree.OnGUI(columnRect);
         }
-        
+
+        private void DrawPropertiesColumn()
+        {
+            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width * (1 / 3f)));
+
+            var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2, GUILayout.ExpandWidth(true));
+            rect.x -= 2;
+            rect.y -= 1;
+            rect.width += 4;
+
+            EditorGUI.LabelField(rect, GUIContent.none, Styles.propertiesBackground);
+            var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
+            EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
+
+            if (m_PropertyView != null)
+            {
+                m_PropertyView.OnGUI();
+            }
+            else
+            {
+                GUILayout.FlexibleSpace();
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
         private void ShowAddActionMapMenu()
         {
             var menu = new GenericMenu();
@@ -488,7 +511,7 @@ namespace UnityEngine.Experimental.Input.Editor
             AddActionsOptionsToMenu(menu, false);
             menu.ShowAsContext();
         }
-        
+
         private void AddActionMapOptionsToMenu(GenericMenu menu, bool isContextMenu)
         {
             menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
@@ -609,31 +632,6 @@ namespace UnityEngine.Experimental.Input.Editor
             while (selectedRow.parent != null);
 
             return null;
-        }
-
-        private void DrawProperties()
-        {
-            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width * (1/3f)));
-
-            var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2, GUILayout.ExpandWidth(true));
-            rect.x -= 2;
-            rect.y -= 1;
-            rect.width += 4;
-
-            EditorGUI.LabelField(rect, GUIContent.none, Styles.propertiesBackground);
-            var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
-            EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
-
-            if (m_PropertyView != null)
-            {
-                m_PropertyView.OnGUI();
-            }
-            else
-            {
-                GUILayout.FlexibleSpace();
-            }
-
-            EditorGUILayout.EndVertical();
         }
     }
 }

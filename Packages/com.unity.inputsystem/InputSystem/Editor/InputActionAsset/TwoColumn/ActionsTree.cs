@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public Action OnSelectionChanged;
         public Action<SerializedProperty> OnContextClick;
-        
+
         public SerializedProperty actionMapProperty;
 
         public static ActionsTree CreateFromSerializedObject(Action applyAction, ref TreeViewState treeViewState)
@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Editor
             root.children = new List<TreeViewItem>();
             if (actionMapProperty != null)
             {
-                ParseActionMap(root, actionMapProperty, 1);
+                ParseActionMap(root, actionMapProperty, 0);
                 // is searching
                 if (!string.IsNullOrEmpty(m_NameFilter))
                 {
