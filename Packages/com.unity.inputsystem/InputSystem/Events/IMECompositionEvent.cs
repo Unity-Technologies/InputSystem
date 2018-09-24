@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -31,8 +33,59 @@ namespace UnityEngine.Experimental.Input.LowLevel
 namespace UnityEngine.Experimental.Input
 {
     [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + (sizeof(char) * LowLevel.IMECompositionEvent.kIMECharBufferSize))]
-    public unsafe struct IMEComposition
+    public unsafe struct IMEComposition : IEnumerable<char>
     {
+        internal unsafe struct Enumerator : IEnumerator<char>
+        {
+            IMEComposition m_Composition;
+            char m_CurrentCharacter;
+            int m_CurrentIndex;
+
+            public Enumerator(IMEComposition composition)
+            {
+                m_Composition = composition;
+                m_CurrentCharacter = '\0';
+                m_CurrentIndex = -1;
+            }
+
+            public bool MoveNext()
+            {
+                int size = m_Composition.Count;
+
+                m_CurrentIndex++;
+
+                if (m_CurrentIndex == size)
+                    return false;                
+
+                fixed (char* ptr = m_Composition.buffer)
+                    m_CurrentCharacter = *(ptr + m_CurrentIndex);
+
+                return true;
+            }
+
+            public void Reset()
+            {
+                m_CurrentIndex = -1;
+            }
+
+            public void Dispose()
+            {
+            }
+
+            public char Current
+            {
+                get
+                {
+                    return m_CurrentCharacter;
+                }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
+        }
+
         public int Count
         {
             get
@@ -60,5 +113,21 @@ namespace UnityEngine.Experimental.Input
 
         [FieldOffset(sizeof(int))]
         fixed char buffer[LowLevel.IMECompositionEvent.kIMECharBufferSize];
+
+        public override string ToString()
+        {
+            fixed(char* ptr = buffer)
+                return new string(ptr);
+        }
+
+        public IEnumerator<char> GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }
