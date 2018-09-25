@@ -57,8 +57,10 @@ namespace UnityEngine.Experimental.Input
                 if (m_CurrentIndex == size)
                     return false;
 
-                fixed(char* ptr = m_Composition.buffer)
-                m_CurrentCharacter = *(ptr + m_CurrentIndex);
+                fixed (char* ptr = m_Composition.buffer)
+                {
+                    m_CurrentCharacter = *(ptr + m_CurrentIndex);
+                }
 
                 return true;
             }
