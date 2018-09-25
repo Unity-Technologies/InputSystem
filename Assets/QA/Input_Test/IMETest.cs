@@ -11,6 +11,8 @@ public class IMETest : MonoBehaviour
     public string outputString;
     public string compositionString;
 
+    public bool logCompositionString;
+
     private bool m_AddedTextListeners = false;
 
     // Use this for initialization
@@ -50,8 +52,11 @@ public class IMETest : MonoBehaviour
     void OnIMECompositionChange(IMEComposition composition)
     {
         compositionString = "";
-        for (int i = 0; i < composition.Count; i++)
-            compositionString += composition[i];
+        foreach (char c in composition)
+            compositionString += c;
+
+        if (logCompositionString)
+            Debug.Log(logCompositionString.ToString());
     }
 
     // Update is called once per frame
