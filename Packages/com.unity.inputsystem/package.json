@@ -6,5 +6,6 @@
 	"description": "A new input system.",
 	"keywords": ["input", "events", "keyboard", "mouse", "gamepad", "touch", "vr", "xr"],
 	"dependencies": {
+		"com.unity.xr.poseprovider": "1.0.0"
 	}
 }

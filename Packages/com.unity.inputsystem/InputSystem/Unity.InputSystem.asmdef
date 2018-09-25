@@ -1,6 +1,8 @@
 {
     "name": "Unity.InputSystem",
-    "references": [],
+    "references": [
+    	"UnityEngine.XR.PoseProvider"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
