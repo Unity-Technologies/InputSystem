@@ -6,30 +6,29 @@ using UnityEditorInternal;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    public class AddControlSchemePopup : PopupWindowContent
+    class AddControlSchemePopup : PopupWindowContent
     {
-        InputActionAsset m_Asset;
         int m_ControlSchemeIndex = -1;
         ReorderableList m_DevicesReorderableList;
         List<DeviceEntryForList> m_Devices = new List<DeviceEntryForList>();
-        Action m_SetDirty;
         string m_InputControlSchemeName = "New control schema";
         int m_RequirementsOptionsChoice;
 
         static Vector2 s_Size = new Vector2(400, 250);
         static string[] choices = { "Optional", "Required" };
 
-        public AddControlSchemePopup(InputActionAsset asset, Action setDirty)
+        InputActionAssetManager m_AssetManager;
+
+        public AddControlSchemePopup(InputActionAssetManager assetManager)
         {
-            m_Asset = asset;
-            m_SetDirty = setDirty;
+            m_AssetManager = assetManager;
         }
 
         public void SetSchemaForEditing(string schemaName)
         {
-            for (int i = 0; i < m_Asset.m_ControlSchemes.Length; i++)
+            for (int i = 0; i < m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes.Length; i++)
             {
-                if (m_Asset.m_ControlSchemes[i].name == schemaName)
+                if (m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[i].name == schemaName)
                 {
                     m_ControlSchemeIndex = i;
                     break;
@@ -40,8 +39,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SetSchemaParametersFrom(string schemaName)
         {
-            m_InputControlSchemeName = m_Asset.GetControlScheme(schemaName).name;
-            m_Devices = m_Asset.GetControlScheme(schemaName).devices.Select(a => new DeviceEntryForList() { name = a.devicePath, deviceEntry = a }).ToList();
+            m_InputControlSchemeName = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).name;
+            m_Devices = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).devices.Select(a => new DeviceEntryForList() { name = a.devicePath, deviceEntry = a }).ToList();
         }
 
         public override Vector2 GetWindowSize()
@@ -158,9 +157,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void Save()
         {
-            m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
-            m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
-            m_SetDirty();
+            m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
+            m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
+            m_AssetManager.SetAssetDirty();
             editorWindow.Close();
         }
 
@@ -168,8 +167,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var controlScheme = new InputControlScheme(m_InputControlSchemeName);
             controlScheme.m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
-            m_Asset.AddControlScheme(controlScheme);
-            m_SetDirty();
+            m_AssetManager.m_AssetObjectForEditing.AddControlScheme(controlScheme);
+            m_AssetManager.SetAssetDirty();
             editorWindow.Close();
         }
 

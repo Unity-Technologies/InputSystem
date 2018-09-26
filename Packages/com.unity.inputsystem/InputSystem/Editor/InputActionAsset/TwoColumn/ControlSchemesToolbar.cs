@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
     [Serializable]
-    public class ControlSchemesToolbar
+    class ControlSchemesToolbar
     {
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
@@ -14,12 +15,15 @@ namespace UnityEngine.Experimental.Input.Editor
         private int m_SelectedControlSchemeIndex = -1;
         [SerializeField]
         private int m_SelectedDeviceIndex;
-        string[] m_AllControlSchemeNames;
 
-        private readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
-        private readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        private readonly GUIContent m_EditGUI = EditorGUIUtility.TrTextContent("edit");
+        private string[] m_AllControlSchemeNames;
+        private SearchField m_SearchField;
+        private string m_SearchText;
 
+        private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
+        private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
+        private static readonly GUIContent m_EditGUI = EditorGUIUtility.TrTextContent("edit");
+        private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
 
         public ControlSchemesToolbar(InputActionAssetManager actionAssetManager)
         {
@@ -27,16 +31,27 @@ namespace UnityEngine.Experimental.Input.Editor
             m_AllControlSchemeNames = m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToArray();
         }
 
+        public bool searching
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(m_SearchText);
+            }
+        }
+
         public void OnGUI()
         {
+            if (m_SearchField == null)
+                m_SearchField = new SearchField();
+
             var controlSchemes = m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
             controlSchemes.Add("Add Control Scheme...");
             var newScheme = EditorGUILayout.Popup(m_SelectedControlSchemeIndex, controlSchemes.ToArray());
-            if (newScheme == controlSchemes.Count - 1)
+            if (controlSchemes.Count > 0 && newScheme == controlSchemes.Count - 1)
             {
                 if (controlSchemes.Count == 1)
                     m_SelectedControlSchemeIndex = -1;
-                var popup = new AddControlSchemePopup(m_ActionAssetManager.m_AssetObjectForEditing, () => m_ActionAssetManager.SetAssetDirty());
+                var popup = new AddControlSchemePopup(m_ActionAssetManager);
                 PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
             }
             else if (newScheme != m_SelectedControlSchemeIndex)
@@ -64,24 +79,37 @@ namespace UnityEngine.Experimental.Input.Editor
                 menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
                 menu.ShowAsContext();
             }
+
+            EditorGUI.BeginDisabledGroup(!m_ActionAssetManager.dirty);
+            if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
+                m_ActionAssetManager.SaveChangesToAsset();
+            EditorGUI.EndDisabledGroup();
+            GUILayout.FlexibleSpace();
+            EditorGUI.BeginChangeCheck();
+
+            m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
+            if (EditorGUI.EndChangeCheck())
+            {
+//                m_TreeView.SetNameFilter(m_SearchText);
+            }
         }
 
-        void DeleteControlScheme()
+        private void DeleteControlScheme()
         {
             m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
         }
 
-        void DuplicateControlScheme(object rectObj)
+        private void DuplicateControlScheme(object rectObj)
         {
-            var popup = new AddControlSchemePopup(m_ActionAssetManager.m_AssetObjectForEditing, m_ActionAssetManager.SetAssetDirty);
+            var popup = new AddControlSchemePopup(m_ActionAssetManager);
             popup.SetSchemaParametersFrom(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
             // TODO make sure name is unique
             PopupWindow.Show((Rect)rectObj, popup);
         }
 
-        void EditSelectedControlScheme(object rectObj)
+        private void EditSelectedControlScheme(object rectObj)
         {
-            var popup = new AddControlSchemePopup(m_ActionAssetManager.m_AssetObjectForEditing, m_ActionAssetManager.SetAssetDirty);
+            var popup = new AddControlSchemePopup(m_ActionAssetManager);
             popup.SetSchemaForEditing(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
             PopupWindow.Show((Rect)rectObj, popup);
         }
