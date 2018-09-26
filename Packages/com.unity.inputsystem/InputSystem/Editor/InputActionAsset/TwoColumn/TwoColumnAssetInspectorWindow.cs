@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -117,11 +118,16 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputBindingPropertiesView m_PropertyView;
         private CopyPasteUtility m_CopyPasteUtility;
         private SearchField m_SearchField;
+        private int m_SelectedControlScheme = -1;
+        private int m_DeviceFilter;
         private string m_SearchText;
 
         private const string k_FileExtension = ".inputactions";
-
+        
         private readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
+        private readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
+        private readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
+        private readonly GUIContent m_EditGUI = EditorGUIUtility.TrTextContent("edit");
         private readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
         private readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add/Binding");
         private readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
@@ -139,6 +145,8 @@ namespace UnityEngine.Experimental.Input.Editor
             // Initialize after assembly reload
             InitializeObjectReferences();
             InitializeTrees();
+            OnActionMapSelection();
+            LoadPropertiesForSelection(false);
         }
 
         public void OnDisable()
@@ -179,6 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionMapsTree.SelectFirstRow();
             OnActionMapSelection();
             m_ActionsTree.ExpandAll();
+            LoadPropertiesForSelection(true);
         }
 
         private void InitializeObjectReferences()
@@ -245,8 +254,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_SerializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new TreeViewState();
-
-            LoadPropertiesForSelection();
         }
 
         private void OnUndoRedoCallback()
@@ -272,13 +279,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnActionSelection()
         {
-            LoadPropertiesForSelection();
+            LoadPropertiesForSelection(true);
         }
 
-        private void LoadPropertiesForSelection()
+        private void LoadPropertiesForSelection(bool checkFocus)
         {
             m_PropertyView = null;
-            if (m_ActionMapsTree.HasFocus() && m_ActionMapsTree.GetSelectedRow() != null)
+            
+            if ((!checkFocus || m_ActionMapsTree.HasFocus()) && m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
                 if (row != null)
@@ -287,7 +295,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
-            if (m_ActionsTree.HasFocus() && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
+            if ((!checkFocus || m_ActionsTree.HasFocus()) && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p.hasProperties)
@@ -329,6 +337,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Perform a full refresh.
             InitializeObjectReferences();
             InitializeTrees();
+            LoadPropertiesForSelection(true);
             Repaint();
 
             m_AssetJson = newJson;
@@ -362,6 +371,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     if(!m_ActionsTree.HasSelection())
                         m_ActionsTree.SelectFirstRow();
+                    m_ActionsTree.SetFocus();
                 }
             }
 
@@ -369,17 +379,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Toolbar.
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            EditorGUI.BeginDisabledGroup(!m_IsDirty);
-            if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
-                SaveChangesToAsset();
-            EditorGUI.EndDisabledGroup();
-            GUILayout.FlexibleSpace();
-            EditorGUI.BeginChangeCheck();
-            m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
-            if (EditorGUI.EndChangeCheck())
-            {
-//                m_TreeView.SetNameFilter(m_SearchText);
-            }
+
+
+            DrawToolbar();
+
             GUILayout.Space(5);
             EditorGUILayout.EndHorizontal();
 
@@ -409,6 +412,82 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
             }
+        }
+
+        void DrawToolbar()
+        {
+            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
+            controlSchemes.Add("Add Control Scheme...");
+            var newScheme = EditorGUILayout.Popup(m_SelectedControlScheme, controlSchemes.ToArray());
+            if (newScheme == controlSchemes.Count - 1)
+            {
+                if (controlSchemes.Count == 1)
+                    m_SelectedControlScheme = -1;
+                var popup = new AddControlSchemePopup(m_AssetObjectForEditing, () => m_IsDirty = true);
+                PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
+            }
+            else if (newScheme != m_SelectedControlScheme)
+            {
+                m_SelectedControlScheme = newScheme;
+            }
+            
+            EditorGUI.BeginDisabledGroup(m_SelectedControlScheme == -1);
+
+            List<string> devices = new List<string>();
+            if (m_SelectedControlScheme >= 0)
+            {
+                devices.Add("All devices");
+                devices.AddRange(m_AssetObjectForEditing.GetControlScheme(controlSchemes[m_SelectedControlScheme]).devices.Select(a=>a.devicePath).ToList());
+                
+            }
+            m_DeviceFilter = EditorGUILayout.Popup(m_DeviceFilter, devices.ToArray());
+            EditorGUI.EndDisabledGroup();
+
+            if (GUILayout.Button(m_EditGUI, EditorStyles.toolbarButton))
+            {
+                var menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Edit \"" + controlSchemes[m_SelectedControlScheme] + "\""), false, EditSelectedControlScheme, GUILayoutUtility.GetLastRect());
+                menu.AddSeparator("");
+                menu.AddItem(m_DuplicateGUI, false, DuplicateControlScheme, GUILayoutUtility.GetLastRect());
+                menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
+                menu.ShowAsContext();
+            }
+            
+            EditorGUI.BeginDisabledGroup(!m_IsDirty);
+            if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
+                SaveChangesToAsset();
+            EditorGUI.EndDisabledGroup();
+            GUILayout.FlexibleSpace();
+            EditorGUI.BeginChangeCheck();
+            
+            m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
+            if (EditorGUI.EndChangeCheck())
+            {
+//                m_TreeView.SetNameFilter(m_SearchText);
+            }
+        }        
+        
+        void DeleteControlScheme()
+        {
+            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
+            m_AssetObjectForEditing.RemoveControlScheme(controlSchemes[m_SelectedControlScheme]);
+        }
+
+        void DuplicateControlScheme(object rectObj)
+        {
+            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
+            var popup = new AddControlSchemePopup(m_AssetObjectForEditing, () => m_IsDirty = true);
+            popup.SetSchemaParametersFrom(controlSchemes[m_SelectedControlScheme]);
+            // TODO make sure name is unique
+            PopupWindow.Show((Rect) rectObj, popup);
+        }
+
+        void EditSelectedControlScheme(object rectObj)
+        {
+            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
+            var popup = new AddControlSchemePopup(m_AssetObjectForEditing, () => m_IsDirty = true);
+            popup.SetSchemaForEditing(controlSchemes[m_SelectedControlScheme]);
+            PopupWindow.Show((Rect) rectObj, popup);
         }
 
         void DrawActionMapsColumn(Rect columnRect)

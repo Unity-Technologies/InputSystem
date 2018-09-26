@@ -188,6 +188,14 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
+        public void RemoveControlScheme(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            ArrayHelpers.Erase(ref m_ControlSchemes, GetControlScheme(name));
+        }
+
         public InputControlScheme GetControlScheme(string name)
         {
             if (string.IsNullOrEmpty(name))
