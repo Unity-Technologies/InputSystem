@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return item as ActionMapTreeItem;
         }
-        
+
         public void SelectFirstRow()
         {
             SetSelection(new[] {rootItem.children[0].id});

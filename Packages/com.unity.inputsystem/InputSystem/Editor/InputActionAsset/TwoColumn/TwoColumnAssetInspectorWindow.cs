@@ -1,7 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -56,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // See if we have an existing editor window that has the asset open.
             var inputManagers = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
-            var window = inputManagers.FirstOrDefault(w => w.m_ImportedAssetObject.Equals(obj));
+            var window = inputManagers.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(obj));
             if (window != null)
             {
                 window.Show();
@@ -101,12 +99,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static bool s_RefreshPending;
 
-        [SerializeField] private bool m_IsDirty;
-        [SerializeField] private string m_AssetGUID;
-        [SerializeField] private string m_AssetPath;
-        [SerializeField] private string m_AssetJson;
-        [SerializeField] private InputActionAsset m_ImportedAssetObject;
-        [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private TreeViewState m_ActionMapsTreeState;
         [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private TreeViewState m_PickerTreeViewState;
@@ -114,20 +106,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private ActionMapsTree m_ActionMapsTree;
         private ActionsTree m_ActionsTree;
 
-        private SerializedObject m_SerializedObject;
         private InputBindingPropertiesView m_PropertyView;
         private CopyPasteUtility m_CopyPasteUtility;
         private SearchField m_SearchField;
-        private int m_SelectedControlScheme = -1;
-        private int m_DeviceFilter;
         private string m_SearchText;
 
         private const string k_FileExtension = ".inputactions";
-        
+
         private readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
-        private readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
-        private readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        private readonly GUIContent m_EditGUI = EditorGUIUtility.TrTextContent("edit");
         private readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
         private readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add/Binding");
         private readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
@@ -135,15 +121,20 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
         private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
 
+        [SerializeField]
+        InputActionAssetManager m_ActionAssetManager;
+        [SerializeField]
+        ControlSchemesToolbar m_ControlSchemesToolbar;
+
         public void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedoCallback;
-            if (m_ImportedAssetObject == null)
+            if (m_ActionAssetManager == null)
             {
                 return;
             }
             // Initialize after assembly reload
-            InitializeObjectReferences();
+            m_ActionAssetManager.InitializeObjectReferences();
             InitializeTrees();
             OnActionMapSelection();
             LoadPropertiesForSelection(false);
@@ -156,14 +147,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void OnDestroy()
         {
-            if (m_IsDirty)
+            if (m_ActionAssetManager.dirty)
             {
                 var result = EditorUtility.DisplayDialogComplex("Unsaved changes", "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
                 switch (result)
                 {
                     case 0:
                         // Save
-                        SaveChangesToAsset();
+                        m_ActionAssetManager.SaveChangesToAsset();
                         break;
                     case 1:
                         // Cancel
@@ -179,8 +170,9 @@ namespace UnityEngine.Experimental.Input.Editor
         // Set asset would usually only be called when the window is open
         private void SetAsset(InputActionAsset referencedObject)
         {
-            m_ImportedAssetObject = referencedObject;
-            InitializeObjectReferences();
+            m_ActionAssetManager = new InputActionAssetManager(referencedObject);
+            m_ActionAssetManager.InitializeObjectReferences();
+            m_ControlSchemesToolbar = new ControlSchemesToolbar(m_ActionAssetManager);
             InitializeTrees();
 
             // Make sure first actions map selected and actions tree expanded
@@ -190,60 +182,11 @@ namespace UnityEngine.Experimental.Input.Editor
             LoadPropertiesForSelection(true);
         }
 
-        private void InitializeObjectReferences()
-        {
-            // If we have an asset object, grab its path and GUID.
-            if (m_ImportedAssetObject != null)
-            {
-                m_AssetPath = AssetDatabase.GetAssetPath(m_ImportedAssetObject);
-                m_AssetGUID = AssetDatabase.AssetPathToGUID(m_AssetPath);
-            }
-            else
-            {
-                // Otherwise look it up from its GUID. We're not relying on just
-                // the path here as the asset may have been moved.
-                InitializeReferenceToImportedAssetObject();
-            }
-
-            if (m_AssetObjectForEditing == null)
-            {
-                // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
-                // GUIDs.
-                m_AssetObjectForEditing = Instantiate(m_ImportedAssetObject);
-                m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
-                m_AssetObjectForEditing.name = m_ImportedAssetObject.name;
-            }
-
-            m_AssetJson = null;
-            m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
-        }
-
-        private void InitializeReferenceToImportedAssetObject()
-        {
-            LoadImportedObjectFromGuid();
-            if (m_AssetObjectForEditing != null)
-            {
-                DestroyImmediate(m_AssetObjectForEditing);
-                m_AssetObjectForEditing = null;
-            }
-        }
-
-        void LoadImportedObjectFromGuid()
-        {
-            Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID));
-
-            m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            if (string.IsNullOrEmpty(m_AssetPath))
-                throw new Exception("Could not determine asset path for " + m_AssetGUID);
-
-            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
-        }
-
         private void InitializeTrees()
         {
             if (m_SearchField == null)
                 m_SearchField = new SearchField();
-            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_ActionMapsTreeState);
+            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(Apply, m_ActionAssetManager.serializedObject, ref m_ActionMapsTreeState);
             m_ActionMapsTree.OnSelectionChanged = OnActionMapSelection;
             m_ActionMapsTree.OnContextClick = OnActionMapContextClick;
 
@@ -251,7 +194,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree.OnSelectionChanged = OnActionSelection;
             m_ActionsTree.OnContextClick = OnActionsContextClick;
 
-            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_SerializedObject);
+            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new TreeViewState();
         }
@@ -261,11 +204,12 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionMapsTree == null)
                 return;
 
-            LoadImportedObjectFromGuid();
+            m_ActionAssetManager.LoadImportedObjectFromGuid();
 
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
-            m_IsDirty = m_AssetObjectForEditing.ToJson() != m_ImportedAssetObject.ToJson();
+            if (m_ActionAssetManager.IsEditingAssetDifferent())
+                m_ActionAssetManager.SetAssetDirty();
 
             m_ActionMapsTree.Reload();
             OnActionMapSelection();
@@ -285,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void LoadPropertiesForSelection(bool checkFocus)
         {
             m_PropertyView = null;
-            
+
             if ((!checkFocus || m_ActionMapsTree.HasFocus()) && m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
@@ -307,10 +251,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void Apply()
         {
-            m_IsDirty = true;
-            m_SerializedObject.ApplyModifiedProperties();
-            m_SerializedObject.Update();
-
+            m_ActionAssetManager.SetAssetDirty();
+            m_ActionAssetManager.ApplyChanges();
             m_ActionMapsTree.Reload();
             var selectedActionMap = m_ActionMapsTree.GetSelectedActionMap();
             if (selectedActionMap != null)
@@ -324,43 +266,20 @@ namespace UnityEngine.Experimental.Input.Editor
         private void Refresh()
         {
             // See if the data has actually changed.
-            var newJson = m_AssetObjectForEditing.ToJson();
-            if (newJson == m_AssetJson)
+            if (m_ActionAssetManager.IsEditedAssetDifferent())
             {
                 // Still need to refresh reference to imported object in case we had a re-import.
-                if (m_ImportedAssetObject == null)
-                    LoadImportedObjectFromGuid();
+                if (m_ActionAssetManager.IsAssetReferenceValid())
+                    m_ActionAssetManager.LoadImportedObjectFromGuid();
 
                 return;
             }
 
             // Perform a full refresh.
-            InitializeObjectReferences();
+            m_ActionAssetManager.InitializeObjectReferences();
             InitializeTrees();
             LoadPropertiesForSelection(true);
             Repaint();
-
-            m_AssetJson = newJson;
-        }
-
-        private void SaveChangesToAsset()
-        {
-            ////TODO: has to be made to work with version control
-            Debug.Assert(!string.IsNullOrEmpty(m_AssetPath));
-
-            // Update JSON.
-            var asset = m_AssetObjectForEditing;
-            m_AssetJson = asset.ToJson();
-
-            // Write out, if changed.
-            var existingJson = File.ReadAllText(m_AssetPath);
-            if (m_AssetJson != existingJson)
-            {
-                File.WriteAllText(m_AssetPath, m_AssetJson);
-                AssetDatabase.ImportAsset(m_AssetPath);
-            }
-
-            m_IsDirty = false;
         }
 
         public void OnGUI()
@@ -369,20 +288,16 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (m_ActionMapsTree.HasFocus() && Event.current.keyCode == KeyCode.RightArrow)
                 {
-                    if(!m_ActionsTree.HasSelection())
+                    if (!m_ActionsTree.HasSelection())
                         m_ActionsTree.SelectFirstRow();
                     m_ActionsTree.SetFocus();
                 }
             }
 
             EditorGUILayout.BeginVertical();
-
             // Toolbar.
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-
             DrawToolbar();
-
             GUILayout.Space(5);
             EditorGUILayout.EndHorizontal();
 
@@ -416,78 +331,19 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void DrawToolbar()
         {
-            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
-            controlSchemes.Add("Add Control Scheme...");
-            var newScheme = EditorGUILayout.Popup(m_SelectedControlScheme, controlSchemes.ToArray());
-            if (newScheme == controlSchemes.Count - 1)
-            {
-                if (controlSchemes.Count == 1)
-                    m_SelectedControlScheme = -1;
-                var popup = new AddControlSchemePopup(m_AssetObjectForEditing, () => m_IsDirty = true);
-                PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
-            }
-            else if (newScheme != m_SelectedControlScheme)
-            {
-                m_SelectedControlScheme = newScheme;
-            }
-            
-            EditorGUI.BeginDisabledGroup(m_SelectedControlScheme == -1);
-
-            List<string> devices = new List<string>();
-            if (m_SelectedControlScheme >= 0)
-            {
-                devices.Add("All devices");
-                devices.AddRange(m_AssetObjectForEditing.GetControlScheme(controlSchemes[m_SelectedControlScheme]).devices.Select(a=>a.devicePath).ToList());
-                
-            }
-            m_DeviceFilter = EditorGUILayout.Popup(m_DeviceFilter, devices.ToArray());
-            EditorGUI.EndDisabledGroup();
-
-            if (GUILayout.Button(m_EditGUI, EditorStyles.toolbarButton))
-            {
-                var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Edit \"" + controlSchemes[m_SelectedControlScheme] + "\""), false, EditSelectedControlScheme, GUILayoutUtility.GetLastRect());
-                menu.AddSeparator("");
-                menu.AddItem(m_DuplicateGUI, false, DuplicateControlScheme, GUILayoutUtility.GetLastRect());
-                menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
-                menu.ShowAsContext();
-            }
-            
-            EditorGUI.BeginDisabledGroup(!m_IsDirty);
+            m_ControlSchemesToolbar.OnGUI();
+            EditorGUI.BeginDisabledGroup(!m_ActionAssetManager.dirty);
             if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
-                SaveChangesToAsset();
+                m_ActionAssetManager.SaveChangesToAsset();
             EditorGUI.EndDisabledGroup();
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
-            
+
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
             if (EditorGUI.EndChangeCheck())
             {
 //                m_TreeView.SetNameFilter(m_SearchText);
             }
-        }        
-        
-        void DeleteControlScheme()
-        {
-            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
-            m_AssetObjectForEditing.RemoveControlScheme(controlSchemes[m_SelectedControlScheme]);
-        }
-
-        void DuplicateControlScheme(object rectObj)
-        {
-            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
-            var popup = new AddControlSchemePopup(m_AssetObjectForEditing, () => m_IsDirty = true);
-            popup.SetSchemaParametersFrom(controlSchemes[m_SelectedControlScheme]);
-            // TODO make sure name is unique
-            PopupWindow.Show((Rect) rectObj, popup);
-        }
-
-        void EditSelectedControlScheme(object rectObj)
-        {
-            var controlSchemes = m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToList();
-            var popup = new AddControlSchemePopup(m_AssetObjectForEditing, () => m_IsDirty = true);
-            popup.SetSchemaForEditing(controlSchemes[m_SelectedControlScheme]);
-            PopupWindow.Show((Rect) rectObj, popup);
         }
 
         void DrawActionMapsColumn(Rect columnRect)
@@ -682,7 +538,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnAddActionMap()
         {
-            InputActionSerializationHelpers.AddActionMap(m_SerializedObject);
+            InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
             Apply();
         }
 

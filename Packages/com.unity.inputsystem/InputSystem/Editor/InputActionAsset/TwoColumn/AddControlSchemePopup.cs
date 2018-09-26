@@ -15,8 +15,8 @@ namespace UnityEngine.Experimental.Input.Editor
         Action m_SetDirty;
         string m_InputControlSchemeName = "New control schema";
         int m_RequirementsOptionsChoice;
-        
-        static Vector2 s_Size = new Vector2(400,250);
+
+        static Vector2 s_Size = new Vector2(400, 250);
         static string[] choices = { "Optional", "Required" };
 
         public AddControlSchemePopup(InputActionAsset asset, Action setDirty)
@@ -37,7 +37,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             SetSchemaParametersFrom(schemaName);
         }
-        
+
         public void SetSchemaParametersFrom(string schemaName)
         {
             m_InputControlSchemeName = m_Asset.GetControlScheme(schemaName).name;
@@ -101,45 +101,44 @@ namespace UnityEngine.Experimental.Input.Editor
                     Event.current.Use();
                 }
             }
-            
+
             GUILayout.BeginArea(rect);
-            
+
             EditorGUILayout.LabelField("Add control scheme", EditorStyles.toolbar);
-            
+
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
             m_InputControlSchemeName = EditorGUILayout.TextField("Scheme Name", m_InputControlSchemeName);
             EditorGUILayout.BeginHorizontal();
-            
-            var r = GUILayoutUtility.GetRect(0, GetWindowSize().x/2, 0, GetWindowSize().x/2, GUILayout.ExpandHeight(true));
+
+            var r = GUILayoutUtility.GetRect(0, GetWindowSize().x / 2, 0, GetWindowSize().x / 2, GUILayout.ExpandHeight(true));
             EditorGUILayout.BeginVertical();
             EditorGUILayout.LabelField("Requirements:");
-            
+
             EditorGUI.BeginDisabledGroup(m_DevicesReorderableList.index == -1);
 
             var requirementsOption = -1;
             if (m_DevicesReorderableList.index >= 0)
             {
-                var deviceEntryForList = (DeviceEntryForList) m_DevicesReorderableList.list[m_DevicesReorderableList.index];
+                var deviceEntryForList = (DeviceEntryForList)m_DevicesReorderableList.list[m_DevicesReorderableList.index];
                 requirementsOption = deviceEntryForList.deviceEntry.isOptional ? 0 : 1;
-
             }
             EditorGUI.BeginChangeCheck();
             requirementsOption = GUILayout.SelectionGrid(requirementsOption, choices, 1, EditorStyles.radioButton);
             if (EditorGUI.EndChangeCheck())
             {
                 m_Devices[m_DevicesReorderableList.index].deviceEntry.isOptional = requirementsOption == 0;
-            } 
+            }
             EditorGUI.EndDisabledGroup();
-            
+
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
 
             m_DevicesReorderableList.DoList(r);
-            EditorGUILayout.EndVertical();;
+            EditorGUILayout.EndVertical();
 
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(m_InputControlSchemeName));
-            if(m_ControlSchemeIndex == -1)
+            if (m_ControlSchemeIndex == -1)
             {
                 if (GUILayout.Button("Add", GUILayout.ExpandWidth(true)))
                 {
@@ -160,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor
         void Save()
         {
             m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
-            m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a=>a.deviceEntry).ToArray();
+            m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
             m_SetDirty();
             editorWindow.Close();
         }
@@ -168,12 +167,12 @@ namespace UnityEngine.Experimental.Input.Editor
         void Add()
         {
             var controlScheme = new InputControlScheme(m_InputControlSchemeName);
-            controlScheme.m_Devices = m_Devices.Select(a=>a.deviceEntry).ToArray();
+            controlScheme.m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
             m_Asset.AddControlScheme(controlScheme);
             m_SetDirty();
             editorWindow.Close();
         }
-        
+
         class DeviceEntryForList
         {
             public string name;
