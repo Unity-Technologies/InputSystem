@@ -239,8 +239,13 @@ public class UserTests : InputTestFixture
     [Test]
     [Category("Users")]
     [Ignore("TODO")]
-    public void TODO_Users_CanAssignActionMapsToUsers()
+    public void TODO_Users_CanAssignActionsToUsers()
     {
+        var user = InputUser.Add();
+        var action = new InputAction();
+
+        user.actions.Push(action);
+
         Assert.Fail();
     }
 

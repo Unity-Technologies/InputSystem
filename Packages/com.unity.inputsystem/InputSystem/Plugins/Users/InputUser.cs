@@ -3,6 +3,13 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Haptics;
 using UnityEngine.Experimental.Input.Utilities;
 
+//do we need to make users have ties to assets?
+
+//does this take control of enabling/disabling actions in some form?
+//does it have all possible actions for the user or just whatever applies in the user's current context?
+
+////REVIEW: is detecting control scheme switches really that important? the UI hints depend more on when bindings change
+
 ////TODO: add something to deal with the situation of a controller loosing battery power; in the current model
 ////      the controller would disappear as a device but we want to handle the situation such that when the device
 ////      comes back online, we connect the user to the same device; also, some platforms have APIs to help
@@ -96,20 +103,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             get { return new ReadOnlyArray<InputDevice>(s_AllDevices, m_DeviceStartIndex, m_DeviceCount);}
         }
 
-        ////REVIEW: the way action maps are designed, does it make sense to constrain this to a single map?
-        ////REVIEW: should this be a stack and automatically handle conflicting bindings?
+        //do we really need a stack on this? is a single InputActionMap or even a list of InputActionMaps not enough?
+        //what's the problem that the stack here is trying to solve?
         /// <summary>
-        /// Action map currently associated with the user.
+        /// <see cref="InputAction">Input actions</see> that are currently active for the user.
         /// </summary>
-        /// <remarks>
-        /// This is optional and may be <c>null</c>. User management can be used without
-        /// also using action maps.
-        ///
-        /// To set actions on a user, call <see cref="SwitchActions"/>.
-        /// </remarks>
-        public InputActionMap actions
+        public InputActionStack actions
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                if (m_ActionStack == null)
+                    m_ActionStack = new InputActionStack();
+                return m_ActionStack;
+            }
         }
 
         ////REVIEW: allow multiple schemes?
@@ -122,13 +128,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// this property will automatically change value according to what bindings are being
         /// used.
         ///
-        /// Any time the value of this property change (whether by <see cref="SwitchControlScheme"/>
+        /// Any time the value of this property change (whether by <see cref="SetControlScheme"/>
         /// or by automatic switching), a notification is sent on <see cref="onChange"/> with
         /// <see cref="InputUserChange.ControlSchemeChanged"/>.
         /// </remarks>
         public InputControlScheme? controlScheme
         {
-            get { throw new NotImplementedException(); }
+            ////TODO
+            get { return null; }
         }
 
         ////REVIEW: are control schemes affecting this?
@@ -138,22 +145,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             set { throw new NotImplementedException(); }
         }
 
-        /// <summary>
-        /// Change the set of actions active for the user.
-        /// </summary>
-        /// <param name="actions"></param>
-        public void SwitchActions(InputActionMap actions)
+        //downside: restricted to just action maps
+        public void SetActions(InputActionMap actionMap)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="controlScheme"></param>
-        public void SwitchControlScheme(InputControlScheme controlScheme)
+        public void SetControlScheme(InputControlScheme controlScheme)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         public void AssignDevice(InputDevice device)
@@ -349,7 +349,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         private string m_UserName;
         private int m_DeviceCount;
         private int m_DeviceStartIndex;
-        private InputActionMap m_ActionMap;
+        private InputActionStack m_ActionStack;
 
         internal static uint s_LastUserId;
         internal static int s_AllUserCount;

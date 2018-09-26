@@ -148,6 +148,8 @@ GameObject:
   - component: {fileID: 223096282477357754}
   - component: {fileID: 114812057631398092}
   - component: {fileID: 114082140075728016}
+  - component: {fileID: 114723690533178896}
+  - component: {fileID: 114028696437931582}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -231,6 +233,113 @@ AudioListener:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1318950621897070}
   m_Enabled: 1
+--- !u!114 &114028696437931582
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1898737442537260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftClick:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  middleClick:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  rightClick:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  scroll:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_PointAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_MoveAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_SubmitAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_CancelAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_LeftClickAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_MiddleClickAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_RightClickAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
+  m_ScrollAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_ExpectedControlLayout: 
+      m_Id: 
+      m_SingletonActionBindings: []
+    m_Reference: {fileID: 0}
 --- !u!114 &114082140075728016
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -482,12 +591,12 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayFireActionPerformed:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayFireActionCancelled:
       m_PersistentCalls:
@@ -503,12 +612,12 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayMoveActionStarted:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayMoveActionPerformed:
       m_PersistentCalls:
@@ -524,17 +633,17 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayMoveActionCancelled:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayLookActionStarted:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayLookActionPerformed:
       m_PersistentCalls:
@@ -550,17 +659,17 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayLookActionCancelled:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayJumpActionStarted:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayJumpActionPerformed:
       m_PersistentCalls:
@@ -576,59 +685,65 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_gameplayJumpActionCancelled:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+    m_gameplayEscapeActionStarted:
+      m_PersistentCalls:
+        m_Calls: []
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+    m_gameplayEscapeActionPerformed:
+      m_PersistentCalls:
+        m_Calls: []
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+    m_gameplayEscapeActionCancelled:
+      m_PersistentCalls:
+        m_Calls: []
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_menuNavigateActionStarted:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_menuNavigateActionPerformed:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_menuNavigateActionCancelled:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_menuClickActionStarted:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_menuClickActionPerformed:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
     m_menuClickActionCancelled:
       m_PersistentCalls:
         m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+      m_TypeName: DemoControls+ActionEvent, Demo, Version=0.0.0.0, Culture=neutral,
         PublicKeyToken=null
-    m_generalJoinActionStarted:
-      m_PersistentCalls:
-        m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-        PublicKeyToken=null
-    m_generalJoinActionPerformed:
-      m_PersistentCalls:
-        m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-        PublicKeyToken=null
-    m_generalJoinActionCancelled:
-      m_PersistentCalls:
-        m_Calls: []
-      m_TypeName: DemoControls+ActionEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-        PublicKeyToken=null
-  ui: {fileID: 0}
+  ui: {fileID: 223096282477357754}
+  menuUI: {fileID: 0}
+  inGameUI: {fileID: 0}
+  fireHintsUI: {fileID: 0}
+  moveHintsUI: {fileID: 0}
+  lookHintsUI: {fileID: 0}
+  chargingUI: {fileID: 0}
 --- !u!114 &114637126642751980
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -656,6 +771,20 @@ MonoBehaviour:
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
+--- !u!114 &114723690533178896
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1898737442537260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -619905303, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_FirstSelected: {fileID: 0}
+  m_sendNavigationEvents: 1
+  m_DragThreshold: 10
 --- !u!114 &114767672964610950
 MonoBehaviour:
   m_ObjectHideFlags: 1

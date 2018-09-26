@@ -1,10 +1,12 @@
 using System;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.Experimental.Input.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+////WIP
 
 /// <summary>
 /// Main controller for the demo game.
@@ -31,6 +33,42 @@ public class DemoGame : MonoBehaviour
     public Canvas mainMenuCanvas;
     public Camera mainMenuCamera;
 
+    public enum State
+    {
+        InMainMenu,
+        InGame,
+        InGameOver,
+        WaitingForFirstPlayerToJoin,
+    }
+
+    public State state
+    {
+        get { return m_State; }
+    }
+
+    public ReadOnlyArray<DemoPlayerController> players
+    {
+        get { return new ReadOnlyArray<DemoPlayerController>(m_Players); }
+    }
+
+    public DemoFishController fish
+    {
+        get { return m_Fish; }
+    }
+
+    public static RuntimePlatform platform
+    {
+        get
+        {
+            if (!s_Platform.HasValue)
+                return Application.platform;
+            return s_Platform.Value;
+        }
+        set { s_Platform = value; }
+    }
+
+    private static RuntimePlatform? s_Platform;
+
     //single player: all devices owned by player (but not assigned to), automatically switches schemes as player uses different devices
     //multi player: devices assigned by players explicitly joining on them
 
@@ -54,6 +92,7 @@ public class DemoGame : MonoBehaviour
     private int m_ActivePlayerCount;
     private DemoPlayerController[] m_Players;
     private DemoFishController m_Fish;
+    private State m_State;
 
     /// <summary>
     /// Start the game.
@@ -101,7 +140,7 @@ public class DemoGame : MonoBehaviour
         var defaultScheme = player.InferDefaultControlScheme();
 
         // Switch to default control scheme.
-        player.user.SwitchControlScheme(defaultScheme);
+        player.user.SetControlScheme(defaultScheme);
 
         // Finally, run code that is shared between single- and multi-player games.
         StartGame();
@@ -144,6 +183,8 @@ public class DemoGame : MonoBehaviour
         UpdateSplitScreen();
 
         //start timer
+
+        m_State = State.InGame;
     }
 
     /// <summary>
@@ -197,7 +238,7 @@ public class DemoGame : MonoBehaviour
         player.controls.Enable(controlScheme);
 
         // Enable control scheme on player.
-        player.user.SwitchControlScheme(controlScheme);
+        player.user.SetControlScheme(controlScheme);
     }
 
     /// <summary>
