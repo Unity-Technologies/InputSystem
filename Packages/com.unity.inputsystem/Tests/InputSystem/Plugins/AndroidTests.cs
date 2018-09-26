@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.TestTools.Utils;
 
 public class AndroidTests : InputTestFixture
 {
@@ -448,10 +449,10 @@ public class AndroidTests : InputTestFixture
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
             Assert.That(control.ReadValue(), Is.EqualTo(q).Within(0.01));
-            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(vector3Comparer));
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(Vector3EqualityComparer.Instance));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = true;
-            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(vector3Comparer));
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(Vector3EqualityComparer.Instance));
         }
     }
 }

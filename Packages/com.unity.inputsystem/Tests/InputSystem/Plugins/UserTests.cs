@@ -26,7 +26,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanManuallyAddAndRemoveUsers()
+    public void Users_CanAddAndRemoveUsers()
     {
         var user1 = InputUser.Add();
         var user2 = InputUser.Add();

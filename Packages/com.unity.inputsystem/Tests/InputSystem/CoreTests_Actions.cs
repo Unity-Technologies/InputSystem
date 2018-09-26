@@ -10,6 +10,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -541,11 +542,11 @@ partial class CoreTests
             Assert.That(events[2].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(events[0].ReadValue<Vector2>(),
                 Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.123f, 0.234f), gamepad.leftStick))
-                    .Using(vector2Comparer));
+                    .Using(Vector2EqualityComparer.Instance));
             Assert.That(events[1].ReadValue<Vector2>(),
                 Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.345f, 0.456f), gamepad.rightStick))
-                    .Using(vector2Comparer));
-            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             queue.Clear();
 
@@ -2436,7 +2437,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
-        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(vector2Comparer));
+        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]

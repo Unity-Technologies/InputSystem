@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.OnScreen;
+using UnityEngine.TestTools.Utils;
 
 public class OnScreenTests : InputTestFixture
 {
@@ -34,7 +35,7 @@ public class OnScreenTests : InputTestFixture
 
         Assert.That(stick.control.ReadValueAsObject(),
             Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
-                .Using(vector2Comparer));
+                .Using(Vector2EqualityComparer.Instance));
 
         Assert.That(gameObject.transform.position.x, Is.GreaterThan(0.0f));
         Assert.That(gameObject.transform.position.y, Is.GreaterThan(0.0f));
