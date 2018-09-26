@@ -128,6 +128,11 @@ namespace UnityEngine.Experimental.Input
                 var unresolvedBinding = bindingsInThisMap[n];
                 var bindingIndex = bindingStartIndex + n;
 
+                // Set binding state to defaults.
+                bindingStates[bindingIndex].mapIndex = totalMapCount;
+                bindingStates[bindingIndex].compositeOrCompositeBindingIndex = InputActionMapState.kInvalidIndex;
+                bindingStates[bindingIndex].actionIndex = InputActionMapState.kInvalidIndex;
+
                 // Skip binding if it is disabled (path is empty string).
                 var path = unresolvedBinding.effectivePath;
                 if (unresolvedBinding.path == "")

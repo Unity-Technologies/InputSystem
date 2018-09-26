@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Refresh editors.
-            ActionInspectorWindow.RefreshAll();
+            ActionInspectorWindow.RefreshAllAfterImport();
         }
 
         ////REVIEW: actually pre-populate with some stuff?

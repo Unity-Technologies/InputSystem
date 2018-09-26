@@ -29,6 +29,46 @@ namespace UnityEngine.Experimental.Input.Editor
             return treeView;
         }
 
+        public ActionMapTreeItem FindActionMapTreeViewItem(string mapName)
+        {
+            if (!rootItem.hasChildren)
+                return null;
+
+            foreach (var child in rootItem.children)
+            {
+                var mapItem = child as ActionMapTreeItem;
+                if (mapItem == null)
+                    continue;
+
+                if (string.Compare(mapItem.displayName, mapName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return mapItem;
+            }
+
+            return null;
+        }
+
+        public ActionTreeViewItem FindActionTreeViewItem(string mapName, string actionName)
+        {
+            var mapItem = FindActionMapTreeViewItem(mapName);
+            if (mapItem == null)
+                return null;
+
+            if (!mapItem.hasChildren)
+                return null;
+
+            foreach (var child in mapItem.children)
+            {
+                var actionItem = child as ActionTreeViewItem;
+                if (actionItem == null)
+                    continue;
+
+                if (string.Compare(actionItem.displayName, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return actionItem;
+            }
+
+            return null;
+        }
+
         static bool OnFoldoutDraw(Rect position, bool expandedstate, GUIStyle style)
         {
             var indent = (int)(position.x / 15);

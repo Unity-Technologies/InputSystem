@@ -244,16 +244,37 @@ namespace UnityEngine.Experimental.Input
             return m_ControlSchemes[index];
         }
 
-        public void SwitchControlScheme(InputControlScheme scheme)
+        /// <summary>
+        /// Set the mask to apply when choosing which bindings to use and which to ignore.
+        /// </summary>
+        /// <param name="bindingMask">A binding that can be used as a mask.</param>
+        public void SetBindingMask(InputBinding bindingMask)
         {
-            throw new NotImplementedException();
+            if (bindingMask == m_BindingMask)
+                return;
+
+            m_BindingMask = bindingMask;
+
+            // Re-resolve bindings, if necessary.
+            if (m_ActionMapState != null)
+            {
+                Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
+                // State is share between all action maps in the asset. Resolving bindings for the
+                // first map will resolve them for all maps.
+                m_ActionMaps[0].ResolveBindings();
+            }
         }
 
-        public void SwitchControlScheme(string name)
+        public void SetBindingMask(string bindingGroups)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(bindingGroups))
+                throw new ArgumentNullException("bindingGroups");
+            SetBindingMask(new InputBinding {groups = bindingGroups});
+        }
+
+        public void ClearBindingMask()
+        {
+            SetBindingMask(new InputBinding());
         }
 
         /// <summary>
@@ -287,7 +308,7 @@ namespace UnityEngine.Experimental.Input
         /// Shared state for all action maps in the asset.
         /// </summary>
         [NonSerialized] internal InputActionMapState m_ActionMapState;
-        [NonSerialized] internal int m_CurrentControlSchemeIndex = -1;
+        [NonSerialized] internal InputBinding m_BindingMask;
 
         [Serializable]
         internal struct FileJson

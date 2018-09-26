@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Layouts;
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -2201,6 +2201,11 @@ namespace UnityEngine.Experimental.Input
                         var textEventPtr = (TextEvent*)currentEventPtr;
                         ////TODO: handle UTF-32 to UTF-16 conversion properly
                         device.OnTextInput((char)textEventPtr->character);
+                        break;
+
+                    case IMECompositionEvent.Type:
+                        var imeEventPtr = (IMECompositionEvent*)currentEventPtr;
+                        device.OnIMEStringEvent(imeEventPtr->composition);
                         break;
 
                     case DeviceRemoveEvent.Type:

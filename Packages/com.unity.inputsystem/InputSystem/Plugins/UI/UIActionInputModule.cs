@@ -3,11 +3,18 @@ using UnityEngine.EventSystems;
 
 ////TODO: come up with an action response system that doesn't require hooking and unhooking all those delegates
 
+//touch vs mouse will need refinement in both the action and the device stuff
+
 namespace UnityEngine.Experimental.Input.Plugins.UI
 {
     /// <summary>
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
     /// </summary>
+    /// <remarks>
+    /// This UI input module has the advantage over other such modules that it doesn't have to know
+    /// what devices and types of devices input is coming from. Instead, the actions hide the actual
+    /// sources of input from the module.
+    /// </remarks>
     public class UIActionInputModule : UIInputModule
     {
         /// <summary>
@@ -38,9 +45,35 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (m_MoveAction != null && m_ActionsHooked)
                     m_MoveAction.action.performed -= m_ActionCallback;
-                m_PointAction = value;
+                m_MoveAction = value;
                 if (m_PointAction != null && m_ActionsHooked)
                     m_PointAction.action.performed += m_ActionCallback;
+            }
+        }
+
+        public InputActionProperty submit
+        {
+            get { return m_SubmitAction; }
+            set
+            {
+                if (m_SubmitAction != null && m_ActionsHooked)
+                    m_SubmitAction.action.performed -= m_ActionCallback;
+                m_SubmitAction = value;
+                if (m_SubmitAction != null && m_ActionsHooked)
+                    m_SubmitAction.action.performed += m_ActionCallback;
+            }
+        }
+
+        public InputActionProperty cancel
+        {
+            get { return m_CancelAction; }
+            set
+            {
+                if (m_CancelAction != null && m_ActionsHooked)
+                    m_CancelAction.action.performed -= m_ActionCallback;
+                m_CancelAction = value;
+                if (m_CancelAction != null && m_ActionsHooked)
+                    m_CancelAction.action.performed += m_ActionCallback;
             }
         }
 
@@ -54,12 +87,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         public void OnDestroy()
         {
-            if (m_ActionsHooked)
-                UnhookActions();
+            UnhookActions();
+
+            if (m_ActionQueue != null)
+            {
+                m_ActionQueue.Dispose();
+                m_ActionQueue = null;
+            }
         }
 
         public void OnEnable()
         {
+            base.OnEnable();
             HookActions();
         }
 
@@ -70,17 +109,50 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         public override void Process()
         {
-            throw new NotImplementedException();
-        }
+            foreach (var entry in m_ActionQueue)
+            {
+                var action = entry.action;
+                Debug.Assert(action != null);
+                if (action == null)
+                    continue;
 
-        protected void ProcessPointer(Pointer pointer)
-        {
-            if (pointer == null)
-                throw new ArgumentNullException("pointer");
+                if (action == m_PointAction)
+                {
+                    var control = entry.control;
+                    var device = control != null ? control.device : null;
+                    var pointer = device as Pointer;
+                    var pointerId = pointer != null ? pointer.pointerId.ReadValue() : 0;
+
+                    // Initialize event.
+                    var eventData = GetOrCreateCachedPointerEvent();
+                    eventData.pointerId = pointerId;
+                    eventData.position = entry.ReadValue<Vector2>();
+                    PerformRaycast(eventData);
+
+                    // Fire events.
+                    HandlePointerExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
+
+                    eventData.Reset();
+                }
+                else if (action == m_MoveAction)
+                {
+                    // Don't send move events if disabled in the EventSystem.
+                    if (!eventSystem.sendNavigationEvents)
+                        continue;
+
+                    throw new NotImplementedException();
+                }
+            }
+            m_ActionQueue.Clear();
         }
 
         private void HookActions()
         {
+            if (m_ActionsHooked)
+                return;
+
+            if (m_ActionQueue == null)
+                m_ActionQueue = new InputActionQueue();
             if (m_ActionCallback == null)
                 m_ActionCallback = m_ActionQueue.RecordAction;
 
@@ -93,10 +165,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
                 moveAction.performed += m_ActionCallback;
+
+            var submitAction = m_SubmitAction.action;
+            if (submitAction != null)
+                submitAction.performed += m_ActionCallback;
+
+            var cancelAction = m_CancelAction.action;
+            if (cancelAction != null)
+                cancelAction.performed += m_ActionCallback;
         }
 
         private void UnhookActions()
         {
+            if (!m_ActionsHooked)
+                return;
+
             m_ActionsHooked = false;
 
             var pointAction = m_PointAction.action;
@@ -106,6 +189,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
                 moveAction.performed -= m_ActionCallback;
+
+            var submitAction = m_SubmitAction.action;
+            if (submitAction != null)
+                submitAction.performed -= m_ActionCallback;
+
+            var cancelAction = m_CancelAction.action;
+            if (cancelAction != null)
+                cancelAction.performed -= m_ActionCallback;
         }
 
         /// <summary>
@@ -120,9 +211,17 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
-        [Tooltip("Action that delivers a relative motion Vector2.")]
+        [Tooltip("Action that delivers a relative motion Vector2 for navigation.")]
         [SerializeField]
         private InputActionProperty m_MoveAction;
+
+        [Tooltip("Button action that represents a 'Submit' navigation action.")]
+        [SerializeField]
+        private InputActionProperty m_SubmitAction;
+
+        [Tooltip("Button action that represents a 'Cancel' navigation action.")]
+        [SerializeField]
+        private InputActionProperty m_CancelAction;
 
         [Tooltip("Button action that represents a left click.")]
         [SerializeField]
@@ -143,6 +242,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
 
+        [NonSerialized] private int m_LastPointerId;
+        [NonSerialized] private Vector2 m_LastPointerPosition;
+
         /// <summary>
         /// Queue where we record action events.
         /// </summary>
@@ -154,5 +256,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// call to <see cref="Process"/> and translate it into <see cref="BaseEventData">UI events</see>.
         /// </remarks>
         [NonSerialized] private InputActionQueue m_ActionQueue;
+
+        /// <summary>
+        /// If the left click button is currently held, this is the button control.
+        /// </summary>
+        [NonSerialized] private InputControl m_LeftClickControl;
+        [NonSerialized] private InputControl m_RightClickControl;
+        [NonSerialized] private InputControl m_MiddleClickControl;
     }
 }

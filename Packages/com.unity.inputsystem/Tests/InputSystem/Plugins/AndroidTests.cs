@@ -423,5 +423,36 @@ public class AndroidTests : InputTestFixture
             Assert.That(control.z.ReadValue(), Is.EqualTo(0.3f).Within(0.000001));
         }
     }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase("AndroidRotationVector", "attitude")]
+    public void Devices_SupportSensorsWithQuaternionControl(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (QuaternionControl)device[controlName];
+
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            var rotation = new Vector3(5.0f, 12.0f, 16.0f);
+            var q = Quaternion.Euler(rotation);
+
+            // The 4th value is ignored and is calculated from other three
+            control.WriteValueInto(stateEventPtr, new Quaternion(q.x, q.y, q.z, 1234567.0f));
+
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            Assert.That(control.ReadValue(), Is.EqualTo(q).Within(0.01));
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(vector3Comparer));
+
+            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(vector3Comparer));
+        }
+    }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

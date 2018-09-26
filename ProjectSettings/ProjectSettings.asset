@@ -648,7 +648,7 @@ PlayerSettings:
   scriptingDefineSymbols:
     1: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
   platformArchitecture:
-    iOS: 0
+    iOS: 1
   scriptingBackend:
     Android: 0
     Standalone: 0
