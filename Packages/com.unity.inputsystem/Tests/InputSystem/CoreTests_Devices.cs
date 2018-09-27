@@ -10,6 +10,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
@@ -630,7 +631,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(InputSystem.TryGetDeviceById(device.id), Is.SameAs(device));
+        Assert.That(InputSystem.GetDeviceById(device.id), Is.SameAs(device));
     }
 
     [Test]
@@ -641,6 +642,17 @@ partial class CoreTests
         var result = InputSystem.GetDevice("Gamepad");
 
         Assert.That(result, Is.SameAs(device));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanLookUpDeviceByType()
+    {
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        var gamepad = InputSystem.AddDevice<DualShockGamepad>();
+
+        Assert.That(InputSystem.GetDevice<Gamepad>(), Is.SameAs(gamepad));
+        Assert.That(InputSystem.GetDevice<DualShockGamepad>(), Is.SameAs(gamepad));
     }
 
     [Test]
@@ -1378,7 +1390,7 @@ partial class CoreTests
 
         InputSystem.Update();
 
-        var device = InputSystem.TryGetDeviceById(deviceId);
+        var device = InputSystem.GetDeviceById(deviceId);
 
         Assert.That(device, Is.Not.Null);
         Assert.That(device.native, Is.True);

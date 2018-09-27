@@ -14,7 +14,7 @@ public class OnScreenTests : InputTestFixture
     public void Devices_CanCreateOnScreenStick()
     {
         var gameObject = new GameObject();
-        var stickObject = new GameObject(); 
+        var stickObject = new GameObject();
         gameObject.AddComponent<Camera>();
         var canvas = gameObject.AddComponent<Canvas>();
         var eventSystem = gameObject.AddComponent<EventSystem>();

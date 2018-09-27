@@ -592,17 +592,25 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RemoveDevice(device);
         }
 
-        public static InputDevice TryGetDevice(string nameOrLayout)
+        public static InputDevice GetDevice(string nameOrLayout)
         {
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        public static InputDevice GetDevice(string nameOrLayout)
+        public static TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
         {
-            return s_Manager.GetDevice(nameOrLayout);
+            foreach (var device in devices)
+            {
+                var deviceOfType = device as TDevice;
+                if (deviceOfType != null)
+                    return deviceOfType;
+            }
+
+            return null;
         }
 
-        public static InputDevice TryGetDeviceById(int deviceId)
+        public static InputDevice GetDeviceById(int deviceId)
         {
             return s_Manager.TryGetDeviceById(deviceId);
         }
