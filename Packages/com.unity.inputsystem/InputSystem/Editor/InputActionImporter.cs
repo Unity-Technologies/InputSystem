@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Refresh editors.
-            TwoColumnAssetInspectorWindow.RefreshAll();
+            TwoColumnAssetInspectorWindow.RefreshAllOnAssetReimport();
         }
 
         ////REVIEW: actually pre-populate with some stuff?

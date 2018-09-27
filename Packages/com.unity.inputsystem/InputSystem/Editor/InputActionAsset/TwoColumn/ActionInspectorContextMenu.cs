@@ -7,16 +7,14 @@ namespace UnityEngine.Experimental.Input.Editor
     [Serializable]
     class ActionInspectorContextMenu
     {
-        private readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        private readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add/Binding");
-        private readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
-        private readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add/Action");
-        private readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
+        private static readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        private static readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add/Binding");
+        private static readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
+        private static readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add/Action");
+        private static readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
+        private static readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
 
-        [SerializeField]
         TwoColumnAssetInspectorWindow m_AssetInspectorWindow;
-        [SerializeField]
         InputActionAssetManager m_ActionAssetManager;
 
         ActionsTree m_ActionsTree
@@ -30,6 +28,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public ActionInspectorContextMenu(TwoColumnAssetInspectorWindow window, InputActionAssetManager assetManager)
+        {
+            SetReferences(window, assetManager);
+        }
+
+        public void SetReferences(TwoColumnAssetInspectorWindow window, InputActionAssetManager assetManager)
         {
             m_AssetInspectorWindow = window;
             m_ActionAssetManager = assetManager;

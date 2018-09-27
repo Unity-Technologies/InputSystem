@@ -18,10 +18,15 @@ namespace UnityEngine.Experimental.Input.Editor
         static string[] choices = { "Optional", "Required" };
 
         InputActionAssetManager m_AssetManager;
+        InputActionWindowToolbar m_Toolbar;
 
-        public AddControlSchemePopup(InputActionAssetManager assetManager)
+        bool m_SetFocus;
+
+        public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
         {
             m_AssetManager = assetManager;
+            m_Toolbar = toolbar;
+            m_SetFocus = true;
         }
 
         public void SetSchemaForEditing(string schemaName)
@@ -107,8 +112,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
+            GUI.SetNextControlName("SchemaName");
             m_InputControlSchemeName = EditorGUILayout.TextField("Scheme Name", m_InputControlSchemeName);
             EditorGUILayout.BeginHorizontal();
+
+            if (m_SetFocus)
+            {
+                EditorGUI.FocusTextInControl("SchemaName");
+                m_SetFocus = false;
+            }
 
             var r = GUILayoutUtility.GetRect(0, GetWindowSize().x / 2, 0, GetWindowSize().x / 2, GUILayout.ExpandHeight(true));
             EditorGUILayout.BeginVertical();
@@ -160,6 +172,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
             m_AssetManager.SetAssetDirty();
+            m_Toolbar.RebuildData();
+            m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
             editorWindow.Close();
         }
 
@@ -169,6 +183,8 @@ namespace UnityEngine.Experimental.Input.Editor
             controlScheme.m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
             m_AssetManager.m_AssetObjectForEditing.AddControlScheme(controlScheme);
             m_AssetManager.SetAssetDirty();
+            m_Toolbar.RebuildData();
+            m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
             editorWindow.Close();
         }
 

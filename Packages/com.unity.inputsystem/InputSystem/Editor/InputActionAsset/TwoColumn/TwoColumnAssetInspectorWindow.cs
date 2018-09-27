@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
-        private ControlSchemesToolbar m_ControlSchemesToolbar;
+        private InputActionWindowToolbar m_InputActionWindowToolbar;
         [SerializeField]
         private ActionInspectorContextMenu m_ContextMenu;
 
@@ -62,62 +62,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private static bool s_RefreshPending;
         private static readonly string k_FileExtension = ".inputactions";
 
-        [OnOpenAsset]
-        private static bool OnOpenAsset(int instanceId, int line)
-        {
-            var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!path.EndsWith(k_FileExtension))
-                return false;
-
-            var obj = EditorUtility.InstanceIDToObject(instanceId) as InputActionAsset;
-            if (obj == null)
-                return false;
-
-            // See if we have an existing editor window that has the asset open.
-            var inputManagers = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
-            var window = inputManagers.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(obj));
-            if (window != null)
-            {
-                window.Show();
-                window.Focus();
-                return true;
-            }
-
-            // No, so create a new window.
-            window = CreateInstance<TwoColumnAssetInspectorWindow>();
-            window.titleContent = new GUIContent(obj.name + " (Input Manager)");
-            window.SetAsset(obj);
-            window.Show();
-
-            return true;
-        }
-
-        public static void RefreshAll()
-        {
-            if (s_RefreshPending)
-                return;
-
-            // We don't want to refresh right away but rather wait for the next editor update
-            // to then do one pass of refreshing action editor windows.
-            EditorApplication.delayCall += RefreshAllInternal;
-            s_RefreshPending = true;
-        }
-
-        private static void RefreshAllInternal()
-        {
-            var windows = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
-            foreach (var window in windows)
-                window.Refresh();
-
-            // When the asset is modified outside of the editor
-            // and the importer settings are visible in the inspector
-            // the asset references in the importer inspector need to be force rebuild
-            // (otherwise we gets lots of exceptions)
-            ActiveEditorTracker.sharedTracker.ForceRebuild();
-
-            s_RefreshPending = false;
-        }
-
         private void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedoCallback;
@@ -125,8 +69,12 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 return;
             }
+
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
+            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager);
+            m_ContextMenu.SetReferences(this, m_ActionAssetManager);
+
             InitializeTrees();
             OnActionMapSelection();
             LoadPropertiesForSelection(false);
@@ -147,6 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     case 0:
                         // Save
                         m_ActionAssetManager.SaveChangesToAsset();
+                        m_ActionAssetManager.UnloadAssets();
                         break;
                     case 1:
                         // Cancel
@@ -164,7 +113,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ActionAssetManager = new InputActionAssetManager(referencedObject);
             m_ActionAssetManager.InitializeObjectReferences();
-            m_ControlSchemesToolbar = new ControlSchemesToolbar(m_ActionAssetManager);
+            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager);
             InitializeTrees();
 
@@ -196,19 +145,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             m_ActionAssetManager.LoadImportedObjectFromGuid();
-
+            Apply();
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
-            if (m_ActionAssetManager.IsEditingAssetDifferent())
-                m_ActionAssetManager.SetAssetDirty();
-
-            m_ActionMapsTree.Reload();
-            OnActionMapSelection();
+            m_ActionAssetManager.UpdateAssetDirtyState();
         }
 
         private void OnActionMapSelection()
         {
-            m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
+            if (m_ActionMapsTree.GetSelectedRow() != null)
+                m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
             m_ActionsTree.Reload();
         }
 
@@ -233,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if ((!checkFocus || m_ActionsTree.HasFocus()) && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
                 var p = m_ActionsTree.GetSelectedRow();
-                if (p.hasProperties)
+                if (p != null && p.hasProperties)
                 {
                     m_PropertyView = p.GetPropertiesView(Apply, m_PickerTreeViewState);
                 }
@@ -245,32 +191,18 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionAssetManager.SetAssetDirty();
             m_ActionAssetManager.ApplyChanges();
             m_ActionMapsTree.Reload();
+            m_InputActionWindowToolbar.RebuildData();
             var selectedActionMap = m_ActionMapsTree.GetSelectedActionMap();
             if (selectedActionMap != null)
             {
                 m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedActionMap().elementProperty;
             }
+            else
+            {
+                m_ActionsTree.actionMapProperty = null;
+            }
             m_ActionsTree.Reload();
             OnActionSelection();
-        }
-
-        private void Refresh()
-        {
-            // See if the data has actually changed.
-            if (m_ActionAssetManager.IsEditedAssetDifferent())
-            {
-                // Still need to refresh reference to imported object in case we had a re-import.
-                if (m_ActionAssetManager.IsAssetReferenceValid())
-                    m_ActionAssetManager.LoadImportedObjectFromGuid();
-
-                return;
-            }
-
-            // Perform a full refresh.
-            m_ActionAssetManager.InitializeObjectReferences();
-            InitializeTrees();
-            LoadPropertiesForSelection(true);
-            Repaint();
         }
 
         private void OnGUI()
@@ -288,7 +220,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.BeginVertical();
             // Toolbar.
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            DrawToolbar();
+            m_InputActionWindowToolbar.OnGUI();
             GUILayout.Space(5);
             EditorGUILayout.EndHorizontal();
 
@@ -318,11 +250,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
             }
-        }
-
-        private void DrawToolbar()
-        {
-            m_ControlSchemesToolbar.OnGUI();
         }
 
         private void DrawActionMapsColumn(Rect columnRect)
@@ -363,10 +290,10 @@ namespace UnityEngine.Experimental.Input.Editor
             columnRect.height -= labelRect.height;
 
             GUIContent header;
-            if (m_ControlSchemesToolbar.searching)
-                header = EditorGUIUtility.TrTextContent("Actions");
-            else
+            if (m_InputActionWindowToolbar.searching)
                 header = EditorGUIUtility.TrTextContent("Actions (Searching)");
+            else
+                header = EditorGUIUtility.TrTextContent("Actions");
 
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
@@ -411,6 +338,73 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        public static void RefreshAllOnAssetReimport()
+        {
+            if (s_RefreshPending)
+                return;
+
+            // We don't want to refresh right away but rather wait for the next editor update
+            // to then do one pass of refreshing action editor windows.
+            EditorApplication.delayCall += RefreshAllOnAssetReimportCallback;
+            s_RefreshPending = true;
+        }
+
+        private static void RefreshAllOnAssetReimportCallback()
+        {
+            s_RefreshPending = false;
+
+            // When the asset is modified outside of the editor
+            // and the importer settings are visible in the inspector
+            // the asset references in the importer inspector need to be force rebuild
+            // (otherwise we gets lots of exceptions)
+            ActiveEditorTracker.sharedTracker.ForceRebuild();
+
+            var windows = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
+            foreach (var window in windows)
+                window.ReloadAssetFromFile();
+        }
+
+        private void ReloadAssetFromFile()
+        {
+            if (!m_ActionAssetManager.dirty)
+            {
+                m_ActionAssetManager.CreateWorkingCopyAsset();
+                InitializeTrees();
+                LoadPropertiesForSelection(false);
+                Repaint();
+            }
+        }
+
+        [OnOpenAsset]
+        internal static bool OnOpenAsset(int instanceId, int line)
+        {
+            var path = AssetDatabase.GetAssetPath(instanceId);
+            if (!path.EndsWith(k_FileExtension))
+                return false;
+
+            var obj = EditorUtility.InstanceIDToObject(instanceId) as InputActionAsset;
+            if (obj == null)
+                return false;
+
+            // See if we have an existing editor window that has the asset open.
+            var inputManagers = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
+            var window = inputManagers.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(obj));
+            if (window != null)
+            {
+                window.Show();
+                window.Focus();
+                return true;
+            }
+
+            // No, so create a new window.
+            window = CreateInstance<TwoColumnAssetInspectorWindow>();
+            window.titleContent = new GUIContent(obj.name + " (Input Manager)");
+            window.SetAsset(obj);
+            window.Show();
+
+            return true;
         }
     }
 }
