@@ -717,25 +717,10 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException("type");
 
             // Find the layout name that the given type was registered with.
-            // First just try the name of the type and see if that produces a hit.
-            var layoutName = new InternedString(type.Name);
-            Type registeredType;
-            if (!m_Layouts.layoutTypes.TryGetValue(layoutName, out registeredType)
-                || registeredType != type)
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
             {
-                // Didn't produce a hit so crawl through all registered layout types
-                // and look for a match.
-                layoutName = new InternedString();
-                foreach (var entry in m_Layouts.layoutTypes)
-                {
-                    if (entry.Value == type)
-                    {
-                        layoutName = entry.Key;
-                        break;
-                    }
-                }
-
-                // Still no match. Automatically registers the given type as a layout.
+                // Automatically register the given type as a layout.
                 if (layoutName.IsEmpty())
                 {
                     layoutName = new InternedString(type.Name);
@@ -1020,6 +1005,15 @@ namespace UnityEngine.Experimental.Input
                 throw new Exception(string.Format("Cannot find device with name or layout '{0}'", nameOrLayout));
 
             return device;
+        }
+
+        public InputDevice TryGetDevice(Type layoutType)
+        {
+            var layoutName = m_Layouts.TryFindLayoutForType(layoutType);
+            if (layoutName.IsEmpty())
+                return null;
+
+            return TryGetDevice(layoutName);
         }
 
         public InputDevice TryGetDeviceById(int id)

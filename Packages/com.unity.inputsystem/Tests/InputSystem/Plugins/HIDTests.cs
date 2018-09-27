@@ -168,7 +168,7 @@ public class HIDTests : InputTestFixture
         InputSystem.Update();
 
         // Grab device.
-        var device = (HID)InputSystem.TryGetDeviceById(deviceId);
+        var device = (HID)InputSystem.GetDeviceById(deviceId);
         Assert.That(device, Is.Not.Null);
         Assert.That(device, Is.TypeOf<HID>());
 
