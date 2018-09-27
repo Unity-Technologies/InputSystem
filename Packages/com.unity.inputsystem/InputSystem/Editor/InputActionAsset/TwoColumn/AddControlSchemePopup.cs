@@ -3,11 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
     class AddControlSchemePopup : PopupWindowContent
     {
+        public static class Styles
+        {
+            public static GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar);
+            static Styles()
+            {
+                headerLabel.alignment = TextAnchor.MiddleCenter;
+                headerLabel.fontStyle = FontStyle.Bold;
+                headerLabel.padding.left = 10;
+            }
+        }
+        
         int m_ControlSchemeIndex = -1;
         ReorderableList m_DevicesReorderableList;
         List<DeviceEntryForList> m_Devices = new List<DeviceEntryForList>();
@@ -70,16 +83,50 @@ namespace UnityEngine.Experimental.Input.Editor
         void OnDeviceAdd(ReorderableList list)
         {
             var menu = new GenericMenu();
-            foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts.OrderBy(a => a.name))
+            var deviceList = GetDeviceOptions();
+            deviceList.Sort();
+            foreach (var device in deviceList)
             {
-                menu.AddItem(new GUIContent(deviceLayout.name), false, AddElement, deviceLayout.name);
-                foreach (var commonUsage in deviceLayout.commonUsages)
-                {
-                    var name = deviceLayout.name + " " + commonUsage;
-                    menu.AddItem(new GUIContent(name), false, AddElement, name);
-                }
+                menu.AddItem(new GUIContent(device), false, AddElement, device);
             }
             menu.ShowAsContext();
+        }
+
+        List<string> GetDeviceOptions()
+        {
+            List<string> devices = new List<string>();
+            BuildTreeForAbstractDevices(devices);
+            BuildTreeForSpecificDevices(devices);
+            return devices;
+        }
+
+        private void BuildTreeForAbstractDevices(List<string> deviceList)
+        {
+            foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts.OrderBy(a => a.name))
+                AddDeviceTreeItem(deviceLayout, deviceList);
+        }
+
+        private void BuildTreeForSpecificDevices(List<string> deviceList)
+        {
+            foreach (var layout in EditorInputControlLayoutCache.allProductLayouts.OrderBy(a => a.name))
+            {
+                var rootLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
+                if (string.IsNullOrEmpty(rootLayoutName))
+                    rootLayoutName = "Other";
+                else
+                    rootLayoutName = rootLayoutName.GetPlural();
+
+                AddDeviceTreeItem(layout, deviceList);
+            }
+        }
+        
+        private void AddDeviceTreeItem(InputControlLayout layout, List<string> deviceList)
+        {
+            deviceList.Add(layout.name);
+            foreach (var commonUsage in layout.commonUsages)
+            {
+                deviceList.Add(layout.name + " " + commonUsage);
+            }
         }
 
         void AddElement(object nameObject)
@@ -108,7 +155,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             GUILayout.BeginArea(rect);
 
-            EditorGUILayout.LabelField("Add control scheme", EditorStyles.toolbar);
+            EditorGUILayout.LabelField("Add control scheme", Styles.headerLabel);
 
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();

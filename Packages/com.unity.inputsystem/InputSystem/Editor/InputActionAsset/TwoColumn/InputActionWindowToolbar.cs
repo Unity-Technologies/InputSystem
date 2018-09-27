@@ -63,10 +63,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var controlSchemes = GetControlSchemesNames();
             var newScheme = EditorGUILayout.Popup(m_SelectedControlSchemeIndex, controlSchemes.ToArray());
-            if (controlSchemes.Count > 0 && newScheme == controlSchemes.Count - 1)
+            if (controlSchemes.Count > 0 && newScheme == (controlSchemes.Count - 1))
             {
-                if (controlSchemes.Count == 1)
+                if (controlSchemes.Count == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Count - 1))
                     m_SelectedControlSchemeIndex = -1;
+                    
                 var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
                 PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
             }
