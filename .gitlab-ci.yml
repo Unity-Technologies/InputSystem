@@ -1,0 +1,11 @@
+stages:
+- test
+
+Windows-2018.2-default:
+  stage: test
+  image: input-system/win-2018.2:stable
+  tags:
+    - bokken-job
+  script:
+  - cd "C:\Program Files\Unity\Editor"
+  - unity.exe -batchmode -automated -quit -nographics -runTests -projectPath "C:\users\bokken\builds\vm\InputSystem" -testPlatform playmode
