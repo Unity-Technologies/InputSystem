@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: allow associating control schemes with platforms, too?
@@ -18,7 +19,7 @@ namespace UnityEngine.Experimental.Input
     /// Control schemes fill this void by making the information explicit.
     /// </remarks>
     [Serializable]
-    public struct InputControlScheme
+    public struct InputControlScheme : IEquatable<InputControlScheme>
     {
         /// <summary>
         /// Name of the control scheme.
@@ -94,13 +95,106 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
+        public bool Equals(InputControlScheme other)
+        {
+            if (!(string.Equals(m_Name, other.m_Name) &&
+                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName) &&
+                  string.Equals(m_BindingGroup, other.m_BindingGroup)))
+                return false;
+
+            // Compare device requirements.
+            if (m_Devices == null || m_Devices.Length == 0)
+                return (other.m_Devices == null || other.m_Devices.Length == 0);
+            else
+            {
+                if (other.m_Devices == null || m_Devices.Length != other.m_Devices.Length)
+                    return false;
+
+                var deviceCount = m_Devices.Length;
+                for (var i = 0; i < deviceCount; ++i)
+                {
+                    var device = m_Devices[i];
+                    var haveMatch = false;
+                    for (var n = 0; i < deviceCount; ++n)
+                    {
+                        if (other.m_Devices[n] == device)
+                        {
+                            haveMatch = true;
+                            break;
+                        }
+                    }
+
+                    if (!haveMatch)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+
+            return obj is InputControlScheme && Equals((InputControlScheme)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (m_Name != null ? m_Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_BaseSchemeName != null ? m_BaseSchemeName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_BindingGroup != null ? m_BindingGroup.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_Devices != null ? m_Devices.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            if (string.IsNullOrEmpty(m_Name))
+                return base.ToString();
+
+            if (m_Devices == null)
+                return m_Name;
+
+            var builder = new StringBuilder();
+            builder.Append(m_Name);
+            builder.Append('(');
+
+            var isFirst = true;
+            foreach (var device in m_Devices)
+            {
+                if (!isFirst)
+                    builder.Append(',');
+
+                builder.Append(device.devicePath);
+                isFirst = false;
+            }
+
+            builder.Append(')');
+            return builder.ToString();
+        }
+
+        public static bool operator==(InputControlScheme left, InputControlScheme right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator!=(InputControlScheme left, InputControlScheme right)
+        {
+            return !left.Equals(right);
+        }
+
         [SerializeField] internal string m_Name;
         [SerializeField] internal string m_BaseSchemeName;
         [SerializeField] internal string m_BindingGroup;
         [SerializeField] internal DeviceEntry[] m_Devices;
 
         [Serializable]
-        public struct DeviceEntry
+        public struct DeviceEntry : IEquatable<DeviceEntry>
         {
             /// <summary>
             /// <see cref="InputControlPath">Control path</see> that is matched against a device to determine
@@ -117,17 +211,25 @@ namespace UnityEngine.Experimental.Input
             /// "&lt;Gamepad&gt;"
             /// </code>
             /// </example>
-            public string devicePath { get; set; }
+            public string devicePath
+            {
+                get { return m_DevicePath; }
+                set { m_DevicePath = value; }
+            }
 
             /// <summary>
             /// If true, a device with the given <see cref="devicePath">device path</see> is employed by the
             /// control scheme if one is available. If none is available, the control scheme is still
             /// functional.
             /// </summary>
-            public bool isOptional { get; set; }
+            public bool isOptional
+            {
+                get { return m_IsOptional;}
+                set { m_IsOptional = value; }
+            }
 
             [SerializeField] private string m_DevicePath;
-            [SerializeField] private bool m_IsOptional;
+            [SerializeField] private bool m_IsOptional;////REVIEW: convert to flags field?
 
             public override string ToString()
             {
@@ -139,6 +241,42 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 return base.ToString();
+            }
+
+            public bool Equals(DeviceEntry other)
+            {
+                return string.Equals(m_DevicePath, other.m_DevicePath) && m_IsOptional == other.m_IsOptional &&
+                    string.Equals(devicePath, other.devicePath) && isOptional == other.isOptional;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj))
+                    return false;
+
+                return obj is DeviceEntry && Equals((DeviceEntry)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (m_DevicePath != null ? m_DevicePath.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ m_IsOptional.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (devicePath != null ? devicePath.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ isOptional.GetHashCode();
+                    return hashCode;
+                }
+            }
+
+            public static bool operator==(DeviceEntry left, DeviceEntry right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator!=(DeviceEntry left, DeviceEntry right)
+            {
+                return !left.Equals(right);
             }
         }
 
