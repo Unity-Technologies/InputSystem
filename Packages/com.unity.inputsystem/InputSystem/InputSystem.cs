@@ -592,17 +592,25 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RemoveDevice(device);
         }
 
-        public static InputDevice TryGetDevice(string nameOrLayout)
+        public static InputDevice GetDevice(string nameOrLayout)
         {
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        public static InputDevice GetDevice(string nameOrLayout)
+        public static TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
         {
-            return s_Manager.GetDevice(nameOrLayout);
+            foreach (var device in devices)
+            {
+                var deviceOfType = device as TDevice;
+                if (deviceOfType != null)
+                    return deviceOfType;
+            }
+
+            return null;
         }
 
-        public static InputDevice TryGetDeviceById(int deviceId)
+        public static InputDevice GetDeviceById(int deviceId)
         {
             return s_Manager.TryGetDeviceById(deviceId);
         }
@@ -1065,10 +1073,23 @@ namespace UnityEngine.Experimental.Input
         /// before it flushes out its event queue. This means that events queued from a callback will
         /// be fed right into the upcoming update.
         /// </remarks>
-        public static event Action<InputUpdateType> onUpdate
+        /// <seealso cref="onAfterUpdate"/>
+        /// <seealso cref="Update"/>
+        public static event Action<InputUpdateType> onBeforeUpdate
         {
-            add { s_Manager.onUpdate += value; }
-            remove { s_Manager.onUpdate -= value; }
+            add { s_Manager.onBeforeUpdate += value; }
+            remove { s_Manager.onBeforeUpdate -= value; }
+        }
+
+        /// <summary>
+        /// Event that is fired after the input system has completed an update and processed all pending events.
+        /// </summary>
+        /// <seealso cref="onBeforeUpdate"/>
+        /// <seealso cref="Update"/>
+        public static event Action<InputUpdateType> onAfterUpdate
+        {
+            add { s_Manager.onAfterUpdate += value; }
+            remove { s_Manager.onAfterUpdate -= value; }
         }
 
         #endregion

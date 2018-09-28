@@ -8,6 +8,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -498,7 +499,7 @@ partial class CoreTests
     {
         var receivedUpdate = false;
         InputUpdateType? receivedUpdateType = null;
-        InputSystem.onUpdate +=
+        InputSystem.onBeforeUpdate +=
             type =>
         {
             Assert.That(receivedUpdate, Is.False);
@@ -916,6 +917,30 @@ partial class CoreTests
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.000001));
     }
 
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_FixedUpdatesAreDisabledByDefault()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CannotRunUpdatesThatAreNotEnabled()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanSetUpStateMonitorsUsingControlPath()
+    {
+        Assert.Fail();
+    }
+
     // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
     // the motion curve of a tracking device over time.
     [Test]
@@ -937,9 +962,9 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(history.Count, Is.EqualTo(3));
-            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
-            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
-            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
+            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(Vector2EqualityComparer.Instance));
         }
     }
 

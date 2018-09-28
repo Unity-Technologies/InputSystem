@@ -10,8 +10,10 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 
 ////TODO: test that device re-creation doesn't lose flags and such
@@ -629,7 +631,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(InputSystem.TryGetDeviceById(device.id), Is.SameAs(device));
+        Assert.That(InputSystem.GetDeviceById(device.id), Is.SameAs(device));
     }
 
     [Test]
@@ -640,6 +642,17 @@ partial class CoreTests
         var result = InputSystem.GetDevice("Gamepad");
 
         Assert.That(result, Is.SameAs(device));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanLookUpDeviceByType()
+    {
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        var gamepad = InputSystem.AddDevice<DualShockGamepad>();
+
+        Assert.That(InputSystem.GetDevice<Gamepad>(), Is.SameAs(gamepad));
+        Assert.That(InputSystem.GetDevice<DualShockGamepad>(), Is.SameAs(gamepad));
     }
 
     [Test]
@@ -1377,7 +1390,7 @@ partial class CoreTests
 
         InputSystem.Update();
 
-        var device = InputSystem.TryGetDeviceById(deviceId);
+        var device = InputSystem.GetDeviceById(deviceId);
 
         Assert.That(device, Is.Not.Null);
         Assert.That(device.native, Is.True);
@@ -2684,21 +2697,21 @@ partial class CoreTests
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(-value.y, value.x, value.z)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(-value.y, value.x, value.z)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(-value.x, -value.y, value.z)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(-value.x, -value.y, value.z)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(value.y, -value.x, value.z)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(value.y, -value.x, value.z)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.Portrait;
-            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(vector3Comparer));
+            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
-            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(vector3Comparer));
+            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
         }
     }
 
@@ -2721,23 +2734,23 @@ partial class CoreTests
             InputConfiguration.CompensateSensorsForScreenOrientation = true;
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.Portrait;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(angles).Using(vector3Comparer));
+                Is.EqualTo(angles).Using(Vector3EqualityComparer.Instance));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(angles).Using(vector3Comparer));
+                Is.EqualTo(angles).Using(Vector3EqualityComparer.Instance));
         }
     }
 

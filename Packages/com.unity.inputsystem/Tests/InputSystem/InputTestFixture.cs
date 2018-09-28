@@ -149,57 +149,5 @@ namespace UnityEngine.Experimental.Input
         /// The input runtime used during testing.
         /// </summary>
         public InputTestRuntime testRuntime { get; private set; }
-
-        private Vector3Comparer m_Vector3Comparer;
-        public Vector3Comparer vector3Comparer
-        {
-            get
-            {
-                if (m_Vector3Comparer == null)
-                    m_Vector3Comparer = new Vector3Comparer();
-                return m_Vector3Comparer;
-            }
-        }
-
-        private Vector2Comparer m_Vector2Comparer;
-        public Vector2Comparer vector2Comparer
-        {
-            get
-            {
-                if (m_Vector2Comparer == null)
-                    m_Vector2Comparer = new Vector2Comparer();
-                return m_Vector2Comparer;
-            }
-        }
-
-        public class Vector3Comparer : IComparer<Vector3>
-        {
-            private float m_Epsilon;
-
-            public Vector3Comparer(float epsilon = 0.0001f)
-            {
-                m_Epsilon = epsilon;
-            }
-
-            public int Compare(Vector3 a, Vector3 b)
-            {
-                return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
-            }
-        }
-
-        public class Vector2Comparer : IComparer<Vector2>
-        {
-            private float m_Epsilon;
-
-            public Vector2Comparer(float epsilon = 0.0001f)
-            {
-                m_Epsilon = epsilon;
-            }
-
-            public int Compare(Vector2 a, Vector2 b)
-            {
-                return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon ? 0 : 1;
-            }
-        }
     }
 }

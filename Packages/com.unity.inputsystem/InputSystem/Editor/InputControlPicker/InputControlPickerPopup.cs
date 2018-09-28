@@ -3,6 +3,8 @@ using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
+////REVIEW: there should be an indication of what type of control one is looking at; need to be able to tell value types
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate

@@ -102,6 +102,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (s_RefreshPending)
                 return;
 
+            ////REVIEW: we probably don't even need to do this explicitly and can just force repaints and then do it lazily from OnGUI
             // We don't want to refresh right away but rather wait for the next editor update
             // to then do one pass of refreshing action editor windows.
             EditorApplication.delayCall += RefreshAllAfterImportInternal;

@@ -9,6 +9,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add random access capability
 
+////REVIEW: rename back to InputActionEventQueue? if we have InputActionMap, InputActionStack, and InputActionQueue, it's
+////        rather confusing that in the end, they contain very different action-related things
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -25,8 +28,6 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Directly access the underlying raw memory queue.
         /// </summary>
-        /// <remarks>
-        /// </remarks>
         public InputEventBuffer buffer
         {
             get { return m_EventBuffer; }

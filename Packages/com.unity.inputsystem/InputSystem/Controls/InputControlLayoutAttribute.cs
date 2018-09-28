@@ -1,5 +1,7 @@
 using System;
 
+////REVIEW: should this *not* be inherited? inheritance can lead to surprises
+
 namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>

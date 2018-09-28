@@ -146,14 +146,20 @@ namespace UnityEngine.Experimental.Input
             remove { m_EventListeners.Remove(value); }
         }
 
-        public event UpdateListener onUpdate
+        public event UpdateListener onBeforeUpdate
         {
             add
             {
                 InstallBeforeUpdateHookIfNecessary();
-                m_UpdateListeners.Append(value);
+                m_BeforeUpdateListeners.Append(value);
             }
-            remove { m_UpdateListeners.Remove(value); }
+            remove { m_BeforeUpdateListeners.Remove(value); }
+        }
+
+        public event UpdateListener onAfterUpdate
+        {
+            add { m_AfterUpdateListeners.Append(value); }
+            remove { m_AfterUpdateListeners.Remove(value); }
         }
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
@@ -717,25 +723,10 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException("type");
 
             // Find the layout name that the given type was registered with.
-            // First just try the name of the type and see if that produces a hit.
-            var layoutName = new InternedString(type.Name);
-            Type registeredType;
-            if (!m_Layouts.layoutTypes.TryGetValue(layoutName, out registeredType)
-                || registeredType != type)
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
             {
-                // Didn't produce a hit so crawl through all registered layout types
-                // and look for a match.
-                layoutName = new InternedString();
-                foreach (var entry in m_Layouts.layoutTypes)
-                {
-                    if (entry.Value == type)
-                    {
-                        layoutName = entry.Key;
-                        break;
-                    }
-                }
-
-                // Still no match. Automatically registers the given type as a layout.
+                // Automatically register the given type as a layout.
                 if (layoutName.IsEmpty())
                 {
                     layoutName = new InternedString(type.Name);
@@ -839,7 +830,7 @@ namespace UnityEngine.Experimental.Input
             // put it on the list.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
-                onUpdate += beforeUpdateCallbackReceiver.OnUpdate;
+                onBeforeUpdate += beforeUpdateCallbackReceiver.OnUpdate;
 
             // If the device has state callbacks, make a note of it.
             var stateCallbackReceiver = device as IInputStateCallbackReceiver;
@@ -965,7 +956,7 @@ namespace UnityEngine.Experimental.Input
             // Kill before update callback, if applicable.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
-                onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
+                onBeforeUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
 
             // Disable before-render updates if this was the last device
             // that requires them.
@@ -1020,6 +1011,15 @@ namespace UnityEngine.Experimental.Input
                 throw new Exception(string.Format("Cannot find device with name or layout '{0}'", nameOrLayout));
 
             return device;
+        }
+
+        public InputDevice TryGetDevice(Type layoutType)
+        {
+            var layoutName = m_Layouts.TryFindLayoutForType(layoutType);
+            if (layoutName.IsEmpty())
+                return null;
+
+            return TryGetDevice(layoutName);
         }
 
         public InputDevice TryGetDeviceById(int id)
@@ -1330,7 +1330,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.pollingFrequency = pollingFrequency;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
-            if (m_UpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
+            if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
             {
                 m_Runtime.onBeforeUpdate = OnBeforeUpdate;
                 m_NativeBeforeUpdateHooked = true;
@@ -1397,7 +1397,8 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
         private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         private InlinedArray<EventListener> m_EventListeners;
-        private InlinedArray<UpdateListener> m_UpdateListeners;
+        private InlinedArray<UpdateListener> m_BeforeUpdateListeners;
+        private InlinedArray<UpdateListener> m_AfterUpdateListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_SuppressReResolvingOfActions;
@@ -1808,8 +1809,8 @@ namespace UnityEngine.Experimental.Input
             }
 
             ////REVIEW: should we activate the buffers for the given update here?
-            for (var i = 0; i < m_UpdateListeners.length; ++i)
-                m_UpdateListeners[i](updateType);
+            for (var i = 0; i < m_BeforeUpdateListeners.length; ++i)
+                m_BeforeUpdateListeners[i](updateType);
         }
 
         ////REVIEW: do we want to filter out state events that result in no state change?
@@ -1885,6 +1886,7 @@ namespace UnityEngine.Experimental.Input
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
+                InvokeAfterUpdateCallback(updateType);
                 return;
             }
 
@@ -2245,6 +2247,14 @@ namespace UnityEngine.Experimental.Input
                 InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             Profiler.EndSample();
+
+            InvokeAfterUpdateCallback(updateType);
+        }
+
+        private void InvokeAfterUpdateCallback(InputUpdateType updateType)
+        {
+            for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
+                m_AfterUpdateListeners[i](updateType);
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,

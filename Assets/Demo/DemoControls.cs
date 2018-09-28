@@ -250,6 +250,15 @@ public class DemoControls : InputActionAssetReference
             return asset.controlSchemes[m_KeyboardMouseSchemeIndex];
         }
     }
+    private int m_GamepadSchemeIndex = -1;
+    public InputControlScheme GamepadScheme
+    {
+        get
+        {
+            if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.GetControlSchemeIndex("Gamepad");
+            return asset.controlSchemes[m_GamepadSchemeIndex];
+        }
+    }
     [Serializable]
     public class ActionEvent : UnityEvent<InputAction.CallbackContext>
     {

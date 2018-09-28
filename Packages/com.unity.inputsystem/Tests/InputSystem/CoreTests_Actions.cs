@@ -10,6 +10,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -541,11 +542,11 @@ partial class CoreTests
             Assert.That(events[2].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(events[0].ReadValue<Vector2>(),
                 Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.123f, 0.234f), gamepad.leftStick))
-                    .Using(vector2Comparer));
+                    .Using(Vector2EqualityComparer.Instance));
             Assert.That(events[1].ReadValue<Vector2>(),
                 Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.345f, 0.456f), gamepad.rightStick))
-                    .Using(vector2Comparer));
-            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             queue.Clear();
 
@@ -2349,10 +2350,6 @@ partial class CoreTests
         Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
     }
 
-    // It's somewhat counterintuitive but not sure it's worth bothering with. State monitors don't know about
-    // controls that trigger in unison and for the action machinery it'd be some extra work to reliably figure out
-    // ...
-
     private class LogInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)
@@ -2436,7 +2433,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
-        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(vector2Comparer));
+        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
@@ -3246,5 +3243,96 @@ partial class CoreTests
 
         Assert.That(action.bindings, Has.Count.EqualTo(1));
         Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanBeArrangedInStack()
+    {
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1");
+        var action2 = new InputAction("action2");
+        var action3 = new InputAction("action3");
+
+        stack.Push(action1);
+        stack.Push(action2);
+        stack.Push(action3);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(3));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action3));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
+
+        stack.Clear();
+
+        Assert.That(stack.actions, Is.Empty);
+        Assert.That(stack.ToList(), Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
+    {
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1");
+        var action2 = new InputAction("action2");
+
+        stack.Push(action1);
+        stack.Push(action2);
+
+        stack.Enable();
+
+        Assert.That(stack.enabled);
+        Assert.That(action1.enabled);
+        Assert.That(action2.enabled);
+
+        stack.Disable();
+
+        Assert.That(stack.enabled, Is.False);
+        Assert.That(action1.enabled, Is.False);
+        Assert.That(action2.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_ArrangedInStack_OverrideEachOthersBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = new InputAction("action2", binding: "<Gamepad>/buttonSouth");
+
+        var action1Performed = false;
+        var action2Performed = false;
+
+        action1.performed += ctx => action1Performed = true;
+        action2.performed += ctx => action2Performed = true;
+
+        stack.Push(action1);
+        stack.Push(action2);
+
+        stack.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
+
+        Assert.That(action1Performed, Is.False);
+        Assert.That(action2Performed, Is.True);
+
+        stack.Pop(action2);
+
+        action1Performed = false;
+        action2Performed = false;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(action1Performed, Is.True);
+        Assert.That(action2Performed, Is.False);
     }
 }
