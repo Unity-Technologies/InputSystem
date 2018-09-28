@@ -32,14 +32,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             ExecuteEvents.Execute(selectedObject, baseEventData, ExecuteEvents.updateSelectedHandler);
         }
 
-        protected void PerformRaycast(PointerEventData eventData)
+        protected RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
                 throw new ArgumentNullException("eventData");
 
             eventSystem.RaycastAll(eventData, m_RaycastResultCache);
-            eventData.pointerCurrentRaycast = FindFirstRaycast(m_RaycastResultCache);
+            RaycastResult result = FindFirstRaycast(m_RaycastResultCache);
             m_RaycastResultCache.Clear();
+            return result;
         }
 
         protected PointerEventData GetOrCreateCachedPointerEvent()

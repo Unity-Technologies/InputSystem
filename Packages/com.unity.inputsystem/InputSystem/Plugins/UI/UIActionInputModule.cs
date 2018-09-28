@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
 ////TODO: come up with an action response system that doesn't require hooking and unhooking all those delegates
@@ -24,14 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty point
         {
             get { return m_PointAction; }
-            set
-            {
-                if (m_PointAction != null && m_ActionsHooked)
-                    m_PointAction.action.performed -= m_ActionCallback;
-                m_PointAction = value;
-                if (m_PointAction != null && m_ActionsHooked)
-                    m_PointAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_PointAction, value); }
         }
 
         /// <summary>
@@ -41,51 +35,46 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty move
         {
             get { return m_MoveAction; }
-            set
-            {
-                if (m_MoveAction != null && m_ActionsHooked)
-                    m_MoveAction.action.performed -= m_ActionCallback;
-                m_MoveAction = value;
-                if (m_PointAction != null && m_ActionsHooked)
-                    m_PointAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_MoveAction, value); }
+        }
+
+        public InputActionProperty scrollWheel
+        {
+            get { return m_ScrollWheelAction; }
+            set { SwapProperty(ref m_ScrollWheelAction, value); }
+        }
+
+        public InputActionProperty leftClick
+        {
+            get { return m_LeftClickAction; }
+            set { SwapProperty(ref m_LeftClickAction, value); }
+        }
+
+        public InputActionProperty middleClick
+        {
+            get { return m_MiddleClickAction; }
+            set { SwapProperty(ref m_MiddleClickAction, value); }
+        }
+
+        public InputActionProperty rightClick
+        {
+            get { return m_RightClickAction; }
+            set { SwapProperty(ref m_RightClickAction, value); }
         }
 
         public InputActionProperty submit
         {
             get { return m_SubmitAction; }
-            set
-            {
-                if (m_SubmitAction != null && m_ActionsHooked)
-                    m_SubmitAction.action.performed -= m_ActionCallback;
-                m_SubmitAction = value;
-                if (m_SubmitAction != null && m_ActionsHooked)
-                    m_SubmitAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_SubmitAction, value); }
         }
 
         public InputActionProperty cancel
         {
             get { return m_CancelAction; }
-            set
-            {
-                if (m_CancelAction != null && m_ActionsHooked)
-                    m_CancelAction.action.performed -= m_ActionCallback;
-                m_CancelAction = value;
-                if (m_CancelAction != null && m_ActionsHooked)
-                    m_CancelAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_CancelAction, value); }
         }
 
-        public InputActionProperty leftClick;
-
-        public InputActionProperty middleClick;
-
-        public InputActionProperty rightClick;
-
-        public InputActionProperty scroll;
-
-        public void OnDestroy()
+        protected override void OnDestroy()
         {
             UnhookActions();
 
@@ -96,19 +85,60 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        public void OnEnable()
+        protected override void Awake()
+        {
+            base.Awake();
+            mockMouseStates = new List<MockMouseState>();
+        }
+
+        protected override void OnEnable()
         {
             base.OnEnable();
             HookActions();
+            EnableActions();
         }
 
-        public void OnDisable()
+        protected override void OnDisable()
         {
             UnhookActions();
+            DisableActions();
+        }
+
+        int GetPointerIdFromControl(InputControl control)
+        {
+            var device = control != null ? control.device : null;
+            var pointer = device as Pointer;
+            return pointer != null ? pointer.pointerId.ReadValue() : 0;
+        }
+
+        private delegate void ModifyMouseStateDel(ref MockMouseState mouseState);
+        void ModifyMouseState(int pointerId, ModifyMouseStateDel func)
+        {
+            int i = 0;
+            for (; i < mockMouseStates.Count; i++)
+            {
+                if (mockMouseStates[i].pointerId == pointerId)
+                {
+                    MockMouseState mouseState = mockMouseStates[i];
+                    func(ref mouseState);
+
+                    mockMouseStates[i] = mouseState;
+                    return;
+                }
+            }
+
+            // No mouse state with that Id
+            {
+                MockMouseState mouseState = new MockMouseState(eventSystem, pointerId);
+                func(ref mouseState);
+                mockMouseStates.Add(mouseState);
+            }
         }
 
         public override void Process()
         {
+            //Mouse needs Position, Delta Position, ScrollDelta, ButtonStatesMock (Left, Right,Middle)
+
             foreach (var entry in m_ActionQueue)
             {
                 var action = entry.action;
@@ -118,32 +148,121 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 if (action == m_PointAction)
                 {
-                    var control = entry.control;
-                    var device = control != null ? control.device : null;
-                    var pointer = device as Pointer;
-                    var pointerId = pointer != null ? pointer.pointerId.ReadValue() : 0;
-
-                    // Initialize event.
-                    var eventData = GetOrCreateCachedPointerEvent();
-                    eventData.pointerId = pointerId;
-                    eventData.position = entry.ReadValue<Vector2>();
-                    PerformRaycast(eventData);
-
-                    // Fire events.
-                    HandlePointerExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
-
-                    eventData.Reset();
+                    var pointerId = GetPointerIdFromControl(entry.control);
+                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.position = entry.ReadValue<Vector2>(); });
+                }
+                else if(action == m_ScrollWheelAction)
+                {
+                    var pointerId = GetPointerIdFromControl(entry.control);
+                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.scrollDelta = entry.ReadValue<Vector2>(); });
+                }
+                else if (action == m_LeftClickAction)
+                {
+                    var pointerId = GetPointerIdFromControl(entry.control);
+                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.leftButton = entry.ReadValue<bool>(); });
+                }
+                else if (action == m_RightClickAction)
+                {
+                    var pointerId = GetPointerIdFromControl(entry.control);
+                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.rightButton = entry.ReadValue<bool>(); });
+                }
+                else if (action == m_MiddleClickAction)
+                {
+                    var pointerId = GetPointerIdFromControl(entry.control);
+                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.middleButton = entry.ReadValue<bool>(); });
                 }
                 else if (action == m_MoveAction)
                 {
                     // Don't send move events if disabled in the EventSystem.
                     if (!eventSystem.sendNavigationEvents)
                         continue;
-
-                    throw new NotImplementedException();
                 }
             }
+
             m_ActionQueue.Clear();
+
+            for(int i = 0; i < mockMouseStates.Count; i++)
+            {              
+                if(mockMouseStates[i].dirty)
+                {
+                    MockMouseState state = mockMouseStates[i];
+
+                    var eventData = GetOrCreateCachedPointerEvent();
+                    eventData.pointerId = state.pointerId;
+                    eventData.position = state.position;
+                    eventData.delta = state.deltaPosition;
+                    eventData.scrollDelta = state.scrollDelta;
+
+                    eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+                    //Handle Left Click
+
+                    //Handle Move
+                    HandlePointerExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
+
+                    //Handle Left Drag
+
+                    //Handle Right Click
+
+                    //Handle Right Drag
+
+                    //Handle Middle Click
+
+                    //Handle Middle Drag
+
+
+                    mockMouseStates[i].ClearDirty();
+                }
+            }
+        }
+
+        private void EnableActions()
+        {
+            if(!m_ActionsEnabled)
+            {
+                var pointAction = m_PointAction.action;
+                if (pointAction != null && !pointAction.enabled)
+                    pointAction.Enable();
+
+                var moveAction = m_MoveAction.action;
+                if (moveAction != null && !moveAction.enabled)
+                    moveAction.Enable();
+
+                var submitAction = m_SubmitAction.action;
+                if (submitAction != null && !submitAction.enabled)
+                    submitAction.Enable();
+
+                var cancelAction = m_CancelAction.action;
+                if (cancelAction != null && !cancelAction.enabled)
+                    cancelAction.Enable();
+
+                m_ActionsEnabled = true;
+            }           
+        }
+
+        private void DisableActions()
+        {
+            if(m_ActionsEnabled)
+            {
+                var pointAction = m_PointAction.action;
+                if (pointAction != null && pointAction.enabled)
+                    pointAction.Disable();
+
+                var moveAction = m_MoveAction.action;
+                if (moveAction != null && moveAction.enabled)
+                    moveAction.Disable();
+
+                var submitAction = m_SubmitAction.action;
+                if (submitAction != null && submitAction.enabled)
+                    submitAction.Disable();
+
+                var cancelAction = m_CancelAction.action;
+                if (cancelAction != null && cancelAction.enabled)
+                    cancelAction.Disable();
+
+                m_ActionsEnabled = false;
+            }
+            
         }
 
         private void HookActions()
@@ -199,6 +318,29 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 cancelAction.performed -= m_ActionCallback;
         }
 
+        private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
+        {
+            if (oldProperty != null)
+            {
+                if (m_ActionsEnabled)
+                    oldProperty.action.Disable();
+
+                if (m_ActionsHooked)
+                    oldProperty.action.performed -= m_ActionCallback;
+            }
+
+            oldProperty = newProperty;
+
+            if (oldProperty != null)
+            {
+                if (m_ActionsEnabled)
+                    oldProperty.action.Enable();
+
+                if (m_ActionsHooked)
+                    oldProperty.action.performed += m_ActionCallback;
+            }
+        }
+
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
@@ -237,9 +379,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         [Tooltip("Vector2 action that represents horizontal and vertical scrolling.")]
         [SerializeField]
-        private InputActionProperty m_ScrollAction;
+        private InputActionProperty m_ScrollWheelAction;
 
         [NonSerialized] private bool m_ActionsHooked;
+        [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
 
         [NonSerialized] private int m_LastPointerId;
@@ -257,11 +400,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </remarks>
         [NonSerialized] private InputActionQueue m_ActionQueue;
 
-        /// <summary>
-        /// If the left click button is currently held, this is the button control.
-        /// </summary>
-        [NonSerialized] private InputControl m_LeftClickControl;
-        [NonSerialized] private InputControl m_RightClickControl;
-        [NonSerialized] private InputControl m_MiddleClickControl;
+        private List<MockMouseState> mockMouseStates;
     }
 }
