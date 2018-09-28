@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -711,5 +712,46 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("LeftHand XRController position"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("Any leftStick"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("Any PrimaryMotion/x"));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanKeepListsOfControls_WithoutAllocatingManagedMemory()
+    {
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        using (var list = new InputControlList<InputControl>())
+        {
+            Assert.That(list.Count, Is.Zero);
+            Assert.That(list.ToArray(), Is.Empty);
+            Assert.That(() => list[0], Throws.TypeOf<ArgumentOutOfRangeException>());
+
+            list.Add(gamepad.leftStick);
+            list.Add(keyboard.spaceKey);
+            list.Add(keyboard);
+
+            Assert.That(list.Count, Is.EqualTo(3));
+            Assert.That(list[0], Is.SameAs(gamepad.leftStick));
+            Assert.That(list[1], Is.SameAs(keyboard.spaceKey));
+            Assert.That(list[2], Is.SameAs(keyboard));
+            Assert.That(() => list[3], Throws.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] { gamepad.leftStick, keyboard.spaceKey, keyboard }));
+
+            list.Remove(keyboard.spaceKey);
+
+            Assert.That(list.Count, Is.EqualTo(2));
+            Assert.That(list[0], Is.SameAs(gamepad.leftStick));
+            Assert.That(list[1], Is.SameAs(keyboard));
+            Assert.That(() => list[2], Throws.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] { gamepad.leftStick, keyboard }));
+
+            list.Clear();
+
+            Assert.That(list.Count, Is.Zero);
+            Assert.That(list.ToArray(), Is.Empty);
+            Assert.That(() => list[0], Throws.TypeOf<ArgumentOutOfRangeException>());
+        }
     }
 }

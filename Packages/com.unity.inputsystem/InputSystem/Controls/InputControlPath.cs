@@ -8,6 +8,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
 ////TODO: store CRC32s of names on controls and use that for first-level matching of name components
 ////TODO: handle arrays
+////TODO: support InputControlList
 
 ////TODO: add ability to cache images and display names for an entire action set
 
