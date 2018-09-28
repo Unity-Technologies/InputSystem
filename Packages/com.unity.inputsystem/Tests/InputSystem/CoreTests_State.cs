@@ -499,7 +499,7 @@ partial class CoreTests
     {
         var receivedUpdate = false;
         InputUpdateType? receivedUpdateType = null;
-        InputSystem.onUpdate +=
+        InputSystem.onBeforeUpdate +=
             type =>
         {
             Assert.That(receivedUpdate, Is.False);
