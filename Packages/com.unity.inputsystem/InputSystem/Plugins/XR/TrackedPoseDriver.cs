@@ -134,7 +134,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
 
         protected virtual void Awake()
-        {           
+        {
+           
 #if ENABLE_VR
             if (HasStereoCamera())
             {
@@ -145,12 +146,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         protected void OnEnable()
         {
+            InputSystem.onAfterUpdate += UpdateCallback;
             BindActions();
         }
 
         void OnDisable()
         {
             UnbindActions();
+            InputSystem.onAfterUpdate -= UpdateCallback;
         }
 
         protected virtual void OnDestroy()
@@ -163,6 +166,22 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 #endif
         }
 
+        protected void UpdateCallback(InputUpdateType type)
+        {
+            switch(type)
+            {
+                case InputUpdateType.Fixed:
+                    FixedUpdate();
+                    break;
+                case InputUpdateType.Dynamic:
+                    OnUpdate();
+                    break;
+                case InputUpdateType.BeforeRender:
+                    OnBeforeRender();
+                    break;                
+            }
+        }
+
         protected virtual void FixedUpdate()
         {
             if (m_UpdateType == UpdateType.Update ||
@@ -172,7 +191,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             }
         }
 
-        protected virtual void Update()
+        protected virtual void OnUpdate()
         {
             if (m_UpdateType == UpdateType.Update ||
                 m_UpdateType == UpdateType.UpdateAndBeforeRender)

@@ -8,26 +8,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [TestFixture]
     public class TrackedPoseDriverTests : InputTestFixture
     {
-        public class TestTrackedPoseDriverWrapper : TrackedPoseDriver
-        {
-            public void FakeUpdate()
-            {
-                Update();
-            }
-
-            public void FakeOnBeforeRender()
-            {
-                OnBeforeRender();
-            }
-        }
-
         static Vector3 testpos = new Vector3(1.0f, 2.0f, 3.0f);
         static Quaternion testrot = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
 
-        internal static TestTrackedPoseDriverWrapper CreateGameObjectWithTPD()
+        internal static TrackedPoseDriver CreateGameObjectWithTPD()
         {
             var go = new GameObject();
-            var tpd = go.AddComponent<TestTrackedPoseDriverWrapper>();
+            var tpd = go.AddComponent<TrackedPoseDriver>();
             return tpd;
         }
 
@@ -77,48 +64,49 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
                 device.quaternion.WriteValueInto(stateEvent, testrot);
                 device.vector3.WriteValueInto(stateEvent, testpos);
-                InputSystem.QueueEvent(stateEvent);
-                InputSystem.Update();
 
-                tpd.FakeUpdate();
+                InputSystem.QueueEvent(stateEvent);
+                InputSystem.Update(InputUpdateType.Dynamic);
                 Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
                 Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
 
-                tpd.FakeOnBeforeRender();
+                Reset(tpd.gameObject);
+                InputSystem.QueueEvent(stateEvent);
+                InputSystem.Update(InputUpdateType.BeforeRender);
                 Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
                 Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
 
                 // update only
+                Reset(tpd.gameObject);
                 tpd.updateType = TrackedPoseDriver.UpdateType.Update;
                 tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
-                Reset(tpd.gameObject);
-
+                
                 InputSystem.QueueEvent(stateEvent);
-                InputSystem.Update();
+                InputSystem.Update(InputUpdateType.Dynamic);
+                Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
+                Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
 
-                tpd.FakeOnBeforeRender();
+                Reset(tpd.gameObject);
+                InputSystem.QueueEvent(stateEvent);
+                InputSystem.Update(InputUpdateType.BeforeRender);
                 Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
                 Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
 
-                tpd.FakeUpdate();
-                Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
-                Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
 
                 // check the rot/pos case also Update AND Render.
                 tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
                 tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
                 Reset(tpd.gameObject);
-
+                
                 InputSystem.QueueEvent(stateEvent);
-                InputSystem.Update();
-
-                tpd.FakeUpdate();
+                InputSystem.Update(InputUpdateType.Dynamic);
                 Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
                 Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
 
                 tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
                 Reset(tpd.gameObject);
-                tpd.FakeUpdate();
+                InputSystem.QueueEvent(stateEvent);
+                InputSystem.Update(InputUpdateType.BeforeRender);
                 Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
                 Assert.That(tpd.gameObject.transform.rotation.Equals(testrot)); 
             }
