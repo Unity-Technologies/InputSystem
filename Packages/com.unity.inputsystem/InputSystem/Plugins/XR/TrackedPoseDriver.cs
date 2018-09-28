@@ -7,7 +7,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]
     public class TrackedPoseDriver: MonoBehaviour
     {
-
         public enum TrackingType
         {
             RotationAndPosition,
@@ -170,24 +169,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             switch(type)
             {
-                case InputUpdateType.Fixed:
-                    FixedUpdate();
-                    break;
                 case InputUpdateType.Dynamic:
                     OnUpdate();
                     break;
                 case InputUpdateType.BeforeRender:
                     OnBeforeRender();
                     break;                
-            }
-        }
-
-        protected virtual void FixedUpdate()
-        {
-            if (m_UpdateType == UpdateType.Update ||
-                m_UpdateType == UpdateType.UpdateAndBeforeRender)
-            {
-                PerformUpdate();
             }
         }
 
@@ -232,8 +219,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         protected virtual void PerformUpdate()
         {
-            if (!enabled)
-                return;
             SetLocalTransform(m_CurrentPosition, m_CurrentRotation);            
         }
     }

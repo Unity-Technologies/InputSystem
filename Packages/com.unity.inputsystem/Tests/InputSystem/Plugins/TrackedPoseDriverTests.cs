@@ -40,7 +40,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         [Test]
         [Category("TrackedPoseDriver")]
-        public void TPD_UpdateOptions_EffectProcessedData()
+        public void TPD_UpdateOptions_AffectProcessedData()
         {
             var tpd = CreateGameObjectWithTPD();
             var device = InputSystem.AddDevice<TestHMD>();
