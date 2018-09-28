@@ -7,15 +7,9 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class InputActionListTreeView : TreeView
+    internal class InputActionListTreeView : InputActionTreeBase
     {
         private SerializedObject m_SerializedObject;
-        private string m_GroupFilter;
-        private string m_NameFilter;
-        private Action m_ApplyAction;
-
-        public Action OnSelectionChanged;
-        public Action<SerializedProperty> OnContextClick;
 
         public static InputActionListTreeView CreateFromSerializedObject(Action applyAction, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
@@ -37,25 +31,12 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected InputActionListTreeView(Action applyAction, TreeViewState state)
-            : base(state)
+            : base(applyAction, state)
         {
-            m_ApplyAction = applyAction;
             ////REVIEW: good enough like this for 2018.2?
             #if UNITY_2018_3_OR_NEWER
             foldoutOverride += OnFoldoutDraw;
             #endif
-            Reload();
-        }
-
-        public void SetGroupFilter(string filter)
-        {
-            m_GroupFilter = filter;
-            Reload();
-        }
-
-        public void SetNameFilter(string filter)
-        {
-            m_NameFilter = filter.ToLower();
             Reload();
         }
 
@@ -70,44 +51,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_SerializedObject != null)
             {
                 BuildFromSerializedObject(root);
-                // is searching
-                if (!string.IsNullOrEmpty(m_NameFilter))
-                {
-                    FilterResults(root);
-                }
             }
             return root;
-        }
-
-        // Return true is the child node should be removed from the parent
-        private bool FilterResults(TreeViewItem root)
-        {
-            if (root.hasChildren)
-            {
-                var listToRemove = new List<TreeViewItem>();
-                foreach (var child in root.children)
-                {
-                    if (root.displayName != null && root.displayName.ToLower().Contains(m_NameFilter))
-                    {
-                        continue;
-                    }
-
-                    if (FilterResults(child))
-                    {
-                        listToRemove.Add(child);
-                    }
-                }
-                foreach (var item in listToRemove)
-                {
-                    root.children.Remove(item);
-                }
-
-                return !root.hasChildren;
-            }
-
-            if (root.displayName == null)
-                return false;
-            return !root.displayName.ToLower().Contains(m_NameFilter);
         }
 
         private void BuildFromSerializedObject(TreeViewItem root)
@@ -155,10 +100,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
                 var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j);
                 bindingsItem.depth = depth;
-                if (!string.IsNullOrEmpty(m_GroupFilter) && !bindingsItem.groups.Split(';').Contains(m_GroupFilter))
-                {
-                    continue;
-                }
                 if (bindingsItem.isComposite)
                 {
                     compositeGroupTreeItem = new CompositeGroupTreeItem(actionMapName, bindingProperty, j);
@@ -176,154 +117,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 compositeGroupTreeItem = null;
                 parent.AddChild(bindingsItem);
-            }
-        }
-
-        protected override void ContextClicked()
-        {
-            OnContextClick(null);
-        }
-
-        protected override void SelectionChanged(IList<int> selectedIds)
-        {
-            if (!HasSelection())
-                return;
-            if (OnSelectionChanged != null)
-            {
-                OnSelectionChanged();
-            }
-        }
-
-        public ActionTreeViewItem GetSelectedRow()
-        {
-            if (!HasSelection())
-                return null;
-
-            return (ActionTreeViewItem)FindItem(GetSelection().First(), rootItem);
-        }
-
-        public IEnumerable<ActionTreeViewItem> GetSelectedRows()
-        {
-            return FindRows(GetSelection()).Cast<ActionTreeViewItem>();
-        }
-
-        public ActionTreeItem GetSelectedAction()
-        {
-            if (!HasSelection())
-                return null;
-
-            var item = FindItem(GetSelection().First(), rootItem);
-
-            while (!(item is ActionTreeItem) && item != null && item.parent != null)
-            {
-                item = item.parent;
-            }
-
-            return item as ActionTreeItem;
-        }
-
-        public ActionMapTreeItem GetSelectedActionMap()
-        {
-            if (!HasSelection())
-                return null;
-
-            var item = FindItem(GetSelection().First(), rootItem);
-
-            while (!(item is ActionMapTreeItem) && item != null && item.parent != null)
-            {
-                item = item.parent;
-            }
-
-            return item as ActionMapTreeItem;
-        }
-
-        public SerializedProperty GetSelectedProperty()
-        {
-            if (!HasSelection())
-                return null;
-
-            var item = FindItem(GetSelection().First(), rootItem);
-
-            if (item == null)
-                return null;
-
-            return ((ActionTreeViewItem)item).elementProperty;
-        }
-
-        protected override float GetCustomRowHeight(int row, TreeViewItem item)
-        {
-            return 18;
-        }
-
-        internal bool CanRenameCurrentSelection()
-        {
-            var selection = GetSelectedRows();
-            if (selection.Count() != 1)
-                return false;
-            return CanRename(selection.Single());
-        }
-
-        protected override bool CanRename(TreeViewItem item)
-        {
-            return item is CompositeGroupTreeItem || item is ActionTreeViewItem && !(item is BindingTreeItem);
-        }
-
-        protected override void DoubleClickedItem(int id)
-        {
-            var item = FindItem(id, rootItem);
-            if (item == null)
-                return;
-            if (item is BindingTreeItem && !(item is CompositeGroupTreeItem))
-                return;
-            BeginRename(item);
-            ((ActionTreeViewItem)item).renaming = true;
-        }
-
-        protected override void RenameEnded(RenameEndedArgs args)
-        {
-            var actionItem = FindItem(args.itemID, rootItem) as ActionTreeViewItem;
-            if (actionItem == null)
-                return;
-
-            actionItem.renaming = false;
-
-            if (!args.acceptedRename || args.originalName == args.newName)
-                return;
-
-            if (actionItem is ActionTreeItem)
-            {
-                ((ActionTreeItem)actionItem).Rename(args.newName);
-            }
-            else if (actionItem is ActionMapTreeItem)
-            {
-                ((ActionMapTreeItem)actionItem).Rename(args.newName);
-            }
-            else if (actionItem is CompositeGroupTreeItem)
-            {
-                ((CompositeGroupTreeItem)actionItem).Rename(args.newName);
-            }
-            else
-            {
-                Debug.LogAssertion("Cannot rename: " + actionItem);
-            }
-
-            var newId = actionItem.GetIdForName(args.newName);
-            SetSelection(new[] {newId});
-            SetExpanded(newId, IsExpanded(actionItem.id));
-            m_ApplyAction();
-
-            actionItem.displayName = args.newName;
-            Reload();
-        }
-
-        protected override void RowGUI(RowGUIArgs args)
-        {
-            // We try to predict the indentation
-            var indent = (args.item.depth + 2) * 6 + 10;
-            var item = (args.item as ActionTreeViewItem);
-            if (item != null)
-            {
-                item.OnGUI(args.rowRect, args.selected, args.focused, indent);
             }
         }
 

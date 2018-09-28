@@ -9,6 +9,7 @@ namespace UnityEngine.Experimental.Input.Editor
     [Serializable]
     class InputActionWindowToolbar
     {
+        public Action<string> OnSearchChanged;
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
         private int m_SelectedControlSchemeIndex = -1;
@@ -104,7 +105,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
             if (EditorGUI.EndChangeCheck())
             {
-//                m_TreeView.SetNameFilter(m_SearchText);
+                if(OnSearchChanged != null)
+                    OnSearchChanged(m_SearchText);
             }
         }
 

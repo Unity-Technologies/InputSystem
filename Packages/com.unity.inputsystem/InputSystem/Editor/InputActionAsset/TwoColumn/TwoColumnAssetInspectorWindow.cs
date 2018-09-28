@@ -133,6 +133,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree = ActionsTree.CreateFromSerializedObject(Apply, ref m_ActionsTreeState);
             m_ActionsTree.OnSelectionChanged = OnActionSelection;
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
+            m_InputActionWindowToolbar.OnSearchChanged = m_ActionsTree.SetNameFilter;
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
