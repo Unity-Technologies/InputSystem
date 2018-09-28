@@ -1,5 +1,7 @@
 using NUnit.Framework;
 
+// Multi-player mode tests for the demo game.
+
 public partial class DemoGameTests
 {
     [Test]

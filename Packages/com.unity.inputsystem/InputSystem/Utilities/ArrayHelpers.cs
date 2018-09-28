@@ -316,6 +316,23 @@ namespace UnityEngine.Experimental.Input.Utilities
             Array.Resize(ref array, length - 1);
         }
 
+        public static void EraseAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index)
+        {
+            Debug.Assert(array != null);
+            Debug.Assert(count <= array.Length);
+            Debug.Assert(index >= 0 && index < count);
+
+            // If we're erasing from the beginning or somewhere in the middle, move
+            // the array contents down from after the index.
+            if (index < count - 1)
+            {
+                Array.Copy(array, index + 1, array, index, count - index - 1);
+            }
+
+            array[count - 1] = default(TValue); // Tail has been moved down by one.
+            --count;
+        }
+
         public static bool Erase<TValue>(ref TValue[] array, TValue value)
         {
             var index = IndexOf(array, value);

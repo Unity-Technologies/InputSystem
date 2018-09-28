@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Haptics;
 using UnityEngine.Experimental.Input.Utilities;
 
 //do we need to make users have ties to assets?
@@ -8,9 +7,11 @@ using UnityEngine.Experimental.Input.Utilities;
 //does this take control of enabling/disabling actions in some form?
 //does it have all possible actions for the user or just whatever applies in the user's current context?
 
+////REVIEW: should we reference the control scheme by name only instead of passing InputControlSchemes around?
+
 ////REVIEW: is detecting control scheme switches really that important? the UI hints depend more on when bindings change
 
-////TODO: add something to deal with the situation of a controller loosing battery power; in the current model
+////TODO: add something to deal with the situation of a controller losing battery power; in the current model
 ////      the controller would disappear as a device but we want to handle the situation such that when the device
 ////      comes back online, we connect the user to the same device; also, some platforms have APIs to help
 ////      dealing with this situation and we want to make use of that; probably want to only disable input devices
@@ -24,24 +25,49 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     /// Allows tracking <see cref="InputDevice">devices</see> and (optionally) <see cref="InputActionMap">
     /// actions</see> assigned to a particular user/player.
     /// </summary>
-    public class InputUser : IHaptics
+    public static class InputUser
     {
         public const ulong kInvalidId = 0;
 
         /// <summary>
-        /// Unique numeric ID of the user.
+        /// Event that is triggered when the <see cref="InputUser">user</see> setup in the system
+        /// changes.
+        /// </summary>
+        public static event Action<IInputUser, InputUserChange> onChange
+        {
+            add { s_OnChange.Append(value); }
+            remove { s_OnChange.Remove(value); }
+        }
+
+        /// <summary>
+        /// List of all current users.
+        /// </summary>
+        public static ReadOnlyArray<IInputUser> all
+        {
+            get { return new ReadOnlyArray<IInputUser>(s_AllUsers, 0, s_AllUserCount); }
+        }
+
+        /// <summary>
+        /// Get the unique numeric ID of the user.
         /// </summary>
         /// <remarks>
         /// The ID of a user cannot be changed over its lifetime. Also, while the user
         /// is active, no other player can have the same ID.
         /// </remarks>
-        public ulong id
+        public static ulong GetUserId(this IInputUser user)
         {
-            get { return m_Id; }
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return kInvalidId;
+
+            return s_AllUserData[index].id;
         }
 
         /// <summary>
-        /// Sequence number of the user.
+        /// Get the sequence number of the user.
         /// </summary>
         /// <remarks>
         /// It can be useful to establish a sorting of players locally such that it is
@@ -50,13 +76,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         ///
         /// Note that the index of a user may change as users are added and removed.
         /// </remarks>
-        public int index
+        public static int GetUserIndex(this IInputUser user)
         {
-            get { return m_Index; }
+            if (user == null)
+                throw new ArgumentNullException("user");
+            return FindUserIndex(user);
         }
 
         /// <summary>
-        /// If the user is defined by an external API, this is a handle to the external definition.
+        /// If the user is defined by an external API, this returns a handle to the external definition.
         /// </summary>
         /// <remarks>
         /// Users may be defined by the platform we are running on. Consoles, for example, have
@@ -64,63 +92,86 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// for user management.
         ///
         /// </remarks>
-        public InputUserHandle? handle
+        public static InputUserHandle? GetUserHandle(this IInputUser user)
         {
-            get { throw new NotImplementedException(); }
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return null;
+
+            return s_AllUserData[index].handle;
         }
 
+        public static void SetUserHandle(this IInputUser user, InputUserHandle? handle)
+        {
+            throw new NotImplementedException();
+        }
+
+        ////REVIEW: do we really need/want this?
         /// <summary>
-        /// Human-readable name of the user.
+        /// Get the human-readable name of the user.
         /// </summary>
         /// <remarks>
         /// The system places no constraints on the contents of this string. In particular, it does
         /// not ensure that no two users have the same name or that a user even has a name assigned to it.
         /// </remarks>
-        public string userName
+        public static string GetUserName(this IInputUser user)
         {
-            get { return m_UserName; }
-            set
-            {
-                if (string.Compare(m_UserName, value) == 0)
-                    return;
+            if (user == null)
+                throw new ArgumentNullException("user");
 
-                m_UserName = value;
-                Notify(InputUserChange.NameChanged);
-            }
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return null;
+
+            return s_AllUserData[index].userName;
         }
 
-        /// <summary>
-        /// List of devices assigned to the user.
-        /// </summary>
-        /// <remarks>
-        /// Devices do not necessarily need to be unique to a user. For example, two users may both
-        /// be assigned the same keyboard in a split-screen game where one user uses the left side and
-        /// another user uses the right side of the keyboard. Another example is a game where players
-        /// take turns on the same machine.
-        /// </remarks>
-        public ReadOnlyArray<InputDevice> devices
+        public static void SetUserName(this IInputUser user, string userName)
         {
-            get { return new ReadOnlyArray<InputDevice>(s_AllDevices, m_DeviceStartIndex, m_DeviceCount);}
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            if (string.Compare(s_AllUserData[index].userName, userName) == 0)
+                return;
+
+            s_AllUserData[index].userName = userName;
+
+            Notify(user, InputUserChange.NameChanged);
         }
 
         //do we really need a stack on this? is a single InputActionMap or even a list of InputActionMaps not enough?
         //what's the problem that the stack here is trying to solve?
         /// <summary>
-        /// <see cref="InputAction">Input actions</see> that are currently active for the user.
+        /// Get the <see cref="InputAction">input actions</see> that are currently active for the user.
         /// </summary>
-        public InputActionStack actions
+        public static InputActionStack GetInputActions(this IInputUser user)
         {
-            get
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return null;
+
+            var result = s_AllUserData[index].actionStack;
+            if (result == null)
             {
-                if (m_ActionStack == null)
-                    m_ActionStack = new InputActionStack();
-                return m_ActionStack;
+                result = new InputActionStack();
+                s_AllUserData[index].actionStack = result;
             }
+
+            return result;
         }
 
-        ////REVIEW: allow multiple schemes?
         /// <summary>
-        /// Control scheme currently employed by the user.
+        /// Get the control scheme currently employed by the user.
         /// </summary>
         /// <remarks>
         ///
@@ -132,131 +183,171 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// or by automatic switching), a notification is sent on <see cref="onChange"/> with
         /// <see cref="InputUserChange.ControlSchemeChanged"/>.
         /// </remarks>
-        public InputControlScheme? controlScheme
+        public static InputControlScheme? GetControlScheme(this IInputUser user)
         {
-            ////TODO
-            get { return null; }
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return null;
+
+            return s_AllUserData[index].controlScheme;
         }
 
-        ////REVIEW: are control schemes affecting this?
-        public ReadOnlyArray<InputBinding> customBindings
+        public static void SetControlScheme(this IInputUser user, InputControlScheme scheme)
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            // Ignore if the control scheme is already set on the user.
+            if (s_AllUserData[index].controlScheme.HasValue && s_AllUserData[index].controlScheme == scheme)
+                return;
+
+            s_AllUserData[index].controlScheme = scheme;
+
+            Notify(user, InputUserChange.ControlSchemeChanged);
         }
 
-        //downside: restricted to just action maps
-        public void SetActions(InputActionMap actionMap)
+        public static void SetControlScheme(this IInputUser user, string schemeName)
         {
-            ////TODO
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            if (string.IsNullOrEmpty(schemeName) && !s_AllUserData[index].controlScheme.HasValue)
+                return;
+            if (!string.IsNullOrEmpty(schemeName) && s_AllUserData[index].controlScheme.HasValue &&
+                string.Compare(
+                    s_AllUserData[index].controlScheme.Value.m_Name, schemeName,
+                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                return;
+
+            if (string.IsNullOrEmpty(schemeName))
+                s_AllUserData[index].controlScheme = null;
+            else
+                s_AllUserData[index].controlScheme = new InputControlScheme(schemeName);
+
+            Notify(user, InputUserChange.ControlSchemeChanged);
         }
 
-        public void SetControlScheme(InputControlScheme controlScheme)
+        /// <summary>
+        /// Get the list of <see cref="InputDevice">input devices</see> assigned to the user.
+        /// </summary>
+        /// <remarks>
+        /// Devices do not necessarily need to be unique to a user. For example, two users may both
+        /// be assigned the same keyboard in a split-screen game where one user uses the left side and
+        /// another user uses the right side of the keyboard. Another example is a game where players
+        /// take turns on the same machine.
+        /// </remarks>
+        public static ReadOnlyArray<InputDevice> GetAssignedInputDevices(this IInputUser user)
         {
-            ////TODO
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return new ReadOnlyArray<InputDevice>();
+
+            return new ReadOnlyArray<InputDevice>(s_AllDevices, s_AllUserData[index].deviceStartIndex,
+                s_AllUserData[index].deviceCount);
         }
 
-        public void AssignDevice(InputDevice device)
+        public static void AssignInputDevice(this IInputUser user, InputDevice device)
         {
-            if (AssignDeviceInternal(device))
-                Notify(InputUserChange.DevicesChanged);
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var userIndex = FindUserIndex(user);
+            if (userIndex == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            if (AssignDeviceInternal(userIndex, device))
+                Notify(user, InputUserChange.DevicesChanged);
         }
 
-        public void AssignDevices<TDevices>(TDevices devices)
+        public static void AssignInputDevices<TDevices>(this IInputUser user, TDevices devices)
             where TDevices : IEnumerable<InputDevice> // Parameter so that compiler can know enumerable type instead of having to go through the interface.
         {
             if (devices == null)
                 throw new ArgumentNullException("devices");
 
+            var userIndex = FindUserIndex(user);
+            if (userIndex == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
             var wasAdded = false;
             foreach (var device in devices)
-                wasAdded |= AssignDeviceInternal(device);
+            {
+                if (device == null)
+                    continue;
+                wasAdded |= AssignDeviceInternal(userIndex, device);
+            }
 
             if (wasAdded)
-                Notify(InputUserChange.DevicesChanged);
+                Notify(user, InputUserChange.DevicesChanged);
         }
 
-        private bool AssignDeviceInternal(InputDevice device)
+        private static bool AssignDeviceInternal(int userIndex, InputDevice device)
         {
-            if (device == null)
-                throw new ArgumentNullException("device");
+            var deviceCount = s_AllUserData[userIndex].deviceCount;
+            var deviceStartIndex = s_AllUserData[userIndex].deviceStartIndex;
 
             // Ignore if already assigned to user.
-            for (var i = 0; i < m_DeviceCount; ++i)
-                if (s_AllDevices[m_DeviceStartIndex + i] == device)
+            for (var i = 0; i < deviceCount; ++i)
+                if (s_AllDevices[deviceStartIndex + i] == device)
                     return false;
 
             // Move our devices to end of array.
-            if (m_DeviceCount > 0)
+            if (deviceCount > 0)
             {
-                ArrayHelpers.MoveSlice(s_AllDevices, m_DeviceStartIndex, s_AllDeviceCount - m_DeviceCount,
-                    m_DeviceCount);
+                ArrayHelpers.MoveSlice(s_AllDevices, deviceStartIndex, s_AllDeviceCount - deviceCount,
+                    deviceCount);
 
                 // Adjust users that have been impacted by the change.
                 for (var i = 0; i < s_AllUserCount; ++i)
                 {
-                    var user = s_AllUsers[i];
-                    if (user == this || user.m_DeviceStartIndex <= m_DeviceStartIndex)
+                    if (i == userIndex)
                         continue;
 
-                    user.m_DeviceStartIndex -= m_DeviceCount;
-                }
+                    if (s_AllUserData[i].deviceStartIndex <= deviceStartIndex)
+                        continue;
 
-                m_DeviceStartIndex = s_AllDeviceCount - m_DeviceCount;
+                    s_AllUserData[i].deviceStartIndex -= deviceCount;
+                }
             }
 
             // Append to array.
-            if (m_DeviceCount == 0)
-                m_DeviceStartIndex = s_AllDeviceCount;
+            deviceStartIndex = s_AllDeviceCount - deviceCount;
+            s_AllUserData[userIndex].deviceStartIndex = deviceStartIndex;
             ArrayHelpers.AppendWithCapacity(ref s_AllDevices, ref s_AllDeviceCount, device);
-            ++m_DeviceCount;
+            ++s_AllUserData[userIndex].deviceCount;
 
             return true;
         }
 
-        public void EnableControls()
+        public static void PauseHaptics(this IInputUser user)
         {
             throw new NotImplementedException();
         }
 
-        public void DisableControls()
+        public static void ResumeHaptics(this IInputUser user)
         {
             throw new NotImplementedException();
         }
 
-        private void Notify(InputUserChange change)
+        public static void ResetHaptics(this IInputUser user)
         {
-            for (var i = 0; i < s_OnChange.length; ++i)
-                s_OnChange[i](this, change);
-        }
-
-        /// <summary>
-        /// Event that is triggered when the <see cref="InputUser">user</see> setup in the system
-        /// changes.
-        /// </summary>
-        public static event Action<InputUser, InputUserChange> onChange
-        {
-            add { s_OnChange.Append(value); }
-            remove { s_OnChange.Remove(value); }
-        }
-
-        /// <summary>
-        /// List of all current users.
-        /// </summary>
-        public static ReadOnlyArray<InputUser> all
-        {
-            get { return new ReadOnlyArray<InputUser>(s_AllUsers, 0, s_AllUserCount); }
-        }
-
-        ////REVIEW: should this be some generic join hook? needs to be explored more; involve console team
-        /// <summary>
-        /// If true, on platforms that have built-in support for user management (e.g. Xbox and PS4),
-        /// automatically create users and assign them devices to reflect
-        /// </summary>
-        public static bool autoAddPlatformUsers
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -271,22 +362,24 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         ///
         /// The user is added to <see cref="all"/>.
         /// </remarks>
-        public static InputUser Add(string userName = null)
+        public static void Add(IInputUser user, string userName = null)
         {
-            var user = new InputUser
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var userData = new UserData
             {
-                m_UserName = userName,
-                m_Id = ++s_LastUserId,
+                id = ++s_LastUserId,
+                userName = userName,
             };
 
             // Add to list.
-            var index = ArrayHelpers.AppendWithCapacity(ref s_AllUsers, ref s_AllUserCount, user);
-            user.m_Index = index;
+            var userCount = s_AllUserCount;
+            ArrayHelpers.AppendWithCapacity(ref s_AllUsers, ref userCount, user);
+            ArrayHelpers.AppendWithCapacity(ref s_AllUserData, ref s_AllUserCount, userData);
 
             // Send notification.
-            user.Notify(InputUserChange.Added);
-
-            return user;
+            Notify(user, InputUserChange.Added);
         }
 
         /// <summary>
@@ -298,35 +391,30 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// Removing a user also unassigns all currently assigned devices from the user. On completion of this
         /// method, <see cref="devices"/> of <paramref name="user"/> will be empty.
         /// </remarks>
-        public static void Remove(InputUser user)
+        public static void Remove(IInputUser user)
         {
             if (user == null)
                 throw new ArgumentNullException("user");
 
-            // Check index.
-            var index = user.m_Index;
-            if (index < 0 || index >= s_AllUserCount || s_AllUsers[index] != user)
+            var index = FindUserIndex(user);
+            if (index == -1)
                 return;
 
-            // Remove.
-            ArrayHelpers.EraseAt(ref s_AllUsers, index);
-            --s_AllUserCount;
-
-            // Adjust indices of remaining users.
-            for (var i = index; i < s_AllUserCount; ++i)
-                s_AllUsers[i].m_Index = i;
-
             // Remove devices.
-            if (user.m_DeviceCount > 0)
+            var userData = s_AllUserData[index];
+            if (userData.deviceCount > 0)
             {
-                ArrayHelpers.EraseSliceWithCapacity(ref s_AllDevices, ref s_AllDeviceCount, user.m_DeviceStartIndex,
-                    user.m_DeviceCount);
-                user.m_DeviceCount = 0;
-                user.m_DeviceStartIndex = 0;
+                ArrayHelpers.EraseSliceWithCapacity(ref s_AllDevices, ref s_AllDeviceCount, userData.deviceStartIndex,
+                    userData.deviceCount);
             }
 
+            // Remove.
+            var userCount = s_AllUserCount;
+            ArrayHelpers.EraseAtWithCapacity(ref s_AllUsers, ref userCount, index);
+            ArrayHelpers.EraseAtWithCapacity(ref s_AllUserData, ref s_AllUserCount, index);
+
             // Send notification.
-            user.Notify(InputUserChange.Removed);
+            Notify(user, InputUserChange.Removed);
         }
 
         /// <summary>
@@ -336,7 +424,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
         /// <returns>The user that has <paramref name="device"/> among its <see cref="devices"/> or null if
         /// no user is currently assigned the given device.</returns>
-        public static InputUser FindUserForDevice(InputDevice device)
+        public static IInputUser FindUserForDevice(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
@@ -344,33 +432,71 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             throw new NotImplementedException();
         }
 
-        private ulong m_Id;
-        private int m_Index;
-        private string m_UserName;
-        private int m_DeviceCount;
-        private int m_DeviceStartIndex;
-        private InputActionStack m_ActionStack;
+        private static void Notify(IInputUser user, InputUserChange change)
+        {
+            for (var i = 0; i < s_OnChange.length; ++i)
+                s_OnChange[i](user, change);
+        }
+
+        private static int FindUserIndex(IInputUser user)
+        {
+            for (var i = 0; i < s_AllUserCount; ++i)
+            {
+                if (s_AllUsers[i] == user)
+                    return i;
+            }
+            return -1;
+        }
+
+        internal struct UserData
+        {
+            public ulong id;
+            public string userName;
+            public int deviceCount;
+            public int deviceStartIndex;
+            public InputActionStack actionStack;
+            public InputControlScheme? controlScheme; ////TODO: this will have to be relayed to actions/bindings
+            public InputUserHandle? handle;
+        }
 
         internal static uint s_LastUserId;
         internal static int s_AllUserCount;
         internal static int s_AllDeviceCount;
-        internal static InputUser[] s_AllUsers;
+        internal static IInputUser[] s_AllUsers;
+        internal static UserData[] s_AllUserData;
         internal static InputDevice[] s_AllDevices; // We keep a single array that we slice out to each user.
-        internal static InlinedArray<Action<InputUser, InputUserChange>> s_OnChange;
+        internal static InlinedArray<Action<IInputUser, InputUserChange>> s_OnChange;
 
-        public void PauseHaptics()
+        ////WIP
+        /*
+        ////REVIEW: are control schemes affecting this?
+        public ReadOnlyArray<InputBinding> customBindings
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        ////REVIEW: should this be some generic join hook? needs to be explored more; involve console team
+        /// <summary>
+        /// If true, on platforms that have built-in support for user management (e.g. Xbox and PS4),
+        /// automatically create users and assign them devices to reflect
+        /// </summary>
+        public static bool autoAddPlatformUsers
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public void EnableControls()
         {
             throw new NotImplementedException();
         }
 
-        public void ResumeHaptics()
+        public void DisableControls()
         {
             throw new NotImplementedException();
         }
 
-        public void ResetHaptics()
-        {
-            throw new NotImplementedException();
-        }
+        */
     }
 }
