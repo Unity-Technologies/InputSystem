@@ -1,16 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.XR.PoseProvider;
 using UnityEngine.XR;
 
-namespace UnityEngine.Experimental.Input.XR
-{
-
-    [DefaultExecutionOrder(-30000)]
+namespace UnityEngine.Experimental.Input.Plugins.XR
+{   
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]
     public class TrackedPoseDriver: MonoBehaviour
@@ -48,31 +40,30 @@ namespace UnityEngine.Experimental.Input.XR
 
         [SerializeField]
         InputAction m_PositionAction;
-        public InputAction positionAction {  get { return m_PositionAction;  } set { m_PositionAction = value; m_PositionBound = false;  BindActions(); } }
-
-        [SerializeField]
-        InputAction m_RotationAction;
-        public InputAction rotationAction { get { return m_RotationAction; } set { m_RotationAction = value; m_RotationBound = false; BindActions();  } }
-      
-        [SerializeField]
-        BasePoseProvider m_PoseProviderComponent = null;
-        public BasePoseProvider poseProviderComponent
+        public InputAction positionAction
         {
-            get { return m_PoseProviderComponent; }
+            get { return m_PositionAction; }
             set
             {
-                m_PoseProviderComponent = value;
-                if (value != null)
-                {
-                    UnbindActions();
-                }
-                else
-                {
-                    BindActions();
-                }
+                UnbindPosition();
+                m_PositionAction = value;
+                BindActions();
             }
         }
 
+        [SerializeField]
+        InputAction m_RotationAction;
+        public InputAction rotationAction
+        {
+            get { return m_RotationAction; }
+            set
+            {
+                UnbindRotation();
+                m_RotationAction = value;
+                BindActions();
+            }
+        }
+      
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
         bool m_RotationBound = false;
@@ -80,24 +71,37 @@ namespace UnityEngine.Experimental.Input.XR
 
         void BindActions()
         {
-            if (m_PoseProviderComponent == null)
+            BindPosition();
+            BindRotation();           
+        }
+
+        void BindPosition()
+        {
+            if (!m_PositionBound && m_PositionAction != null)
             {
-                if (!m_PositionBound && m_PositionAction != null)
-                {
-                    m_PositionAction.performed += OnPositionUpdate;
-                    m_PositionBound = true;
-                    m_PositionAction.Enable();
-                }
-                if (!m_RotationBound && m_RotationAction != null)
-                {
-                    m_RotationAction.performed += OnRotationUpdate;
-                    m_RotationBound = true;
-                    m_RotationAction.Enable();
-                }
+                m_PositionAction.performed += OnPositionUpdate;
+                m_PositionBound = true;
+                m_PositionAction.Enable();
+            }
+        }
+
+        void BindRotation()
+        {
+            if (!m_RotationBound && m_RotationAction != null)
+            {
+                m_RotationAction.performed += OnRotationUpdate;
+                m_RotationBound = true;
+                m_RotationAction.Enable();
             }
         }
 
         void UnbindActions()
+        {
+            UnbindPosition();
+            UnbindRotation();           
+        }
+
+        void UnbindPosition()
         {
             if (m_PositionAction != null && m_PositionBound)
             {
@@ -105,6 +109,10 @@ namespace UnityEngine.Experimental.Input.XR
                 m_PositionAction.performed -= OnPositionUpdate;
                 m_PositionBound = false;
             }
+        }
+
+        void UnbindRotation()
+        {
             if (m_RotationAction != null && m_RotationBound)
             {
                 m_RotationAction.Disable();
@@ -115,26 +123,14 @@ namespace UnityEngine.Experimental.Input.XR
 
         void OnPositionUpdate(InputAction.CallbackContext context)
         {
-            if (m_PositionBound)
-            {
-                var vec3Control = context.control as Vector3Control;
-                if (vec3Control != null)
-                {
-                    m_CurrentPosition = vec3Control.ReadValue();
-                }
-            }
+            Debug.Assert(m_PositionBound);
+            m_CurrentPosition = context.ReadValue<Vector3>();                
         }
 
         void OnRotationUpdate(InputAction.CallbackContext context)
         {
-            if (m_RotationBound)
-            {
-                var quatControl = context.control as QuaternionControl;
-                if (quatControl != null)
-                {
-                    m_CurrentRotation = quatControl.ReadValue();
-                }
-            }
+            Debug.Assert(m_RotationBound);           
+            m_CurrentRotation = context.ReadValue<Quaternion>();                           
         }
 
         protected virtual void Awake()
@@ -143,8 +139,6 @@ namespace UnityEngine.Experimental.Input.XR
             if (HasStereoCamera())
             {
                 XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
-                Camera c = GetComponent<Camera>();
-                Debug.Log(c.fieldOfView);
             }
 #endif
         }
@@ -213,7 +207,7 @@ namespace UnityEngine.Experimental.Input.XR
 
         private bool HasStereoCamera()
         {
-            Camera camera = GetComponent<Camera>();
+            var camera = GetComponent<Camera>();
             return camera != null && camera.stereoEnabled;
         }
 
@@ -221,17 +215,7 @@ namespace UnityEngine.Experimental.Input.XR
         {
             if (!enabled)
                 return;
-            if (m_PoseProviderComponent != null)
-            {
-                Pose providerPose;
-                m_PoseProviderComponent.TryGetPoseFromProvider(out providerPose);
-                SetLocalTransform(providerPose.position, providerPose.rotation);
-            }
-            else
-            {
-                SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
-            }
+            SetLocalTransform(m_CurrentPosition, m_CurrentRotation);            
         }
-
     }
 }

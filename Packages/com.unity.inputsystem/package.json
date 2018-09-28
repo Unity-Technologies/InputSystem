@@ -1,11 +1,18 @@
 {
 	"name": "com.unity.inputsystem",
-	"displayName":"Input System",
+	"displayName": "Input System",
 	"version": "0.0.8-preview",
 	"unity": "2018.2",
 	"description": "A new input system.",
-	"keywords": ["input", "events", "keyboard", "mouse", "gamepad", "touch", "vr", "xr"],
-	"dependencies": {
-		"com.unity.xr.poseprovider": "1.0.0"
-	}
+	"keywords": [
+		"input",
+		"events",
+		"keyboard",
+		"mouse",
+		"gamepad",
+		"touch",
+		"vr",
+		"xr"
+	],
+	"dependencies": {}
 }

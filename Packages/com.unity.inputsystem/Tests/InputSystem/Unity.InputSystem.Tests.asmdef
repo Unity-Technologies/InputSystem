@@ -1,8 +1,7 @@
 {
     "name": "Unity.InputSystem.Tests",
     "references": [
-        "Unity.InputSystem",
-        "UnityEngine.XR.PoseProvider"
+        "Unity.InputSystem"
     ],
     "optionalUnityReferences": [ "TestAssemblies" ],
     "includePlatforms": [],
