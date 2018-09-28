@@ -743,6 +743,32 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
+    {
+        InputUpdateType? receivedUpdateType = null;
+        Action<InputUpdateType> callback =
+            type =>
+        {
+            Assert.That(receivedUpdateType, Is.Null);
+            receivedUpdateType = type;
+        };
+
+        InputSystem.onAfterUpdate += callback;
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        receivedUpdateType = null;
+        InputSystem.onAfterUpdate -= callback;
+
+        InputSystem.Update();
+
+        Assert.That(receivedUpdateType, Is.Null);
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_EventBuffer_CanIterateEvents()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
