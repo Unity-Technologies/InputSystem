@@ -5,82 +5,128 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 [Flags]
-internal enum ButtonDeltaState
+public enum ButtonDeltaState
 {
     NoChange = 0,
     Pressed = 1,
     Released = 2,
 }
 
-internal struct MockMouseButtonEventData
+public struct MockMouseButton
 {
-    public MockMouseButtonEventData(EventSystem eventSystem, bool initialState)
+    public bool isDown
     {
-        m_CurrentState = initialState;
-        m_DeltaState = ButtonDeltaState.NoChange;
-        m_EventData = new PointerEventData(eventSystem);
+        get
+        {
+            return m_IsDown;
+        }
+        set
+        {
+            m_IsDown = value;
+            m_LastFrameDelta |= value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
+        }
     }
 
-    void FlipFrame()
+    public ButtonDeltaState lastFrameDelta
     {
-        m_DeltaState = ButtonDeltaState.NoChange;
+        get
+        {
+            return m_LastFrameDelta;
+        }
     }
 
-    private bool m_CurrentState;
-    private ButtonDeltaState m_DeltaState;
+    private ButtonDeltaState m_LastFrameDelta;
 
-    private PointerEventData m_EventData;
+    public bool isDragging { get; set; }
+    public float pressedTime { get; set; }
+
+    public Vector2 pressedPosition { get; set; }
+    public RaycastResult pressedRaycast { get; set; }
+    public GameObject pressedGameObject { get; set; }
+    public GameObject pressedGameObjectRaw { get; set; }
+    public GameObject draggedGameObject { get; set; }
+
+    public void Reset()
+    {
+        m_LastFrameDelta = ButtonDeltaState.NoChange;
+        m_IsDown = isDragging = false;
+        pressedTime = 0.0f;
+        pressedPosition = Vector2.zero;
+        pressedRaycast = new RaycastResult();
+        pressedGameObject = pressedGameObjectRaw = draggedGameObject = null;
+    }
+
+    public void OnFrameFinished()
+    {
+        m_LastFrameDelta = ButtonDeltaState.NoChange;
+    }
+
+    public void CopyTo(PointerEventData eventData)
+    {
+        eventData.dragging = isDragging;
+        eventData.clickTime = pressedTime;
+        eventData.pressPosition = pressedPosition;
+        eventData.pointerPressRaycast = pressedRaycast;
+        eventData.pointerPress = pressedGameObject;
+        eventData.rawPointerPress = pressedGameObjectRaw;
+        eventData.pointerDrag = draggedGameObject;
+    }
+
+    public void CopyFrom(PointerEventData eventData)
+    {
+        isDragging = eventData.dragging;
+        pressedTime = eventData.clickTime;
+        pressedPosition = eventData.pressPosition;
+        pressedRaycast = eventData.pointerPressRaycast;
+        pressedGameObject = eventData.pointerPress;
+        pressedGameObjectRaw = eventData.rawPointerPress;
+        draggedGameObject = eventData.pointerDrag;
+    }
+
+    private bool m_IsDown;
+
 }
 
 public struct MockMouseState
 {
-    public int pointerId
-    {
-        get { return m_PointerId; }
-    }
+    /// ///////////////////////////////////////
+ 
+    public List<GameObject> hoverTargets { get; set; }
+    public GameObject pointerTarget { get; set; }
 
-    public bool dirty
-    {
-        get { return m_ChangedThisFrame; }
-    }
+    /// ///////////////////////////////////////
+
+    public int pointerId { get; private set; }
+
+    public bool changedThisFrame { get; private set; }
 
     public Vector2 position
     {
-        get { return buttonEventData[(int)PointerEventData.InputButton.Left].position; }
+        get { return m_Position; }
         set
         {
-            for(int i = 0; i < buttonEventData.Length; i++)
-            {
-                buttonEventData[i].position = value;
-                buttonEventData[i].delta += value;
-            }
-            m_ChangedThisFrame = true;
+            m_Position = value;
+            deltaPosition += value;
+            changedThisFrame = true;
         }
     }
 
-    public Vector2 deltaPosition
-    {
-        get { return buttonEventData[(int)PointerEventData.InputButton.Left].delta; }
-    }
+    public Vector2 deltaPosition { get; private set; }
 
     public Vector2 scrollDelta
     {
         get
         {
-            return buttonEventData[(int)PointerEventData.InputButton.Left].scrollDelta;
+            return m_ScrollDelta;
         }
         set
         {
-            for (int i = 0; i < buttonEventData.Length; i++)
-            {
-                buttonEventData[i].scrollDelta = value;
-                m_ChangedThisFrame = true;
-            }
-            m_ChangedThisFrame = true;
+            m_ScrollDelta = value;
+            changedThisFrame = true;
         }
     }
 
-    public bool leftButton
+    public MockMouseButton leftButton
     {
         get
         {
@@ -88,14 +134,12 @@ public struct MockMouseState
         }
         set
         {
-            //buttonEventData[(int)PointerEventData.InputButton.Left].pointerPress
             m_LeftButton = value;
-            m_LeftButtonDelta |= value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
-            m_ChangedThisFrame = true;
+            changedThisFrame = true;
         }
     }
 
-    public bool rightButton
+    public MockMouseButton rightButton
     {
         get
         {
@@ -104,12 +148,11 @@ public struct MockMouseState
         set
         {
             m_RightButton = value;
-            m_RightButtonDelta |= value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
-            m_ChangedThisFrame = true;
+            changedThisFrame = true;
         }
     }
 
-    public bool middleButton
+    public MockMouseButton middleButton
     {
         get
         {
@@ -118,54 +161,39 @@ public struct MockMouseState
         set
         {
             m_MiddleButton = value;
-            m_MiddleButtonDelta |= value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
-            m_ChangedThisFrame = true;
+            changedThisFrame = true;
         }
     }
 
     public MockMouseState(EventSystem eventSystem, int pointerId)
     {
-        m_PointerId = pointerId;
-        m_ChangedThisFrame = false;
-        m_Position = m_DeltaPosition = m_ScrollDelta = Vector2.zero;
-        m_LeftButton = m_RightButton = m_MiddleButton = false;
-        m_LeftButtonDelta = m_RightButtonDelta = m_MiddleButtonDelta = ButtonDeltaState.NoChange;
+        this.pointerId = pointerId;
+        changedThisFrame = false;
+        m_Position = deltaPosition = m_ScrollDelta = Vector2.zero;
 
-        buttonEventData = new PointerEventData[] { new PointerEventData(eventSystem), new PointerEventData(eventSystem), new PointerEventData(eventSystem) };
-        PointerEventData leftData = buttonEventData[(int)PointerEventData.InputButton.Left];
-        leftData.button = PointerEventData.InputButton.Left;
-        leftData.pointerId = pointerId;
+        m_LeftButton = new MockMouseButton();
+        m_RightButton = new MockMouseButton();
+        m_MiddleButton = new MockMouseButton();
+        m_LeftButton.Reset();
+        m_RightButton.Reset();
+        m_MiddleButton.Reset();
 
-        PointerEventData rightData = buttonEventData[(int)PointerEventData.InputButton.Right];
-        rightData.button = PointerEventData.InputButton.Right;
-        rightData.pointerId = pointerId;
-
-        PointerEventData middleData = buttonEventData[(int)PointerEventData.InputButton.Middle];
-        middleData.button = PointerEventData.InputButton.Middle;
-        middleData.pointerId = pointerId;
-
-
+        pointerTarget = null;
+        hoverTargets = new List<GameObject>();
     }
 
-    public void ClearDirty()
+    public void OnFrameFinished()
     {
-        m_DeltaPosition = m_ScrollDelta = Vector2.zero;
-        m_ChangedThisFrame = false;
-        m_LeftButtonDelta = m_RightButtonDelta = m_MiddleButtonDelta = ButtonDeltaState.NoChange;
+        changedThisFrame = false;
+        deltaPosition = m_ScrollDelta = Vector2.zero;
+        m_LeftButton.OnFrameFinished();
+        m_RightButton.OnFrameFinished();
+        m_MiddleButton.OnFrameFinished();
     }
-
-    private int m_PointerId;
-    private bool m_ChangedThisFrame;
 
     private Vector2 m_Position;
-    private Vector2 m_DeltaPosition;
     private Vector2 m_ScrollDelta;
-    private bool m_LeftButton;
-    private ButtonDeltaState m_LeftButtonDelta;
-    private bool m_RightButton;
-    private ButtonDeltaState m_RightButtonDelta;
-    private bool m_MiddleButton;
-    private ButtonDeltaState m_MiddleButtonDelta;
-
-    private PointerEventData[] buttonEventData;
+    private MockMouseButton m_LeftButton;
+    private MockMouseButton m_RightButton;
+    private MockMouseButton m_MiddleButton;
 }

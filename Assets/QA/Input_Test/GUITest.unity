@@ -475,21 +475,6 @@ MonoBehaviour:
         m_Action: Action
         m_Flags: 0
     m_Reference: {fileID: 0}
-  m_SelectProperty:
-    m_UseReference: 0
-    m_Action:
-      m_Name: Action
-      m_ExpectedControlLayout: 
-      m_Id: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Path: <Pointer>/button
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Action
-        m_Flags: 0
-    m_Reference: {fileID: 0}
   m_SubmitAction:
     m_UseReference: 0
     m_Action:
@@ -512,7 +497,14 @@ MonoBehaviour:
       m_Name: Action
       m_ExpectedControlLayout: 
       m_Id: 
-      m_SingletonActionBindings: []
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Path: <Mouse>/leftButton
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Action
+        m_Flags: 0
     m_Reference: {fileID: 0}
   m_MiddleClickAction:
     m_UseReference: 0
@@ -530,7 +522,7 @@ MonoBehaviour:
       m_Id: 
       m_SingletonActionBindings: []
     m_Reference: {fileID: 0}
-  m_ScrollAction:
+  m_ScrollWheelAction:
     m_UseReference: 0
     m_Action:
       m_Name: 

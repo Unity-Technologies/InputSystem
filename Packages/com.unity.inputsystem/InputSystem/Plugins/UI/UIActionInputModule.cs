@@ -111,6 +111,185 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return pointer != null ? pointer.pointerId.ReadValue() : 0;
         }
 
+        PointerEventData PrepareInitialEventData(MockMouseState mouseState)
+        {
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.pointerId = mouseState.pointerId;
+            eventData.position = mouseState.position;
+            eventData.delta = mouseState.deltaPosition;
+            eventData.scrollDelta = mouseState.scrollDelta;
+            eventData.pointerEnter = mouseState.pointerTarget;
+
+            // Defaults (Unset)
+            eventData.useDragThreshold = true;
+
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+            return eventData;
+        }
+
+        // walk up the tree till a common root between the last entered and the current entered is foung
+        // send exit events up to (but not inluding) the common root. Then send enter events up to
+        // (but not including the common root).
+        void HandleEnterAndExit(PointerEventData eventData)
+        {
+            GameObject currentPointerTarget = eventData.pointerCurrentRaycast.gameObject;
+
+            // if we have no target / pointerEnter has been deleted
+            // just send exit events to anything we are tracking
+            // then exit
+            if (currentPointerTarget == null || eventData.pointerEnter == null)
+            {
+                for (var i = 0; i < eventData.hovered.Count; ++i)
+                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerExitHandler);
+
+                eventData.hovered.Clear();
+
+                if (currentPointerTarget == null)
+                {
+                    eventData.pointerEnter = null;
+                    return;
+                }
+            }
+
+            // if we have not changed hover target
+            if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
+                return;
+
+            GameObject commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget);
+
+            // and we already an entered object from last time
+            if (eventData.pointerEnter != null)
+            {
+                // send exit handler call to all elements in the chain
+                // until we reach the new target, or null!
+                Transform t = eventData.pointerEnter.transform;
+
+                while (t != null)
+                {
+                    // if we reach the common root break out!
+                    if (commonRoot != null && commonRoot.transform == t)
+                        break;
+
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerExitHandler);
+
+                    eventData.hovered.Remove(t.gameObject);
+
+                    t = t.parent;
+                }
+            }
+
+            // now issue the enter call up to but not including the common root
+            eventData.pointerEnter = currentPointerTarget;
+            if (currentPointerTarget != null)
+            {
+                Transform t = currentPointerTarget.transform;
+
+                while (t != null && t.gameObject != commonRoot)
+                {
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
+
+                    eventData.hovered.Add(t.gameObject);
+
+                    t = t.parent;
+                }
+            }
+        }
+
+        void HandleMouseClick(ButtonDeltaState mouseButtonChanges, PointerEventData eventData)
+        {
+            var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
+
+            if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)
+            {
+                eventData.eligibleForClick = true;
+                eventData.delta = Vector2.zero; //TODO TB: The Delta still exists, why are we wiping it out.
+                eventData.dragging = false;
+                eventData.pressPosition = eventData.position;
+                eventData.pointerPressRaycast = eventData.pointerCurrentRaycast;
+
+                //TODO TB
+                //DeselectIfSelectionChanged(currentOverGo, pointerEvent);
+
+                // search for the control that will receive the press
+                // if we can't find a press handler set the press
+                // handler to be what would receive a click.
+                var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
+
+                // didnt find a press handler... search for a click handler
+                if (newPressed == null)
+                    newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                float time = Time.unscaledTime;
+
+                if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < 0.3f))
+                    ++eventData.clickCount;
+                else
+                    eventData.clickCount = 1;
+
+                eventData.clickTime = time;
+
+                eventData.pointerPress = newPressed;
+                eventData.rawPointerPress = currentOverGo;
+
+                // Save the drag handler as well
+                eventData.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
+
+                if (eventData.pointerDrag != null)
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.initializePotentialDrag);
+            }
+
+            if ((mouseButtonChanges & ButtonDeltaState.Released) != 0)
+            {
+                //Check for Events
+                ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+
+                var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                if (eventData.pointerPress == pointerUpHandler && eventData.eligibleForClick)
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
+                else if (eventData.dragging && eventData.pointerDrag != null)
+                {
+                    ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.endDragHandler);
+                }       
+
+                //Clear Data
+                eventData.eligibleForClick = eventData.dragging = false;
+                eventData.pointerPress = eventData.rawPointerPress = eventData.pointerDrag = null;
+            }
+        }
+
+        void HandleMouseDrag(PointerEventData eventData)
+        {
+            if (!eventData.IsPointerMoving() ||
+                Cursor.lockState == CursorLockMode.Locked ||
+                eventData.pointerDrag == null)
+                return;
+
+            if(!eventData.dragging)
+            {
+                if((eventData.pressPosition - eventData.position).sqrMagnitude >= (eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold))
+                {
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
+                    eventData.dragging = true;
+                }
+            }
+
+            if(eventData.dragging)
+            {
+                // If we moved from our initial press object
+                if(eventData.pointerPress != eventData.pointerDrag)
+                {
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+
+                    eventData.eligibleForClick = false;
+                    eventData.pointerPress = null;
+                    eventData.rawPointerPress = null;
+                }
+                ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
+            }
+        }
+
         private delegate void ModifyMouseStateDel(ref MockMouseState mouseState);
         void ModifyMouseState(int pointerId, ModifyMouseStateDel func)
         {
@@ -159,17 +338,32 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 else if (action == m_LeftClickAction)
                 {
                     var pointerId = GetPointerIdFromControl(entry.control);
-                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.leftButton = entry.ReadValue<bool>(); });
+                    ModifyMouseState(pointerId, (ref MockMouseState state) => 
+                                                                {
+                                                                    MockMouseButton buttonState = state.leftButton;
+                                                                    buttonState.isDown = entry.ReadValue<float>() != 0.0f;
+                                                                    state.leftButton = buttonState;
+                                                                });
                 }
                 else if (action == m_RightClickAction)
                 {
                     var pointerId = GetPointerIdFromControl(entry.control);
-                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.rightButton = entry.ReadValue<bool>(); });
+                    ModifyMouseState(pointerId, (ref MockMouseState state) =>
+                                                                {
+                                                                    MockMouseButton buttonState = state.rightButton;
+                                                                    buttonState.isDown = entry.ReadValue<float>() != 0.0f;
+                                                                    state.rightButton = buttonState;
+                                                                });
                 }
                 else if (action == m_MiddleClickAction)
                 {
                     var pointerId = GetPointerIdFromControl(entry.control);
-                    ModifyMouseState(pointerId, (ref MockMouseState state) => { state.middleButton = entry.ReadValue<bool>(); });
+                    ModifyMouseState(pointerId, (ref MockMouseState state) =>
+                                                                {
+                                                                    MockMouseButton buttonState = state.middleButton;
+                                                                    buttonState.isDown = entry.ReadValue<float>() != 0.0f;
+                                                                    state.middleButton = buttonState;
+                                                                });
                 }
                 else if (action == m_MoveAction)
                 {
@@ -183,24 +377,30 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             for(int i = 0; i < mockMouseStates.Count; i++)
             {              
-                if(mockMouseStates[i].dirty)
+                if(mockMouseStates[i].changedThisFrame)
                 {
                     MockMouseState state = mockMouseStates[i];
+                    bool mouseMoving = state.deltaPosition.sqrMagnitude > float.Epsilon;
 
-                    var eventData = GetOrCreateCachedPointerEvent();
-                    eventData.pointerId = state.pointerId;
-                    eventData.position = state.position;
-                    eventData.delta = state.deltaPosition;
-                    eventData.scrollDelta = state.scrollDelta;
-
-                    eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+                    PointerEventData eventData = PrepareInitialEventData(state);
 
                     //Handle Left Click
+                    MockMouseButton buttonState = state.leftButton;
+                    buttonState.CopyTo(eventData);
+                    HandleMouseClick(state.leftButton.lastFrameDelta, eventData);
 
                     //Handle Move
-                    HandlePointerExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
+                    HandleEnterAndExit(eventData);
+
+                    // Copy updated data back
+                    state.hoverTargets = eventData.hovered;
+                    state.pointerTarget = eventData.pointerEnter;
 
                     //Handle Left Drag
+                    HandleMouseDrag(eventData);
+
+                    buttonState.CopyFrom(eventData);
+                    state.leftButton = buttonState;
 
                     //Handle Right Click
 
@@ -211,7 +411,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     //Handle Middle Drag
 
 
-                    mockMouseStates[i].ClearDirty();
+                    state.OnFrameFinished();
+                    mockMouseStates[i] = state;
                 }
             }
         }
@@ -227,6 +428,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 var moveAction = m_MoveAction.action;
                 if (moveAction != null && !moveAction.enabled)
                     moveAction.Enable();
+
+                var leftClickAction = m_LeftClickAction.action;
+                if (leftClickAction != null && !leftClickAction.enabled)
+                    leftClickAction.Enable();
 
                 var submitAction = m_SubmitAction.action;
                 if (submitAction != null && !submitAction.enabled)
@@ -251,6 +456,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 var moveAction = m_MoveAction.action;
                 if (moveAction != null && moveAction.enabled)
                     moveAction.Disable();
+
+                var leftClickAction = m_LeftClickAction.action;
+                if (leftClickAction != null && leftClickAction.enabled)
+                    leftClickAction.Disable();
 
                 var submitAction = m_SubmitAction.action;
                 if (submitAction != null && submitAction.enabled)
@@ -285,6 +494,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (moveAction != null)
                 moveAction.performed += m_ActionCallback;
 
+            var leftClickAction = m_LeftClickAction.action;
+            if (leftClickAction != null)
+                leftClickAction.performed += m_ActionCallback;
+
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
                 submitAction.performed += m_ActionCallback;
@@ -308,6 +521,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
                 moveAction.performed -= m_ActionCallback;
+
+            var leftClickAction = m_LeftClickAction.action;
+            if (leftClickAction != null)
+                leftClickAction.performed -= m_ActionCallback;
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
