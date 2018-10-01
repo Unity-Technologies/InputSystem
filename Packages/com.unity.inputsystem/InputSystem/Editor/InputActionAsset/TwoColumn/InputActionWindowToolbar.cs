@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        private static readonly GUIContent m_EditGUI = EditorGUIUtility.TrTextContent("edit");
+        private static readonly GUIContent m_EditGUI = EditorGUIUtility.IconContent("_Popup");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
 
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager)

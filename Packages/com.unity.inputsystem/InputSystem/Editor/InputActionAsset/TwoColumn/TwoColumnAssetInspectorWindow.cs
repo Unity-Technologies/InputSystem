@@ -73,6 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager);
+            m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager);
 
             InitializeTrees();
