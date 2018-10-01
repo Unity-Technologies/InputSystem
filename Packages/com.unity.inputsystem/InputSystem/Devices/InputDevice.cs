@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////REVIEW: nuke MakeCurrent() and replace with (optional) device tracking on InputPlayer?
+
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
 ////        the heap objects of devices he doesn't use?
 
@@ -187,6 +189,25 @@ namespace UnityEngine.Experimental.Input
             get { return typeof(byte[]); }
         }
 
+        public override int valueSizeInBytes
+        {
+            get { return (int)m_StateBlock.alignedSizeInBytes; }
+        }
+
+        public InputNoiseFilter userInteractionFilter
+        {
+            get
+            {
+                return m_UserInteractionFilter;
+            }
+            set
+            {
+                m_UserInteractionFilter.Reset(this);
+                m_UserInteractionFilter = value;
+                m_UserInteractionFilter.Apply(this);
+            }
+        }
+
         /// <summary>
         /// Return the current state of the device as byte array.
         /// </summary>
@@ -211,6 +232,11 @@ namespace UnityEngine.Experimental.Input
         }
 
         public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override unsafe void WriteValueInto(void* buffer, int bufferSize)
         {
             throw new NotImplementedException();
         }
@@ -245,6 +271,10 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="character"></param>
         public virtual void OnTextInput(char character)
+        {
+        }
+
+        public virtual void OnIMEStringEvent(IMEComposition imeComposition)
         {
         }
 
@@ -346,6 +376,8 @@ namespace UnityEngine.Experimental.Input
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        internal InputNoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

@@ -85,6 +85,14 @@ namespace UnityEngine.Experimental.Input.Utilities
             additionalValues = null;
         }
 
+        public void ClearWithCapacity()
+        {
+            length = 0;
+            firstValue = default(TValue);
+            for (var i = 0; i < length - 1; ++i)
+                additionalValues[i] = default(TValue);
+        }
+
         public InlinedArray<TValue> Clone()
         {
             return new InlinedArray<TValue>
@@ -167,7 +175,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public void AppendWithCapacity(TValue value, int capacityIncrement = 10)
+        public int AppendWithCapacity(TValue value, int capacityIncrement = 10)
         {
             if (length == 0)
             {
@@ -178,7 +186,10 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var numAdditionalValues = length - 1;
                 ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value, capacityIncrement: capacityIncrement);
             }
+
+            var index = length;
             ++length;
+            return index;
         }
 
         public void Append(IEnumerable<TValue> values)
@@ -296,7 +307,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             --length;
         }
 
-        public bool RemoveAtByMovingTailWithCapacity(TValue value)
+        public bool RemoveByMovingTailWithCapacity(TValue value)
         {
             var index = IndexOf(value);
             if (index == -1)

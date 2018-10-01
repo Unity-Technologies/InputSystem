@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             {
                                 break;
                             }
-                            InputActionSerializationHelpers.AppendBindingFromSavedProperties(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
+                            InputActionSerializationHelpers.AddBindingFromSavedProperties(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
                             i++;
                         }
                         catch (ArgumentException e)
@@ -182,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
                     }
 
-                    selectedRow.AppendBindingFromObject(GetParameterDictionary(row));
+                    selectedRow.AddBindingFromSavedProperties(GetParameterDictionary(row));
                     m_Apply();
                     continue;
                 }

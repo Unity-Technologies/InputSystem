@@ -121,6 +121,36 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
+    {
+        InputNoiseFilter filter = new InputNoiseFilter
+        {
+            elements = new InputNoiseFilter.FilterElement[]
+            {
+                new InputNoiseFilter.FilterElement
+                {
+                    controlIndex = 0,
+                    type = InputNoiseFilter.ElementType.EntireControl
+                }
+            }
+        };
+
+        var device = InputSystem.AddDevice<Gamepad>();
+        device.userInteractionFilter = filter;
+
+        InputSystem.SaveAndReset();
+        InputSystem.Restore();
+
+        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+
+        Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
+        Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
+        Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
+        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(InputNoiseFilter.ElementType.EntireControl));
+    }
+
+    [Test]
+    [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
     {
@@ -230,7 +260,7 @@ partial class CoreTests
         var binding = new InputBinding();
         binding.path = "some path";
         var action = map.AddAction("action");
-        action.AppendBinding(binding);
+        action.AddBinding(binding);
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
@@ -290,7 +320,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendBinding(action1Property, mapProperty);
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         // Maps and actions aren't UnityEngine.Objects so the modifications will not
@@ -344,7 +374,7 @@ partial class CoreTests
         parameters.Add("flags", "" + flags);
         parameters.Add("action", sourceActionName);
 
-        InputActionSerializationHelpers.AppendBindingFromSavedProperties(parameters, action1Property, mapProperty);
+        InputActionSerializationHelpers.AddBindingFromSavedProperties(parameters, action1Property, mapProperty);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 
@@ -359,7 +389,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAppendCompositeBinding()
+    public void Editor_InputAsset_CanAddCompositeBinding()
     {
         var map = new InputActionMap("set");
         map.AddAction(name: "action1");
@@ -370,7 +400,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
+        InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");
@@ -426,8 +456,8 @@ partial class CoreTests
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
-        Assert.That(code, Contains.Substring("class NewControls_4_"));
-        Assert.That(code, Contains.Substring("public InputAction @action__"));
+        Assert.That(code, Contains.Substring("class NewControls4"));
+        Assert.That(code, Contains.Substring("public InputAction @action"));
         Assert.That(code, Contains.Substring("public InputAction @_1thing"));
     }
 

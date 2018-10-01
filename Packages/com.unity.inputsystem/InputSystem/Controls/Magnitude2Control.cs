@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeVector2;
         }
 
-        public override unsafe float ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe float ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             var x = valuePtr[0];
@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Controls
             return new Vector2(x, y).magnitude;
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, float value)
+        protected override void WriteUnprocessedValueInto(IntPtr statePtr, float value)
         {
             throw new NotSupportedException("Magnitudes are derived from vectors and cannot be written");
         }

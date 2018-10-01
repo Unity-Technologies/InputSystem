@@ -8,9 +8,11 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: allow creating generic controls as parents just to group child controls
 
 ////TODO: allow things like "-something" and "+something" for usages, processors, etc
 
@@ -1716,6 +1718,14 @@ namespace UnityEngine.Experimental.Input.Layouts
                 layoutBuilders = new Dictionary<InternedString, BuilderInfo>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
+            }
+
+            public InternedString TryFindLayoutForType(Type layoutType)
+            {
+                foreach (var entry in layoutTypes)
+                    if (entry.Value == layoutType)
+                        return entry.Key;
+                return new InternedString();
             }
 
             public InternedString TryFindMatchingLayout(InputDeviceDescription deviceDescription)

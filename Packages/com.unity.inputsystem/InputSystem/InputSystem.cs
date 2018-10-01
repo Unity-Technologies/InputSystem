@@ -20,9 +20,11 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: move state change monitor API out of here (static InputStateChangeMonitor class?)
 
 ////TODO: rename RegisterControlProcessor to just RegisterProcessor
 
@@ -42,11 +44,11 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.6")]
+[assembly: AssemblyVersion("0.0.8")]
 
 namespace UnityEngine.Experimental.Input
 {
-    using NotifyControlValueChangeAction = Action<InputControl, double, long>;
+    using NotifyControlValueChangeAction = Action<InputControl, double, InputEventPtr, long>;
     using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
 
     /// <summary>
@@ -590,17 +592,25 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RemoveDevice(device);
         }
 
-        public static InputDevice TryGetDevice(string nameOrLayout)
+        public static InputDevice GetDevice(string nameOrLayout)
         {
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        public static InputDevice GetDevice(string nameOrLayout)
+        public static TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
         {
-            return s_Manager.GetDevice(nameOrLayout);
+            foreach (var device in devices)
+            {
+                var deviceOfType = device as TDevice;
+                if (deviceOfType != null)
+                    return deviceOfType;
+            }
+
+            return null;
         }
 
-        public static InputDevice TryGetDeviceById(int deviceId)
+        public static InputDevice GetDeviceById(int deviceId)
         {
             return s_Manager.TryGetDeviceById(deviceId);
         }
@@ -839,9 +849,9 @@ namespace UnityEngine.Experimental.Input
             public NotifyControlValueChangeAction valueChangeCallback;
             public NotifyTimerExpiredAction timerExpiredCallback;
 
-            public void NotifyControlValueChanged(InputControl control, double time, long monitorIndex)
+            public void NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
             {
-                valueChangeCallback(control, time, monitorIndex);
+                valueChangeCallback(control, time, eventPtr, monitorIndex);
             }
 
             public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
@@ -973,7 +983,7 @@ namespace UnityEngine.Experimental.Input
             {
                 baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.id, time),
                 stateFormat = device.stateBlock.format,
-                stateOffset = control.m_StateBlock.byteOffset
+                stateOffset = control.m_StateBlock.byteOffset - device.m_StateBlock.byteOffset
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
@@ -1063,10 +1073,23 @@ namespace UnityEngine.Experimental.Input
         /// before it flushes out its event queue. This means that events queued from a callback will
         /// be fed right into the upcoming update.
         /// </remarks>
-        public static event Action<InputUpdateType> onUpdate
+        /// <seealso cref="onAfterUpdate"/>
+        /// <seealso cref="Update"/>
+        public static event Action<InputUpdateType> onBeforeUpdate
         {
-            add { s_Manager.onUpdate += value; }
-            remove { s_Manager.onUpdate -= value; }
+            add { s_Manager.onBeforeUpdate += value; }
+            remove { s_Manager.onBeforeUpdate -= value; }
+        }
+
+        /// <summary>
+        /// Event that is fired after the input system has completed an update and processed all pending events.
+        /// </summary>
+        /// <seealso cref="onBeforeUpdate"/>
+        /// <seealso cref="Update"/>
+        public static event Action<InputUpdateType> onAfterUpdate
+        {
+            add { s_Manager.onAfterUpdate += value; }
+            remove { s_Manager.onAfterUpdate -= value; }
         }
 
         #endregion
@@ -1588,7 +1611,6 @@ namespace UnityEngine.Experimental.Input
             Destroy();
 
             // Load back previous state.
-            var index = s_SavedStateStack.Count - 1;
             var state = s_SavedStateStack.Pop();
             s_Manager = state.manager;
             s_Remote = state.remote;

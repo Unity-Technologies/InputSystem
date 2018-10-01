@@ -239,5 +239,30 @@
             "bindings": []
         }
     ],
-    "controlSchemes": []
+    "controlSchemes": [
+        {
+            "name" : "Keyboard&Mouse",
+            "bindingGroup" : "Keyboard&Mouse",
+            "devices" : [
+                {
+                    "devicePath" : "<Keyboard>",
+                    "isOptional" : false
+                },
+                {
+                    "devicePath" : "<Mouse>",
+                    "isOptional" : false
+                }
+            ]
+        },
+        {
+            "name" : "Gamepad",
+            "bindingGroup" : "Gamepad",
+            "devices" : [
+                {
+                    "devicePath" : "<Gamepad>",
+                    "isOptional" : false
+                }
+            ]
+        }
+    ]
 }

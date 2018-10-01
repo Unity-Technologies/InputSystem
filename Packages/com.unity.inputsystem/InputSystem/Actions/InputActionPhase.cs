@@ -78,7 +78,16 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         Started,
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <seealso cref="InputAction.performed"/>
         Performed,
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <seealso cref="InputAction.cancelled"/>
         Cancelled
     }
 }

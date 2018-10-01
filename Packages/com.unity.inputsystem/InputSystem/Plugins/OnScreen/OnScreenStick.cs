@@ -18,14 +18,14 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         public void OnPointerDown(PointerEventData data)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
         }
 
         public void OnDrag(PointerEventData data)
         {
             Vector2 position;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out position);
-            Vector2 delta = position - m_PointerDownPos;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out position);
+            var delta = position - m_PointerDownPos;
 
             delta = Vector2.ClampMagnitude(delta, movementRange);
             ((RectTransform)transform).anchoredPosition = m_StartPos + (Vector3)delta;

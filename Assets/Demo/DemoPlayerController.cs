@@ -8,12 +8,12 @@ using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
+////WIP
+
 /// <summary>
 /// Controller for a single player in the game.
 /// </summary>
-/// <remarks>
-/// </remarks>
-public class DemoPlayerController : MonoBehaviour
+public class DemoPlayerController : MonoBehaviour, IInputUser
 {
     public float moveSpeed;
     public float rotateSpeed;
@@ -65,13 +65,12 @@ public class DemoPlayerController : MonoBehaviour
     private bool m_IsGrounded;
     private bool m_Charging;
     private Vector2 m_Rotation;
-    private InputUser m_User;
 
     private Rigidbody m_Rigidbody;
 
-    public InputUser user
+    public int score
     {
-        get { return m_User; }
+        get { return m_Score; }
     }
 
     public void Start()
@@ -86,18 +85,13 @@ public class DemoPlayerController : MonoBehaviour
     /// <summary>
     /// One-time initialization for a player controller.
     /// </summary>
-    public void Initialize()
+    public void Initialize(int playerIndex)
     {
-        m_User = InputUser.Add();
-
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
         // the original actions.
-        if (m_User.index != 0)
+        if (playerIndex != 0)
             controls.DuplicateAndSwitchAsset();
-
-        // By default, player starts out with gameplay actions active.
-        m_User.SwitchActions(controls.gameplay);
 
         // Wire our input actions into the UI. Doing this manually here instead of setting it up
         // in the inspector ensure that when we duplicate DemoControls.inputactions above, we
@@ -107,8 +101,8 @@ public class DemoPlayerController : MonoBehaviour
         //       means that the UI will react only to input from that same user.
         var uiInput = ui.GetComponent<UIActionInputModule>();
         Debug.Assert(uiInput != null);
-        uiInput.moveAction.Set(controls.menu.navigate);
-        uiInput.leftClickAction.Set(controls.menu.click);
+        uiInput.move = new InputActionProperty(controls.menu.navigate);
+        uiInput.leftClick = new InputActionProperty(controls.menu.click);
     }
 
     /// <summary>
@@ -124,18 +118,33 @@ public class DemoPlayerController : MonoBehaviour
     /// So, based on what platform we are on and what devices we have available locally, we select
     /// one of the control schemes to start out with.
     /// </remarks>
-    public InputControlScheme InferDefaultControlScheme()
+    public InputControlScheme InferDefaultControlSchemeForSinglePlayer()
     {
-        //if we have VR devices, go with them by default regardless of platform
+        ////TODO: check if we have VR devices; if so, use VR control scheme by default
 
-        #if UNITY_STANDALONE
-        #elif UNITY_ANDROID || UNITY_IOS
-        #endif
+        var platform = DemoGame.platform;
+
+        if (platform.IsDesktopPlatform())
+        {
+            // If we have a gamepad, default to gamepad. Otherwise default to keyboard&mouse.
+            if (InputSystem.GetDevice<Gamepad>() != null)
+                return controls.GamepadScheme;
+            return controls.KeyboardMouseScheme;
+        }
 
         throw new NotImplementedException();
     }
 
-    public InputControlScheme SelectControlSchemeBasedOnDevice(InputDevice device)
+    /// <summary>
+    /// Based on the choice of the given device, select an appropriate control scheme.
+    /// </summary>
+    /// <param name="device"></param>
+    /// <returns></returns>
+    /// <remarks>
+    /// The chosen control scheme may depend also on what other devices are already in use by other
+    /// players.
+    /// </remarks>
+    public InputControlScheme SelectControlSchemeBasedOnDeviceForMultiPlayer(InputDevice device)
     {
         throw new NotImplementedException();
     }
@@ -289,10 +298,10 @@ public class DemoPlayerController : MonoBehaviour
     private void OnGotoMenu()
     {
         // Pause haptics effects while we are in the menu.
-        user.PauseHaptics();
+        this.PauseHaptics();
 
         // Switch from gameplay actions to menu actions.
-        user.SwitchActions(controls.menu);
+        //user.SetActions(controls.menu);
 
         // Activate the UI.
         ui.gameObject.SetActive(true);
@@ -304,9 +313,9 @@ public class DemoPlayerController : MonoBehaviour
         ui.gameObject.SetActive(false);
 
         // Resume playback of haptics effects.
-        user.ResumeHaptics();
+        this.ResumeHaptics();
 
         // Switch back to gameplay controls.
-        user.SwitchActions(controls.gameplay);
+        //user.SetActions(controls.gameplay);
     }
 }

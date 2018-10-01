@@ -66,7 +66,15 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector2 ReadRawValueFrom(IntPtr statePtr)
+        public override bool HasSignificantChange(InputEventPtr eventPtr)
+        {
+            Vector2 value;
+            if (ReadValueFrom(eventPtr, out value))
+                return Vector2.SqrMagnitude(value - ReadDefaultValue()) > float.Epsilon;
+            return false;
+        }
+
+        public override Vector2 ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             var upIsPressed = up.ReadValueFrom(statePtr) >= up.pressPointOrDefault;
             var downIsPressed = down.ReadValueFrom(statePtr) >= down.pressPointOrDefault;
@@ -89,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Controls
             return result;
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, Vector2 value)
+        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector2 value)
         {
             throw new NotImplementedException();
         }

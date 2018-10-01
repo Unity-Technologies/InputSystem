@@ -29,12 +29,12 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector3 ReadRawValueFrom(IntPtr statePtr)
+        public override Vector3 ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             return new Vector3(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr));
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, Vector3 value)
+        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector3 value)
         {
             x.WriteValueInto(statePtr, value.x);
             y.WriteValueInto(statePtr, value.y);

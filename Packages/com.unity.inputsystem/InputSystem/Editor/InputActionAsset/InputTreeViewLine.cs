@@ -233,20 +233,20 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return Styles.greenRect; }
         }
 
-        public void AppendCompositeBinding(string compositeName)
+        public void AddCompositeBinding(string compositeName)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
         }
 
-        public void AppendBinding()
+        public void AddBinding()
         {
-            InputActionSerializationHelpers.AppendBinding(elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty);
         }
 
-        public void AppendBindingFromObject(Dictionary<string, string> values)
+        public void AddBindingFromSavedProperties(Dictionary<string, string> values)
         {
-            InputActionSerializationHelpers.AppendBindingFromSavedProperties(values, elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBindingFromSavedProperties(values, elementProperty, m_ActionMapProperty);
         }
 
         public void RemoveBinding(int compositeIndex)
@@ -280,7 +280,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public CompositeGroupTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
         {
-            var name = elementProperty.FindPropertyRelative("name").stringValue;
+            var name = elementProperty.FindPropertyRelative("m_Name").stringValue;
             displayName = name;
         }
 
@@ -310,8 +310,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public CompositeTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
         {
-            var path = elementProperty.FindPropertyRelative("path").stringValue;
-            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
+            var path = elementProperty.FindPropertyRelative("m_Path").stringValue;
+            displayName = elementProperty.FindPropertyRelative("m_Name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
         }
 
         protected override GUIStyle rectStyle
@@ -330,12 +330,12 @@ namespace UnityEngine.Experimental.Input.Editor
         public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(bindingProperty, index)
         {
-            path = elementProperty.FindPropertyRelative("path").stringValue;
-            groups = elementProperty.FindPropertyRelative("groups").stringValue;
-            action = elementProperty.FindPropertyRelative("action").stringValue;
-            name = elementProperty.FindPropertyRelative("name").stringValue;
+            path = elementProperty.FindPropertyRelative("m_Path").stringValue;
+            groups = elementProperty.FindPropertyRelative("m_Groups").stringValue;
+            action = elementProperty.FindPropertyRelative("m_Action").stringValue;
+            name = elementProperty.FindPropertyRelative("m_Name").stringValue;
 
-            var flags = (InputBinding.Flags)elementProperty.FindPropertyRelative("flags").intValue;
+            var flags = (InputBinding.Flags)elementProperty.FindPropertyRelative("m_Flags").intValue;
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
             isPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) == InputBinding.Flags.PartOfComposite;
 
@@ -391,12 +391,12 @@ namespace UnityEngine.Experimental.Input.Editor
         public override string SerializeToString()
         {
             var builder = new StringBuilder();
-            builder.AppendFormat("{0}={1}\n", "name", elementProperty.FindPropertyRelative("name").stringValue);
-            builder.AppendFormat("{0}={1}\n", "path", elementProperty.FindPropertyRelative("path").stringValue);
-            builder.AppendFormat("{0}={1}\n", "groups", elementProperty.FindPropertyRelative("groups").stringValue);
-            builder.AppendFormat("{0}={1}\n", "interactions", elementProperty.FindPropertyRelative("interactions").stringValue);
-            builder.AppendFormat("{0}={1}\n", "flags", elementProperty.FindPropertyRelative("flags").intValue);
-            builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("action").stringValue);
+            builder.AppendFormat("{0}={1}\n", "name", elementProperty.FindPropertyRelative("m_Name").stringValue);
+            builder.AppendFormat("{0}={1}\n", "path", elementProperty.FindPropertyRelative("m_Path").stringValue);
+            builder.AppendFormat("{0}={1}\n", "groups", elementProperty.FindPropertyRelative("m_Groups").stringValue);
+            builder.AppendFormat("{0}={1}\n", "interactions", elementProperty.FindPropertyRelative("m_Interactions").stringValue);
+            builder.AppendFormat("{0}={1}\n", "flags", elementProperty.FindPropertyRelative("m_Flags").intValue);
+            builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("m_Action").stringValue);
             return builder.ToString();
         }
 

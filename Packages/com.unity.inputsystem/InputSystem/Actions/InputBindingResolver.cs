@@ -24,7 +24,11 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputActionMapState.Initialize"/>
     internal struct InputBindingResolver
     {
+        /// <summary>
+        /// Total number of <see cref="InputActionMap">action maps</see> in <see cref="maps"/>.
+        /// </summary>
         public int totalMapCount;
+
         public int totalActionCount;
         public int totalBindingCount;
         public int totalControlCount;
@@ -33,6 +37,7 @@ namespace UnityEngine.Experimental.Input
         public int totalProcessorCount;
         public int totalCompositeCount;
 
+        ////REVIEW: make InlinedArray?
         public InputActionMap[] maps;
         public InputControl[] controls;
         public InlinedArray<InputDevice> devices;
@@ -45,6 +50,21 @@ namespace UnityEngine.Experimental.Input
 
         public InputActionMapState.ActionMapIndices[] mapIndices;
         public int[] controlIndexToBindingIndex;
+
+        /// <summary>
+        /// Binding mask used to globally mask out bindings.
+        /// </summary>
+        /// <remarks>
+        /// This is empty by default.
+        ///
+        /// The bindings of each map will be <see cref="InputBinding.Matches">matched</see> against this
+        /// binding. Any bindings that don't match will get skipped and not resolved to controls.
+        ///
+        /// Note that regardless of whether a binding will be resolved to controls or not, it will get
+        /// an entry in <see cref="bindingStates"/>. Otherwise we would have to have a more complicated
+        /// mapping from <see cref="InputActionMap.bindings"/> to <see cref="bindingStates"/>.
+        /// </remarks>
+        public InputBinding bindingMask;
 
         private List<InputControlLayout.NameAndParameters> m_Parameters;
 
@@ -61,7 +81,7 @@ namespace UnityEngine.Experimental.Input
 
             maps = state.maps;
             mapIndices = state.mapIndices;
-            actionStates = state.actionStates;
+            actionStates = state.triggerStates;
             bindingStates = state.bindingStates;
             interactionStates = state.interactionStates;
             interactions = state.interactions;
@@ -80,7 +100,6 @@ namespace UnityEngine.Experimental.Input
         public void AddActionMap(InputActionMap map)
         {
             Debug.Assert(map != null);
-            Debug.Assert(map.m_MapIndex == InputActionMapState.kInvalidIndex);
 
             // Keep track of indices for this map.
             var bindingStartIndex = totalBindingCount;
@@ -101,6 +120,7 @@ namespace UnityEngine.Experimental.Input
             ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
             var currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
             var currentCompositeIndex = InputActionMapState.kInvalidIndex;
+            var bindingMaskOnThisMap = map.m_BindingMask;
             var actionsInThisMap = map.m_Actions;
             var actionCountInThisMap = actionsInThisMap != null ? actionsInThisMap.Length : 0;
             for (var n = 0; n < bindingCountInThisMap; ++n)
@@ -108,12 +128,27 @@ namespace UnityEngine.Experimental.Input
                 var unresolvedBinding = bindingsInThisMap[n];
                 var bindingIndex = bindingStartIndex + n;
 
+                // Set binding state to defaults.
+                bindingStates[bindingIndex].mapIndex = totalMapCount;
+                bindingStates[bindingIndex].compositeOrCompositeBindingIndex = InputActionMapState.kInvalidIndex;
+                bindingStates[bindingIndex].actionIndex = InputActionMapState.kInvalidIndex;
+
                 // Skip binding if it is disabled (path is empty string).
                 var path = unresolvedBinding.effectivePath;
                 if (unresolvedBinding.path == "")
                     continue;
 
+                // Skip binding if it doesn't match with our binding mask (might be empty).
+                if (!bindingMask.Matches(ref unresolvedBinding))
+                    continue;
+
+                // Skip binding if it doesn't match the binding mask on the map (might be empty).
+                if (!bindingMaskOnThisMap.Matches(ref unresolvedBinding))
+                    continue;
+
                 // Try to find action.
+                // NOTE: Technically, we allow individual bindings of composites to trigger actions independent
+                //       of the action triggered by the composite.
                 var actionIndex = InputActionMapState.kInvalidIndex;
                 var actionName = unresolvedBinding.action;
                 if (!string.IsNullOrEmpty(actionName))
@@ -125,6 +160,11 @@ namespace UnityEngine.Experimental.Input
                     // Special-case for singleton actions that don't have names.
                     actionIndex = 0;
                 }
+
+                // Skip binding if it doesn't match the binding mask on the action (might be empty).
+                if (actionIndex != InputActionMapState.kInvalidIndex &&
+                    !map.m_Actions[actionIndex].m_BindingMask.Matches(ref unresolvedBinding))
+                    continue;
 
                 // Instantiate processors.
                 var firstProcessorIndex = 0;
@@ -279,7 +319,7 @@ namespace UnityEngine.Experimental.Input
                 compositeStartIndex = compositeStartIndex,
                 compositeCount = totalCompositeCount - compositeStartIndex,
             });
-            map.m_MapIndex = mapIndex;
+            map.m_MapIndexInState = mapIndex;
 
             // Allocate action states.
             if (actionCountInThisMap > 0)

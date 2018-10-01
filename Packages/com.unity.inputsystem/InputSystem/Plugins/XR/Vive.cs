@@ -59,6 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl primary { get; private set; }
         public ButtonControl joystickOrPadPressed { get; private set; }
         public ButtonControl joystickOrPadTouched { get; private set; }
+        [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
         public AxisControl trigger { get; private set; }
         public ButtonControl triggerPressed { get; private set; }

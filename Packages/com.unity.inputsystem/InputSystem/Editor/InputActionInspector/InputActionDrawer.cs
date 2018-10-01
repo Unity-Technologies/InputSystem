@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
         internal void AddBinding(object propertyObj)
         {
             var property = (SerializedProperty)propertyObj;
-            InputActionSerializationHelpers.AppendBinding(property, null);
+            InputActionSerializationHelpers.AddBinding(property, null);
             property.serializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }
@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var compositeName = (string)((List<object>)paramList)[0];
             var property = (SerializedProperty)((List<object>)paramList)[1];
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(property, null, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(property, null, compositeName, compositeType);
             property.serializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }

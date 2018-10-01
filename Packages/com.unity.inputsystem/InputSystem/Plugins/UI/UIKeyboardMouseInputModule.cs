@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.EventSystems;
 
 namespace UnityEngine.Experimental.Input.Plugins.UI
@@ -10,6 +11,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     {
         public override void Process()
         {
+            throw new NotImplementedException();
         }
     }
 }

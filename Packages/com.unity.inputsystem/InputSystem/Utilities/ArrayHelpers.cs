@@ -6,7 +6,9 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
-    // A collection of utility functions to work with arrays.
+    /// <summary>
+    /// A collection of utility functions for working with arrays.
+    /// </summary>
     internal static class ArrayHelpers
     {
         public static bool Contains<TValue>(TValue[] array, TValue value)
@@ -246,7 +248,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 array[index++] = value;
 
             if (values != null)
-                Array.Copy(values, 0, array, index, length);
+                Array.Copy(values, 0, array, index, values.Length);
 
             return array;
         }
@@ -312,6 +314,23 @@ namespace UnityEngine.Experimental.Input.Utilities
                 Array.Copy(array, index + 1, array, index, length - index - 1);
 
             Array.Resize(ref array, length - 1);
+        }
+
+        public static void EraseAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index)
+        {
+            Debug.Assert(array != null);
+            Debug.Assert(count <= array.Length);
+            Debug.Assert(index >= 0 && index < count);
+
+            // If we're erasing from the beginning or somewhere in the middle, move
+            // the array contents down from after the index.
+            if (index < count - 1)
+            {
+                Array.Copy(array, index + 1, array, index, count - index - 1);
+            }
+
+            array[count - 1] = default(TValue); // Tail has been moved down by one.
+            --count;
         }
 
         public static bool Erase<TValue>(ref TValue[] array, TValue value)

@@ -7,10 +7,6 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      per device, multiple devices per stack, etc.); should also resolve the problem of having
 ////      two bindings stack on top of each other and making the one on top suppress the one below
 
-////REVIEW: have an optional reference to an InputActionMap?
-
-////TODO: nuke Clone()
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -38,6 +34,14 @@ namespace UnityEngine.Experimental.Input
         public string name
         {
             get { return m_Name; }
+        }
+
+        /// <summary>
+        /// If the action map is part of an asset, this refers to the asset. Otherwise it is <c>null</c>.
+        /// </summary>
+        public InputActionAsset asset
+        {
+            get { return m_Asset; }
         }
 
         /// <summary>
@@ -121,9 +125,14 @@ namespace UnityEngine.Experimental.Input
             get { throw new NotImplementedException(); }
         }
 
-        public ReadOnlyArray<InputDevice> devices
+        public InputBinding? bindingMask
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                if (m_BindingMask.isEmpty)
+                    return null;
+                return m_BindingMask;
+            }
         }
 
         ////REVIEW: should this operate by binding path or by action name?
@@ -141,30 +150,13 @@ namespace UnityEngine.Experimental.Input
         /// Add or remove a callback that is triggered when an action in the map changes its <see cref="InputActionPhase">
         /// phase</see>.
         /// </summary>
-        /// <remarks>
-        /// This is a convenience wrapper for <see cref="AddActionCallbackReceiver"/>. Internally, it will create
-        /// a wrapper implementing <see cref="IInputActionCallbackReceiver"/>. Note that it is more efficient, though,
-        /// to use <see cref="AddActionCallbackReceiver"/> directly as it will not create an intermediate object and
-        /// not require a two-step dispatch.
-        /// </remarks>
         /// <seealso cref="InputAction.started"/>
         /// <seealso cref="InputAction.performed"/>
         /// <seealso cref="InputAction.cancelled"/>
-        public event InputActionListener actionTriggered
+        public event Action<InputAction.CallbackContext> actionTriggered
         {
-            add { AddActionCallbackReceiver(new ActionListenerWrapper { listener = value }); }
-            remove
-            {
-                for (var i = 0; i < m_ActionCallbacks.length; ++i)
-                {
-                    var wrapper = m_ActionCallbacks[i] as ActionListenerWrapper;
-                    if (wrapper != null && wrapper.listener == value)
-                    {
-                        m_ActionCallbacks.RemoveAt(i);
-                        break;
-                    }
-                }
-            }
+            add { m_ActionCallbacks.AppendWithCapacity(value); }
+            remove { m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); } // Changes callback ordering.
         }
 
         public InputActionMap(string name = null, InputActionMap extend = null)
@@ -182,7 +174,7 @@ namespace UnityEngine.Experimental.Input
             ////   that's quite tricky.
 
             if (string.IsNullOrEmpty(nameOrId))
-                throw new ArgumentNullException("nameOrId");
+                return -1;
 
             if (m_Actions == null)
                 return InputActionMapState.kInvalidIndex;
@@ -252,18 +244,27 @@ namespace UnityEngine.Experimental.Input
             return action;
         }
 
-        public void AddActionCallbackReceiver(IInputActionCallbackReceiver receiver)
+        public void SetBindingMask(InputBinding bindingMask)
         {
-            if (receiver == null)
-                throw new ArgumentNullException("receiver");
-            m_ActionCallbacks.Append(receiver);
+            if (bindingMask == m_BindingMask)
+                return;
+
+            m_BindingMask = bindingMask;
+
+            if (m_State != null)
+                ResolveBindings();
         }
 
-        public void RemoveActionCallbackReceiver(IInputActionCallbackReceiver receiver)
+        public void SetBindingMask(string bindingGroups)
         {
-            if (receiver == null)
-                throw new ArgumentNullException("receiver");
-            m_ActionCallbacks.Remove(receiver);
+            if (string.IsNullOrEmpty(bindingGroups))
+                bindingGroups = null;
+            SetBindingMask(new InputBinding {groups = bindingGroups});
+        }
+
+        public void ClearBindingMask()
+        {
+            SetBindingMask(new InputBinding());
         }
 
         /// <summary>
@@ -339,13 +340,12 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        #region Configuration Data
-
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
         [SerializeField] internal string m_Name;
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
+        [SerializeField] internal InputActionAsset m_Asset;
 
         /// <summary>
         /// List of actions in this map.
@@ -365,12 +365,21 @@ namespace UnityEngine.Experimental.Input
         // NOTE: Because InputBindings are structs, m_BindingsForEachAction actually duplicates each binding
         //       (only in the case where m_Bindings has scattered references to actions).
         ////REVIEW: this will lead to problems when overrides are thrown into the mix
+
+        /// <summary>
+        /// For each entry in <see cref="m_Actions"/>, a slice of this array corresponds to the
+        /// action's bindings.
+        /// </summary>
+        /// <remarks>
+        /// Ideally, this array is the same as <see cref="m_Bindings"/> (the same as in literally reusing the
+        /// same array). However, we have no guarantee that <see cref="m_Bindings"/> is sorted by actions. In case it
+        /// isn't, we create a separate array with the bindings sorted by action and have each action reference
+        /// a slice through <see cref="InputAction.m_BindingsStartIndex"/> and <see cref="InputAction.m_BindingsCount"/>.
+        /// </remarks>
+        /// <seealso cref="SetUpPerActionCachedBindingData"/>
         [NonSerialized] internal InputBinding[] m_BindingsForEachAction;
+
         [NonSerialized] internal InputControl[] m_ControlsForEachAction;
-        [NonSerialized] internal InputDevice[] m_DevicesForEachAction;
-        ////REVIEW: this seems to make sense to have on the state; probably best to move it over there
-        ////REVIEW: also, should this be integer indices instead of another array that needs scanning?
-        [NonSerialized] internal InputAction[] m_ActionForEachBinding;
 
         [NonSerialized] internal int m_EnabledActionsCount;
         [NonSerialized] internal Guid m_Guid;
@@ -379,6 +388,19 @@ namespace UnityEngine.Experimental.Input
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
+
+        [NonSerialized] internal int m_MapIndexInState = InputActionMapState.kInvalidIndex;
+
+        /// <summary>
+        /// Current execution state.
+        /// </summary>
+        /// <remarks>
+        /// Initialized when map (or any action in it) is first enabled.
+        /// </remarks>
+        [NonSerialized] internal InputActionMapState m_State;
+        [NonSerialized] internal InputBinding m_BindingMask;
+
+        [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 
         /// <summary>
         /// Return the list of bindings for just the given actions.
@@ -405,206 +427,41 @@ namespace UnityEngine.Experimental.Input
 
             // See if we need to refresh.
             if (m_BindingsForEachAction == null)
-                SetUpBindingArrayForEachAction();
+                SetUpPerActionCachedBindingData();
 
             return new ReadOnlyArray<InputBinding>(m_BindingsForEachAction, action.m_BindingsStartIndex,
                 action.m_BindingsCount);
         }
 
-        /// <summary>
-        /// For the given action, return the current list of devices used by its bound controls.
-        /// </summary>
-        /// <param name="action">Input action belonging to this action map.</param>
-        /// <returns>(Possibly empty) array of devices used by action.</returns>
-        /// <remarks>
-        /// This function may allocate whenever the control setup of the action map changes.
-        /// </remarks>
-        internal ReadOnlyArray<InputDevice> GetDevicesForSingleAction(InputAction action)
-        {
-            Debug.Assert(m_State != null);
-            Debug.Assert(m_MapIndex != InputActionMapState.kInvalidIndex);
-            Debug.Assert(m_Actions != null);
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap == this);
-            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
-
-            if (m_DevicesForEachAction == null)
-            {
-                if (m_State.totalDeviceCount == 0)
-                    return new ReadOnlyArray<InputDevice>();
-
-                var perActionDeviceListCorrespondsToDeviceListOfEntireState = true;
-                if (m_SingletonAction != null)
-                {
-                    // For singleton action, device list always corresponds to the list of
-                    // devices in our state.
-                    action.m_DeviceStartIndex = 0;
-                    action.m_DeviceCount = m_State.totalDeviceCount;
-                }
-                else
-                {
-                    // Try to find an action that doesn't use all of the devices in our state.
-                    // If there's none, we can still just use the same list of devices that we
-                    // have in our state.
-                    var haveActionNotUsingAllDevices = false;
-                    var deviceCount = m_State.totalDeviceCount;
-                    for (var i = 0; i < m_Actions.Length; ++i)
-                    {
-                        var currentAction = m_Actions[i];
-
-                        for (var n = 0; n < deviceCount; ++n)
-                        {
-                            // Get device.
-                            InputDevice currentDevice;
-                            if (m_DevicesForEachAction != null)
-                                currentDevice = m_DevicesForEachAction[n];
-                            else
-                                currentDevice = m_State.devices[n];
-
-                            // Try to find control that uses the device.
-                            var isUsedByControl = false;
-                            var controlsForAction = currentAction.controls;
-                            for (var k = 0; k < controlsForAction.Count; ++k)
-                            {
-                                if (controlsForAction[k].device == currentDevice)
-                                {
-                                    isUsedByControl = true;
-                                    break;
-                                }
-                            }
-
-                            if (!isUsedByControl)
-                            {
-                                haveActionNotUsingAllDevices = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // If we have at least one action that isn't using all the devices in our state,
-                    // set up a separate array. We may still end up being able to share one list of
-                    // devices between all the actions in our map.
-                    if (haveActionNotUsingAllDevices)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        for (var i = 0; i < m_Actions.Length; ++i)
-                        {
-                            var currentAction = m_Actions[i];
-                            currentAction.m_DeviceStartIndex = 0;
-                            currentAction.m_DeviceCount = m_State.totalDeviceCount;
-                        }
-                    }
-                }
-
-                // If the list of devices used by this one and every action in it corresponds
-                // to the list of devices used by our shared state, then just copy that list.
-                if (perActionDeviceListCorrespondsToDeviceListOfEntireState)
-                {
-                    m_DevicesForEachAction = new InputDevice[m_State.totalDeviceCount];
-                    for (var i = 0; i < m_State.totalDeviceCount; ++i)
-                        m_DevicesForEachAction[i] = m_State.devices[i];
-                }
-            }
-
-            return new ReadOnlyArray<InputDevice>(m_DevicesForEachAction, action.m_DeviceStartIndex,
-                action.m_DeviceCount);
-        }
-
         internal ReadOnlyArray<InputControl> GetControlsForSingleAction(InputAction action)
         {
             Debug.Assert(m_State != null);
-            Debug.Assert(m_MapIndex != InputActionMapState.kInvalidIndex);
+            Debug.Assert(m_MapIndexInState != InputActionMapState.kInvalidIndex);
             Debug.Assert(m_Actions != null);
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap == this);
             Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
 
-            // See if we need to refresh.
             if (m_ControlsForEachAction == null)
-            {
-                if (m_State.totalControlCount == 0)
-                    return new ReadOnlyArray<InputControl>();
-
-                if (m_SingletonAction != null)
-                {
-                    // For singleton action, all resolved controls in the state simply
-                    // belong to the action.
-
-                    m_ControlsForEachAction = m_State.controls;
-
-                    action.m_ControlStartIndex = 0;
-                    action.m_ControlCount = m_State.totalControlCount;
-                }
-                else
-                {
-                    // For "normal" maps, we rely on the per-action binding data set up in SetUpBindingArrayForEachAction().
-                    // From that, we set up a sorted array of controls.
-
-                    var mapIndices = m_State.FetchMapIndices(this);
-
-                    var controlCount = mapIndices.controlCount;
-                    var bindingCount = mapIndices.bindingCount;
-                    var bindingStartIndex = mapIndices.bindingStartIndex;
-
-                    if (m_BindingsForEachAction == null)
-                        SetUpBindingArrayForEachAction();
-
-                    // Go binding by binding in the array that has bindings already sorted for
-                    // each action. Gather their controls and store the result on the actions
-                    // while copying the control references over to a new array.
-                    m_ControlsForEachAction = new InputControl[controlCount];
-                    var bindingStates = m_State.bindingStates;
-                    var controls = m_State.controls;
-                    var currentAction = m_ActionForEachBinding[0];
-                    var currentActionControlStartIndex = 0;
-                    var currentActionControlCount = 0;
-                    var currentControlIndex = 0;
-                    for (var i = 0; i < bindingCount; ++i)
-                    {
-                        var actionForBinding = m_ActionForEachBinding[i];
-                        if (actionForBinding != currentAction)
-                        {
-                            if (currentAction != null)
-                            {
-                                // Store final array slice.
-                                currentAction.m_ControlStartIndex = currentActionControlStartIndex;
-                                currentAction.m_ControlCount = currentActionControlCount;
-                            }
-
-                            // Switch to new action.
-                            currentAction = actionForBinding;
-                            currentActionControlStartIndex = currentControlIndex;
-                            currentActionControlCount = 0;
-                        }
-                        if (actionForBinding == null)
-                            continue; // Binding is not associated with an action.
-
-                        // Copy controls from binding.
-                        var bindingIndex = bindingStartIndex + i;
-                        var controlCountForBinding = bindingStates[bindingIndex].controlCount;
-                        Array.Copy(controls, bindingStates[bindingIndex].controlStartIndex, m_ControlsForEachAction,
-                            currentControlIndex, controlCountForBinding);
-
-                        currentControlIndex += controlCountForBinding;
-                        currentActionControlCount += controlCountForBinding;
-                    }
-
-                    if (currentAction != null)
-                    {
-                        currentAction.m_ControlStartIndex = currentActionControlStartIndex;
-                        currentAction.m_ControlCount = currentActionControlCount;
-                    }
-                }
-            }
+                SetUpPerActionCachedBindingData();
 
             return new ReadOnlyArray<InputControl>(m_ControlsForEachAction, action.m_ControlStartIndex,
                 action.m_ControlCount);
         }
 
-        private void SetUpBindingArrayForEachAction()
+        /// <summary>
+        /// Collect data from <see cref="m_Bindings"/> and <see cref="m_Actions"/> such that we can
+        /// we can cleanly expose it from <see cref="InputAction.bindings"/> and <see cref="InputAction.controls"/>.
+        /// </summary>
+        /// <remarks>
+        /// We set up per-action caches the first time their information is requested. Internally, we do not
+        /// use those arrays and thus they will not get set up by default.
+        ///
+        /// Note that it is important to allow to call this method at a point where we have not resolved
+        /// controls yet (i.e. <see cref="m_State"/> is <c>null</c>). Otherwise, using <see cref="InputAction.bindings"/>
+        /// may trigger a control resolution which would be surprising.
+        /// </remarks>
+        private void SetUpPerActionCachedBindingData()
         {
             // Handle case where we don't have any bindings.
             if (m_Bindings == null)
@@ -618,78 +475,93 @@ namespace UnityEngine.Experimental.Input
                 Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings);
 
                 m_BindingsForEachAction = m_Bindings;
-                m_ActionForEachBinding = null; // No point in having this for singleton actions.
+                m_ControlsForEachAction = m_State != null ? m_State.controls : null;
 
                 m_SingletonAction.m_BindingsStartIndex = 0;
                 m_SingletonAction.m_BindingsCount = m_Bindings.Length;
+                m_SingletonAction.m_ControlStartIndex = 0;
+                m_SingletonAction.m_ControlCount = m_State != null ? m_State.totalControlCount : 0;
             }
             else
             {
                 // Go through all bindings and slice them out to individual actions.
 
                 Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
+                var mapIndices = m_State != null
+                    ? m_State.FetchMapIndices(this)
+                    : new InputActionMapState.ActionMapIndices();
 
-                // Allocate array to retain resolved actions, if need be.
-                var totalBindingsCount = m_Bindings.Length;
-                if (m_ActionForEachBinding == null || m_ActionForEachBinding.Length != totalBindingsCount)
-                    m_ActionForEachBinding = new InputAction[totalBindingsCount];
-
-                // Reset state on each action. Important we have actions that are no longer
+                // Reset state on each action. Important if we have actions that are no longer
                 // referred to by bindings.
                 for (var i = 0; i < m_Actions.Length; ++i)
                 {
-                    m_Actions[i].m_BindingsCount = 0;
-                    m_Actions[i].m_BindingsStartIndex = 0;
+                    var action = m_Actions[i];
+                    action.m_BindingsCount = 0;
+                    action.m_BindingsStartIndex = -1;
+                    action.m_ControlCount = 0;
+                    action.m_ControlStartIndex = -1;
                 }
 
-                // Collect actions and count bindings.
+                // Count bindings on each action.
                 // After this loop, we can have one of two situations:
                 // 1) The bindings for any action X start at some index N and occupy the next m_BindingsCount slots.
                 // 2) The bindings for some or all actions are scattered across non-contiguous chunks of the array.
-                for (var i = 0; i < m_Bindings.Length; ++i)
+                var bindingCount = m_Bindings.Length;
+                for (var i = 0; i < bindingCount; ++i)
                 {
-                    // Look up action.
-                    var actionForBinding = TryGetAction(m_Bindings[i].action);
-                    m_ActionForEachBinding[i] = actionForBinding;
-                    if (actionForBinding == null)
-                        continue;
-
-                    ++actionForBinding.m_BindingsCount;
+                    var action = TryGetAction(m_Bindings[i].action);
+                    if (action != null)
+                        ++action.m_BindingsCount;
                 }
 
-                // Collect the bindings and bundle them into chunks.
+                // Collect the bindings and controls and bundle them into chunks.
                 var newBindingsArrayIndex = 0;
-                InputBinding[] newBindingsArray = null;
-                for (var sourceBindingIndex = 0; sourceBindingIndex < m_Bindings.Length;)
+                if (m_State != null && (m_ControlsForEachAction == null || m_ControlsForEachAction.Length != mapIndices.controlCount))
                 {
-                    var currentAction = m_ActionForEachBinding[sourceBindingIndex];
-                    if (currentAction == null || currentAction.m_BindingsStartIndex != 0)
+                    if (mapIndices.controlCount == 0)
+                        m_ControlsForEachAction = null;
+                    else
+                        m_ControlsForEachAction = new InputControl[mapIndices.controlCount];
+                }
+                InputBinding[] newBindingsArray = null;
+                var currentControlIndex = 0;
+                for (var currentBindingIndex = 0; currentBindingIndex < m_Bindings.Length;)
+                {
+                    var currentAction = TryGetAction(m_Bindings[currentBindingIndex].action);
+                    if (currentAction == null || currentAction.m_BindingsStartIndex != -1)
                     {
-                        // Skip bindings not targeting an action or bindings whose actions we
-                        // have already processed (when gathering bindings for a single actions scattered
-                        // across the array we may be skipping ahead).
-                        ++sourceBindingIndex;
+                        // Skip bindings not targeting an action or bindings we have already processed
+                        // (when gathering bindings for a single actions scattered across the array we may have
+                        // skipping ahead).
+                        ++currentBindingIndex;
                         continue;
                     }
 
                     // Bindings for current action start at current index.
                     currentAction.m_BindingsStartIndex = newBindingsArray != null
                         ? newBindingsArrayIndex
-                        : sourceBindingIndex;
+                        : currentBindingIndex;
+                    currentAction.m_ControlStartIndex = currentControlIndex;
 
-                    // Collect all bindings for the action.
+                    // Collect all bindings for the action. As part of that, also copy the controls
+                    // for each binding over to m_ControlsForEachAction.
                     var bindingCountForCurrentAction = currentAction.m_BindingsCount;
-                    var sourceBindingToCopy = sourceBindingIndex;
+                    Debug.Assert(bindingCountForCurrentAction > 0);
+                    var sourceBindingToCopy = currentBindingIndex;
                     for (var i = 0; i < bindingCountForCurrentAction; ++i)
                     {
-                        if (m_ActionForEachBinding[sourceBindingToCopy] != currentAction)
+                        // See if we've come across a binding that isn't belong to our currently looked at action.
+                        if (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
                         {
+                            // Yes, we have. Means the bindings for our actions are scattered in m_Bindings and
+                            // we need to collect them.
+
                             // If this is the first action that has its bindings scattered around, switch to
                             // having a separate bindings array and copy whatever bindings we already processed
                             // over to it.
                             if (newBindingsArray == null)
                             {
-                                newBindingsArray = new InputBinding[totalBindingsCount];
+                                newBindingsArray = new InputBinding[mapIndices.bindingCount];
                                 newBindingsArrayIndex = sourceBindingToCopy;
                                 Array.Copy(m_Bindings, 0, newBindingsArray, 0, sourceBindingToCopy);
                             }
@@ -700,16 +572,33 @@ namespace UnityEngine.Experimental.Input
                             do
                             {
                                 ++sourceBindingToCopy;
-                                Debug.Assert(sourceBindingToCopy < m_ActionForEachBinding.Length);
+                                Debug.Assert(sourceBindingToCopy < mapIndices.bindingCount);
                             }
-                            while (m_ActionForEachBinding[sourceBindingToCopy] != currentAction);
+                            while (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
                         }
-                        else if (sourceBindingIndex == sourceBindingToCopy)
-                            ++sourceBindingIndex;
+                        else if (currentBindingIndex == sourceBindingToCopy)
+                            ++currentBindingIndex;
 
                         // Copy binding over to new bindings array, if need be.
                         if (newBindingsArray != null)
                             newBindingsArray[newBindingsArrayIndex++] = m_Bindings[sourceBindingToCopy];
+
+                        // Copy controls for binding, if we have resolved controls already.
+                        if (m_State != null)
+                        {
+                            var controlCountForBinding = m_State
+                                .bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy].controlCount;
+                            if (controlCountForBinding > 0)
+                            {
+                                Array.Copy(m_State.controls,
+                                    m_State.bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy]
+                                        .controlStartIndex,
+                                    m_ControlsForEachAction, currentControlIndex, controlCountForBinding);
+
+                                currentControlIndex += controlCountForBinding;
+                                currentAction.m_ControlCount += controlCountForBinding;
+                            }
+                        }
 
                         ++sourceBindingToCopy;
                     }
@@ -733,6 +622,31 @@ namespace UnityEngine.Experimental.Input
         internal void ClearPerActionCachedBindingData()
         {
             m_BindingsForEachAction = null;
+            m_ControlsForEachAction = null;
+        }
+
+        ////FIXME: this needs to be able to handle the case where two maps share state and one is enabled and one isn't
+        internal void InvalidateResolvedData()
+        {
+            Debug.Assert(m_EnabledActionsCount == 0);
+
+            if (m_State == null)
+                return;
+
+            ////TODO: keep state instance around for re-use
+
+            if (m_Asset != null)
+            {
+                foreach (var map in m_Asset.m_ActionMaps)
+                    map.m_State = null;
+                m_Asset.m_ActionMapState = null;
+            }
+            else
+            {
+                m_State = null;
+            }
+
+            ClearPerActionCachedBindingData();
         }
 
         internal void ThrowIfModifyingBindingsIsNotAllowed()
@@ -742,58 +656,82 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Cannot modify bindings on action map '{0}' while the map is enabled", this));
         }
 
-        #endregion
-
-        #region Execution Data
-
-        [NonSerialized] internal int m_MapIndex = InputActionMapState.kInvalidIndex;
-
-        /// <summary>
-        /// Current execution state.
-        /// </summary>
-        /// <remarks>
-        /// Initialized when map (or any action in it) is first enabled.
-        /// </remarks>
-        [NonSerialized] internal InputActionMapState m_State;
-
-        [NonSerialized] internal InlinedArray<IInputActionCallbackReceiver> m_ActionCallbacks;
-
         internal void ResolveBindingsIfNecessary()
         {
             if (m_State == null)
                 ResolveBindings();
         }
 
-        ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them
-        // Resolve all bindings to their controls and also add any action interactions
-        // from the bindings. The best way is for this to happen once for each action
-        // set at the beginning of the game and to then enable and disable the sets
-        // as needed. However, the system will also re-resolve bindings if the control
-        // setup in the system changes (i.e. if devices are added or removed or if
-        // layouts in the system are changed).
+        /// <summary>
+        /// Resolve all bindings to their controls and also add any action interactions
+        /// from the bindings.
+        /// </summary>
+        /// <remarks>
+        /// The best way is for this to happen once for each action map at the beginning of the game
+        /// and to then enable and disable the maps as needed. However, the system will also re-resolve
+        /// bindings if the control setup in the system changes (i.e. if devices are added or removed
+        /// or if layouts in the system are changed).
+        /// </remarks>
         internal void ResolveBindings()
         {
-            Debug.Assert(m_State == null);
-
-            // Resolve all source paths.
-            var resolver = new InputBindingResolver();
-            resolver.AddActionMap(this);
-
-            // Transfer final arrays into state.
-            m_State = new InputActionMapState();
-            m_State.Initialize(resolver);
-        }
-
-        private class ActionListenerWrapper : IInputActionCallbackReceiver
-        {
-            public InputActionListener listener;
-            public void OnActionTriggered(ref InputAction.CallbackContext context)
+            // If we're part of an asset, we share state and thus binding resolution with
+            // all maps in the asset.
+            if (m_Asset)
             {
-                listener(context);
+                var actionMaps = m_Asset.m_ActionMaps;
+                Debug.Assert(actionMaps != null); // Should have at least us in the array.
+                var actionMapCount = actionMaps.Length;
+
+                // Start resolving.
+                var resolver = new InputBindingResolver();
+
+                // If there's a binding mask set on the asset, apply it.
+                resolver.bindingMask = m_Asset.m_BindingMask;
+
+                // Resolve all maps in the asset.
+                for (var i = 0; i < actionMapCount; ++i)
+                    resolver.AddActionMap(actionMaps[i]);
+
+                // Install state.
+                if (m_Asset.m_ActionMapState == null)
+                {
+                    var state = new InputActionMapState();
+                    for (var i = 0; i < actionMapCount; ++i)
+                        actionMaps[i].m_State = state;
+                    m_Asset.m_ActionMapState = state;
+                    m_State.Initialize(resolver);
+                }
+                else
+                {
+                    m_State.ClaimDataFrom(resolver);
+                }
+
+                // Wipe caches.
+                for (var i = 0; i < actionMapCount; ++i)
+                    actionMaps[i].ClearPerActionCachedBindingData();
+            }
+            else
+            {
+                // Standalone action map (possibly a hidden one created for a singleton action).
+                // We get our own private state.
+
+                // Resolve all source paths.
+                var resolver = new InputBindingResolver();
+                resolver.AddActionMap(this);
+
+                // Transfer final arrays into state.
+                if (m_State == null)
+                {
+                    m_State = new InputActionMapState();
+                    m_State.Initialize(resolver);
+                }
+                else
+                {
+                    m_State.ClaimDataFrom(resolver);
+                    ClearPerActionCachedBindingData();
+                }
             }
         }
-
-        #endregion
 
         #region Serialization
 
@@ -1158,7 +1096,7 @@ namespace UnityEngine.Experimental.Input
         public void OnAfterDeserialize()
         {
             m_State = null;
-            m_MapIndex = InputActionMapState.kInvalidIndex;
+            m_MapIndexInState = InputActionMapState.kInvalidIndex;
 
             // Restore references of actions linking back to us.
             if (m_Actions != null)
@@ -1170,9 +1108,7 @@ namespace UnityEngine.Experimental.Input
 
             // Make sure we don't retain any cached per-action data when using serialization
             // to docter around in action map configurations in the editor.
-            m_ActionForEachBinding = null;
-            m_BindingsForEachAction = null;
-            m_ControlsForEachAction = null;
+            ClearPerActionCachedBindingData();
         }
 
         #endregion

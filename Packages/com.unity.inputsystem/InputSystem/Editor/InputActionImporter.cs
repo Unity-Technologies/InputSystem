@@ -54,29 +54,29 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            // Create asset.
+            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
             // Parse JSON.
-            InputActionMap[] maps;
             try
             {
-                maps = InputActionMap.FromJson(text);
+                ////TODO: make sure action names are unique
+                asset.LoadFromJson(text);
             }
             catch (Exception exception)
             {
                 ctx.LogImportError(string.Format("Could not parse input actions in JSON format from '{0}' ({1})",
                     ctx.assetPath, exception));
+                DestroyImmediate(asset);
                 return;
             }
 
-            ////TODO: make sure action names are unique
-
-            // Create asset.
-            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.m_ActionMaps = maps;
             ctx.AddObjectToAsset("<root>", asset);
             ctx.SetMainObject(asset);
 
             // Make sure every map and every action has a stable ID assigned to it.
-            foreach (var map in asset.m_ActionMaps)
+            var maps = asset.actionMaps;
+            foreach (var map in maps)
             {
                 if (map.idDontGenerate == Guid.Empty)
                 {
@@ -140,19 +140,18 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Create subasset for each action.
-            for (var i = 0; i < maps.Length; ++i)
+            foreach (var map in maps)
             {
-                var set = maps[i];
-                var haveSetName = !string.IsNullOrEmpty(set.name);
+                var haveSetName = !string.IsNullOrEmpty(map.name);
 
-                foreach (var action in set.actions)
+                foreach (var action in map.actions)
                 {
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
-                    actionReference.Set(asset, action);
+                    actionReference.Set(action);
 
                     var objectName = action.name;
                     if (haveSetName)
-                        objectName = string.Format("{0}/{1}", set.name, action.name);
+                        objectName = string.Format("{0}/{1}", map.name, action.name);
 
                     actionReference.name = objectName;
                     ctx.AddObjectToAsset(objectName, actionReference);
@@ -179,7 +178,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     generateEvents = m_GenerateActionEvents,
                 };
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, options))
+                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, asset.controlSchemes, options))
                 {
                     // Inform database that we modified a source asset *during* import.
                     AssetDatabase.ImportAsset(wrapperFilePath);

@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
             };
 
             onAddCallback =
-                (list) => InputActionSerializationHelpers.AppendBinding(actionProperty, actionMapProperty);
+                (list) => InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty);
 
             onRemoveCallback =
                 (list) => InputActionSerializationHelpers.RemoveBinding(actionProperty, list.index, actionMapProperty);

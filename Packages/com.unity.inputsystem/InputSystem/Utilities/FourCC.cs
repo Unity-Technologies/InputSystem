@@ -1,8 +1,15 @@
+using System;
+
 namespace UnityEngine.Experimental.Input.Utilities
 {
-    public struct FourCC
+    public struct FourCC : IEquatable<FourCC>
     {
         int m_Code;
+
+        public FourCC(int code)
+        {
+            m_Code = code;
+        }
 
         public FourCC(char a, char b = ' ', char c = ' ', char d = ' ')
         {
@@ -39,6 +46,33 @@ namespace UnityEngine.Experimental.Input.Utilities
             return
                 string.Format("{0}{1}{2}{3}", (char)(m_Code >> 24), (char)((m_Code & 0xff0000) >> 16),
                 (char)((m_Code & 0xff00) >> 8), (char)(m_Code & 0xff));
+        }
+
+        public bool Equals(FourCC other)
+        {
+            return m_Code == other.m_Code;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            return obj is FourCC && Equals((FourCC)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return m_Code;
+        }
+
+        public static bool operator==(FourCC left, FourCC right)
+        {
+            return left.m_Code == right.m_Code;
+        }
+
+        public static bool operator!=(FourCC left, FourCC right)
+        {
+            return left.m_Code != right.m_Code;
         }
     }
 }

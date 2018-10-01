@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: support for removing bindings
 
-////TODO: rename AppendBinding to just AddBinding
+////TODO: rename AddBinding to just AddBinding
 
 namespace UnityEngine.Experimental.Input
 {
@@ -50,17 +50,17 @@ namespace UnityEngine.Experimental.Input
 
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
-                action.AppendBinding(binding, interactions: interactions, groups: groups);
+                action.AddBinding(binding, interactions: interactions, groups: groups);
 
             return action;
         }
 
-        public static BindingSyntax AppendBinding(this InputAction action, string path, string interactions = null, string groups = null)
+        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", "path");
 
-            return AppendBinding(action, new InputBinding
+            return AddBinding(action, new InputBinding
             {
                 path = path,
                 interactions = interactions,
@@ -68,11 +68,24 @@ namespace UnityEngine.Experimental.Input
             });
         }
 
-        public static BindingSyntax AppendBinding(this InputAction action, InputControl control)
+        /// <summary>
+        /// Add a binding that references the given <paramref name="control"/> and triggers
+        /// the given <seealso cref="action"/>.
+        /// </summary>
+        /// <param name="action">Action to trigger. Also determines where to add the binding. If the action is not part
+        /// of an <see cref="InputActionMap">action map</see>, the binding is added directly to <paramref name="action"/>.
+        /// If it is part of a map, the binding is added to the action map (<see cref="InputAction.actionMap"/>).</param>
+        /// <param name="control">Control to binding to. The full <see cref="InputControl.path"/> of the control will
+        /// be used in the resulting <see cref="InputBinding">binding</see>.</param>
+        /// <returns>Syntax to configure the binding further.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null or <paramref name="control"/> is null.</exception>
+        /// <seealso cref="InputAction.bindings"/>
+        public static BindingSyntax AddBinding(this InputAction action, InputControl control)
         {
-            //sets the path itself based on just the layout of the control's device
-            //sets an overridePath pointing to the actual device as it exists at runtime
-            throw new NotImplementedException();
+            if (control == null)
+                throw new ArgumentNullException("control");
+
+            return AddBinding(action, control.path);
         }
 
         /// <summary>
@@ -90,7 +103,7 @@ namespace UnityEngine.Experimental.Input
         /// Note that actions must be disabled while altering their binding sets. Also, if the action belongs
         /// to a set, all actions in the set must be disabled.
         /// </remarks>
-        public static BindingSyntax AppendBinding(this InputAction action, InputBinding binding)
+        public static BindingSyntax AddBinding(this InputAction action, InputBinding binding)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -102,17 +115,17 @@ namespace UnityEngine.Experimental.Input
             binding.action = action.m_Name;
 
             var actionMap = action.GetOrCreateActionMap();
-            var bindingIndex = AppendBindingInternal(actionMap, binding);
+            var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, action, bindingIndex);
         }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path,
+        public static BindingSyntax AddBinding(this InputActionMap actionMap, string path,
             string interactions = null, string groups = null, string action = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", "path");
 
-            return AppendBinding(actionMap, new InputBinding
+            return AddBinding(actionMap, new InputBinding
             {
                 path = path,
                 interactions = interactions,
@@ -121,7 +134,7 @@ namespace UnityEngine.Experimental.Input
             });
         }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, InputAction action,
+        public static BindingSyntax AddBinding(this InputActionMap actionMap, string path, InputAction action,
             string interactions = null, string groups = null)
         {
             if (action != null && action.actionMap != actionMap)
@@ -129,22 +142,22 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Action '{0}' is not part of action map '{1}'", action, actionMap), "action");
 
             if (action == null)
-                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
+                return AddBinding(actionMap, path: path, interactions: interactions, groups: groups);
 
-            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
+            return AddBinding(actionMap, path: path, interactions: interactions, groups: groups,
                 action: action.id);
         }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, Guid action,
+        public static BindingSyntax AddBinding(this InputActionMap actionMap, string path, Guid action,
             string interactions = null, string groups = null)
         {
             if (action == Guid.Empty)
-                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
-            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
+                return AddBinding(actionMap, path: path, interactions: interactions, groups: groups);
+            return AddBinding(actionMap, path: path, interactions: interactions, groups: groups,
                 action: string.Format("{{{0}}}", action));
         }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, InputBinding binding)
+        public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
             if (actionMap == null)
                 throw new ArgumentNullException("actionMap");
@@ -152,11 +165,11 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Binding path cannot be null or empty", "binding");
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
-            var bindingIndex = AppendBindingInternal(actionMap, binding);
+            var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, null, bindingIndex);
         }
 
-        public static CompositeSyntax AppendCompositeBinding(this InputAction action, string composite, string interactions = null)
+        public static CompositeSyntax AddCompositeBinding(this InputAction action, string composite, string interactions = null)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -165,12 +178,12 @@ namespace UnityEngine.Experimental.Input
 
             var actionMap = action.GetOrCreateActionMap();
             ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, flags = InputBinding.Flags.Composite, action = action.name};
-            var bindingIndex = AppendBindingInternal(actionMap, binding);
+            var binding = new InputBinding {path = composite, interactions = interactions, isComposite = true, action = action.name};
+            var bindingIndex = AddBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }
 
-        private static int AppendBindingInternal(InputActionMap map, InputBinding binding)
+        private static int AddBindingInternal(InputActionMap map, InputBinding binding)
         {
             Debug.Assert(map != null);
 
@@ -189,6 +202,7 @@ namespace UnityEngine.Experimental.Input
             return bindingIndex;
         }
 
+        ////TODO: update binding mask if necessary
         ////REVIEW: should we allow renaming singleton actions to empty/null names?
         /// <summary>
         /// Rename an existing action.
@@ -273,7 +287,7 @@ namespace UnityEngine.Experimental.Input
                     throw new InvalidOperationException(
                         "Must not add other bindings in-between calling AddBindings() and ChainedWith()");
 
-                var result = m_Action.AppendBinding(binding, interactions: interactions, groups: @group);
+                var result = m_Action.AddBinding(binding, interactions: interactions, groups: @group);
                 m_Action.m_SingletonActionBindings[m_Action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
                     InputBinding.Flags.ThisAndPreviousCombine;
 
@@ -395,8 +409,8 @@ namespace UnityEngine.Experimental.Input
             {
                 /*
                 var child = m_Action != null
-                    ? m_Action.AppendBinding(binding, interactions, groups)
-                    : m_ActionMap.AppendBinding(binding, interactions, groups);
+                    ? m_Action.AddBinding(binding, interactions, groups)
+                    : m_ActionMap.AddBinding(binding, interactions, groups);
                 m_ActionMap.m_Bindings[child.m_BindingIndex].flags |= InputBinding.Flags.PushBindingLevel;
 
                 return child;
@@ -437,10 +451,10 @@ namespace UnityEngine.Experimental.Input
 
                 int bindingIndex;
                 if (m_Action != null)
-                    bindingIndex = m_Action.AppendBinding(path: binding, interactions: interactions, groups: groups)
+                    bindingIndex = m_Action.AddBinding(path: binding, interactions: interactions, groups: groups)
                         .m_BindingIndex;
                 else
-                    bindingIndex = m_ActionMap.AppendBinding(path: binding, interactions: interactions, groups: groups)
+                    bindingIndex = m_ActionMap.AddBinding(path: binding, interactions: interactions, groups: groups)
                         .m_BindingIndex;
 
                 m_ActionMap.m_Bindings[bindingIndex].name = name;
