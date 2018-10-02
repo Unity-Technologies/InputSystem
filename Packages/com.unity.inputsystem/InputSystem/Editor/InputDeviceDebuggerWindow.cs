@@ -82,7 +82,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Find device again if we've gone through a domain reload.
             if (m_Device == null)
             {
-                m_Device = InputSystem.TryGetDeviceById(m_DeviceId);
+                m_Device = InputSystem.GetDeviceById(m_DeviceId);
 
                 if (m_Device == null)
                 {

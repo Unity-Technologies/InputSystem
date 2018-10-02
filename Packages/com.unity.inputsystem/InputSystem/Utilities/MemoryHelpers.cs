@@ -24,10 +24,10 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 return bitOffset + sizeInBits > ((ulong)(memoryOffset - byteOffset)) * 8;
             }
-            return ((ulong)(memorySizeInBytes * 8)) > (((ulong)(byteOffset - memoryOffset)) * 8 + bitOffset);
+            return memorySizeInBytes * 8 > ((ulong)(byteOffset - memoryOffset)) * 8 + bitOffset;
         }
 
-        public static unsafe void WriteSingleBit(IntPtr ptr, uint bitOffset, bool value)
+        public static void WriteSingleBit(IntPtr ptr, uint bitOffset, bool value)
         {
             if (bitOffset < 8)
             {
@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
-        public static unsafe bool ReadSingleBit(IntPtr ptr, uint bitOffset)
+        public static bool ReadSingleBit(IntPtr ptr, uint bitOffset)
         {
             ////TODO: currently this is not actually enforced...
             // The layout code makes sure that bitfields are either 8bit or multiples
@@ -239,11 +239,74 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var intValue = (uint)value;
                 intValue >>= (int)bitOffset;
                 var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
-                *((uint*)ptr) |= (uint)(intValue & mask);
+                *((uint*)ptr) |= intValue & mask;
                 return;
             }
 
             throw new NotImplementedException("Writing int straddling int boundary");
+        }
+
+        public static void SetBitsInBuffer(IntPtr filterBuffer, InputControl control, bool value)
+        {
+            SetBitsInBuffer(filterBuffer, control.stateBlock.byteOffset, control.stateBlock.sizeInBits, value);
+        }
+
+        public static void SetBitsInBuffer(IntPtr filterBuffer, uint byteOffset, uint sizeInBits, bool value)
+        {
+            if (filterBuffer == IntPtr.Zero)
+                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "filterBuffer");
+
+            var sizeRemaining = sizeInBits;
+
+            var filterIter = (uint*)((filterBuffer.ToInt64() + (Int64)byteOffset));
+            while (sizeRemaining >= 32)
+            {
+                *filterIter = value ? 0xFFFFFFFF : 0;
+                filterIter++;
+                sizeRemaining -= 32;
+            }
+
+            var mask = (uint)((1 << (int)sizeRemaining) - 1);
+            if (value)
+            {
+                *filterIter |= mask;
+            }
+            else
+            {
+                *filterIter &= ~mask;
+            }
+        }
+
+        public static bool HasAnyNonZeroBitsAfterMaskingWithBuffer(IntPtr eventBuffer, IntPtr maskPtr, uint offsetBytes, uint sizeInBits)
+        {
+            if (eventBuffer == IntPtr.Zero || maskPtr == IntPtr.Zero)
+                return false;
+
+            var sizeRemaining = sizeInBits;
+            var eventIter = (uint*)eventBuffer.ToPointer();
+            var maskIter = (uint*)(new IntPtr(maskPtr.ToInt64() + (Int64)offsetBytes).ToPointer());
+
+            while (sizeRemaining >= 32)
+            {
+                if ((*eventIter & *maskIter) != 0)
+                    return true;
+
+                eventIter++;
+                maskIter++;
+
+                sizeRemaining -= 32;
+            }
+
+            //Find the remaining bytes to check
+            // Mask it in the state iterator and noise
+            var remainingState = *eventIter;
+            var remainingMask = *maskIter;
+
+            var mask = ((1 >> (int)sizeRemaining) - 1);
+            if ((remainingState & (remainingMask & mask)) != 0)
+                return true;
+
+            return false;
         }
     }
 }

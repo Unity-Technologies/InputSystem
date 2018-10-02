@@ -6,6 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -58,6 +59,34 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_TakeDeviceOffsetsIntoAccount()
+    {
+        InputSystem.AddDevice<Gamepad>();
+        var secondGamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Full state updates to make sure we won't be overwriting other
+        // controls with state. Also, make sure we actually carry over
+        // those values on buffer flips.
+        InputSystem.QueueStateEvent(secondGamepad,
+            new GamepadState
+            {
+                buttons = 0xffffffff,
+                rightStick = Vector2.one,
+                leftTrigger = 0.123f,
+                rightTrigger = 0.456f
+            });
+        InputSystem.Update();
+
+        // Update just left stick.
+        InputSystem.QueueDeltaStateEvent(secondGamepad.leftStick, new Vector2(0.5f, 0.5f));
+        InputSystem.Update();
+
+        Assert.That(secondGamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(secondGamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_UseCurrentTimeByDefault()
     {
         var device = InputSystem.AddDevice<Gamepad>();
@@ -84,6 +113,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
     public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -96,6 +126,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
     public void TODO_Events_AreTimeslicedAcrossFixedUpdates()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -122,8 +153,13 @@ partial class CoreTests
         InputEventPtr eventPtr;
         using (var buffer = StateEvent.From(mouse, out eventPtr))
         {
-            Assert.That(mouse.delta.x.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
-            Assert.That(mouse.delta.y.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
+            float xVal;
+            float yVal;
+            Assert.IsTrue(mouse.delta.x.ReadValueFrom(eventPtr, out xVal));
+            Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
+
+            Assert.IsTrue(mouse.delta.y.ReadValueFrom(eventPtr, out yVal));
+            Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
@@ -134,29 +170,6 @@ partial class CoreTests
             Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));
             Assert.That(stateEventPtr->stateFormat, Is.EqualTo(mouse.stateBlock.format));
         }
-    }
-
-    [Test]
-    [Category("Events")]
-    public void Events_SendingStateEventToDevice_MakesItCurrent()
-    {
-        var gamepad = InputSystem.AddDevice("Gamepad");
-
-        // Adding a device makes it current so add another one so that .current
-        // is not already set to the gamepad we just created.
-        InputSystem.AddDevice("Gamepad");
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
-
-        Assert.That(Gamepad.current, Is.SameAs(gamepad));
-    }
-
-    [Test]
-    [Category("Events")]
-    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
-    {
-        Assert.Fail();
     }
 
     [Test]
@@ -221,6 +234,7 @@ partial class CoreTests
     // controls by comparing it to a device's current state.
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
     public void TODO_Events_CanFindActiveControlsFromStateEvent()
     {
         Assert.Fail();
@@ -701,13 +715,12 @@ partial class CoreTests
     // that we store for the HID.
     [Test]
     [Category("Events")]
-    public void Events_CandSendLargerStateToDeviceWithSmallerState()
+    public void Events_CanSendLargerStateToDeviceWithSmallerState()
     {
         InputSystem.RegisterLayout<CustomDevice>();
-        var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
+        var device = InputSystem.AddDevice<CustomDevice>();
 
-        var state = new ExtendedCustomDeviceState();
-        state.baseState.axis = 0.5f;
+        var state = new ExtendedCustomDeviceState {baseState = {axis = 0.5f}};
         InputSystem.QueueStateEvent(device, state);
         InputSystem.Update();
 
@@ -726,5 +739,149 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
         Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
+    {
+        InputUpdateType? receivedUpdateType = null;
+        Action<InputUpdateType> callback =
+            type =>
+        {
+            Assert.That(receivedUpdateType, Is.Null);
+            receivedUpdateType = type;
+        };
+
+        InputSystem.onAfterUpdate += callback;
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        receivedUpdateType = null;
+        InputSystem.onAfterUpdate -= callback;
+
+        InputSystem.Update();
+
+        Assert.That(receivedUpdateType, Is.Null);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_EventBuffer_CanIterateEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        unsafe
+        {
+            InputEventPtr eventPtr;
+            using (StateEvent.From(gamepad, out eventPtr))
+            using (var buffer = new InputEventBuffer(eventPtr, 1))
+            {
+                Assert.That(buffer.eventCount, Is.EqualTo(1));
+                Assert.That(buffer.sizeInBytes, Is.EqualTo(InputEventBuffer.kBufferSizeUnknown));
+                Assert.That(buffer.capacityInBytes, Is.Zero);
+                Assert.That(buffer.bufferPtr, Is.EqualTo(eventPtr));
+
+                var events = buffer.ToArray();
+                Assert.That(events, Has.Length.EqualTo(1));
+                Assert.That(events[0], Is.EqualTo(eventPtr));
+            }
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_EventBuffer_CanAddEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        unsafe
+        {
+            InputEventPtr eventPtr;
+            using (StateEvent.From(gamepad, out eventPtr))
+            using (var buffer = new InputEventBuffer())
+            {
+                // Write two events into buffer.
+                gamepad.leftStick.WriteValueInto(eventPtr, Vector2.one);
+                eventPtr.id = 111;
+                eventPtr.time = 123;
+                eventPtr.handled = false;
+                buffer.AppendEvent(eventPtr);
+                gamepad.leftStick.WriteValueInto(eventPtr, Vector2.zero);
+                eventPtr.id = 222;
+                eventPtr.time = 234;
+                eventPtr.handled = true;
+                buffer.AppendEvent(eventPtr);
+
+                Assert.That(buffer.eventCount, Is.EqualTo(2));
+                var events = buffer.ToArray();
+
+                Assert.That(events, Has.Length.EqualTo(2));
+                Assert.That(events[0].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+                Assert.That(events[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+                Assert.That(events[0].time, Is.EqualTo(123).Within(0.00001));
+                Assert.That(events[1].time, Is.EqualTo(234).Within(0.00001));
+                Assert.That(events[0].id, Is.EqualTo(111));
+                Assert.That(events[1].id, Is.EqualTo(222));
+                Assert.That(events[0].handled, Is.False);
+                Assert.That(events[1].handled, Is.True);
+                Assert.That(events[0].deviceId, Is.EqualTo(gamepad.id));
+                Assert.That(events[1].deviceId, Is.EqualTo(gamepad.id));
+                Assert.That(gamepad.leftStick.ReadUnprocessedValueFrom(events[0]), Is.EqualTo(Vector2.one));
+                Assert.That(gamepad.leftStick.ReadUnprocessedValueFrom(events[1]), Is.EqualTo(Vector2.zero));
+            }
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_EventBuffer_CanBeReset()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        unsafe
+        {
+            using (var buffer = new InputEventBuffer())
+            {
+                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.id, 123).ToEventPtr());
+                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.id, 234).ToEventPtr());
+
+                var events = buffer.ToArray();
+                Assert.That(events, Has.Length.EqualTo(2));
+                Assert.That(events[0].type, Is.EqualTo(new FourCC(DeviceConfigurationEvent.Type)));
+                Assert.That(events[1].type, Is.EqualTo(new FourCC(DeviceConfigurationEvent.Type)));
+
+                buffer.Reset();
+
+                Assert.That(buffer.eventCount, Is.Zero);
+
+                buffer.AppendEvent(DeviceRemoveEvent.Create(gamepad.id, 432).ToEventPtr());
+
+                events = buffer.ToArray();
+
+                Assert.That(events.Length, Is.EqualTo(1));
+                Assert.That(events[0].type, Is.EqualTo(new FourCC(DeviceRemoveEvent.Type)));
+            }
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_EventBuffer_CanAllocateEvent()
+    {
+        unsafe
+        {
+            using (var buffer = new InputEventBuffer())
+            {
+                var eventPtr = buffer.AllocateEvent(1024);
+
+                Assert.That(buffer.bufferPtr, Is.EqualTo(new InputEventPtr(eventPtr)));
+                Assert.That(buffer.eventCount, Is.EqualTo(1));
+                Assert.That(eventPtr->sizeInBytes, Is.EqualTo(1024));
+                Assert.That(eventPtr->type, Is.EqualTo(new FourCC()));
+            }
+        }
     }
 }

@@ -1,3 +1,5 @@
+using UnityEngine.Experimental.Input.Layouts;
+
 namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>

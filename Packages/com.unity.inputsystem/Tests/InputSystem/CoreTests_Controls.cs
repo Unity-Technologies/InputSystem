@@ -5,6 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
@@ -46,7 +47,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_ControlsReferToTheirParent()
+    public void Controls_ReferToTheirParent()
     {
         var setup = new InputDeviceBuilder("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
@@ -57,13 +58,37 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_ControlsReferToTheirDevices()
+    public void Controls_ReferToTheirDevices()
     {
         var setup = new InputDeviceBuilder("Gamepad");
         var leftStick = setup.GetControl("leftStick");
         var device = setup.Finish();
 
         Assert.That(leftStick.device, Is.SameAs(device));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanGetValueType()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad.leftStick.valueType, Is.SameAs(typeof(Vector2)));
+        Assert.That(gamepad.leftStick.x.valueType, Is.SameAs(typeof(float)));
+        Assert.That(gamepad.buttonSouth.valueType, Is.SameAs(typeof(float)));
+        Assert.That(gamepad.valueType, Is.SameAs(typeof(byte[])));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanGetValueSize()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad.leftStick.valueSizeInBytes, Is.EqualTo(sizeof(float) * 2));
+        Assert.That(gamepad.leftStick.x.valueSizeInBytes, Is.EqualTo(sizeof(float)));
+        Assert.That(gamepad.buttonSouth.valueSizeInBytes, Is.EqualTo(sizeof(float)));
+        Assert.That(gamepad.valueSizeInBytes, Is.EqualTo(gamepad.stateBlock.alignedSizeInBytes));
     }
 
     [Test]
@@ -254,7 +279,9 @@ partial class CoreTests
             eventPtr =>
         {
             ++receivedCalls;
-            Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
+            float value;
+            Assert.IsTrue(gamepad.leftTrigger.ReadValueFrom(eventPtr, out value));
+            Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
@@ -292,7 +319,9 @@ partial class CoreTests
             eventPtr =>
         {
             Assert.That(value, Is.Null);
-            value = ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr);
+            float eventValue;
+            ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr, out eventValue);
+            value = eventValue;
         };
 
         InputSystem.QueueStateEvent(device, new GamepadState());

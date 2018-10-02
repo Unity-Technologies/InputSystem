@@ -6,9 +6,11 @@ using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.TestTools.Utils;
 
-class AndroidTests : InputTestFixture
+public class AndroidTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -451,6 +453,37 @@ class AndroidTests : InputTestFixture
 
             InputConfiguration.CompensateSensorsForScreenOrientation = true;
             Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(vector3Comparer));
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase("AndroidRotationVector", "attitude")]
+    public void Devices_SupportSensorsWithQuaternionControl(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (QuaternionControl)device[controlName];
+
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            var rotation = new Vector3(5.0f, 12.0f, 16.0f);
+            var q = Quaternion.Euler(rotation);
+
+            // The 4th value is ignored and is calculated from other three
+            control.WriteValueInto(stateEventPtr, new Quaternion(q.x, q.y, q.z, 1234567.0f));
+
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            Assert.That(control.ReadValue(), Is.EqualTo(q).Within(0.01));
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(Vector3EqualityComparer.Instance));
+
+            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(Vector3EqualityComparer.Instance));
         }
     }
 }

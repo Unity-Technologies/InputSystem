@@ -8,8 +8,9 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
-class XRTests : InputTestFixture
+public class XRTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -98,7 +99,7 @@ class XRTests : InputTestFixture
         Assert.That(XRController.rightHand, Is.Null);
         Assert.That(XRController.leftHand, Is.EqualTo(controller));
 
-        InputSystem.SetUsage(controller, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(controller, CommonUsages.RightHand);
 
         Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
         Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
@@ -201,22 +202,16 @@ class XRTests : InputTestFixture
     [Category("Devices")]
     [TestCase("Windows Mixed Reality HMD", "Microsoft", typeof(WMRHMD))]
     [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
-    [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
     [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
-    [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
     [TestCase("Oculus HMD", "Samsung", typeof(GearVRHMD))]
     [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
-    [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
     [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
-    [TestCase("Daydream Controller", null, typeof(DaydreamController))]
     [TestCase("Daydream Controller", null, typeof(DaydreamController))]
     [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
-    [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
-    [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
     [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {

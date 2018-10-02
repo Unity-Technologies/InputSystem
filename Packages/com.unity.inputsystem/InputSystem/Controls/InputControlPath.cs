@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
 ////TODO: allow stuff like "/gamepad/**/<button>"
+////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
 ////TODO: store CRC32s of names on controls and use that for first-level matching of name components
 ////TODO: handle arrays
 

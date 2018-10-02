@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -55,6 +56,18 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO
         Manual = 1 << 4,
+
+        /// <summary>
+        /// Variation of <see cref="Manual"/> that additionally allows calling <see cref="InputSystem.Update"/>
+        /// on a thread other than the main thread.
+        /// </summary>
+        /// <remarks>
+        /// Note that this mode doesn't mean the input system as a whole is thread-safe and can be accessed concurrently
+        /// from multiple threads. Instead, what this mode permits is just to call <see cref="InputSystem.Update"/>
+        /// on a thread other than the main thread. While the update is running, the executing thread must be the only
+        /// one accessing the input system.
+        /// </remarks>
+        ManualThreaded = Manual | 1 << 5,
 
         Default = Dynamic | Fixed | Editor,
     }

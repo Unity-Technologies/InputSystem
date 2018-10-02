@@ -9,10 +9,29 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     public interface ISteamControllerAPI
     {
         void RunFrame();
-        int GetConnectedControllers(ulong[] outHandles);
-        ulong GetActionSetHandle(string actionSetName);
-        ulong GetDigitalActionHandle(string actionName);
-        ulong GetAnalogActionHandle(string actionName);
+
+        int GetConnectedControllers(SteamHandle<SteamController>[] outHandles);
+
+        SteamHandle<InputActionMap> GetActionSetHandle(string actionSetName);
+
+        SteamHandle<InputAction> GetDigitalActionHandle(string actionName);
+
+        SteamHandle<InputAction> GetAnalogActionHandle(string actionName);
+
+        void ActivateActionSet(SteamHandle<SteamController> controllerHandle, SteamHandle<InputActionMap> actionSetHandle);
+
+        SteamHandle<InputActionMap> GetCurrentActionSet(SteamHandle<SteamController> controllerHandle);
+
+        void ActivateActionSetLayer(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputActionMap> actionSetLayerHandle);
+
+        void DeactivateActionSetLayer(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputActionMap> actionSetLayerHandle);
+
+        void DeactivateAllActionSetLayers(SteamHandle<SteamController> controllerHandle);
+
+        int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle,
+            out SteamHandle<InputActionMap> handlesOut);
     }
 }
 

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel

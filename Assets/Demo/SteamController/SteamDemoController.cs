@@ -3,6 +3,7 @@
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.Steam;
 #if UNITY_EDITOR
@@ -46,20 +47,20 @@ public class SteamDemoController : SteamController
         fire = builder.GetControl<ButtonControl>("fire");
     }
 
-    public override void ResolveActions(ISteamControllerAPI api)
+    protected override void ResolveActions(ISteamControllerAPI api)
     {
-        m_SetHandle_gameplay = api.GetActionSetHandle("gameplay");
-        m_ActionHandle_move = api.GetAnalogActionHandle("move");
-        m_ActionHandle_look = api.GetAnalogActionHandle("look");
-        m_ActionHandle_fire = api.GetDigitalActionHandle("fire");
+        gameplayHandle = api.GetActionSetHandle("gameplay");
+        moveHandle = api.GetAnalogActionHandle("move");
+        lookHandle = api.GetAnalogActionHandle("look");
+        fireHandle = api.GetDigitalActionHandle("fire");
     }
 
-    private ulong m_SetHandle_gameplay;
-    private ulong m_ActionHandle_move;
-    private ulong m_ActionHandle_look;
-    private ulong m_ActionHandle_fire;
+    public SteamHandle<InputActionMap> gameplayHandle { get; private set; }
+    public SteamHandle<InputAction> moveHandle { get; private set; }
+    public SteamHandle<InputAction> lookHandle { get; private set; }
+    public SteamHandle<InputAction> fireHandle { get; private set; }
 
-    public override void Update(ISteamControllerAPI api)
+    protected override void Update(ISteamControllerAPI api)
     {
         ////TODO
     }

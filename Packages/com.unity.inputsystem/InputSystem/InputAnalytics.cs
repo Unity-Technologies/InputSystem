@@ -1,6 +1,7 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Input.Layouts;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
 #endif
@@ -49,7 +50,8 @@ namespace UnityEngine.Experimental.Input
             // Collect unrecognized devices.
             deviceList.Clear();
             var availableDevices = manager.m_AvailableDevices;
-            for (var i = 0; i < availableDevices.Count; ++i)
+            var availableDeviceCount = manager.m_AvailableDeviceCount;
+            for (var i = 0; i < availableDeviceCount; ++i)
             {
                 var deviceId = availableDevices[i].deviceId;
                 if (manager.TryGetDeviceById(deviceId) != null)

@@ -7,55 +7,74 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    abstract class InputTreeViewLine : TreeViewItem
+    internal abstract class ActionTreeViewItem : TreeViewItem
     {
         protected static class Styles
         {
-            public static GUIStyle actionItemRowStyle = new GUIStyle("Label");
-            public static GUIStyle actionSetItemStyle = new GUIStyle("Label");
-            public static GUIStyle actionItemLabelStyle = new GUIStyle("Label");
-            public static GUIStyle backgroundStyle = new GUIStyle("Label");
-            public static GUIStyle yellowRect = new GUIStyle("Label");
-            public static GUIStyle orangeRect = new GUIStyle("Label");
-            public static GUIStyle greenRect = new GUIStyle("Label");
-            public static GUIStyle blueRect = new GUIStyle("Label");
-            public static GUIStyle pinkRect = new GUIStyle("Label");
+            public static GUIStyle borderStyle;
 
-            static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
-            static string ResourcesPath
-            {
-                get
-                {
-                    if (EditorGUIUtility.isProSkin)
-                        return SharedResourcesPath + "pro/";
-                    return SharedResourcesPath + "personal/";
-                }
-            }
+            public static GUIStyle actionMapItemStyle;
+            public static GUIStyle actionItemStyle;
+            public static GUIStyle bindingItemStyle;
 
             static Styles()
             {
-                backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
+                borderStyle = new GUIStyle("Label")
+                {
+                    normal =
+                    {
+                        background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                            ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackground.png")
+                    }
+                };
 
-                actionItemRowStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "row.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onFocused.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "rowSelected.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onNormal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "rowSelected.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
+                actionItemStyle = new GUIStyle("Label")
+                {
+                    normal =
+                    {
+                        background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                            ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackgroundWithoutBorder.png")
+                    },
+                    border = new RectOffset(3, 3, 3, 3),
+                    onFocused =
+                    {
+                        background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                            ActionInspectorWindow.Styles.ResourcesPath + "rowSelected.png"),
+                        textColor = Color.white,
+                    },
+                    onNormal =
+                    {
+                        background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                            ActionInspectorWindow.Styles.ResourcesPath + "rowSelected.png"),
+                        textColor = Color.white,
+                    },
+                    alignment = TextAnchor.MiddleLeft
+                };
 
-                actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
-                actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
+                actionMapItemStyle = new GUIStyle(actionItemStyle);
+                bindingItemStyle = new GUIStyle(actionItemStyle);
 
-                yellowRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "yellow.png");
-                orangeRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "orange.png");
-                greenRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "green.png");
-                blueRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "blue.png");
-                pinkRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "pink.png");
+                var isProSkin = EditorGUIUtility.isProSkin;
+                var actionMapBackground = isProSkin ? "orange.png" : "yellow.png";
+                var actionBackground = isProSkin ? "blue.png" : "green.png";
+
+                // Assign colors.
+                actionMapItemStyle.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + actionMapBackground);
+                actionItemStyle.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + actionBackground);
+
+                if (isProSkin)
+                {
+                    actionItemStyle.normal.textColor = Color.white;
+                    actionMapItemStyle.normal.textColor = Color.white;
+                }
             }
         }
 
-        public bool renaming;
-        protected SerializedProperty m_SetProperty;
+        protected SerializedProperty m_ElementProperty;
         protected int m_Index;
 
         public virtual bool isDraggable
@@ -63,9 +82,9 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return false; }
         }
 
-        public virtual SerializedProperty elementProperty
+        public SerializedProperty elementProperty
         {
-            get { return m_SetProperty.GetArrayElementAtIndex(index); }
+            get { return m_ElementProperty; }
         }
 
         public int index
@@ -73,7 +92,7 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_Index; }
         }
 
-        protected abstract GUIStyle rectStyle
+        protected abstract GUIStyle style
         {
             get;
         }
@@ -83,42 +102,36 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return false; }
         }
 
-        public InputTreeViewLine(SerializedProperty setProperty, int index)
+        public ActionTreeViewItem(SerializedProperty elementProperty, int index)
         {
-            m_SetProperty = setProperty;
+            m_ElementProperty = elementProperty;
             m_Index = index;
             depth = 0;
         }
 
-        public void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
+        public void OnGUI(Rect rowRect, bool selected, bool focused)
         {
-            var rect = rowRect;
-            if (Event.current.type == EventType.Repaint)
-            {
-                rowRect.height += 1;
-                Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
-
-                rect.x += indent;
-                rect.width -= indent + 2;
-                rect.y += 1;
-                rect.height -= 2;
-
-                if (!renaming)
-                    Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
-
-                DrawCustomRect(rowRect);
-            }
-        }
-
-        public virtual void DrawCustomRect(Rect rowRect)
-        {
-            var boxRect = rowRect;
-            boxRect.width = (depth + 1) * 6;
-            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            if (depth == 0)
+            if (Event.current.type != EventType.Repaint)
                 return;
-            boxRect.width = 6 * depth;
-            Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+
+            // Border.
+            Styles.borderStyle.Draw(rowRect, "", false, false, selected, focused);
+
+            // Background.
+            var rect = rowRect;
+            rect.y += 1;
+            rect.height -= 1;
+
+            style.Draw(rect, "", false, false, selected, focused);
+
+            // Label.
+            var indent = (depth + 2) * 6 + 10;
+            rect.x += indent;
+            rect.width -= indent + 2;
+            rect.y += 1;
+            rect.height -= 2;
+
+            style.Draw(rect, displayName, false, false, selected, focused);
         }
 
         public abstract string SerializeToString();
@@ -129,17 +142,18 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class ActionMapTreeItem : InputTreeViewLine
+    internal class ActionMapTreeItem : ActionTreeViewItem
     {
-        public ActionMapTreeItem(SerializedProperty actionMapProperty, int index) : base(actionMapProperty, index)
+        public ActionMapTreeItem(SerializedProperty actionMapProperty, int index)
+            : base(actionMapProperty, index)
         {
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
             id = displayName.GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle style
         {
-            get { return Styles.yellowRect; }
+            get { return Styles.actionMapItemStyle; }
         }
 
         public SerializedProperty bindingsProperty
@@ -165,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public SerializedProperty AddActionFromObject(Dictionary<string, string> parameters)
         {
-            return InputActionSerializationHelpers.AddActionFromObject(parameters, elementProperty);
+            return InputActionSerializationHelpers.AddActionFromSavedProperties(parameters, elementProperty);
         }
 
         public void DeleteAction(int actionRowIndex)
@@ -180,51 +194,61 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override string SerializeToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
             return builder.ToString();
         }
     }
 
-    class ActionTreeItem : InputTreeViewLine
+    internal class ActionTreeItem : ActionTreeViewItem
     {
-        SerializedProperty m_ActionMapProperty;
+        private SerializedProperty m_ActionMapProperty;
 
         public int bindingsStartIndex { get; private set; }
         public int bindingsCount { get; private set; }
         public string actionName { get; private set; }
 
-        public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty setProperty, int index)
-            : base(setProperty, index)
+        public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty actionProperty, int index)
+            : base(actionProperty, index)
         {
             m_ActionMapProperty = actionMapProperty;
             actionName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-            bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
-            bindingsCount = InputActionSerializationHelpers.GetBindingCount(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+            if (m_ActionMapProperty != null)
+            {
+                bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+                bindingsCount = InputActionSerializationHelpers.GetBindingCount(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+            }
+            else
+            {
+                bindingsStartIndex = 0;
+                bindingsCount = InputActionSerializationHelpers.GetBindingCount(elementProperty.FindPropertyRelative("m_SingletonActionBindings"), actionName);
+            }
             displayName = actionName;
-            var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
+            var actionMapName = "";
+            if (m_ActionMapProperty != null)
+                actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
             id = (actionMapName + "/" + displayName).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle style
         {
-            get { return Styles.greenRect; }
+            get { return Styles.actionItemStyle; }
         }
 
-        public void AppendCompositeBinding(string compositeName)
+        public void AddCompositeBinding(string compositeName)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
         }
 
-        public void AppendBinding()
+        public void AddBinding()
         {
-            InputActionSerializationHelpers.AppendBinding(elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty);
         }
 
-        public void AppendBindingFromObject(Dictionary<string, string> values)
+        public void AddBindingFromSavedProperties(Dictionary<string, string> values)
         {
-            InputActionSerializationHelpers.AppendBindingFromObject(values, elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBindingFromSavedProperties(values, elementProperty, m_ActionMapProperty);
         }
 
         public void RemoveBinding(int compositeIndex)
@@ -245,12 +269,12 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class CompositeGroupTreeItem : BindingTreeItem
+    internal class CompositeGroupTreeItem : BindingTreeItem
     {
         public CompositeGroupTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
         {
-            var name = elementProperty.FindPropertyRelative("name").stringValue;
+            var name = elementProperty.FindPropertyRelative("m_Name").stringValue;
             displayName = name;
         }
 
@@ -259,9 +283,9 @@ namespace UnityEngine.Experimental.Input.Editor
             return (actionMapName + " " + action + " " + name + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle style
         {
-            get { return Styles.blueRect; }
+            get { return Styles.bindingItemStyle; }
         }
 
         public void Rename(string newName)
@@ -275,18 +299,18 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class CompositeTreeItem : BindingTreeItem
+    internal class CompositeTreeItem : BindingTreeItem
     {
         public CompositeTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
         {
-            var path = elementProperty.FindPropertyRelative("path").stringValue;
-            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
+            var path = elementProperty.FindPropertyRelative("m_Path").stringValue;
+            displayName = elementProperty.FindPropertyRelative("m_Name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle style
         {
-            get { return Styles.pinkRect; }
+            get { return Styles.bindingItemStyle; }
         }
 
         public override bool isDraggable
@@ -295,19 +319,17 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class BindingTreeItem : InputTreeViewLine
+    internal class BindingTreeItem : ActionTreeViewItem
     {
-        SerializedProperty m_BindingProperty;
-
-        public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+        public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
+            : base(bindingProperty, index)
         {
-            m_BindingProperty = bindingProperty;
-            path = elementProperty.FindPropertyRelative("path").stringValue;
-            groups = elementProperty.FindPropertyRelative("groups").stringValue;
-            action = elementProperty.FindPropertyRelative("action").stringValue;
-            name = elementProperty.FindPropertyRelative("name").stringValue;
+            path = elementProperty.FindPropertyRelative("m_Path").stringValue;
+            groups = elementProperty.FindPropertyRelative("m_Groups").stringValue;
+            action = elementProperty.FindPropertyRelative("m_Action").stringValue;
+            name = elementProperty.FindPropertyRelative("m_Name").stringValue;
 
-            var flags = (InputBinding.Flags)elementProperty.FindPropertyRelative("flags").intValue;
+            var flags = (InputBinding.Flags)elementProperty.FindPropertyRelative("m_Flags").intValue;
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
             isPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) == InputBinding.Flags.PartOfComposite;
 
@@ -331,28 +353,14 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return true; }
         }
 
-        public override SerializedProperty elementProperty
-        {
-            get { return m_BindingProperty; }
-        }
-
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)
         {
             return (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle style
         {
-            get { return Styles.blueRect; }
-        }
-
-        public override void DrawCustomRect(Rect rowRect)
-        {
-            var boxRect = rowRect;
-            boxRect.width = (depth + 1) * 6;
-            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            boxRect.width = 6 * depth;
-            Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+            get { return Styles.bindingItemStyle; }
         }
 
         public override bool hasProperties
@@ -362,13 +370,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override string SerializeToString()
         {
-            StringBuilder builder = new StringBuilder();
-            builder.AppendFormat("{0}={1}\n", "name", elementProperty.FindPropertyRelative("name").stringValue);
-            builder.AppendFormat("{0}={1}\n", "path", elementProperty.FindPropertyRelative("path").stringValue);
-            builder.AppendFormat("{0}={1}\n", "groups", elementProperty.FindPropertyRelative("groups").stringValue);
-            builder.AppendFormat("{0}={1}\n", "interactions", elementProperty.FindPropertyRelative("interactions").stringValue);
-            builder.AppendFormat("{0}={1}\n", "flags", elementProperty.FindPropertyRelative("flags").intValue);
-            builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("action").stringValue);
+            var builder = new StringBuilder();
+            builder.AppendFormat("{0}={1}\n", "name", elementProperty.FindPropertyRelative("m_Name").stringValue);
+            builder.AppendFormat("{0}={1}\n", "path", elementProperty.FindPropertyRelative("m_Path").stringValue);
+            builder.AppendFormat("{0}={1}\n", "groups", elementProperty.FindPropertyRelative("m_Groups").stringValue);
+            builder.AppendFormat("{0}={1}\n", "interactions", elementProperty.FindPropertyRelative("m_Interactions").stringValue);
+            builder.AppendFormat("{0}={1}\n", "flags", elementProperty.FindPropertyRelative("m_Flags").intValue);
+            builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("m_Action").stringValue);
             return builder.ToString();
         }
     }

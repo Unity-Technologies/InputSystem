@@ -34,41 +34,62 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            var root = new TreeViewItem
-            {
-                id = 0,
-                depth = -1
-            };
-            root.children = new List<TreeViewItem>();
             if (m_ActionMapSerializedProperty != null)
             {
-                BuildFromActionMapSerializedProperty(root);
+                return BuildFromActionMapSerializedProperty();
             }
-            else if (m_ActionSerializedProperty != null)
+            if (m_ActionSerializedProperty != null)
             {
-                BuildFromActionSerializedProperty(root);
+                return BuildFromActionSerializedProperty();
             }
-            return root;
+            var dummyRoot = new TreeViewItem();
+            dummyRoot.children = new List<TreeViewItem>();
+            dummyRoot.depth = -1;
+            return dummyRoot;
         }
 
         protected override void ContextClicked()
         {
+            if (OnContextClick == null)
+                return;
             if (m_ActionSerializedProperty != null)
             {
                 OnContextClick(m_ActionSerializedProperty);
             }
+            else
+            {
+                OnContextClick(m_ActionMapSerializedProperty);
+            }
         }
 
-        void BuildFromActionSerializedProperty(TreeViewItem root)
+        TreeViewItem BuildFromActionSerializedProperty()
         {
             var bindingsArrayProperty = m_ActionSerializedProperty.FindPropertyRelative("m_SingletonActionBindings");
             var actionName = m_ActionSerializedProperty.FindPropertyRelative("m_Name").stringValue;
-            ParseBindings(root, "", actionName, bindingsArrayProperty, 0);
+            var actionItem = new ActionTreeItem(null, m_ActionSerializedProperty, 0);
+            actionItem.children = new List<TreeViewItem>();
+            actionItem.depth = -1;
+            ParseBindings(actionItem, "", actionName, bindingsArrayProperty, 0);
+            return actionItem;
         }
 
-        void BuildFromActionMapSerializedProperty(TreeViewItem root)
+        TreeViewItem BuildFromActionMapSerializedProperty()
         {
-            ParseActionMap(root, m_ActionMapSerializedProperty, 0);
+            var actionMapItem = new ActionMapTreeItem(m_ActionMapSerializedProperty, 0);
+            actionMapItem.depth = -1;
+            actionMapItem.children = new List<TreeViewItem>();
+            ParseActionMap(actionMapItem, m_ActionMapSerializedProperty, 0);
+            return actionMapItem;
+        }
+
+        protected override bool CanRename(TreeViewItem item)
+        {
+            return false;
+        }
+
+        protected override bool CanStartDrag(CanStartDragArgs args)
+        {
+            return false;
         }
 
         protected override bool CanMultiSelect(TreeViewItem item)
@@ -78,34 +99,20 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            if (args.item is InputTreeViewLine)
-            {
-                var bindingItem = (args.item as InputTreeViewLine);
+            var item = args.item as ActionTreeViewItem;
+            if (item == null)
+                return;
 
-                // We try to predict the indentation
-                var indent = (args.item.depth + 2) * 6 + 10;
-                bindingItem.OnGUI(args.rowRect, args.selected, args.focused, indent);
+            item.OnGUI(args.rowRect, args.selected, args.focused);
 
-                var btnRect = args.rowRect;
-                btnRect.x = btnRect.width - 20;
-                btnRect.width = 20;
-
-                if (!bindingItem.hasProperties)
-                    return;
-
-                if (GUI.Button(btnRect, "..."))
-                {
-                    var screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(btnRect.x, btnRect.y));
-                    btnRect.x = screenPoint.x;
-                    btnRect.y = screenPoint.y;
-                    BindingPropertiesPopup.Show(btnRect, bindingItem, Reload);
-                }
-            }
+            var btnRect = args.rowRect;
+            btnRect.x = btnRect.width - 20;
+            btnRect.width = 20;
         }
 
         protected override void DoubleClickedItem(int id)
         {
-            var element = (InputTreeViewLine)FindItem(id, rootItem);
+            var element = (ActionTreeViewItem)FindItem(id, rootItem);
             var rect = new Rect(GUIUtility.GUIToScreenPoint(Event.current.mousePosition), Vector2.zero);
             BindingPropertiesPopup.Show(rect, element, Reload);
         }
