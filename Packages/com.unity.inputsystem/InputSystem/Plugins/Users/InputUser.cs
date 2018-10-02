@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
 //do we need to make users have ties to assets?
@@ -54,7 +55,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// The ID of a user cannot be changed over its lifetime. Also, while the user
         /// is active, no other player can have the same ID.
         /// </remarks>
-        public static ulong GetUserId(this IInputUser user)
+        public static ulong GetUserId<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -76,7 +78,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         ///
         /// Note that the index of a user may change as users are added and removed.
         /// </remarks>
-        public static int GetUserIndex(this IInputUser user)
+        public static int GetUserIndex<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -92,7 +95,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// for user management.
         ///
         /// </remarks>
-        public static InputUserHandle? GetUserHandle(this IInputUser user)
+        public static InputUserHandle? GetUserHandle<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -104,7 +108,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return s_AllUserData[index].handle;
         }
 
-        public static void SetUserHandle(this IInputUser user, InputUserHandle? handle)
+        public static void SetUserHandle<TUser>(this TUser user, InputUserHandle? handle)
+            where TUser : class, IInputUser
         {
             throw new NotImplementedException();
         }
@@ -117,7 +122,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// The system places no constraints on the contents of this string. In particular, it does
         /// not ensure that no two users have the same name or that a user even has a name assigned to it.
         /// </remarks>
-        public static string GetUserName(this IInputUser user)
+        public static string GetUserName<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -129,7 +135,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return s_AllUserData[index].userName;
         }
 
-        public static void SetUserName(this IInputUser user, string userName)
+        public static void SetUserName<TUser>(this TUser user, string userName)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -151,7 +158,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <summary>
         /// Get the <see cref="InputAction">input actions</see> that are currently active for the user.
         /// </summary>
-        public static InputActionStack GetInputActions(this IInputUser user)
+        public static InputActionStack GetInputActions<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -183,7 +191,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// or by automatic switching), a notification is sent on <see cref="onChange"/> with
         /// <see cref="InputUserChange.ControlSchemeChanged"/>.
         /// </remarks>
-        public static InputControlScheme? GetControlScheme(this IInputUser user)
+        public static InputControlScheme? GetControlScheme<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -195,7 +204,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return s_AllUserData[index].controlScheme;
         }
 
-        public static void SetControlScheme(this IInputUser user, InputControlScheme scheme)
+        public static bool AssignControlScheme<TUser>(this TUser user, InputControlScheme scheme, bool assignMatchingUnusedDevices = false)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -206,14 +216,63 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
             // Ignore if the control scheme is already set on the user.
             if (s_AllUserData[index].controlScheme.HasValue && s_AllUserData[index].controlScheme == scheme)
-                return;
+                return true;
 
             s_AllUserData[index].controlScheme = scheme;
 
+            // If we're supposed to automatically add devices, look for matching devices now which aren't
+            // used by any other user.
+            if (assignMatchingUnusedDevices)
+            {
+                var needToNotify = false;
+
+                // If we are currently assigned devices, unassign them first.
+                if (s_AllUserData[index].deviceCount > 0)
+                {
+                    ClearAssignedInputDevicesInternal(index);
+                    needToNotify = true;
+                }
+
+                // Only go through the matching process if we actually have device requirements.
+                if (scheme.devices.Count > 0)
+                {
+                    // Grab all unused devices and then select a set of devices matching the scheme's
+                    // requirements.
+                    var availableDevices = GetUnusedDevices();
+                    try
+                    {
+                        if (scheme.PickMatchingDevices(ref availableDevices) == InputControlScheme.MatchResult.NoMatch)
+                        {
+                            // Control scheme isn't satisfied with the devices we have available.
+                            // Fail setting the control scheme.
+                            s_AllUserData[index].controlScheme = null;
+                            return false;
+                        }
+
+                        // Assign selected devices to user.
+                        if (availableDevices.Count > 0)
+                        {
+                            foreach (var device in availableDevices)
+                                AssignDeviceInternal(index, device);
+                            needToNotify = true;
+                        }
+                    }
+                    finally
+                    {
+                        availableDevices.Dispose();
+                    }
+                }
+
+                if (needToNotify)
+                    Notify(user, InputUserChange.DevicesChanged);
+            }
+
             Notify(user, InputUserChange.ControlSchemeChanged);
+            return true;
         }
 
-        public static void SetControlScheme(this IInputUser user, string schemeName)
+        public static void AssignControlScheme<TUser>(this TUser user, string schemeName)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -260,7 +319,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 s_AllUserData[index].deviceCount);
         }
 
-        public static void AssignInputDevice(this IInputUser user, InputDevice device)
+        public static void AssignInputDevice<TUser>(this TUser user, InputDevice device)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -275,7 +335,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 Notify(user, InputUserChange.DevicesChanged);
         }
 
-        public static void AssignInputDevices<TDevices>(this IInputUser user, TDevices devices)
+        public static void AssignInputDevices<TUser, TDevices>(this TUser user, TDevices devices)
+            where TUser : class, IInputUser
             where TDevices : IEnumerable<InputDevice> // Parameter so that compiler can know enumerable type instead of having to go through the interface.
         {
             if (devices == null)
@@ -333,6 +394,70 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             ++s_AllUserData[userIndex].deviceCount;
 
             return true;
+        }
+
+        public static void ClearAssignedInputDevices<TUser>(this TUser user)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                return; // User hasn't been added and thus owns no devices.
+
+            ClearAssignedInputDevicesInternal(index);
+
+            Notify(user, InputUserChange.DevicesChanged);
+        }
+
+        private static void ClearAssignedInputDevicesInternal(int index)
+        {
+            var deviceCount = s_AllUserData[index].deviceCount;
+            if (deviceCount == 0)
+                return;
+
+            var deviceStartIndex = s_AllUserData[index].deviceStartIndex;
+            ArrayHelpers.EraseSliceWithCapacity(ref s_AllDevices, ref s_AllDeviceCount, deviceCount, deviceStartIndex);
+
+            s_AllUserData[index].deviceCount = 0;
+            s_AllUserData[index].deviceStartIndex = -1;
+
+            // Adjust indices of other users.
+            for (var i = 0; i < s_AllUserCount; ++i)
+            {
+                if (s_AllUserData[i].deviceStartIndex <= deviceStartIndex)
+                    continue;
+
+                s_AllUserData[i].deviceStartIndex -= deviceCount;
+            }
+        }
+
+        /// <summary>
+        /// Return a list of all currently added devices that are not assigned to any user.
+        /// </summary>
+        /// <returns>A (possibly empty) list of devices that are currently not assigned to a user.</returns>
+        /// <seealso cref="InputSystem.devices"/>
+        /// <seealso cref="InputUser.AssignInputDevice"/>
+        /// <remarks>
+        /// The resulting list uses <see cref="Allocator.Temp"> temporary, unmanaged memory</see>. If not disposed of
+        /// explicitly, the list will automatically be deallocated at the end of the frame and will become unusable.
+        /// </remarks>
+        public static InputControlList<InputDevice> GetUnusedDevices()
+        {
+            var unusedDevices = new InputControlList<InputDevice>(Allocator.Temp);
+
+            foreach (var device in InputSystem.devices)
+            {
+                // If it's in s_AllDevices, there is *some* user that is using the device.
+                // We don't care which one it is here.
+                if (ArrayHelpers.ContainsReferenceTo(s_AllDevices, device))
+                    continue;
+
+                unusedDevices.Add(device);
+            }
+
+            return unusedDevices;
         }
 
         public static void PauseHaptics(this IInputUser user)

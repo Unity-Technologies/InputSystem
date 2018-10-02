@@ -177,8 +177,17 @@ public class UserTests : InputTestFixture
 
         Assert.That(receivedChange, Is.Null);
 
+        // DevicesChanges, removed.
+        user.ClearAssignedInputDevices();
+
+        Assert.That(receivedUser, Is.SameAs(user));
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.DevicesChanged));
+
+        receivedUser = null;
+        receivedChange = null;
+
         // ControlSchemeChanged.
-        user.SetControlScheme("gamepad");
+        user.AssignControlScheme("gamepad");
 
         Assert.That(receivedUser, Is.SameAs(user));
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlSchemeChanged));
@@ -187,7 +196,7 @@ public class UserTests : InputTestFixture
         receivedChange = null;
 
         // Same control scheme, no notification.
-        user.SetControlScheme("gamepad");
+        user.AssignControlScheme("gamepad");
 
         Assert.That(receivedChange, Is.Null);
 
@@ -308,6 +317,58 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanClearAssignedDevices()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+        var user3 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        user1.AssignInputDevice(device);
+        user1.ClearAssignedInputDevices();
+        user2.ClearAssignedInputDevices();
+        user3.ClearAssignedInputDevices();
+
+        Assert.That(user1.GetAssignedInputDevices(), Is.Empty);
+        Assert.That(user2.GetAssignedInputDevices(), Is.Empty);
+        Assert.That(user3.GetAssignedInputDevices(), Is.Empty);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanQueryUnusedDevices()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var gyro = InputSystem.AddDevice<Gyroscope>();
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+        var user3 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+        InputUser.Add(user3);
+
+        user1.AssignInputDevice(gamepad);
+        user3.AssignInputDevices(new InputDevice[] {keyboard, mouse});
+
+        using (var unusedDevices = InputUser.GetUnusedDevices())
+        {
+            Assert.That(unusedDevices, Has.Count.EqualTo(2));
+            Assert.That(unusedDevices, Has.Exactly(1).SameAs(touch));
+            Assert.That(unusedDevices, Has.Exactly(1).SameAs(gyro));
+        }
+    }
+
+    [Test]
+    [Category("Users")]
     [Ignore("TODO")]
     public void TODO_Users_CanAssignActionsToUsers()
     {
@@ -323,7 +384,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanSwitchControlSchemes()
+    public void Users_CanAssignControlScheme()
     {
         var user = new TestUser();
 
@@ -331,13 +392,48 @@ public class UserTests : InputTestFixture
 
         InputUser.Add(user);
 
-        user.SetControlScheme("scheme");
+        user.AssignControlScheme("scheme");
 
         Assert.That(user.GetControlScheme(), Is.EqualTo(new InputControlScheme("scheme")));
 
-        user.SetControlScheme(null);
+        user.AssignControlScheme(null);
 
         Assert.That(user.GetControlScheme(), Is.Null);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanAssignControlScheme_AndAutomaticallyAssignMatchingUnusedDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        var singleGamepadScheme = new InputControlScheme("SingleGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var dualGamepadScheme = new InputControlScheme("DualGamepad")
+            .WithRequiredDevice("<Gamepad>")
+            .WithRequiredDevice("<Gamepad>");
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+        var user3 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+        InputUser.Add(user3);
+
+        user1.AssignInputDevice(keyboard); // Should automatically be unassigned.
+        user3.AssignInputDevice(keyboard); // Should not be affected by any of what we do here.
+
+        user1.AssignControlScheme(singleGamepadScheme, assignMatchingUnusedDevices: true);
+        user2.AssignControlScheme(dualGamepadScheme, assignMatchingUnusedDevices: true);
+
+        Assert.That(user1.GetAssignedInputDevices(), Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(user2.GetAssignedInputDevices(), Is.EquivalentTo(new[] { gamepad2, gamepad3 }));
+        Assert.That(user3.GetAssignedInputDevices(), Is.EquivalentTo(new[] { keyboard }));
     }
 
     [Test]

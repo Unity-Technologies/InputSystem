@@ -84,6 +84,31 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
+        public static unsafe void Resize<TValue>(ref NativeArray<TValue> array, int newSize, Allocator allocator)
+            where TValue : struct
+        {
+            var oldSize = array.Length;
+            if (oldSize == newSize)
+                return;
+
+            if (newSize == 0)
+            {
+                if (array.IsCreated)
+                    array.Dispose();
+                array = new NativeArray<TValue>();
+                return;
+            }
+
+            var newArray = new NativeArray<TValue>(newSize, allocator);
+            if (oldSize != 0)
+            {
+                // Copy contents from old array.
+                UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(),
+                    UnsafeUtility.SizeOf<TValue>() * (newSize < oldSize ? newSize : oldSize));
+            }
+            array = newArray;
+        }
+
         public static int Append<TValue>(ref TValue[] array, TValue value)
         {
             if (array == null)

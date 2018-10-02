@@ -2098,9 +2098,9 @@ namespace UnityEngine.Experimental.Input
                         // Significant changes are non-noisy control changes, and changes that create a value
                         // change after processors are applied.  These are used to detect actual user interaction
                         // with a device instead of simply sensor noise.
-                        InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
-                        InputNoiseFilter filter = device.userInteractionFilter;
-                        bool hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
+                        var eventPtr = new InputEventPtr(currentEventPtr);
+                        var filter = device.userInteractionFilter;
+                        var hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
                         doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.

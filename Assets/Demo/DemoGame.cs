@@ -152,8 +152,14 @@ public class DemoGame : MonoBehaviour
         // switch.
         var defaultScheme = player.InferDefaultControlSchemeForSinglePlayer();
 
-        // Switch to default control scheme.
-        player.SetControlScheme(defaultScheme);
+        //what's relevant here
+        // - putting the binding mask in place
+        // - having the devices used by the bindings assigned to the player
+
+        ////TODO: handle failure
+        // Switch to default control scheme and give the player whatever controls
+        // it needs.
+        player.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
 
         // Finally, run code that is shared between single- and multi-player games.
         StartGame();
@@ -251,7 +257,7 @@ public class DemoGame : MonoBehaviour
         player.controls.Enable(controlScheme);
 
         // Enable control scheme on player.
-        player.SetControlScheme(controlScheme);
+        player.AssignControlScheme(controlScheme);
     }
 
     /// <summary>

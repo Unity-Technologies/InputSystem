@@ -757,6 +757,8 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
+        ////TODO: replace List versions with InputControlList
+
         public static List<InputControl> GetControls(string path)
         {
             var list = new List<InputControl>();

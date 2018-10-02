@@ -714,6 +714,7 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("Any PrimaryMotion/x"));
     }
 
+    ////TODO: doesnotallocate constraint
     [Test]
     [Category("Controls")]
     public void Controls_CanKeepListsOfControls_WithoutAllocatingManagedMemory()
@@ -722,36 +723,62 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        using (var list = new InputControlList<InputControl>())
+        var list = new InputControlList<InputControl>();
+        try
         {
             Assert.That(list.Count, Is.Zero);
             Assert.That(list.ToArray(), Is.Empty);
             Assert.That(() => list[0], Throws.TypeOf<ArgumentOutOfRangeException>());
 
+            list.Capacity = 10;
+
             list.Add(gamepad.leftStick);
+            list.Add(null); // Permissible to add null entry.
             list.Add(keyboard.spaceKey);
             list.Add(keyboard);
 
-            Assert.That(list.Count, Is.EqualTo(3));
+            Assert.That(list.Count, Is.EqualTo(4));
+            Assert.That(list.Capacity, Is.EqualTo(6));
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
-            Assert.That(list[1], Is.SameAs(keyboard.spaceKey));
-            Assert.That(list[2], Is.SameAs(keyboard));
-            Assert.That(() => list[3], Throws.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] { gamepad.leftStick, keyboard.spaceKey, keyboard }));
+            Assert.That(list[1], Is.Null);
+            Assert.That(list[2], Is.SameAs(keyboard.spaceKey));
+            Assert.That(list[3], Is.SameAs(keyboard));
+            Assert.That(() => list[4], Throws.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(list.ToArray(),
+                Is.EquivalentTo(new InputControl[] {gamepad.leftStick, null, keyboard.spaceKey, keyboard}));
+            Assert.That(list.Contains(gamepad.leftStick));
+            Assert.That(list.Contains(null));
+            Assert.That(list.Contains(keyboard.spaceKey));
+            Assert.That(list.Contains(keyboard));
 
-            list.Remove(keyboard.spaceKey);
+            list.RemoveAt(1);
+            list.Remove(keyboard);
 
             Assert.That(list.Count, Is.EqualTo(2));
+            Assert.That(list.Capacity, Is.EqualTo(8));
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
-            Assert.That(list[1], Is.SameAs(keyboard));
+            Assert.That(list[1], Is.SameAs(keyboard.spaceKey));
             Assert.That(() => list[2], Throws.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] { gamepad.leftStick, keyboard }));
+            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] {gamepad.leftStick, keyboard.spaceKey}));
+            Assert.That(list.Contains(gamepad.leftStick));
+            Assert.That(!list.Contains(null));
+            Assert.That(list.Contains(keyboard.spaceKey));
+            Assert.That(!list.Contains(keyboard));
 
             list.Clear();
 
             Assert.That(list.Count, Is.Zero);
+            Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list.ToArray(), Is.Empty);
             Assert.That(() => list[0], Throws.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(!list.Contains(gamepad.leftStick));
+            Assert.That(!list.Contains(null));
+            Assert.That(!list.Contains(keyboard.spaceKey));
+            Assert.That(!list.Contains(keyboard));
+        }
+        finally
+        {
+            list.Dispose();
         }
     }
 }
