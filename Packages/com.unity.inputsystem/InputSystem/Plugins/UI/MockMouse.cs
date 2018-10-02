@@ -32,8 +32,11 @@ public struct MockMouseButton
         }
         set
         {
-            m_IsDown = value;
-            lastFrameDelta |= value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
+            if(m_IsDown != value)
+            {
+                m_IsDown = value;
+                lastFrameDelta |= value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
+            }           
         }
     }
 
@@ -129,20 +132,21 @@ public struct MockMouseButton
     }
 
     private bool m_IsDown;
-
 }
 
 public struct MockMouseState
 {
-    /// ///////////////////////////////////////
- 
-    public List<GameObject> hoverTargets { get; set; }
-    public GameObject pointerTarget { get; set; }
-
-    /// ///////////////////////////////////////
-
+    /// <summary>
+    /// An Id representing a unique pointer.  See <see cref="UnityEngine.Experimental.Input.Pointer.pointerId"/> for more details.
+    /// </summary>
     public int pointerId { get; private set; }
 
+    /// <summary>
+    /// A flag representing whether any mouse data has changed this frame, meaning that events should be processed.
+    /// </summary>
+    /// <remarks>
+    /// This only checks for changes in mouse state (<see cref="position"/>, <see cref="leftButton"/>, <see cref="rightButton"/>, <see cref="middleButton"/>, or <see cref="scrollPosition"/>).
+    /// </remarks>
     public bool changedThisFrame { get; private set; }
 
     public Vector2 position
@@ -150,12 +154,18 @@ public struct MockMouseState
         get { return m_Position; }
         set
         {
-            m_Position = value;
-            deltaPosition += value;
-            changedThisFrame = true;
+            if(m_Position != value)
+            {
+                changedThisFrame = true;
+                deltaPosition = value - m_Position;
+                m_Position = value;
+            }
         }
     }
 
+    /// <summary>
+    /// The pixel-space change in <see cref="position"/> since the last call to <see cref="OnFrameFinished"/>.
+    /// </summary>
     public Vector2 deltaPosition { get; private set; }
 
     public Vector2 scrollPosition
@@ -163,14 +173,24 @@ public struct MockMouseState
         get { return m_ScrollPosition; }
         set
         {
-            m_ScrollPosition = value;
-            scrollDelta += value;
-            changedThisFrame = true;
+            if(m_ScrollPosition != value)
+            {
+                changedThisFrame = true;
+                scrollDelta = value - m_ScrollPosition;
+                m_ScrollPosition = value;
+            }
         }
     }
-    
+
+    /// <summary>
+    /// The change in <see cref="scrollPosition"/> since the last call to <see cref="OnFrameFinished"/>.
+    /// </summary>
     public Vector2 scrollDelta { get; private set; }
 
+
+    /// <summary>
+    /// Cached data and button state representing a left mouse button on a mouse.  Used by uGUI to keep track of persistent click, press, and drag states.
+    /// </summary>
     public MockMouseButton leftButton
     {
         get
@@ -179,11 +199,14 @@ public struct MockMouseState
         }
         set
         {
+            changedThisFrame |= (value.lastFrameDelta != ButtonDeltaState.NoChange);
             m_LeftButton = value;
-            changedThisFrame = true;
         }
     }
 
+    /// <summary>
+    /// Cached data and button state representing a right mouse button on a mouse.  Used by uGUI to keep track of persistent click, press, and drag states.
+    /// </summary>
     public MockMouseButton rightButton
     {
         get
@@ -192,11 +215,14 @@ public struct MockMouseState
         }
         set
         {
+            changedThisFrame |= (value.lastFrameDelta != ButtonDeltaState.NoChange);
             m_RightButton = value;
-            changedThisFrame = true;
         }
     }
 
+    /// <summary>
+    /// Cached data and button state representing a middle mouse button on a mouse.  Used by uGUI to keep track of persistent click, press, and drag states.
+    /// </summary>
     public MockMouseButton middleButton
     {
         get
@@ -205,10 +231,20 @@ public struct MockMouseState
         }
         set
         {
-            m_MiddleButton = value;
-            changedThisFrame = true;
+            changedThisFrame |= (value.lastFrameDelta != ButtonDeltaState.NoChange);
+            m_MiddleButton = value;          
         }
     }
+
+    /// <summary>
+    /// This tracks the current GUI targets being hovered over.  Syncs up to <see cref="PointerEventData.hovered"/>.
+    /// </summary>
+    public List<GameObject> hoverTargets { get; set; }
+
+    /// <summary>
+    ///  Tracks the current enter/exit target being hovered over at any given moment. Syncs up to <see cref="PointerEventData.pointerEnter"/>.
+    /// </summary>
+    public GameObject pointerTarget { get; set; }
 
     public MockMouseState(EventSystem eventSystem, int pointerId)
     {
@@ -227,6 +263,9 @@ public struct MockMouseState
         hoverTargets = new List<GameObject>();
     }
 
+    /// <summary>
+    /// Call this at the end of polling for per-frame changes.  This resets delta values, such as <see cref="deltaPosition"/>, <see cref="scrollDelta"/>, and <see cref="MockMouseButton.lastFrameDelta"/>.
+    /// </summary>
     public void OnFrameFinished()
     {
         changedThisFrame = false;

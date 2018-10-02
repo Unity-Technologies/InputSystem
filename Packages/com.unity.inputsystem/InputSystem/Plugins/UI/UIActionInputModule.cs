@@ -383,8 +383,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 if(mockMouseStates[i].changedThisFrame)
                 {
                     MockMouseState state = mockMouseStates[i];
-                    bool mouseMoving = state.deltaPosition.sqrMagnitude > float.Epsilon;
-
                     PointerEventData eventData = PrepareInitialEventData(state);
 
                     // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
