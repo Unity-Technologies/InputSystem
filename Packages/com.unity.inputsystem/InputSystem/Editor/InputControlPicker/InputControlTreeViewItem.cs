@@ -24,7 +24,9 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (!string.IsNullOrEmpty(m_Usage))
                     return string.Format("<{0}>{{{1}}}/{2}", m_Device, m_Usage, m_ControlPath);
-                return string.Format("<{0}>/{1}", m_Device,  m_ControlPath);
+                if (!string.IsNullOrEmpty(m_ControlPath))
+                    return string.Format("<{0}>/{1}", m_Device, m_ControlPath);
+                return string.Format("<{0}>", m_Device);
             }
         }
 
@@ -78,6 +80,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public DeviceTreeViewItem(InputControlLayout layout, string commonUsage)
         {
             displayName = layout.name;
+            m_Device = layout.name;
             if (commonUsage != null)
                 displayName += " (" + commonUsage + ")";
             id = (displayName).GetHashCode();

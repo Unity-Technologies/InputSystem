@@ -183,7 +183,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p != null && p.hasProperties)
                 {
-                    m_PropertyView = p.GetPropertiesView(Apply, m_PickerTreeViewState);
+                    m_PropertyView = p.GetPropertiesView(()=>
+                    {
+                        Apply();
+                        LoadPropertiesForSelection(false);
+                    }, m_PickerTreeViewState);
+                    m_PropertyView.toolbar = m_InputActionWindowToolbar;
                 }
             }
         }

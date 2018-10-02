@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Editor;
@@ -23,8 +24,10 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
         {
             EditorGUILayout.Space();
             ////TODO: line up "Binding" so it conforms to width of property names used in other inspectors
-            InputBindingPropertiesView.DrawBindingGUI(m_ControlPathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
-                s => { m_ManualPathEditMode = false; });
+            /// TODO: fix
+//            InputBindingPropertiesView.DrawBindingGUI(m_ControlPathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
+//                s => { m_ManualPathEditMode = false; });
+            throw new NotImplementedException();
             EditorGUILayout.Space();
         }
     }

@@ -58,6 +58,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, ApplyModifiers);
         }
 
+        public InputActionWindowToolbar toolbar { get; set; }
+
         private void ApplyModifiers()
         {
             m_InteractionsProperty.stringValue = m_InteractionsReorderableReorderableList.ToSerializableString();
@@ -127,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
-        internal static void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
+        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
         {
             EditorGUILayout.BeginHorizontal();
 
@@ -180,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
             var w = new InputControlPickerPopup(pathProperty, pickerTreeViewState)
@@ -188,6 +190,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onPickCallback = onPickCallback,
                 width = rect.width,
             };
+            w.SetDeviceFilter(toolbar.deviceFilter);
             PopupWindow.Show(rect, w);
         }
 

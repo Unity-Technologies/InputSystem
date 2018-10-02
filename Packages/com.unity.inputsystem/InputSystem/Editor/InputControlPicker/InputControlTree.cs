@@ -20,12 +20,14 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private InputControlPickerPopup m_ParentWindow;
         private Action<string> m_OnSelected;
+        string m_DeviceFilter;
 
-        public InputControlTree(TreeViewState state, InputControlPickerPopup parentWindow, Action<string> onSelected)
+        public InputControlTree(TreeViewState state, InputControlPickerPopup parentWindow, Action<string> onSelected, string deviceFilter)
             : base(state)
         {
             m_ParentWindow = parentWindow;
             m_OnSelected = onSelected;
+            m_DeviceFilter = deviceFilter;
             Reload();
         }
 
@@ -117,7 +119,36 @@ namespace UnityEngine.Experimental.Input.Editor
             root.AddChild(devices);
             var products = BuildTreeForSpecificDevices();
             root.AddChild(products);
+
+            if (!string.IsNullOrEmpty(m_DeviceFilter))
+            {
+                var deviceNode = FindDevice(root, m_DeviceFilter);
+                root.children = new List<TreeViewItem>();
+                root.AddChild(deviceNode);
+                SetExpanded(deviceNode.id, true);
+            }
+            
             return root;
+        }
+
+        TreeViewItem FindDevice(TreeViewItem root, string deviceFilter)
+        {
+            foreach (var child in root.children)
+            {
+                var deviceItem = child as DeviceTreeViewItem;
+                if (child is DeviceTreeViewItem)
+                {
+                    if (deviceItem.controlPathWithDevice == deviceFilter)
+                        return deviceItem;
+                }
+                if (child.hasChildren)
+                {
+                    var result = FindDevice(child, deviceFilter);
+                    if (result != null)
+                        return result;
+                } 
+            }
+            return null;
         }
 
         TreeViewItem BuildTreeForUsages()

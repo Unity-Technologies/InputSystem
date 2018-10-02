@@ -58,6 +58,17 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        public string deviceFilter
+        {
+            get
+            {
+                if (m_SelectedDeviceIndex <= 0)
+                    return null;
+                var devices = GetDeviceList();
+                return devices[m_SelectedDeviceIndex];
+            }
+        }
+
         public void OnGUI()
         {
             if (m_SearchField == null)
