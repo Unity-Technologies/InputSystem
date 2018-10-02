@@ -30,8 +30,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 vector3 = builder.GetControl<Vector3Control>("vector3");
             }
         }
-  
-       
+
+
         public void Reset(GameObject go)
         {
             go.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
@@ -44,10 +44,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             var tpd = CreateGameObjectWithTPD();
             var device = InputSystem.AddDevice<TestHMD>();
-            
+
             InputEventPtr stateEvent;
             using (StateEvent.From(device, out stateEvent))
-            {                                
+            {
                 var positionAction = new InputAction();
                 positionAction.AddBinding("<TestHMD>/vector3");
 
@@ -80,7 +80,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 Reset(tpd.gameObject);
                 tpd.updateType = TrackedPoseDriver.UpdateType.Update;
                 tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
-                
+
                 InputSystem.QueueEvent(stateEvent);
                 InputSystem.Update(InputUpdateType.Dynamic);
                 Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
                 tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
                 Reset(tpd.gameObject);
-                
+
                 InputSystem.QueueEvent(stateEvent);
                 InputSystem.Update(InputUpdateType.Dynamic);
                 Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
@@ -108,9 +108,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 InputSystem.QueueEvent(stateEvent);
                 InputSystem.Update(InputUpdateType.BeforeRender);
                 Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
-                Assert.That(tpd.gameObject.transform.rotation.Equals(testrot)); 
+                Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
             }
         }
     }
 }
-    

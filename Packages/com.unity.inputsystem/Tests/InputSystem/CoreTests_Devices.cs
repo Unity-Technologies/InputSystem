@@ -274,10 +274,11 @@ partial class CoreTests
 
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        var controls = InputSystem.GetControls("/{LeftHand}");
-
-        Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(device));
+        using (var controls = InputSystem.FindControls("/{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
     }
 
     [Test]
@@ -290,10 +291,11 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         InputSystem.SetDeviceUsage(keyboard, CommonUsages.LeftHand);
 
-        var controls = InputSystem.GetControls("/<Keyboard>{LeftHand}");
-
-        Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
+        using (var controls = InputSystem.FindControls("/<Keyboard>{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
+        }
     }
 
     [Test]
@@ -2897,11 +2899,12 @@ partial class CoreTests
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice("Keyboard");
 
-        var matches = InputSystem.GetControls("/<gamepad>");
-
-        Assert.That(matches, Has.Count.EqualTo(2));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
+        using (var matches = InputSystem.FindControls("/<gamepad>"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(2));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
+        }
     }
 
     [Test]

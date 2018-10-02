@@ -2,10 +2,10 @@ using System;
 using UnityEngine.XR;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
-{   
+{
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]
-    public class TrackedPoseDriver: MonoBehaviour
+    public class TrackedPoseDriver : MonoBehaviour
     {
         public enum TrackingType
         {
@@ -62,7 +62,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 BindActions();
             }
         }
-      
+
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
         bool m_RotationBound = false;
@@ -71,7 +71,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         void BindActions()
         {
             BindPosition();
-            BindRotation();           
+            BindRotation();
         }
 
         void BindPosition()
@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         void UnbindActions()
         {
             UnbindPosition();
-            UnbindRotation();           
+            UnbindRotation();
         }
 
         void UnbindPosition()
@@ -123,18 +123,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         void OnPositionUpdate(InputAction.CallbackContext context)
         {
             Debug.Assert(m_PositionBound);
-            m_CurrentPosition = context.ReadValue<Vector3>();                
+            m_CurrentPosition = context.ReadValue<Vector3>();
         }
 
         void OnRotationUpdate(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_RotationBound);           
-            m_CurrentRotation = context.ReadValue<Quaternion>();                           
+            Debug.Assert(m_RotationBound);
+            m_CurrentRotation = context.ReadValue<Quaternion>();
         }
 
         protected virtual void Awake()
         {
-           
 #if ENABLE_VR
             if (HasStereoCamera())
             {
@@ -167,14 +166,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         protected void UpdateCallback(InputUpdateType type)
         {
-            switch(type)
+            switch (type)
             {
                 case InputUpdateType.Dynamic:
                     OnUpdate();
                     break;
                 case InputUpdateType.BeforeRender:
                     OnBeforeRender();
-                    break;                
+                    break;
             }
         }
 
@@ -219,7 +218,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         protected virtual void PerformUpdate()
         {
-            SetLocalTransform(m_CurrentPosition, m_CurrentRotation);            
+            SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
         }
     }
 }

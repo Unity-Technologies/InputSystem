@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input
         /// using (var list = new InputControlList(Allocator.Temp))
         /// {
         ///     // Add all gamepads to the list.
-        ///     InputSystem.GetControls("&lt;Gamepad&gt;", list);
+        ///     InputSystem.FindControls("&lt;Gamepad&gt;", list);
         /// }
         /// </code>
         /// </example>
@@ -185,6 +185,12 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < m_Count; ++i)
                 result[i] = this[i];
             return result;
+        }
+
+        internal void AppendTo(ref TControl[] array, ref int count)
+        {
+            for (var i = 0; i < m_Count; ++i)
+                ArrayHelpers.AppendWithCapacity(ref array, ref count, this[i]);
         }
 
         public void Dispose()

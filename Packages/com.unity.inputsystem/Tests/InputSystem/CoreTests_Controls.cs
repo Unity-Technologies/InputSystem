@@ -529,10 +529,11 @@ partial class CoreTests
     public void Controls_CanFindControlsByExactPath()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("/Gamepad/leftStick");
-
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        using (var matches = InputSystem.FindControls("/Gamepad/leftStick"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
     }
 
     [Test]
@@ -540,10 +541,24 @@ partial class CoreTests
     public void Controls_CanFindControlsByExactPathCaseInsensitive()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("/gamePAD/LeftSTICK");
+        using (var matches = InputSystem.FindControls("/gamePAD/LeftSTICK"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+    }
 
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsByType()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls<StickControl>("/<Gamepad>/*"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(2));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightStick));
+        }
     }
 
     [Test]
@@ -551,10 +566,11 @@ partial class CoreTests
     public void Controls_CanFindControlsByUsage()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("/gamepad/{Primary2DMotion}");
-
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        using (var matches = InputSystem.FindControls("/gamepad/{Primary2DMotion}"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
     }
 
     [Test]
@@ -562,10 +578,11 @@ partial class CoreTests
     public void Controls_CanFindChildControlsOfControlsFoundByUsage()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("/gamepad/{Primary2DMotion}/x");
-
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick.x));
+        using (var matches = InputSystem.FindControls("/gamepad/{Primary2DMotion}/x"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick.x));
+        }
     }
 
     [Test]
@@ -573,11 +590,12 @@ partial class CoreTests
     public void Controls_CanFindControlsByLayout()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("/gamepad/<stick>");
-
-        Assert.That(matches, Has.Count.EqualTo(2));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightStick));
+        using (var matches = InputSystem.FindControls("/gamepad/<stick>"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(2));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightStick));
+        }
     }
 
     [Test]
@@ -594,10 +612,11 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = InputSystem.AddDevice("MyGamepad");
 
-        var matches = InputSystem.GetControls("/<gamepad>");
-
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(device));
+        using (var matches = InputSystem.FindControls("/<gamepad>"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(device));
+        }
     }
 
     [Test]
@@ -607,14 +626,15 @@ partial class CoreTests
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        var matches = InputSystem.GetControls("/*/*Stick");
+        using (var matches = InputSystem.FindControls("/*/*Stick"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(4));
 
-        Assert.That(matches, Has.Count.EqualTo(4));
-
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.leftStick));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.rightStick));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.leftStick));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.rightStick));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.leftStick));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.rightStick));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.leftStick));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.rightStick));
+        }
     }
 
     [Test]
@@ -622,10 +642,11 @@ partial class CoreTests
     public void Controls_CanOmitLeadingSlashWhenFindingControls()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("gamepad/leftStick");
-
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        using (var matches = InputSystem.FindControls("gamepad/leftStick"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
     }
 
     [Test]
@@ -633,14 +654,15 @@ partial class CoreTests
     public void Controls_CanFindControlsByTheirAliases()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matchByName = InputSystem.GetControls("/gamepad/buttonSouth");
-        var matchByAlias1 = InputSystem.GetControls("/gamepad/a");
-        var matchByAlias2 = InputSystem.GetControls("/gamepad/cross");
-
-        Assert.That(matchByName, Has.Count.EqualTo(1));
-        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.buttonSouth));
-        Assert.That(matchByAlias1, Is.EqualTo(matchByName));
-        Assert.That(matchByAlias2, Is.EqualTo(matchByName));
+        using (var matchByName = InputSystem.FindControls("/gamepad/buttonSouth"))
+        using (var matchByAlias1 = InputSystem.FindControls("/gamepad/a"))
+        using (var matchByAlias2 = InputSystem.FindControls("/gamepad/cross"))
+        {
+            Assert.That(matchByName, Has.Count.EqualTo(1));
+            Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+            Assert.That(matchByAlias1, Is.EqualTo(matchByName));
+            Assert.That(matchByAlias2, Is.EqualTo(matchByName));
+        }
     }
 
     [Test]
@@ -648,10 +670,11 @@ partial class CoreTests
     public void Controls_CanFindControlsUsingWildcardsInMiddleOfNames()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var matches = InputSystem.GetControls("/g*pad/leftStick");
-
-        Assert.That(matches, Has.Count.EqualTo(1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        using (var matches = InputSystem.FindControls("/g*pad/leftStick"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
     }
 
     [Test]

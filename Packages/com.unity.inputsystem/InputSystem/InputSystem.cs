@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Unity.Collections;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -757,22 +758,40 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        ////TODO: replace List versions with InputControlList
-
-        public static List<InputControl> GetControls(string path)
+        /// <summary>
+        /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <example>
+        /// <code>
+        /// // Find all gamepads (literally: that use the "Gamepad" layout).
+        /// InputSystem.FindControls("&lt;Gamepad&gt;");
+        ///
+        /// // Find all sticks on all gamepads.
+        /// InputSystem.FindControls("&lt;Gamepad&gt;/*stick");
+        ///
+        /// // Same but filter stick by type rather than by name.
+        /// InputSystem.FindControls<StickControl>("&lt;Gamepad&gt;/*");
+        /// </code>
+        /// </example>
+        /// <seealso cref="FindControls{TControl}"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
+        public static InputControlList<InputControl> FindControls(string path)
         {
-            var list = new List<InputControl>();
-            GetControls(path, list);
+            return FindControls<InputControl>(path);
+        }
+
+        public static InputControlList<TControl> FindControls<TControl>(string path)
+            where TControl : InputControl
+        {
+            var list = new InputControlList<TControl>();
+            FindControls(path, ref list);
             return list;
         }
 
-        public static int GetControls(string path, List<InputControl> controls)
-        {
-            var wrapper = new ArrayOrListWrapper<InputControl>(controls);
-            return GetControls(path, ref wrapper);
-        }
-
-        internal static int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
+        public static int FindControls<TControl>(string path, ref InputControlList<TControl> controls)
+            where TControl : InputControl
         {
             return s_Manager.GetControls(path, ref controls);
         }

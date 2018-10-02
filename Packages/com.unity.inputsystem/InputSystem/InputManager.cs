@@ -671,7 +671,17 @@ namespace UnityEngine.Experimental.Input
         // Adds all controls that match the given path spec to the given list.
         // Returns number of controls added to the list.
         // NOTE: Does not create garbage.
-        public int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
+
+        /// <summary>
+        /// Adds to the given list all controls that match the given <see cref="InputControlPath">path spec</see>
+        /// and are assignable to the given type.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="controls"></param>
+        /// <typeparam name="TControl"></typeparam>
+        /// <returns></returns>
+        public int GetControls<TControl>(string path, ref InputControlList<TControl> controls)
+            where TControl : InputControl
         {
             if (string.IsNullOrEmpty(path))
                 return 0;
@@ -1375,6 +1385,7 @@ namespace UnityEngine.Experimental.Input
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
+        internal int m_DeviceSetupVersion;
         private float m_PollingFrequency;
 
         internal InputControlLayout.Collection m_Layouts;
@@ -2566,6 +2577,7 @@ namespace UnityEngine.Experimental.Input
         internal struct SerializedState
         {
             public int layoutRegistrationVersion;
+            public int deviceSetupVersion;
             public float pollingFrequency;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -2615,6 +2627,7 @@ namespace UnityEngine.Experimental.Input
             return new SerializedState
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
+                deviceSetupVersion = m_DeviceSetupVersion,
                 pollingFrequency = m_PollingFrequency,
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices != null ? m_AvailableDevices.Take(m_AvailableDeviceCount).ToArray() : null,
@@ -2635,6 +2648,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
+            m_DeviceSetupVersion = state.deviceSetupVersion + 1;
             m_UpdateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;

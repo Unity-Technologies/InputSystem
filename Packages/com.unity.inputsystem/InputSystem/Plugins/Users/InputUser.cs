@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
+//make users actually *own* their actions
+
 //do we need to make users have ties to assets?
 
 //does this take control of enabling/disabling actions in some form?
