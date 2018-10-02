@@ -21,8 +21,6 @@ namespace UnityEngine.Experimental.Input
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
-        public const double kTimeIncrementPerUpdate = 0.1;
-
         ~InputTestRuntime()
         {
             Dispose();
@@ -40,9 +38,6 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
-                // Advance time on every update. We choose an arbitrary amount here.
-                currentTime += kTimeIncrementPerUpdate;
-
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)

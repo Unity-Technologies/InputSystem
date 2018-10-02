@@ -1,3 +1,5 @@
+using UnityEngine.Experimental.Input.Layouts;
+
 #if UNITY_EDITOR || UNITY_SWITCH
 namespace UnityEngine.Experimental.Input.Plugins.Switch
 {

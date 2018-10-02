@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: enforce memory layout of TouchControl to be in TouchState.kFormat
@@ -50,13 +51,13 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override unsafe TouchState ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe TouchState ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             var valuePtr = (TouchState*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *valuePtr;
         }
 
-        protected override unsafe void WriteRawValueInto(IntPtr statePtr, TouchState value)
+        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, TouchState value)
         {
             var valuePtr = (TouchState*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<TouchState>());

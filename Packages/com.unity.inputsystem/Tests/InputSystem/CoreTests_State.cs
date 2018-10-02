@@ -5,8 +5,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -333,6 +335,7 @@ partial class CoreTests
     // should add the base offset of the field itself.
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_SpecifyingOffsetOnControlAttribute_AddsBaseOffset()
     {
         Assert.Fail();
@@ -478,6 +481,7 @@ partial class CoreTests
     ////        in a way where all updates are controlled manually by the user through InputSystem.Update
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
     {
         InputSystem.updateMask = InputUpdateType.None;
@@ -495,7 +499,7 @@ partial class CoreTests
     {
         var receivedUpdate = false;
         InputUpdateType? receivedUpdateType = null;
-        InputSystem.onUpdate +=
+        InputSystem.onBeforeUpdate +=
             type =>
         {
             Assert.That(receivedUpdate, Is.False);
@@ -549,14 +553,16 @@ partial class CoreTests
         var monitorFired = false;
         InputControl receivedControl = null;
         double? receivedTime = null;
+        InputEventPtr? receivedEventPtr = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 receivedControl = control;
                 receivedTime = time;
+                receivedEventPtr = eventPtr;
             });
 
         // Left stick only.
@@ -566,10 +572,12 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         // Left stick again but with no value change.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)}, 0.6);
@@ -585,10 +593,12 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         // Right stick only.
         InputSystem.QueueStateEvent(gamepad,
@@ -605,6 +615,7 @@ partial class CoreTests
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         // Remove state monitor and change leftStick again.
         InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor);
@@ -612,6 +623,7 @@ partial class CoreTests
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.0f, 0.0f)}, 1.0);
         InputSystem.Update();
@@ -666,8 +678,8 @@ partial class CoreTests
 
         var monitorFired = false;
         InputControl receivedControl = null;
-        Action<InputControl, double, long> action =
-            (control, time, monitorIndex) =>
+        Action<InputControl, double, InputEventPtr, long> action =
+            (control, time, eventPtr, monitorIndex) =>
         {
             Assert.That(!monitorFired);
             monitorFired = true;
@@ -705,7 +717,7 @@ partial class CoreTests
         var monitorFired = false;
         long? receivedMonitorIndex = null;
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -764,7 +776,7 @@ partial class CoreTests
         InputControl receivedControl = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -833,7 +845,7 @@ partial class CoreTests
 
         IInputStateChangeMonitor monitor = null;
         monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -883,9 +895,9 @@ partial class CoreTests
             device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
             device3.stateBlock.alignedSizeInBytes, 4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
-        var sizeOfDefaultStateBuffer = combinedDeviceStateSize;
+        var sizeOfSingleBuffer = combinedDeviceStateSize;
 
-        const int kBufferCount =
+        const int kDoubleBufferCount =
             #if UNITY_EDITOR
             3     // Dynamic + fixed + editor
             #else
@@ -898,17 +910,42 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kBufferCount * sizePerBuffer + sizeOfDefaultStateBuffer));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo((kDoubleBufferCount * sizePerBuffer) + (sizeOfSingleBuffer * 2)));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.000001));
     }
 
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_FixedUpdatesAreDisabledByDefault()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CannotRunUpdatesThatAreNotEnabled()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanSetUpStateMonitorsUsingControlPath()
+    {
+        Assert.Fail();
+    }
+
     // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
     // the motion curve of a tracking device over time.
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_CanRecordHistoryOfState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -925,14 +962,15 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(history.Count, Is.EqualTo(3));
-            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
-            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
-            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
+            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(Vector2EqualityComparer.Instance));
         }
     }
 
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_SupportsBitAddressingControlsWithAutomaticOffsets()
     {
         ////TODO
@@ -941,6 +979,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption

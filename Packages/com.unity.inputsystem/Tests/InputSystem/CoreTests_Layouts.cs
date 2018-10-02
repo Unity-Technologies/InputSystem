@@ -6,9 +6,14 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
+
+#if UNITY_EDITOR
+using UnityEngine.Experimental.Input.Editor;
+#endif
 
 partial class CoreTests
 {
@@ -18,7 +23,7 @@ partial class CoreTests
     {
         var setup = new InputDeviceBuilder("Gamepad");
 
-        // The default ButtonControl layout has no constrols inside of it.
+        // The default ButtonControl layout has no controls inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
         Assert.That(setup.GetControl("start").children, Is.Empty);
     }
@@ -541,6 +546,91 @@ partial class CoreTests
         Assert.That(device, Is.TypeOf<Keyboard>());
     }
 
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanRegisterMultipleMatchersForSingleLayout()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        InputSystem.RegisterLayoutMatcher("TestLayout",
+            new InputDeviceMatcher()
+                .WithManufacturer("Manufacturer")
+                .WithProduct("ProductA"));
+        InputSystem.RegisterLayoutMatcher("TestLayout",
+            new InputDeviceMatcher()
+                .WithManufacturer("Manufacturer")
+                .WithProduct("ProductB"));
+
+        var device1 = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                manufacturer = "Manufacturer",
+                product = "ProductA"
+            });
+        var device2 = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                manufacturer = "Manufacturer",
+                product = "ProductB"
+            });
+
+        Assert.That(device1, Is.TypeOf<Gamepad>());
+        Assert.That(device2, Is.TypeOf<Gamepad>());
+        Assert.That(device1.layout, Is.EqualTo("TestLayout"));
+        Assert.That(device2.layout, Is.EqualTo("TestLayout"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    [Ignore("TODO")]
+    public void TODO_Layouts_RegisteringMatcherForLayout_OverridesExistingMatchers()
+    {
+        const string jsonA = @"
+            {
+                ""name"" : ""LayoutA"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+        const string jsonB = @"
+            {
+                ""name"" : ""LayoutB"",
+                ""extend"" : ""Mouse""
+            }
+        ";
+
+        InputSystem.RegisterLayout(jsonA);
+        InputSystem.RegisterLayout(jsonB);
+
+        InputSystem.RegisterLayoutMatcher("LayoutA",
+            new InputDeviceMatcher()
+                .WithProduct("ProductA"));
+        InputSystem.RegisterLayoutMatcher("LayoutB",
+            new InputDeviceMatcher()
+                .WithProduct("ProductA"));
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                product = "ProductA"
+            });
+
+        Assert.That(device.layout, Is.EqualTo("LayoutB"));
+        Assert.That(device, Is.TypeOf<Mouse>());
+
+        // Make sure it's gone from the layout cache.
+        #if UNITY_EDITOR
+        var matchers = EditorInputControlLayoutCache.GetDeviceMatchers("LayoutA");
+        Assert.That(matchers, Is.Empty);
+        #endif
+    }
+
     // At some point we may actually want to allow this. Could lead to some interesting capabilities.
     [Test]
     [Category("Layouts")]
@@ -631,6 +721,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanOverrideCommonUsagesOnExistingLayout()
     {
+        // Change all Gamepads to have the common usages "A", "B", and "C".
         const string json = @"
             {
                 ""name"" : ""Overrides"",
@@ -674,6 +765,7 @@ partial class CoreTests
     // can narrow focus on just what's interesting to the current project.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanSpecifyPlatformsThatLayoutAppliesTo()
     {
         Assert.Fail();
@@ -684,6 +776,7 @@ partial class CoreTests
     // by product.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanHaveLayoutFallbackForInterface()
     {
         const string fallbackJson = @"
@@ -713,6 +806,7 @@ partial class CoreTests
     ////REVIEW: if this behavior is guaranteed, we also have to make sure we preserve it across domain reloads
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_WhenTwoLayoutsConflict_LastOneRegisteredWins()
     {
         const string firstLayout = @"
@@ -912,6 +1006,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RegisteringLayoutBuilder_MarksResultingLayoutAsGenerated()
     {
         Assert.Fail();
@@ -930,56 +1025,6 @@ partial class CoreTests
         var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
         Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_RegisteringLayoutType_WithMatcher_PutsMatcherInLayoutWhenLoaded()
-    {
-        InputSystem.RegisterLayout<TestLayoutType>(
-            matches: new InputDeviceMatcher()
-                .WithInterface("TestInterface")
-                .WithManufacturer("TestManufacturer")
-                .WithProduct("TestProduct"));
-
-        var layout = InputSystem.TryLoadLayout("TestLayoutType");
-
-        Assert.That(layout.deviceMatcher.empty, Is.False);
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_RegisteringLayoutBuilder_WithMatcher_PutsMatcherInLayoutWhenLoaded()
-    {
-        var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
-
-        InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), name: "TestLayout",
-            matches: new InputDeviceMatcher()
-                .WithInterface("TestInterface")
-                .WithProduct("TestProduct")
-                .WithManufacturer("TestManufacturer"));
-
-        var layout = InputSystem.TryLoadLayout("TestLayout");
-
-        Assert.That(layout.deviceMatcher.empty, Is.False);
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     // We consider layouts built by layout builders as being auto-generated. We want them to
@@ -1147,6 +1192,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
     {
         const string baseJson = @"
@@ -1529,6 +1575,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RemovingLayouts_RemovesAllLayoutsBasedOnIt()
     {
         Assert.Fail();
@@ -1536,6 +1583,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanQueryResourceNameFromControl()
     {
         var json = @"
@@ -1694,6 +1742,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CurrentPlatformIsImplicitLayoutVariant()
     {
         var json = @"
@@ -1760,6 +1809,7 @@ partial class CoreTests
     ////      isn't.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanMoveProcessorFromBaseLayoutInProcessorStack()
     {
         // The base gamepad layout is adding deadzone processors to sticks. However, a
@@ -1791,6 +1841,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layout_CustomizedStateLayoutWillNotUseFormatCodeFromBaseLayout()
     {
         //make sure that if you customize a gamepad layout, you don't end up with the "GPAD" format on the device
@@ -1831,6 +1882,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)

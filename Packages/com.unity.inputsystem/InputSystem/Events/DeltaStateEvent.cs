@@ -2,8 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: use deltastateevents as basis for ActionEvent
-
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>

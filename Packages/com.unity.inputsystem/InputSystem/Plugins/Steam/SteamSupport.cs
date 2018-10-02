@@ -1,7 +1,7 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+using System;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
-
-////TODO: in case we're running off of Steam input, we probably want to suppress any of the other gamepad input support we have
 
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
@@ -22,18 +22,43 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             set
             {
                 s_API = value;
-                if (value != null && !s_UpdateHookedIn)
+                if (value != null && !s_OnUpdateHookedIn)
                 {
-                    InputSystem.onUpdate += type => UpdateControllers();
-                    s_UpdateHookedIn = true;
+                    InputSystem.onBeforeUpdate += type => UpdateControllers();
+                    s_OnUpdateHookedIn = true;
                 }
             }
         }
 
-        internal static ulong[] s_ConnectedControllers;
+        /// <summary>
+        /// If enabled, if Steam support is in use (i.e. if <see cref="api"/> has been set), then
+        /// any <see cref="Gamepad"/> device that isn't using the <see cref="SteamController.kSteamInterface"/>
+        /// interface will automatically be disabled.
+        /// </summary>
+        /// <remarks>
+        /// Makes sure that input isn't picked up in parallel through both Unity's own gamepad support and
+        /// through Steam's controller support.
+        ///
+        /// Enabled by default.
+        /// </remarks>
+        internal static bool disableNonSteamGamepads
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        internal static ISteamControllerAPI GetAPIAndRequireItToBeSet()
+        {
+            if (s_API == null)
+                throw new InvalidOperationException("ISteamControllerAPI implementation has not been set on SteamSupport");
+            return s_API;
+        }
+
+        internal static SteamHandle<SteamController>[] s_ConnectedControllers;
         internal static SteamController[] s_InputDevices;
         internal static int s_InputDeviceCount;
-        internal static bool s_UpdateHookedIn;
+        internal static bool s_OnUpdateHookedIn;
+        internal static bool s_OnActionChangeHookedIn;
         internal static ISteamControllerAPI s_API;
 
         private const int STEAM_CONTROLLER_MAX_COUNT = 16;
@@ -46,11 +71,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             // We use this as a base layout.
             InputSystem.RegisterLayout<SteamController>();
 
-            if (api != null && !s_UpdateHookedIn)
+            if (api != null && !s_OnUpdateHookedIn)
             {
-                InputSystem.onUpdate +=
+                InputSystem.onBeforeUpdate +=
                     type => UpdateControllers();
-                s_UpdateHookedIn = true;
+                s_OnUpdateHookedIn = true;
             }
         }
 
@@ -64,7 +89,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
 
             // Check if we have any new controllers have appeared.
             if (s_ConnectedControllers == null)
-                s_ConnectedControllers = new ulong[STEAM_CONTROLLER_MAX_COUNT];
+                s_ConnectedControllers = new SteamHandle<SteamController>[STEAM_CONTROLLER_MAX_COUNT];
             var numConnectedControllers = api.GetConnectedControllers(s_ConnectedControllers);
             for (var i = 0; i < numConnectedControllers; ++i)
             {
@@ -76,7 +101,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                     SteamController existingDevice = null;
                     for (var n = 0; n < s_InputDeviceCount; ++n)
                     {
-                        if (s_InputDevices[n].steamControllerHandle == handle)
+                        if (s_InputDevices[n].handle == handle)
                         {
                             existingDevice = s_InputDevices[n];
                             break;
@@ -111,10 +136,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                     }
 
                     // Resolve the controller's actions.
-                    steamDevice.ResolveActions(api);
+                    steamDevice.InvokeResolveActions();
 
                     // Assign it the Steam controller handle.
-                    steamDevice.steamControllerHandle = handle;
+                    steamDevice.handle = handle;
 
                     ArrayHelpers.AppendWithCapacity(ref s_InputDevices, ref s_InputDeviceCount, steamDevice);
                 }
@@ -124,7 +149,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             for (var i = 0; i < s_InputDeviceCount; ++i)
             {
                 var device = s_InputDevices[i];
-                var handle = device.steamControllerHandle;
+                var handle = device.handle;
 
                 // Check if the device still exists.
                 var stillExists = false;
@@ -147,7 +172,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
 
                 ////TODO: support polling Steam controllers on an async polling thread adhering to InputSystem.pollingFrequency
                 // Otherwise, update it.
-                device.Update(s_API);
+                device.InvokeUpdate();
             }
         }
     }

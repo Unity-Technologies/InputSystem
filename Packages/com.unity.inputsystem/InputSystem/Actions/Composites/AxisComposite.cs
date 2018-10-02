@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Composites
@@ -19,16 +20,42 @@ namespace UnityEngine.Experimental.Input.Composites
         // Parameters.
         ////TODO: add parameters to control ramp up&down
 
-        public float ReadValue(ref InputBindingCompositeContext context)
+        public Type valueType
         {
+            get { return typeof(float); }
+        }
+
+        public int valueSizeInBytes
+        {
+            get { return sizeof(float); }
+        }
+
+        public unsafe float ReadValue(ref InputBindingCompositeContext context)
+        {
+            float result;
+            ReadValue(ref context, &result, sizeof(float));
+            return result;
+        }
+
+        public unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+            if (bufferSize < sizeof(float))
+                throw new ArgumentException("bufferSize < sizeof(float)", "bufferSize");
+
             var negativeIsPressed = negative.isPressed;
             var positiveIsPressed = positive.isPressed;
 
+            float result;
             if (negativeIsPressed && positiveIsPressed)
-                return 0f;
-            if (negativeIsPressed)
-                return -1f;
-            return 1f;
+                result = 0f;
+            else if (negativeIsPressed)
+                result = -1f;
+            else
+                result = 1f;
+
+            *((float*)buffer) = result;
         }
     }
 }

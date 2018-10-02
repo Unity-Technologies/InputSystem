@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input
         /// This may signal, for example, that what was the right hand XR controller before
         /// is now the left hand controller.
         /// </remarks>
-        /// <seealso cref="InputSystem.SetUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="InputSystem.SetDeviceUsage(UnityEngine.Experimental.Input.InputDevice,UnityEngine.Experimental.Input.Utilities.InternedString)"/>
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 

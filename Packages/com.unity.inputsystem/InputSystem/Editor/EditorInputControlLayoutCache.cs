@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -96,6 +97,14 @@ namespace UnityEngine.Experimental.Input.Editor
             return s_Cache.FindOrLoadLayout(name);
         }
 
+        public static IEnumerable<InputDeviceMatcher> GetDeviceMatchers(string name)
+        {
+            Refresh();
+            InlinedArray<InputDeviceMatcher> matchers;
+            s_DeviceMatchers.TryGetValue(new InternedString(name), out matchers);
+            return matchers;
+        }
+
         internal static void Clear()
         {
             s_LayoutRegistrationVersion = 0;
@@ -105,6 +114,7 @@ namespace UnityEngine.Experimental.Input.Editor
             s_ControlLayouts.Clear();
             s_DeviceLayouts.Clear();
             s_ProductLayouts.Clear();
+            s_DeviceMatchers.Clear();
         }
 
         // If our layout data is outdated, rescan all the layouts in the system.
@@ -121,6 +131,20 @@ namespace UnityEngine.Experimental.Input.Editor
 
             s_Cache.layouts = manager.m_Layouts;
 
+            // Remember which layout maps to which device matchers.
+            for (var i = 0; i < s_Cache.layouts.layoutMatcherCount; ++i)
+            {
+                var entry = s_Cache.layouts.layoutMatchers[i];
+                var layoutName = entry.Value;
+                var matcher = entry.Key;
+
+                InlinedArray<InputDeviceMatcher> matchers;
+                s_DeviceMatchers.TryGetValue(layoutName, out matchers);
+
+                matchers.Append(matcher);
+                s_DeviceMatchers[layoutName] = matchers;
+            }
+
             // Load and store all layouts.
             for (var i = 0; i < layoutNames.Count; ++i)
             {
@@ -129,7 +153,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (layout.isControlLayout)
                     s_ControlLayouts.Add(layout.name);
-                else if (!layout.deviceMatcher.empty)
+                else if (s_DeviceMatchers.ContainsKey(layout.name))
                     s_ProductLayouts.Add(layout.name);
                 else
                     s_DeviceLayouts.Add(layout.name);
@@ -177,6 +201,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private static HashSet<InternedString> s_ControlLayouts = new HashSet<InternedString>();
         private static HashSet<InternedString> s_DeviceLayouts = new HashSet<InternedString>();
         private static HashSet<InternedString> s_ProductLayouts = new HashSet<InternedString>();
+        private static Dictionary<InternedString, InlinedArray<InputDeviceMatcher>> s_DeviceMatchers =
+            new Dictionary<InternedString, InlinedArray<InputDeviceMatcher>>();
 
         // We keep a map of all unique usages we find in layouts and also
         // retain a list of the layouts they are used with.

@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: reordering support for interactions
 
@@ -27,9 +28,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUI.BeginProperty(rect, label, property);
 
-            var pathProperty = property.FindPropertyRelative("path");
-            var interactionsProperty = property.FindPropertyRelative("interactions");
-            var flagsProperty = property.FindPropertyRelative("flags");
+            var pathProperty = property.FindPropertyRelative("m_Path");
+            var interactionsProperty = property.FindPropertyRelative("m_Interactions");
+            var flagsProperty = property.FindPropertyRelative("m_Flags");
 
             var path = pathProperty.stringValue;
             var interactions = interactionsProperty.stringValue;
@@ -51,33 +52,28 @@ namespace UnityEngine.Experimental.Input.Editor
             if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
                 PopupWindow.Show(pickButtonRect,
-                    new InputControlPicker(pathProperty) {onPickCallback = OnBindingModified});
+                    new InputControlPickerPopup(pathProperty));
             }
 
             // Modify button.
             if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
             {
                 PopupWindow.Show(modifyButtonRect,
-                    new ModifyPopupWindow(property) {onApplyCallback = OnBindingModified});
+                    new ModifyPopupWindow(property));
             }
 
             EditorGUI.EndProperty();
         }
 
-        private void OnBindingModified(SerializedProperty property)
-        {
-            var importerEditor = InputActionImporterEditor.FindFor(property.serializedObject);
-            if (importerEditor != null)
-                importerEditor.OnAssetModified();
-        }
-
         ////TODO: move this out into a general routine that can take a path and construct a display name
-        private GUIContent GetContentForPath(string path, string interactions, InputBinding.Flags flags)
+        private static GUIContent GetContentForPath(string path, string interactions, InputBinding.Flags flags)
         {
             const int kUsageNameGroup = 1;
             const int kDeviceNameGroup = 1;
             const int kDeviceUsageGroup = 3;
             const int kControlPathGroup = 4;
+
+            ////TODO: nuke the regex stuff in here
 
             if (s_UsageRegex == null)
                 s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
@@ -85,13 +81,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
 
             var text = path;
-
-            ////TODO: make this less GC heavy
-            ////TODO: prettify control names (e.g. "rightTrigger" should read "Right Trigger"); have explicit display names?
-
-            ////REVIEW: This stuff here should really be based on general display functionality for controls
-            ////        which should be available to game code in just the same way for on-screen display
-            ////        purposes
 
             var usageMatch = s_UsageRegex.Match(path);
             if (usageMatch.Success)
@@ -168,8 +157,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
-                m_FlagsProperty = bindingProperty.FindPropertyRelative("flags");
-                m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
+                m_FlagsProperty = bindingProperty.FindPropertyRelative("m_Flags");
+                m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
                 m_Flags = (InputBinding.Flags)m_FlagsProperty.intValue;
 
                 var interactions = InputSystem.ListInteractions().ToList();
@@ -252,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_InteractionListView = new ReorderableList(m_Interactions, typeof(InputControlLayout.NameAndParameters));
 
                 m_InteractionListView.drawHeaderCallback =
-                    (rect) => EditorGUI.LabelField(rect, Contents.interactions);
+                    rect => EditorGUI.LabelField(rect, Contents.interactions);
 
                 m_InteractionListView.drawElementCallback =
                     (rect, index, isActive, isFocused) =>

@@ -1,4 +1,7 @@
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+
+////REVIEW: remove control argument and rename interface to `IInputProcessor`
 
 ////REVIEW: should control processors on parent controls somehow affect their children automatically as well?
 ////        (ATM it can be confusing that leftStick is deadzoned but leftStick/x and leftStick/y are not)
@@ -59,6 +62,7 @@ namespace UnityEngine.Experimental.Input
     /// </example>
     /// <seealso cref="InputSystem.RegisterControlProcessor"/>
     public interface IInputControlProcessor<TValue>
+        where TValue : struct
     {
         /// <summary>
         /// Process the given value and return the result.

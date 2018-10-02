@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input
     /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
-    /// <c>new</c>'d directlty.
+    /// <c>new</c>'d directly.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
@@ -44,13 +44,17 @@ namespace UnityEngine.Experimental.Input
             m_LayoutCache.layouts = layouts;
         }
 
-        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variants = null)
+        public InputDeviceBuilder(string layout, string variants = null,
+                                  InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+                                  InputDevice existingDevice = null)
         {
             m_LayoutCache.layouts = InputControlLayout.s_Layouts;
-            Setup(new InternedString(layout), existingDevice, new InternedString(variants));
+            Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 
-        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variants)
+        internal void Setup(InternedString layout, InternedString variants,
+            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+            InputDevice existingDevice = null)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
@@ -59,17 +63,9 @@ namespace UnityEngine.Experimental.Input
 
             InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
-            m_Device.CallFinishSetupRecursive(this);
-        }
 
-        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variants)
-        {
-            InstantiateLayout(layout, variants, new InternedString(), null, null);
-            FinalizeControlHierarchy();
-
-            if (!deviceDescription.empty)
-                m_Device.m_Description = deviceDescription;
-
+            m_Device.m_Description = deviceDescription;
+            m_Device.m_UserInteractionFilter = InputNoiseFilter.CreateDefaultNoiseFilter(m_Device);
             m_Device.CallFinishSetupRecursive(this);
         }
 

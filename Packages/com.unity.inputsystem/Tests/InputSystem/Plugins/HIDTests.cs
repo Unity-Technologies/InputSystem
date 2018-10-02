@@ -10,11 +10,13 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
-class HIDTests : InputTestFixture
+public class HIDTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -166,7 +168,7 @@ class HIDTests : InputTestFixture
         InputSystem.Update();
 
         // Grab device.
-        var device = (HID)InputSystem.TryGetDeviceById(deviceId);
+        var device = (HID)InputSystem.GetDeviceById(deviceId);
         Assert.That(device, Is.Not.Null);
         Assert.That(device, Is.TypeOf<HID>());
 
@@ -566,8 +568,7 @@ class HIDTests : InputTestFixture
             }.ToJson());
         InputSystem.Update();
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
         InputSystem.Restore();
 
         var hid = (HID)InputSystem.devices.First(x => x is HID);
@@ -644,63 +645,63 @@ class HIDTests : InputTestFixture
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUp;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUpRight;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRight;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRightDown;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDown;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDownLeft;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeft;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeftUp;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(Vector2EqualityComparer.Instance));
         }
     }
 
@@ -769,6 +770,7 @@ class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_SupportsHIDDpads()
     {
         Assert.Fail();
@@ -776,6 +778,7 @@ class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
     {
         Assert.Fail();
@@ -790,6 +793,7 @@ class HIDTests : InputTestFixture
     // all but rather turn them into joysticks instead.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()
     {
         Assert.Fail();

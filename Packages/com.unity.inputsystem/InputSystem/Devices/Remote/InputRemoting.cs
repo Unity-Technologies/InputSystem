@@ -1,15 +1,21 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: support actions
+
+////TODO: support input users
+
 ////TODO: text input events
+
+////TODO: remove remoting of layout information
 
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player
@@ -674,9 +680,7 @@ namespace UnityEngine.Experimental.Input
             return JsonUtility.FromJson<TData>(json);
         }
 
-        // Domain reload survival. Kept separate as making the entire class [Serializable]
-        // would signal the wrong thing to users as it's part of the public API.
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         // State we want to take across domain reloads. We can only take some of the
         // state across. Subscriptions will be lost and have to be manually restored.
         [Serializable]

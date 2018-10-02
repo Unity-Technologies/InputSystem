@@ -25,7 +25,9 @@ namespace UnityEngine.Experimental.Input.Interactions
             if (context.isWaiting && !context.controlHasDefaultValue)
             {
                 m_TapStartTime = context.time;
-                context.SetTimeout(durationOrDefault);
+                // Set timeout slightly after duration so that if tap comes in exactly at the expiration
+                // time, it still counts as a valid tap.
+                context.SetTimeout(durationOrDefault + 0.00001f);
                 context.Started();
                 return;
             }

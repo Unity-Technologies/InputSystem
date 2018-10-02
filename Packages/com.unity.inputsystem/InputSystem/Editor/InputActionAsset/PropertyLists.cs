@@ -5,9 +5,12 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: "properties" seems wrong; these seems to revert to "parameters" specifically
+
+////TODO: nuke "ReorderableReorderable"
 
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {

@@ -2,12 +2,13 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR || UNITY_XBOXONE
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 #endif
 
-class XInputTests : InputTestFixture
+public class XInputTests : InputTestFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test

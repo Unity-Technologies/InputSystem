@@ -24,29 +24,61 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             Steamworks.SteamController.RunFrame();
         }
 
-        public int GetConnectedControllers(ulong[] outHandles)
+        public int GetConnectedControllers(SteamHandle<SteamController>[] outHandles)
         {
             if (m_ConnectedControllers == null)
                 m_ConnectedControllers = new ControllerHandle_t[Constants.STEAM_CONTROLLER_MAX_COUNT];
             var controllerCount = Steamworks.SteamController.GetConnectedControllers(m_ConnectedControllers);
             for (var i = 0; i < controllerCount; ++i)
-                outHandles[i] = m_ConnectedControllers[i].m_ControllerHandle;
+                outHandles[i] = new SteamHandle<SteamController>((ulong)m_ConnectedControllers[i]);
             return controllerCount;
         }
 
-        public ulong GetActionSetHandle(string actionSetName)
+        public SteamHandle<InputActionMap> GetActionSetHandle(string actionSetName)
         {
-            return Steamworks.SteamController.GetActionSetHandle(actionSetName).m_ControllerActionSetHandle;
+            return new SteamHandle<InputActionMap>(
+                (ulong)Steamworks.SteamController.GetActionSetHandle(actionSetName));
         }
 
-        public ulong GetDigitalActionHandle(string actionName)
+        public SteamHandle<InputAction> GetDigitalActionHandle(string actionName)
         {
-            return Steamworks.SteamController.GetDigitalActionHandle(actionName).m_ControllerDigitalActionHandle;
+            return new SteamHandle<InputAction>((ulong)Steamworks.SteamController.GetDigitalActionHandle(actionName));
         }
 
-        public ulong GetAnalogActionHandle(string actionName)
+        public SteamHandle<InputAction> GetAnalogActionHandle(string actionName)
         {
-            return Steamworks.SteamController.GetAnalogActionHandle(actionName).m_ControllerAnalogActionHandle;
+            return new SteamHandle<InputAction>((ulong)Steamworks.SteamController.GetAnalogActionHandle(actionName));
+        }
+
+        public void ActivateActionSet(SteamHandle<SteamController> controllerHandle, SteamHandle<InputActionMap> actionSetHandle)
+        {
+            Steamworks.SteamController.ActivateActionSet(new ControllerHandle_t((ulong)actionSetHandle),
+                new ControllerActionSetHandle_t((ulong)actionSetHandle));
+        }
+
+        public SteamHandle<InputActionMap> GetCurrentActionSet(SteamHandle<SteamController> controllerHandle)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void ActivateActionSetLayer(SteamHandle<SteamController> controllerHandle, SteamHandle<InputActionMap> actionSetLayerHandle)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void DeactivateActionSetLayer(SteamHandle<SteamController> controllerHandle, SteamHandle<InputActionMap> actionSetLayerHandle)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void DeactivateAllActionSetLayers(SteamHandle<SteamController> controllerHandle)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle, out SteamHandle<InputActionMap> handlesOut)
+        {
+            throw new System.NotImplementedException();
         }
 
         private ControllerHandle_t[] m_ConnectedControllers;
