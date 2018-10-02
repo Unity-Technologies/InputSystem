@@ -82,7 +82,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         protected override void Awake()
         {
             base.Awake();
-            mockMouseStates = new List<MockMouseState>();
+
+            //TODO TB figure out why the pointer Ids change for every click and mouse press. Use 0 for now.
+            mouseState = new MockMouseState(eventSystem, 0);
         }
 
         protected override void OnEnable()
@@ -97,16 +99,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             UnhookActions();
             DisableActions();
         }
-
-        int GetPointerIdFromControl(InputControl control)
+        private bool ShouldIgnoreEventsOnNoFocus()
         {
-            //TODO TB figure out why the pointer Ids change for every click and mouse press
-            /*
-            var device = control != null ? control.device : null;
-            var pointer = device as Pointer;
-            return pointer != null ? pointer.pointerId.ReadValue() : 0;
-            */
-            return 0;
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.Windows:
+                case OperatingSystemFamily.Linux:
+                case OperatingSystemFamily.MacOSX:
+#if UNITY_EDITOR
+                    if (UnityEditor.EditorApplication.isRemoteConnected)
+                        return false;
+#endif
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         PointerEventData PrepareInitialEventData(MockMouseState mouseState)
@@ -122,6 +129,24 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.useDragThreshold = true;
 
             eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+            return eventData;
+        }
+
+        AxisEventData PrepareAxisEventData(MockJoystick joystickState)
+        {
+            //TODO TB (Don't be so wasteful)
+            AxisEventData eventData = new AxisEventData(eventSystem);
+
+            eventData.Reset();
+            Vector2 moveVector = eventData.moveVector = joystickState.move;
+
+            if (moveVector.sqrMagnitude < moveDeadzone * moveDeadzone)
+                eventData.moveDir = MoveDirection.None;
+            else if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
+                eventData.moveDir = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
+            else
+                eventData.moveDir = (moveVector.y > 0) ? MoveDirection.Up : MoveDirection.Down;
+
             return eventData;
         }
 
@@ -153,14 +178,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
                 return;
 
-            GameObject commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget);
+            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget);
 
             // and we already an entered object from last time
             if (eventData.pointerEnter != null)
             {
                 // send exit handler call to all elements in the chain
                 // until we reach the new target, or null!
-                Transform t = eventData.pointerEnter.transform;
+                var t = eventData.pointerEnter.transform;
 
                 while (t != null)
                 {
@@ -180,7 +205,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.pointerEnter = currentPointerTarget;
             if (currentPointerTarget != null)
             {
-                Transform t = currentPointerTarget.transform;
+                var t = currentPointerTarget.transform;
 
                 while (t != null && t.gameObject != commonRoot)
                 {
@@ -295,147 +320,177 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private delegate void ModifyMouseStateDel(ref MockMouseState mouseState);
-        void ModifyMouseState(int pointerId, ModifyMouseStateDel func)
-        {
-            int i = 0;
-            for (; i < mockMouseStates.Count; i++)
-            {
-                if (mockMouseStates[i].pointerId == pointerId)
-                {
-                    MockMouseState mouseState = mockMouseStates[i];
-                    func(ref mouseState);
-
-                    mockMouseStates[i] = mouseState;
-                    return;
-                }
-            }
-
-            // No mouse state with that Id
-            {
-                MockMouseState mouseState = new MockMouseState(eventSystem, pointerId);
-                func(ref mouseState);
-                mockMouseStates.Add(mouseState);
-            }
-        }
-
         public void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
-            var pointerId = GetPointerIdFromControl(context.control);
             if (action == m_PointAction)
             {
-                ModifyMouseState(pointerId, (ref MockMouseState state) =>
-                {
-                    Vector2 position = context.ReadValue<Vector2>();
-                    state.position = position;
-                });
+                mouseState.position = context.ReadValue<Vector2>();
             }
             else if (action == m_ScrollWheelAction)
             {
-                ModifyMouseState(pointerId, (ref MockMouseState state) =>
-                {
-                    Vector2 scrollPosition = context.ReadValue<Vector2>();
-                    state.scrollPosition = scrollPosition;
-                });
+                mouseState.scrollPosition = context.ReadValue<Vector2>();
             }
             else if (action == m_LeftClickAction)
             {
-                ModifyMouseState(pointerId, (ref MockMouseState state) =>
-                {
-                    MockMouseButton buttonState = state.leftButton;
-                    buttonState.isDown = context.ReadValue<float>() != 0.0f;
-                    state.leftButton = buttonState;
-                });
+                var buttonState = mouseState.leftButton;
+                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                mouseState.leftButton = buttonState;
             }
             else if (action == m_RightClickAction)
             {
-                ModifyMouseState(pointerId, (ref MockMouseState state) =>
-                {
-                    MockMouseButton buttonState = state.rightButton;
-                    buttonState.isDown = context.ReadValue<float>() != 0.0f;
-                    state.rightButton = buttonState;
-                });
+                var buttonState = mouseState.rightButton;
+                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                mouseState.rightButton = buttonState;
             }
             else if (action == m_MiddleClickAction)
             {
-                ModifyMouseState(pointerId, (ref MockMouseState state) =>
-                {
-                    MockMouseButton buttonState = state.middleButton;
-                    buttonState.isDown = context.ReadValue<float>() != 0.0f;
-                    state.middleButton = buttonState;
-                });
+                var buttonState = mouseState.middleButton;
+                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                mouseState.middleButton = buttonState;
             }
             else if (action == m_MoveAction)
             {
-                // Don't send move events if disabled in the EventSystem.
-                if (!eventSystem.sendNavigationEvents)
-                    return;
+                joystickState.move = context.ReadValue<Vector2>();
             }
+            else if (action == m_SubmitAction)
+            {
+                joystickState.submitButtonDown = context.ReadValue<float>() != 0.0f;
+            }
+            else if(action == m_CancelAction)
+            {
+                joystickState.cancelButtonDown = context.ReadValue<float>() != 0.0f;
+            }
+        }
+
+        void ProcessMouse()
+        {
+            if (!mouseState.changedThisFrame)
+                return;
+
+            var eventData = PrepareInitialEventData(mouseState);
+
+            /// Left Mouse Button
+            // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
+            var buttonState = mouseState.leftButton;
+            buttonState.CopyTo(eventData);
+            HandleMouseClick(buttonState.lastFrameDelta, eventData);
+
+            HandleEnterAndExit(eventData);
+            mouseState.hoverTargets = eventData.hovered;
+            mouseState.pointerTarget = eventData.pointerEnter;
+
+            var scrollDelta = mouseState.scrollDelta;
+            if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
+            {
+                var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(mouseState.pointerTarget);
+                ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
+            }
+
+            HandleMouseDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.leftButton = buttonState;
+
+            /// Right Mouse Button
+            buttonState = mouseState.rightButton;
+            buttonState.CopyTo(eventData);
+
+            HandleMouseClick(buttonState.lastFrameDelta, eventData);
+            HandleMouseDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.rightButton = buttonState;
+
+            /// Middle Mouse Button
+            buttonState = mouseState.middleButton;
+            buttonState.CopyTo(eventData);
+
+            HandleMouseClick(buttonState.lastFrameDelta, eventData);
+            HandleMouseDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.middleButton = buttonState;
+
+            mouseState.OnFrameFinished();
+        }
+
+        void ProcessJoystick()
+        {
+            var usedSelectionChange = false;
+            if (eventSystem.currentSelectedGameObject != null)
+            {
+                var data = GetBaseEventData();
+                ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.updateSelectedHandler);
+                usedSelectionChange = data.used;
+            }
+
+            // Don't send move events if disabled in the EventSystem.
+            if (!eventSystem.sendNavigationEvents)
+                return;
+
+            Vector2 movement = joystickState.move;
+            if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
+            {
+                float time = Time.unscaledTime;
+                bool similarDirection = (Vector2.Dot(movement, joystickState.lastMoveVector) > 0);
+
+                bool allow = true;
+                if (joystickState.consecutiveMoveCount != 0)
+                {
+                    if (similarDirection && joystickState.consecutiveMoveCount == 1)
+                        allow = (time > (joystickState.lastMoveTime + repeatDelay));
+                    else
+                        allow = (time > (joystickState.lastMoveTime + repeatRate));
+                }
+
+                if (allow)
+                {
+                    AxisEventData eventData = PrepareAxisEventData(joystickState);
+                    if (eventData.moveDir != MoveDirection.None)
+                    {
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                        usedSelectionChange = eventData.used;
+
+                        joystickState.consecutiveMoveCount = similarDirection ? (joystickState.consecutiveMoveCount + 1) : 1;
+                        joystickState.lastMoveTime = time;
+                        joystickState.lastMoveVector = movement;
+                    }
+                    else
+                    {
+                        joystickState.consecutiveMoveCount = 0;
+                    }
+                }
+            } 
+            else
+                joystickState.consecutiveMoveCount = 0;
+
+            if(!usedSelectionChange)
+            {
+                if(eventSystem.currentSelectedGameObject != null)
+                {
+                    var data = GetBaseEventData();
+                    if((joystickState.submitButtonDelta & ButtonDeltaState.Pressed) != 0)
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
+
+                    if(!data.used && (joystickState.cancelButtonDelta & ButtonDeltaState.Released) != 0)
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
+                }
+            }
+
+            joystickState.OnFrameFinished();
         }
 
         public override void Process()
         {
-            //Mouse needs Position, Delta Position, ScrollDelta, ButtonStatesMock (Left, Right,Middle)
-
-            for(int i = 0; i < mockMouseStates.Count; i++)
-            {              
-                if(mockMouseStates[i].changedThisFrame)
-                {
-                    MockMouseState state = mockMouseStates[i];
-                    PointerEventData eventData = PrepareInitialEventData(state);
-
-                    // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
-                    {
-                        MockMouseButton buttonState = state.leftButton;
-                        buttonState.CopyTo(eventData);
-                        HandleMouseClick(buttonState.lastFrameDelta, eventData);
-
-                        HandleEnterAndExit(eventData);
-                        state.hoverTargets = eventData.hovered;
-                        state.pointerTarget = eventData.pointerEnter;
-
-                        Vector2 scrollDelta = state.scrollDelta;
-                        if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
-                        {
-                            var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(state.pointerTarget);
-                            ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
-                        }
-
-                        HandleMouseDrag(eventData);
-
-                        buttonState.CopyFrom(eventData);
-                        state.leftButton = buttonState;
-                    }
-
-                    {
-                        MockMouseButton buttonState = state.rightButton;
-                        buttonState.CopyTo(eventData);
-
-                        HandleMouseClick(buttonState.lastFrameDelta, eventData);
-                        HandleMouseDrag(eventData);
-
-                        buttonState.CopyFrom(eventData);
-                        state.rightButton = buttonState;
-
-                    }
-
-                    {
-                        MockMouseButton buttonState = state.middleButton;
-                        buttonState.CopyTo(eventData);
-
-                        HandleMouseClick(buttonState.lastFrameDelta, eventData);
-                        HandleMouseDrag(eventData);
-
-                        buttonState.CopyFrom(eventData);
-                        state.middleButton = buttonState;
-
-                    }
-
-                    state.OnFrameFinished();
-                    mockMouseStates[i] = state;
-                }
+            if(!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+            {
+                joystickState.OnFrameFinished();
+                mouseState.OnFrameFinished();
             }
+
+            ProcessJoystick();
+            ProcessMouse();
         }
 
         private void EnableActions()
@@ -446,13 +501,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 if (pointAction != null && !pointAction.enabled)
                     pointAction.Enable();
 
-                var moveAction = m_MoveAction.action;
-                if (moveAction != null && !moveAction.enabled)
-                    moveAction.Enable();
-
                 var leftClickAction = m_LeftClickAction.action;
                 if (leftClickAction != null && !leftClickAction.enabled)
                     leftClickAction.Enable();
+
+                var rightClickAction = m_RightClickAction.action;
+                if (rightClickAction != null && !rightClickAction.enabled)
+                    rightClickAction.Enable();
+
+                var middleClickAction = m_MiddleClickAction.action;
+                if (middleClickAction != null && !middleClickAction.enabled)
+                    middleClickAction.Enable();
+
+                var moveAction = m_MoveAction.action;
+                if (moveAction != null && !moveAction.enabled)
+                    moveAction.Enable();
 
                 var submitAction = m_SubmitAction.action;
                 if (submitAction != null && !submitAction.enabled)
@@ -474,13 +537,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 if (pointAction != null && pointAction.enabled)
                     pointAction.Disable();
 
-                var moveAction = m_MoveAction.action;
-                if (moveAction != null && moveAction.enabled)
-                    moveAction.Disable();
-
                 var leftClickAction = m_LeftClickAction.action;
                 if (leftClickAction != null && leftClickAction.enabled)
                     leftClickAction.Disable();
+
+                var rightClickAction = m_RightClickAction.action;
+                if (rightClickAction != null && rightClickAction.enabled)
+                    rightClickAction.Disable();
+
+                var middleClickAction = m_MiddleClickAction.action;
+                if (middleClickAction != null && middleClickAction.enabled)
+                    middleClickAction.Disable();
+
+                var moveAction = m_MoveAction.action;
+                if (moveAction != null && moveAction.enabled)
+                    moveAction.Disable();
 
                 var submitAction = m_SubmitAction.action;
                 if (submitAction != null && submitAction.enabled)
@@ -517,6 +588,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (leftClickAction != null)
                 leftClickAction.performed += m_ActionCallback;
 
+            var rightClickAction = m_RightClickAction.action;
+            if (rightClickAction != null)
+                rightClickAction.performed += m_ActionCallback;
+
+            var middleClickAction = m_MiddleClickAction.action;
+            if (middleClickAction != null)
+                middleClickAction.performed += m_ActionCallback;
+
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
                 submitAction.performed += m_ActionCallback;
@@ -544,6 +623,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var leftClickAction = m_LeftClickAction.action;
             if (leftClickAction != null)
                 leftClickAction.performed -= m_ActionCallback;
+
+            var rightClickAction = m_RightClickAction.action;
+            if (rightClickAction != null)
+                rightClickAction.performed -= m_ActionCallback;
+
+            var middleClickAction = m_MiddleClickAction.action;
+            if (middleClickAction != null)
+                middleClickAction.performed -= m_ActionCallback;
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
@@ -620,6 +707,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [Tooltip("The maximum time (in seconds) between two mouse presses for it to be consecutive click.")]
         public float clickSpeed = 0.3f;
 
+        [Tooltip("The absolute value required by a move action on either axis required to trigger a move event.")]
+        public float moveDeadzone = 0.6f;
+
+        [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
+        public float repeatDelay = 0.5f;
+
+        [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
+        public float repeatRate = 0.1f;
+
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
@@ -627,18 +723,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [NonSerialized] private int m_LastPointerId;
         [NonSerialized] private Vector2 m_LastPointerPosition;
 
-        /// <summary>
-        /// Queue where we record action events.
-        /// </summary>
-        /// <remarks>
-        /// The callback-based interface isn't of much use to us as we cannot respond to actions immediately
-        /// but have to wait until <see cref="Process"/> is called by <see cref="EventSystem"/>. So instead
-        /// we trace everything that happens to the actions we're linked to by recording events into this queue
-        /// and then during <see cref="Process"/> we replay any activity that has occurred since the last
-        /// call to <see cref="Process"/> and translate it into <see cref="BaseEventData">UI events</see>.
-        /// </remarks>
-        [NonSerialized] private InputActionQueue m_ActionQueue;
-
-        private List<MockMouseState> mockMouseStates;
+        [NonSerialized] private MockMouseState mouseState;
+        [NonSerialized] private MockJoystick joystickState;
     }
 }

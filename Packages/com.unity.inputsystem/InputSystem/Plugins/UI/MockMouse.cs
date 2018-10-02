@@ -17,6 +17,72 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         Released = 2,
     }
 
+    public struct MockJoystick
+    {
+        public Vector2 move { get; set; }
+
+        public bool submitButtonDown
+        {
+            get
+            {
+                return m_SubmitButtonDown;
+            }
+            set
+            {
+                if(m_SubmitButtonDown != value)
+                {
+                    submitButtonDelta = value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
+                    m_SubmitButtonDown = value;
+                }                
+            }
+        }
+        public ButtonDeltaState submitButtonDelta { get; private set; }
+
+        public bool cancelButtonDown
+        {
+            get
+            {
+                return m_CancelButtonDown;
+            }
+            set
+            {
+                if(cancelButtonDown != value)
+                {
+                    cancelButtonDelta = value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
+                    m_CancelButtonDown = value;
+                }
+            }
+        }
+
+        public ButtonDeltaState cancelButtonDelta { get; private set; }
+
+        public int consecutiveMoveCount { get; set; }
+        public Vector2 lastMoveVector { get; set; }
+        public float lastMoveTime { get; set; }
+
+        void Reset()
+        {
+            move = lastMoveVector = Vector2.zero;
+            m_SubmitButtonDown = m_CancelButtonDown = false;
+            submitButtonDelta = cancelButtonDelta = ButtonDeltaState.NoChange;
+
+            consecutiveMoveCount = 0;
+            lastMoveTime = 0.0f;
+        }
+
+        /// <summary>
+        /// Call this at the end of polling for per-frame changes.  This resets delta values, such as <see cref="submitButtonDelta"/> and <see cref="cancelButtonDelta"/>.
+        /// </summary>
+        public void OnFrameFinished()
+        {
+            submitButtonDelta = ButtonDeltaState.NoChange;
+            cancelButtonDelta = ButtonDeltaState.NoChange;
+        }
+
+        private bool m_SubmitButtonDown;
+        private bool m_CancelButtonDown;
+    }
+
     /// <summary>
     /// Represents the state of a single mouse button within the uGUI system.  Keeps track of various book-keeping regarding clicks, drags, and presses.
     /// Can be converted to and from PointerEventData for sending into uGUI.
