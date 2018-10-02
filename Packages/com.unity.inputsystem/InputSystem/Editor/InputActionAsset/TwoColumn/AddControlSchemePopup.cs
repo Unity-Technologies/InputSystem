@@ -20,20 +20,26 @@ namespace UnityEngine.Experimental.Input.Editor
                 headerLabel.padding.left = 10;
             }
         }
-        
+
         int m_ControlSchemeIndex = -1;
         ReorderableList m_DevicesReorderableList;
         List<DeviceEntryForList> m_Devices = new List<DeviceEntryForList>();
         string m_InputControlSchemeName = "New control schema";
         int m_RequirementsOptionsChoice;
 
-        static Vector2 s_Size = new Vector2(400, 250);
-        static string[] choices = { "Optional", "Required" };
-
         InputActionAssetManager m_AssetManager;
         InputActionWindowToolbar m_Toolbar;
 
         bool m_SetFocus;
+        Vector2 m_SchemaNameLabelSize;
+        float m_RequirementHeights;
+        float m_ButtonsAndLabelsHeights;
+
+        static readonly GUIContent m_RequirementGUI = new GUIContent("Requirements:");
+        static readonly GUIContent m_AddControlSchemeGUI = new GUIContent("Add control scheme");
+        static readonly GUIContent m_SchemaNameGUI = new GUIContent("Scheme Name");
+        static Vector2 s_Size = new Vector2(300, 250);
+        static string[] choices = { "Optional", "Required" };
 
         public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
         {
@@ -63,7 +69,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override Vector2 GetWindowSize()
         {
-            return s_Size;
+            return m_ButtonsAndLabelsHeights > 0 ? new Vector2(300, m_ButtonsAndLabelsHeights) : new Vector2(300, 200);
         }
 
         public override void OnOpen()
@@ -100,13 +106,13 @@ namespace UnityEngine.Experimental.Input.Editor
             return devices;
         }
 
-        private void BuildTreeForAbstractDevices(List<string> deviceList)
+        void BuildTreeForAbstractDevices(List<string> deviceList)
         {
             foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts.OrderBy(a => a.name))
                 AddDeviceTreeItem(deviceLayout, deviceList);
         }
 
-        private void BuildTreeForSpecificDevices(List<string> deviceList)
+        void BuildTreeForSpecificDevices(List<string> deviceList)
         {
             foreach (var layout in EditorInputControlLayoutCache.allProductLayouts.OrderBy(a => a.name))
             {
@@ -119,8 +125,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 AddDeviceTreeItem(layout, deviceList);
             }
         }
-        
-        private void AddDeviceTreeItem(InputControlLayout layout, List<string> deviceList)
+
+        void AddDeviceTreeItem(InputControlLayout layout, List<string> deviceList)
         {
             deviceList.Add(layout.name);
             foreach (var commonUsage in layout.commonUsages)
@@ -153,48 +159,23 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
 
+            if (Event.current.type == EventType.Repaint)
+                m_ButtonsAndLabelsHeights = 0;
+
             GUILayout.BeginArea(rect);
-
-            EditorGUILayout.LabelField("Add control scheme", Styles.headerLabel);
-
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.Space();
-            GUI.SetNextControlName("SchemaName");
-            m_InputControlSchemeName = EditorGUILayout.TextField("Scheme Name", m_InputControlSchemeName);
-            EditorGUILayout.BeginHorizontal();
-
-            if (m_SetFocus)
-            {
-                EditorGUI.FocusTextInControl("SchemaName");
-                m_SetFocus = false;
-            }
-
-            var r = GUILayoutUtility.GetRect(0, GetWindowSize().x / 2, 0, GetWindowSize().x / 2, GUILayout.ExpandHeight(true));
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.LabelField("Requirements:");
-
-            EditorGUI.BeginDisabledGroup(m_DevicesReorderableList.index == -1);
-
-            var requirementsOption = -1;
-            if (m_DevicesReorderableList.index >= 0)
-            {
-                var deviceEntryForList = (DeviceEntryForList)m_DevicesReorderableList.list[m_DevicesReorderableList.index];
-                requirementsOption = deviceEntryForList.deviceEntry.isOptional ? 0 : 1;
-            }
-            EditorGUI.BeginChangeCheck();
-            requirementsOption = GUILayout.SelectionGrid(requirementsOption, choices, 1, EditorStyles.radioButton);
-            if (EditorGUI.EndChangeCheck())
-            {
-                m_Devices[m_DevicesReorderableList.index].deviceEntry.isOptional = requirementsOption == 0;
-            }
-            EditorGUI.EndDisabledGroup();
-
+            DrawTopBar();
+            EditorGUILayout.BeginVertical(EditorStyles.label);
+            DrawSpace();
+            DrawNameEditTextField();
+            DrawSpace();
+            DrawDeviceList();
+            DrawConfirmationButton();
             EditorGUILayout.EndVertical();
-            EditorGUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
 
-            m_DevicesReorderableList.DoList(r);
-            EditorGUILayout.EndVertical();
-
+        void DrawConfirmationButton()
+        {
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(m_InputControlSchemeName));
             if (m_ControlSchemeIndex == -1)
             {
@@ -210,8 +191,88 @@ namespace UnityEngine.Experimental.Input.Editor
                     Save();
                 }
             }
+            if (Event.current.type == EventType.Repaint)
+                m_ButtonsAndLabelsHeights += GUILayoutUtility.GetLastRect().height;
             EditorGUI.EndDisabledGroup();
-            GUILayout.EndArea();
+        }
+
+        void DrawDeviceList()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.label);
+            var requirementsLabelSize = EditorStyles.label.CalcSize(m_RequirementGUI);
+            var deviceListRect = GUILayoutUtility.GetRect(GetWindowSize().x - requirementsLabelSize.x - 20, m_DevicesReorderableList.GetHeight());
+            m_DevicesReorderableList.DoList(deviceListRect);
+            var requirementsHeight = DrawRequirementsCheckboxes();
+            var listHeight = m_DevicesReorderableList.GetHeight() + EditorGUIUtility.singleLineHeight * 3;
+            if (Event.current.type == EventType.Repaint)
+            {
+                if (listHeight < requirementsHeight)
+                {
+                    m_ButtonsAndLabelsHeights += requirementsHeight;
+                }
+                else
+                {
+                    m_ButtonsAndLabelsHeights += listHeight;
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        void DrawSpace()
+        {
+            GUILayout.Space(6f);
+            if (Event.current.type == EventType.Repaint)
+                m_ButtonsAndLabelsHeights += 6f;
+        }
+
+        void DrawTopBar()
+        {
+            EditorGUILayout.LabelField(m_AddControlSchemeGUI, Styles.headerLabel);
+
+            if (Event.current.type == EventType.Repaint)
+                m_ButtonsAndLabelsHeights += GUILayoutUtility.GetLastRect().height;
+        }
+
+        void DrawNameEditTextField()
+        {
+            EditorGUILayout.BeginHorizontal();
+            m_SchemaNameLabelSize = EditorStyles.label.CalcSize(m_RequirementGUI);
+            EditorGUILayout.LabelField(m_SchemaNameGUI, GUILayout.Width(m_SchemaNameLabelSize.x));
+            GUI.SetNextControlName("SchemaName");
+            m_InputControlSchemeName = EditorGUILayout.TextField(m_InputControlSchemeName);
+
+            if (m_SetFocus)
+            {
+                EditorGUI.FocusTextInControl("SchemaName");
+                m_SetFocus = false;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        float DrawRequirementsCheckboxes()
+        {
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.LabelField(m_RequirementGUI, GUILayout.Width(200));
+            var requirementHeights = GUILayoutUtility.GetLastRect().y;
+            EditorGUI.BeginDisabledGroup(m_DevicesReorderableList.index == -1);
+            var requirementsOption = -1;
+            if (m_DevicesReorderableList.index >= 0)
+            {
+                var deviceEntryForList = (DeviceEntryForList)m_DevicesReorderableList.list[m_DevicesReorderableList.index];
+                requirementsOption = deviceEntryForList.deviceEntry.isOptional ? 0 : 1;
+            }
+            EditorGUI.BeginChangeCheck();
+            requirementsOption = GUILayout.SelectionGrid(requirementsOption, choices, 1, EditorStyles.radioButton);
+            requirementHeights += GUILayoutUtility.GetLastRect().y;
+            if (EditorGUI.EndChangeCheck())
+            {
+                m_Devices[m_DevicesReorderableList.index].deviceEntry.isOptional = requirementsOption == 0;
+            }
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndVertical();
+            return requirementHeights;
         }
 
         void Save()

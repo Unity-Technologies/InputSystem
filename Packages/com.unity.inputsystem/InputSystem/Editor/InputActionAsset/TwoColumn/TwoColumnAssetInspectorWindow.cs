@@ -386,7 +386,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!path.EndsWith(k_FileExtension))
                 return false;
 
-            
+
             string mapToSelect = null;
             string actionToSelect = null;
 
@@ -424,7 +424,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 window.SetAsset(asset);
                 window.Show();
             }
-            
+
             // If user clicked on an action inside the asset, focus on that action (if we can find it).
             if (actionToSelect != null)
             {

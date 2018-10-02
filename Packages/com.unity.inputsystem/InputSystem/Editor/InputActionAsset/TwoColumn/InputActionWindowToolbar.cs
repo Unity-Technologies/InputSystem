@@ -24,6 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
         private static readonly GUIContent m_EditGUI = EditorGUIUtility.IconContent("_Popup");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
+        Rect m_EditButtonRect;
 
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager)
         {
@@ -68,7 +69,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (controlSchemes.Count == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Count - 1))
                     m_SelectedControlSchemeIndex = -1;
-                    
+
                 var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
                 PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
             }
@@ -85,13 +86,22 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.BeginDisabledGroup(selectedControlSchemeName == null);
             if (GUILayout.Button(m_EditGUI, EditorStyles.toolbarButton))
             {
+                var position = new Rect(Event.current.mousePosition, Vector2.zero);
+                position.x += EditorWindow.focusedWindow.position.x;
+                position.y += EditorWindow.focusedWindow.position.y;
                 var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Edit \"" + selectedControlSchemeName + "\""), false, EditSelectedControlScheme, GUILayoutUtility.GetLastRect());
+                menu.AddItem(new GUIContent("Edit \"" + selectedControlSchemeName + "\""), false, EditSelectedControlScheme, position);
                 menu.AddSeparator("");
-                menu.AddItem(m_DuplicateGUI, false, DuplicateControlScheme, GUILayoutUtility.GetLastRect());
+                menu.AddItem(m_DuplicateGUI, false, DuplicateControlScheme, position);
                 menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
                 menu.ShowAsContext();
             }
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                m_EditButtonRect = new Rect(Event.current.mousePosition, Vector2.zero);
+            }
+
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.BeginDisabledGroup(!m_ActionAssetManager.dirty);
@@ -105,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
             if (EditorGUI.EndChangeCheck())
             {
-                if(OnSearchChanged != null)
+                if (OnSearchChanged != null)
                     OnSearchChanged(m_SearchText);
             }
         }
@@ -135,19 +145,30 @@ namespace UnityEngine.Experimental.Input.Editor
             RebuildData();
         }
 
-        private void DuplicateControlScheme(object rectObj)
+        private void DuplicateControlScheme(object position)
         {
+            // TODO make sure name is unique
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
             popup.SetSchemaParametersFrom(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
-            // TODO make sure name is unique
-            PopupWindow.Show((Rect)rectObj, popup);
+            // Since it's a callback, we need to manually handle ExitGUIException
+            try
+            {
+                PopupWindow.Show((Rect)position, popup);
+            }
+            catch (ExitGUIException) {}
         }
 
-        private void EditSelectedControlScheme(object rectObj)
+        private void EditSelectedControlScheme(object position)
         {
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
             popup.SetSchemaForEditing(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
-            PopupWindow.Show((Rect)rectObj, popup);
+
+            // Since it's a callback, we need to manually handle ExitGUIException
+            try
+            {
+                PopupWindow.Show((Rect)position, popup);
+            }
+            catch (ExitGUIException) {}
         }
 
         public void SelectControlScheme(string inputControlSchemeName)

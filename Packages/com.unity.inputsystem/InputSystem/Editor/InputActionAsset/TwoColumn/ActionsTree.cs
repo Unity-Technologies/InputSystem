@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // is searching
                 if (!string.IsNullOrEmpty(m_NameFilter))
                 {
-                    FilterResultsByName(root);                
+                    FilterResultsByName(root);
                     // is searching
                     if (!string.IsNullOrEmpty(m_NameFilter))
                     {

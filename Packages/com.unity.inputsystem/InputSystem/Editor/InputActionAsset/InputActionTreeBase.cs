@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         [SerializeField]
         protected string m_NameFilter;
-        
+
         ////TODO: move to a better place
         public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
         public static string ResourcesPath
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ApplyAction = applyAction;
         }
-        
+
         // Return true is the child node should be removed from the parent
         protected bool FilterResults(TreeViewItem root)
         {
@@ -125,7 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             SetSelection(new[] {rootItem.children[0].id});
         }
-        
+
         protected override void SelectionChanged(IList<int> selectedIds)
         {
             if (!HasSelection())
@@ -209,7 +209,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 item.OnGUI(args.rowRect, args.selected, args.focused, indent);
             }
         }
-        
+
         public bool SetSelection(string actionMapName)
         {
             foreach (var child in rootItem.children)
