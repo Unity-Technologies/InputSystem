@@ -209,5 +209,18 @@ namespace UnityEngine.Experimental.Input.Editor
                 item.OnGUI(args.rowRect, args.selected, args.focused, indent);
             }
         }
+        
+        public bool SetSelection(string actionMapName)
+        {
+            foreach (var child in rootItem.children)
+            {
+                if (string.Compare(child.displayName, actionMapName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    SetSelection(new int[] { child.id });
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

@@ -122,14 +122,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnAddCompositeBinding(object compositeName)
         {
             var actionLine = GetSelectedActionLine();
-            actionLine.AppendCompositeBinding((string)compositeName);
+            actionLine.AddCompositeBinding((string)compositeName);
             m_AssetInspectorWindow.Apply();
         }
 
         private void OnAddBinding()
         {
             var actionLine = GetSelectedActionLine();
-            actionLine.AppendBinding();
+            actionLine.AddBinding();
             m_AssetInspectorWindow.Apply();
         }
 
