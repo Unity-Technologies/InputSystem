@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.XR;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -73,7 +74,7 @@ public class DemoGame : MonoBehaviour
         get
         {
             if (!s_VRSupported.HasValue)
-                return PlayerSettings.virtualRealitySupported;
+                return XRSettings.enabled;
             return s_VRSupported.Value;
         }
         set { s_VRSupported = value; }
