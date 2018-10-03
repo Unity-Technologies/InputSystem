@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputControlTree m_PathTree;
         private TreeViewState m_PathTreeState;
         private bool m_FirstRenderCompleted;
-        string m_DeviceFilter;
+        string[] m_DeviceFilter;
 
         public InputControlPickerPopup(SerializedProperty pathProperty, TreeViewState treeViewState = null)
         {
@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle toolbarSearchField = new GUIStyle("ToolbarSeachTextField");
         }
 
-        public void SetDeviceFilter(string deviceFilter)
+        public void SetDeviceFilter(string[] deviceFilter)
         {
             m_DeviceFilter = deviceFilter;
         }

@@ -64,7 +64,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public void SetSchemaParametersFrom(string schemaName)
         {
             m_InputControlSchemeName = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).name;
-            m_Devices = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).devices.Select(a => new DeviceEntryForList() { name = a.devicePath, deviceEntry = a }).ToList();
+            var schema = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName);
+            m_Devices = schema.devices.Select(a => new DeviceEntryForList() { name = a.devicePath, deviceEntry = a }).ToList();
         }
 
         public override Vector2 GetWindowSize()
@@ -93,28 +94,28 @@ namespace UnityEngine.Experimental.Input.Editor
             deviceList.Sort();
             foreach (var device in deviceList)
             {
-                menu.AddItem(new GUIContent(device), false, AddElement, device);
+                menu.AddItem(new GUIContent(device.ToString()), false, AddElement, device.id);
             }
             menu.ShowAsContext();
         }
 
-        List<string> GetDeviceOptions()
+        List<DeviceEntryForList> GetDeviceOptions()
         {
-            List<string> devices = new List<string>();
+            List<DeviceEntryForList> devices = new List<DeviceEntryForList>();
             BuildTreeForAbstractDevices(devices);
             BuildTreeForSpecificDevices(devices);
             return devices;
         }
 
-        void BuildTreeForAbstractDevices(List<string> deviceList)
+        void BuildTreeForAbstractDevices(List<DeviceEntryForList> deviceList)
         {
-            foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts.OrderBy(a => a.name))
+            foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts)
                 AddDeviceTreeItem(deviceLayout, deviceList);
         }
 
-        void BuildTreeForSpecificDevices(List<string> deviceList)
+        void BuildTreeForSpecificDevices(List<DeviceEntryForList> deviceList)
         {
-            foreach (var layout in EditorInputControlLayoutCache.allProductLayouts.OrderBy(a => a.name))
+            foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
             {
                 var rootLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
                 if (string.IsNullOrEmpty(rootLayoutName))
@@ -126,12 +127,17 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void AddDeviceTreeItem(InputControlLayout layout, List<string> deviceList)
+        void AddDeviceTreeItem(InputControlLayout layout, List<DeviceEntryForList> deviceList)
         {
-            deviceList.Add(layout.name);
+            var entry = new DeviceEntryForList();
+            entry.name = layout.name;
+            deviceList.Add(entry);
             foreach (var commonUsage in layout.commonUsages)
             {
-                deviceList.Add(layout.name + " " + commonUsage);
+                var entryWithUsage = new DeviceEntryForList();
+                entryWithUsage.name = layout.name;
+                entryWithUsage.commonUsage = commonUsage;
+                deviceList.Add(entryWithUsage);
             }
         }
 
@@ -296,13 +302,33 @@ namespace UnityEngine.Experimental.Input.Editor
             editorWindow.Close();
         }
 
-        class DeviceEntryForList
+        class DeviceEntryForList : IComparable
         {
             public string name;
             public InputControlScheme.DeviceEntry deviceEntry;
+            public InternedString commonUsage;
+            public object id { get
+            {
+                if (string.IsNullOrEmpty(commonUsage))
+                {
+                    return string.Format("<{0}>", name);
+                }
+                else
+                {
+                    return string.Format("<{0}>{{{1}}}", name, commonUsage);
+                }
+            } }
+
             public override string ToString()
             {
-                return name;
+                return string.Format("{0} {1}", InputControlPath.ToHumanReadableString(name), commonUsage);
+            }
+
+            public int CompareTo(object obj)
+            {
+                var c = (DeviceEntryForList) obj;
+                return String.Compare(name, c.name);
+
             }
         }
     }

@@ -20,9 +20,9 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private InputControlPickerPopup m_ParentWindow;
         private Action<string> m_OnSelected;
-        string m_DeviceFilter;
+        private string[] m_DeviceFilter;
 
-        public InputControlTree(TreeViewState state, InputControlPickerPopup parentWindow, Action<string> onSelected, string deviceFilter)
+        public InputControlTree(TreeViewState state, InputControlPickerPopup parentWindow, Action<string> onSelected, string[] deviceFilter)
             : base(state)
         {
             m_ParentWindow = parentWindow;
@@ -120,35 +120,47 @@ namespace UnityEngine.Experimental.Input.Editor
             var products = BuildTreeForSpecificDevices();
             root.AddChild(products);
 
-            if (!string.IsNullOrEmpty(m_DeviceFilter))
+            if (m_DeviceFilter != null )//&& false)
             {
-                var deviceNode = FindDevice(root, m_DeviceFilter);
-                root.children = new List<TreeViewItem>();
-                root.AddChild(deviceNode);
-                SetExpanded(deviceNode.id, true);
+                var newRoot = new TreeViewItem
+                {
+                    displayName = "Root",
+                    id = 0,
+                    depth = -1
+                };
+                FindDevice(newRoot, root, m_DeviceFilter);
+                newRoot.children.ForEach(a =>
+                {
+                    a.depth = 0;
+                    a.children.ForEach(b => b.depth = 1);
+                });
+                if (newRoot.children.Count == 1)
+                {
+                    SetExpanded(newRoot.children[0].id, true);
+                }
+                return newRoot;
             }
             
             return root;
         }
 
-        TreeViewItem FindDevice(TreeViewItem root, string deviceFilter)
+        void FindDevice(TreeViewItem newRoot, TreeViewItem root, string[] deviceFilter)
         {
             foreach (var child in root.children)
             {
                 var deviceItem = child as DeviceTreeViewItem;
                 if (child is DeviceTreeViewItem)
                 {
-                    if (deviceItem.controlPathWithDevice == deviceFilter)
-                        return deviceItem;
+                    if (deviceFilter.Contains(deviceItem.controlPathWithDevice))
+                    {
+                        newRoot.AddChild(deviceItem);
+                    }
                 }
                 if (child.hasChildren)
                 {
-                    var result = FindDevice(child, deviceFilter);
-                    if (result != null)
-                        return result;
+                    FindDevice(newRoot, child, deviceFilter);
                 } 
             }
-            return null;
         }
 
         TreeViewItem BuildTreeForUsages()

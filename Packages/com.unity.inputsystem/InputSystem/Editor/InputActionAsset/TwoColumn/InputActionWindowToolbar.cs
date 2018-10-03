@@ -10,22 +10,59 @@ namespace UnityEngine.Experimental.Input.Editor
     class InputActionWindowToolbar
     {
         public Action<string> OnSearchChanged;
-        private InputActionAssetManager m_ActionAssetManager;
+        
         [SerializeField]
         private int m_SelectedControlSchemeIndex = -1;
         [SerializeField]
         private int m_SelectedDeviceIndex;
+        [SerializeField]
+        private string[] m_DeviceIdList= new string[0];
+        [SerializeField]
+        private string[] m_DeviceNamesList = new string[0];
 
-        private string[] m_AllControlSchemeNames;
+        private InputActionAssetManager m_ActionAssetManager;
         private SearchField m_SearchField;
+        private string[] m_AllControlSchemeNames;
         private string m_SearchText;
 
         private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
         private static readonly GUIContent m_EditGUI = EditorGUIUtility.IconContent("_Popup");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
-        Rect m_EditButtonRect;
+        
+        private string selectedControlSchemeName
+        {
+            get
+            {
+                return m_SelectedControlSchemeIndex == -1 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex];
+            }
+        }
 
+        public bool searching
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(m_SearchText);
+            }
+        }
+        
+        public string[] deviceFilter
+        {
+            get
+            {
+                if (m_SelectedDeviceIndex < 0)
+                {
+                    return null;
+                }
+                if (m_SelectedDeviceIndex == 0)
+                {
+                    // All devices
+                    return m_DeviceIdList.Skip(1).ToArray();
+                }
+                return m_DeviceIdList.Skip(m_SelectedDeviceIndex).Take(1).ToArray();
+            }
+        }
+        
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager)
         {
             SetReferences(actionAssetManager);
@@ -41,32 +78,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_AllControlSchemeNames = m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToArray();
         }
-
-        public bool searching
+        
+        public void SelectControlScheme(string inputControlSchemeName)
         {
-            get
-            {
-                return !string.IsNullOrEmpty(m_SearchText);
-            }
-        }
-
-        public string selectedControlSchemeName
-        {
-            get
-            {
-                return m_SelectedControlSchemeIndex == -1 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex];
-            }
-        }
-
-        public string deviceFilter
-        {
-            get
-            {
-                if (m_SelectedDeviceIndex <= 0)
-                    return null;
-                var devices = GetDeviceList();
-                return devices[m_SelectedDeviceIndex];
-            }
+            m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName);
+            BuildDeviceList();
         }
 
         public void OnGUI()
@@ -74,6 +90,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_SearchField == null)
                 m_SearchField = new SearchField();
 
+            DrawSchemaSelection();
+            DrawDeviceFilterSelection();
+            DrawSchemaEditButton();
+            DrawSaveButton();
+        }
+
+        private void DrawSchemaSelection()
+        {
             var controlSchemes = GetControlSchemesNames();
             var newScheme = EditorGUILayout.Popup(m_SelectedControlSchemeIndex, controlSchemes.ToArray());
             if (controlSchemes.Count > 0 && newScheme == (controlSchemes.Count - 1))
@@ -87,13 +111,20 @@ namespace UnityEngine.Experimental.Input.Editor
             else if (newScheme != m_SelectedControlSchemeIndex)
             {
                 m_SelectedControlSchemeIndex = newScheme;
+                m_SelectedDeviceIndex = 0;
+                BuildDeviceList();
             }
+        }
 
+        private void DrawDeviceFilterSelection()
+        {
             EditorGUI.BeginDisabledGroup(m_SelectedControlSchemeIndex == -1);
-            var devices = GetDeviceList();
-            m_SelectedDeviceIndex = EditorGUILayout.Popup(m_SelectedDeviceIndex, devices.ToArray());
+            m_SelectedDeviceIndex = EditorGUILayout.Popup(m_SelectedDeviceIndex, m_DeviceNamesList);
             EditorGUI.EndDisabledGroup();
+        }
 
+        private void DrawSchemaEditButton()
+        {
             EditorGUI.BeginDisabledGroup(selectedControlSchemeName == null);
             if (GUILayout.Button(m_EditGUI, EditorStyles.toolbarButton))
             {
@@ -107,14 +138,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
                 menu.ShowAsContext();
             }
-
-            if (Event.current.type == EventType.Repaint)
-            {
-                m_EditButtonRect = new Rect(Event.current.mousePosition, Vector2.zero);
-            }
-
             EditorGUI.EndDisabledGroup();
-
+        }
+        
+        private void DrawSaveButton()
+        {
             EditorGUI.BeginDisabledGroup(!m_ActionAssetManager.dirty);
             EditorGUILayout.Space();
             if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
@@ -131,22 +159,24 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        List<string> GetControlSchemesNames()
+        private List<string> GetControlSchemesNames()
         {
             var controlSchemes = m_AllControlSchemeNames.ToList();
             controlSchemes.Add("Add Control Scheme...");
             return controlSchemes;
         }
 
-        List<string> GetDeviceList()
+        private void BuildDeviceList()
         {
             var devices = new List<string>();
             if (m_SelectedControlSchemeIndex >= 0)
             {
                 devices.Add("All devices");
-                devices.AddRange(m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName).devices.Select(a => a.devicePath).ToList());
+                var controlScheme = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName);
+                devices.AddRange(controlScheme.devices.Select(a => a.devicePath).ToList());
             }
-            return devices;
+            m_DeviceIdList = devices.ToArray();
+            m_DeviceNamesList = devices.Select(InputControlPath.ToHumanReadableString).ToArray();
         }
 
         private void DeleteControlScheme()
@@ -180,11 +210,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 PopupWindow.Show((Rect)position, popup);
             }
             catch (ExitGUIException) {}
-        }
-
-        public void SelectControlScheme(string inputControlSchemeName)
-        {
-            m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName);
         }
     }
 }
