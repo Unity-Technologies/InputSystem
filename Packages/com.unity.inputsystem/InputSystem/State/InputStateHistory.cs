@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -11,6 +11,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////        This would still allow tracing individual controls but at the same time would allow
 ////        capturing history including procesors and composites and everything (and multiple
 ////        controls at the same time)
+
+////TODO: allow correlating history to frames/updates
 
 namespace UnityEngine.Experimental.Input
 {
@@ -61,6 +63,7 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     public class InputStateHistory<TValue> : InputStateHistory, IReadOnlyList<TValue>, IDisposable
+        where TValue : struct
     {
         public InputStateHistory(InputControl<TValue> control)
             : base(control)

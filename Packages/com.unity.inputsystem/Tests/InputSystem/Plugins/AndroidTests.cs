@@ -6,9 +6,11 @@ using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.TestTools.Utils;
 
-class AndroidTests : InputTestFixture
+public class AndroidTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -54,10 +56,20 @@ class AndroidTests : InputTestFixture
         Assert.That(device, Is.TypeOf<AndroidGamepad>());
         var controller = (AndroidGamepad)device;
 
+        // Note: Regarding triggers, android sends different events depending to which device the controller is connected.
+        //       For ex., when NVIDIA shield controller when connected to Shield Console, triggers generate events:
+        //            Left Trigger -> AndroidAxis.Brake, AndroidAxis.LtTrigger
+        //            Right Trigger -> AndroidAxis.Gas, AndroidAxis.RtTrigger
+        //       BUT
+        //           when NVIDIA shield controller when connected to Samsung phone, triggers generate events:
+        //            Left Trigger -> AndroidAxis.Brake
+        //            Right Trigger -> AndroidAxis.Gas
+        //
+        //       This is why we're only reading and validating that events are correctly processed from AndroidAxis.Brake & AndroidAxis.Gas
         InputSystem.QueueStateEvent(controller,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Ltrigger, 0.123f)
-                .WithAxis(AndroidAxis.Rtrigger, 0.456f)
+                .WithAxis(AndroidAxis.Brake, 0.123f)
+                .WithAxis(AndroidAxis.Gas, 0.456f)
                 .WithAxis(AndroidAxis.X, 0.789f)
                 .WithAxis(AndroidAxis.Y, 0.987f)
                 .WithAxis(AndroidAxis.Z, 0.654f)
@@ -287,11 +299,12 @@ class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void FIXME_Devices_TriggerHasCorrectDefaultValue()
+    public void Devices_DualshockTriggersHaveCorrectDefaultValues()
     {
         // Trigger on Dualshock has -1.0 value when in rest mode (not touched by user)
         // But when input system reads data from state struct, it reads 0.0, after normalization this becomes 0.5
         // This is incorrect... We need somekind of attribute which would allow us to specify default value in state struct
+        // Update: using defaultState attribute now to have value as -1.0 by default
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
@@ -315,6 +328,7 @@ class AndroidTests : InputTestFixture
         });
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
     }
 
     [Test]
@@ -408,6 +422,37 @@ class AndroidTests : InputTestFixture
             Assert.That(control.x.ReadValue(), Is.EqualTo(0.1f).Within(0.000001));
             Assert.That(control.y.ReadValue(), Is.EqualTo(0.2f).Within(0.000001));
             Assert.That(control.z.ReadValue(), Is.EqualTo(0.3f).Within(0.000001));
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase("AndroidRotationVector", "attitude")]
+    public void Devices_SupportSensorsWithQuaternionControl(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (QuaternionControl)device[controlName];
+
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            var rotation = new Vector3(5.0f, 12.0f, 16.0f);
+            var q = Quaternion.Euler(rotation);
+
+            // The 4th value is ignored and is calculated from other three
+            control.WriteValueInto(stateEventPtr, new Quaternion(q.x, q.y, q.z, 1234567.0f));
+
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            Assert.That(control.ReadValue(), Is.EqualTo(q).Within(0.01));
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(Vector3EqualityComparer.Instance));
+
+            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(Vector3EqualityComparer.Instance));
         }
     }
 }

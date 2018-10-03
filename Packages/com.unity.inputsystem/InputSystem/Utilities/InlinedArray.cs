@@ -1,6 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+
+////REVIEW: what about ignoring 'firstValue' entirely in case length > 1 and putting everything into an array in that case
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -9,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// array.
     /// </summary>
     /// <typeparam name="TValue">Element type for the array.</typeparam>
-    internal struct InlinedArray<TValue>
+    internal struct InlinedArray<TValue> : IEnumerable<TValue>
     {
         // We inline the first value so if there's only one, there's
         // no additional allocation. If more are added, we allocate an array.
@@ -82,6 +85,14 @@ namespace UnityEngine.Experimental.Input.Utilities
             additionalValues = null;
         }
 
+        public void ClearWithCapacity()
+        {
+            length = 0;
+            firstValue = default(TValue);
+            for (var i = 0; i < length - 1; ++i)
+                additionalValues[i] = default(TValue);
+        }
+
         public InlinedArray<TValue> Clone()
         {
             return new InlinedArray<TValue>
@@ -110,6 +121,18 @@ namespace UnityEngine.Experimental.Input.Utilities
         public TValue[] ToArray()
         {
             return ArrayHelpers.Join(firstValue, additionalValues);
+        }
+
+        public TOther[] ToArray<TOther>(Func<TValue, TOther> mapFunction)
+        {
+            if (length == 0)
+                return null;
+
+            var result = new TOther[length];
+            for (var i = 0; i < length; ++i)
+                result[i] = mapFunction(this[i]);
+
+            return result;
         }
 
         public int IndexOf(TValue value)
@@ -152,7 +175,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public void AppendWithCapacity(TValue value)
+        public int AppendWithCapacity(TValue value, int capacityIncrement = 10)
         {
             if (length == 0)
             {
@@ -161,9 +184,18 @@ namespace UnityEngine.Experimental.Input.Utilities
             else
             {
                 var numAdditionalValues = length - 1;
-                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value);
+                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value, capacityIncrement: capacityIncrement);
             }
+
+            var index = length;
             ++length;
+            return index;
+        }
+
+        public void Append(IEnumerable<TValue> values)
+        {
+            foreach (var value in values)
+                Append(value);
         }
 
         public void Remove(TValue value)
@@ -181,7 +213,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 {
                     if (EqualityComparer<TValue>.Default.Equals(additionalValues[i], value))
                     {
-                        RemoveAt(i);
+                        RemoveAt(i + 1);
                         break;
                     }
                 }
@@ -221,7 +253,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     // Remove only entry in array.
                     additionalValues = null;
                 }
-                else if (index == numAdditionalValues - 1)
+                else if (index == length - 1)
                 {
                     // Remove entry at end.
                     Array.Resize(ref additionalValues, numAdditionalValues - 1);
@@ -231,17 +263,16 @@ namespace UnityEngine.Experimental.Input.Utilities
                     // Remove entry at beginning or in middle by pasting together
                     // into a new array.
                     var newAdditionalProcessors = new TValue[numAdditionalValues - 1];
-                    if (index > 0)
+                    if (index >= 2)
                     {
-                        // Copy element before entry.
-                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index);
+                        // Copy elements before entry.
+                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index - 1);
                     }
-                    if (index != numAdditionalValues - 1)
-                    {
-                        // Copy elements after entry.
-                        Array.Copy(additionalValues, index + 1, newAdditionalProcessors, index,
-                            numAdditionalValues - index - 1);
-                    }
+
+                    // Copy elements after entry. We already know that we're not removing
+                    // the last entry so there have to be entries.
+                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalProcessors, index - 1,
+                        length - index - 1);
                 }
             }
 
@@ -276,7 +307,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             --length;
         }
 
-        public bool RemoveAtByMovingTailWithCapacity(TValue value)
+        public bool RemoveByMovingTailWithCapacity(TValue value)
         {
             var index = IndexOf(value);
             if (index == -1)
@@ -284,6 +315,71 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             RemoveAtByMovingTailWithCapacity(index);
             return true;
+        }
+
+        public bool Contains(TValue value, IEqualityComparer<TValue> comparer)
+        {
+            for (var n = 0; n < length; ++n)
+                if (comparer.Equals(this[n], value))
+                    return true;
+            return false;
+        }
+
+        public void Merge(InlinedArray<TValue> other)
+        {
+            var comparer = EqualityComparer<TValue>.Default;
+            for (var i = 0; i < other.length; ++i)
+            {
+                var value = other[i];
+                if (Contains(value, comparer))
+                    continue;
+
+                ////FIXME: this is ugly as it repeatedly copies
+                Append(value);
+            }
+        }
+
+        public IEnumerator<TValue> GetEnumerator()
+        {
+            return new Enumerator { array = this, index = -1 };
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private struct Enumerator : IEnumerator<TValue>
+        {
+            public InlinedArray<TValue> array;
+            public int index;
+
+            public bool MoveNext()
+            {
+                if (index >= array.length)
+                    return false;
+                ++index;
+                return index < array.length;
+            }
+
+            public void Reset()
+            {
+                index = -1;
+            }
+
+            public TValue Current
+            {
+                get { return array[index]; }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
+
+            public void Dispose()
+            {
+            }
         }
     }
 }

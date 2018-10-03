@@ -3,6 +3,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
 
 public struct MyDeviceState : IInputStateTypeInfo
 {
@@ -54,7 +55,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     public static void Initialize()
     {
-        InputSystem.RegisterControlLayout<MyDevice>();
+        InputSystem.RegisterLayout<MyDevice>();
 
         if (!InputSystem.devices.Any(x => x is MyDevice))
             InputSystem.AddDevice<MyDevice>();

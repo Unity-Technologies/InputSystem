@@ -1,11 +1,14 @@
+using System;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -27,7 +30,7 @@ partial class CoreTests
     [Category("State")]
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
-        InputSystem.RegisterControlLayout<CustomDevice>();
+        InputSystem.RegisterLayout<CustomDevice>();
         var setup = new InputDeviceBuilder("CustomDevice");
         var axis2 = setup.GetControl("axis2");
         setup.Finish();
@@ -218,7 +221,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(jsonLayout);
+        InputSystem.RegisterLayout(jsonLayout);
 
         var setup = new InputDeviceBuilder("CustomGamepad");
         Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
@@ -244,7 +247,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(jsonLayout);
+        InputSystem.RegisterLayout(jsonLayout);
 
         var device1 = InputSystem.AddDevice("TestDevice");
         var device2 = InputSystem.AddDevice("TestDevice");
@@ -279,7 +282,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(jsonLayout);
+        InputSystem.RegisterLayout(jsonLayout);
 
         var setup = new InputDeviceBuilder("CustomGamepad");
         var device = (Gamepad)setup.Finish();
@@ -309,7 +312,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var setup = new InputDeviceBuilder("MyDevice");
 
         Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
@@ -332,6 +335,7 @@ partial class CoreTests
     // should add the base offset of the field itself.
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_SpecifyingOffsetOnControlAttribute_AddsBaseOffset()
     {
         Assert.Fail();
@@ -417,13 +421,14 @@ partial class CoreTests
                     {
                         ""name"" : ""buttonSouth"",
                         ""format"" : ""FLT"",
-                        ""offset"" : 4
+                        ""offset"" : 4,
+                        ""bit"" : 0
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var state = new GamepadState {leftStick = new Vector2(0.5f, 0.0f)};
@@ -472,8 +477,11 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
     }
 
+    ////REVIEW: if we do this, we have to have something like InputUpdateType.Manual that allows using the system
+    ////        in a way where all updates are controlled manually by the user through InputSystem.Update
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
     {
         InputSystem.updateMask = InputUpdateType.None;
@@ -491,7 +499,7 @@ partial class CoreTests
     {
         var receivedUpdate = false;
         InputUpdateType? receivedUpdateType = null;
-        InputSystem.onUpdate +=
+        InputSystem.onBeforeUpdate +=
             type =>
         {
             Assert.That(receivedUpdate, Is.False);
@@ -545,14 +553,16 @@ partial class CoreTests
         var monitorFired = false;
         InputControl receivedControl = null;
         double? receivedTime = null;
+        InputEventPtr? receivedEventPtr = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 receivedControl = control;
                 receivedTime = time;
+                receivedEventPtr = eventPtr;
             });
 
         // Left stick only.
@@ -562,10 +572,12 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         // Left stick again but with no value change.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)}, 0.6);
@@ -581,10 +593,12 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         // Right stick only.
         InputSystem.QueueStateEvent(gamepad,
@@ -601,6 +615,7 @@ partial class CoreTests
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         // Remove state monitor and change leftStick again.
         InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor);
@@ -608,11 +623,86 @@ partial class CoreTests
         monitorFired = false;
         receivedControl = null;
         receivedTime = 0;
+        receivedEventPtr = null;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.0f, 0.0f)}, 1.0);
         InputSystem.Update();
 
         Assert.That(monitorFired, Is.False);
+    }
+
+    struct StateWithMultiBitControl : IInputStateTypeInfo
+    {
+        // Dpad layout that is identical to how the PS4 DualShock controller sets up its Dpad.
+        // Offset the whole dpad by 3 bits to make sure we're not only supporting the case where
+        // the multi-bit value is byte-aligned.
+        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4, bit = 3)]
+        [InputControl(name = "dpad/up", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 3, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 3, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 3, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 3, sizeInBits = 4)]
+        public int buttons;
+
+        // Add a whacky 23bit button that isn't byte aligned.
+        [InputControl(name = "data", layout = "DiscreteButton", bit = 4, sizeInBits = 23)]
+        public long data;
+
+        public StateWithMultiBitControl WithDpad(int value)
+        {
+            buttons |= value << 3;
+            return this;
+        }
+
+        public StateWithMultiBitControl WithData(int value)
+        {
+            data = value << 4 & (0x7fff << 4);
+            return this;
+        }
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
+    class TestDeviceWithMultiBitControl : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanSetUpMonitorsForStateChanges_OnMultiBitFields()
+    {
+        var device = InputSystem.AddDevice<TestDeviceWithMultiBitControl>();
+
+        var monitorFired = false;
+        InputControl receivedControl = null;
+        Action<InputControl, double, InputEventPtr, long> action =
+            (control, time, eventPtr, monitorIndex) =>
+        {
+            Assert.That(!monitorFired);
+            monitorFired = true;
+            receivedControl = control;
+        };
+
+        InputSystem.AddStateChangeMonitor(device["dpad"], action);
+        InputSystem.AddStateChangeMonitor(device["data"], action);
+
+        InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3));
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedControl, Is.SameAs(device["dpad"]));
+
+        monitorFired = false;
+        receivedControl = null;
+
+        InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3).WithData(1234));
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedControl, Is.SameAs(device["data"]));
     }
 
     [Test]
@@ -627,7 +717,7 @@ partial class CoreTests
         var monitorFired = false;
         long? receivedMonitorIndex = null;
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -686,7 +776,7 @@ partial class CoreTests
         InputControl receivedControl = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-            (control, time, monitorIndex) =>
+            (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -742,6 +832,45 @@ partial class CoreTests
         Assert.That(!timeoutFired);
     }
 
+    // Actions will process interactions inside of monitor callbacks. Since interactions can add
+    // timeouts, make sure that they make it through properly.
+    [Test]
+    [Category("State")]
+    public void State_StateChangeMonitorTimeout_CanBeAddedFromMonitorCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitorFired = false;
+        var timeoutFired = false;
+
+        IInputStateChangeMonitor monitor = null;
+        monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+            (control, time, eventPtr, monitorIndex) =>
+            {
+                Assert.That(!monitorFired);
+                monitorFired = true;
+                InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor,
+                    testRuntime.currentTime + 1);
+            }, timerExpiredCallback:
+            (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.That(!timeoutFired);
+                timeoutFired = true;
+            });
+
+        // Trigger monitor callback.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+
+        // Expire timer.
+        testRuntime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutFired);
+    }
+
     [Test]
     [Category("State")]
     public unsafe void State_CanGetMetrics()
@@ -766,9 +895,9 @@ partial class CoreTests
             device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
             device3.stateBlock.alignedSizeInBytes, 4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
-        var sizeOfDefaultStateBuffer = combinedDeviceStateSize;
+        var sizeOfSingleBuffer = combinedDeviceStateSize;
 
-        const int kBufferCount =
+        const int kDoubleBufferCount =
             #if UNITY_EDITOR
             3     // Dynamic + fixed + editor
             #else
@@ -781,17 +910,42 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kBufferCount * sizePerBuffer + sizeOfDefaultStateBuffer));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo((kDoubleBufferCount * sizePerBuffer) + (sizeOfSingleBuffer * 2)));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.000001));
     }
 
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_FixedUpdatesAreDisabledByDefault()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CannotRunUpdatesThatAreNotEnabled()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanSetUpStateMonitorsUsingControlPath()
+    {
+        Assert.Fail();
+    }
+
     // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
     // the motion curve of a tracking device over time.
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_CanRecordHistoryOfState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -808,14 +962,15 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(history.Count, Is.EqualTo(3));
-            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
-            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
-            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
+            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(Vector2EqualityComparer.Instance));
         }
     }
 
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_SupportsBitAddressingControlsWithAutomaticOffsets()
     {
         ////TODO
@@ -824,6 +979,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption

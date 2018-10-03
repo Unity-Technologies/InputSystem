@@ -199,6 +199,41 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
+        public int ToInt()
+        {
+            switch (valueType)
+            {
+                case PrimitiveValueType.Bool:
+                    if (boolValue)
+                        return 1;
+                    return 0;
+                case PrimitiveValueType.Char:
+                    return charValue;
+                case PrimitiveValueType.Byte:
+                    return byteValue;
+                case PrimitiveValueType.SByte:
+                    return sbyteValue;
+                case PrimitiveValueType.Short:
+                    return shortValue;
+                case PrimitiveValueType.UShort:
+                    return ushortValue;
+                case PrimitiveValueType.Int:
+                    return intValue;
+                case PrimitiveValueType.UInt:
+                    return (int)uintValue;
+                case PrimitiveValueType.Long:
+                    return (int)longValue;
+                case PrimitiveValueType.ULong:
+                    return (int)ulongValue;
+                case PrimitiveValueType.Float:
+                    return (int)floatValue;
+                case PrimitiveValueType.Double:
+                    return (int)doubleValue;
+                default:
+                    return default(int);
+            }
+        }
+
         public long ToLong()
         {
             switch (valueType)
@@ -326,6 +361,12 @@ namespace UnityEngine.Experimental.Input.Utilities
             get { return valueType == PrimitiveValueType.None; }
         }
 
+        public PrimitiveValueOrArray(PrimitiveValue value)
+        {
+            primitiveValue = value;
+            arrayValue = null;
+        }
+
         public PrimitiveValueOrArray(bool value)
         {
             primitiveValue = new PrimitiveValue(value);
@@ -400,6 +441,9 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public override string ToString()
         {
+            if (!isArray)
+                return primitiveValue.ToString();
+
             throw new NotImplementedException();
         }
 

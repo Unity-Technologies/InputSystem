@@ -5,23 +5,44 @@ using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.TestTools.Utils;
 
-class DualShockTests : InputTestFixture
+#if UNITY_WSA
+using UnityEngine.Experimental.Input.Plugins.HID;
+#endif
+
+public class DualShockTests : InputTestFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID()
     {
+#if !UNITY_WSA
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             product = "Wireless Controller",
             manufacturer = "Sony Interactive Entertainment",
-            interfaceName = "HID"
+            interfaceName = "HID",
         });
+#else // UWP requires different query logic (manufacture not available)
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            interfaceName = "HID",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+#endif
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
         var gamepad = (DualShockGamepad)device;
+
+        // Dpad has default state value so make sure that one is coming through.
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockHIDInputReport
@@ -80,6 +101,40 @@ class DualShockTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+#if UNITY_WSA
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHIDOnUWP()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+#endif
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualShockHID_HasDpadInNullStateByDefault()
+    {
+        // The DualShock's dpad has a default state of 8 (indicating dpad isn't pressed in any direction),
+        // not of 0 (which actually means "up" is pressed). Make sure this is set up correctly.
+
+        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
+
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
     }
 
     [Test]

@@ -4,6 +4,8 @@ using System.Reflection;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add ability to add to existing arrays rather than creating per-device arrays
+
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the layout cache around instead of throwing
 ////        it away after the creation of every single device; best approach may be to just
@@ -12,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
@@ -25,7 +27,7 @@ namespace UnityEngine.Experimental.Input
     /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
-    /// <c>new</c>'d directlty.
+    /// <c>new</c>'d directly.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
@@ -44,13 +46,17 @@ namespace UnityEngine.Experimental.Input
             m_LayoutCache.layouts = layouts;
         }
 
-        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variants = null)
+        public InputDeviceBuilder(string layout, string variants = null,
+                                  InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+                                  InputDevice existingDevice = null)
         {
             m_LayoutCache.layouts = InputControlLayout.s_Layouts;
-            Setup(new InternedString(layout), existingDevice, new InternedString(variants));
+            Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 
-        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variants)
+        internal void Setup(InternedString layout, InternedString variants,
+            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+            InputDevice existingDevice = null)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
@@ -59,17 +65,9 @@ namespace UnityEngine.Experimental.Input
 
             InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
-            m_Device.CallFinishSetupRecursive(this);
-        }
 
-        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variants)
-        {
-            InstantiateLayout(layout, variants, new InternedString(), null, null);
-            FinalizeControlHierarchy();
-
-            if (!deviceDescription.empty)
-                m_Device.m_Description = deviceDescription;
-
+            m_Device.m_Description = deviceDescription;
+            m_Device.m_UserInteractionFilter = InputNoiseFilter.CreateDefaultNoiseFilter(m_Device);
             m_Device.CallFinishSetupRecursive(this);
         }
 
@@ -191,7 +189,7 @@ namespace UnityEngine.Experimental.Input
         private InputDevice m_Device;
 
         // We construct layouts lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construt the same Button layout
+        // set up hierarchies so that we don't re-construct the same Button layout
         // 256 times for a keyboard.
         private InputControlLayout.Cache m_LayoutCache;
 
@@ -222,7 +220,9 @@ namespace UnityEngine.Experimental.Input
             InputControl control;
 
             // If we have an existing control, see whether it's usable.
-            if (existingControl != null && existingControl.layout == layout.name && existingControl.GetType() == layout.type)
+            // NOTE: We allow the layout to change to a different layout as long as the new layout uses
+            //       the same type.
+            if (existingControl != null && existingControl.GetType() == layout.type)
             {
                 control = existingControl;
 
@@ -707,6 +707,11 @@ namespace UnityEngine.Experimental.Input
                     SetParameters(child, controlItem.parameters);
                 if (!string.IsNullOrEmpty(controlItem.displayName))
                     child.m_DisplayNameFromLayout = controlItem.displayName;
+                if (!controlItem.defaultState.isEmpty)
+                {
+                    child.m_DefaultValue = controlItem.defaultState;
+                    m_Device.hasControlsWithDefaultState = true;
+                }
 
                 ////TODO: other modifications
             }

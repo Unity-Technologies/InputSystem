@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Text;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -53,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return sanitizedName.ToString();
         }
 
-        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
@@ -108,7 +109,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return layoutName;
 
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
+            InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }
@@ -190,7 +191,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Button")
-                            .WithOffset(currentOffset)
+                            .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.kTypeBit)
                             .WithUsages(currentUsages);
                         break;
@@ -199,7 +200,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Integer")
-                            .WithOffset(currentOffset)
+                            .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.kTypeInt)
                             .WithUsages(currentUsages);
                         break;
@@ -208,7 +209,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Analog")
-                            .WithOffset(currentOffset)
+                            .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.kTypeFloat)
                             .WithUsages(currentUsages);
                         break;
@@ -217,7 +218,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Vector2")
-                            .WithOffset(currentOffset)
+                            .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.kTypeVector2)
                             .WithUsages(currentUsages);
                         break;
@@ -226,7 +227,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Vector3")
-                            .WithOffset(currentOffset)
+                            .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.kTypeVector3)
                             .WithUsages(currentUsages);
                         break;
@@ -235,7 +236,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Quaternion")
-                            .WithOffset(currentOffset)
+                            .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.kTypeQuaternion)
                             .WithUsages(currentUsages);
                         break;

@@ -6,7 +6,7 @@ namespace UnityEngine.Experimental.Input.Controls
 {
     public class ColorControl : InputControl<Color>
     {
-        public override Color ReadRawValueFrom(IntPtr statePtr)
+        public override Color ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             throw new NotImplementedException();
         }

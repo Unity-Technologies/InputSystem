@@ -1,6 +1,7 @@
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -59,11 +60,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             {
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
                 {
-                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 }
                 else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                 {
-                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
                 }
             }
         }
@@ -106,12 +107,21 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     /// </summary>
     public class XRControllerWithRumble : XRController, IHaptics
     {
-        SimpleXRRumble m_Rumble;
+        SimpleRumble m_Rumble;
+        BufferedRumble m_BufferedRumble;
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-            m_Rumble = new SimpleXRRumble(this);
+            m_Rumble = new SimpleRumble(this);
+        }
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            m_BufferedRumble = new BufferedRumble(this);
+            HapticCapabilities capabilities = m_BufferedRumble.capabilities;
         }
 
         /// <summary>

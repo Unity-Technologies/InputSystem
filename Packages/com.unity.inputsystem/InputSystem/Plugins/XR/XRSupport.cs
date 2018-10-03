@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -99,74 +100,76 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         /// </summary>
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<XRHMD>();
-            InputSystem.RegisterControlLayout<XRController>();
+            InputSystem.RegisterLayout<XRHMD>();
+            InputSystem.RegisterLayout<XRController>();
 
-            InputSystem.RegisterControlLayout<WMRHMD>(
+            InputSystem.RegisterLayout<WMRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithProduct("Windows Mixed Reality HMD"));
-            InputSystem.RegisterControlLayout<WMRSpatialController>(
+                    .WithProduct("(Windows Mixed Reality HMD)|(Acer AH100)")
+                    .WithManufacturer("(Microsoft)|(WindowsMR)"));
+            InputSystem.RegisterLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithProduct("^(Spatial Controller)"));
+                    .WithProduct(@"(^(Spatial Controller))|(^(OpenVR Controller\(WindowsMR))")
+                    .WithManufacturer("(Microsoft)|(WindowsMR)"));
 
-            InputSystem.RegisterControlLayout<OculusHMD>(
+            InputSystem.RegisterLayout<OculusHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("Oculus")
                     .WithProduct("^(Oculus Rift)"));
-            InputSystem.RegisterControlLayout<OculusTouchController>(
+            InputSystem.RegisterLayout<OculusTouchController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("Oculus")
                     .WithProduct(@"((Oculus Touch Controller)|(^(OpenVR Controller\(Oculus Rift [a-zA-Z0-9]*)))"));
-            InputSystem.RegisterControlLayout<OculusTrackingReference>(
+            InputSystem.RegisterLayout<OculusTrackingReference>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct(@"((Tracking Reference)|(^(Oculus Rift [a-zA-Z0-9]* \(Camera)))"));
 
-            InputSystem.RegisterControlLayout<GearVRHMD>(
+            InputSystem.RegisterLayout<GearVRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct("Oculus HMD"));
-            InputSystem.RegisterControlLayout<GearVRTrackedController>(
+            InputSystem.RegisterLayout<GearVRTrackedController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct("^(Oculus Tracked Remote)"));
 
-            InputSystem.RegisterControlLayout<DaydreamHMD>(
+            InputSystem.RegisterLayout<DaydreamHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct("Daydream HMD"));
-            InputSystem.RegisterControlLayout<DaydreamController>(
+            InputSystem.RegisterLayout<DaydreamController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct("Daydream Controller"));
 
-            InputSystem.RegisterControlLayout<ViveHMD>(
+            InputSystem.RegisterLayout<ViveHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(Vive[\.]?((Pro)|( MV)))"));
-            InputSystem.RegisterControlLayout<ViveWand>(
+            InputSystem.RegisterLayout<ViveWand>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(OpenVR Controller\(Vive[\.]? Controller)"));
-            InputSystem.RegisterControlLayout<ViveLighthouse>(
+            InputSystem.RegisterLayout<ViveLighthouse>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(HTC V2-XD/XE)"));
 
-            InputSystem.RegisterControlLayout<KnucklesController>(
+            InputSystem.RegisterLayout<KnucklesController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("Valve")
                     .WithProduct(@"^(OpenVR Controller\(Knuckles)"));
 
-            InputSystem.onFindControlLayoutForDevice += XRLayoutBuilder.OnFindControlLayoutForDevice;
+            InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
         }
     }
 }

@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.OnScreen;
+using UnityEngine.TestTools.Utils;
 
 public class OnScreenTests : InputTestFixture
 {
@@ -13,17 +14,20 @@ public class OnScreenTests : InputTestFixture
     public void Devices_CanCreateOnScreenStick()
     {
         var gameObject = new GameObject();
+        var stickObject = new GameObject();
+        gameObject.AddComponent<Camera>();
+        var canvas = gameObject.AddComponent<Canvas>();
         var eventSystem = gameObject.AddComponent<EventSystem>();
 
-        var stick = gameObject.AddComponent<OnScreenStick>();
+        stickObject.AddComponent<RectTransform>();
+        var stick = stickObject.AddComponent<OnScreenStick>();
+        stick.transform.SetParent(canvas.transform);
         stick.controlPath = "/<Gamepad>/leftStick";
 
         Assert.That(stick.control.device, Is.TypeOf<Gamepad>());
         Assert.That(stick.control, Is.SameAs(stick.control.device["leftStick"]));
         Assert.That(stick.control, Is.TypeOf<StickControl>());
         var stickControl = (StickControl)stick.control;
-
-        ////FIXME: OnScreenStick mixes up transform.position and 2D position space
 
         stick.OnDrag(new PointerEventData(eventSystem)
         {
@@ -33,10 +37,11 @@ public class OnScreenTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(stick.control.ReadValueAsObject(),
-            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2)))
-                .Using(vector2Comparer));
+            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
+                .Using(Vector2EqualityComparer.Instance));
 
-        ////REVIEW: check transform?
+        Assert.That(stickObject.transform.position.x, Is.GreaterThan(0.0f));
+        Assert.That(stickObject.transform.position.y, Is.GreaterThan(0.0f));
     }
 
     [Test]
@@ -93,5 +98,26 @@ public class OnScreenTests : InputTestFixture
         Assert.That(aKey.control.device, Is.SameAs(bKey.control.device));
         Assert.That(aKey.control.device, Is.Not.SameAs(leftTrigger.control.device));
         Assert.That(bKey.control.device, Is.Not.SameAs(leftTrigger.control.device));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DisablingLastOnScreenControlRemovesCreatedDevice()
+    {
+        var gameObject = new GameObject();
+        var buttonA = gameObject.AddComponent<OnScreenButton>();
+        var buttonB = gameObject.AddComponent<OnScreenButton>();
+        buttonA.controlPath = "/<Keyboard>/a";
+        buttonB.controlPath = "/<Keyboard>/b";
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+
+        buttonA.enabled = false;
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+
+        buttonB.enabled = false;
+
+        Assert.That(InputSystem.devices, Has.None.TypeOf<Keyboard>());
     }
 }

@@ -40,10 +40,10 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public int nullValue;
 
-        public override float ReadRawValueFrom(IntPtr statePtr)
+        public override float ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            var intValue = MemoryHelpers.ReadMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+            var intValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
 
             var value = 0.0f;
             if (minValue > maxValue)
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Controls
             return Preprocess(value);
         }
 
-        protected override unsafe void WriteRawValueInto(IntPtr statePtr, float value)
+        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, float value)
         {
             throw new NotImplementedException();
         }

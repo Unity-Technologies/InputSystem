@@ -3,6 +3,8 @@ using Unity.Collections;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should we make this ExecuteInEditMode?
+
 ////TODO: make this survive domain reloads
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
@@ -145,6 +147,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         }
 
         protected void SendValueToControl<TValue>(TValue value)
+            where TValue : struct
         {
             if (m_Control == null)
                 return;
@@ -158,7 +161,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                     controlPath, m_Control.GetType().Name, typeof(TValue).Name));
             }
 
-            m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueInto(m_InputEventPtr, value);
             InputSystem.QueueEvent(m_InputEventPtr);
         }

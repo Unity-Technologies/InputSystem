@@ -9,7 +9,10 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
 partial class CoreTests
@@ -25,7 +28,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         InputSystem.AddDevice("MyDevice");
         testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
@@ -35,8 +38,7 @@ partial class CoreTests
         }.ToJson());
         InputSystem.Update();
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
 
@@ -54,31 +56,120 @@ partial class CoreTests
         Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
+    // onFindLayoutForDevice allows dynamically injecting new layouts into the system that
+    // are custom-tailored at runtime for the discovered device. Make sure that our domain
+    // reload can restore these.
     [Test]
     [Category("Editor")]
-    public void Editor_RestoringDeviceFromSave_RestoresRelevantDynamicConfiguration()
+    public void Editor_DomainReload_CanRestoreDevicesBuiltWithDynamicallyGeneratedLayouts()
     {
-        var device = InputSystem.AddDevice("Gamepad");
-        InputSystem.SetUsage(device, CommonUsages.LeftHand);
-        ////TODO: set variants
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+            }
+        };
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
+
+        InputSystem.SaveAndReset();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        var state = InputSystem.GetSavedState();
+        var manager = InputSystem.s_Manager;
+
+        manager.m_SavedAvailableDevices = state.managerState.availableDevices;
+        manager.m_SavedDeviceStates = state.managerState.devices;
+
+        manager.RestoreDevicesAfterDomainReload();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
+
+        InputSystem.Restore();
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_PreservesUsagesOnDevices()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
+
+        InputSystem.SaveAndReset();
         InputSystem.Restore();
 
         var newDevice = InputSystem.devices.First(x => x is Gamepad);
 
-        Assert.That(newDevice.layout, Is.EqualTo("Gamepad"));
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-        Assert.That(Gamepad.current, Is.SameAs(newDevice));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
+    {
+        InputNoiseFilter filter = new InputNoiseFilter
+        {
+            elements = new InputNoiseFilter.FilterElement[]
+            {
+                new InputNoiseFilter.FilterElement
+                {
+                    controlIndex = 0,
+                    type = InputNoiseFilter.ElementType.EntireControl
+                }
+            }
+        };
+
+        var device = InputSystem.AddDevice<Gamepad>();
+        device.userInteractionFilter = filter;
+
+        InputSystem.SaveAndReset();
+        InputSystem.Restore();
+
+        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+
+        Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
+        Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
+        Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
+        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(InputNoiseFilter.ElementType.EntireControl));
+    }
+
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_DomainReload_PreservesCurrentDevices()
+    {
+        Assert.Fail();
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
-        InputSystem.Save();
+        InputSystem.SaveAndReset();
 
         var receivedOnEvent = 0;
         var receivedOnDeviceChange = 0;
@@ -101,10 +192,9 @@ partial class CoreTests
     public void Editor_RestoringStateWillRestoreObjectsOfLayoutBuilder()
     {
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
-        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), "TestLayout");
+        InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
         InputSystem.Restore();
 
         var device = InputSystem.AddDevice("TestLayout");
@@ -149,6 +239,8 @@ partial class CoreTests
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps[0].name, Is.Not.Null.Or.Empty);
         Assert.That(asset.actionMaps[1].name, Is.Not.Null.Or.Empty);
+        Assert.That(asset.actionMaps[0].m_Id, Is.Not.Empty);
+        Assert.That(asset.actionMaps[1].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].name, Is.Not.EqualTo(asset.actionMaps[1].name));
 
         var actionMap2Name = asset.actionMaps[1].name;
@@ -162,26 +254,27 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAddActionMapFromObject()
+    public void Editor_InputAsset_CanAddActionMapFromSavedProperties()
     {
         var map = new InputActionMap("set");
         var binding = new InputBinding();
         binding.path = "some path";
         var action = map.AddAction("action");
-        action.AppendBinding(binding);
+        action.AddBinding(binding);
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
 
+        var parameters = new Dictionary<string, string>();
+        parameters.Add("m_Name", "set");
+
         Assert.That(asset.actionMaps, Has.Count.EqualTo(0));
 
-        InputActionSerializationHelpers.AddActionMapFromObject(obj, map);
+        InputActionSerializationHelpers.AddActionMapFromSavedProperties(obj, parameters);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
         Assert.That(asset.actionMaps[0].name, Is.EqualTo("set"));
-        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action"));
-        Assert.That(asset.actionMaps[0].actions[0].bindings[0].path, Is.EqualTo("some path"));
     }
 
     [Test]
@@ -202,6 +295,7 @@ partial class CoreTests
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
         Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[0].actions[2].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
         InputActionSerializationHelpers.DeleteAction(mapProperty, 2);
@@ -226,7 +320,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendBinding(action1Property, mapProperty);
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         // Maps and actions aren't UnityEngine.Objects so the modifications will not
@@ -254,7 +348,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAddBindingFromObject()
+    public void Editor_InputAsset_CanAddBindingFromSavedProperties()
     {
         var map = new InputActionMap("set");
         map.AddAction(name: "action1");
@@ -266,16 +360,22 @@ partial class CoreTests
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
         var pathName = "/gamepad/leftStick";
+        var name = "some name";
+        var interactionsName = "someinteractions";
         var sourceActionName = "some action";
         var groupName = "group";
         var flags = 10;
-        var inputBinding = new InputBinding()
-        {
-            path = pathName,
-            action = sourceActionName,
-            groups = groupName
-        };
-        InputActionSerializationHelpers.AppendBindingFromObject(inputBinding, action1Property, mapProperty);
+
+        var parameters = new Dictionary<string, string>();
+        parameters.Add("path", pathName);
+        parameters.Add("name", name);
+        parameters.Add("groups", groupName);
+        parameters.Add("interactions", interactionsName);
+        parameters.Add("flags", "" + flags);
+        parameters.Add("action", sourceActionName);
+
+        InputActionSerializationHelpers.AddBindingFromSavedProperties(parameters, action1Property, mapProperty);
+
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");
@@ -283,11 +383,13 @@ partial class CoreTests
         Assert.That(action1.bindings[0].path, Is.EqualTo(pathName));
         Assert.That(action1.bindings[0].action, Is.EqualTo("action1"));
         Assert.That(action1.bindings[0].groups, Is.EqualTo(groupName));
+        Assert.That(action1.bindings[0].interactions, Is.EqualTo(interactionsName));
+        Assert.That(action1.bindings[0].name, Is.EqualTo(name));
     }
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAppendCompositeBinding()
+    public void Editor_InputAsset_CanAddCompositeBinding()
     {
         var map = new InputActionMap("set");
         map.AddAction(name: "action1");
@@ -298,11 +400,14 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, typeof(AxisComposite));
+        InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(3));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "positive"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "negative"));
         Assert.That(action1.bindings[0].isComposite, Is.True);
         Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
         Assert.That(action1.bindings[1].isComposite, Is.False);
@@ -334,7 +439,7 @@ partial class CoreTests
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputActionMap Clone()"));
+        Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
     }
 
     [Test]
@@ -351,19 +456,19 @@ partial class CoreTests
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
-        Assert.That(code, Contains.Substring("class NewControls_4_"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @action__"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @_1thing"));
+        Assert.That(code, Contains.Substring("class NewControls4"));
+        Assert.That(code, Contains.Substring("public InputAction @action"));
+        Assert.That(code, Contains.Substring("public InputAction @_1thing"));
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_CanRenameAction()
     {
-        var set1 = new InputActionMap("set1");
-        set1.AddAction(name: "action", binding: "/gamepad/leftStick");
+        var map = new InputActionMap("set1");
+        map.AddAction(name: "action", binding: "<Gamepad>/leftStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set1);
+        asset.AddActionMap(map);
 
         var obj = new SerializedObject(asset);
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
@@ -372,9 +477,139 @@ partial class CoreTests
         InputActionSerializationHelpers.RenameAction(action1Property, mapProperty, "newAction");
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        Assert.That(set1.actions[0].name, Is.EqualTo("newAction"));
-        Assert.That(set1.actions[0].bindings, Has.Count.EqualTo(1));
-        Assert.That(set1.actions[0].bindings[0].action, Is.EqualTo("newAction"));
+        Assert.That(map.actions[0].name, Is.EqualTo("newAction"));
+        Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(map.actions[0].bindings[0].action, Is.EqualTo("newAction"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RenamingAction_WillAutomaticallyEnsureUniqueNames()
+    {
+        var map = new InputActionMap("set1");
+        map.AddAction("actionA", binding: "<Gamepad>/leftStick");
+        map.AddAction("actionB");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameAction(action1Property, mapProperty, "actionB");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.actions[1].name, Is.EqualTo("actionB"));
+        Assert.That(map.actions[0].name, Is.EqualTo("actionB1"));
+        Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(map.actions[0].bindings[0].action, Is.EqualTo("actionB1"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanRenameActionMap()
+    {
+        var map = new InputActionMap("oldName");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameActionMap(mapProperty, "newName");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.name, Is.EqualTo("newName"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RenamingActionMap_WillAutomaticallyEnsureUniqueNames()
+    {
+        var map1 = new InputActionMap("mapA");
+        var map2 = new InputActionMap("mapB");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var obj = new SerializedObject(asset);
+        var map1Property = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameActionMap(map1Property, "mapB");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map1.name, Is.EqualTo("mapB1"));
+        Assert.That(map2.name, Is.EqualTo("mapB"));
+    }
+
+    // We don't want the game code's update mask affect editor code and vice versa.
+    [Test]
+    [Category("Editor")]
+    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
+
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode_ButPreservesBeforeRenderState()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+
+        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_AlwaysKeepsEditorUpdatesEnabled()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanListDeviceMatchersForLayout()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout""
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        InputSystem.RegisterLayoutMatcher("TestLayout", new InputDeviceMatcher().WithProduct("A"));
+        InputSystem.RegisterLayoutMatcher("TestLayout", new InputDeviceMatcher().WithProduct("B"));
+
+        var matchers = EditorInputControlLayoutCache.GetDeviceMatchers("TestLayout").ToList();
+
+        Assert.That(matchers, Has.Count.EqualTo(2));
+        Assert.That(matchers[0], Is.EqualTo(new InputDeviceMatcher().WithProduct("A")));
+        Assert.That(matchers[1], Is.EqualTo(new InputDeviceMatcher().WithProduct("B")));
     }
 
     private class TestEditorWindow : EditorWindow
@@ -389,6 +624,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("TODO")]
     public void TODO_Editor_PointerCoordinatesInEditorWindowOnGUI_AreInEditorWindowSpace()
     {
         Assert.Fail();
@@ -400,6 +636,7 @@ partial class CoreTests
     ////REVIEW: support actions in the editor at all?
     [UnityTest]
     [Category("Editor")]
+    [Ignore("TODO")]
     public IEnumerator TODO_Editor_ActionSetUpInEditor_DoesNotTriggerInPlayMode()
     {
         throw new NotImplementedException();
@@ -407,6 +644,7 @@ partial class CoreTests
 
     [UnityTest]
     [Category("Editor")]
+    [Ignore("TODO")]
     public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
     {
         throw new NotImplementedException();

@@ -4,7 +4,7 @@ using UnityEditor;
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
 {
     [CustomEditor(typeof(OnScreenButton))]
-    public class OnScreenButtonEditor : UnityEditor.Editor
+    public class OnScreenButtonEditor : OnScreenControlEditor
     {
     }
 }

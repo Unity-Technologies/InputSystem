@@ -1,0 +1,40 @@
+"In Game Actions"
+{
+	"actions"
+	{
+		"gameplay"
+		{
+			"title"	"#Set_gameplay"
+			"StickPadGyro"
+			{
+				"move"
+				{
+					"title"	"#Action_gameplay_move"
+					"input_mode"	"joystick_move"
+				}
+				"look"
+				{
+					"title"	"#Action_gameplay_look"
+					"input_mode"	"absolute_mouse"
+				}
+			}
+			"AnalogTrigger"
+			{
+			}
+			"Button"
+			{
+				"fire"	"Action_gameplay_fire"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_gameplay"	"gameplay"
+			"Action_gameplay_move"	"move"
+			"Action_gameplay_look"	"look"
+			"Action_gameplay_fire"	"fire"
+		}
+	}
+}

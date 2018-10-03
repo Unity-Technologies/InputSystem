@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     {
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<OnScreenKeyboard>();
+            InputSystem.RegisterLayout<OnScreenKeyboard>();
         }
     }
 }

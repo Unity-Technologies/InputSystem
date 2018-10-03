@@ -6,6 +6,10 @@ ScriptedImporter:
     11400002: gameplay/fire
     11400004: gameplay/move
     11400006: gameplay/look
+    11400008: gameplay/jump
+    11400010: menu/navigate
+    11400012: menu/click
+    11400014: gameplay/escape
   externalObjects: {}
   userData: 
   assetBundleName: 
@@ -13,4 +17,10 @@ ScriptedImporter:
   script: {fileID: 11500000, guid: e2fdc6edf8744b38b702a2a5ee3541b2, type: 3}
   generateWrapperCode: 1
   wrapperCodePath: 
+  wrapperClassName: 
   wrapperCodeNamespace: 
+  generateActionEvents: 1
+  actionGuids:
+  - name: gameplay/fire
+    guid: 1077f913-a9f9-41b1-acb3-b9ee0adbc744
+  actionMapGuids: []

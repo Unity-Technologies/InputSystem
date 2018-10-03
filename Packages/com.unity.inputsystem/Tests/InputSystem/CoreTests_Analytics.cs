@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor.VersionControl;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 #if UNITY_EDITOR
@@ -75,7 +76,7 @@ partial class CoreTests
             deviceClass = "Keyboard",
             interfaceName = "TestB"
         }.ToJson());
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription // Unrecognized; won't result in device.
         {
             product = "TestProductC",
             manufacturer = "TestManufacturerC",
@@ -213,6 +214,7 @@ partial class CoreTests
     ////TODO: for this one to make sense, we first need noise filtering to be able to tell real user interaction from garbage data
     [Test]
     [Category("Analytics")]
+    [Ignore("TODO")]
     public void TODO_Analytics_ReceivesEventOnFirstUserInteraction()
     {
         Assert.Fail();

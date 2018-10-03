@@ -3,17 +3,21 @@ InitTestScene*
 *.orig
 *.orig.meta
 .vs/
-Assets/Plugins/
-Assets/Plugins.meta
+Assets/Plugins/Editor/JetBrains
+Assets/Plugins/Editor/JetBrains.meta
 Builds/
+Logs/
 Library/
 Temp/
 *.sln
 *.sln*user
 *.csproj
+*.DotSettings
+*.userprefs
 .idea/
 obj/
 .DS_Store
+docerrors.log
 
 Packages/com.unity.inputsystem/artifacts/**
 Packages/com.unity.inputsystem/build/**
