@@ -2211,15 +2211,31 @@ namespace UnityEngine.Experimental.Input
                         break;
 
                     case TextEvent.Type:
+                    {
                         var textEventPtr = (TextEvent*)currentEventPtr;
-                        ////TODO: handle UTF-32 to UTF-16 conversion properly
-                        device.OnTextInput((char)textEventPtr->character);
+                        var textInputReceiver = device as ITextInputReceiver;
+                        if (textInputReceiver != null)
+                        {
+                            var ch = (char)textEventPtr->character;
+                            textInputReceiver.OnTextInput(ch);
+                            if (char.IsSurrogate(ch))
+                            {
+                                // Get high-surrogate char of pair.
+                                ch = (char)(textEventPtr->character >> 16);
+                                textInputReceiver.OnTextInput(ch);
+                            }
+                        }
                         break;
+                    }
 
                     case IMECompositionEvent.Type:
+                    {
                         var imeEventPtr = (IMECompositionEvent*)currentEventPtr;
-                        device.OnIMEStringEvent(imeEventPtr->composition);
+                        var textInputReceiver = device as ITextInputReceiver;
+                        if (textInputReceiver != null)
+                            textInputReceiver.OnIMECompositionChanged(imeEventPtr->compositionString);
                         break;
+                    }
 
                     case DeviceRemoveEvent.Type:
                         RemoveDevice(device);

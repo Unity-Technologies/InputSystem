@@ -324,7 +324,7 @@ namespace UnityEngine.Experimental.Input
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState))]
-    public class Keyboard : InputDevice
+    public class Keyboard : InputDevice, ITextInputReceiver
     {
         public const int KeyCount = (int)Key.OEM5;
 
@@ -347,7 +347,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
         /// </remarks>
-        public event Action<IMEComposition> onIMECompositionChange
+        public event Action<IMECompositionString> onIMECompositionChange
         {
             add { m_ImeCompositionListeners.Append(value); }
             remove { m_ImeCompositionListeners.Remove(value); }
@@ -897,24 +897,24 @@ namespace UnityEngine.Experimental.Input
                 keyboardLayout = command.ReadLayoutName();
         }
 
-        public override void OnTextInput(char character)
+        public void OnTextInput(char character)
         {
             for (var i = 0; i < m_TextInputListeners.length; ++i)
                 m_TextInputListeners[i](character);
         }
 
-        public override void OnIMEStringEvent(IMEComposition composition)
+        public void OnIMECompositionChanged(IMECompositionString compositionString)
         {
             if (m_ImeCompositionListeners.length > 0)
             {
                 for (var i = 0; i < m_ImeCompositionListeners.length; ++i)
-                    m_ImeCompositionListeners[i](composition);
+                    m_ImeCompositionListeners[i](compositionString);
             }
         }
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<IMEComposition>> m_ImeCompositionListeners;
+        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 }
