@@ -1792,6 +1792,27 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanHandleUTF32CharactersInTextInputOnKeyboard()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var charsReceived = new List<char>();
+        keyboard.onTextInput += ch => charsReceived.Add(ch);
+
+        const int highBits = 0x12;
+        const int lowBits = 0x21;
+
+        var inputEvent = TextEvent.Create(keyboard.id, 0x10000 + (highBits << 10 | lowBits), 123);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(charsReceived, Has.Count.EqualTo(2));
+        Assert.That(charsReceived[0], Is.EqualTo(0xD800 + highBits));
+        Assert.That(charsReceived[1], Is.EqualTo(0xDC00 + lowBits));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetDisplayNameFromKeyboardKey()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();

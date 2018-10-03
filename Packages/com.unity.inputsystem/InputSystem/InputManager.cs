@@ -2216,13 +2216,21 @@ namespace UnityEngine.Experimental.Input
                         var textInputReceiver = device as ITextInputReceiver;
                         if (textInputReceiver != null)
                         {
-                            var ch = (char)textEventPtr->character;
-                            textInputReceiver.OnTextInput(ch);
-                            if (char.IsSurrogate(ch))
+                            var utf32Char = textEventPtr->character;
+                            if (utf32Char >= 0x10000)
                             {
-                                // Get high-surrogate char of pair.
-                                ch = (char)(textEventPtr->character >> 16);
-                                textInputReceiver.OnTextInput(ch);
+                                // Send surrogate pair.
+                                utf32Char -= 0x10000;
+                                var highSurrogate = 0xD800 + ((utf32Char >> 10) & 0x3FF);
+                                var lowSurrogate = 0xDC00 + (utf32Char & 0x3FF);
+
+                                textInputReceiver.OnTextInput((char)highSurrogate);
+                                textInputReceiver.OnTextInput((char)lowSurrogate);
+                            }
+                            else
+                            {
+                                // Send single, plain character.
+                                textInputReceiver.OnTextInput((char)utf32Char);
                             }
                         }
                         break;

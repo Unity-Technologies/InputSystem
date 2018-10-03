@@ -13,8 +13,8 @@ namespace UnityEngine.Experimental.Input
         /// A single, fully-formed Unicode character has been typed on the device.
         /// </summary>
         /// <param name="character">Character that was typed. Note that in case the character is part of
-        /// a surrogate pair, this method is called first with the low surrogate and then with the
-        /// high surrogate character.</param>
+        /// a surrogate pair, this method is called first with the high surrogate and then with the
+        /// low surrogate character.</param>
         void OnTextInput(char character);
 
         /// <summary>
