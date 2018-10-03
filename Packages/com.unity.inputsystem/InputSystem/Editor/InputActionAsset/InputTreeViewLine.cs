@@ -199,6 +199,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return name.GetHashCode();
         }
+
+        public override bool isDraggable
+        {
+            get { return true; }
+        }
     }
 
     internal class ActionTreeItem : ActionTreeViewItem
@@ -231,6 +236,11 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override GUIStyle rectStyle
         {
             get { return Styles.greenRect; }
+        }
+
+        public override bool isDraggable
+        {
+            get { return true; }
         }
 
         public void AddCompositeBinding(string compositeName)

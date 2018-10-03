@@ -67,6 +67,37 @@ namespace UnityEngine.Experimental.Input.Editor
                 root.AddChild(actionMapItem);
             }
         }
+
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
+        {
+            if (args.dragAndDropPosition != DragAndDropPosition.BetweenItems)
+                return DragAndDropVisualMode.None;
+
+            var id = Int32.Parse(DragAndDrop.paths.First());
+            var item = FindItem(id, rootItem);
+            var row = (ActionMapTreeItem)item;
+
+            if (!row.isDraggable || args.parentItem != row.parent)
+            {
+                return DragAndDropVisualMode.None;
+            }
+
+            if (args.performDrop)
+            {
+                var dstIndex = args.insertAtIndex;
+                var srcIndex = row.index;
+                
+                if (dstIndex > srcIndex)
+                {
+                    dstIndex--;
+                }
+                
+                InputActionSerializationHelpers.MoveActionMap(m_SerializedObject, srcIndex, dstIndex);
+                m_ApplyAction();
+                DragAndDrop.AcceptDrag();
+            }
+            return DragAndDropVisualMode.Move;
+        }
     }
 }
 #endif // UNITY_EDITOR

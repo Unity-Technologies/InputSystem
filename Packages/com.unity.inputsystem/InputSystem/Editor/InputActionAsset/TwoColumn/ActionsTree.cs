@@ -152,6 +152,95 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return rootItem;
         }
+
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
+        {
+            if (args.dragAndDropPosition != DragAndDropPosition.BetweenItems)
+                return DragAndDropVisualMode.None;
+
+            var id = Int32.Parse(DragAndDrop.paths.First());
+            var item = FindItem(id, rootItem);
+            var row = (ActionTreeViewItem)item;
+
+            if (!row.isDraggable || args.parentItem != row.parent)
+            {
+                return DragAndDropVisualMode.None;
+            }
+
+            if (args.performDrop)
+            {
+                if (item is BindingTreeItem)
+                {
+                    MoveBinding(args, row);
+                }
+                else if (item is ActionTreeItem)
+                {
+                    MoveAction(args, row);
+                }
+
+                m_ApplyAction();
+                DragAndDrop.AcceptDrag();
+            }
+            return DragAndDropVisualMode.Move;
+        }
+        
+        void MoveAction(DragAndDropArgs args, ActionTreeViewItem row)
+        {
+            var action = (ActionTreeItem)row;
+            
+            var dstIndex = args.insertAtIndex;
+            var srcIndex = action.index;
+            if (dstIndex > srcIndex)
+            {
+                dstIndex--;
+            }
+            InputActionSerializationHelpers.MoveAction(actionMapProperty, srcIndex, dstIndex);
+        }
+
+        void MoveBinding(DragAndDropArgs args, ActionTreeViewItem row)
+        {
+            TreeViewItem item;
+            var compositeChildrenCount = 0;
+            for (var i = 0; i < args.insertAtIndex; i++)
+            {
+                item = args.parentItem.children[i];
+                if (item.hasChildren)
+                {
+                    compositeChildrenCount += item.children.Count;
+                }
+            }
+
+            args.insertAtIndex += compositeChildrenCount;
+
+            var action = (ActionTreeItem)args.parentItem;
+
+            var dstIndex = action.bindingsStartIndex + args.insertAtIndex;
+            var srcIndex = action.bindingsStartIndex + row.index;
+            if (dstIndex > srcIndex)
+            {
+                dstIndex--;
+            }
+
+            InputActionSerializationHelpers.MoveBinding(actionMapProperty, srcIndex, dstIndex);
+
+            if (row.hasChildren)
+            {
+                for (var i = 0; i < row.children.Count; i++)
+                {
+                    if (dstIndex > srcIndex)
+                    {
+                        // when moving composite down
+                        InputActionSerializationHelpers.MoveBinding(actionMapProperty, srcIndex, dstIndex);
+                        continue;
+                    }
+
+                    // when moving composite up
+                    dstIndex++;
+                    srcIndex = action.bindingsStartIndex + (row.children[i] as CompositeTreeItem).index;
+                    InputActionSerializationHelpers.MoveBinding(actionMapProperty, srcIndex, dstIndex);
+                }
+            }
+        }
     }
 }
 #endif // UNITY_EDITOR

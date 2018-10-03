@@ -147,7 +147,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             m_ActionAssetManager.LoadImportedObjectFromGuid();
-            Apply();
+            EditorApplication.delayCall += Apply;
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
             m_ActionAssetManager.UpdateAssetDirtyState();
@@ -390,7 +390,6 @@ namespace UnityEngine.Experimental.Input.Editor
             var path = AssetDatabase.GetAssetPath(instanceId);
             if (!path.EndsWith(k_FileExtension))
                 return false;
-
 
             string mapToSelect = null;
             string actionToSelect = null;

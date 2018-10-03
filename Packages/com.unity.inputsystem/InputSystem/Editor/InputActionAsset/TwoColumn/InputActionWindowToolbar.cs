@@ -15,11 +15,9 @@ namespace UnityEngine.Experimental.Input.Editor
         private int m_SelectedControlSchemeIndex = -1;
         [SerializeField]
         private int m_SelectedDeviceIndex;
-        [SerializeField]
-        private string[] m_DeviceIdList= new string[0];
-        [SerializeField]
-        private string[] m_DeviceNamesList = new string[0];
 
+        private string[] m_DeviceIdList;
+        private string[] m_DeviceNamesList;
         private InputActionAssetManager m_ActionAssetManager;
         private SearchField m_SearchField;
         private string[] m_AllControlSchemeNames;
@@ -72,6 +70,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public void SetReferences(InputActionAssetManager actionAssetManager)
         {
             m_ActionAssetManager = actionAssetManager;
+            RebuildData();
+            BuildDeviceList();
         }
 
         public void RebuildData()
