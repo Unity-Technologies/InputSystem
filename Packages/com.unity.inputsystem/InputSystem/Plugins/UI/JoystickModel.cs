@@ -10,6 +10,34 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </summary>
     public struct JoystickModel
     {
+        public struct InternalData
+        {
+            /// <summary>
+            /// Bookkeeping values for uGUI that tracks the number of sequential move commands in the same direction that have been sent.  Used to handle proper repeat timing.
+            /// </summary>
+            public int consecutiveMoveCount { get; set; }
+
+            /// <summary>
+            /// Bookkeeping values for uGUI that tracks the direction of the last move command.  Used to handle proper repeat timing.
+            /// </summary>
+            public MoveDirection lastMoveDirection { get; set; }
+
+            /// <summary>
+            /// Bookkeeping values for uGUI that tracks the last time a move command was sent.  Used to handle proper repeat timing.
+            /// </summary>
+            public float lastMoveTime { get; set; }
+
+            /// <summary>
+            /// Resets this object to it's default, unused state.
+            /// </summary>
+            public void Reset()
+            {
+                consecutiveMoveCount = 0;
+                lastMoveTime = 0.0f;
+                lastMoveDirection = MoveDirection.None;
+            }
+        }
+
         /// <summary>
         /// A 2D Vector that represents a UI Selection movement command.  Think moving up and down in options menus or highlighting options.
         /// </summary>
@@ -64,19 +92,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public ButtonDeltaState cancelButtonDelta { get; private set; }
 
         /// <summary>
-        /// Bookkeeping values for uGUI that tracks the number of sequential move commands in the same direction that have been sent.  Used to handle proper repeat timing.
+        /// Internal bookkeeping data used by the uGUI system.
         /// </summary>
-        public int consecutiveMoveCount { get; set; }
-
-        /// <summary>
-        /// Bookkeeping values for uGUI that tracks the direction of the last move command.  Used to handle proper repeat timing.
-        /// </summary>
-        public MoveDirection lastMoveDirection { get; set; }
-
-        /// <summary>
-        /// Bookkeeping values for uGUI that tracks the last time a move command was sent.  Used to handle proper repeat timing.
-        /// </summary>
-        public float lastMoveTime { get; set; }
+        public InternalData internalData { get; set; }
 
         /// <summary>
         /// Resets this object to it's default, unused state.
@@ -85,11 +103,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             move = Vector2.zero;
             m_SubmitButtonDown = m_CancelButtonDown = false;
-            submitButtonDelta = cancelButtonDelta = ButtonDeltaState.NoChange; 
+            submitButtonDelta = cancelButtonDelta = ButtonDeltaState.NoChange;
 
-            consecutiveMoveCount = 0;
-            lastMoveTime = 0.0f;
-            lastMoveDirection = MoveDirection.None;
+            internalData.Reset();
         }
 
         /// <summary>

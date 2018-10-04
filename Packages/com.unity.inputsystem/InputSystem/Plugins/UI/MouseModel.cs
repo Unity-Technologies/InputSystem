@@ -23,6 +23,56 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </summary>
     public struct MouseButtonModel
     {
+        public struct InternalData
+        {
+            /// <summary>
+            /// Used to cache whether or not the current mouse button is being dragged.  See <see cref="PointerEventData.dragging"/> for more details.
+            /// </summary>
+            public bool isDragging { get; set; }
+
+            /// <summary>
+            /// Used to cache the last time this button was pressed.  See <see cref="PointerEventData.clickTime"/> for more details.
+            /// </summary>
+            public float pressedTime { get; set; }
+
+            /// <summary>
+            /// The position on the screen that this button was last pressed.  In the same scale as <see cref="MouseModel.position"/>, and caches the same value as <see cref="PointerEventData.pressPosition"/>.
+            /// </summary>
+            public Vector2 pressedPosition { get; set; }
+
+            /// <summary>
+            /// The Raycast data from the time it was pressed.  See <see cref="PointerEventData.pointerPressRaycast"/> for more details.
+            /// </summary>
+            public RaycastResult pressedRaycast { get; set; }
+
+            /// <summary>
+            /// The last gameobject pressed on that can handle press or click events.  See <see cref="PointerEventData.pointerPress"/> for more details.
+            /// </summary>
+            public GameObject pressedGameObject { get; set; }
+
+            /// <summary>
+            /// The last gameobject pressed on regardless of whether it can handle events or not.  See <see cref="PointerEventData.rawPointerPress"/> for more details.
+            /// </summary>
+            public GameObject pressedGameObjectRaw { get; set; }
+
+            /// <summary>
+            /// The gameobject currently being dragged if any.  See <see cref="PointerEventData.pointerDrag"/> for more details.
+            /// </summary>
+            public GameObject draggedGameObject { get; set; }
+
+            /// <summary>
+            /// Resets this object to it's default, unused state.
+            /// </summary>
+            public void Reset()
+            {
+                isDragging = false;
+                pressedTime = 0.0f;
+                pressedPosition = Vector2.zero;
+                pressedRaycast = new RaycastResult();
+                pressedGameObject = pressedGameObjectRaw = draggedGameObject = null;
+            }
+        }
+
         /// <summary>
         /// Used to store the current binary state of the button.  When set, will also track the changes between calls of <see cref="OnFrameFinished"/> in <see cref="lastFrameDelta"/>.
         /// </summary>
@@ -48,39 +98,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public ButtonDeltaState lastFrameDelta { get; private set; }
 
         /// <summary>
-        /// Used to cache whether or not the current mouse button is being dragged.  See <see cref="PointerEventData.dragging"/> for more details.
+        /// Internal bookkeeping data used by the uGUI system.
         /// </summary>
-        public bool isDragging { get; set; }
-
-        /// <summary>
-        /// Used to cache the last time this button was pressed.  See <see cref="PointerEventData.clickTime"/> for more details.
-        /// </summary>
-        public float pressedTime { get; set; }
-
-        /// <summary>
-        /// The position on the screen that this button was last pressed.  In the same scale as <see cref="MouseModel.position"/>, and caches the same value as <see cref="PointerEventData.pressPosition"/>.
-        /// </summary>
-        public Vector2 pressedPosition { get; set; }
-
-        /// <summary>
-        /// The Raycast data from the time it was pressed.  See <see cref="PointerEventData.pointerPressRaycast"/> for more details.
-        /// </summary>
-        public RaycastResult pressedRaycast { get; set; }
-
-        /// <summary>
-        /// The last gameobject pressed on that can handle press or click events.  See <see cref="PointerEventData.pointerPress"/> for more details.
-        /// </summary>
-        public GameObject pressedGameObject { get; set; }
-
-        /// <summary>
-        /// The last gameobject pressed on regardless of whether it can handle events or not.  See <see cref="PointerEventData.rawPointerPress"/> for more details.
-        /// </summary>
-        public GameObject pressedGameObjectRaw { get; set; }
-
-        /// <summary>
-        /// The gameobject currently being dragged if any.  See <see cref="PointerEventData.pointerDrag"/> for more details.
-        /// </summary>
-        public GameObject draggedGameObject { get; set; }
+        public InternalData internalData { get; set; }
 
         /// <summary>
         /// Set's this object to it's default, unused state.
@@ -88,11 +108,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public void Reset()
         {
             lastFrameDelta = ButtonDeltaState.NoChange;
-            m_IsDown = isDragging = false;
-            pressedTime = 0.0f;
-            pressedPosition = Vector2.zero;
-            pressedRaycast = new RaycastResult();
-            pressedGameObject = pressedGameObjectRaw = draggedGameObject = null;
+            m_IsDown = false;
+
+            internalData.Reset();
         }
 
         /// <summary>
@@ -109,13 +127,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <param name="eventData">These objects are used to send data through the uGUI system.</param>
         public void CopyTo(PointerEventData eventData)
         {
-            eventData.dragging = isDragging;
-            eventData.clickTime = pressedTime;
-            eventData.pressPosition = pressedPosition;
-            eventData.pointerPressRaycast = pressedRaycast;
-            eventData.pointerPress = pressedGameObject;
-            eventData.rawPointerPress = pressedGameObjectRaw;
-            eventData.pointerDrag = draggedGameObject;
+            InternalData bookkeeping = internalData;
+            eventData.dragging = bookkeeping.isDragging;
+            eventData.clickTime = bookkeeping.pressedTime;
+            eventData.pressPosition = bookkeeping.pressedPosition;
+            eventData.pointerPressRaycast = bookkeeping.pressedRaycast;
+            eventData.pointerPress = bookkeeping.pressedGameObject;
+            eventData.rawPointerPress = bookkeeping.pressedGameObjectRaw;
+            eventData.pointerDrag = bookkeeping.draggedGameObject;
         }
 
         /// <summary>
@@ -124,13 +143,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <param name="eventData">These objects are used to send data through the uGUI system.</param>
         public void CopyFrom(PointerEventData eventData)
         {
-            isDragging = eventData.dragging;
-            pressedTime = eventData.clickTime;
-            pressedPosition = eventData.pressPosition;
-            pressedRaycast = eventData.pointerPressRaycast;
-            pressedGameObject = eventData.pointerPress;
-            pressedGameObjectRaw = eventData.rawPointerPress;
-            draggedGameObject = eventData.pointerDrag;
+            InternalData bookkeeping = internalData;
+            bookkeeping.isDragging = eventData.dragging;
+            bookkeeping.pressedTime = eventData.clickTime;
+            bookkeeping.pressedPosition = eventData.pressPosition;
+            bookkeeping.pressedRaycast = eventData.pointerPressRaycast;
+            bookkeeping.pressedGameObject = eventData.pointerPress;
+            bookkeeping.pressedGameObjectRaw = eventData.rawPointerPress;
+            bookkeeping.draggedGameObject = eventData.pointerDrag;
+            internalData = bookkeeping;
         }
 
         private bool m_IsDown;
@@ -138,6 +159,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
     public struct MouseModel
     {
+        public struct InternalData
+        {
+            /// <summary>
+            /// This tracks the current GUI targets being hovered over.  Syncs up to <see cref="PointerEventData.hovered"/>.
+            /// </summary>
+            public List<GameObject> hoverTargets { get; set; }
+
+            /// <summary>
+            ///  Tracks the current enter/exit target being hovered over at any given moment. Syncs up to <see cref="PointerEventData.pointerEnter"/>.
+            /// </summary>
+            public GameObject pointerTarget { get; set; }
+        }
+
         /// <summary>
         /// An Id representing a unique pointer.  See <see cref="UnityEngine.Experimental.Input.Pointer.pointerId"/> for more details.
         /// </summary>
@@ -239,14 +273,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         /// <summary>
-        /// This tracks the current GUI targets being hovered over.  Syncs up to <see cref="PointerEventData.hovered"/>.
+        /// Internal bookkeeping data used by the uGUI system.
         /// </summary>
-        public List<GameObject> hoverTargets { get; set; }
-
-        /// <summary>
-        ///  Tracks the current enter/exit target being hovered over at any given moment. Syncs up to <see cref="PointerEventData.pointerEnter"/>.
-        /// </summary>
-        public GameObject pointerTarget { get; set; }
+        public InternalData internalData { get; set; }
 
         public MouseModel(EventSystem eventSystem, int pointerId)
         {
@@ -261,8 +290,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_RightButton.Reset();
             m_MiddleButton.Reset();
 
-            pointerTarget = null;
-            hoverTargets = new List<GameObject>();
+            InternalData bookkeeping = new InternalData();
+            bookkeeping.pointerTarget = null;
+            bookkeeping.hoverTargets = new List<GameObject>();
+            internalData = bookkeeping;
         }
 
         /// <summary>

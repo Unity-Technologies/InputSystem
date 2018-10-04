@@ -16,11 +16,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public abstract class UIInputModule : BaseInputModule
     {
-        protected override void Awake()
-        {
-            base.Awake();
-        }
-
         private RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
@@ -41,7 +36,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.position = mouseState.position;
             eventData.delta = mouseState.deltaPosition;
             eventData.scrollDelta = mouseState.scrollDelta;
-            eventData.pointerEnter = mouseState.pointerTarget;
+            eventData.pointerEnter = mouseState.internalData.pointerTarget;
 
             // This is unset in legacy systems and can safely assumed to stay true.
             eventData.useDragThreshold = true;
@@ -51,12 +46,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return eventData;
         }
 
+        /// <summary>
+        /// Takes an existing MouseModel and dispatches all relevant changes through the event system.
+        /// It also updates the internal data of the MouseModel.
+        /// </summary>
+        /// <param name="mouseState">The mouse state you want to forward into the UI Event System</param>
         protected void ProcessMouse(ref MouseModel mouseState)
         {
             if (!mouseState.changedThisFrame)
                 return;
 
             var eventData = PreparePointerEventData(mouseState);
+            eventData.Reset();
 
             /// Left Mouse Button
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
@@ -65,15 +66,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             ProcessMouseButton(buttonState.lastFrameDelta, eventData);
 
             ProcessMouseMovement(eventData);
-            mouseState.hoverTargets = eventData.hovered;
-            mouseState.pointerTarget = eventData.pointerEnter;
+            ProcessMouseScroll(eventData);
 
-            var scrollDelta = mouseState.scrollDelta;
-            if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
-            {
-                var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(mouseState.pointerTarget);
-                ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
-            }
+            MouseModel.InternalData internalMouseData = mouseState.internalData;
+            internalMouseData.hoverTargets = eventData.hovered;
+            internalMouseData.pointerTarget = eventData.pointerEnter;
+            mouseState.internalData = internalMouseData;
 
             ProcessMouseButtonDrag(eventData);
 
@@ -274,8 +272,25 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
+        private void ProcessMouseScroll(PointerEventData eventData)
+        {
+            var scrollDelta = eventData.scrollDelta;
+            if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
+            {
+                var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(eventData.pointerEnter);
+                ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
+            }
+        }
+
+        /// <summary>
+        /// Takes an existing JoystickModel and dispatches all relevant changes through the event system.
+        /// It also updates the internal data of the JoystickModel.
+        /// </summary>
+        /// <param name="joystickState">The joystick state you want to forward into the UI Event System</param>
         protected void ProcessJoystick(ref JoystickModel joystickState)
         {
+            JoystickModel.InternalData internalJoystickState = joystickState.internalData;
+
             var usedSelectionChange = false;
             if (eventSystem.currentSelectedGameObject != null)
             {
@@ -304,26 +319,25 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                         moveDirection = (moveVector.y > 0) ? MoveDirection.Up : MoveDirection.Down;
                 }
 
-                if (moveDirection != joystickState.lastMoveDirection)
+                if (moveDirection != internalJoystickState.lastMoveDirection)
                 {
-                    joystickState.consecutiveMoveCount = 0;
+                    internalJoystickState.consecutiveMoveCount = 0;
                 }
 
                 if (moveDirection != MoveDirection.None)
                 {
                     bool allow = true;
-                    if (joystickState.consecutiveMoveCount != 0)
+                    if (internalJoystickState.consecutiveMoveCount != 0)
                     {
-                        if (joystickState.consecutiveMoveCount > 1)
-                            allow = (time > (joystickState.lastMoveTime + repeatRate));
+                        if (internalJoystickState.consecutiveMoveCount > 1)
+                            allow = (time > (internalJoystickState.lastMoveTime + repeatRate));
                         else
-                            allow = (time > (joystickState.lastMoveTime + repeatDelay));
+                            allow = (time > (internalJoystickState.lastMoveTime + repeatDelay));
                     }
 
                     if (allow)
                     {
-                        //TODO TB (Don't be so wasteful)
-                        AxisEventData eventData = new AxisEventData(eventSystem);
+                        AxisEventData eventData = GetOrCreateCachedAxisEvent();
                         eventData.Reset();
 
                         eventData.moveVector = moveVector;
@@ -332,17 +346,17 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                         ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
                         usedSelectionChange = eventData.used;
 
-                        joystickState.consecutiveMoveCount = joystickState.consecutiveMoveCount + 1;
-                        joystickState.lastMoveTime = time;
-                        joystickState.lastMoveDirection = moveDirection;
+                        internalJoystickState.consecutiveMoveCount = internalJoystickState.consecutiveMoveCount + 1;
+                        internalJoystickState.lastMoveTime = time;
+                        internalJoystickState.lastMoveDirection = moveDirection;
 
                     }
                 }
                 else
-                    joystickState.consecutiveMoveCount = 0;
+                    internalJoystickState.consecutiveMoveCount = 0;
             }
             else
-                joystickState.consecutiveMoveCount = 0;
+                internalJoystickState.consecutiveMoveCount = 0;
 
             if (!usedSelectionChange)
             {
@@ -357,6 +371,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 }
             }
 
+            joystickState.internalData = internalJoystickState;
             joystickState.OnFrameFinished();
         }
 
@@ -368,8 +383,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 result = new PointerEventData(eventSystem);
                 m_CachedPointerEvent = result;
             }
-
-            result.Reset();
 
             return result;
         }

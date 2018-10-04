@@ -341,11 +341,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             if (oldProperty != null)
             {
-                if (m_ActionsEnabled)
-                    oldProperty.action.Enable();
-
                 if (m_ActionsHooked)
                     oldProperty.action.performed += m_ActionCallback;
+
+                if (m_ActionsEnabled)
+                    oldProperty.action.Enable();
             }
         }
 
