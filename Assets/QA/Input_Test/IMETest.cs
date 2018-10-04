@@ -49,11 +49,11 @@ public class IMETest : MonoBehaviour
         outputString += character;
     }
 
-    void OnIMECompositionChange(IMEComposition composition)
+    void OnIMECompositionChange(IMECompositionString compositionString)
     {
-        compositionString = "";
-        foreach (char c in composition)
-            compositionString += c;
+        this.compositionString = "";
+        foreach (char c in compositionString)
+            this.compositionString += c;
 
         if (logCompositionString)
             Debug.Log(logCompositionString.ToString());

@@ -5,6 +5,8 @@
 //
 // Version: 1.0.5
 
+#if UNITY_STANDALONE && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+
 using UnityEngine;
 using System.Collections;
 using Steamworks;
@@ -176,3 +178,5 @@ public class SteamManager : MonoBehaviour
         SteamAPI.RunCallbacks();
     }
 }
+
+#endif

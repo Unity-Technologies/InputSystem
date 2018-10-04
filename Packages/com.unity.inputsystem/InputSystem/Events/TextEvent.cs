@@ -39,9 +39,22 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public static TextEvent Create(int deviceId, char character, double time)
         {
-            var inputEvent = new TextEvent();
-            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + 4, deviceId, time);
-            inputEvent.character = character;
+            ////TODO: detect and throw when if character is surrogate
+            var inputEvent = new TextEvent
+            {
+                baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + 4, deviceId, time),
+                character = character
+            };
+            return inputEvent;
+        }
+
+        public static TextEvent Create(int deviceId, int character, double time)
+        {
+            var inputEvent = new TextEvent
+            {
+                baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + 4, deviceId, time),
+                character = character
+            };
             return inputEvent;
         }
     }

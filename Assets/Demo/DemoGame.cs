@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.XR;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -73,7 +74,7 @@ public class DemoGame : MonoBehaviour
         get
         {
             if (!s_VRSupported.HasValue)
-                return PlayerSettings.virtualRealitySupported;
+                return XRSettings.enabled;
             return s_VRSupported.Value;
         }
         set { s_VRSupported = value; }
@@ -152,8 +153,14 @@ public class DemoGame : MonoBehaviour
         // switch.
         var defaultScheme = player.InferDefaultControlSchemeForSinglePlayer();
 
-        // Switch to default control scheme.
-        player.SetControlScheme(defaultScheme);
+        //what's relevant here
+        // - putting the binding mask in place
+        // - having the devices used by the bindings assigned to the player
+
+        ////TODO: handle failure
+        // Switch to default control scheme and give the player whatever controls
+        // it needs.
+        player.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
 
         // Finally, run code that is shared between single- and multi-player games.
         StartGame();
@@ -251,7 +258,7 @@ public class DemoGame : MonoBehaviour
         player.controls.Enable(controlScheme);
 
         // Enable control scheme on player.
-        player.SetControlScheme(controlScheme);
+        player.AssignControlScheme(controlScheme);
     }
 
     /// <summary>

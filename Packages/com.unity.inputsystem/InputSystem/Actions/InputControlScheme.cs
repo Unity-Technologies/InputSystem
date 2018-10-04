@@ -1,10 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: allow associating control schemes with platforms, too?
+
+////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -30,6 +34,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         //problem: how do you do any subtractive operation? should we care?
+        //problem: this won't allow resolving things on just an InputControlScheme itself; needs context
         /// <summary>
         /// Name of control scheme that this scheme is based on.
         /// </summary>
@@ -57,12 +62,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Devices necessary for this control scheme.
+        /// Devices used by the control scheme.
         /// </summary>
         /// <remarks>
-        ///
-        ///
-        /// Note that there may be multiple devices
+        /// No two entries will be allowed to match the same control or device at runtime in order for the requirements
+        /// of the control scheme to be considered <see cref="IsSatisfiedBy{TDeviceList}">satisfied</see>. If,
+        /// for example, one entry requires a "&lt;Gamepad&gt;" and another entry requires a "&lt;Gamepad&gt;",
+        /// then at runtime two gamepads will be required even though a single one will match both requirements
+        /// individually.
         /// </remarks>
         public ReadOnlyArray<DeviceEntry> devices
         {
@@ -73,7 +80,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_Name = name;
             m_BaseSchemeName = string.Empty;
-            m_BindingGroup = name;
+            m_BindingGroup = name; // Defaults to name.
             m_BaseSchemeName = basedOn;
             m_Devices = null;
 
@@ -83,6 +90,128 @@ namespace UnityEngine.Experimental.Input
                 if (m_Devices.Length == 0)
                     m_Devices = null;
             }
+        }
+
+        /// <summary>
+        /// Determine whether the given device matches any of the requirements in the control scheme.
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <seealso cref="devices"/>
+        public MatchResult Matches(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            // Empty device requirements matches any device.
+            if (m_Devices == null || m_Devices.Length == 0)
+                return MatchResult.NoSpecificRequirementsMatch;
+
+            for (var i = 0; i < m_Devices.Length; ++i)
+            {
+                // Check if device path matches any control on the device. Works with both
+                // matching requirements on child controls as well as matching requirements
+                // just on the device itself.
+                if (InputControlPath.TryFindControl(device, m_Devices[i].devicePath) != null)
+                {
+                    if (m_Devices[i].isOptional)
+                        return MatchResult.OptionalMatch;
+                    return MatchResult.RequiredMatch;
+                }
+            }
+
+            return MatchResult.NoMatch;
+        }
+
+        /// <summary>
+        /// Based on a list of devices, make a selection that matches the <see cref="devices">requirements</see>
+        /// imposed by the control scheme. Remove any devices not used by the control scheme from the list.
+        /// </summary>
+        /// <param name="devices"></param>
+        /// <returns></returns>
+        public MatchResult PickMatchingDevices(ref InputControlList<InputDevice> devices)
+        {
+            // Empty device requirements matches anything.
+            if (m_Devices == null || m_Devices.Length == 0)
+            {
+                devices.Clear();
+                return MatchResult.NoSpecificRequirementsMatch;
+            }
+
+            // Go through each requirement and match it.
+            // NOTE: Even if `devices` is empty, we don't know yet whether we have a NoMatch.
+            //       All our devices may be optional.
+            var result = MatchResult.RequiredMatch;
+            var requirementCount = m_Devices.Length;
+            using (var requirementMatches = new InputControlList<InputControl>(Allocator.Temp, requirementCount))
+            {
+                for (var i = 0; i < requirementCount; ++i)
+                {
+                    var path = m_Devices[i].devicePath;
+
+                    InputControl match = null;
+                    for (var n = 0; n < devices.Count; ++n)
+                    {
+                        var device = devices[n];
+
+                        // See if we have a match.
+                        var matchedControl = InputControlPath.TryFindControl(device, path);
+                        if (matchedControl == null)
+                            continue; // No.
+
+                        // We have a match but if we've already match the same control through another requirement,
+                        // we can't use the match.
+                        if (requirementMatches.Contains(matchedControl))
+                            continue;
+
+                        match = matchedControl;
+                        break;
+                    }
+
+                    var isOptional = m_Devices[i].isOptional;
+                    if (match == null && !isOptional)
+                        return MatchResult.NoMatch;
+
+                    requirementMatches.Add(match);
+                    if (isOptional)
+                        result = MatchResult.OptionalMatch;
+                }
+
+                // We should have matched each of our requirements.
+                Debug.Assert(requirementMatches.Count == requirementCount);
+
+                // At this point, if we don't have any devices, we don't have a match.
+                if (devices.Count == 0)
+                    return MatchResult.NoMatch;
+
+                // Whittle the list down to the devices that we picked.
+                for (var i = 0; i < devices.Count; ++i)
+                {
+                    var device = devices[i];
+
+                    var haveMatchedThisDevice = false;
+                    for (var n = 0; n < requirementCount; ++n)
+                    {
+                        var matchedControl = requirementMatches[n];
+                        var matchedDevice = matchedControl.device;
+
+                        if (matchedDevice == device)
+                        {
+                            haveMatchedThisDevice = true;
+                            break;
+                        }
+                    }
+
+                    if (!haveMatchedThisDevice)
+                    {
+                        devices.RemoveAt(i);
+                        --i;
+                    }
+                }
+            }
+
+            return result;
         }
 
         public string ToJson()
@@ -105,28 +234,25 @@ namespace UnityEngine.Experimental.Input
             // Compare device requirements.
             if (m_Devices == null || m_Devices.Length == 0)
                 return (other.m_Devices == null || other.m_Devices.Length == 0);
-            else
+            if (other.m_Devices == null || m_Devices.Length != other.m_Devices.Length)
+                return false;
+
+            var deviceCount = m_Devices.Length;
+            for (var i = 0; i < deviceCount; ++i)
             {
-                if (other.m_Devices == null || m_Devices.Length != other.m_Devices.Length)
-                    return false;
-
-                var deviceCount = m_Devices.Length;
-                for (var i = 0; i < deviceCount; ++i)
+                var device = m_Devices[i];
+                var haveMatch = false;
+                for (var n = 0; i < deviceCount; ++n)
                 {
-                    var device = m_Devices[i];
-                    var haveMatch = false;
-                    for (var n = 0; i < deviceCount; ++n)
+                    if (other.m_Devices[n] == device)
                     {
-                        if (other.m_Devices[n] == device)
-                        {
-                            haveMatch = true;
-                            break;
-                        }
+                        haveMatch = true;
+                        break;
                     }
-
-                    if (!haveMatch)
-                        return false;
                 }
+
+                if (!haveMatch)
+                    return false;
             }
 
             return true;
@@ -192,6 +318,26 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] internal string m_BaseSchemeName;
         [SerializeField] internal string m_BindingGroup;
         [SerializeField] internal DeviceEntry[] m_Devices;
+
+        public enum MatchResult
+        {
+            /// <summary>
+            /// A <see cref="InputDevice">device</see> did not match any of a <see cref="InputControlScheme">
+            /// control scheme's</see> device requirements.
+            /// </summary>
+            /// <seealso cref="InputControlScheme.devices"/>
+            /// <seealso cref="InputControlScheme.Matches"/>
+            NoMatch,
+
+            RequiredMatch,
+            OptionalMatch,
+
+            /// <summary>
+            /// The control scheme has no specific <see cref="devices">device requirements</see> and thus
+            /// matched by virtue of matching anything.
+            /// </summary>
+            NoSpecificRequirementsMatch,
+        }
 
         [Serializable]
         public struct DeviceEntry : IEquatable<DeviceEntry>
@@ -277,6 +423,45 @@ namespace UnityEngine.Experimental.Input
             public static bool operator!=(DeviceEntry left, DeviceEntry right)
             {
                 return !left.Equals(right);
+            }
+        }
+
+        public struct FilteredDeviceList<TSourceList> : IEnumerable<InputDevice>
+            where TSourceList : IEnumerable<InputDevice>
+        {
+            public IEnumerator<InputDevice> GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
+        public struct DeviceEnumerator : IEnumerator<InputDevice>
+        {
+            public bool MoveNext()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Reset()
+            {
+                throw new NotImplementedException();
+            }
+
+            public InputDevice Current { get; private set; }
+
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
             }
         }
 

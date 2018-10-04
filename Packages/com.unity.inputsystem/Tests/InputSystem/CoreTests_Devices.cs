@@ -274,10 +274,11 @@ partial class CoreTests
 
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        var controls = InputSystem.GetControls("/{LeftHand}");
-
-        Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(device));
+        using (var controls = InputSystem.FindControls("/{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
     }
 
     [Test]
@@ -290,10 +291,11 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         InputSystem.SetDeviceUsage(keyboard, CommonUsages.LeftHand);
 
-        var controls = InputSystem.GetControls("/<Keyboard>{LeftHand}");
-
-        Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
+        using (var controls = InputSystem.FindControls("/<Keyboard>{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
+        }
     }
 
     [Test]
@@ -1790,6 +1792,27 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanHandleUTF32CharactersInTextInputOnKeyboard()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var charsReceived = new List<char>();
+        keyboard.onTextInput += ch => charsReceived.Add(ch);
+
+        const int highBits = 0x12;
+        const int lowBits = 0x21;
+
+        var inputEvent = TextEvent.Create(keyboard.id, 0x10000 + (highBits << 10 | lowBits), 123);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(charsReceived, Has.Count.EqualTo(2));
+        Assert.That(charsReceived[0], Is.EqualTo(0xD800 + highBits));
+        Assert.That(charsReceived[1], Is.EqualTo(0xDC00 + lowBits));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetDisplayNameFromKeyboardKey()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -2897,11 +2920,12 @@ partial class CoreTests
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice("Keyboard");
 
-        var matches = InputSystem.GetControls("/<gamepad>");
-
-        Assert.That(matches, Has.Count.EqualTo(2));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
+        using (var matches = InputSystem.FindControls("/<gamepad>"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(2));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
+        }
     }
 
     [Test]

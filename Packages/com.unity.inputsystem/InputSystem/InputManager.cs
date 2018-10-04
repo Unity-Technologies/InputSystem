@@ -671,7 +671,17 @@ namespace UnityEngine.Experimental.Input
         // Adds all controls that match the given path spec to the given list.
         // Returns number of controls added to the list.
         // NOTE: Does not create garbage.
-        public int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
+
+        /// <summary>
+        /// Adds to the given list all controls that match the given <see cref="InputControlPath">path spec</see>
+        /// and are assignable to the given type.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="controls"></param>
+        /// <typeparam name="TControl"></typeparam>
+        /// <returns></returns>
+        public int GetControls<TControl>(string path, ref InputControlList<TControl> controls)
+            where TControl : InputControl
         {
             if (string.IsNullOrEmpty(path))
                 return 0;
@@ -1375,6 +1385,7 @@ namespace UnityEngine.Experimental.Input
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
+        internal int m_DeviceSetupVersion;
         private float m_PollingFrequency;
 
         internal InputControlLayout.Collection m_Layouts;
@@ -2098,9 +2109,9 @@ namespace UnityEngine.Experimental.Input
                         // Significant changes are non-noisy control changes, and changes that create a value
                         // change after processors are applied.  These are used to detect actual user interaction
                         // with a device instead of simply sensor noise.
-                        InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
-                        InputNoiseFilter filter = device.userInteractionFilter;
-                        bool hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
+                        var eventPtr = new InputEventPtr(currentEventPtr);
+                        var filter = device.userInteractionFilter;
+                        var hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
                         doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
@@ -2200,15 +2211,39 @@ namespace UnityEngine.Experimental.Input
                         break;
 
                     case TextEvent.Type:
+                    {
                         var textEventPtr = (TextEvent*)currentEventPtr;
-                        ////TODO: handle UTF-32 to UTF-16 conversion properly
-                        device.OnTextInput((char)textEventPtr->character);
+                        var textInputReceiver = device as ITextInputReceiver;
+                        if (textInputReceiver != null)
+                        {
+                            var utf32Char = textEventPtr->character;
+                            if (utf32Char >= 0x10000)
+                            {
+                                // Send surrogate pair.
+                                utf32Char -= 0x10000;
+                                var highSurrogate = 0xD800 + ((utf32Char >> 10) & 0x3FF);
+                                var lowSurrogate = 0xDC00 + (utf32Char & 0x3FF);
+
+                                textInputReceiver.OnTextInput((char)highSurrogate);
+                                textInputReceiver.OnTextInput((char)lowSurrogate);
+                            }
+                            else
+                            {
+                                // Send single, plain character.
+                                textInputReceiver.OnTextInput((char)utf32Char);
+                            }
+                        }
                         break;
+                    }
 
                     case IMECompositionEvent.Type:
+                    {
                         var imeEventPtr = (IMECompositionEvent*)currentEventPtr;
-                        device.OnIMEStringEvent(imeEventPtr->composition);
+                        var textInputReceiver = device as ITextInputReceiver;
+                        if (textInputReceiver != null)
+                            textInputReceiver.OnIMECompositionChanged(imeEventPtr->compositionString);
                         break;
+                    }
 
                     case DeviceRemoveEvent.Type:
                         RemoveDevice(device);
@@ -2566,6 +2601,7 @@ namespace UnityEngine.Experimental.Input
         internal struct SerializedState
         {
             public int layoutRegistrationVersion;
+            public int deviceSetupVersion;
             public float pollingFrequency;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -2615,6 +2651,7 @@ namespace UnityEngine.Experimental.Input
             return new SerializedState
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
+                deviceSetupVersion = m_DeviceSetupVersion,
                 pollingFrequency = m_PollingFrequency,
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices != null ? m_AvailableDevices.Take(m_AvailableDeviceCount).ToArray() : null,
@@ -2635,6 +2672,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
+            m_DeviceSetupVersion = state.deviceSetupVersion + 1;
             m_UpdateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;

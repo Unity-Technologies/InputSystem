@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input
     /// a device at the root. Devices cannot occur inside of hierarchies.
     ///
     /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    /// without requiring a change to the device layout (<see cref="InputSystem.SetUsage"/>).
+    /// without requiring a change to the device layout (<see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
     /// </remarks>
     public class InputDevice : InputControl
     {
@@ -262,19 +262,6 @@ namespace UnityEngine.Experimental.Input
         /// it receives an event.
         /// </remarks>
         public virtual void MakeCurrent()
-        {
-        }
-
-        ////REVIEW: should this receive a timestamp, too?
-        /// <summary>
-        /// Invoked when the device receive a <see cref="LowLevel.TextEvent">text input event</see>.
-        /// </summary>
-        /// <param name="character"></param>
-        public virtual void OnTextInput(char character)
-        {
-        }
-
-        public virtual void OnIMEStringEvent(IMEComposition imeComposition)
         {
         }
 

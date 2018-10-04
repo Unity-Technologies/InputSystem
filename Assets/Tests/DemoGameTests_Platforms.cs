@@ -19,7 +19,7 @@ public partial class DemoGameTests
         Click("SinglePlayerButton");
 
         Assert.That(game.players[0].GetControlScheme(), Is.EqualTo(game.players[0].controls.GamepadScheme));
-        //Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Gamepad>());
+        Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Gamepad>());
     }
 
     [Test]
@@ -33,8 +33,8 @@ public partial class DemoGameTests
         Click("SinglePlayerButton");
 
         Assert.That(game.players[0].GetControlScheme(), Is.EqualTo(game.players[0].controls.KeyboardMouseScheme));
-        //Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Keyboard>());
-        //Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Mouse>());
+        Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Keyboard>());
+        Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Mouse>());
     }
 
     #endif

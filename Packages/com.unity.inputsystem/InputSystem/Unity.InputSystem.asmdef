@@ -1,6 +1,7 @@
 {
     "name": "Unity.InputSystem",
-    "references": [],
+    "references": [    	
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],

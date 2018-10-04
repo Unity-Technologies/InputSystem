@@ -2035,6 +2035,129 @@ partial class CoreTests
         Assert.That(asset.GetControlScheme("scheme").devices[2].isOptional, Is.True);
     }
 
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanMatchDeviceAgainstControlSchemeDeviceRequirements()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepadA = InputSystem.AddDevice<Gamepad>();
+        var gamepadB = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.SetDeviceUsage(gamepadA, "A");
+        InputSystem.SetDeviceUsage(gamepadB, "B");
+
+        var scheme1 = new InputControlScheme("scheme1")
+            .WithRequiredDevice("<Keyboard>");
+        var scheme2 = new InputControlScheme("scheme2")
+            .WithRequiredDevice("<Gamepad>{B}")
+            .WithOptionalDevice("<Gamepad>{A}");
+        var scheme3 = new InputControlScheme("scheme3")
+            .WithRequiredDevice("<Mouse>");
+        var scheme4 = new InputControlScheme("scheme4");
+        var scheme5 = new InputControlScheme("scheme5")
+            .WithRequiredDevice("<Gamepad>/buttonSouth"); // This essentially requires that a device provides a specific control.
+
+        /*
+        Assert.That(scheme1.Matches(keyboard));
+        Assert.That(scheme1.Matches(gamepadA), Is.False);
+        Assert.That(scheme2.Matches(gamepadA));
+        Assert.That(scheme2.Matches(gamepadB));
+        Assert.That(scheme2.Matches(keyboard), Is.False);
+        Assert.That(scheme3.Matches(keyboard), Is.False);
+        Assert.That(scheme4.Matches(keyboard));
+        Assert.That(scheme4.Matches(gamepadA));
+        Assert.That(scheme4.Matches(gamepadB));
+        Assert.That(scheme5.Matches(gamepadA));
+        Assert.That(scheme5.Matches(gamepadB));
+        */
+        Assert.Fail();
+    }
+
+    //do we really want the complexity of the device requirement lists?
+    //can't we just go by what's in the bindings and put the optional/required on the actions?
+    //then the matching would also move to happening in the context of actions instead of just free-standing on InputControlScheme
+
+
+    //Q1: can I construct scheme information from bindings?
+
+    /*
+    InputControlList<InputDevice> PickDevices(this InputActionAsset asset,
+        InputControlList<InputDevice> availableDevices, string bindingGroup)
+    {
+
+    }
+    */
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPickDevicesThatMatchGivenControlScheme()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        var scheme1 = new InputControlScheme("scheme1")
+            .WithRequiredDevice("<Keyboard>");
+        var scheme2 = new InputControlScheme("scheme2")
+            .WithRequiredDevice("<Gamepad>")
+            .WithOptionalDevice("<Gamepad>");
+        var scheme3 = new InputControlScheme("scheme3");
+        var scheme4 = new InputControlScheme("scheme4")
+            .WithRequiredDevice("<Gamepad>")
+            .WithRequiredDevice("<Gamepad>");
+
+        var keyboardOnly = new InputControlList<InputDevice>(keyboard);
+        var gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
+
+        try
+        {
+            // RequiredMatch.
+            Assert.That(scheme1.PickMatchingDevices(ref keyboardOnly),
+                Is.EqualTo(InputControlScheme.MatchResult.RequiredMatch));
+            Assert.That(scheme1.PickMatchingDevices(ref gamepad1And2AndKeyboard),
+                Is.EqualTo(InputControlScheme.MatchResult.RequiredMatch));
+
+            Assert.That(keyboardOnly, Is.EquivalentTo(new[] {keyboard}));
+            Assert.That(gamepad1And2AndKeyboard, Is.EquivalentTo(new[] {keyboard}));
+
+            keyboardOnly.Dispose();
+            gamepad1And2AndKeyboard.Dispose();
+
+            keyboardOnly = new InputControlList<InputDevice>(keyboard);
+            gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
+
+            // OptionalMatch.
+            Assert.That(scheme2.PickMatchingDevices(ref keyboardOnly),
+                Is.EqualTo(InputControlScheme.MatchResult.NoMatch));
+            Assert.That(scheme2.PickMatchingDevices(ref gamepad1And2AndKeyboard),
+                Is.EqualTo(InputControlScheme.MatchResult.OptionalMatch));
+
+            Assert.That(keyboardOnly, Is.EquivalentTo(new[] {keyboard})); // Untouched.
+            Assert.That(gamepad1And2AndKeyboard, Is.EquivalentTo(new[] { gamepad1, gamepad2 }));
+
+            keyboardOnly.Dispose();
+            gamepad1And2AndKeyboard.Dispose();
+
+            keyboardOnly = new InputControlList<InputDevice>(keyboard);
+            gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
+
+            // NoSpecificRequirementsMatch.
+            Assert.That(scheme3.PickMatchingDevices(ref keyboardOnly),
+                Is.EqualTo(InputControlScheme.MatchResult.NoSpecificRequirementsMatch));
+            Assert.That(scheme3.PickMatchingDevices(ref gamepad1And2AndKeyboard),
+                Is.EqualTo(InputControlScheme.MatchResult.NoSpecificRequirementsMatch));
+
+            Assert.That(keyboardOnly, Is.Empty);
+            Assert.That(gamepad1And2AndKeyboard, Is.Empty);
+        }
+        finally
+        {
+            keyboardOnly.Dispose();
+            gamepad1And2AndKeyboard.Dispose();
+        }
+    }
+
     // The bindings targeting an action can be masked out such that only specific
     // bindings take effect and others are ignored.
     [Test]
