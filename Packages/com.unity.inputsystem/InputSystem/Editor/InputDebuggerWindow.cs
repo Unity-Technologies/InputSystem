@@ -326,6 +326,16 @@ namespace UnityEngine.Experimental.Input.Editor
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
+                var disconnectedDevices = InputSystem.disconnectedDevices;
+                if (disconnectedDevices.Count > 0)
+                {
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var disconnectedDevicesNode = AddChild(parent, string.Format("Disconnected ({0})", disconnectedDevices.Count), ref id);
+                    foreach (var device in disconnectedDevices)
+                        AddChild(disconnectedDevicesNode, device.ToString(), ref id);
+                    disconnectedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
+
                 // Layouts.
                 layoutsItem = AddChild(root, "Layouts", ref id);
                 AddControlLayouts(layoutsItem, ref id);

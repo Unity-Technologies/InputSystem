@@ -123,7 +123,7 @@ namespace UnityEngine.Experimental.Input
 
             return MatchResult.NoMatch;
         }
-        
+
         ////REVIEW: this fails to answer an important question adequately "are we missing devices we'd like to have? if so, which ones?"
 
         /// <summary>

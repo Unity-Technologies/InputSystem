@@ -2384,6 +2384,13 @@ partial class CoreTests
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.Zero.Within(0.00001));
     }
 
     [Test]
