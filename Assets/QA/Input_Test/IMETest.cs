@@ -103,7 +103,7 @@ public class IMETest : MonoBehaviour
         {
             float x, y;
             bool validInput = float.TryParse(cursorXInput.text, out x);
-            validInput |= float.TryParse(cursorYInput.text, out y);
+            validInput &= float.TryParse(cursorYInput.text, out y);
 
             cursorPositionButton.interactable = validInput;
         }
@@ -129,7 +129,7 @@ public class IMETest : MonoBehaviour
         {
             float x, y;
             bool validInput = float.TryParse(cursorXInput.text, out x);
-            validInput |= float.TryParse(cursorYInput.text, out y);
+            validInput &= float.TryParse(cursorYInput.text, out y);
 
             if (validInput)
             {
