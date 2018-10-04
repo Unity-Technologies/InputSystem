@@ -62,8 +62,16 @@ namespace UnityEngine.Experimental.Input.Editor
         private static bool s_RefreshPending;
         private static readonly string k_FileExtension = ".inputactions";
 
+        GUIContent m_PlusIconGUI;
+        GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
+        GUIContent m_ActionsSearchingGUI = EditorGUIUtility.TrTextContent("Actions (Searching)");
+        GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+
         private void OnEnable()
         {
+            if (m_PlusIconGUI == null)
+                m_PlusIconGUI = EditorGUIUtility.IconContent("Toolbar Plus");
+            
             Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ActionAssetManager == null)
             {
@@ -267,15 +275,13 @@ namespace UnityEngine.Experimental.Input.Editor
             columnRect.height -= labelRect.height;
 
             // Draw header
-            var header = EditorGUIUtility.TrTextContent("Action maps");
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
-            EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
+            EditorGUI.LabelField(headerRect, m_ActionMapsHeaderGUI, Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            var plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
-            if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, m_PlusIconGUI, GUIStyle.none))
             {
                 m_ContextMenu.ShowAddActionMapMenu();
             }
@@ -298,9 +304,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
             GUIContent header;
             if (m_InputActionWindowToolbar.searching)
-                header = EditorGUIUtility.TrTextContent("Actions (Searching)");
+                header = m_ActionsSearchingGUI;
             else
-                header = EditorGUIUtility.TrTextContent("Actions");
+                header = m_ActionsGUI;
 
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
@@ -308,7 +314,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            if (GUI.Button(labelRect, EditorGUIUtility.IconContent("Toolbar Plus"), GUIStyle.none))
+            if (GUI.Button(labelRect, m_PlusIconGUI, GUIStyle.none))
             {
                 m_ContextMenu.ShowAddActionsMenu();
             }

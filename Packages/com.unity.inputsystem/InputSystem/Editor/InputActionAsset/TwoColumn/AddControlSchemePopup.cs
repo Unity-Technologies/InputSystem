@@ -38,8 +38,8 @@ namespace UnityEngine.Experimental.Input.Editor
         static readonly GUIContent m_RequirementGUI = new GUIContent("Requirements:");
         static readonly GUIContent m_AddControlSchemeGUI = new GUIContent("Add control scheme");
         static readonly GUIContent m_SchemaNameGUI = new GUIContent("Scheme Name");
-        static Vector2 s_Size = new Vector2(300, 250);
-        static string[] choices = { "Optional", "Required" };
+        static readonly Vector2 s_DefaultSize = new Vector2(300, 200);
+        static readonly string[] choices = { "Optional", "Required" };
 
         public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
         {
@@ -70,7 +70,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override Vector2 GetWindowSize()
         {
-            return m_ButtonsAndLabelsHeights > 0 ? new Vector2(300, m_ButtonsAndLabelsHeights) : new Vector2(300, 200);
+            return m_ButtonsAndLabelsHeights > 0 ? new Vector2(300, m_ButtonsAndLabelsHeights) : s_DefaultSize;
         }
 
         public override void OnOpen()
