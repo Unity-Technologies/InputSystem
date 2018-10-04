@@ -57,17 +57,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public ButtonDeltaState cancelButtonDelta { get; private set; }
 
         public int consecutiveMoveCount { get; set; }
-        public Vector2 lastMoveVector { get; set; }
+        public MoveDirection lastMoveDirection { get; set; }
         public float lastMoveTime { get; set; }
 
-        void Reset()
+        public void Reset()
         {
-            move = lastMoveVector = Vector2.zero;
+            move = Vector2.zero;
             m_SubmitButtonDown = m_CancelButtonDown = false;
-            submitButtonDelta = cancelButtonDelta = ButtonDeltaState.NoChange;
+            submitButtonDelta = cancelButtonDelta = ButtonDeltaState.NoChange; 
 
             consecutiveMoveCount = 0;
             lastMoveTime = 0.0f;
+            lastMoveDirection = MoveDirection.None;
         }
 
         /// <summary>

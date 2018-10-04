@@ -85,6 +85,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             //TODO TB figure out why the pointer Ids change for every click and mouse press. Use 0 for now.
             mouseState = new MockMouseState(eventSystem, 0);
+            joystickState.Reset();
         }
 
         protected override void OnEnable()
@@ -433,34 +434,54 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
             {
                 float time = Time.unscaledTime;
-                bool similarDirection = (Vector2.Dot(movement, joystickState.lastMoveVector) > 0);
 
-                bool allow = true;
-                if (joystickState.consecutiveMoveCount != 0)
+                Vector2 moveVector = joystickState.move;
+
+                MoveDirection moveDirection = MoveDirection.None;
+                if(moveVector.sqrMagnitude > moveDeadzone * moveDeadzone)
                 {
-                    if (similarDirection && joystickState.consecutiveMoveCount == 1)
-                        allow = (time > (joystickState.lastMoveTime + repeatDelay));
+                    if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
+                        moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
                     else
-                        allow = (time > (joystickState.lastMoveTime + repeatRate));
+                        moveDirection = (moveVector.y > 0) ? MoveDirection.Up : MoveDirection.Down;
                 }
 
-                if (allow)
+                if (moveDirection != joystickState.lastMoveDirection)
                 {
-                    AxisEventData eventData = PrepareAxisEventData(joystickState);
-                    if (eventData.moveDir != MoveDirection.None)
+                    joystickState.consecutiveMoveCount = 0;
+                }
+
+                if (moveDirection != MoveDirection.None)
+                {
+                    bool allow = true;
+                    if (joystickState.consecutiveMoveCount != 0)
                     {
+                        if (joystickState.consecutiveMoveCount > 1)
+                            allow = (time > (joystickState.lastMoveTime + repeatRate));
+                        else
+                            allow = (time > (joystickState.lastMoveTime + repeatDelay));
+                    }
+
+                    if (allow)
+                    {
+                        //TODO TB (Don't be so wasteful)
+                        AxisEventData eventData = new AxisEventData(eventSystem);
+                        eventData.Reset();
+
+                        eventData.moveVector = moveVector;
+                        eventData.moveDir = moveDirection;
+
                         ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
                         usedSelectionChange = eventData.used;
 
-                        joystickState.consecutiveMoveCount = similarDirection ? (joystickState.consecutiveMoveCount + 1) : 1;
+                        joystickState.consecutiveMoveCount = joystickState.consecutiveMoveCount + 1;
                         joystickState.lastMoveTime = time;
-                        joystickState.lastMoveVector = movement;
-                    }
-                    else
-                    {
-                        joystickState.consecutiveMoveCount = 0;
+                        joystickState.lastMoveDirection = moveDirection;
+                        
                     }
                 }
+                else
+                    joystickState.consecutiveMoveCount = 0;
             } 
             else
                 joystickState.consecutiveMoveCount = 0;
