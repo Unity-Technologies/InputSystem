@@ -10,6 +10,7 @@ namespace UnityEngine.Experimental.Input.Editor
     internal class ActionsTree : InputActionTreeBase
     {
         public SerializedProperty actionMapProperty;
+        public Action<TreeViewItem, Rect> OnRowGUI;
 
         public static ActionsTree CreateFromSerializedObject(Action applyAction, ref TreeViewState treeViewState)
         {
@@ -240,6 +241,13 @@ namespace UnityEngine.Experimental.Input.Editor
                     InputActionSerializationHelpers.MoveBinding(actionMapProperty, srcIndex, dstIndex);
                 }
             }
+        }
+
+        protected override void RowGUI(RowGUIArgs args)
+        {
+            base.RowGUI(args);
+            if (OnRowGUI != null)
+                OnRowGUI(args.item, args.rowRect);
         }
     }
 }

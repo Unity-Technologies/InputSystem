@@ -7,12 +7,10 @@ namespace UnityEngine.Experimental.Input.Editor
     [Serializable]
     class ActionInspectorContextMenu
     {
-        private static readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        private static readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add/Binding");
-        private static readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
-        private static readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add/Action");
-        private static readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        private static readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
+        private static readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Create Binding");
+        private static readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Create/Binding");
+        private static readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Create Action map");
+        private static readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Create Action map");
 
         TwoColumnAssetInspectorWindow m_AssetInspectorWindow;
         InputActionAssetManager m_ActionAssetManager;
@@ -82,12 +80,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 canAddBinding = true;
             }
-            var canAddAction = false;
-            var actionMap = m_ActionMapsTree.GetSelectedActionMap();
-            if (actionMap != null && hasSelection)
-            {
-                canAddAction = true;
-            }
             if (canAddBinding)
             {
                 menu.AddItem(isContextMenu ? m_AddBindingContextGUI : m_AddBindingGUI, false, OnAddBinding);
@@ -96,16 +88,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 menu.AddDisabledItem(m_AddBindingGUI);
             }
-            if (canAddAction)
-            {
-                menu.AddItem(isContextMenu ? m_AddActionContextGUI : m_AddActionGUI, false, OnAddAction);
-            }
-            else if (!isContextMenu)
-            {
-                menu.AddDisabledItem(m_AddActionGUI, false);
-            }
 
-            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Add/Composite") : EditorGUIUtility.TrTextContent("Composite");
+            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Create/Composite") : EditorGUIUtility.TrTextContent("Composite");
             if (canAddBinding)
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
@@ -133,14 +117,14 @@ namespace UnityEngine.Experimental.Input.Editor
             m_AssetInspectorWindow.Apply();
         }
 
-        private void OnAddAction()
+        public void OnAddAction()
         {
             var actionMapLine = GetSelectedActionMapLine();
             actionMapLine.AddAction();
             m_AssetInspectorWindow.Apply();
         }
 
-        private void OnAddActionMap()
+        public void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
             m_AssetInspectorWindow.Apply();

@@ -62,15 +62,21 @@ namespace UnityEngine.Experimental.Input.Editor
         private static bool s_RefreshPending;
         private static readonly string k_FileExtension = ".inputactions";
 
-        GUIContent m_PlusIconGUI;
+        GUIContent m_AddActionIconGUI;
+        GUIContent m_AddActionMapIconGUI;
+        GUIContent m_AddBindingGUI;
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
         GUIContent m_ActionsSearchingGUI = EditorGUIUtility.TrTextContent("Actions (Searching)");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
 
         private void OnEnable()
         {
-            if (m_PlusIconGUI == null)
-                m_PlusIconGUI = EditorGUIUtility.IconContent("Toolbar Plus");
+            if (m_AddActionIconGUI == null)
+                m_AddActionIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
+            if (m_AddActionMapIconGUI == null)
+                m_AddActionMapIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action Map");
+            if (m_AddBindingGUI == null)
+                m_AddBindingGUI = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Binding");
             
             Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ActionAssetManager == null)
@@ -142,6 +148,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree = ActionsTree.CreateFromSerializedObject(Apply, ref m_ActionsTreeState);
             m_ActionsTree.OnSelectionChanged = OnActionSelection;
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
+            m_ActionsTree.OnRowGUI = OnActionRowGUI;
             m_InputActionWindowToolbar.OnSearchChanged = m_ActionsTree.SetNameFilter;
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
@@ -281,9 +288,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            if (GUI.Button(labelRect, m_PlusIconGUI, GUIStyle.none))
+            if (GUI.Button(labelRect, m_AddActionMapIconGUI, GUIStyle.none))
             {
-                m_ContextMenu.ShowAddActionMapMenu();
+                m_ContextMenu.OnAddActionMap();
             }
 
             // Draw border rect
@@ -314,9 +321,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            if (GUI.Button(labelRect, m_PlusIconGUI, GUIStyle.none))
+            if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
             {
-                m_ContextMenu.ShowAddActionsMenu();
+                m_ContextMenu.OnAddAction();
             }
 
             // Draw border rect
@@ -446,6 +453,20 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             return true;
+        }
+        
+
+        void OnActionRowGUI(TreeViewItem treeViewItem, Rect rect)
+        {
+            if (treeViewItem is ActionTreeItem)
+            {
+                rect.x = rect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+                rect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                if (GUI.Button(rect, m_AddBindingGUI, GUIStyle.none))
+                {
+                    m_ContextMenu.ShowAddActionsMenu();
+                }
+            }
         }
     }
 }
