@@ -35,9 +35,8 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public InputActionAssetManager(InputActionAsset inputActionAsset, Action<bool> setTitle)
+        public InputActionAssetManager(InputActionAsset inputActionAsset)
         {
-            m_SetTitle = setTitle;
             m_ImportedAssetObject = inputActionAsset;
             m_AssetPath = AssetDatabase.GetAssetPath(importedAsset);
             m_AssetGUID = AssetDatabase.AssetPathToGUID(m_AssetPath);
@@ -137,6 +136,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_IsDirty = m_AssetObjectForEditing.ToJson() != importedAsset.ToJson();
             m_SetTitle(m_IsDirty);
+        }
+
+        public void SetReferences(Action<bool> setTitle)
+        {
+            m_SetTitle = setTitle;
         }
     }
 }

@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
         private static readonly GUIContent m_EditGUI = EditorGUIUtility.IconContent("_Popup");
-        private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
+        private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save Asset");
 
         string selectedControlSchemeName
         {
@@ -105,7 +105,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (controlSchemes.Length > 0 && newScheme == (controlSchemes.Length - 1))
             {
                 if (controlSchemes.Length == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Length - 1))
-                    m_SelectedControlSchemeIndex = -1;
+                    m_SelectedControlSchemeIndex = 0;
 
                 var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
                 popup.SetUniqueName();
@@ -189,7 +189,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private void DeleteControlScheme()
         {
             m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(selectedControlSchemeName);
-            m_SelectedControlSchemeIndex = -1;
+            m_SelectedControlSchemeIndex = 0;
+            m_SelectedDeviceIndex = -1;
             m_Apply();
             RebuildData();
         }

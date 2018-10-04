@@ -88,6 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
+            m_ActionAssetManager.SetReferences(SetTitle);
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager);
@@ -128,7 +129,8 @@ namespace UnityEngine.Experimental.Input.Editor
         // Set asset would usually only be called when the window is open
         private void SetAsset(InputActionAsset referencedObject)
         {
-            m_ActionAssetManager = new InputActionAssetManager(referencedObject, SetTitle);
+            m_ActionAssetManager = new InputActionAssetManager(referencedObject);
+            m_ActionAssetManager.SetReferences(SetTitle);
             m_ActionAssetManager.InitializeObjectReferences();
             m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager);
