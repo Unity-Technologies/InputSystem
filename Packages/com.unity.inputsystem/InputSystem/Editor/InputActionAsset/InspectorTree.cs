@@ -9,7 +9,7 @@
 //{
 //    internal class InspectorTree : InputActionTreeBase
 //    {
-//       
+//
 //
 ////        protected override TreeViewItem BuildRoot()
 ////        {
@@ -39,7 +39,7 @@
 ////            }
 ////        }
 //
-//       
+//
 //    }
 //}
 //#endif // UNITY_EDITOR

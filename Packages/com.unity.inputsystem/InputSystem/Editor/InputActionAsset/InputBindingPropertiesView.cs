@@ -190,7 +190,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onPickCallback = onPickCallback,
                 width = rect.width,
             };
-            if(toolbar!=null)
+            if (toolbar != null)
                 w.SetDeviceFilter(toolbar.deviceFilter);
             PopupWindow.Show(rect, w);
         }

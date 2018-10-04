@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Editor
             treeView.ExpandAll();
             return treeView;
         }
-        
+
         static bool OnFoldoutDraw(Rect position, bool expandedState, GUIStyle style)
         {
             var indent = (int)(position.x / 15);
@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ParseActionMap(actionMapItem, m_ActionMapSerializedProperty, 0);
             return actionMapItem;
         }
-        
+
         protected void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, int depth)
         {
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
