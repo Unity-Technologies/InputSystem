@@ -470,7 +470,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 rect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 if (GUI.Button(rect, m_AddBindingGUI, GUIStyle.none))
                 {
-                    m_ContextMenu.ShowAddActionsMenu();
+                    m_ContextMenu.ShowAddActionsMenu(treeViewItem);
                 }
             }
         }

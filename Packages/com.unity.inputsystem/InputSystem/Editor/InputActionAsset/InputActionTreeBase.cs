@@ -123,7 +123,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SelectFirstRow()
         {
-            SetSelection(new[] {rootItem.children[0].id});
+            if (rootItem.children.Any())
+                SetSelection(new[] {rootItem.children[0].id});
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)

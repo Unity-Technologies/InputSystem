@@ -120,7 +120,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var products = BuildTreeForSpecificDevices();
             root.AddChild(products);
 
-            if (m_DeviceFilter != null) //&& false)
+            if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
             {
                 var newRoot = new TreeViewItem
                 {

@@ -129,6 +129,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public bool ImportedAssetObjectEquals(InputActionAsset inputActionAsset)
         {
+            if (importedAsset == null)
+                return false;
             return importedAsset.Equals(inputActionAsset);
         }
 
