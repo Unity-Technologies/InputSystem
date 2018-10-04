@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input.Composites
             var positiveIsPressed = positive.isPressed;
 
             float result;
-            if (negativeIsPressed && positiveIsPressed)
+            if (negativeIsPressed == positiveIsPressed)
                 result = 0f;
             else if (negativeIsPressed)
                 result = -1f;
