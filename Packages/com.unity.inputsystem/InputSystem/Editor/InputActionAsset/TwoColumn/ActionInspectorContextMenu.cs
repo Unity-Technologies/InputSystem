@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 menu.AddDisabledItem(m_AddBindingGUI);
             }
 
-            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Create/Composite") : EditorGUIUtility.TrTextContent("Composite");
+            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Create/Composite") : EditorGUIUtility.TrTextContent("Create Composite");
             if (canAddBinding)
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)

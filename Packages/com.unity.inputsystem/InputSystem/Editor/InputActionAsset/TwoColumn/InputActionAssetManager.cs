@@ -21,6 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private bool m_IsDirty;
 
         private SerializedObject m_SerializedObject;
+        Action<bool> m_SetTitle;
 
         InputActionAsset importedAsset
         {
@@ -34,8 +35,9 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public InputActionAssetManager(InputActionAsset inputActionAsset)
+        public InputActionAssetManager(InputActionAsset inputActionAsset, Action<bool> setTitle)
         {
+            m_SetTitle = setTitle;
             m_ImportedAssetObject = inputActionAsset;
             m_AssetPath = AssetDatabase.GetAssetPath(importedAsset);
             m_AssetGUID = AssetDatabase.AssetPathToGUID(m_AssetPath);
@@ -117,11 +119,13 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             m_IsDirty = false;
+            m_SetTitle(false);
         }
 
         public void SetAssetDirty()
         {
             m_IsDirty = true;
+            m_SetTitle(true);
         }
 
         public bool ImportedAssetObjectEquals(InputActionAsset inputActionAsset)
@@ -132,6 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public void UpdateAssetDirtyState()
         {
             m_IsDirty = m_AssetObjectForEditing.ToJson() != importedAsset.ToJson();
+            m_SetTitle(m_IsDirty);
         }
     }
 }

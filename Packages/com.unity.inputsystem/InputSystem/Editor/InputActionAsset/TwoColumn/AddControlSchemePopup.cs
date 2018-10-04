@@ -41,12 +41,14 @@ namespace UnityEngine.Experimental.Input.Editor
         static readonly Vector2 s_DefaultSize = new Vector2(300, 200);
         static readonly string[] choices = { "Optional", "Required" };
         string m_OriginalName;
+        Action m_Apply;
 
-        public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
+        public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar, Action apply)
         {
             m_AssetManager = assetManager;
             m_Toolbar = toolbar;
             m_SetFocus = true;
+            m_Apply = apply;
         }
 
         public void SetSchemaForEditing(string schemaName)
@@ -306,8 +308,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
-            m_AssetManager.SetAssetDirty();
-            m_Toolbar.RebuildData();
+            m_Apply();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
             editorWindow.Close();
         }
@@ -317,8 +318,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var controlScheme = new InputControlScheme(m_InputControlSchemeName);
             controlScheme.m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
             m_AssetManager.m_AssetObjectForEditing.AddControlScheme(controlScheme);
-            m_AssetManager.SetAssetDirty();
-            m_Toolbar.RebuildData();
+            m_Apply();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
             editorWindow.Close();
         }

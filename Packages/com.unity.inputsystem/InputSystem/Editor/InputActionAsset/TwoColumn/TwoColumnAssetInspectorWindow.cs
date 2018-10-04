@@ -68,6 +68,8 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
         GUIContent m_ActionsSearchingGUI = EditorGUIUtility.TrTextContent("Actions (Searching)");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+        GUIContent m_DirtyTitle;
+        GUIContent m_Title;
 
         private void OnEnable()
         {
@@ -86,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
-            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager);
+            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager);
 
@@ -126,9 +128,9 @@ namespace UnityEngine.Experimental.Input.Editor
         // Set asset would usually only be called when the window is open
         private void SetAsset(InputActionAsset referencedObject)
         {
-            m_ActionAssetManager = new InputActionAssetManager(referencedObject);
+            m_ActionAssetManager = new InputActionAssetManager(referencedObject, SetTitle);
             m_ActionAssetManager.InitializeObjectReferences();
-            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager);
+            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager);
             InitializeTrees();
 
@@ -165,7 +167,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorApplication.delayCall += Apply;
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
-            m_ActionAssetManager.UpdateAssetDirtyState();
+            EditorApplication.delayCall += m_ActionAssetManager.UpdateAssetDirtyState;
         }
 
         private void OnActionMapSelection()
@@ -211,6 +213,7 @@ namespace UnityEngine.Experimental.Input.Editor
         internal void Apply()
         {
             m_ActionAssetManager.SetAssetDirty();
+            titleContent = m_DirtyTitle;
             m_ActionAssetManager.ApplyChanges();
             m_ActionMapsTree.Reload();
             m_InputActionWindowToolbar.RebuildData();
@@ -437,7 +440,9 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 // No, so create a new window.
                 window = CreateInstance<TwoColumnAssetInspectorWindow>();
-                window.titleContent = new GUIContent(asset.name + " (Input Manager)");
+                window.m_Title = new GUIContent(asset.name + " (Input Manager)");
+                window.m_DirtyTitle = new GUIContent("(*) " + window.m_Title.text);
+                window.titleContent = window.m_Title;
                 window.SetAsset(asset);
                 window.Show();
             }
@@ -454,7 +459,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return true;
         }
-        
 
         void OnActionRowGUI(TreeViewItem treeViewItem, Rect rect)
         {
@@ -467,6 +471,11 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ContextMenu.ShowAddActionsMenu();
                 }
             }
+        }
+
+        void SetTitle(bool dirty)
+        {
+            titleContent = dirty? m_DirtyTitle : m_Title;
         }
     }
 }

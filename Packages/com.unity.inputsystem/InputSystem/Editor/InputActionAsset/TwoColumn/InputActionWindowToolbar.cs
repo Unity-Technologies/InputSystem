@@ -22,6 +22,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private SearchField m_SearchField;
         private string[] m_AllControlSchemeNames;
         private string m_SearchText;
+        private Action m_Apply;
 
         private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
@@ -61,15 +62,16 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
         
-        public InputActionWindowToolbar(InputActionAssetManager actionAssetManager)
+        public InputActionWindowToolbar(InputActionAssetManager actionAssetManager, Action apply)
         {
-            SetReferences(actionAssetManager);
+            SetReferences(actionAssetManager, apply);
             RebuildData();
         }
 
-        public void SetReferences(InputActionAssetManager actionAssetManager)
+        public void SetReferences(InputActionAssetManager actionAssetManager, Action apply)
         {
             m_ActionAssetManager = actionAssetManager;
+            m_Apply = apply;
             RebuildData();
             BuildDeviceList();
         }
@@ -105,7 +107,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (controlSchemes.Length == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Length - 1))
                     m_SelectedControlSchemeIndex = -1;
 
-                var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
+                var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
                 popup.SetUniqueName();
                 PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
             }
@@ -147,7 +149,9 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.BeginDisabledGroup(!m_ActionAssetManager.dirty);
             EditorGUILayout.Space();
             if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
+            {
                 m_ActionAssetManager.SaveChangesToAsset();
+            }
             EditorGUI.EndDisabledGroup();
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
@@ -186,12 +190,13 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(selectedControlSchemeName);
             m_SelectedControlSchemeIndex = -1;
+            m_Apply();
             RebuildData();
         }
 
         private void DuplicateControlScheme(object position)
         {
-            var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
+            var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
             popup.DuplicateParametersFrom(selectedControlSchemeName);
             // Since it's a callback, we need to manually handle ExitGUIException
             try
@@ -203,7 +208,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void EditSelectedControlScheme(object position)
         {
-            var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
+            var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
             popup.SetSchemaForEditing(selectedControlSchemeName);
 
             // Since it's a callback, we need to manually handle ExitGUIException
