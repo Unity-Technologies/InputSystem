@@ -263,14 +263,14 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SchemaNameLabelSize = EditorStyles.label.CalcSize(m_RequirementGUI);
             EditorGUILayout.LabelField(m_SchemaNameGUI, GUILayout.Width(m_SchemaNameLabelSize.x));
             GUI.SetNextControlName("SchemaName");
-            
+
             EditorGUI.BeginChangeCheck();
             m_InputControlSchemeName = EditorGUILayout.TextField(m_InputControlSchemeName);
             if (EditorGUI.EndChangeCheck())
             {
                 SetUniqueName();
             }
-            
+
             if (m_SetFocus)
             {
                 EditorGUI.FocusTextInControl("SchemaName");
@@ -328,17 +328,20 @@ namespace UnityEngine.Experimental.Input.Editor
             public string name;
             public InputControlScheme.DeviceEntry deviceEntry;
             public InternedString commonUsage;
-            public object id { get
+            public object id
             {
-                if (string.IsNullOrEmpty(commonUsage))
+                get
                 {
-                    return string.Format("<{0}>", name);
+                    if (string.IsNullOrEmpty(commonUsage))
+                    {
+                        return string.Format("<{0}>", name);
+                    }
+                    else
+                    {
+                        return string.Format("<{0}>{{{1}}}", name, commonUsage);
+                    }
                 }
-                else
-                {
-                    return string.Format("<{0}>{{{1}}}", name, commonUsage);
-                }
-            } }
+            }
 
             public override string ToString()
             {
@@ -347,9 +350,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             public int CompareTo(object obj)
             {
-                var c = (DeviceEntryForList) obj;
+                var c = (DeviceEntryForList)obj;
                 return String.Compare(name, c.name);
-
             }
         }
 

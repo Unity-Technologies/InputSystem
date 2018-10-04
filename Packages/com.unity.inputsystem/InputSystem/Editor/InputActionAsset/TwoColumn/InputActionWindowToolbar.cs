@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Editor
     class InputActionWindowToolbar
     {
         public Action<string> OnSearchChanged;
-        
+
         [SerializeField]
         private int m_SelectedControlSchemeIndex;
         [SerializeField]
@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return !string.IsNullOrEmpty(m_SearchText);
             }
         }
-        
+
         public string[] deviceFilter
         {
             get
@@ -61,7 +61,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return m_DeviceIdList.Skip(m_SelectedDeviceIndex).Take(1).ToArray();
             }
         }
-        
+
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager, Action apply)
         {
             SetReferences(actionAssetManager, apply);
@@ -80,7 +80,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_AllControlSchemeNames = m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToArray();
         }
-        
+
         public void SelectControlScheme(string inputControlSchemeName)
         {
             m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName) + 1;
@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             EditorGUI.EndDisabledGroup();
         }
-        
+
         private void DrawSaveButton()
         {
             EditorGUI.BeginDisabledGroup(!m_ActionAssetManager.dirty);

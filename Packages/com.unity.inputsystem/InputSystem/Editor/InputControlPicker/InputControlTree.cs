@@ -120,7 +120,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var products = BuildTreeForSpecificDevices();
             root.AddChild(products);
 
-            if (m_DeviceFilter != null )//&& false)
+            if (m_DeviceFilter != null) //&& false)
             {
                 var newRoot = new TreeViewItem
                 {
@@ -140,7 +140,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 return newRoot;
             }
-            
+
             return root;
         }
 
@@ -159,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (child.hasChildren)
                 {
                     FindDevice(newRoot, child, deviceFilter);
-                } 
+                }
             }
         }
 

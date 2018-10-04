@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_AddActionMapIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action Map");
             if (m_AddBindingGUI == null)
                 m_AddBindingGUI = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Binding");
-            
+
             Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ActionAssetManager == null)
             {
@@ -202,7 +202,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p != null && p.hasProperties)
                 {
-                    m_PropertyView = p.GetPropertiesView(()=>
+                    m_PropertyView = p.GetPropertiesView(() =>
                     {
                         Apply();
                         LoadPropertiesForSelection(false);
@@ -477,7 +477,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetTitle(bool dirty)
         {
-            titleContent = dirty? m_DirtyTitle : m_Title;
+            titleContent = dirty ? m_DirtyTitle : m_Title;
         }
     }
 }

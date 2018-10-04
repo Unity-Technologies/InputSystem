@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             actionsArrayProperty.MoveArrayElement(srcIndex, dstIndex);
         }
-        
+
         public static void MoveActionMap(SerializedObject serializedObject, int srcIndex, int dstIndex)
         {
             var actionMapsProperty = serializedObject.FindProperty("m_ActionMaps");

@@ -184,11 +184,11 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return DragAndDropVisualMode.Move;
         }
-        
+
         void MoveAction(DragAndDropArgs args, ActionTreeViewItem row)
         {
             var action = (ActionTreeItem)row;
-            
+
             var dstIndex = args.insertAtIndex;
             var srcIndex = action.index;
             if (dstIndex > srcIndex)

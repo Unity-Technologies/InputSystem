@@ -222,7 +222,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return false;
         }
-        
+
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
             if (args.draggedItemIDs.Count > 1)
@@ -230,7 +230,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var item = FindItem(args.draggedItemIDs[0], rootItem) as ActionTreeViewItem;
             return item.isDraggable;
         }
-        
+
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
         {
             var row = FindItem(args.draggedItemIDs.First(), rootItem);

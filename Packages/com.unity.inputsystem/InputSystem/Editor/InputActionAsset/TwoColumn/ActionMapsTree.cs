@@ -86,12 +86,12 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var dstIndex = args.insertAtIndex;
                 var srcIndex = row.index;
-                
+
                 if (dstIndex > srcIndex)
                 {
                     dstIndex--;
                 }
-                
+
                 InputActionSerializationHelpers.MoveActionMap(m_SerializedObject, srcIndex, dstIndex);
                 m_ApplyAction();
                 DragAndDrop.AcceptDrag();
