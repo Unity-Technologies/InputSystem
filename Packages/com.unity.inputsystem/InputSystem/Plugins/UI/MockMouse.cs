@@ -17,10 +17,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         Released = 2,
     }
 
-    public struct MockJoystick
+    /// <summary>
+    /// Represents the state of a joystick in the uGUI system. Keeps track of various book-keeping regarding UI selection, and move and button states.
+    /// </summary>
+    public struct JoystickModel
     {
+        /// <summary>
+        /// A 2D Vector that represents a UI Selection movement command.  Think moving up and down in options menus or highlighting options.
+        /// </summary>
         public Vector2 move { get; set; }
 
+        /// <summary>
+        /// Tracks the current state of the submit or 'move forward' button.  Setting this also updates the <see cref="submitButtonDelta"/> to track if a press or release occurred in the frame.
+        /// </summary>
         public bool submitButtonDown
         {
             get
@@ -36,8 +45,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 }                
             }
         }
+
+        /// <summary>
+        /// Tracks the changes in <see cref="submitButtonDown"/> between calls to <see cref="OnFrameFinished"/>
+        /// </summary>
         public ButtonDeltaState submitButtonDelta { get; private set; }
 
+        /// <summary>
+        /// Tracks the current state of the submit or 'move backward' button.  Setting this also updates the <see cref="cancelButtonDelta"/> to track if a press or release occurred in the frame.
+        /// </summary>
         public bool cancelButtonDown
         {
             get
@@ -54,12 +70,29 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
+        /// <summary>
+        /// Tracks the changes in <see cref="cancelButtonDown"/> between calls to <see cref="OnFrameFinished"/>
+        /// </summary>
         public ButtonDeltaState cancelButtonDelta { get; private set; }
 
+        /// <summary>
+        /// Bookkeeping values for uGUI that tracks the number of sequential move commands in the same direction that have been sent.  Used to handle proper repeat timing.
+        /// </summary>
         public int consecutiveMoveCount { get; set; }
+
+        /// <summary>
+        /// Bookkeeping values for uGUI that tracks the direction of the last move command.  Used to handle proper repeat timing.
+        /// </summary>
         public MoveDirection lastMoveDirection { get; set; }
+
+        /// <summary>
+        /// Bookkeeping values for uGUI that tracks the last time a move command was sent.  Used to handle proper repeat timing.
+        /// </summary>
         public float lastMoveTime { get; set; }
 
+        /// <summary>
+        /// Resets this object to it's default, unused state.
+        /// </summary>
         public void Reset()
         {
             move = Vector2.zero;
@@ -88,7 +121,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// Represents the state of a single mouse button within the uGUI system.  Keeps track of various book-keeping regarding clicks, drags, and presses.
     /// Can be converted to and from PointerEventData for sending into uGUI.
     /// </summary>
-    public struct MockMouseButton
+    public struct MouseButtonModel
     {
         /// <summary>
         /// Used to store the current binary state of the button.  When set, will also track the changes between calls of <see cref="OnFrameFinished"/> in <see cref="lastFrameDelta"/>.
@@ -125,7 +158,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public float pressedTime { get; set; }
 
         /// <summary>
-        /// The position on the screen that this button was last pressed.  In the same scale as <see cref="MockMouseState.position"/>, and caches the same value as <see cref="PointerEventData.pressPosition"/>.
+        /// The position on the screen that this button was last pressed.  In the same scale as <see cref="MouseModel.position"/>, and caches the same value as <see cref="PointerEventData.pressPosition"/>.
         /// </summary>
         public Vector2 pressedPosition { get; set; }
 
@@ -150,7 +183,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public GameObject draggedGameObject { get; set; }
 
         /// <summary>
-        /// Sets this MockMouseButton to it's default, unused state.
+        /// Set's this object to it's default, unused state.
         /// </summary>
         public void Reset()
         {
@@ -203,7 +236,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private bool m_IsDown;
     }
 
-    public struct MockMouseState
+    public struct MouseModel
     {
         /// <summary>
         /// An Id representing a unique pointer.  See <see cref="UnityEngine.Experimental.Input.Pointer.pointerId"/> for more details.
@@ -260,7 +293,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// Cached data and button state representing a left mouse button on a mouse.  Used by uGUI to keep track of persistent click, press, and drag states.
         /// </summary>
-        public MockMouseButton leftButton
+        public MouseButtonModel leftButton
         {
             get
             {
@@ -276,7 +309,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// Cached data and button state representing a right mouse button on a mouse.  Used by uGUI to keep track of persistent click, press, and drag states.
         /// </summary>
-        public MockMouseButton rightButton
+        public MouseButtonModel rightButton
         {
             get
             {
@@ -292,7 +325,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// Cached data and button state representing a middle mouse button on a mouse.  Used by uGUI to keep track of persistent click, press, and drag states.
         /// </summary>
-        public MockMouseButton middleButton
+        public MouseButtonModel middleButton
         {
             get
             {
@@ -315,15 +348,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public GameObject pointerTarget { get; set; }
 
-        public MockMouseState(EventSystem eventSystem, int pointerId)
+        public MouseModel(EventSystem eventSystem, int pointerId)
         {
             this.pointerId = pointerId;
             changedThisFrame = false;
             m_Position = deltaPosition = m_ScrollPosition = scrollDelta = Vector2.zero;
 
-            m_LeftButton = new MockMouseButton();
-            m_RightButton = new MockMouseButton();
-            m_MiddleButton = new MockMouseButton();
+            m_LeftButton = new MouseButtonModel();
+            m_RightButton = new MouseButtonModel();
+            m_MiddleButton = new MouseButtonModel();
             m_LeftButton.Reset();
             m_RightButton.Reset();
             m_MiddleButton.Reset();
@@ -333,7 +366,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         /// <summary>
-        /// Call this at the end of polling for per-frame changes.  This resets delta values, such as <see cref="deltaPosition"/>, <see cref="scrollDelta"/>, and <see cref="MockMouseButton.lastFrameDelta"/>.
+        /// Call this at the end of polling for per-frame changes.  This resets delta values, such as <see cref="deltaPosition"/>, <see cref="scrollDelta"/>, and <see cref="MouseButtonModel.lastFrameDelta"/>.
         /// </summary>
         public void OnFrameFinished()
         {
@@ -346,8 +379,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private Vector2 m_Position;
         private Vector2 m_ScrollPosition;
-        private MockMouseButton m_LeftButton;
-        private MockMouseButton m_RightButton;
-        private MockMouseButton m_MiddleButton;
+        private MouseButtonModel m_LeftButton;
+        private MouseButtonModel m_RightButton;
+        private MouseButtonModel m_MiddleButton;
     }
 }

@@ -41,7 +41,7 @@ public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandl
 
     public void OnMove(AxisEventData eventData)
     {
-        string directionStr = "UNknown";
+        string directionStr = "Unknown";
         switch(eventData.moveDir)
         {
             case MoveDirection.Up:

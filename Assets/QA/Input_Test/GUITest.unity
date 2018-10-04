@@ -1013,18 +1013,32 @@ MonoBehaviour:
   m_SubmitAction:
     m_UseReference: 0
     m_Action:
-      m_Name: 
+      m_Name: Action
       m_ExpectedControlLayout: 
       m_Id: 
-      m_SingletonActionBindings: []
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Path: <Gamepad>/buttonSouth
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Action
+        m_Flags: 0
     m_Reference: {fileID: 0}
   m_CancelAction:
     m_UseReference: 0
     m_Action:
-      m_Name: 
+      m_Name: Action
       m_ExpectedControlLayout: 
       m_Id: 
-      m_SingletonActionBindings: []
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Path: <Gamepad>/buttonEast
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Action
+        m_Flags: 0
     m_Reference: {fileID: 0}
   m_LeftClickAction:
     m_UseReference: 0
@@ -1067,7 +1081,7 @@ MonoBehaviour:
     m_Reference: {fileID: 0}
   clickSpeed: 0.3
   moveDeadzone: 0.6
-  repeatDelay: 1
+  repeatDelay: 0.6
   repeatRate: 0.1
 --- !u!114 &975778828
 MonoBehaviour:
