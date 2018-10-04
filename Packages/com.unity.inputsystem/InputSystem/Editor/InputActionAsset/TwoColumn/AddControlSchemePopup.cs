@@ -40,6 +40,7 @@ namespace UnityEngine.Experimental.Input.Editor
         static readonly GUIContent m_SchemaNameGUI = new GUIContent("Scheme Name");
         static readonly Vector2 s_DefaultSize = new Vector2(300, 200);
         static readonly string[] choices = { "Optional", "Required" };
+        string m_OriginalName;
 
         public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
         {
@@ -59,9 +60,17 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
             SetSchemaParametersFrom(schemaName);
+            m_OriginalName = schemaName;
         }
 
-        public void SetSchemaParametersFrom(string schemaName)
+        public void DuplicateParametersFrom(string schemaName)
+        {
+            SetSchemaParametersFrom(schemaName);
+            SetUniqueName();
+            m_OriginalName = m_InputControlSchemeName;
+        }
+
+        private void SetSchemaParametersFrom(string schemaName)
         {
             m_InputControlSchemeName = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).name;
             var schema = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName);
@@ -182,8 +191,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void DrawConfirmationButton()
         {
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(true)))
+            {
+                editorWindow.Close();
+            }
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(m_InputControlSchemeName) || m_DevicesReorderableList.list.Count <= 0);
-            //TODO Check if name is unique
             if (m_ControlSchemeIndex == -1)
             {
                 if (GUILayout.Button("Add", GUILayout.ExpandWidth(true)))
@@ -201,6 +214,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (Event.current.type == EventType.Repaint)
                 m_ButtonsAndLabelsHeights += GUILayoutUtility.GetLastRect().height;
             EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
         }
 
         void DrawDeviceList()
@@ -247,8 +261,14 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SchemaNameLabelSize = EditorStyles.label.CalcSize(m_RequirementGUI);
             EditorGUILayout.LabelField(m_SchemaNameGUI, GUILayout.Width(m_SchemaNameLabelSize.x));
             GUI.SetNextControlName("SchemaName");
+            
+            EditorGUI.BeginChangeCheck();
             m_InputControlSchemeName = EditorGUILayout.TextField(m_InputControlSchemeName);
-
+            if (EditorGUI.EndChangeCheck())
+            {
+                SetUniqueName();
+            }
+            
             if (m_SetFocus)
             {
                 EditorGUI.FocusTextInControl("SchemaName");
@@ -284,8 +304,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void Save()
         {
-            m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
+            m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
             m_AssetManager.SetAssetDirty();
             m_Toolbar.RebuildData();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
@@ -331,6 +351,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 return String.Compare(name, c.name);
 
             }
+        }
+
+        public void SetUniqueName()
+        {
+            if (m_InputControlSchemeName == m_OriginalName)
+                return;
+            m_AssetManager.serializedObject.Update();
+            var controlSchemeArrayProperty = m_AssetManager.serializedObject.FindProperty("m_ControlSchemes");
+            m_InputControlSchemeName = InputActionSerializationHelpers.FindUniqueName(controlSchemeArrayProperty, m_InputControlSchemeName);
         }
     }
 }

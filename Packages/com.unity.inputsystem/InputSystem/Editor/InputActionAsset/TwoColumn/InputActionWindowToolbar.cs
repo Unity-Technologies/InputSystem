@@ -106,6 +106,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_SelectedControlSchemeIndex = -1;
 
                 var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
+                popup.SetUniqueName();
                 PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
             }
             else if (newScheme != m_SelectedControlSchemeIndex)
@@ -190,9 +191,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DuplicateControlScheme(object position)
         {
-            // TODO make sure name is unique
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
-            popup.SetSchemaParametersFrom(selectedControlSchemeName);
+            popup.DuplicateParametersFrom(selectedControlSchemeName);
             // Since it's a callback, we need to manually handle ExitGUIException
             try
             {

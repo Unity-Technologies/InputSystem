@@ -238,7 +238,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 "bindingIndex");
         }
 
-        private static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
+        public static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
         {
             var result = baseName;
             var lowerCase = baseName.ToLower();
