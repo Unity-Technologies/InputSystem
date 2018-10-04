@@ -7,7 +7,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class TwoColumnAssetInspectorWindow : EditorWindow
+    internal class AssetInspectorWindow : EditorWindow
     {
         public static class Styles
         {
@@ -386,7 +386,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // (otherwise we gets lots of exceptions)
             ActiveEditorTracker.sharedTracker.ForceRebuild();
 
-            var windows = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
+            var windows = Resources.FindObjectsOfTypeAll<AssetInspectorWindow>();
             foreach (var window in windows)
                 window.ReloadAssetFromFile();
         }
@@ -430,7 +430,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // See if we have an existing editor window that has the asset open.
-            var inputManagers = Resources.FindObjectsOfTypeAll<TwoColumnAssetInspectorWindow>();
+            var inputManagers = Resources.FindObjectsOfTypeAll<AssetInspectorWindow>();
             var window = inputManagers.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(asset));
 
             if (window != null)
@@ -441,7 +441,7 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 // No, so create a new window.
-                window = CreateInstance<TwoColumnAssetInspectorWindow>();
+                window = CreateInstance<AssetInspectorWindow>();
                 window.m_Title = new GUIContent(asset.name + " (Input Manager)");
                 window.m_DirtyTitle = new GUIContent("(*) " + window.m_Title.text);
                 window.titleContent = window.m_Title;

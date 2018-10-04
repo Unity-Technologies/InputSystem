@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private const string k_InputAssetMarker = "INPUTASSET ";
 
-        private InputActionListTreeView m_TreeView;
+        private InspectorTree m_Tree;
         private ActionMapsTree m_ActionMapsTree;
         private ActionsTree m_ActionsTree;
 
@@ -34,13 +34,13 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SerializedObject = serializedObject;
         }
 
-        public CopyPasteUtility(InputActionListTreeView treeView)
+        public CopyPasteUtility(InspectorTree tree)
         {
-            m_TreeView = treeView;
+            m_Tree = tree;
             m_Apply = () =>
             {
-                if (m_TreeView != null)
-                    m_TreeView.Reload();
+                if (m_Tree != null)
+                    m_Tree.Reload();
             };
         }
 
@@ -285,7 +285,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var action = actionRow;
                 ActionMapTreeItem actionMap;
-                if (m_TreeView != null)
+                if (m_Tree != null)
                 {
                     actionMap = actionRow.parent as ActionMapTreeItem;
                 }
@@ -356,8 +356,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         IEnumerable<ActionTreeViewItem> GetSelectedRows()
         {
-            if (m_TreeView != null && m_TreeView.HasFocus())
-                return m_TreeView.GetSelectedRows();
+            if (m_Tree != null && m_Tree.HasFocus())
+                return m_Tree.GetSelectedRows();
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 return m_ActionMapsTree.GetSelectedRows();
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())
@@ -367,8 +367,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         ActionTreeItem GetSelectedAction()
         {
-            if (m_TreeView != null)
-                return m_TreeView.GetSelectedAction();
+            if (m_Tree != null)
+                return m_Tree.GetSelectedAction();
             if (m_ActionsTree != null)
                 return m_ActionsTree.GetSelectedAction();
             return null;
@@ -376,8 +376,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         ActionMapTreeItem GetSelectedActionMap()
         {
-            if (m_TreeView != null)
-                return m_TreeView.GetSelectedActionMap();
+            if (m_Tree != null)
+                return m_Tree.GetSelectedActionMap();
             if (m_ActionMapsTree != null)
                 return m_ActionMapsTree.GetSelectedActionMap();
             return null;
@@ -385,8 +385,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         bool CanRenameCurrentSelection()
         {
-            if (m_TreeView != null && m_TreeView.HasFocus())
-                return m_TreeView.CanRenameCurrentSelection();
+            if (m_Tree != null && m_Tree.HasFocus())
+                return m_Tree.CanRenameCurrentSelection();
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 return m_ActionMapsTree.CanRenameCurrentSelection();
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())
@@ -396,8 +396,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetEmptySelection()
         {
-            if (m_TreeView != null && m_TreeView.HasFocus())
-                m_TreeView.SetSelection(new int[0]);
+            if (m_Tree != null && m_Tree.HasFocus())
+                m_Tree.SetSelection(new int[0]);
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 m_ActionMapsTree.SetSelection(new int[0]);
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())
@@ -407,8 +407,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void BeginRename()
         {
-            if (m_TreeView != null && m_TreeView.HasFocus())
-                m_TreeView.BeginRename(m_TreeView.GetSelectedRow());
+            if (m_Tree != null && m_Tree.HasFocus())
+                m_Tree.BeginRename(m_Tree.GetSelectedRow());
             if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
                 m_ActionMapsTree.BeginRename(m_ActionMapsTree.GetSelectedRow());
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())

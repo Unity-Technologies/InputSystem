@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Create Action map");
         private static readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Create Action map");
 
-        TwoColumnAssetInspectorWindow m_AssetInspectorWindow;
+        AssetInspectorWindow m_AssetInspectorWindow;
         InputActionAssetManager m_ActionAssetManager;
 
         ActionsTree m_ActionsTree
@@ -25,12 +25,12 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_AssetInspectorWindow.m_ActionMapsTree; }
         }
 
-        public ActionInspectorContextMenu(TwoColumnAssetInspectorWindow window, InputActionAssetManager assetManager)
+        public ActionInspectorContextMenu(AssetInspectorWindow window, InputActionAssetManager assetManager)
         {
             SetReferences(window, assetManager);
         }
 
-        public void SetReferences(TwoColumnAssetInspectorWindow window, InputActionAssetManager assetManager)
+        public void SetReferences(AssetInspectorWindow window, InputActionAssetManager assetManager)
         {
             m_AssetInspectorWindow = window;
             m_ActionAssetManager = assetManager;
