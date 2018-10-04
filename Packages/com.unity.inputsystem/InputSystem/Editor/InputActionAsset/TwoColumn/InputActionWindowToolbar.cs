@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public Action<string> OnSearchChanged;
         
         [SerializeField]
-        private int m_SelectedControlSchemeIndex = -1;
+        private int m_SelectedControlSchemeIndex;
         [SerializeField]
         private int m_SelectedDeviceIndex;
 
@@ -27,12 +27,12 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
         private static readonly GUIContent m_EditGUI = EditorGUIUtility.IconContent("_Popup");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
-        
-        private string selectedControlSchemeName
+
+        string selectedControlSchemeName
         {
             get
             {
-                return m_SelectedControlSchemeIndex == -1 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex];
+                return m_SelectedControlSchemeIndex <= 0 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex - 1];
             }
         }
 
@@ -81,7 +81,7 @@ namespace UnityEngine.Experimental.Input.Editor
         
         public void SelectControlScheme(string inputControlSchemeName)
         {
-            m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName);
+            m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName) + 1;
             BuildDeviceList();
         }
 
@@ -99,10 +99,10 @@ namespace UnityEngine.Experimental.Input.Editor
         private void DrawSchemaSelection()
         {
             var controlSchemes = GetControlSchemesNames();
-            var newScheme = EditorGUILayout.Popup(m_SelectedControlSchemeIndex, controlSchemes.ToArray());
-            if (controlSchemes.Count > 0 && newScheme == (controlSchemes.Count - 1))
+            var newScheme = EditorGUILayout.Popup(m_SelectedControlSchemeIndex, controlSchemes);
+            if (controlSchemes.Length > 0 && newScheme == (controlSchemes.Length - 1))
             {
-                if (controlSchemes.Count == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Count - 1))
+                if (controlSchemes.Length == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Length - 1))
                     m_SelectedControlSchemeIndex = -1;
 
                 var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
@@ -118,7 +118,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DrawDeviceFilterSelection()
         {
-            EditorGUI.BeginDisabledGroup(m_SelectedControlSchemeIndex == -1);
+            EditorGUI.BeginDisabledGroup(m_SelectedControlSchemeIndex <= 0);
             m_SelectedDeviceIndex = EditorGUILayout.Popup(m_SelectedDeviceIndex, m_DeviceNamesList);
             EditorGUI.EndDisabledGroup();
         }
@@ -159,17 +159,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private List<string> GetControlSchemesNames()
+        private string[] GetControlSchemesNames()
         {
-            var controlSchemes = m_AllControlSchemeNames.ToList();
-            controlSchemes.Add("Add Control Scheme...");
+            var controlSchemes = new string[m_AllControlSchemeNames.Length + 2];
+            controlSchemes[0] = "No Control Scheme";
+            Array.Copy(m_AllControlSchemeNames, 0, controlSchemes, 1, m_AllControlSchemeNames.Length);
+            controlSchemes[m_AllControlSchemeNames.Length + 1] = "Add Control Scheme...";
             return controlSchemes;
         }
 
         private void BuildDeviceList()
         {
             var devices = new List<string>();
-            if (m_SelectedControlSchemeIndex >= 0)
+            if (m_SelectedControlSchemeIndex >= 1)
             {
                 devices.Add("All devices");
                 var controlScheme = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName);
@@ -181,7 +183,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DeleteControlScheme()
         {
-            m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
+            m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(selectedControlSchemeName);
             m_SelectedControlSchemeIndex = -1;
             RebuildData();
         }
@@ -190,7 +192,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // TODO make sure name is unique
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
-            popup.SetSchemaParametersFrom(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
+            popup.SetSchemaParametersFrom(selectedControlSchemeName);
             // Since it's a callback, we need to manually handle ExitGUIException
             try
             {
@@ -202,7 +204,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void EditSelectedControlScheme(object position)
         {
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this);
-            popup.SetSchemaForEditing(m_AllControlSchemeNames[m_SelectedControlSchemeIndex]);
+            popup.SetSchemaForEditing(selectedControlSchemeName);
 
             // Since it's a callback, we need to manually handle ExitGUIException
             try

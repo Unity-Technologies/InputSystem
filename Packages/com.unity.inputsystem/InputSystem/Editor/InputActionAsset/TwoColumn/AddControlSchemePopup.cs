@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         int m_ControlSchemeIndex = -1;
         ReorderableList m_DevicesReorderableList;
         List<DeviceEntryForList> m_Devices = new List<DeviceEntryForList>();
-        string m_InputControlSchemeName = "New control schema";
+        string m_InputControlSchemeName = "New control scheme";
         int m_RequirementsOptionsChoice;
 
         InputActionAssetManager m_AssetManager;
@@ -182,7 +182,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void DrawConfirmationButton()
         {
-            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(m_InputControlSchemeName));
+            EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(m_InputControlSchemeName) || m_DevicesReorderableList.list.Count <= 0);
+            //TODO Check if name is unique
             if (m_ControlSchemeIndex == -1)
             {
                 if (GUILayout.Button("Add", GUILayout.ExpandWidth(true)))
