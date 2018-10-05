@@ -3242,7 +3242,7 @@ partial class CoreTests
     {
         const string imeCompositionCharacters = "CompositionTestCharacters! ɝ";
         bool callbackWasCalled = false;
-        
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         keyboard.onIMECompositionChange += (IMEComposition composition) =>
         {
@@ -3250,12 +3250,12 @@ partial class CoreTests
             callbackWasCalled = true;
             Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
         };
-        
+
         IMECompositionEvent inputEvent = IMECompositionEvent.Create(keyboard.id, imeCompositionCharacters,
             InputRuntime.s_Instance.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
-        
+
         Assert.That(callbackWasCalled, Is.True);
     }
 
@@ -3264,8 +3264,8 @@ partial class CoreTests
     public void Devices_IMEEnableSendsCorrectIOCTLCommand()
     {
         bool commandWasSent = false;
-        
-        var keyboard = InputSystem.AddDevice<Keyboard>();     
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
         unsafe
         {
             testRuntime.SetDeviceCommandCallback(keyboard.id,
@@ -3275,7 +3275,7 @@ partial class CoreTests
                     {
                         Assert.That(commandWasSent, Is.False);
                         commandWasSent = true;
-                        
+
                         EnableIMECompositionCommand command = *((EnableIMECompositionCommand*)commandPtr);
                         Assert.That(command.imeEnabled, Is.True);
                         return InputDeviceCommand.kGenericSuccess;
@@ -3296,7 +3296,7 @@ partial class CoreTests
         bool commandWasSent = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        
+
         unsafe
         {
             testRuntime.SetDeviceCommandCallback(keyboard.id,
@@ -3306,18 +3306,18 @@ partial class CoreTests
                     {
                         Assert.That(commandWasSent, Is.False);
                         commandWasSent = true;
-                        
+
                         SetIMECursorPositionCommand command = *((SetIMECursorPositionCommand*)commandPtr);
                         Assert.AreEqual(Vector2.one, command.position);
                         return InputDeviceCommand.kGenericSuccess;
-                        
+
                         return InputDeviceCommand.kGenericSuccess;
                     }
 
                     return InputDeviceCommand.kGenericFailure;
                 });
         }
-        
+
         keyboard.imeCursorPosition = Vector2.one;
         Assert.That(commandWasSent, Is.True);
     }

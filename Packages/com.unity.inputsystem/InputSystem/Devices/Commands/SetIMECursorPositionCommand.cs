@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get { return m_Position; }
         }
-        
+
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         Vector2 m_Position;
 

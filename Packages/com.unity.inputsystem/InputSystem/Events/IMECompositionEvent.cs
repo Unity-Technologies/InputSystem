@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             return Type;
         }
-        
+
         public static IMECompositionEvent Create(int deviceId, string composition, double time)
         {
             var inputEvent = new IMECompositionEvent();
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input
                 if (m_CurrentIndex == size)
                     return false;
 
-                fixed (char* ptr = m_Composition.buffer)
+                fixed(char* ptr = m_Composition.buffer)
                 {
                     m_CurrentCharacter = *(ptr + m_CurrentIndex);
                 }
@@ -128,20 +128,19 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(characters.Length < LowLevel.IMECompositionEvent.kIMECharBufferSize);
             size = characters.Length;
-            fixed (char* ptr = buffer)
+            fixed(char* ptr = buffer)
             {
                 for (int i = 0; i < size; i++)
                     ptr[i] = characters[i];
             }
-            
         }
-        
+
         public override string ToString()
         {
-            fixed (char* ptr = buffer)
+            fixed(char* ptr = buffer)
             {
                 return new string(ptr);
-            }           
+            }
         }
 
         public IEnumerator<char> GetEnumerator()

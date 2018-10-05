@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get { return m_ImeEnabled != 0; }
         }
-       
+
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         byte m_ImeEnabled;
 
