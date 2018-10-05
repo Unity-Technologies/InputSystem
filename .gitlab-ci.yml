@@ -49,3 +49,55 @@ test:windows:2019-1:
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:osx:2018-2:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py StandaloneOSX Editor --version=2018.2
+  after_script:
+    - /opt/post_build_script.sh
+
+test:osx:2018-3:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py StandaloneOSX Editor --version=2018.3
+  after_script:
+    - /opt/post_build_script.sh
+    
+test:osx:2019-1:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py StandaloneOSX Editor --version=2019.1
+  after_script:
+    - /opt/post_build_script.sh
+
