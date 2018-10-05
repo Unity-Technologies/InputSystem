@@ -228,7 +228,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 {
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
                 }
-
                 else if (eventData.dragging && eventData.pointerDrag != null)
                 {
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
@@ -349,7 +348,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                         internalJoystickState.consecutiveMoveCount = internalJoystickState.consecutiveMoveCount + 1;
                         internalJoystickState.lastMoveTime = time;
                         internalJoystickState.lastMoveDirection = moveDirection;
-
                     }
                 }
                 else

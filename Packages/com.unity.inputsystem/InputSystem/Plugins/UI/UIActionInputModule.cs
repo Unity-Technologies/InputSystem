@@ -105,6 +105,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             UnhookActions();
             DisableActions();
         }
+
         private bool ShouldIgnoreEventsOnNoFocus()
         {
             switch (SystemInfo.operatingSystemFamily)
@@ -159,7 +160,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 joystickState.submitButtonDown = context.ReadValue<float>() != 0.0f;
             }
-            else if(action == m_CancelAction)
+            else if (action == m_CancelAction)
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() != 0.0f;
             }
@@ -168,7 +169,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public override void Process()
         {
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
-            if(!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+            if (!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
             {
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
@@ -180,7 +181,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private void EnableActions()
         {
-            if(!m_ActionsEnabled)
+            if (!m_ActionsEnabled)
             {
                 var pointAction = m_PointAction.action;
                 if (pointAction != null && !pointAction.enabled)
@@ -211,12 +212,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     cancelAction.Enable();
 
                 m_ActionsEnabled = true;
-            }           
+            }
         }
 
         private void DisableActions()
         {
-            if(m_ActionsEnabled)
+            if (m_ActionsEnabled)
             {
                 var pointAction = m_PointAction.action;
                 if (pointAction != null && pointAction.enabled)
@@ -248,7 +249,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 m_ActionsEnabled = false;
             }
-            
         }
 
         private void HookActions()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -54,11 +54,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
             set
             {
-                if(m_SubmitButtonDown != value)
+                if (m_SubmitButtonDown != value)
                 {
                     submitButtonDelta = value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
                     m_SubmitButtonDown = value;
-                }                
+                }
             }
         }
 
@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
             set
             {
-                if(cancelButtonDown != value)
+                if (cancelButtonDown != value)
                 {
                     cancelButtonDelta = value ? ButtonDeltaState.Pressed : ButtonDeltaState.Released;
                     m_CancelButtonDown = value;

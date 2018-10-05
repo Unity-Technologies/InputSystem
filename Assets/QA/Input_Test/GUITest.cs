@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandler, ISubmitHandler, ICancelHandler
@@ -17,9 +17,8 @@ public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandl
         base.OnDisable();
 
         EventSystem current = EventSystem.current;
-        if(current != null)
+        if (current != null)
             EventSystem.current.SetSelectedGameObject(null);
-
     }
 
     public void OnButtonClick()
@@ -42,7 +41,7 @@ public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandl
     public void OnMove(AxisEventData eventData)
     {
         string directionStr = "Unknown";
-        switch(eventData.moveDir)
+        switch (eventData.moveDir)
         {
             case MoveDirection.Up:
                 directionStr = "Up";
@@ -63,6 +62,7 @@ public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandl
         Debug.Log(string.Format("Move Event Recieved: [{0}] [{1}]", directionStr, eventData.moveVector));
         eventData.Use();
     }
+
     public void OnSubmit(BaseEventData eventData)
     {
         Debug.Log("Submit Event Recieved");
