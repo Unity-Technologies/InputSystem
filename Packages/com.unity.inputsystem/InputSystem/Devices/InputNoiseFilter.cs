@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input
                 if (control == null)
                     return false;
 
-                return control.HasDifferentValueIn(inputEvent);
+                return control.HasSignificantChange(inputEvent);
             }
         }
 
