@@ -12,7 +12,7 @@ public class IMETest : MonoBehaviour
     public string compositionString;
 
     private bool m_AddedTextListeners = false;
-    
+
     //UI Visual Support
     public Toggle activeIMEVisual;
     public Toggle enabledIMEVisual;
@@ -37,7 +37,7 @@ public class IMETest : MonoBehaviour
         }
 
         OnCursorTextEntered();
-        
+
         if (enabledIMEVisual != null)
             enabledIMEVisual.isOn = enableIME;
     }
@@ -59,8 +59,8 @@ public class IMETest : MonoBehaviour
     void OnTextEvent(char character)
     {
         outputString += character;
-        
-        if(outputStringText != null)
+
+        if (outputStringText != null)
             outputStringText.text = outputString;
     }
 
@@ -89,14 +89,14 @@ public class IMETest : MonoBehaviour
 
             keyboard.imeEnabled = enableIME;
             keyboard.imeCursorPosition = cursorPosition;
-            
+
             activeIME = keyboard.imeSelected.isPressed;
 
             if (activeIMEVisual != null)
                 activeIMEVisual.isOn = activeIME;
         }
     }
-    
+
     public void OnCursorTextEntered()
     {
         if (cursorXInput != null && cursorYInput != null && cursorPositionButton != null)
@@ -108,12 +108,12 @@ public class IMETest : MonoBehaviour
             cursorPositionButton.interactable = validInput;
         }
     }
-    
+
     public void OnClearOutputString()
     {
         outputString = "";
-        
-        if(outputStringText != null)
+
+        if (outputStringText != null)
             outputStringText.text = outputString;
     }
 
