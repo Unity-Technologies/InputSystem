@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var property = (SerializedProperty)propertyObj;
             InputActionSerializationHelpers.AddBinding(property, null);
             property.serializedObject.ApplyModifiedProperties();
-            m_TreeView.Reload();
+            m_Tree.Reload();
         }
 
         internal void OnAddCompositeBinding(object paramList)
@@ -33,12 +33,12 @@ namespace UnityEngine.Experimental.Input.Editor
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
             InputActionSerializationHelpers.AddCompositeBinding(property, null, compositeName, compositeType);
             property.serializedObject.ApplyModifiedProperties();
-            m_TreeView.Reload();
+            m_Tree.Reload();
         }
 
-        protected override InputActionListTreeView CreateTree(SerializedProperty property)
+        protected override InspectorTree CreateTree(SerializedProperty property)
         {
-            return InputActionComponentListTreeView.CreateFromActionProperty(() => {}, property);
+            return InspectorTree.CreateFromActionProperty(() => {}, property);
         }
 
         protected override string GetSuffix()

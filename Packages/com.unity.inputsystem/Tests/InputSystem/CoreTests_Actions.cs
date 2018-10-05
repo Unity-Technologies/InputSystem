@@ -1985,10 +1985,14 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanRemoveControlSchemeFromAsset()
+    public void Actions_CanRemoveControlSchemeFromAsset()
     {
-        Assert.Fail();
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddControlScheme("scheme");
+        Assert.That(asset.controlSchemes, Is.Not.Empty);
+
+        asset.RemoveControlScheme("scheme");
+        Assert.That(asset.controlSchemes, Is.Empty);
     }
 
     [Test]

@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Button to pop up window to edit the asset.
             if (GUILayout.Button("Edit asset"))
-                ActionInspectorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
+                AssetInspectorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
 
             EditorGUILayout.Space();
 

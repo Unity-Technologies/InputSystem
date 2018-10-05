@@ -238,6 +238,14 @@ namespace UnityEngine.Experimental.Input
             return m_ControlSchemes[index];
         }
 
+        public void RemoveControlScheme(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            ArrayHelpers.EraseAt(ref m_ControlSchemes, GetControlSchemeIndex(name));
+        }
+
         public InputControlScheme GetControlScheme(string name)
         {
             var index = GetControlSchemeIndex(name);
