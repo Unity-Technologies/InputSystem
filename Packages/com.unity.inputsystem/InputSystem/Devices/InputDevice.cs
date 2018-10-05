@@ -65,6 +65,25 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: this might be useful even at the control level
+        /// <summary>
+        /// Whether the device is currently enabled (i.e. sends and receives events).
+        /// </summary>
+        /// <remarks>
+        /// A device that is disabled will not receive events. I.e. events that are being sent to the device
+        /// will be ignored.
+        ///
+        /// When disabling a <see cref="native"/> device, a <see cref="DisableDeviceCommand">disable command</see> will
+        /// also be sent to the <see cref="IInputRuntime">runtime</see>. It depends on the specific runtime whether the
+        /// device command is supported but if it is, the device will be disabled in the runtime and no longer send
+        /// events. This is especially important for devices such as <see cref="Sensor">sensors</see> that incur both
+        /// computation and battery consumption overhead while enabled.
+        ///
+        /// Specific types of devices can choose to start out in disabled state by default. This is generally the
+        /// case for <see cref="Sensor">sensors</see> to ensure that their overhead is only incurred when actually
+        /// being used by the application.
+        /// </remarks>
+        /// <seealso cref="InputSystem.EnableDevice"/>
+        /// <seealso cref="InputSystem.DisableDevice"/>
         public bool enabled
         {
             get

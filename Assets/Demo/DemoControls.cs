@@ -259,6 +259,15 @@ public class DemoControls : InputActionAssetReference
             return asset.controlSchemes[m_GamepadSchemeIndex];
         }
     }
+    private int m_SteamSchemeIndex = -1;
+    public InputControlScheme SteamScheme
+    {
+        get
+        {
+            if (m_SteamSchemeIndex == -1) m_SteamSchemeIndex = asset.GetControlSchemeIndex("Steam");
+            return asset.controlSchemes[m_SteamSchemeIndex];
+        }
+    }
     [Serializable]
     public class ActionEvent : UnityEvent<InputAction.CallbackContext>
     {

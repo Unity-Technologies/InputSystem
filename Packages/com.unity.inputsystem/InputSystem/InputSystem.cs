@@ -448,13 +448,22 @@ namespace UnityEngine.Experimental.Input
         /// Note that the devices moved to disconnected status will still see a <see cref="InputDeviceChange.Removed"/>
         /// notification and a <see cref="InputDeviceChange.Added"/> notification when plugged back in.
         ///
-        /// To determine if a newly discovered device is one we have seen before, the system uses
-        /// heuristics as, based on information made available by platforms, it can be inherently difficult
-        /// to determine whether a device is indeed the very same one. For example, it is often not possible
-        /// to determine with 100% certainty whether an identical looking device to one we've previously seen on a
-        /// different USB port is indeed the very same device.
+        /// To determine if a newly discovered device is one we have seen before, the system uses a
+        /// simple approach of comparing <see cref="InputDeviceDescription">device descriptions</see>.
+        /// Note that there can be errors and a device may be incorrectly classified as <see cref="InputDeviceChange.Reconnected"/>
+        /// when in fact it is a different device from before. The problem is that based on information
+        /// made available by platforms, it can be inherently difficult to determine whether a device is
+        /// indeed the very same one.
         ///
-        /// This list can be purged by calling <see cref="RemoveDisconnetedDevices"/>. Doing so, will release
+        /// For example, it is often not possible to determine with 100% certainty whether an identical looking device
+        /// to one we've previously seen on a different USB port is indeed the very same device. OSs will usually
+        /// reattach a USB device to its previous instance if it is plugged into the same USB port but create a
+        /// new instance of the same device is plugged into a different port.
+        ///
+        /// For devices that do relay their <see cref="InputDeviceDescription.serial">serials</see> the matching
+        /// is reliable.
+        ///
+        /// The list can be purged by calling <see cref="RemoveDisconnetedDevices"/>. Doing so, will release
         /// all reference we hold to the devices or any controls inside of them and allow the devices to be
         /// reclaimed by the garbage collector.
         ///
@@ -638,13 +647,6 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This will release all references held on to for these devices or any of their controls and will
         /// allow the devices to be reclaimed by the garbage collector.
-        ///
-        /// Note that this means that many of the APIs supported by <see cref="InputDevice"/> and
-        /// <see cref="InputControl"/> will become nonfunctional on these devices. Internally, the input system
-        /// keeps the majority of its data in shared arrays that are not specific to individual devices. When
-        /// a device is fully removed from the system, this data is lost and the various APIs that retrieve it
-        /// (such as <see cref="InputControl.stateBlock"/> and <see cref="InputControl.layout"/>) will no longer
-        /// work.
         /// </remarks>
         /// <seealso cref="disconnectedDevices"/>
         public static void RemoveDisconnectedDevices()

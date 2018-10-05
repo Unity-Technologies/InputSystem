@@ -1,5 +1,8 @@
 using System;
 
+////TODO: add a 'devicePath' property that platforms can use to relay their internal device locators
+////      (but do *not* take it into account when comparing descriptions for disconnected devices)
+
 namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>

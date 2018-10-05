@@ -45,7 +45,7 @@ namespace UnityEngine.Experimental.Input
         Reconnected,
 
         /// <summary>
-        /// An existing device was re-enabled.
+        /// An existing device was re-enabled after having been <see cref="Disabled"/>.
         /// </summary>
         /// <seealso cref="InputSystem.EnableDevice"/>
         /// <seealso cref="InputDevice.enabled"/>
@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// An existing device was disabled.
         /// </summary>
-        /// <seealso cref="InputSystem.EnableDevice"/>
+        /// <seealso cref="InputSystem.DisableDevice"/>
         /// <seealso cref="InputDevice.enabled"/>
         Disabled,
 
