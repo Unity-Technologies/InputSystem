@@ -113,7 +113,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     case 0:
                         // Save
                         m_ActionAssetManager.SaveChangesToAsset();
-                        m_ActionAssetManager.UnloadAssets();
+                        m_ActionAssetManager.CleanupAssets();
                         break;
                     case 1:
                         // Cancel

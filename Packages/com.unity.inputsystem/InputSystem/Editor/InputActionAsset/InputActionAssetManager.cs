@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.IO;
 using UnityEditor;
@@ -65,7 +66,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_AssetObjectForEditing != null)
             {
-                UnloadAssets();
+                CleanupAssets();
             }
             // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
             // GUIDs.
@@ -75,7 +76,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
         }
 
-        public void UnloadAssets()
+        public void CleanupAssets()
         {
             if (m_AssetObjectForEditing == null)
                 return;
@@ -146,3 +147,4 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 }
+#endif // UNITY_EDITOR

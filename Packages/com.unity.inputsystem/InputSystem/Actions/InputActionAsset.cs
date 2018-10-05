@@ -243,7 +243,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
 
-            ArrayHelpers.Erase(ref m_ControlSchemes, GetControlScheme(name));
+            ArrayHelpers.EraseAt(ref m_ControlSchemes, GetControlSchemeIndex(name));
         }
 
         public InputControlScheme GetControlScheme(string name)

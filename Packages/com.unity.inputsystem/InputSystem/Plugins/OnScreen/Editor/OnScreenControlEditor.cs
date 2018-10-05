@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Editor;
