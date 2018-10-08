@@ -347,7 +347,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
         /// </remarks>
-        public event Action<IMECompositionString> onIMECompositionChange
+        public event Action<IMEComposition> onIMECompositionChange
         {
             add { m_ImeCompositionListeners.Append(value); }
             remove { m_ImeCompositionListeners.Remove(value); }
@@ -903,18 +903,18 @@ namespace UnityEngine.Experimental.Input
                 m_TextInputListeners[i](character);
         }
 
-        public void OnIMECompositionChanged(IMECompositionString compositionString)
+        public void OnIMECompositionChanged(IMEComposition composition)
         {
             if (m_ImeCompositionListeners.length > 0)
             {
                 for (var i = 0; i < m_ImeCompositionListeners.length; ++i)
-                    m_ImeCompositionListeners[i](compositionString);
+                    m_ImeCompositionListeners[i](composition);
             }
         }
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
+        internal InlinedArray<Action<IMEComposition>> m_ImeCompositionListeners;
     }
 }

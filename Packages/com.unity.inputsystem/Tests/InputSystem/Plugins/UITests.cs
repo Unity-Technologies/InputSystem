@@ -261,24 +261,6 @@ public class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Deselect));
         rightChildReceiver.Reset();
-
-        ///Event Types
-        /// PointerEnter (Hierarchical)
-        /// PointerExit (Hierarchical)
-        /// PointerDown (Per Button)
-        /// PointerPotentialDrag (Per Button)
-        /// PointerClick (Per Button)
-        /// PointerUp (Per Button)
-        /// Drop (Per Button)
-        /// EndDrag (Per Button)
-        /// BeginDrag (Per Button)
-        /// Dragging (Per Button)
-        /// Scroll
-        /// UpdateSelected
-        /// Move
-        /// Submit
-        /// Cancel
-        yield return null;
     }
 
     [Test]
@@ -334,7 +316,7 @@ public class UITests : InputTestFixture
     }
 
     private class UICallbackReceiver : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler,
-        IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler, IInitializePotentialDragHandler, 
+        IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler, IInitializePotentialDragHandler,
         IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
     {
         public struct Event
@@ -415,6 +397,7 @@ public class UITests : InputTestFixture
         {
             events.Add(new Event(EventType.BeginDrag, ClonePointerEventData(eventData)));
         }
+
         public void OnDrag(PointerEventData eventData)
         {
             events.Add(new Event(EventType.Dragging, ClonePointerEventData(eventData)));

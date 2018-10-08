@@ -9,9 +9,7 @@ public class IMETest : MonoBehaviour
     public Vector2 cursorPosition;
 
     public string outputString;
-    public string compositionString;
-
-    public bool logCompositionString;
+    public string composition;
 
     private bool m_AddedTextListeners = false;
 
@@ -49,14 +47,11 @@ public class IMETest : MonoBehaviour
         outputString += character;
     }
 
-    void OnIMECompositionChange(IMECompositionString compositionString)
+    void OnIMECompositionChange(IMEComposition composition)
     {
-        this.compositionString = "";
-        foreach (char c in compositionString)
-            this.compositionString += c;
-
-        if (logCompositionString)
-            Debug.Log(logCompositionString.ToString());
+        this.composition = "";
+        foreach (char c in composition)
+            this.composition += c;
     }
 
     // Update is called once per frame

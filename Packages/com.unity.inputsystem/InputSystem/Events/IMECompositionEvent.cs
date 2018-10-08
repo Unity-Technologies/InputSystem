@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public IMECompositionString compositionString;
+        public IMEComposition composition;
 
         public FourCC GetTypeStatic()
         {
@@ -86,7 +86,7 @@ namespace UnityEngine.Experimental.Input
             char m_CurrentCharacter;
             int m_CurrentIndex;
 
-            public Enumerator(IMEComposition m_Composition)
+            public Enumerator(IMEComposition composition)
             {
                 m_Composition = composition;
                 m_CurrentCharacter = '\0';
@@ -102,7 +102,7 @@ namespace UnityEngine.Experimental.Input
                 if (m_CurrentIndex == size)
                     return false;
 
-                fixed (char* ptr = m_Composition.buffer)
+                fixed(char* ptr = m_Composition.buffer)
                 {
                     m_CurrentCharacter = *(ptr + m_CurrentIndex);
                 }

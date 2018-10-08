@@ -12,12 +12,10 @@ public class DemoControls : InputActionAssetReference
     public DemoControls()
     {
     }
-
     public DemoControls(InputActionAsset asset)
         : base(asset)
     {
     }
-
     private bool m_Initialized;
     private void Initialize()
     {
@@ -76,7 +74,6 @@ public class DemoControls : InputActionAssetReference
             m_menu_click.cancelled += m_menuClickActionCancelled.Invoke;
         m_Initialized = true;
     }
-
     private void Uninitialize()
     {
         m_gameplay = null;
@@ -132,19 +129,16 @@ public class DemoControls : InputActionAssetReference
             m_menu_click.cancelled -= m_menuClickActionCancelled.Invoke;
         m_Initialized = false;
     }
-
     public void SwitchAsset(InputActionAsset newAsset)
     {
         if (newAsset == asset) return;
         if (m_Initialized) Uninitialize();
         asset = newAsset;
     }
-
     public void DuplicateAndSwitchAsset()
     {
         SwitchAsset(ScriptableObject.Instantiate(asset));
     }
-
     // gameplay
     private InputActionMap m_gameplay;
     private InputAction m_gameplay_fire;
@@ -245,6 +239,7 @@ public class DemoControls : InputActionAssetReference
     public InputControlScheme KeyboardMouseScheme
     {
         get
+
         {
             if (m_KeyboardMouseSchemeIndex == -1) m_KeyboardMouseSchemeIndex = asset.GetControlSchemeIndex("Keyboard&Mouse");
             return asset.controlSchemes[m_KeyboardMouseSchemeIndex];
@@ -254,6 +249,7 @@ public class DemoControls : InputActionAssetReference
     public InputControlScheme GamepadScheme
     {
         get
+
         {
             if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.GetControlSchemeIndex("Gamepad");
             return asset.controlSchemes[m_GamepadSchemeIndex];
@@ -263,6 +259,7 @@ public class DemoControls : InputActionAssetReference
     public InputControlScheme SteamScheme
     {
         get
+
         {
             if (m_SteamSchemeIndex == -1) m_SteamSchemeIndex = asset.GetControlSchemeIndex("Steam");
             return asset.controlSchemes[m_SteamSchemeIndex];
