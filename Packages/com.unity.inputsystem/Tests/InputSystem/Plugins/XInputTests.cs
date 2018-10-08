@@ -32,13 +32,16 @@ public class XInputTests : InputTestFixture
         InputDevice device = null;
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
 
-        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", layoutName)), Has.Exactly(1).SameAs(device));
+        using (var matches = InputSystem.FindControls(string.Format("/<{0}>", layoutName)))
+            Assert.That(matches, Has.Exactly(1).SameAs(device));
+
         Assert.That(device.name, Is.EqualTo(layoutName));
         Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
     }
 
+    ////FIXME: we should not have tests that only run in players
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [Test]
     [Category("Devices")]

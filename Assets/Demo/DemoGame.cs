@@ -2,9 +2,13 @@ using System;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.XR;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+////WIP
 
 /// <summary>
 /// Main controller for the demo game.
@@ -31,6 +35,54 @@ public class DemoGame : MonoBehaviour
     public Canvas mainMenuCanvas;
     public Camera mainMenuCamera;
 
+    public enum State
+    {
+        InMainMenu,
+        InGame,
+        InGameOver,
+        WaitingForFirstPlayerToJoin,
+    }
+
+    public State state
+    {
+        get { return m_State; }
+    }
+
+    public ReadOnlyArray<DemoPlayerController> players
+    {
+        get { return new ReadOnlyArray<DemoPlayerController>(m_Players); }
+    }
+
+    public DemoFishController fish
+    {
+        get { return m_Fish; }
+    }
+
+    public static RuntimePlatform platform
+    {
+        get
+        {
+            if (!s_Platform.HasValue)
+                return Application.platform;
+            return s_Platform.Value;
+        }
+        set { s_Platform = value; }
+    }
+
+    public static bool vrSupported
+    {
+        get
+        {
+            if (!s_VRSupported.HasValue)
+                return XRSettings.enabled;
+            return s_VRSupported.Value;
+        }
+        set { s_VRSupported = value; }
+    }
+
+    private static RuntimePlatform? s_Platform;
+    private static bool? s_VRSupported;
+
     //single player: all devices owned by player (but not assigned to), automatically switches schemes as player uses different devices
     //multi player: devices assigned by players explicitly joining on them
 
@@ -54,6 +106,7 @@ public class DemoGame : MonoBehaviour
     private int m_ActivePlayerCount;
     private DemoPlayerController[] m_Players;
     private DemoFishController m_Fish;
+    private State m_State;
 
     /// <summary>
     /// Start the game.
@@ -98,10 +151,16 @@ public class DemoGame : MonoBehaviour
         // We still select one control scheme and make it the active one so that we can display UI hints
         // for it. When the player uses bindings not in the scheme, the control scheme will automatically
         // switch.
-        var defaultScheme = player.InferDefaultControlScheme();
+        var defaultScheme = player.InferDefaultControlSchemeForSinglePlayer();
 
-        // Switch to default control scheme.
-        player.user.SwitchControlScheme(defaultScheme);
+        //what's relevant here
+        // - putting the binding mask in place
+        // - having the devices used by the bindings assigned to the player
+
+        ////TODO: handle failure
+        // Switch to default control scheme and give the player whatever controls
+        // it needs.
+        player.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
 
         // Finally, run code that is shared between single- and multi-player games.
         StartGame();
@@ -144,6 +203,8 @@ public class DemoGame : MonoBehaviour
         UpdateSplitScreen();
 
         //start timer
+
+        m_State = State.InGame;
     }
 
     /// <summary>
@@ -178,7 +239,7 @@ public class DemoGame : MonoBehaviour
         //       combinations of devices explicitly, this would have to be handled with a more complicated
         //       device selection procedure (by, for example, having the player go through an additional
         //       step of pressing buttons on additional devices).
-        var controlScheme = player.SelectControlSchemeBasedOnDevice(device);
+        var controlScheme = player.SelectControlSchemeBasedOnDeviceForMultiPlayer(device);
 
         // If the control scheme involves additional devices, find unused devices.
         if (controlScheme.devices.Count > 1)
@@ -188,7 +249,7 @@ public class DemoGame : MonoBehaviour
         else
         {
             // Single device only. Just assign to player.
-            player.user.AssignDevice(device);
+            player.AssignInputDevice(device);
         }
 
         // Enable just the bindings that are part of the control scheme.
@@ -197,7 +258,7 @@ public class DemoGame : MonoBehaviour
         player.controls.Enable(controlScheme);
 
         // Enable control scheme on player.
-        player.user.SwitchControlScheme(controlScheme);
+        player.AssignControlScheme(controlScheme);
     }
 
     /// <summary>
@@ -235,7 +296,7 @@ public class DemoGame : MonoBehaviour
             playerComponent = playerObject.GetComponent<DemoPlayerController>();
             if (playerComponent == null)
                 throw new Exception("Missing DemoPlayerController component on " + playerObject);
-            playerComponent.Initialize();
+            playerComponent.Initialize(playerIndex);
             playerComponent.onLeaveGame = OnPlayerLeavesGame;
 
             // Add to list.
@@ -243,11 +304,18 @@ public class DemoGame : MonoBehaviour
             m_Players[playerIndex] = playerComponent;
         }
 
+        // Register as input user with input system.
+        InputUser.Add(playerComponent);
+
+        // Every player starts out with gameplay actions active.
+        //playerComponent.SetInputActions(playerComponent.controls.gameplay);
+
         return playerComponent;
     }
 
     private void UnspawnPlayer(int playerIndex)
     {
+        throw new NotImplementedException();
     }
 
     /// <summary>

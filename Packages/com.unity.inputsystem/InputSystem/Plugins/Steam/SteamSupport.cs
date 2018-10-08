@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                 s_API = value;
                 if (value != null && !s_OnUpdateHookedIn)
                 {
-                    InputSystem.onUpdate += type => UpdateControllers();
+                    InputSystem.onBeforeUpdate += type => UpdateControllers();
                     s_OnUpdateHookedIn = true;
                 }
             }
@@ -73,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
 
             if (api != null && !s_OnUpdateHookedIn)
             {
-                InputSystem.onUpdate +=
+                InputSystem.onBeforeUpdate +=
                     type => UpdateControllers();
                 s_OnUpdateHookedIn = true;
             }

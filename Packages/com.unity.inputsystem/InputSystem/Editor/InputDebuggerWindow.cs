@@ -9,6 +9,8 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: show input users
+
 ////TODO: append " (Disabled) to disabled devices and grey them out
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
@@ -322,6 +324,16 @@ namespace UnityEngine.Experimental.Input.Editor
                     foreach (var device in m_UnsupportedDevices)
                         AddChild(unsupportedDevicesNode, device.ToString(), ref id);
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
+
+                var disconnectedDevices = InputSystem.disconnectedDevices;
+                if (disconnectedDevices.Count > 0)
+                {
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var disconnectedDevicesNode = AddChild(parent, string.Format("Disconnected ({0})", disconnectedDevices.Count), ref id);
+                    foreach (var device in disconnectedDevices)
+                        AddChild(disconnectedDevicesNode, device.ToString(), ref id);
+                    disconnectedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 // Layouts.

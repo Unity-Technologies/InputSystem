@@ -138,9 +138,21 @@ namespace UnityEngine.Experimental.Input.Editor
             return actionProperty;
         }
 
-        public static void MoveBinding(SerializedProperty actionMap, int srcIndex, int dstIndex)
+        public static void MoveBinding(SerializedProperty actionMapProperty, int srcIndex, int dstIndex)
         {
-            var actionsArrayProperty = actionMap.FindPropertyRelative("m_Bindings");
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
+            actionsArrayProperty.MoveArrayElement(srcIndex, dstIndex);
+        }
+
+        public static void MoveActionMap(SerializedObject serializedObject, int srcIndex, int dstIndex)
+        {
+            var actionMapsProperty = serializedObject.FindProperty("m_ActionMaps");
+            actionMapsProperty.MoveArrayElement(srcIndex, dstIndex);
+        }
+
+        public static void MoveAction(SerializedProperty actionMapProperty, int srcIndex, int dstIndex)
+        {
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             actionsArrayProperty.MoveArrayElement(srcIndex, dstIndex);
         }
 
@@ -226,7 +238,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 "bindingIndex");
         }
 
-        private static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
+        public static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
         {
             var result = baseName;
             var lowerCase = baseName.ToLower();

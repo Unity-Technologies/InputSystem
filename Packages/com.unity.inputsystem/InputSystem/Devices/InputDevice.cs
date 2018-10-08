@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input
     /// a device at the root. Devices cannot occur inside of hierarchies.
     ///
     /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    /// without requiring a change to the device layout (<see cref="InputSystem.SetUsage"/>).
+    /// without requiring a change to the device layout (<see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
     /// </remarks>
     public class InputDevice : InputControl
     {
@@ -65,6 +65,25 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: this might be useful even at the control level
+        /// <summary>
+        /// Whether the device is currently enabled (i.e. sends and receives events).
+        /// </summary>
+        /// <remarks>
+        /// A device that is disabled will not receive events. I.e. events that are being sent to the device
+        /// will be ignored.
+        ///
+        /// When disabling a <see cref="native"/> device, a <see cref="DisableDeviceCommand">disable command</see> will
+        /// also be sent to the <see cref="IInputRuntime">runtime</see>. It depends on the specific runtime whether the
+        /// device command is supported but if it is, the device will be disabled in the runtime and no longer send
+        /// events. This is especially important for devices such as <see cref="Sensor">sensors</see> that incur both
+        /// computation and battery consumption overhead while enabled.
+        ///
+        /// Specific types of devices can choose to start out in disabled state by default. This is generally the
+        /// case for <see cref="Sensor">sensors</see> to ensure that their overhead is only incurred when actually
+        /// being used by the application.
+        /// </remarks>
+        /// <seealso cref="InputSystem.EnableDevice"/>
+        /// <seealso cref="InputSystem.DisableDevice"/>
         public bool enabled
         {
             get
@@ -97,28 +116,62 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Whether the device has been added to the system.
         /// </summary>
+        /// <remarks>
+        /// Input devices can be constructed manually through <see cref="InputDeviceBuilder"/>. Also,
+        /// they can be removed through <see cref="InputSystem.RemoveDevice"/>. This property reflects
+        /// whether the device is currently added to the system.
+        ///
+        /// Note that devices in <see cref="InputSystem.disconnectedDevices"/> will all have this
+        /// property return false.
+        /// </remarks>
+        /// <seealso cref="InputSystem.AddDevice(InputDevice)"/>
+        /// <seealso cref="InputSystem.devices"/>
         public bool added
         {
-            get { return (m_DeviceIndex != kInvalidDeviceIndex); }
+            get { return m_DeviceIndex != kInvalidDeviceIndex; }
         }
 
         /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
         /// </summary>
+        /// <seealso cref="InputSystem.remoting"/>
+        /// <seealso cref="InputRemoting"/>
         public bool remote
         {
             get { return (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote; }
         }
 
         /// <summary>
-        /// Whether the device comes from the native Unity runtime.
+        /// Whether the device comes from the <see cref="IInputRuntime">runtime</see>
         /// </summary>
+        /// <remarks>
+        /// Devices can be discovered when <see cref="IInputRuntime.onDeviceDiscovered">reported</see>
+        /// by the runtime or they can be added manually through the various <see cref="InputSystem.AddDevice(InputDevice)">
+        /// AddDevice</see> APIs. Devices reported by the runtime will return true for this
+        /// property whereas devices added manually will return false.
+        ///
+        /// Devices reported by the runtime will usually come from the Unity engine itself.
+        /// </remarks>
+        /// <seealso cref="IInputRuntime"/>
+        /// <seealso cref="IInputRuntime.onDeviceDiscovered"/>
         public bool native
         {
             get { return (m_DeviceFlags & DeviceFlags.Native) == DeviceFlags.Native; }
         }
 
+        /// <summary>
+        /// Whether the device requires an extra update before rendering.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property is determined by <see cref="InputControlLayout.updateBeforeRender"/> in
+        /// the device's <see cref="InputControlLayout">control layout</see>.
+        ///
+        /// The extra update is necessary for tracking devices that are used in rendering code. For example,
+        /// the eye transforms of an HMD should be refreshed right before rendering as refreshing only in the
+        /// beginning of the frame will lead to a noticeable lag.
+        /// </remarks>
+        /// <seealso cref="InputUpdateType.BeforeRender"/>
         public bool updateBeforeRender
         {
             get { return (m_DeviceFlags & DeviceFlags.UpdateBeforeRender) == DeviceFlags.UpdateBeforeRender; }
@@ -265,19 +318,6 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
-        ////REVIEW: should this receive a timestamp, too?
-        /// <summary>
-        /// Invoked when the device receive a <see cref="LowLevel.TextEvent">text input event</see>.
-        /// </summary>
-        /// <param name="character"></param>
-        public virtual void OnTextInput(char character)
-        {
-        }
-
-        public virtual void OnIMEStringEvent(IMEComposition imeComposition)
-        {
-        }
-
         /// <summary>
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
@@ -351,7 +391,10 @@ namespace UnityEngine.Experimental.Input
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
-        // Time of last event we received.
+        /// <summary>
+        /// Timestamp of last event we received.
+        /// </summary>
+        /// <seealso cref="InputEvent.time"/>
         internal double m_LastUpdateTimeInternal;
 
         // The dynamic and fixed update count corresponding to the current

@@ -10,6 +10,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -541,11 +542,11 @@ partial class CoreTests
             Assert.That(events[2].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(events[0].ReadValue<Vector2>(),
                 Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.123f, 0.234f), gamepad.leftStick))
-                    .Using(vector2Comparer));
+                    .Using(Vector2EqualityComparer.Instance));
             Assert.That(events[1].ReadValue<Vector2>(),
                 Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.345f, 0.456f), gamepad.rightStick))
-                    .Using(vector2Comparer));
-            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(events[2].ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             queue.Clear();
 
@@ -1984,10 +1985,14 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanRemoveControlSchemeFromAsset()
+    public void Actions_CanRemoveControlSchemeFromAsset()
     {
-        Assert.Fail();
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddControlScheme("scheme");
+        Assert.That(asset.controlSchemes, Is.Not.Empty);
+
+        asset.RemoveControlScheme("scheme");
+        Assert.That(asset.controlSchemes, Is.Empty);
     }
 
     [Test]
@@ -2032,6 +2037,129 @@ partial class CoreTests
         Assert.That(asset.GetControlScheme("scheme").devices[1].isOptional, Is.False);
         Assert.That(asset.GetControlScheme("scheme").devices[2].devicePath, Is.EqualTo("<Gamepad>"));
         Assert.That(asset.GetControlScheme("scheme").devices[2].isOptional, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanMatchDeviceAgainstControlSchemeDeviceRequirements()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepadA = InputSystem.AddDevice<Gamepad>();
+        var gamepadB = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.SetDeviceUsage(gamepadA, "A");
+        InputSystem.SetDeviceUsage(gamepadB, "B");
+
+        var scheme1 = new InputControlScheme("scheme1")
+            .WithRequiredDevice("<Keyboard>");
+        var scheme2 = new InputControlScheme("scheme2")
+            .WithRequiredDevice("<Gamepad>{B}")
+            .WithOptionalDevice("<Gamepad>{A}");
+        var scheme3 = new InputControlScheme("scheme3")
+            .WithRequiredDevice("<Mouse>");
+        var scheme4 = new InputControlScheme("scheme4");
+        var scheme5 = new InputControlScheme("scheme5")
+            .WithRequiredDevice("<Gamepad>/buttonSouth"); // This essentially requires that a device provides a specific control.
+
+        /*
+        Assert.That(scheme1.Matches(keyboard));
+        Assert.That(scheme1.Matches(gamepadA), Is.False);
+        Assert.That(scheme2.Matches(gamepadA));
+        Assert.That(scheme2.Matches(gamepadB));
+        Assert.That(scheme2.Matches(keyboard), Is.False);
+        Assert.That(scheme3.Matches(keyboard), Is.False);
+        Assert.That(scheme4.Matches(keyboard));
+        Assert.That(scheme4.Matches(gamepadA));
+        Assert.That(scheme4.Matches(gamepadB));
+        Assert.That(scheme5.Matches(gamepadA));
+        Assert.That(scheme5.Matches(gamepadB));
+        */
+        Assert.Fail();
+    }
+
+    //do we really want the complexity of the device requirement lists?
+    //can't we just go by what's in the bindings and put the optional/required on the actions?
+    //then the matching would also move to happening in the context of actions instead of just free-standing on InputControlScheme
+
+
+    //Q1: can I construct scheme information from bindings?
+
+    /*
+    InputControlList<InputDevice> PickDevices(this InputActionAsset asset,
+        InputControlList<InputDevice> availableDevices, string bindingGroup)
+    {
+
+    }
+    */
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPickDevicesThatMatchGivenControlScheme()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        var scheme1 = new InputControlScheme("scheme1")
+            .WithRequiredDevice("<Keyboard>");
+        var scheme2 = new InputControlScheme("scheme2")
+            .WithRequiredDevice("<Gamepad>")
+            .WithOptionalDevice("<Gamepad>");
+        var scheme3 = new InputControlScheme("scheme3");
+        var scheme4 = new InputControlScheme("scheme4")
+            .WithRequiredDevice("<Gamepad>")
+            .WithRequiredDevice("<Gamepad>");
+
+        var keyboardOnly = new InputControlList<InputDevice>(keyboard);
+        var gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
+
+        try
+        {
+            // RequiredMatch.
+            Assert.That(scheme1.PickMatchingDevices(ref keyboardOnly),
+                Is.EqualTo(InputControlScheme.MatchResult.RequiredMatch));
+            Assert.That(scheme1.PickMatchingDevices(ref gamepad1And2AndKeyboard),
+                Is.EqualTo(InputControlScheme.MatchResult.RequiredMatch));
+
+            Assert.That(keyboardOnly, Is.EquivalentTo(new[] {keyboard}));
+            Assert.That(gamepad1And2AndKeyboard, Is.EquivalentTo(new[] {keyboard}));
+
+            keyboardOnly.Dispose();
+            gamepad1And2AndKeyboard.Dispose();
+
+            keyboardOnly = new InputControlList<InputDevice>(keyboard);
+            gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
+
+            // OptionalMatch.
+            Assert.That(scheme2.PickMatchingDevices(ref keyboardOnly),
+                Is.EqualTo(InputControlScheme.MatchResult.NoMatch));
+            Assert.That(scheme2.PickMatchingDevices(ref gamepad1And2AndKeyboard),
+                Is.EqualTo(InputControlScheme.MatchResult.OptionalMatch));
+
+            Assert.That(keyboardOnly, Is.EquivalentTo(new[] {keyboard})); // Untouched.
+            Assert.That(gamepad1And2AndKeyboard, Is.EquivalentTo(new[] { gamepad1, gamepad2 }));
+
+            keyboardOnly.Dispose();
+            gamepad1And2AndKeyboard.Dispose();
+
+            keyboardOnly = new InputControlList<InputDevice>(keyboard);
+            gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
+
+            // NoSpecificRequirementsMatch.
+            Assert.That(scheme3.PickMatchingDevices(ref keyboardOnly),
+                Is.EqualTo(InputControlScheme.MatchResult.NoSpecificRequirementsMatch));
+            Assert.That(scheme3.PickMatchingDevices(ref gamepad1And2AndKeyboard),
+                Is.EqualTo(InputControlScheme.MatchResult.NoSpecificRequirementsMatch));
+
+            Assert.That(keyboardOnly, Is.Empty);
+            Assert.That(gamepad1And2AndKeyboard, Is.Empty);
+        }
+        finally
+        {
+            keyboardOnly.Dispose();
+            gamepad1And2AndKeyboard.Dispose();
+        }
     }
 
     // The bindings targeting an action can be masked out such that only specific
@@ -2260,6 +2388,13 @@ partial class CoreTests
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.Zero.Within(0.00001));
     }
 
     [Test]
@@ -2349,10 +2484,6 @@ partial class CoreTests
         Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
     }
 
-    // It's somewhat counterintuitive but not sure it's worth bothering with. State monitors don't know about
-    // controls that trigger in unison and for the action machinery it'd be some extra work to reliably figure out
-    // ...
-
     private class LogInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)
@@ -2436,7 +2567,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
-        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(vector2Comparer));
+        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
@@ -3246,5 +3377,96 @@ partial class CoreTests
 
         Assert.That(action.bindings, Has.Count.EqualTo(1));
         Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanBeArrangedInStack()
+    {
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1");
+        var action2 = new InputAction("action2");
+        var action3 = new InputAction("action3");
+
+        stack.Push(action1);
+        stack.Push(action2);
+        stack.Push(action3);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(3));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action3));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
+
+        stack.Clear();
+
+        Assert.That(stack.actions, Is.Empty);
+        Assert.That(stack.ToList(), Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
+    {
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1");
+        var action2 = new InputAction("action2");
+
+        stack.Push(action1);
+        stack.Push(action2);
+
+        stack.Enable();
+
+        Assert.That(stack.enabled);
+        Assert.That(action1.enabled);
+        Assert.That(action2.enabled);
+
+        stack.Disable();
+
+        Assert.That(stack.enabled, Is.False);
+        Assert.That(action1.enabled, Is.False);
+        Assert.That(action2.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_ArrangedInStack_OverrideEachOthersBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = new InputAction("action2", binding: "<Gamepad>/buttonSouth");
+
+        var action1Performed = false;
+        var action2Performed = false;
+
+        action1.performed += ctx => action1Performed = true;
+        action2.performed += ctx => action2Performed = true;
+
+        stack.Push(action1);
+        stack.Push(action2);
+
+        stack.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
+
+        Assert.That(action1Performed, Is.False);
+        Assert.That(action2Performed, Is.True);
+
+        stack.Pop(action2);
+
+        action1Performed = false;
+        action2Performed = false;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(action1Performed, Is.True);
+        Assert.That(action2Performed, Is.False);
     }
 }

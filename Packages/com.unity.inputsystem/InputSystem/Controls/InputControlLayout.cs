@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: allow creating generic controls as parents just to group child controls
+
 ////TODO: allow things like "-something" and "+something" for usages, processors, etc
 
 ////TODO: change interactions and processors to use kSeparator
@@ -1716,6 +1718,14 @@ namespace UnityEngine.Experimental.Input.Layouts
                 layoutBuilders = new Dictionary<InternedString, BuilderInfo>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
+            }
+
+            public InternedString TryFindLayoutForType(Type layoutType)
+            {
+                foreach (var entry in layoutTypes)
+                    if (entry.Value == layoutType)
+                        return entry.Key;
+                return new InternedString();
             }
 
             public InternedString TryFindMatchingLayout(InputDeviceDescription deviceDescription)

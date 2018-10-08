@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// existed at the same time or not.
         /// </remarks>
         /// <seealso cref="InputDevice.id"/>
-        /// <seealso cref="InputSystem.TryGetDeviceById"/>
+        /// <seealso cref="InputSystem.GetDeviceById"/>
         public int deviceId
         {
             get { return m_DeviceId; }

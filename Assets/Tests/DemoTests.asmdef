@@ -1,0 +1,14 @@
+{
+    "name": "DemoTests",
+    "references": [
+        "Demo",
+        "Unity.InputSystem",
+        "Unity.InputSystem.Tests"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

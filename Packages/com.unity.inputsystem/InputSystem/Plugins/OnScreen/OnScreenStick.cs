@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         {
             Vector2 position;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out position);
-            Vector2 delta = position - m_PointerDownPos;
+            var delta = position - m_PointerDownPos;
 
             delta = Vector2.ClampMagnitude(delta, movementRange);
             ((RectTransform)transform).anchoredPosition = m_StartPos + (Vector3)delta;

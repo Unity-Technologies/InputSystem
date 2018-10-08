@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var darkGreyBackgroundWithBorderTexture =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.ResourcesPath + "foldoutBackground.png");
+                        InputActionTreeBase.ResourcesPath + "foldoutBackground.png");
                 foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
                 foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
                 foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
@@ -57,6 +57,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(m_InteractionsProperty, ApplyModifiers);
             m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, ApplyModifiers);
         }
+
+        public InputActionWindowToolbar toolbar { get; set; }
 
         private void ApplyModifiers()
         {
@@ -127,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
-        internal static void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
+        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
         {
             EditorGUILayout.BeginHorizontal();
 
@@ -156,6 +158,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (EditorGUI.EndChangeCheck())
                 {
                     pathProperty.stringValue = path;
+                    pathProperty.serializedObject.ApplyModifiedProperties();
                     onModified(pathProperty);
                 }
                 if (GUI.Button(editBtn, "˅"))
@@ -179,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
             var w = new InputControlPickerPopup(pathProperty, pickerTreeViewState)
@@ -187,6 +190,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 onPickCallback = onPickCallback,
                 width = rect.width,
             };
+            if (toolbar != null)
+                w.SetDeviceFilter(toolbar.deviceFilter);
             PopupWindow.Show(rect, w);
         }
 

@@ -3,6 +3,8 @@ using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
+////REVIEW: there should be an indication of what type of control one is looking at; need to be able to tell value types
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate
@@ -22,6 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputControlTree m_PathTree;
         private TreeViewState m_PathTreeState;
         private bool m_FirstRenderCompleted;
+        string[] m_DeviceFilter;
 
         public InputControlPickerPopup(SerializedProperty pathProperty, TreeViewState treeViewState = null)
         {
@@ -52,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_PathTree == null)
             {
-                m_PathTree = new InputControlTree(m_PathTreeState, this, OnSelected);
+                m_PathTree = new InputControlTree(m_PathTreeState, this, OnSelected, m_DeviceFilter);
             }
 
             DrawToolbar();
@@ -90,6 +93,11 @@ namespace UnityEngine.Experimental.Input.Editor
         private static class Styles
         {
             public static GUIStyle toolbarSearchField = new GUIStyle("ToolbarSeachTextField");
+        }
+
+        public void SetDeviceFilter(string[] deviceFilter)
+        {
+            m_DeviceFilter = deviceFilter;
         }
     }
 }
