@@ -10,9 +10,16 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
+
+#if UNITY_2018_3_OR_NEWER
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
+#endif
 
 ////TODO: test that device re-creation doesn't lose flags and such
 
@@ -272,10 +279,11 @@ partial class CoreTests
 
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        var controls = InputSystem.GetControls("/{LeftHand}");
-
-        Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(device));
+        using (var controls = InputSystem.FindControls("/{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
     }
 
     [Test]
@@ -288,10 +296,11 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         InputSystem.SetDeviceUsage(keyboard, CommonUsages.LeftHand);
 
-        var controls = InputSystem.GetControls("/<Keyboard>{LeftHand}");
-
-        Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
+        using (var controls = InputSystem.FindControls("/<Keyboard>{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
+        }
     }
 
     [Test]
@@ -629,7 +638,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(InputSystem.TryGetDeviceById(device.id), Is.SameAs(device));
+        Assert.That(InputSystem.GetDeviceById(device.id), Is.SameAs(device));
     }
 
     [Test]
@@ -640,6 +649,17 @@ partial class CoreTests
         var result = InputSystem.GetDevice("Gamepad");
 
         Assert.That(result, Is.SameAs(device));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanLookUpDeviceByType()
+    {
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        var gamepad = InputSystem.AddDevice<DualShockGamepad>();
+
+        Assert.That(InputSystem.GetDevice<Gamepad>(), Is.SameAs(gamepad));
+        Assert.That(InputSystem.GetDevice<DualShockGamepad>(), Is.SameAs(gamepad));
     }
 
     [Test]
@@ -994,6 +1014,7 @@ partial class CoreTests
 
         InputSystem.RemoveDevice(gamepad2);
 
+        Assert.That(gamepad2.added, Is.False);
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad1));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad3));
@@ -1027,10 +1048,70 @@ partial class CoreTests
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 
+        Assert.That(gamepad1.added, Is.False);
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad2));
         Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
         Assert.That(gamepad1WasRemoved, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenRemovedThroughEvent_AndDeviceIsNative_DeviceIsMovedToDisconnectedDeviceList()
+    {
+        ////REVIEW: should the system mandate more info in the description in order to retain a device?
+        var description =
+            new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+        };
+
+        var originalDeviceId = testRuntime.ReportNewInputDevice(description);
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        InputSystem.Update();
+        var originalGamepad = (Gamepad)InputSystem.GetDeviceById(originalDeviceId);
+
+        var receivedChanges = new List<KeyValuePair<InputDevice, InputDeviceChange>>();
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+        {
+            receivedChanges.Add(new KeyValuePair<InputDevice, InputDeviceChange>(device, change));
+        };
+
+        var inputEvent = DeviceRemoveEvent.Create(originalGamepad.id, testRuntime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        // Two notifications: first removed, then disconnect.
+        Assert.That(receivedChanges, Has.Count.EqualTo(2));
+        Assert.That(receivedChanges[0].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[0].Value, Is.EqualTo(InputDeviceChange.Removed));
+        Assert.That(receivedChanges[1].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[1].Value, Is.EqualTo(InputDeviceChange.Disconnected));
+
+        Assert.That(originalGamepad.added, Is.False);
+        Assert.That(InputSystem.disconnectedDevices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.disconnectedDevices, Has.Exactly(1).SameAs(originalGamepad));
+
+        receivedChanges.Clear();
+
+        // Add it back.
+        var newDeviceId = testRuntime.ReportNewInputDevice(description);
+        InputSystem.Update();
+        var newGamepad = (Gamepad)InputSystem.GetDeviceById(newDeviceId);
+
+        Assert.That(newGamepad, Is.SameAs(originalGamepad));
+
+        // Two notifications: first added, then reconnect.
+        Assert.That(receivedChanges, Has.Count.EqualTo(2));
+        Assert.That(receivedChanges[0].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[0].Value, Is.EqualTo(InputDeviceChange.Added));
+        Assert.That(receivedChanges[1].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[1].Value, Is.EqualTo(InputDeviceChange.Reconnected));
+
+        Assert.That(originalGamepad.added, Is.True);
+        Assert.That(originalGamepad.id, Is.EqualTo(newDeviceId));
+        Assert.That(InputSystem.disconnectedDevices, Has.Count.Zero);
     }
 
     //Keep weak ref to device when getting disconnect event
@@ -1377,7 +1458,7 @@ partial class CoreTests
 
         InputSystem.Update();
 
-        var device = InputSystem.TryGetDeviceById(deviceId);
+        var device = InputSystem.GetDeviceById(deviceId);
 
         Assert.That(device, Is.Not.Null);
         Assert.That(device.native, Is.True);
@@ -1773,6 +1854,27 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(textReceived, Is.EqualTo("abc"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanHandleUTF32CharactersInTextInputOnKeyboard()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var charsReceived = new List<char>();
+        keyboard.onTextInput += ch => charsReceived.Add(ch);
+
+        const int highBits = 0x12;
+        const int lowBits = 0x21;
+
+        var inputEvent = TextEvent.Create(keyboard.id, 0x10000 + (highBits << 10 | lowBits), 123);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(charsReceived, Has.Count.EqualTo(2));
+        Assert.That(charsReceived[0], Is.EqualTo(0xD800 + highBits));
+        Assert.That(charsReceived[1], Is.EqualTo(0xDC00 + lowBits));
     }
 
     [Test]
@@ -2684,21 +2786,21 @@ partial class CoreTests
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(-value.y, value.x, value.z)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(-value.y, value.x, value.z)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(-value.x, -value.y, value.z)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(-value.x, -value.y, value.z)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(value.y, -value.x, value.z)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(value.y, -value.x, value.z)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.Portrait;
-            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(vector3Comparer));
+            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
-            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(vector3Comparer));
+            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
         }
     }
 
@@ -2721,23 +2823,23 @@ partial class CoreTests
             InputConfiguration.CompensateSensorsForScreenOrientation = true;
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(vector3Comparer));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(Vector3EqualityComparer.Instance));
 
             testRuntime.screenOrientation = ScreenOrientation.Portrait;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(angles).Using(vector3Comparer));
+                Is.EqualTo(angles).Using(Vector3EqualityComparer.Instance));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(angles).Using(vector3Comparer));
+                Is.EqualTo(angles).Using(Vector3EqualityComparer.Instance));
         }
     }
 
@@ -2884,11 +2986,12 @@ partial class CoreTests
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice("Keyboard");
 
-        var matches = InputSystem.GetControls("/<gamepad>");
-
-        Assert.That(matches, Has.Count.EqualTo(2));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
-        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
+        using (var matches = InputSystem.FindControls("/<gamepad>"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(2));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
+        }
     }
 
     [Test]
@@ -2903,6 +3006,38 @@ partial class CoreTests
 
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
+
+    #if UNITY_2018_3_OR_NEWER
+    [Test]
+    [Category("Devices")]
+    [Ignore("TODO")]
+    public void TODO_Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
+    {
+        var description =
+            new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer"
+        };
+
+        var deviceId = testRuntime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        Assert.That(() =>
+        {
+            // "Unplug" device.
+            var removeEvent = DeviceRemoveEvent.Create(deviceId, 0.123);
+            InputSystem.QueueEvent(ref removeEvent);
+            InputSystem.Update();
+
+            // "Plug" it back in.
+            testRuntime.ReportNewInputDevice(description);
+            InputSystem.Update();
+        }, Is.Not.AllocatingGCMemory());
+    }
+
+    #endif
 
     [Test]
     [Category("Devices")]
@@ -3202,7 +3337,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_NoiseFilterCanHandleMultipleProcessors()
+    public void Devices_CanUseNoiseFilterWithMultipleProcessors()
     {
         const string json = @"
             {

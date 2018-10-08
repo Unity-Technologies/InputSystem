@@ -11,19 +11,21 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
         [SerializeField] private TreeViewState m_ControlPickerTreeViewState;
 
         private SerializedProperty m_ControlPathProperty;
+        private InputBindingPropertiesView m_PropertyView;
 
         public void OnEnable()
         {
             m_ControlPathProperty = serializedObject.FindProperty("m_ControlPath");
             if (m_ControlPickerTreeViewState == null)
                 m_ControlPickerTreeViewState = new TreeViewState();
+            m_PropertyView = new InputBindingPropertiesView(m_ControlPathProperty, null, m_ControlPickerTreeViewState);
         }
 
         public override void OnInspectorGUI()
         {
             EditorGUILayout.Space();
             ////TODO: line up "Binding" so it conforms to width of property names used in other inspectors
-            InputBindingPropertiesView.DrawBindingGUI(m_ControlPathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
+            m_PropertyView.DrawBindingGUI(m_ControlPathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
                 s => { m_ManualPathEditMode = false; });
             EditorGUILayout.Space();
         }

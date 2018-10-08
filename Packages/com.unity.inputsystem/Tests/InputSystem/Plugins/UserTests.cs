@@ -12,7 +12,10 @@ public class UserTests : InputTestFixture
     {
         InputUser.s_AllUserCount = 0;
         InputUser.s_AllUsers = null;
-        InputUser.s_OnChange = new InlinedArray<Action<InputUser, InputUserChange>>();
+        InputUser.s_AllUserData = null;
+        InputUser.s_AllDeviceCount = 0;
+        InputUser.s_AllDevices = null;
+        InputUser.s_OnChange = new InlinedArray<Action<IInputUser, InputUserChange>>();
 
         base.TearDown();
     }
@@ -26,10 +29,13 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanManuallyAddAndRemoveUsers()
+    public void Users_CanAddAndRemoveUsers()
     {
-        var user1 = InputUser.Add();
-        var user2 = InputUser.Add();
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
 
         Assert.That(InputUser.all, Has.Count.EqualTo(2)); // Plus default user.
         Assert.That(InputUser.all, Has.Exactly(1).SameAs(user1));
@@ -54,55 +60,75 @@ public class UserTests : InputTestFixture
     [Category("Users")]
     public void Users_HaveIndices()
     {
-        var user1 = InputUser.Add();
-        var user2 = InputUser.Add();
+        var user1 = new TestUser();
+        var user2 = new TestUser();
 
-        Assert.That(user1.index, Is.EqualTo(0));
-        Assert.That(user2.index, Is.EqualTo(1));
+        Assert.That(user1.GetUserIndex(), Is.EqualTo(-1));
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        Assert.That(user1.GetUserIndex(), Is.EqualTo(0));
+        Assert.That(user2.GetUserIndex(), Is.EqualTo(1));
 
         InputUser.Remove(user1);
 
-        Assert.That(user2.index, Is.EqualTo(0));
+        Assert.That(user1.GetUserIndex(), Is.EqualTo(-1));
+        Assert.That(user2.GetUserIndex(), Is.EqualTo(0));
     }
 
     [Test]
     [Category("Users")]
     public void Users_HaveUniqueIds()
     {
-        var user1 = InputUser.Add();
-        var user2 = InputUser.Add();
+        var user1 = new TestUser();
+        var user2 = new TestUser();
 
-        Assert.That(user1.id, Is.Not.EqualTo(InputUser.kInvalidId));
-        Assert.That(user2.id, Is.Not.EqualTo(InputUser.kInvalidId));
-        Assert.That(user1.id, Is.Not.EqualTo(user2.id));
+        Assert.That(user1.GetUserId(), Is.EqualTo(InputUser.kInvalidId));
+        Assert.That(user2.GetUserId(), Is.EqualTo(InputUser.kInvalidId));
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        Assert.That(user1.GetUserId(), Is.Not.EqualTo(InputUser.kInvalidId));
+        Assert.That(user2.GetUserId(), Is.Not.EqualTo(InputUser.kInvalidId));
+        Assert.That(user1.GetUserId(), Is.Not.EqualTo(user2.GetUserId()));
+
+        InputUser.Remove(user1);
+
+        Assert.That(user1.GetUserId(), Is.EqualTo(InputUser.kInvalidId));
     }
 
     [Test]
     [Category("Users")]
     public void Users_CanHaveUserNames()
     {
-        var user = InputUser.Add("A");
+        var user = new TestUser();
 
-        Assert.That(user.userName, Is.EqualTo("A"));
+        Assert.That(user.GetUserName(), Is.Null);
 
-        user.userName = "B";
+        InputUser.Add(user);
 
-        Assert.That(user.userName, Is.EqualTo("B"));
-    }
+        Assert.That(user.GetUserName(), Is.Null);
 
-    [Test]
-    [Category("Users")]
-    public void Users_UserNameIsNullByDefault()
-    {
-        var user = InputUser.Add();
-        Assert.That(user.userName, Is.Null);
+        user.SetUserName("A");
+
+        Assert.That(user.GetUserName(), Is.EqualTo("A"));
+
+        user.SetUserName("B");
+
+        Assert.That(user.GetUserName(), Is.EqualTo("B"));
     }
 
     [Test]
     [Category("Users")]
     public void Users_CanMonitorForChanges()
     {
-        InputUser receivedUser = null;
+        InputUser.Add(new TestUser()); // Noise.
+        InputUser.Add(new TestUser()); // Noise.
+        var user = new TestUser();
+
+        IInputUser receivedUser = null;
         InputUserChange? receivedChange = null;
 
         InputUser.onChange +=
@@ -114,7 +140,7 @@ public class UserTests : InputTestFixture
         };
 
         // Added.
-        var user = InputUser.Add();
+        InputUser.Add(user);
 
         Assert.That(receivedUser, Is.SameAs(user));
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.Added));
@@ -123,7 +149,7 @@ public class UserTests : InputTestFixture
         receivedChange = null;
 
         // NameChanged.
-        user.userName = "NewName";
+        user.SetUserName("NewName");
 
         Assert.That(receivedUser, Is.SameAs(user));
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.NameChanged));
@@ -131,9 +157,14 @@ public class UserTests : InputTestFixture
         receivedUser = null;
         receivedChange = null;
 
+        // Same name, no notification.
+        user.SetUserName("NewName");
+
+        Assert.That(receivedChange, Is.Null);
+
         // DevicesChanged.
         var device = InputSystem.AddDevice<Gamepad>();
-        user.AssignDevice(device);
+        user.AssignInputDevice(device);
 
         Assert.That(receivedUser, Is.SameAs(user));
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.DevicesChanged));
@@ -142,7 +173,30 @@ public class UserTests : InputTestFixture
         receivedChange = null;
 
         // Same device, no notification.
-        user.AssignDevice(device);
+        user.AssignInputDevice(device);
+
+        Assert.That(receivedChange, Is.Null);
+
+        // DevicesChanges, removed.
+        user.ClearAssignedInputDevices();
+
+        Assert.That(receivedUser, Is.SameAs(user));
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.DevicesChanged));
+
+        receivedUser = null;
+        receivedChange = null;
+
+        // ControlSchemeChanged.
+        user.AssignControlScheme("gamepad");
+
+        Assert.That(receivedUser, Is.SameAs(user));
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlSchemeChanged));
+
+        receivedUser = null;
+        receivedChange = null;
+
+        // Same control scheme, no notification.
+        user.AssignControlScheme("gamepad");
 
         Assert.That(receivedChange, Is.Null);
 
@@ -157,34 +211,53 @@ public class UserTests : InputTestFixture
     [Category("Users")]
     public void Users_CanAssignDevicesToUsers()
     {
-        var user1 = InputUser.Add();
-        var user2 = InputUser.Add();
+        var user1 = new TestUser();
+        var user2 = new TestUser();
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        user1.AssignDevices(new InputDevice[] {keyboard, mouse});
-        user2.AssignDevice(gamepad);
+        Assert.That(user1.GetAssignedInputDevices(), Is.Empty);
+        Assert.That(user2.GetAssignedInputDevices(), Is.Empty);
 
-        Assert.That(user1.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
-        Assert.That(user2.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        user1.AssignInputDevices(new InputDevice[] {keyboard, mouse});
+        user2.AssignInputDevice(gamepad);
+
+        Assert.That(user1.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(user2.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] { gamepad }));
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CannotAssignDevicesToUserThatHasNotBeenAdded()
+    {
+        var user = new TestUser();
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(() => user.AssignInputDevice(device), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Users")]
     public void Users_CanAssignSameDeviceToMoreThanOneUser()
     {
-        var user1 = InputUser.Add();
-        var user2 = InputUser.Add();
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        user1.AssignDevice(gamepad);
-        user2.AssignDevice(gamepad);
+        user1.AssignInputDevice(gamepad);
+        user2.AssignInputDevice(gamepad);
 
-        Assert.That(user1.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
-        Assert.That(user2.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(user1.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(user2.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] { gamepad }));
     }
 
     [Test]
@@ -195,15 +268,18 @@ public class UserTests : InputTestFixture
         var device2 = InputSystem.AddDevice<Gamepad>();
         var device3 = InputSystem.AddDevice<Gamepad>();
 
-        var user1 = InputUser.Add();
-        var user2 = InputUser.Add();
+        var user1 = new TestUser();
+        var user2 = new TestUser();
 
-        user1.AssignDevice(device1);
-        user2.AssignDevice(device2);
-        user1.AssignDevice(device3);
+        InputUser.Add(user1);
+        InputUser.Add(user2);
 
-        Assert.That(user1.devices, Is.EquivalentTo(new InputDevice[] { device1, device3}));
-        Assert.That(user2.devices, Is.EquivalentTo(new InputDevice[] {device2}));
+        user1.AssignInputDevice(device1);
+        user2.AssignInputDevice(device2);
+        user1.AssignInputDevice(device3);
+
+        Assert.That(user1.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] { device1, device3}));
+        Assert.That(user2.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] {device2}));
     }
 
     [Test]
@@ -211,13 +287,14 @@ public class UserTests : InputTestFixture
     public void Users_AssigningSameDeviceToSameUserMoreThanOnce_IsIgnored()
     {
         var device = InputSystem.AddDevice<Gamepad>();
-        var user = InputUser.Add();
+        var user = new TestUser();
+        InputUser.Add(user);
 
-        user.AssignDevice(device);
-        user.AssignDevice(device);
-        user.AssignDevice(device);
+        user.AssignInputDevice(device);
+        user.AssignInputDevice(device);
+        user.AssignInputDevice(device);
 
-        Assert.That(user.devices, Is.EquivalentTo(new InputDevice[] {device}));
+        Assert.That(user.GetAssignedInputDevices(), Is.EquivalentTo(new InputDevice[] {device}));
     }
 
     [Test]
@@ -226,30 +303,137 @@ public class UserTests : InputTestFixture
     {
         var device1 = InputSystem.AddDevice<Gamepad>();
         var device2 = InputSystem.AddDevice<Gamepad>();
-        var user = InputUser.Add();
 
-        user.AssignDevice(device1);
-        user.AssignDevice(device2);
+        var user = new TestUser();
+        InputUser.Add(user);
+
+        user.AssignInputDevice(device1);
+        user.AssignInputDevice(device2);
 
         InputUser.Remove(user);
 
-        Assert.That(user.devices, Has.Count.Zero);
+        Assert.That(user.GetAssignedInputDevices(), Has.Count.Zero);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanClearAssignedDevices()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+        var user3 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        user1.AssignInputDevice(device);
+        user1.ClearAssignedInputDevices();
+        user2.ClearAssignedInputDevices();
+        user3.ClearAssignedInputDevices();
+
+        Assert.That(user1.GetAssignedInputDevices(), Is.Empty);
+        Assert.That(user2.GetAssignedInputDevices(), Is.Empty);
+        Assert.That(user3.GetAssignedInputDevices(), Is.Empty);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanQueryUnusedDevices()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var gyro = InputSystem.AddDevice<Gyroscope>();
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+        var user3 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+        InputUser.Add(user3);
+
+        user1.AssignInputDevice(gamepad);
+        user3.AssignInputDevices(new InputDevice[] {keyboard, mouse});
+
+        using (var unusedDevices = InputUser.GetUnusedDevices())
+        {
+            Assert.That(unusedDevices, Has.Count.EqualTo(2));
+            Assert.That(unusedDevices, Has.Exactly(1).SameAs(touch));
+            Assert.That(unusedDevices, Has.Exactly(1).SameAs(gyro));
+        }
     }
 
     [Test]
     [Category("Users")]
     [Ignore("TODO")]
-    public void TODO_Users_CanAssignActionMapsToUsers()
+    public void TODO_Users_CanAssignActionsToUsers()
     {
+        var user = new TestUser();
+        InputUser.Add(user);
+
+        var action = new InputAction();
+
+        user.GetInputActions().Push(action);
+
         Assert.Fail();
     }
 
     [Test]
     [Category("Users")]
-    [Ignore("TODO")]
-    public void TODO_Users_CanSwitchControlSchemes()
+    public void Users_CanAssignControlScheme()
     {
-        Assert.Fail();
+        var user = new TestUser();
+
+        Assert.That(user.GetControlScheme(), Is.Null);
+
+        InputUser.Add(user);
+
+        user.AssignControlScheme("scheme");
+
+        Assert.That(user.GetControlScheme(), Is.EqualTo(new InputControlScheme("scheme")));
+
+        user.AssignControlScheme(null);
+
+        Assert.That(user.GetControlScheme(), Is.Null);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanAssignControlScheme_AndAutomaticallyAssignMatchingUnusedDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        var singleGamepadScheme = new InputControlScheme("SingleGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var dualGamepadScheme = new InputControlScheme("DualGamepad")
+            .WithRequiredDevice("<Gamepad>")
+            .WithRequiredDevice("<Gamepad>");
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+        var user3 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+        InputUser.Add(user3);
+
+        user1.AssignInputDevice(keyboard); // Should automatically be unassigned.
+        user3.AssignInputDevice(keyboard); // Should not be affected by any of what we do here.
+
+        user1.AssignControlScheme(singleGamepadScheme, assignMatchingUnusedDevices: true);
+        user2.AssignControlScheme(dualGamepadScheme, assignMatchingUnusedDevices: true);
+
+        Assert.That(user1.GetAssignedInputDevices(), Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(user2.GetAssignedInputDevices(), Is.EquivalentTo(new[] { gamepad2, gamepad3 }));
+        Assert.That(user3.GetAssignedInputDevices(), Is.EquivalentTo(new[] { keyboard }));
     }
 
     [Test]
@@ -258,5 +442,9 @@ public class UserTests : InputTestFixture
     public void TODO_Users_CanDetectSwitchesInControlScheme()
     {
         Assert.Fail();
+    }
+
+    public class TestUser : IInputUser
+    {
     }
 }

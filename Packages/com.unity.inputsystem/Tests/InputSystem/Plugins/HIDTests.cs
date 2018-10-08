@@ -12,6 +12,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
@@ -167,7 +168,7 @@ public class HIDTests : InputTestFixture
         InputSystem.Update();
 
         // Grab device.
-        var device = (HID)InputSystem.TryGetDeviceById(deviceId);
+        var device = (HID)InputSystem.GetDeviceById(deviceId);
         Assert.That(device, Is.Not.Null);
         Assert.That(device, Is.TypeOf<HID>());
 
@@ -644,63 +645,63 @@ public class HIDTests : InputTestFixture
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUp;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUpRight;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRight;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRightDown;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDown;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDownLeft;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeft;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeftUp;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(vector2Comparer));
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(Vector2EqualityComparer.Instance));
         }
     }
 

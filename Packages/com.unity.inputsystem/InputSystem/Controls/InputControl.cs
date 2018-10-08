@@ -457,7 +457,6 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
             }
 
-
             // Make sure we have a state event compatible with our device. The event doesn't
             // have to be specifically for our device (we don't require device IDs to match) but
             // the formats have to match and the size must be within range of what we're trying

@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
@@ -12,11 +13,34 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
-using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
 partial class CoreTests
 {
+    [Serializable]
+    struct PackageJson
+    {
+        public string version;
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_PackageVersionAndAssemblyVersionAreTheSame()
+    {
+        var packageJsonFile = File.ReadAllText("Packages/com.unity.inputsystem/package.json");
+        var packageJson = JsonUtility.FromJson<PackageJson>(packageJsonFile);
+
+        // Snip -preview off the end. System.Version doesn't support semantic versioning.
+        var versionString = packageJson.version;
+        if (versionString.EndsWith("-preview"))
+            versionString = versionString.Substring(0, versionString.Length - "-preview".Length);
+        var version = new Version(versionString);
+
+        Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
+        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Major));
+        Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_CanSaveAndRestoreState()

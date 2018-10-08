@@ -5,6 +5,10 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should we put lock state directly on Pointer?
+
+////REVIEW: should pointer IDs be required to be globally unique across pointing devices?
+
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
 ////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?

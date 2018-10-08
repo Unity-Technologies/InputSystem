@@ -85,7 +85,7 @@ public class SimpleController_UsingActionQueue : MonoBehaviour
                 m_Move = eventPtr.ReadValue<Vector2>();
             }
         }
-        m_ActionQueue.Flush();
+        m_ActionQueue.Clear();
 
         Move(m_Move);
         Look(m_Look);

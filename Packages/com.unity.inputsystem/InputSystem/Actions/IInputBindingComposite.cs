@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
 ////        not just be about composing multiple bindings?
 
-////REVIEW: rename to "IInputCompoundBinding"?
+////REVIEW: why not just name this IInputBinding and have AxisBinding, DpadBinding, etc?
 
 ////REVIEW: should composites be able to nest?
 

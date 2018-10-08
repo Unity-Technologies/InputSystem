@@ -10,6 +10,11 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+#if UNITY_2018_3_OR_NEWER
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
+#endif
+
 partial class CoreTests
 {
     // This is one of the most central tests. If this one breaks, it most often
@@ -56,6 +61,26 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
     }
+
+    #if UNITY_2018_3_OR_NEWER
+    [Test]
+    [Category("Events")]
+    [Ignore("TODO")]
+    public void TODO_Events_ProcessingStateEvent_DoesNotAllocateMemory()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        ////REVIEW: We do some analytics stuff on the first update that allocates. Probably there's
+        ////        a better way to handle this.
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+
+        ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
+        Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
+    }
+
+    #endif
 
     [Test]
     [Category("Events")]
@@ -109,19 +134,6 @@ partial class CoreTests
         Assert.That(receivedTime.HasValue);
         Assert.That(receivedTime.Value, Is.EqualTo(111).Within(0.00001));
         Assert.That(receivedInternalTime.Value, Is.EqualTo(1234).Within(0.00001));
-    }
-
-    [Test]
-    [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2);
-        InputSystem.Update();
-
-        Assert.That(gamepad.lastUpdateTime, Is.Not.EqualTo(2).Within(0.00001));
     }
 
     [Test]
@@ -739,6 +751,32 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
         Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
+    {
+        InputUpdateType? receivedUpdateType = null;
+        Action<InputUpdateType> callback =
+            type =>
+        {
+            Assert.That(receivedUpdateType, Is.Null);
+            receivedUpdateType = type;
+        };
+
+        InputSystem.onAfterUpdate += callback;
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        receivedUpdateType = null;
+        InputSystem.onAfterUpdate -= callback;
+
+        InputSystem.Update();
+
+        Assert.That(receivedUpdateType, Is.Null);
     }
 
     [Test]

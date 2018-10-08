@@ -107,6 +107,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
 
             InputSystem.RegisterControlProcessor<AndroidCompensateDirectionProcessor>();
+            InputSystem.RegisterControlProcessor<AndroidCompensateRotationProcessor>();
 
             // Add sensors
             InputSystem.RegisterLayout<AndroidAccelerometer>(

@@ -24,6 +24,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             return false;
         }
 
+        public static bool ContainsReferenceTo<TValue>(TValue[] array, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return false;
+
+            for (var i = 0; i < array.Length; ++i)
+                if (ReferenceEquals(array[i], value))
+                    return true;
+
+            return false;
+        }
+
         public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
         {
             if (first == null || second == null)
@@ -55,6 +68,45 @@ namespace UnityEngine.Experimental.Input.Utilities
                     return i;
 
             return -1;
+        }
+
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return -1;
+
+            var length = array.Length;
+            for (var i = 0; i < length; ++i)
+                if (ReferenceEquals(array[i], value))
+                    return i;
+
+            return -1;
+        }
+
+        public static unsafe void Resize<TValue>(ref NativeArray<TValue> array, int newSize, Allocator allocator)
+            where TValue : struct
+        {
+            var oldSize = array.Length;
+            if (oldSize == newSize)
+                return;
+
+            if (newSize == 0)
+            {
+                if (array.IsCreated)
+                    array.Dispose();
+                array = new NativeArray<TValue>();
+                return;
+            }
+
+            var newArray = new NativeArray<TValue>(newSize, allocator);
+            if (oldSize != 0)
+            {
+                // Copy contents from old array.
+                UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(),
+                    UnsafeUtility.SizeOf<TValue>() * (newSize < oldSize ? newSize : oldSize));
+            }
+            array = newArray;
         }
 
         public static int Append<TValue>(ref TValue[] array, TValue value)
@@ -314,6 +366,44 @@ namespace UnityEngine.Experimental.Input.Utilities
                 Array.Copy(array, index + 1, array, index, length - index - 1);
 
             Array.Resize(ref array, length - 1);
+        }
+
+        public static void EraseAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index)
+        {
+            Debug.Assert(array != null);
+            Debug.Assert(count <= array.Length);
+            Debug.Assert(index >= 0 && index < count);
+
+            // If we're erasing from the beginning or somewhere in the middle, move
+            // the array contents down from after the index.
+            if (index < count - 1)
+            {
+                Array.Copy(array, index + 1, array, index, count - index - 1);
+            }
+
+            array[count - 1] = default(TValue); // Tail has been moved down by one.
+            --count;
+        }
+
+        public static unsafe void EraseAtWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int index)
+            where TValue : struct
+        {
+            Debug.Assert(array.IsCreated);
+            Debug.Assert(count <= array.Length);
+            Debug.Assert(index >= 0 && index < count);
+
+            // If we're erasing from the beginning or somewhere in the middle, move
+            // the array contents down from after the index.
+            if (index < count - 1)
+            {
+                var elementSize = UnsafeUtility.SizeOf<TValue>();
+                var arrayPtr = (byte*)array.GetUnsafePtr();
+
+                UnsafeUtility.MemCpy(arrayPtr + elementSize * index, arrayPtr + elementSize * (index + 1),
+                    (count - index - 1) * elementSize);
+            }
+
+            --count;
         }
 
         public static bool Erase<TValue>(ref TValue[] array, TValue value)

@@ -4,6 +4,8 @@ using System.Reflection;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add ability to add to existing arrays rather than creating per-device arrays
+
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the layout cache around instead of throwing
 ////        it away after the creation of every single device; best approach may be to just
@@ -104,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             return null;
         }
 
-        // Look up a direct or indirect chid control expected to be of a specific type.
+        // Look up a direct or indirect child control expected to be of a specific type.
         // Throws if actual type is not compatible.
         public TControl TryGetControl<TControl>(InputControl parent, string path)
             where TControl : InputControl
@@ -497,7 +499,6 @@ namespace UnityEngine.Experimental.Input.Layouts
             var name = nameOverride ?? controlItem.name;
             var nameLowerCase = name.ToLower();
             var nameInterned = new InternedString(name);
-            string path = null;
 
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
@@ -508,7 +509,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             InputControlLayout.ControlItem? controlOverride = null;
             if (m_ChildControlOverrides != null)
             {
-                path = string.Format("{0}/{1}", parent.path, name);
+                var path = string.Format("{0}/{1}", parent.path, name);
                 var pathLowerCase = path.ToLower();
 
                 InputControlLayout.ControlItem match;
@@ -554,6 +555,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             }
 
             // Add to array.
+            // NOTE: AddChildControls and InstantiateLayout take care of growing the array and making
+            //       room for the immediate children of each control.
             m_Device.m_ChildrenForEachControl[childIndex] = control;
             ++childIndex;
 

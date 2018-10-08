@@ -68,11 +68,24 @@ namespace UnityEngine.Experimental.Input
             });
         }
 
+        /// <summary>
+        /// Add a binding that references the given <paramref name="control"/> and triggers
+        /// the given <seealso cref="action"/>.
+        /// </summary>
+        /// <param name="action">Action to trigger. Also determines where to add the binding. If the action is not part
+        /// of an <see cref="InputActionMap">action map</see>, the binding is added directly to <paramref name="action"/>.
+        /// If it is part of a map, the binding is added to the action map (<see cref="InputAction.actionMap"/>).</param>
+        /// <param name="control">Control to binding to. The full <see cref="InputControl.path"/> of the control will
+        /// be used in the resulting <see cref="InputBinding">binding</see>.</param>
+        /// <returns>Syntax to configure the binding further.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null or <paramref name="control"/> is null.</exception>
+        /// <seealso cref="InputAction.bindings"/>
         public static BindingSyntax AddBinding(this InputAction action, InputControl control)
         {
-            //sets the path itself based on just the layout of the control's device
-            //sets an overridePath pointing to the actual device as it exists at runtime
-            throw new NotImplementedException();
+            if (control == null)
+                throw new ArgumentNullException("control");
+
+            return AddBinding(action, control.path);
         }
 
         /// <summary>
@@ -247,6 +260,21 @@ namespace UnityEngine.Experimental.Input
             asset.AddControlScheme(new InputControlScheme(name));
 
             return new ControlSchemeSyntax(asset, index);
+        }
+
+        public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
+        {
+            return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Finish();
+        }
+
+        public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string devicePath)
+        {
+            return new ControlSchemeSyntax(scheme).WithRequiredDevice(devicePath).Finish();
+        }
+
+        public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string devicePath)
+        {
+            return new ControlSchemeSyntax(scheme).WithOptionalDevice(devicePath).Finish();
         }
 
         /// <summary>
@@ -455,11 +483,20 @@ namespace UnityEngine.Experimental.Input
         {
             private InputActionAsset m_Asset;
             private int m_ControlSchemeIndex;
+            private InputControlScheme m_ControlScheme;
 
             internal ControlSchemeSyntax(InputActionAsset asset, int index)
             {
                 m_Asset = asset;
                 m_ControlSchemeIndex = index;
+                m_ControlScheme = new InputControlScheme();
+            }
+
+            internal ControlSchemeSyntax(InputControlScheme controlScheme)
+            {
+                m_Asset = null;
+                m_ControlSchemeIndex = -1;
+                m_ControlScheme = controlScheme;
             }
 
             public ControlSchemeSyntax BasedOn(string baseControlScheme)
@@ -467,7 +504,11 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(baseControlScheme))
                     throw new ArgumentNullException("baseControlScheme");
 
-                m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
+                if (m_Asset == null)
+                    m_ControlScheme.m_BaseSchemeName = baseControlScheme;
+                else
+                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
+
                 return this;
             }
 
@@ -476,7 +517,11 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(bindingGroup))
                     throw new ArgumentNullException("bindingGroup");
 
-                m_Asset.m_ControlSchemes[m_ControlSchemeIndex].bindingGroup = bindingGroup;
+                if (m_Asset == null)
+                    m_ControlScheme.m_BindingGroup = bindingGroup;
+                else
+                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex].bindingGroup = bindingGroup;
+
                 return this;
             }
 
@@ -492,19 +537,30 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
+            public InputControlScheme Finish()
+            {
+                if (m_Asset != null)
+                    return m_Asset.m_ControlSchemes[m_ControlSchemeIndex];
+                return m_ControlScheme;
+            }
+
             private void AddDeviceEntry(string devicePath, bool isOptional)
             {
                 if (string.IsNullOrEmpty(devicePath))
                     throw new ArgumentNullException("devicePath");
 
-                var scheme = m_Asset.m_ControlSchemes[m_ControlSchemeIndex];
+                var scheme = m_Asset != null ? m_Asset.m_ControlSchemes[m_ControlSchemeIndex] : m_ControlScheme;
                 ArrayHelpers.Append(ref scheme.m_Devices,
                     new InputControlScheme.DeviceEntry
                     {
                         devicePath = devicePath,
                         isOptional = isOptional,
                     });
-                m_Asset.m_ControlSchemes[m_ControlSchemeIndex] = scheme;
+
+                if (m_Asset == null)
+                    m_ControlScheme = scheme;
+                else
+                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex] = scheme;
             }
         }
     }
