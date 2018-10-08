@@ -1447,6 +1447,10 @@ namespace UnityEngine.Experimental.Input
             DualShockSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4
+            MoveControllerSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             HIDSupport.Initialize();
             #endif
