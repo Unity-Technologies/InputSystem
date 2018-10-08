@@ -57,7 +57,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 return;
 
             var eventData = PreparePointerEventData(mouseState);
-            eventData.Reset();
 
             /// Left Mouse Button
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
@@ -364,7 +363,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     if ((joystickState.submitButtonDelta & ButtonDeltaState.Pressed) != 0)
                         ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
 
-                    if (!data.used && (joystickState.cancelButtonDelta & ButtonDeltaState.Released) != 0)
+                    if (!data.used && (joystickState.cancelButtonDelta & ButtonDeltaState.Pressed) != 0)
                         ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
                 }
             }
