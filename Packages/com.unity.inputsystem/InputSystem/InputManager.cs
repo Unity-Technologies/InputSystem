@@ -125,6 +125,7 @@ namespace UnityEngine.Experimental.Input
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
+        ////REVIEW: would be great to have a way to sort out precedence between two callbacks
         public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
         {
             add { m_DeviceFindLayoutCallbacks.Append(value); }
@@ -590,14 +591,16 @@ namespace UnityEngine.Experimental.Input
             }
 
             ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
+            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks?
             // Give listeners a shot to select/create a layout.
+            var haveOverriddenLayoutName = false;
             for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
             {
                 var newLayout = m_DeviceFindLayoutCallbacks[i](deviceId, ref deviceDescription, layoutName, m_Runtime);
-                if (!string.IsNullOrEmpty(newLayout))
+                if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
                 {
                     layoutName = new InternedString(newLayout);
-                    break;
+                    haveOverriddenLayoutName = true;
                 }
             }
 

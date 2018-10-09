@@ -13,6 +13,8 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 #endif
 
+////TODO: expose the layout builder so that other layout builders can use it for their own purposes
+
 ////REVIEW: how are we dealing with multiple different input reports on the same device?
 
 ////REVIEW: move the enums and structs out of here and into UnityEngine.Experimental.Input.HID? Or remove the "HID" name prefixes from them?
