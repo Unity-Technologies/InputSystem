@@ -378,7 +378,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            ////TODO: split remote and local layouts
             private void AddControlLayouts(TreeViewItem parent, ref int id)
             {
                 // Split root into three different groups:
@@ -387,8 +386,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 // 3) Device layouts that match specific products
 
                 var controls = AddChild(parent, "Controls", ref id);
-                var devices = AddChild(parent, "Devices", ref id);
-                var products = AddChild(parent, "Products", ref id);
+                var devices = AddChild(parent, "Abstract Devices", ref id);
+                var products = AddChild(parent, "Specific Devices", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
                     AddControlLayoutItem(layout, controls, ref id);

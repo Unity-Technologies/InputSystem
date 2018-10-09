@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -11,8 +10,37 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 
+#if UNITY_2018_3_OR_NEWER
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
+#endif
+
 partial class CoreTests
 {
+    #if UNITY_2018_3_OR_NEWER
+    [Test]
+    [Category("Controls")]
+    [Ignore("TODO")]
+    public void TODO_Controls_CanFindControls_WithoutAllocatingGCMemory()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        var list = new InputControlList<InputControl>();
+        try
+        {
+            Assert.That(() =>
+            {
+                InputSystem.FindControls("<Gamepad>/*stick", ref list);
+            }, Is.Not.AllocatingGCMemory());
+        }
+        finally
+        {
+            list.Dispose();
+        }
+    }
+
+    #endif
+
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsInSetupByPath()
@@ -740,7 +768,7 @@ partial class CoreTests
     ////TODO: doesnotallocate constraint
     [Test]
     [Category("Controls")]
-    public void Controls_CanKeepListsOfControls_WithoutAllocatingManagedMemory()
+    public void Controls_CanKeepListsOfControls_WithoutAllocatingGCMemory()
     {
         InputSystem.AddDevice<Mouse>(); // Noise.
         var gamepad = InputSystem.AddDevice<Gamepad>();

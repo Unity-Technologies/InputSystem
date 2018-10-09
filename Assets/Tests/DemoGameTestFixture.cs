@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.XInput;
+using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -29,6 +29,9 @@ public class DemoGameTestFixture
     public Joystick joystick { get; set; }
     public Pen pen { get; set; }
     public Gyroscope gyro { get; set; }
+    public XRHMD hmd { get; set; }
+    public XRController leftHand { get; set; }
+    public XRController rightHand { get; set; }
     ////TODO: on-screen controls
 
     [UnitySetUp]
@@ -43,9 +46,9 @@ public class DemoGameTestFixture
         if (testProperties.ContainsKey("Platform"))
         {
             var value = (string)testProperties["Platform"][0];
-            switch (value)
+            switch (value.ToLower())
             {
-                case "OSX": platform = RuntimePlatform.OSXPlayer; break;
+                case "osx": platform = RuntimePlatform.OSXPlayer; break;
                 default: throw new NotImplementedException();
             }
         }
@@ -60,22 +63,45 @@ public class DemoGameTestFixture
         game = GameObject.Find("DemoGame").GetComponent<DemoGame>();
 
         // Set up default device matrix for current platform.
+        // NOTE: We use strings here instead of types as not all devices are available in all players.
         switch (platform)
         {
-            #if UNITY_STANDALONE_OSX || UNITY_EDITOR
             case RuntimePlatform.OSXPlayer:
             case RuntimePlatform.OSXEditor:
-                keyboard = InputSystem.AddDevice<Keyboard>();
-                mouse = InputSystem.AddDevice<Mouse>();
-                ps4Gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
-                xboxGamepad = InputSystem.AddDevice<XInputController>();
+                keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+                mouse = (Mouse)InputSystem.AddDevice("Mouse");
+                ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
+                xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
                 ////TODO: joystick
                 break;
-            #endif
 
             ////TODO: other platforms
             default:
                 throw new NotImplementedException();
+        }
+
+        // Check if we should add VR support.
+        if (testProperties.ContainsKey("VR"))
+        {
+            var value = (string)testProperties["VR"][0];
+            switch (value.ToLower())
+            {
+                case "":
+                case "any":
+                    // Add a combination of generic XRHMD and XRController instances that don't
+                    // represent any specific set of hardware out there.
+                    hmd = InputSystem.AddDevice<XRHMD>();
+                    leftHand = InputSystem.AddDevice<XRController>();
+                    rightHand = InputSystem.AddDevice<XRController>();
+                    InputSystem.SetDeviceUsage(leftHand, CommonUsages.LeftHand);
+                    InputSystem.SetDeviceUsage(rightHand, CommonUsages.RightHand);
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+
+            DemoGame.vrSupported = true;
         }
     }
 
@@ -85,14 +111,26 @@ public class DemoGameTestFixture
         inputFixture.TearDown();
     }
 
-    public void Click(string button, DemoPlayerController player = null)
+    public void Click(string button, int playerIndex = 0)
     {
-        if (player != null)
+        if (playerIndex != 0)
             throw new NotImplementedException();
 
         ////TODO: drive this from a mouse input event so that we cover the whole UI action setup, too
         var buttonObject = GameObject.Find(button);
         Assert.That(buttonObject != null);
         buttonObject.GetComponent<Button>().onClick.Invoke();
+    }
+
+    public void Trigger(string action, int playerIndex = 0)
+    {
+        // Look up action.
+        var controls = game.players[playerIndex].controls;
+        var actionInstance = controls.asset.FindAction(action);
+        if (actionInstance == null)
+            throw new ArgumentException("action");
+
+        // And trigger it.
+        inputFixture.Trigger(actionInstance);
     }
 }

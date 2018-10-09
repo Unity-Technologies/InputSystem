@@ -2603,7 +2603,6 @@ namespace UnityEngine.Experimental.Input
             public string[] usages;
             public NoiseFilterElementState[] noisyElements;
             public int deviceId;
-            public uint stateOffset;
             public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
@@ -2621,8 +2620,10 @@ namespace UnityEngine.Experimental.Input
                 if (noisyElements == null || noisyElements.Length == 0)
                     return;
 
-                InputNoiseFilter newUserInteractionFilter = new InputNoiseFilter();
-                var index = ArrayHelpers.Append(ref newUserInteractionFilter.elements, noisyElements.Select(filterElement => new InputNoiseFilter.FilterElement { controlIndex = filterElement.index, type = filterElement.type}));
+                var newUserInteractionFilter = new InputNoiseFilter();
+                ArrayHelpers.Append(ref newUserInteractionFilter.elements,
+                    noisyElements.Select(filterElement => new InputNoiseFilter.FilterElement
+                        {controlIndex = filterElement.index, type = filterElement.type}));
                 device.userInteractionFilter = newUserInteractionFilter;
             }
         }
@@ -2679,7 +2680,6 @@ namespace UnityEngine.Experimental.Input
                     deviceId = device.id,
                     usages = usages,
                     noisyElements = elements,
-                    stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
                 };
@@ -2818,9 +2818,18 @@ namespace UnityEngine.Experimental.Input
                     var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
                         m_AvailableDevices[i].deviceId);
                     if (!layout.IsEmpty())
-                        AddDevice(layout, m_AvailableDevices[i].deviceId,
-                            deviceDescription: m_AvailableDevices[i].description,
-                            deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                    {
+                        try
+                        {
+                            AddDevice(layout, m_AvailableDevices[i].deviceId,
+                                deviceDescription: m_AvailableDevices[i].description,
+                                deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                        }
+                        catch (Exception exception)
+                        {
+                            // Just ignore. Simply means we still can't really turn the device into something useful.
+                        }
+                    }
                 }
 
                 // Done. Discard saved arrays.

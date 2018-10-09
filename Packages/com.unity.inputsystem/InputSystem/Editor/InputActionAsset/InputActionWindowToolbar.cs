@@ -181,7 +181,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 devices.Add("All devices");
                 var controlScheme = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName);
-                devices.AddRange(controlScheme.devices.Select(a => a.devicePath).ToList());
+                devices.AddRange(controlScheme.deviceRequirements.Select(a => a.controlPath).ToList());
             }
             m_DeviceIdList = devices.ToArray();
             m_DeviceNamesList = devices.Select(InputControlPath.ToHumanReadableString).ToArray();

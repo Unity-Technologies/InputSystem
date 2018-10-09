@@ -273,6 +273,24 @@
                     "isOptional" : false
                 }
             ]
+        },
+        {
+            "name" : "VR",
+            "bindingGroup" : "VR",
+            "devices" : [
+                {
+                    "devicePath" : "<XRHMD>",
+                    "isOptional" : false
+                },
+                {
+                    "devicePath" : "<XRController>{LeftHand}",
+                    "isOptional" : false
+                },
+                {
+                    "devicePath" : "<XRController>{RightHand}",
+                    "isOptional" : false
+                }
+            ]
         }
     ]
 }

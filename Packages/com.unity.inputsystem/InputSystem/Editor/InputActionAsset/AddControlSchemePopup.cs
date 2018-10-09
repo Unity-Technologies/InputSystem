@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_InputControlSchemeName = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).name;
             var schema = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName);
-            m_Devices = schema.devices.Select(a => new DeviceEntryForList() { name = a.devicePath, deviceEntry = a }).ToList();
+            m_Devices = schema.deviceRequirements.Select(a => new DeviceEntryForList() { name = a.controlPath, deviceRequirement = a }).ToList();
         }
 
         public override Vector2 GetWindowSize()
@@ -87,7 +87,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override void OnOpen()
         {
-            m_DevicesReorderableList = new ReorderableList(m_Devices, typeof(InputControlScheme.DeviceEntry));
+            m_DevicesReorderableList = new ReorderableList(m_Devices, typeof(InputControlScheme.DeviceRequirement));
             m_DevicesReorderableList.headerHeight = 2;
             m_DevicesReorderableList.onAddCallback += OnDeviceAdd;
             m_DevicesReorderableList.onRemoveCallback += OnDeviceRemove;
@@ -158,9 +158,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var name = nameObject.ToString();
             if (!m_DevicesReorderableList.list.Cast<DeviceEntryForList>().Any(a => a.name == name))
             {
-                var device = new InputControlScheme.DeviceEntry();
-                device.devicePath = name;
-                m_Devices.Add(new DeviceEntryForList(){name = name, deviceEntry = device});
+                var device = new InputControlScheme.DeviceRequirement();
+                device.controlPath = name;
+                m_Devices.Add(new DeviceEntryForList(){name = name, deviceRequirement = device});
                 m_DevicesReorderableList.index = m_DevicesReorderableList.list.Count - 1;
             }
         }
@@ -291,14 +291,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_DevicesReorderableList.index >= 0)
             {
                 var deviceEntryForList = (DeviceEntryForList)m_DevicesReorderableList.list[m_DevicesReorderableList.index];
-                requirementsOption = deviceEntryForList.deviceEntry.isOptional ? 0 : 1;
+                requirementsOption = deviceEntryForList.deviceRequirement.isOptional ? 0 : 1;
             }
             EditorGUI.BeginChangeCheck();
             requirementsOption = GUILayout.SelectionGrid(requirementsOption, choices, 1, EditorStyles.radioButton);
             requirementHeights += GUILayoutUtility.GetLastRect().y;
             if (EditorGUI.EndChangeCheck())
             {
-                m_Devices[m_DevicesReorderableList.index].deviceEntry.isOptional = requirementsOption == 0;
+                m_Devices[m_DevicesReorderableList.index].deviceRequirement.isOptional = requirementsOption == 0;
             }
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndVertical();
@@ -307,7 +307,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void Save()
         {
-            m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
+            m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_DeviceRequirements = m_Devices.Select(a => a.deviceRequirement).ToArray();
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
             m_Apply();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
@@ -317,7 +317,7 @@ namespace UnityEngine.Experimental.Input.Editor
         void Add()
         {
             var controlScheme = new InputControlScheme(m_InputControlSchemeName);
-            controlScheme.m_Devices = m_Devices.Select(a => a.deviceEntry).ToArray();
+            controlScheme.m_DeviceRequirements = m_Devices.Select(a => a.deviceRequirement).ToArray();
             m_AssetManager.m_AssetObjectForEditing.AddControlScheme(controlScheme);
             m_Apply();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
@@ -327,7 +327,7 @@ namespace UnityEngine.Experimental.Input.Editor
         class DeviceEntryForList : IComparable
         {
             public string name;
-            public InputControlScheme.DeviceEntry deviceEntry;
+            public InputControlScheme.DeviceRequirement deviceRequirement;
             public InternedString commonUsage;
             public object id
             {

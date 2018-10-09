@@ -236,14 +236,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 }
 
                 // Only go through the matching process if we actually have device requirements.
-                if (scheme.devices.Count > 0)
+                if (scheme.deviceRequirements.Count > 0)
                 {
                     // Grab all unused devices and then select a set of devices matching the scheme's
                     // requirements.
-                    var availableDevices = GetUnusedDevices();
-                    try
+                    using (var availableDevices = GetUnusedDevices())
+                    using (var pickedDevices = scheme.PickDevicesFrom(availableDevices))
                     {
-                        if (scheme.PickMatchingDevices(ref availableDevices) == InputControlScheme.MatchResult.NoMatch)
+                        if (!pickedDevices.isSuccessfulMatch)
                         {
                             // Control scheme isn't satisfied with the devices we have available.
                             // Fail setting the control scheme.
@@ -254,14 +254,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                         // Assign selected devices to user.
                         if (availableDevices.Count > 0)
                         {
-                            foreach (var device in availableDevices)
+                            foreach (var device in pickedDevices.devices)
                                 AssignDeviceInternal(index, device);
                             needToNotify = true;
                         }
-                    }
-                    finally
-                    {
-                        availableDevices.Dispose();
                     }
                 }
 

@@ -7,9 +7,11 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
-
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
+
+////REVIEW: can we have a read-only version of this
+
+////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
 
 namespace UnityEngine.Experimental.Input
 {
