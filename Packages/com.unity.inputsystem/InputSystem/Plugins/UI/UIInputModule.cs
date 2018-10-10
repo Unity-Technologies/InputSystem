@@ -22,14 +22,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 throw new ArgumentNullException("eventData");
 
             eventSystem.RaycastAll(eventData, m_RaycastResultCache);
-            RaycastResult result = FindFirstRaycast(m_RaycastResultCache);
+            var result = FindFirstRaycast(m_RaycastResultCache);
             m_RaycastResultCache.Clear();
             return result;
         }
 
         private PointerEventData PreparePointerEventData(MouseModel mouseState)
         {
-            PointerEventData eventData = GetOrCreateCachedPointerEvent();
+            var eventData = GetOrCreateCachedPointerEvent();
             eventData.Reset();
 
             eventData.pointerId = mouseState.pointerId;
@@ -37,6 +37,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.delta = mouseState.deltaPosition;
             eventData.scrollDelta = mouseState.scrollDelta;
             eventData.pointerEnter = mouseState.internalData.pointerTarget;
+
+            eventData.hovered.Clear();
+            eventData.hovered.AddRange(mouseState.internalData.hoverTargets);
 
             // This is unset in legacy systems and can safely assumed to stay true.
             eventData.useDragThreshold = true;
@@ -51,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// It also updates the internal data of the MouseModel.
         /// </summary>
         /// <param name="mouseState">The mouse state you want to forward into the UI Event System</param>
-        protected void ProcessMouse(ref MouseModel mouseState)
+        internal void ProcessMouse(ref MouseModel mouseState)
         {
             if (!mouseState.changedThisFrame)
                 return;
@@ -67,8 +70,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             ProcessMouseMovement(eventData);
             ProcessMouseScroll(eventData);
 
-            MouseModel.InternalData internalMouseData = mouseState.internalData;
-            internalMouseData.hoverTargets = eventData.hovered;
+            var internalMouseData = mouseState.internalData;
+            internalMouseData.hoverTargets.ClearWithCapacity();
+            internalMouseData.hoverTargets.Append(eventData.hovered);
             internalMouseData.pointerTarget = eventData.pointerEnter;
             mouseState.internalData = internalMouseData;
 
@@ -102,15 +106,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private void ProcessMouseMovement(PointerEventData eventData)
         {
-            // walk up the tree till a common root between the last entered and the current entered is foung
-            // send exit events up to (but not inluding) the common root. Then send enter events up to
-            // (but not including the common root).
+            var currentPointerTarget = eventData.pointerCurrentRaycast.gameObject;
 
-            GameObject currentPointerTarget = eventData.pointerCurrentRaycast.gameObject;
-
-            // if we have no target / pointerEnter has been deleted
-            // just send exit events to anything we are tracking
-            // then exit
+            // If we have no target or pointerEnter has been deleted,
+            // we just send exit events to anything we are tracking
+            // and then exit.
             if (currentPointerTarget == null || eventData.pointerEnter == null)
             {
                 for (var i = 0; i < eventData.hovered.Count; ++i)
@@ -125,22 +125,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 }
             }
 
-            // if we have not changed hover target
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
                 return;
 
             var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget);
 
-            // and we already an entered object from last time
+            // We walk up the tree until a common root and the last entered and current entered object is found.
+            // Then send exit and enter events up to, but not including, the common root.
             if (eventData.pointerEnter != null)
             {
-                // send exit handler call to all elements in the chain
-                // until we reach the new target, or null!
                 var t = eventData.pointerEnter.transform;
 
                 while (t != null)
                 {
-                    // if we reach the common root break out!
                     if (commonRoot != null && commonRoot.transform == t)
                         break;
 
@@ -152,7 +149,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 }
             }
 
-            // now issue the enter call up to but not including the common root
             eventData.pointerEnter = currentPointerTarget;
             if (currentPointerTarget != null)
             {
@@ -176,28 +172,28 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)
             {
                 eventData.eligibleForClick = true;
-                eventData.delta = Vector2.zero; //TODO TB: The Delta still exists, why are we wiping it out.
+                eventData.delta = Vector2.zero;
                 eventData.dragging = false;
                 eventData.pressPosition = eventData.position;
                 eventData.pointerPressRaycast = eventData.pointerCurrentRaycast;
 
-                // Selection tracking
                 var selectHandlerGO = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
-                // if we have clicked something new, deselect the old thing
-                // leave 'selection handling' up to the press event though.
+
+                // If we have clicked something new, deselect the old thing
+                // and leave 'selection handling' up to the press event.
                 if (selectHandlerGO != eventSystem.currentSelectedGameObject)
                     eventSystem.SetSelectedGameObject(null, eventData);
-
-                // search for the control that will receive the press
+                
+                // search for the control that will receive the press.
                 // if we can't find a press handler set the press
                 // handler to be what would receive a click.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
-
-                // didnt find a press handler... search for a click handler
+                
+                // We didn't find a press handler, so we search for a click handler.
                 if (newPressed == null)
                     newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
-                float time = Time.unscaledTime;
+                var time = Time.unscaledTime;
 
                 if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
                     ++eventData.clickCount;
@@ -209,7 +205,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 eventData.pointerPress = newPressed;
                 eventData.rawPointerPress = currentOverGo;
 
-                // Save the drag handler as well
+                // Save the drag handler for drag events during this mouse down.
                 eventData.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
 
                 if (eventData.pointerDrag != null)
@@ -218,7 +214,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             if ((mouseButtonChanges & ButtonDeltaState.Released) != 0)
             {
-                //Check for Events
                 ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
 
                 var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
@@ -233,7 +228,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.endDragHandler);
                 }
 
-                //Clear Data
                 eventData.eligibleForClick = eventData.dragging = false;
                 eventData.pointerPress = eventData.rawPointerPress = eventData.pointerDrag = null;
             }
@@ -257,7 +251,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             if (eventData.dragging)
             {
-                // If we moved from our initial press object
+                // If we moved from our initial press object, process an up for that object.
                 if (eventData.pointerPress != eventData.pointerDrag)
                 {
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
@@ -285,9 +279,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// It also updates the internal data of the JoystickModel.
         /// </summary>
         /// <param name="joystickState">The joystick state you want to forward into the UI Event System</param>
-        protected void ProcessJoystick(ref JoystickModel joystickState)
+        internal void ProcessJoystick(ref JoystickModel joystickState)
         {
-            JoystickModel.InternalData internalJoystickState = joystickState.internalData;
+            var internalJoystickState = joystickState.internalData;
 
             var usedSelectionChange = false;
             if (eventSystem.currentSelectedGameObject != null)
@@ -301,14 +295,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (!eventSystem.sendNavigationEvents)
                 return;
 
-            Vector2 movement = joystickState.move;
+            var movement = joystickState.move;
             if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
             {
                 float time = Time.unscaledTime;
 
-                Vector2 moveVector = joystickState.move;
+                var moveVector = joystickState.move;
 
-                MoveDirection moveDirection = MoveDirection.None;
+                var moveDirection = MoveDirection.None;
                 if (moveVector.sqrMagnitude > moveDeadzone * moveDeadzone)
                 {
                     if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
@@ -335,7 +329,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                     if (allow)
                     {
-                        AxisEventData eventData = GetOrCreateCachedAxisEvent();
+                        var eventData = GetOrCreateCachedAxisEvent();
                         eventData.Reset();
 
                         eventData.moveVector = moveVector;

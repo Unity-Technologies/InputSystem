@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Plugins.UI
 {
@@ -10,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// Useful for identifying press/release events that occur in a single frame or sample.
     /// </summary>
     [Flags]
-    public enum ButtonDeltaState
+    internal enum ButtonDeltaState
     {
         NoChange = 0,
         Pressed = 1,
@@ -21,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// Represents the state of a single mouse button within the uGUI system.  Keeps track of various book-keeping regarding clicks, drags, and presses.
     /// Can be converted to and from PointerEventData for sending into uGUI.
     /// </summary>
-    public struct MouseButtonModel
+    internal struct MouseButtonModel
     {
         public struct InternalData
         {
@@ -95,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// A set of flags to identify the changes that have occured between calls of <see cref="OnFrameFinished"/>.
         /// </summary>
-        public ButtonDeltaState lastFrameDelta { get; private set; }
+        internal ButtonDeltaState lastFrameDelta { get; private set; }
 
         /// <summary>
         /// Internal bookkeeping data used by the uGUI system.
@@ -157,14 +158,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private bool m_IsDown;
     }
 
-    public struct MouseModel
+    internal struct MouseModel
     {
         public struct InternalData
         {
             /// <summary>
             /// This tracks the current GUI targets being hovered over.  Syncs up to <see cref="PointerEventData.hovered"/>.
             /// </summary>
-            public List<GameObject> hoverTargets { get; set; }
+            public InlinedArray<GameObject> hoverTargets { get; set; }
 
             /// <summary>
             ///  Tracks the current enter/exit target being hovered over at any given moment. Syncs up to <see cref="PointerEventData.pointerEnter"/>.
@@ -292,7 +293,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             InternalData bookkeeping = new InternalData();
             bookkeeping.pointerTarget = null;
-            bookkeeping.hoverTargets = new List<GameObject>();
+            bookkeeping.hoverTargets = new InlinedArray<GameObject>();
             internalData = bookkeeping;
         }
 

@@ -961,6 +961,7 @@ GameObject:
   - component: {fileID: 975778829}
   - component: {fileID: 975778828}
   - component: {fileID: 975778827}
+  - component: {fileID: 975778830}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -980,6 +981,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  clickSpeed: 0.3
+  moveDeadzone: 0.6
+  repeatDelay: 0.6
+  repeatRate: 0.1
   m_PointAction:
     m_UseReference: 0
     m_Action:
@@ -1079,10 +1084,6 @@ MonoBehaviour:
       m_Id: 
       m_SingletonActionBindings: []
     m_Reference: {fileID: 0}
-  clickSpeed: 0.3
-  moveDeadzone: 0.6
-  repeatDelay: 0.6
-  repeatRate: 0.1
 --- !u!114 &975778828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1112,6 +1113,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &975778830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 975778826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c717122997fabb7439725dac4858a6a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1032416645
 GameObject:
   m_ObjectHideFlags: 0

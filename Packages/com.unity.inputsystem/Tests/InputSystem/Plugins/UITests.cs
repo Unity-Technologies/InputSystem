@@ -25,7 +25,6 @@ public class UITests : InputTestFixture
     {
         // Create devices.
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
         // Set up GameObject with EventSystem.
@@ -39,7 +38,7 @@ public class UITests : InputTestFixture
         var canvasObject = new GameObject("Canvas");
         var canvas = canvasObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
-        var raycaster = canvasObject.AddComponent<GraphicRaycaster>();
+        canvasObject.AddComponent<GraphicRaycaster>();
         var cameraObject = new GameObject("Camera");
         var camera = cameraObject.AddComponent<Camera>();
         canvas.worldCamera = camera;
@@ -49,14 +48,14 @@ public class UITests : InputTestFixture
         // this would be a hierarchy involving UI components.
         var parentGameObject = new GameObject("Parent");
         var parentTransform = parentGameObject.AddComponent<RectTransform>();
-        var parentReceiver = parentGameObject.AddComponent<UICallbackReceiver>();
+        parentGameObject.AddComponent<UICallbackReceiver>();
         var leftChildGameObject = new GameObject("Left Child");
         var leftChildTransform = leftChildGameObject.AddComponent<RectTransform>();
-        var leftChildImage = leftChildGameObject.AddComponent<Image>();
+        leftChildGameObject.AddComponent<Image>();
         var leftChildReceiver = leftChildGameObject.AddComponent<UICallbackReceiver>();
         var rightChildGameObject = new GameObject("Right Child");
         var rightChildTransform = rightChildGameObject.AddComponent<RectTransform>();
-        var rightChildImage = rightChildGameObject.AddComponent<Image>();
+        rightChildGameObject.AddComponent<Image>();
         var rightChildReceiver = rightChildGameObject.AddComponent<UICallbackReceiver>();
 
         parentTransform.SetParent(canvas.transform, worldPositionStays: false);
@@ -109,6 +108,7 @@ public class UITests : InputTestFixture
         // Enable the whole thing.
         map.Enable();
 
+        // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
 
         // Move mouse over left child.

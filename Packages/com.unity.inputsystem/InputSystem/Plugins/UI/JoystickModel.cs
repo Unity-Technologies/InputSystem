@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// <summary>
     /// Represents the state of a joystick in the uGUI system. Keeps track of various book-keeping regarding UI selection, and move and button states.
     /// </summary>
-    public struct JoystickModel
+    internal struct JoystickModel
     {
         public struct InternalData
         {
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// Tracks the changes in <see cref="submitButtonDown"/> between calls to <see cref="OnFrameFinished"/>
         /// </summary>
-        public ButtonDeltaState submitButtonDelta { get; private set; }
+        internal ButtonDeltaState submitButtonDelta { get; private set; }
 
         /// <summary>
         /// Tracks the current state of the submit or 'move backward' button.  Setting this also updates the <see cref="cancelButtonDelta"/> to track if a press or release occurred in the frame.
@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// Tracks the changes in <see cref="cancelButtonDown"/> between calls to <see cref="OnFrameFinished"/>
         /// </summary>
-        public ButtonDeltaState cancelButtonDelta { get; private set; }
+        internal ButtonDeltaState cancelButtonDelta { get; private set; }
 
         /// <summary>
         /// Internal bookkeeping data used by the uGUI system.

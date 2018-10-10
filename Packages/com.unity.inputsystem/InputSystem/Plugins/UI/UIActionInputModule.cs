@@ -95,7 +95,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             base.OnEnable();
 
             HookActions();
-            EnableActions();
         }
 
         protected override void OnDisable()
@@ -103,7 +102,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             base.OnDisable();
 
             UnhookActions();
-            DisableActions();
         }
 
         private bool ShouldIgnoreEventsOnNoFocus()
@@ -168,6 +166,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         public override void Process()
         {
+            DoProcess();
+        }
+
+        private void DoProcess()
+        {
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
             if (!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
             {
@@ -177,78 +180,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             ProcessJoystick(ref joystickState);
             ProcessMouse(ref mouseState);
-        }
-
-        private void EnableActions()
-        {
-            if (!m_ActionsEnabled)
-            {
-                var pointAction = m_PointAction.action;
-                if (pointAction != null && !pointAction.enabled)
-                    pointAction.Enable();
-
-                var leftClickAction = m_LeftClickAction.action;
-                if (leftClickAction != null && !leftClickAction.enabled)
-                    leftClickAction.Enable();
-
-                var rightClickAction = m_RightClickAction.action;
-                if (rightClickAction != null && !rightClickAction.enabled)
-                    rightClickAction.Enable();
-
-                var middleClickAction = m_MiddleClickAction.action;
-                if (middleClickAction != null && !middleClickAction.enabled)
-                    middleClickAction.Enable();
-
-                var moveAction = m_MoveAction.action;
-                if (moveAction != null && !moveAction.enabled)
-                    moveAction.Enable();
-
-                var submitAction = m_SubmitAction.action;
-                if (submitAction != null && !submitAction.enabled)
-                    submitAction.Enable();
-
-                var cancelAction = m_CancelAction.action;
-                if (cancelAction != null && !cancelAction.enabled)
-                    cancelAction.Enable();
-
-                m_ActionsEnabled = true;
-            }
-        }
-
-        private void DisableActions()
-        {
-            if (m_ActionsEnabled)
-            {
-                var pointAction = m_PointAction.action;
-                if (pointAction != null && pointAction.enabled)
-                    pointAction.Disable();
-
-                var leftClickAction = m_LeftClickAction.action;
-                if (leftClickAction != null && leftClickAction.enabled)
-                    leftClickAction.Disable();
-
-                var rightClickAction = m_RightClickAction.action;
-                if (rightClickAction != null && rightClickAction.enabled)
-                    rightClickAction.Disable();
-
-                var middleClickAction = m_MiddleClickAction.action;
-                if (middleClickAction != null && middleClickAction.enabled)
-                    middleClickAction.Disable();
-
-                var moveAction = m_MoveAction.action;
-                if (moveAction != null && moveAction.enabled)
-                    moveAction.Disable();
-
-                var submitAction = m_SubmitAction.action;
-                if (submitAction != null && submitAction.enabled)
-                    submitAction.Disable();
-
-                var cancelAction = m_CancelAction.action;
-                if (cancelAction != null && cancelAction.enabled)
-                    cancelAction.Disable();
-
-                m_ActionsEnabled = false;
-            }
         }
 
         private void HookActions()
@@ -330,9 +261,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             if (oldProperty != null)
             {
-                if (m_ActionsEnabled)
-                    oldProperty.action.Disable();
-
                 if (m_ActionsHooked)
                     oldProperty.action.performed -= m_ActionCallback;
             }
@@ -343,9 +271,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (m_ActionsHooked)
                     oldProperty.action.performed += m_ActionCallback;
-
-                if (m_ActionsEnabled)
-                    oldProperty.action.Enable();
             }
         }
 
@@ -393,7 +318,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
 
-        [NonSerialized] protected MouseModel mouseState;
-        [NonSerialized] protected JoystickModel joystickState;
+        [NonSerialized] private MouseModel mouseState;
+        [NonSerialized] private JoystickModel joystickState;
     }
 }
