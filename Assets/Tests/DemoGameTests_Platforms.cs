@@ -18,6 +18,8 @@ public partial class DemoGameTests
 
         Click("SinglePlayerButton");
 
+        ////REVIEW: should this assign *both* gamepads to the player?
+
         Assert.That(game.players[0].GetControlScheme(), Is.EqualTo(game.players[0].controls.GamepadScheme));
         Assert.That(game.players[0].GetAssignedInputDevices(), Has.Exactly(1).AssignableTo<Gamepad>()); // Free to pick either one.
     }

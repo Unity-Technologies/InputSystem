@@ -114,23 +114,20 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// </summary>
     public void StartSinglePlayerGame()
     {
-        // Blindly enable all bindings we have. This will accept input from whatever devices are present
-        // and the user can freely switch between them.
-        controls.gameplay.Enable();
-
         // We still select one control scheme and make it the active one so that we can display UI hints
         // for it. When the player uses bindings not in the scheme, the control scheme will automatically
         // switch.
         var defaultScheme = InferDefaultControlSchemeForSinglePlayer();
 
-        //what's relevant here
-        // - putting the binding mask in place
-        // - having the devices used by the bindings assigned to the player
-
+        ////TODO: make sure we enable all bindings instead of just the ones from the default control scheme
         ////TODO: handle failure
         // Switch to default control scheme and give the player whatever controls
         // it needs.
         this.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
+
+        this.SetInputActions(controls.gameplay);
+
+        this.ActivateInput();
     }
 
     /// <summary>

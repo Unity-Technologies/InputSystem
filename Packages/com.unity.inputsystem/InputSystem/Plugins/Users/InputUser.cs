@@ -155,10 +155,52 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             Notify(user, InputUserChange.NameChanged);
         }
 
-        //do we really need a stack on this? is a single InputActionMap or even a list of InputActionMaps not enough?
-        //what's the problem that the stack here is trying to solve?
+        public static bool IsInputActive<TUser>(this TUser user)
+            where TUser : class, IInputUser
+        {
+            return user.GetInputActions().enabled;
+        }
+
+        public static void ActivateInput<TUser>(this TUser user)
+            where TUser : class, IInputUser
+        {
+            user.GetInputActions().Enable();
+        }
+
         /// <summary>
-        /// Get the <see cref="InputAction">input actions</see> that are currently active for the user.
+        /// Silence all input on <paramref name="user"/>'s actions.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <typeparam name="TUser"></typeparam>
+        public static void PassivateInput<TUser>(this TUser user)
+            where TUser : class, IInputUser
+        {
+            user.GetInputActions().Disable();
+        }
+
+        /// <summary>
+        /// Clear the current action stack and switch to the given set of actions.
+        /// </summary>
+        /// <param name="user">An input user that has been <see cref="Add">added</see> to the system.</param>
+        /// <param name="actions">Set of actions to switch to. Can be null in which case the stack is simply
+        /// cleared and no further action is taken.</param>
+        /// <typeparam name="TUser">Type of <see cref="IInputUser"/>.</typeparam>
+        /// <exception cref="ArgumentNullException"><paramref name="user"/> is null.</exception>
+        public static void SetInputActions<TUser>(this TUser user, InputActionMap actions)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var stack = user.GetInputActions();
+            stack.Clear();
+
+            if (actions != null)
+                stack.Push(actions);
+        }
+
+        /// <summary>
+        /// Get the <see cref="InputActionMap">input action maps</see> that are currently active for the user.
         /// </summary>
         public static InputActionStack GetInputActions<TUser>(this TUser user)
             where TUser : class, IInputUser
@@ -304,7 +346,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// another user uses the right side of the keyboard. Another example is a game where players
         /// take turns on the same machine.
         /// </remarks>
-        public static ReadOnlyArray<InputDevice> GetAssignedInputDevices(this IInputUser user)
+        public static ReadOnlyArray<InputDevice> GetAssignedInputDevices<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -608,16 +651,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get { throw new NotImplementedException(); }
             set { throw new NotImplementedException(); }
-        }
-
-        public void EnableControls()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisableControls()
-        {
-            throw new NotImplementedException();
         }
 
         */

@@ -101,6 +101,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        ////REVIEW: have mode where instead of matching only the first device that matches a requirement, we match as many
+        ////        as we can get? (could be useful for single-player)
         /// <summary>
         /// Based on a list of devices, make a selection that matches the <see cref="deviceRequirements">requirements</see>
         /// imposed by the control scheme.
@@ -613,9 +615,6 @@ namespace UnityEngine.Experimental.Input
         ///
         /// More complex expressions can often be expressed differently. For example, <c>(a AND b) OR (c AND d)</c>
         /// can be expressed as <c>a OR c AND b OR d</c>.
-        ///
-        /// Also note that <see cref="isOptional"/> works differently in an OR chain.
-        /// Also note that if an OR chain has any required device, the entire chain is
         /// </remarks>
         [Serializable]
         public struct DeviceRequirement : IEquatable<DeviceRequirement>

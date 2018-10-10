@@ -3563,23 +3563,67 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanBeArrangedInStack()
+    public void Actions_CanBeArrangedInStack()
     {
         var stack = new InputActionStack();
         var action1 = new InputAction("action1");
         var action2 = new InputAction("action2");
         var action3 = new InputAction("action3");
 
+        var map = new InputActionMap();
+        var action4 = map.AddAction("action4");
+        var action5 = map.AddAction("action5");
+
         stack.Push(action1);
         stack.Push(action2);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(2));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2 }));
+
+        stack.Push(map);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(4));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action4));
+        Assert.That(stack.actions[3], Is.SameAs(action5));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5 }));
+
         stack.Push(action3);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(5));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action4));
+        Assert.That(stack.actions[3], Is.SameAs(action5));
+        Assert.That(stack.actions[4], Is.SameAs(action3));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5, action3 }));
+
+        stack.Pop();
+
+        Assert.That(stack.actions, Has.Count.EqualTo(4));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action4));
+        Assert.That(stack.actions[3], Is.SameAs(action5));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5 }));
+
+        stack.Pop(action2);
 
         Assert.That(stack.actions, Has.Count.EqualTo(3));
         Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action2));
-        Assert.That(stack.actions[2], Is.SameAs(action3));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
+        Assert.That(stack.actions[1], Is.SameAs(action4));
+        Assert.That(stack.actions[2], Is.SameAs(action5));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action4, action5 }));
+
+        stack.Pop();
+
+        Assert.That(stack.actions, Has.Count.EqualTo(2));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action4));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action4 }));
 
         stack.Clear();
 
@@ -3589,12 +3633,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
+    public void Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
     {
         var stack = new InputActionStack();
         var action1 = new InputAction("action1");
         var action2 = new InputAction("action2");
+        var action3 = new InputAction("action3");
 
         stack.Push(action1);
         stack.Push(action2);
@@ -3605,11 +3649,16 @@ partial class CoreTests
         Assert.That(action1.enabled);
         Assert.That(action2.enabled);
 
+        stack.Push(action3);
+
+        Assert.That(action3.enabled);
+
         stack.Disable();
 
         Assert.That(stack.enabled, Is.False);
         Assert.That(action1.enabled, Is.False);
         Assert.That(action2.enabled, Is.False);
+        Assert.That(action3.enabled, Is.False);
     }
 
     [Test]
