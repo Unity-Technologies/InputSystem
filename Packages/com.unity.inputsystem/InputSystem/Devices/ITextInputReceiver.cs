@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Called when an IME composition is in-progress or finished.
         /// </summary>
-        /// <param name="composition">The current composition.</param>
+        /// <param name="compositionString">The current composition.</param>
         /// <seealso cref="IMECompositionEvent"/>
         /// <seealso cref="Keyboard.onIMECompositionChange"/>
         /// <remarks>
@@ -28,6 +28,6 @@ namespace UnityEngine.Experimental.Input
         /// Once composition finishes, the method will be called one more time with a blank composition
         /// string.
         /// </remarks>
-        void OnIMECompositionChanged(IMEComposition composition);
+        void OnIMECompositionChanged(IMECompositionString compositionString);
     }
 }

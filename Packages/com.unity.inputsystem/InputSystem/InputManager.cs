@@ -2268,7 +2268,7 @@ namespace UnityEngine.Experimental.Input
                         var imeEventPtr = (IMECompositionEvent*)currentEventPtr;
                         var textInputReceiver = device as ITextInputReceiver;
                         if (textInputReceiver != null)
-                            textInputReceiver.OnIMECompositionChanged(imeEventPtr->composition);
+                            textInputReceiver.OnIMECompositionChanged(imeEventPtr->compositionString);
                         break;
                     }
 

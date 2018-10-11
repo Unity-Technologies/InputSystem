@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public IMEComposition composition;
+        public IMECompositionString compositionString;
 
         public FourCC GetTypeStatic()
         {
@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 namespace UnityEngine.Experimental.Input
 {
     [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + sizeof(char) * IMECompositionEvent.kIMECharBufferSize)]
-    public unsafe struct IMEComposition : IEnumerable<char>
+    public unsafe struct IMECompositionString : IEnumerable<char>
     {
         public int Count
         {
@@ -82,27 +82,27 @@ namespace UnityEngine.Experimental.Input
 
         internal struct Enumerator : IEnumerator<char>
         {
-            IMEComposition m_Composition;
+            IMECompositionString m_CompositionString;
             char m_CurrentCharacter;
             int m_CurrentIndex;
 
-            public Enumerator(IMEComposition composition)
+            public Enumerator(IMECompositionString compositionString)
             {
-                m_Composition = composition;
+                m_CompositionString = compositionString;
                 m_CurrentCharacter = '\0';
                 m_CurrentIndex = -1;
             }
 
             public bool MoveNext()
             {
-                var size = m_Composition.Count;
+                var size = m_CompositionString.Count;
 
                 m_CurrentIndex++;
 
                 if (m_CurrentIndex == size)
                     return false;
 
-                fixed(char* ptr = m_Composition.buffer)
+                fixed(char* ptr = m_CompositionString.buffer)
                 {
                     m_CurrentCharacter = *(ptr + m_CurrentIndex);
                 }
