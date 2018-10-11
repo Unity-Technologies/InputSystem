@@ -93,10 +93,10 @@ public class SwitchTests : InputTestFixture
                         ((NPadStatusReport*)commandPtr)->orientation = NPad.Orientation.Vertical;
                         ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyle.Handheld;
 
-                        ((NPadStatusReport*)commandPtr)->colorLeftMain = ColorToNNColor(Color.red);
-                        ((NPadStatusReport*)commandPtr)->colorLeftSub = ColorToNNColor(Color.black);
-                        ((NPadStatusReport*)commandPtr)->colorRightMain = ColorToNNColor(Color.cyan);
-                        ((NPadStatusReport*)commandPtr)->colorRightSub = ColorToNNColor(Color.gray);
+                        ((NPadStatusReport*)commandPtr)->colorLeftMain = NPad.Color32ToNNColor(Color.red);
+                        ((NPadStatusReport*)commandPtr)->colorLeftSub = NPad.Color32ToNNColor(Color.black);
+                        ((NPadStatusReport*)commandPtr)->colorRightMain = NPad.Color32ToNNColor(Color.cyan);
+                        ((NPadStatusReport*)commandPtr)->colorRightSub = NPad.Color32ToNNColor(Color.gray);
                         return 1;
                     }
                     else if (commandPtr->type == QueryUserIdCommand.Type)
@@ -116,13 +116,6 @@ public class SwitchTests : InputTestFixture
         Assert.That(controller.leftControllerColor.Sub, Is.EqualTo((Color32)Color.black));
         Assert.That(controller.rightControllerColor.Main, Is.EqualTo((Color32)Color.cyan));
         Assert.That(controller.rightControllerColor.Sub, Is.EqualTo((Color32)Color.gray));
-    }
-
-    private int ColorToNNColor(Color color)
-    {
-        Color32 color32 = color;
-
-        return (int)color32.r | ((int)color32.g << 8) | ((int)color32.b << 16) | ((int)color32.a << 24);
     }
 
     [Test]

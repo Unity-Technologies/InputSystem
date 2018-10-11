@@ -394,8 +394,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
                 m_NpadId = (NpadId)command.npadId;
                 m_Orientation = (Orientation)command.orientation;
                 m_StyleMask = (NpadStyle)command.styleMask;
-                ReadNNColorIntoJoyConColor(ref m_LeftControllerColor, command.colorLeftMain, command.colorLeftSub);
-                ReadNNColorIntoJoyConColor(ref m_RightControllerColor, command.colorRightMain, command.colorRightSub);
+                m_LeftControllerColor = NNColorToJoyConColor(command.colorLeftMain, command.colorLeftSub);
+                m_RightControllerColor = NNColorToJoyConColor(command.colorRightMain, command.colorRightSub);
             }
         }
 
@@ -435,15 +435,23 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
         }
 
-        private static void ReadNNColorIntoJoyConColor(ref JoyConColor controllerColor, int mainColor, int subColor)
+        private static JoyConColor NNColorToJoyConColor(int mainColor, int subColor)
         {
-            controllerColor.Main = ConvertNNColorToColor32(mainColor);
-            controllerColor.Sub = ConvertNNColorToColor32(subColor);
+            JoyConColor controllerColor;
+
+            controllerColor.Main = NNColorToColor32(mainColor);
+            controllerColor.Sub = NNColorToColor32(subColor);
+
+            return controllerColor;
         }
 
-        private static Color32 ConvertNNColorToColor32(int color)
+        public static Color32 NNColorToColor32(int color)
         {
             return new Color32((byte)(color & 0xFF), (byte)((color >> 8) & 0xFF), (byte)((color >> 16) & 0xFF), (byte)((color >> 24) & 0xFF));
+        }
+        public static int Color32ToNNColor(Color32 color)
+        {
+            return (int)color.r | ((int)color.g << 8) | ((int)color.b << 16) | ((int)color.a << 24);
         }
     }
 }
