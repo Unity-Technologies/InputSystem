@@ -47,10 +47,10 @@ public class IMETest : MonoBehaviour
         outputString += character;
     }
 
-    void OnIMECompositionChange(IMEComposition composition)
+    void OnIMECompositionChange(IMECompositionString compositionString)
     {
         this.composition = "";
-        foreach (char c in composition)
+        foreach (char c in compositionString)
             this.composition += c;
     }
 

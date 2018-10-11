@@ -183,12 +183,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 // and leave 'selection handling' up to the press event.
                 if (selectHandlerGO != eventSystem.currentSelectedGameObject)
                     eventSystem.SetSelectedGameObject(null, eventData);
-                
+
                 // search for the control that will receive the press.
                 // if we can't find a press handler set the press
                 // handler to be what would receive a click.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
-                
+
                 // We didn't find a press handler, so we search for a click handler.
                 if (newPressed == null)
                     newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
