@@ -501,6 +501,40 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WhenTriggered_TriggerNotification()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        action.Enable();
+
+        var receivedPerformed = false;
+        action.performed += ctx => receivedPerformed = true;
+
+        InputAction receivedAction = null;
+        InputActionChange? receivedChange = null;
+        InputSystem.onActionChange +=
+            (a, c) =>
+        {
+            Assert.That(receivedAction, Is.Null);
+            Assert.That(receivedPerformed, Is.False);     // Notification must come *before* callback.
+
+            receivedAction = (InputAction)a;
+            receivedChange = c;
+
+            // lastXXX state on action must have been updated.
+            Assert.That(receivedAction.lastTriggerControl, Is.SameAs(gamepad.leftTrigger));
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger =  0.5f });
+        InputSystem.Update();
+
+        Assert.That(receivedChange, Is.EqualTo(InputActionChange.ActionTriggered));
+        Assert.That(receivedAction, Is.SameAs(action));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanRecordActionsAsEvents()
     {
         var action = new InputAction();

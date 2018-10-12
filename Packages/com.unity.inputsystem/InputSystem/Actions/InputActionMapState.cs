@@ -786,7 +786,7 @@ namespace UnityEngine.Experimental.Input
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
-            if (listeners.length == 0 && callbacksOnMap.length == 0)
+            if (listeners.length == 0 && callbacksOnMap.length == 0 && s_OnActionChange.length == 0)
                 return;
 
             var context = new InputAction.CallbackContext
@@ -799,6 +799,14 @@ namespace UnityEngine.Experimental.Input
             };
 
             Profiler.BeginSample("InputActionCallback");
+
+            // Global callback goes first.
+            if (s_OnActionChange.length > 0)
+            {
+                var action = context.action;
+                for (var i = 0; i < s_OnActionChange.length; ++i)
+                    s_OnActionChange[i](action, InputActionChange.ActionTriggered);
+            }
 
             // Run callbacks (if any) directly on action.
             var listenerCount = listeners.length;
