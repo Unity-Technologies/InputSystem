@@ -66,7 +66,6 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionMapIconGUI;
         GUIContent m_AddBindingGUI;
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
-        GUIContent m_ActionsSearchingGUI = EditorGUIUtility.TrTextContent("Actions (Searching)");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
         GUIContent m_DirtyTitle;
         GUIContent m_Title;
@@ -314,15 +313,9 @@ namespace UnityEngine.Experimental.Input.Editor
             columnRect.y += labelRect.height;
             columnRect.height -= labelRect.height;
 
-            GUIContent header;
-            if (m_InputActionWindowToolbar.searching)
-                header = m_ActionsSearchingGUI;
-            else
-                header = m_ActionsGUI;
-
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
-            EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
+            EditorGUI.LabelField(headerRect, m_ActionsGUI, Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;

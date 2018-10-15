@@ -41,14 +41,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public bool searching
-        {
-            get
-            {
-                return !string.IsNullOrEmpty(m_SearchText);
-            }
-        }
-
         public string[] deviceFilter
         {
             get
