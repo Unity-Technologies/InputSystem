@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
                 {
-                    menu.AddItem(new GUIContent(compositeString.text + " " + composite), false, OnAddCompositeBinding, new object[]{treeViewItem, composite});
+                    menu.AddItem(new GUIContent(compositeString.text + " " + composite), false, OnAddCompositeBinding, new object[] {treeViewItem, composite});
                 }
             }
             else if (!isContextMenu)

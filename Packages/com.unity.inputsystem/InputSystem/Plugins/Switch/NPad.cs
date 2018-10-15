@@ -139,9 +139,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
         public int colorLeftSub;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
-        public int colorRightSub;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
         public int colorRightMain;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
+        public int colorRightSub;
 
         public FourCC GetTypeStatic()
         {

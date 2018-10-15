@@ -194,6 +194,7 @@ public class DemoControls : InputActionAssetReference
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
+        public bool enabled { get { return Get().enabled; } }
         public InputActionMap Clone() { return Get().Clone(); }
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
     }
@@ -230,6 +231,7 @@ public class DemoControls : InputActionAssetReference
         public InputActionMap Get() { return m_Wrapper.m_menu; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
+        public bool enabled { get { return Get().enabled; } }
         public InputActionMap Clone() { return Get().Clone(); }
         public static implicit operator InputActionMap(MenuActions set) { return set.Get(); }
     }
@@ -257,6 +259,24 @@ public class DemoControls : InputActionAssetReference
         {
             if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.GetControlSchemeIndex("Gamepad");
             return asset.controlSchemes[m_GamepadSchemeIndex];
+        }
+    }
+    private int m_SteamSchemeIndex = -1;
+    public InputControlScheme SteamScheme
+    {
+        get
+        {
+            if (m_SteamSchemeIndex == -1) m_SteamSchemeIndex = asset.GetControlSchemeIndex("Steam");
+            return asset.controlSchemes[m_SteamSchemeIndex];
+        }
+    }
+    private int m_VRSchemeIndex = -1;
+    public InputControlScheme VRScheme
+    {
+        get
+        {
+            if (m_VRSchemeIndex == -1) m_VRSchemeIndex = asset.GetControlSchemeIndex("VR");
+            return asset.controlSchemes[m_VRSchemeIndex];
         }
     }
     [Serializable]

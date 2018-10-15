@@ -141,28 +141,13 @@ public class DemoGame : MonoBehaviour
     /// </remarks>
     public void StartSinglePlayerGame()
     {
-        // Spawn a player with the default input user.
+        // Spawn a player at index #0.
         var player = SpawnPlayer(0);
 
-        // Blindly enable all bindings we have. This will accept input from whatever devices are present
-        // and the user can freely switch between them.
-        player.controls.Enable();
+        // Let player initialize controls for single-player.
+        player.StartSinglePlayerGame();
 
-        // We still select one control scheme and make it the active one so that we can display UI hints
-        // for it. When the player uses bindings not in the scheme, the control scheme will automatically
-        // switch.
-        var defaultScheme = player.InferDefaultControlSchemeForSinglePlayer();
-
-        //what's relevant here
-        // - putting the binding mask in place
-        // - having the devices used by the bindings assigned to the player
-
-        ////TODO: handle failure
-        // Switch to default control scheme and give the player whatever controls
-        // it needs.
-        player.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
-
-        // Finally, run code that is shared between single- and multi-player games.
+        // Run code that is shared between single- and multi-player games.
         StartGame();
     }
 
@@ -177,6 +162,8 @@ public class DemoGame : MonoBehaviour
     /// </remarks>
     public void StartMultiPlayerGame()
     {
+        //nuke joinAction and rather listen to event stream; any button press anywhere on a device that isn't
+        //assigned yet should be a join
         // Start listening for joins.
         joinAction.action.Enable();
         ////TODO: call OnJoin when performed
@@ -242,7 +229,7 @@ public class DemoGame : MonoBehaviour
         var controlScheme = player.SelectControlSchemeBasedOnDeviceForMultiPlayer(device);
 
         // If the control scheme involves additional devices, find unused devices.
-        if (controlScheme.devices.Count > 1)
+        if (controlScheme.deviceRequirements.Count > 1)
         {
             throw new NotImplementedException();
         }
@@ -296,7 +283,7 @@ public class DemoGame : MonoBehaviour
             playerComponent = playerObject.GetComponent<DemoPlayerController>();
             if (playerComponent == null)
                 throw new Exception("Missing DemoPlayerController component on " + playerObject);
-            playerComponent.Initialize(playerIndex);
+            playerComponent.PerformOneTimeInitialization(playerIndex);
             playerComponent.onLeaveGame = OnPlayerLeavesGame;
 
             // Add to list.

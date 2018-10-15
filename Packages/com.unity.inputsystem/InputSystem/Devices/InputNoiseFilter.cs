@@ -156,7 +156,7 @@ namespace UnityEngine.Experimental.Input
 
             MemoryHelpers.SetBitsInBuffer(noiseBitmaskPtr, device, true);
 
-            for (int i = 0; i < elements.Length; i++)
+            for (var i = 0; i < elements.Length; i++)
             {
                 elements[i].Apply(noiseBitmaskPtr, device);
             }

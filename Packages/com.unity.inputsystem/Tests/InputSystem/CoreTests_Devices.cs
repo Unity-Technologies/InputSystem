@@ -16,6 +16,11 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 
+#if UNITY_2018_3_OR_NEWER
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
+#endif
+
 ////TODO: test that device re-creation doesn't lose flags and such
 
 partial class CoreTests
@@ -1009,6 +1014,7 @@ partial class CoreTests
 
         InputSystem.RemoveDevice(gamepad2);
 
+        Assert.That(gamepad2.added, Is.False);
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad1));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad3));
@@ -1042,10 +1048,70 @@ partial class CoreTests
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 
+        Assert.That(gamepad1.added, Is.False);
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad2));
         Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
         Assert.That(gamepad1WasRemoved, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenRemovedThroughEvent_AndDeviceIsNative_DeviceIsMovedToDisconnectedDeviceList()
+    {
+        ////REVIEW: should the system mandate more info in the description in order to retain a device?
+        var description =
+            new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+        };
+
+        var originalDeviceId = testRuntime.ReportNewInputDevice(description);
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        InputSystem.Update();
+        var originalGamepad = (Gamepad)InputSystem.GetDeviceById(originalDeviceId);
+
+        var receivedChanges = new List<KeyValuePair<InputDevice, InputDeviceChange>>();
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+        {
+            receivedChanges.Add(new KeyValuePair<InputDevice, InputDeviceChange>(device, change));
+        };
+
+        var inputEvent = DeviceRemoveEvent.Create(originalGamepad.id, testRuntime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        // Two notifications: first removed, then disconnect.
+        Assert.That(receivedChanges, Has.Count.EqualTo(2));
+        Assert.That(receivedChanges[0].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[0].Value, Is.EqualTo(InputDeviceChange.Removed));
+        Assert.That(receivedChanges[1].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[1].Value, Is.EqualTo(InputDeviceChange.Disconnected));
+
+        Assert.That(originalGamepad.added, Is.False);
+        Assert.That(InputSystem.disconnectedDevices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.disconnectedDevices, Has.Exactly(1).SameAs(originalGamepad));
+
+        receivedChanges.Clear();
+
+        // Add it back.
+        var newDeviceId = testRuntime.ReportNewInputDevice(description);
+        InputSystem.Update();
+        var newGamepad = (Gamepad)InputSystem.GetDeviceById(newDeviceId);
+
+        Assert.That(newGamepad, Is.SameAs(originalGamepad));
+
+        // Two notifications: first added, then reconnect.
+        Assert.That(receivedChanges, Has.Count.EqualTo(2));
+        Assert.That(receivedChanges[0].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[0].Value, Is.EqualTo(InputDeviceChange.Added));
+        Assert.That(receivedChanges[1].Key, Is.SameAs(originalGamepad));
+        Assert.That(receivedChanges[1].Value, Is.EqualTo(InputDeviceChange.Reconnected));
+
+        Assert.That(originalGamepad.added, Is.True);
+        Assert.That(originalGamepad.id, Is.EqualTo(newDeviceId));
+        Assert.That(InputSystem.disconnectedDevices, Has.Count.Zero);
     }
 
     //Keep weak ref to device when getting disconnect event
@@ -2941,6 +3007,38 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
+    #if UNITY_2018_3_OR_NEWER
+    [Test]
+    [Category("Devices")]
+    [Ignore("TODO")]
+    public void TODO_Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
+    {
+        var description =
+            new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer"
+        };
+
+        var deviceId = testRuntime.ReportNewInputDevice(description);
+        InputSystem.Update();
+
+        Assert.That(() =>
+        {
+            // "Unplug" device.
+            var removeEvent = DeviceRemoveEvent.Create(deviceId, 0.123);
+            InputSystem.QueueEvent(ref removeEvent);
+            InputSystem.Update();
+
+            // "Plug" it back in.
+            testRuntime.ReportNewInputDevice(description);
+            InputSystem.Update();
+        }, Is.Not.AllocatingGCMemory());
+    }
+
+    #endif
+
     [Test]
     [Category("Devices")]
     public void Devices_AreUpdatedWithTimestampOfLastEvent()
@@ -3239,7 +3337,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_NoiseFilterCanHandleMultipleProcessors()
+    public void Devices_CanUseNoiseFilterWithMultipleProcessors()
     {
         const string json = @"
             {

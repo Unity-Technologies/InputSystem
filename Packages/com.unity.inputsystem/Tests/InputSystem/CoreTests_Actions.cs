@@ -12,6 +12,11 @@ using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
+#if UNITY_2018_3_OR_NEWER
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
+#endif
+
 partial class CoreTests
 {
     [Test]
@@ -1078,7 +1083,7 @@ partial class CoreTests
 
         asset.AddControlScheme("scheme1").WithBindingGroup("group1").WithRequiredDevice("<Gamepad>");
         asset.AddControlScheme("scheme2").BasedOn("scheme1").WithBindingGroup("group2")
-            .WithOptionalDevice("<Keyboard>").WithRequiredDevice("<Mouse>");
+            .WithOptionalDevice("<Keyboard>").WithRequiredDevice("<Mouse>").OrWithRequiredDevice("<Pen>");
 
         var json = asset.ToJson();
 
@@ -1115,14 +1120,20 @@ partial class CoreTests
         Assert.That(asset.controlSchemes[1].bindingGroup, Is.EqualTo("group2"));
         Assert.That(asset.controlSchemes[0].baseScheme, Is.Null);
         Assert.That(asset.controlSchemes[1].baseScheme, Is.EqualTo("scheme1"));
-        Assert.That(asset.controlSchemes[0].devices, Has.Count.EqualTo(1));
-        Assert.That(asset.controlSchemes[1].devices, Has.Count.EqualTo(2));
-        Assert.That(asset.controlSchemes[0].devices,
-            Has.Exactly(1).With.Property("devicePath").EqualTo("<Gamepad>").And.Property("isOptional").False);
-        Assert.That(asset.controlSchemes[1].devices,
-            Has.Exactly(1).With.Property("devicePath").EqualTo("<Keyboard>").And.Property("isOptional").True);
-        Assert.That(asset.controlSchemes[1].devices,
-            Has.Exactly(1).With.Property("devicePath").EqualTo("<Mouse>").And.Property("isOptional").False);
+        Assert.That(asset.controlSchemes[0].deviceRequirements, Has.Count.EqualTo(1));
+        Assert.That(asset.controlSchemes[1].deviceRequirements, Has.Count.EqualTo(3));
+        Assert.That(asset.controlSchemes[0].deviceRequirements[0].controlPath, Is.EqualTo("<Gamepad>"));
+        Assert.That(asset.controlSchemes[0].deviceRequirements[0].isOptional, Is.False);
+        Assert.That(asset.controlSchemes[0].deviceRequirements[0].isOR, Is.False);
+        Assert.That(asset.controlSchemes[1].deviceRequirements[0].controlPath, Is.EqualTo("<Keyboard>"));
+        Assert.That(asset.controlSchemes[1].deviceRequirements[0].isOptional, Is.True);
+        Assert.That(asset.controlSchemes[1].deviceRequirements[0].isOR, Is.False);
+        Assert.That(asset.controlSchemes[1].deviceRequirements[1].controlPath, Is.EqualTo("<Mouse>"));
+        Assert.That(asset.controlSchemes[1].deviceRequirements[1].isOptional, Is.False);
+        Assert.That(asset.controlSchemes[1].deviceRequirements[1].isOR, Is.False);
+        Assert.That(asset.controlSchemes[1].deviceRequirements[2].controlPath, Is.EqualTo("<Pen>"));
+        Assert.That(asset.controlSchemes[1].deviceRequirements[2].isOptional, Is.False);
+        Assert.That(asset.controlSchemes[1].deviceRequirements[2].isOR, Is.True);
     }
 
     [Test]
@@ -1929,6 +1940,40 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanLookUpActionInAssetByName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var action1 = map1.AddAction("action1");
+        var action2 = map1.AddAction("action2");
+        var action3 = map2.AddAction("action3");
+
+        Assert.That(asset.FindAction("action1"), Is.SameAs(action1));
+        Assert.That(asset.FindAction("action2"), Is.SameAs(action2));
+        Assert.That(asset.FindAction("action3"), Is.SameAs(action3));
+
+        Assert.That(asset.FindAction("map1/action1"), Is.SameAs(action1));
+        Assert.That(asset.FindAction("map1/action2"), Is.SameAs(action2));
+        Assert.That(asset.FindAction("map2/action3"), Is.SameAs(action3));
+
+        // Shouldn't allocate.
+        #if UNITY_2018_3_OR_NEWER
+        var map1action1 = "map1/action1";
+        Assert.That(() =>
+        {
+            asset.FindAction(map1action1);
+        }, Is.Not.AllocatingGCMemory());
+        #endif
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanRemoveActionMapFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2030,137 +2075,274 @@ partial class CoreTests
             .WithRequiredDevice("<XRController>{RightHand}")
             .WithOptionalDevice("<Gamepad>");
 
-        Assert.That(asset.GetControlScheme("scheme").devices, Has.Count.EqualTo(3));
-        Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<XRController>{LeftHand}"));
-        Assert.That(asset.GetControlScheme("scheme").devices[0].isOptional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").devices[1].devicePath, Is.EqualTo("<XRController>{RightHand}"));
-        Assert.That(asset.GetControlScheme("scheme").devices[1].isOptional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").devices[2].devicePath, Is.EqualTo("<Gamepad>"));
-        Assert.That(asset.GetControlScheme("scheme").devices[2].isOptional, Is.True);
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements, Has.Count.EqualTo(3));
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[0].controlPath, Is.EqualTo("<XRController>{LeftHand}"));
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[0].isOptional, Is.False);
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[1].controlPath, Is.EqualTo("<XRController>{RightHand}"));
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[1].isOptional, Is.False);
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[2].controlPath, Is.EqualTo("<Gamepad>"));
+        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[2].isOptional, Is.True);
     }
 
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanMatchDeviceAgainstControlSchemeDeviceRequirements()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        var gamepadA = InputSystem.AddDevice<Gamepad>();
-        var gamepadB = InputSystem.AddDevice<Gamepad>();
-
-        InputSystem.SetDeviceUsage(gamepadA, "A");
-        InputSystem.SetDeviceUsage(gamepadB, "B");
-
-        var scheme1 = new InputControlScheme("scheme1")
-            .WithRequiredDevice("<Keyboard>");
-        var scheme2 = new InputControlScheme("scheme2")
-            .WithRequiredDevice("<Gamepad>{B}")
-            .WithOptionalDevice("<Gamepad>{A}");
-        var scheme3 = new InputControlScheme("scheme3")
-            .WithRequiredDevice("<Mouse>");
-        var scheme4 = new InputControlScheme("scheme4");
-        var scheme5 = new InputControlScheme("scheme5")
-            .WithRequiredDevice("<Gamepad>/buttonSouth"); // This essentially requires that a device provides a specific control.
-
-        /*
-        Assert.That(scheme1.Matches(keyboard));
-        Assert.That(scheme1.Matches(gamepadA), Is.False);
-        Assert.That(scheme2.Matches(gamepadA));
-        Assert.That(scheme2.Matches(gamepadB));
-        Assert.That(scheme2.Matches(keyboard), Is.False);
-        Assert.That(scheme3.Matches(keyboard), Is.False);
-        Assert.That(scheme4.Matches(keyboard));
-        Assert.That(scheme4.Matches(gamepadA));
-        Assert.That(scheme4.Matches(gamepadB));
-        Assert.That(scheme5.Matches(gamepadA));
-        Assert.That(scheme5.Matches(gamepadB));
-        */
-        Assert.Fail();
-    }
-
-    //do we really want the complexity of the device requirement lists?
-    //can't we just go by what's in the bindings and put the optional/required on the actions?
-    //then the matching would also move to happening in the context of actions instead of just free-standing on InputControlScheme
-
-
-    //Q1: can I construct scheme information from bindings?
-
-    /*
-    InputControlList<InputDevice> PickDevices(this InputActionAsset asset,
-        InputControlList<InputDevice> availableDevices, string bindingGroup)
-    {
-
-    }
-    */
-
+    ////REVIEW: this one probably warrants breaking it up a little
     [Test]
     [Category("Actions")]
     public void Actions_CanPickDevicesThatMatchGivenControlScheme()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var pen = InputSystem.AddDevice<Pen>();
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        var scheme1 = new InputControlScheme("scheme1")
+        var keyboardScheme = new InputControlScheme("keyboard")
             .WithRequiredDevice("<Keyboard>");
-        var scheme2 = new InputControlScheme("scheme2")
+        var gamepadOptionalGamepadScheme = new InputControlScheme("gamepadOptionalGamepad")
             .WithRequiredDevice("<Gamepad>")
             .WithOptionalDevice("<Gamepad>");
-        var scheme3 = new InputControlScheme("scheme3");
-        var scheme4 = new InputControlScheme("scheme4")
+        var emptyScheme = new InputControlScheme("empty");
+        var twoGamepadScheme = new InputControlScheme("twoGamepad")
+            .WithRequiredDevice("<Gamepad>")
+            .WithRequiredDevice("<Gamepad>");
+        var gyroGamepadScheme = new InputControlScheme("gyroGamepad")
+            .WithRequiredDevice("<Gamepad>/<Gyroscope>");
+        var twinStickScheme = new InputControlScheme("twinStick")
+            .WithRequiredDevice("*/leftStick")
+            .WithRequiredDevice("*/rightStick");
+        var keyboardMouseOrPenOrTouchscreenScheme = new InputControlScheme("keyboardMouseOrPenOrTouchscreen")
+            .WithRequiredDevice("<Keyboard>")
+            .WithRequiredDevice("<Mouse>")
+            .OrWithRequiredDevice("<Pen>")
+            .OrWithRequiredDevice("<Touchscreen>");
+
+        var empty = new InputControlList<InputDevice>();
+        using (var keyboardOnly = new InputControlList<InputDevice>(keyboard))
+        using (var gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard))
+        using (var gamepadOnly = new InputControlList<InputDevice>(gamepad1))
+        using (var keyboardMouseAndPen = new InputControlList<InputDevice>(keyboard, mouse, pen))
+        using (var keyboardAndPen = new InputControlList<InputDevice>(keyboard, pen))
+        {
+            // Fail picking <Keyboard> from [].
+            using (var match = keyboardScheme.PickDevicesFrom(empty))
+            {
+                Assert.That(match.isSuccessfulMatch, Is.False);
+                Assert.That(match.hasMissingRequiredDevices);
+                Assert.That(match.devices, Is.Empty);
+                Assert.That(match.ToList(), Has.Count.EqualTo(1));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.Null);
+                Assert.That(match.ToList()[0].device, Is.Null);
+            }
+
+            // Pick <Keyboard> from [<Keyboard>].
+            using (var match = keyboardScheme.PickDevicesFrom(keyboardOnly))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.EquivalentTo(new[] {keyboard}));
+                Assert.That(match.ToList(), Has.Count.EqualTo(1));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[0].device, Is.SameAs(keyboard));
+            }
+
+            // Pick <Keyboard> from [<Gamepad>,<Gamepad>,<Keyboard>].
+            using (var match = keyboardScheme.PickDevicesFrom(gamepad1And2AndKeyboard))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.EquivalentTo(new[] {keyboard}));
+                Assert.That(match.ToList(), Has.Count.EqualTo(1));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[0].device, Is.SameAs(keyboard));
+            }
+
+            // Pick <Gamepad> from [<Gamepad>].
+            using (var match = gamepadOptionalGamepadScheme.PickDevicesFrom(gamepadOnly))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices);
+                Assert.That(match.devices, Is.EquivalentTo(new[] {gamepad1}));
+                Assert.That(match.ToList(), Has.Count.EqualTo(2));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[0].device, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.Null);
+                Assert.That(match.ToList()[1].device, Is.Null);
+            }
+
+            // Pick [<Gamepad>,optional <Gamepad>] from [<Gamepad>,<Gamepad>,<Keyboard>].
+            using (var match = gamepadOptionalGamepadScheme.PickDevicesFrom(gamepad1And2AndKeyboard))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.EquivalentTo(new[] {gamepad1, gamepad2}));
+                Assert.That(match.ToList(), Has.Count.EqualTo(2));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[0].device, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.SameAs(gamepad2));
+                Assert.That(match.ToList()[1].device, Is.SameAs(gamepad2));
+            }
+
+            // Fail picking [<Gamepad>,<Gamepad>] from [<Gamepad>].
+            using (var match = twoGamepadScheme.PickDevicesFrom(gamepadOnly))
+            {
+                Assert.That(match.isSuccessfulMatch, Is.False);
+                Assert.That(match.hasMissingRequiredDevices);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.Empty);
+                Assert.That(match.ToList(), Has.Count.EqualTo(2));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[0].device, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.Null);
+                Assert.That(match.ToList()[1].device, Is.Null);
+            }
+
+            // Fail picking [<Gamepad>/<Gyroscope>] from [<Gamepad>].
+            using (var match = gyroGamepadScheme.PickDevicesFrom(gamepadOnly))
+            {
+                Assert.That(match.isSuccessfulMatch, Is.False);
+                Assert.That(match.hasMissingRequiredDevices);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.Empty);
+                Assert.That(match.ToList(), Has.Count.EqualTo(1));
+                Assert.That(match.ToList(), Has.Exactly(1)
+                    .With.Property("requirementIndex").EqualTo(0)
+                    .And.With.Property("control").Null
+                    .And.With.Property("device").Null);
+            }
+
+            // Pick [<Keyboard>,<Mouse>] from [<Keyboard>,<Mouse>,<Pen>].
+            using (var match = keyboardMouseOrPenOrTouchscreenScheme.PickDevicesFrom(keyboardMouseAndPen))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+                Assert.That(match.ToList(), Has.Count.EqualTo(4));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[0].device, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.SameAs(mouse));
+                Assert.That(match.ToList()[1].device, Is.SameAs(mouse));
+                Assert.That(match.ToList()[2].requirementIndex, Is.EqualTo(2));
+                Assert.That(match.ToList()[2].control, Is.Null);
+                Assert.That(match.ToList()[2].device, Is.Null);
+                Assert.That(match.ToList()[3].requirementIndex, Is.EqualTo(3));
+                Assert.That(match.ToList()[3].control, Is.Null);
+                Assert.That(match.ToList()[3].device, Is.Null);
+            }
+
+            // Pick [<Keyboard>,<Pen>] from [<Keyboard>,<Mouse>,<Pen>].
+            using (var match = keyboardMouseOrPenOrTouchscreenScheme.PickDevicesFrom(keyboardAndPen))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.EquivalentTo(new InputDevice[] { keyboard, pen }));
+                Assert.That(match.ToList(), Has.Count.EqualTo(4));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[0].device, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.Null);
+                Assert.That(match.ToList()[1].device, Is.Null);
+                Assert.That(match.ToList()[2].requirementIndex, Is.EqualTo(2));
+                Assert.That(match.ToList()[2].control, Is.SameAs(pen));
+                Assert.That(match.ToList()[2].device, Is.SameAs(pen));
+                Assert.That(match.ToList()[3].requirementIndex, Is.EqualTo(3));
+                Assert.That(match.ToList()[3].control, Is.Null);
+                Assert.That(match.ToList()[3].device, Is.Null);
+            }
+
+            // Fail picking [<Keyboard>,<Mouse> or <Pen>] from [<Keyboard>].
+            using (var match = keyboardMouseOrPenOrTouchscreenScheme.PickDevicesFrom(keyboardOnly))
+            {
+                Assert.That(match.isSuccessfulMatch, Is.False);
+                Assert.That(match.hasMissingRequiredDevices);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.Empty);
+                Assert.That(match.ToList(), Has.Count.EqualTo(4));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[0].device, Is.SameAs(keyboard));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.Null);
+                Assert.That(match.ToList()[1].device, Is.Null);
+                Assert.That(match.ToList()[2].requirementIndex, Is.EqualTo(2));
+                Assert.That(match.ToList()[2].control, Is.Null);
+                Assert.That(match.ToList()[2].device, Is.Null);
+                Assert.That(match.ToList()[3].requirementIndex, Is.EqualTo(3));
+                Assert.That(match.ToList()[3].control, Is.Null);
+                Assert.That(match.ToList()[3].device, Is.Null);
+            }
+
+            // Pick [<Gamepad>] from [<Gamepad>,<Gamepad>,<Keyboard>].
+            using (var match = twinStickScheme.PickDevicesFrom(gamepad1And2AndKeyboard))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.EquivalentTo(new[] {gamepad1}));
+                Assert.That(match.ToList(), Has.Count.EqualTo(2));
+                Assert.That(match.ToList()[0].requirementIndex, Is.EqualTo(0));
+                Assert.That(match.ToList()[0].control, Is.SameAs(gamepad1.leftStick));
+                Assert.That(match.ToList()[0].device, Is.SameAs(gamepad1));
+                Assert.That(match.ToList()[1].requirementIndex, Is.EqualTo(1));
+                Assert.That(match.ToList()[1].control, Is.SameAs(gamepad1.rightStick));
+                Assert.That(match.ToList()[1].device, Is.SameAs(gamepad1));
+            }
+
+            // Pick [] from [<Gamepad>,<Gamepad>,<Keyboard>].
+            using (var match = emptyScheme.PickDevicesFrom(gamepad1And2AndKeyboard))
+            {
+                Assert.That(match.isSuccessfulMatch);
+                Assert.That(match.hasMissingRequiredDevices, Is.False);
+                Assert.That(match.hasMissingOptionalDevices, Is.False);
+                Assert.That(match.devices, Is.Empty);
+                Assert.That(match.ToList(), Is.Empty);
+            }
+        }
+    }
+
+    #if UNITY_2018_3_OR_NEWER
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanPickDevicesThatMatchGivenControlScheme_WithoutAllocatingGCMemory()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        var scheme = new InputControlScheme("scheme")
             .WithRequiredDevice("<Gamepad>")
             .WithRequiredDevice("<Gamepad>");
 
-        var keyboardOnly = new InputControlList<InputDevice>(keyboard);
-        var gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
-
-        try
+        using (var gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard))
         {
-            // RequiredMatch.
-            Assert.That(scheme1.PickMatchingDevices(ref keyboardOnly),
-                Is.EqualTo(InputControlScheme.MatchResult.RequiredMatch));
-            Assert.That(scheme1.PickMatchingDevices(ref gamepad1And2AndKeyboard),
-                Is.EqualTo(InputControlScheme.MatchResult.RequiredMatch));
-
-            Assert.That(keyboardOnly, Is.EquivalentTo(new[] {keyboard}));
-            Assert.That(gamepad1And2AndKeyboard, Is.EquivalentTo(new[] {keyboard}));
-
-            keyboardOnly.Dispose();
-            gamepad1And2AndKeyboard.Dispose();
-
-            keyboardOnly = new InputControlList<InputDevice>(keyboard);
-            gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
-
-            // OptionalMatch.
-            Assert.That(scheme2.PickMatchingDevices(ref keyboardOnly),
-                Is.EqualTo(InputControlScheme.MatchResult.NoMatch));
-            Assert.That(scheme2.PickMatchingDevices(ref gamepad1And2AndKeyboard),
-                Is.EqualTo(InputControlScheme.MatchResult.OptionalMatch));
-
-            Assert.That(keyboardOnly, Is.EquivalentTo(new[] {keyboard})); // Untouched.
-            Assert.That(gamepad1And2AndKeyboard, Is.EquivalentTo(new[] { gamepad1, gamepad2 }));
-
-            keyboardOnly.Dispose();
-            gamepad1And2AndKeyboard.Dispose();
-
-            keyboardOnly = new InputControlList<InputDevice>(keyboard);
-            gamepad1And2AndKeyboard = new InputControlList<InputDevice>(gamepad1, gamepad2, keyboard);
-
-            // NoSpecificRequirementsMatch.
-            Assert.That(scheme3.PickMatchingDevices(ref keyboardOnly),
-                Is.EqualTo(InputControlScheme.MatchResult.NoSpecificRequirementsMatch));
-            Assert.That(scheme3.PickMatchingDevices(ref gamepad1And2AndKeyboard),
-                Is.EqualTo(InputControlScheme.MatchResult.NoSpecificRequirementsMatch));
-
-            Assert.That(keyboardOnly, Is.Empty);
-            Assert.That(gamepad1And2AndKeyboard, Is.Empty);
-        }
-        finally
-        {
-            keyboardOnly.Dispose();
-            gamepad1And2AndKeyboard.Dispose();
+            ////FIXME: Even when stripping the method down to basically just returning a "new MatchResult", it's
+            ////       still flagged as allocating; no clue what's going on here
+            Assert.That(() =>
+            {
+                var match = scheme.PickDevicesFrom(gamepad1And2AndKeyboard);
+                match.Dispose();
+            }, Is.Not.AllocatingGCMemory());
         }
     }
+
+    #endif
 
     // The bindings targeting an action can be masked out such that only specific
     // bindings take effect and others are ignored.
@@ -2388,6 +2570,13 @@ partial class CoreTests
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.Zero.Within(0.00001));
     }
 
     [Test]
@@ -3374,23 +3563,67 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanBeArrangedInStack()
+    public void Actions_CanBeArrangedInStack()
     {
         var stack = new InputActionStack();
         var action1 = new InputAction("action1");
         var action2 = new InputAction("action2");
         var action3 = new InputAction("action3");
 
+        var map = new InputActionMap();
+        var action4 = map.AddAction("action4");
+        var action5 = map.AddAction("action5");
+
         stack.Push(action1);
         stack.Push(action2);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(2));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2 }));
+
+        stack.Push(map);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(4));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action4));
+        Assert.That(stack.actions[3], Is.SameAs(action5));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5 }));
+
         stack.Push(action3);
+
+        Assert.That(stack.actions, Has.Count.EqualTo(5));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action4));
+        Assert.That(stack.actions[3], Is.SameAs(action5));
+        Assert.That(stack.actions[4], Is.SameAs(action3));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5, action3 }));
+
+        stack.Pop();
+
+        Assert.That(stack.actions, Has.Count.EqualTo(4));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action2));
+        Assert.That(stack.actions[2], Is.SameAs(action4));
+        Assert.That(stack.actions[3], Is.SameAs(action5));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5 }));
+
+        stack.Pop(action2);
 
         Assert.That(stack.actions, Has.Count.EqualTo(3));
         Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action2));
-        Assert.That(stack.actions[2], Is.SameAs(action3));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
+        Assert.That(stack.actions[1], Is.SameAs(action4));
+        Assert.That(stack.actions[2], Is.SameAs(action5));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action4, action5 }));
+
+        stack.Pop();
+
+        Assert.That(stack.actions, Has.Count.EqualTo(2));
+        Assert.That(stack.actions[0], Is.SameAs(action1));
+        Assert.That(stack.actions[1], Is.SameAs(action4));
+        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action4 }));
 
         stack.Clear();
 
@@ -3400,12 +3633,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
+    public void Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
     {
         var stack = new InputActionStack();
         var action1 = new InputAction("action1");
         var action2 = new InputAction("action2");
+        var action3 = new InputAction("action3");
 
         stack.Push(action1);
         stack.Push(action2);
@@ -3416,11 +3649,16 @@ partial class CoreTests
         Assert.That(action1.enabled);
         Assert.That(action2.enabled);
 
+        stack.Push(action3);
+
+        Assert.That(action3.enabled);
+
         stack.Disable();
 
         Assert.That(stack.enabled, Is.False);
         Assert.That(action1.enabled, Is.False);
         Assert.That(action2.enabled, Is.False);
+        Assert.That(action3.enabled, Is.False);
     }
 
     [Test]

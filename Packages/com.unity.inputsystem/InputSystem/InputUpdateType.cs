@@ -57,6 +57,8 @@ namespace UnityEngine.Experimental.Input
         ////TODO
         Manual = 1 << 4,
 
+        ////REVIEW: this will likely be a problem for the main thread queue; we can't block to access it; it's
+        ////        designed for exclusive access by the main thread
         /// <summary>
         /// Variation of <see cref="Manual"/> that additionally allows calling <see cref="InputSystem.Update"/>
         /// on a thread other than the main thread.
