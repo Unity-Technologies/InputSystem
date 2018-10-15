@@ -27,28 +27,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return result;
         }
 
-        private PointerEventData PreparePointerEventData(MouseModel mouseState)
-        {
-            var eventData = GetOrCreateCachedPointerEvent();
-            eventData.Reset();
-
-            eventData.pointerId = mouseState.pointerId;
-            eventData.position = mouseState.position;
-            eventData.delta = mouseState.deltaPosition;
-            eventData.scrollDelta = mouseState.scrollDelta;
-            eventData.pointerEnter = mouseState.internalData.pointerTarget;
-
-            eventData.hovered.Clear();
-            eventData.hovered.AddRange(mouseState.internalData.hoverTargets);
-
-            // This is unset in legacy systems and can safely assumed to stay true.
-            eventData.useDragThreshold = true;
-
-            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
-
-            return eventData;
-        }
-
         /// <summary>
         /// Takes an existing MouseModel and dispatches all relevant changes through the event system.
         /// It also updates the internal data of the MouseModel.
@@ -59,7 +37,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (!mouseState.changedThisFrame)
                 return;
 
-            var eventData = PreparePointerEventData(mouseState);
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.Reset();
+
+            mouseState.CopyTo(eventData);
+
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
 
             /// Left Mouse Button
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
@@ -70,11 +53,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             ProcessMouseMovement(eventData);
             ProcessMouseScroll(eventData);
 
-            var internalMouseData = mouseState.internalData;
-            internalMouseData.hoverTargets.ClearWithCapacity();
-            internalMouseData.hoverTargets.Append(eventData.hovered);
-            internalMouseData.pointerTarget = eventData.pointerEnter;
-            mouseState.internalData = internalMouseData;
+            mouseState.CopyFrom(eventData);
 
             ProcessMouseButtonDrag(eventData);
 
@@ -274,6 +253,29 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
+        internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
+        {
+            //if (!deviceState.changedThisFrame)
+            //    return;
+
+            TrackedPointerEventData eventData = GetOrCreateCachedTrackedPointerEvent();
+            eventData.Reset();
+            deviceState.CopyTo(eventData);
+
+            eventData.button = PointerEventData.InputButton.Left;
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+            Debug.DrawLine(Camera.main.ScreenToWorldPoint(eventData.position), Camera.main.transform.position);
+
+            ProcessMouseButton(deviceState.selectDelta, eventData);
+            ProcessMouseMovement(eventData);
+            ProcessMouseButtonDrag(eventData);
+
+            deviceState.CopyFrom(eventData);
+
+            deviceState.OnFrameFinished();
+        }
+
         /// <summary>
         /// Takes an existing JoystickModel and dispatches all relevant changes through the event system.
         /// It also updates the internal data of the JoystickModel.
@@ -366,7 +368,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             joystickState.OnFrameFinished();
         }
 
-        protected PointerEventData GetOrCreateCachedPointerEvent()
+        private PointerEventData GetOrCreateCachedPointerEvent()
         {
             var result = m_CachedPointerEvent;
             if (result == null)
@@ -378,7 +380,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return result;
         }
 
-        protected AxisEventData GetOrCreateCachedAxisEvent()
+        private TrackedPointerEventData GetOrCreateCachedTrackedPointerEvent()
+        {
+            var result = m_CachedTrackedPointerEventData;
+            if (result == null)
+            {
+                result = new TrackedPointerEventData(eventSystem);
+                m_CachedTrackedPointerEventData = result;
+            }
+
+            return result;
+        }
+
+        private AxisEventData GetOrCreateCachedAxisEvent()
         {
             var result = m_CachedAxisEvent;
             if (result == null)
@@ -404,5 +418,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private AxisEventData m_CachedAxisEvent;
         private PointerEventData m_CachedPointerEvent;
+        private TrackedPointerEventData m_CachedTrackedPointerEventData;
     }
 }

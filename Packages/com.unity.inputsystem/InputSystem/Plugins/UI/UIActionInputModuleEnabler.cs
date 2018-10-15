@@ -39,6 +39,18 @@ public class UIActionInputModuleEnabler : MonoBehaviour
             var cancelAction = inputModule.cancel.action;
             if (cancelAction != null && !cancelAction.enabled)
                 cancelAction.Enable();
+
+            var trackedPositionAction = inputModule.trackedPosition.action;
+            if (trackedPositionAction != null && !trackedPositionAction.enabled)
+                trackedPositionAction.Enable();
+
+            var trackedOrientationAction = inputModule.trackedOrientation.action;
+            if (trackedOrientationAction != null && !trackedOrientationAction.enabled)
+                trackedOrientationAction.Enable();
+
+            var trackedSelectAction = inputModule.trackedSelect.action;
+            if (trackedSelectAction != null && !trackedSelectAction.enabled)
+                trackedSelectAction.Enable();
         }
     }
 
@@ -74,6 +86,18 @@ public class UIActionInputModuleEnabler : MonoBehaviour
             var cancelAction = inputModule.cancel.action;
             if (cancelAction != null && cancelAction.enabled)
                 cancelAction.Disable();
+
+            var trackedPositionAction = inputModule.trackedPosition.action;
+            if (trackedPositionAction != null && trackedPositionAction.enabled)
+                trackedPositionAction.Disable();
+
+            var trackedOrientationAction = inputModule.trackedOrientation.action;
+            if (trackedOrientationAction != null && trackedOrientationAction.enabled)
+                trackedOrientationAction.Disable();
+
+            var trackedSelectAction = inputModule.trackedSelect.action;
+            if (trackedSelectAction != null && trackedSelectAction.enabled)
+                trackedSelectAction.Disable();
         }
     }
 }

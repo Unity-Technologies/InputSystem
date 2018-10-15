@@ -74,13 +74,33 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             set { SwapProperty(ref m_CancelAction, value); }
         }
 
+        //XR Stuff
+        public InputActionProperty trackedPosition
+        {
+            get { return m_TrackedPositionAction; }
+            set { SwapProperty(ref m_TrackedPositionAction, value); }
+        }
+
+        public InputActionProperty trackedOrientation
+        {
+            get { return m_TrackedOrientationAction; }
+            set { SwapProperty(ref m_TrackedOrientationAction, value); }
+        }
+
+        public InputActionProperty trackedSelect
+        {
+            get { return m_TrackedSelectAction; }
+            set { SwapProperty(ref m_TrackedSelectAction, value); }
+        }
+
         protected override void Awake()
         {
             base.Awake();
 
             /// TODO TB: We don't have proper mouse pointer Ids atm, use 0 for single mouse state.
-            mouseState = new MouseModel(eventSystem, 0);
+            mouseState = new MouseModel(0);
             joystickState.Reset();
+            trackedDeviceState = new TrackedDeviceModel(1);
         }
 
         protected override void OnDestroy()
@@ -162,6 +182,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() != 0.0f;
             }
+            else if (action == m_TrackedPositionAction)
+            {
+                trackedDeviceState.position = context.ReadValue<Vector3>();
+            }
+            else if (action == m_TrackedOrientationAction)
+            {
+                trackedDeviceState.orientation = context.ReadValue<Quaternion>();
+            }
+            else if (action == m_TrackedSelectAction)
+            {
+                trackedDeviceState.select = context.ReadValue<float>() != 0.0f;
+            }
         }
 
         public override void Process()
@@ -176,10 +208,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
+                trackedDeviceState.OnFrameFinished();
             }
 
             ProcessJoystick(ref joystickState);
             ProcessMouse(ref mouseState);
+            ProcessTrackedDevice(ref trackedDeviceState);
         }
 
         private void HookActions()
@@ -219,6 +253,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
                 cancelAction.performed += m_ActionCallback;
+
+            var trackedPositionAction = m_TrackedPositionAction.action;
+            if (trackedPositionAction != null)
+                trackedPositionAction.performed += m_ActionCallback;
+
+            var trackedOrientationAction = m_TrackedOrientationAction.action;
+            if (trackedOrientationAction != null)
+                trackedOrientationAction.performed += m_ActionCallback;
+
+            var trackedSelectAction = m_TrackedSelectAction.action;
+            if (trackedSelectAction != null)
+                trackedSelectAction.performed += m_ActionCallback;
         }
 
         private void UnhookActions()
@@ -255,6 +301,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
                 cancelAction.performed -= m_ActionCallback;
+
+            var trackedPositionAction = m_TrackedPositionAction.action;
+            if (trackedPositionAction != null)
+                trackedPositionAction.performed -= m_ActionCallback;
+
+            var trackedOrientationAction = m_TrackedOrientationAction.action;
+            if (trackedOrientationAction != null)
+                trackedOrientationAction.performed -= m_ActionCallback;
+
+            var trackedSelectAction = m_TrackedSelectAction.action;
+            if (trackedSelectAction != null)
+                trackedSelectAction.performed -= m_ActionCallback;
         }
 
         private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
@@ -314,11 +372,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [SerializeField]
         private InputActionProperty m_ScrollWheelAction;
 
+        [SerializeField]
+        private InputActionProperty m_TrackedPositionAction;
+
+        [SerializeField]
+        private InputActionProperty m_TrackedOrientationAction;
+
+        [SerializeField]
+        private InputActionProperty m_TrackedSelectAction;
+
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
 
         [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
+        [NonSerialized] private TrackedDeviceModel trackedDeviceState;
     }
 }
