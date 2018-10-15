@@ -147,7 +147,20 @@ namespace UnityEngine.Experimental.Input.Editor
         private void DrawDeviceFilterSelection()
         {
             EditorGUI.BeginDisabledGroup(m_SelectedControlSchemeIndex < 0);
-            m_SelectedDeviceIndex = EditorGUILayout.Popup(m_SelectedDeviceIndex, m_DeviceNamesList, EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth));
+            if (m_DeviceNamesList.Length == 0)
+            {
+                GUILayout.Button("All devices", EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth));
+                
+            }
+            else if (GUILayout.Button(m_DeviceNamesList[m_SelectedDeviceIndex], EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth)))
+            {
+                var menu = new GenericMenu();
+                for (int i = 0; i < m_DeviceNamesList.Length; i++)
+                {
+                    menu.AddItem(new GUIContent(m_DeviceNamesList[i]), m_SelectedDeviceIndex == i, (a)=>m_SelectedDeviceIndex = (int)a, i);
+                }
+                menu.ShowAsContext();
+            }
             EditorGUI.EndDisabledGroup();
         }
 
