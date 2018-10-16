@@ -91,7 +91,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager);
-
+            
             InitializeTrees();
             OnActionMapSelection();
             LoadPropertiesForSelection(false);
@@ -153,6 +153,25 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
             m_ActionsTree.OnRowGUI = OnActionRowGUI;
             m_InputActionWindowToolbar.OnSearchChanged = m_ActionsTree.SetNameFilter;
+            m_InputActionWindowToolbar.OnSchemeChanged = a =>
+            {
+                if (a == null)
+                {
+                    m_ActionsTree.SetSchemeBindingGroupFilter(null);
+                    return;
+                }
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(a).bindingGroup;
+                m_ActionsTree.SetSchemeBindingGroupFilter(group);
+            };
+            m_InputActionWindowToolbar.OnDeviceChanged = m_ActionsTree.SetDeviceFilter;
+            
+            m_ActionsTree.SetNameFilter(m_InputActionWindowToolbar.nameFilter);
+            if (m_InputActionWindowToolbar.selectedControlSchemeName != null)
+            {
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(m_InputActionWindowToolbar.selectedControlSchemeName ).bindingGroup;
+                m_ActionsTree.SetSchemeBindingGroupFilter(group);
+            }
+            m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.deviceFilter.Length == 1 ? m_InputActionWindowToolbar.deviceFilter[0] : null);
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)

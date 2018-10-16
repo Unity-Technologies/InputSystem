@@ -11,6 +11,8 @@ namespace UnityEngine.Experimental.Input.Editor
     class InputActionWindowToolbar
     {
         public Action<string> OnSearchChanged;
+        public Action<string> OnSchemeChanged;
+        public Action<string> OnDeviceChanged;
 
         [SerializeField]
         private int m_SelectedControlSchemeIndex;
@@ -33,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save Asset");
         private static readonly float m_MininumButtonWidth = 110f;
 
-        string selectedControlSchemeName
+        public string selectedControlSchemeName
         {
             get
             {
@@ -56,6 +58,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 return m_DeviceIdList.Skip(m_SelectedDeviceIndex).Take(1).ToArray();
             }
+        }
+
+        public string nameFilter
+        {
+            get { return m_SearchText; }
         }
 
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager, Action apply)
@@ -134,6 +141,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SelectedControlSchemeIndex = index;
             m_SelectedDeviceIndex = 0;
             BuildDeviceList();
+            OnSchemeChanged(selectedControlSchemeName);
         }
 
         private void DrawDeviceFilterSelection()
@@ -149,11 +157,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 var menu = new GenericMenu();
                 for (int i = 0; i < m_DeviceNamesList.Length; i++)
                 {
-                    menu.AddItem(new GUIContent(m_DeviceNamesList[i]), m_SelectedDeviceIndex == i, (a)=>m_SelectedDeviceIndex = (int)a, i);
+                    menu.AddItem(new GUIContent(m_DeviceNamesList[i]), m_SelectedDeviceIndex == i, OnDeviceSelected, i);
                 }
                 menu.ShowAsContext();
             }
             EditorGUI.EndDisabledGroup();
+        }
+
+        private void OnDeviceSelected(object indexObj)
+        {
+            m_SelectedDeviceIndex = (int)indexObj;
+            if (m_SelectedDeviceIndex == 0)
+                OnDeviceChanged(null);
+            else
+                OnDeviceChanged(m_DeviceIdList[m_SelectedDeviceIndex]);
         }
 
         private void DrawSaveButton()
