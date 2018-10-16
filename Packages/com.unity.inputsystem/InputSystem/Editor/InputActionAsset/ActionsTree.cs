@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SetNameFilter(string filter)
         {
-            m_NameFilter = filter.ToLower();
+            m_NameFilter = string.IsNullOrEmpty(filter) ? null : filter.ToLower();
             Reload();
         }
 
