@@ -50,11 +50,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 return m_SelectedDeviceIndex <= 0 ? null : m_DeviceIdList[m_SelectedDeviceIndex];
             }
         }
-        
+
         public string[] allDevices
         {
             get
-            {            
+            {
                 return m_DeviceIdList.Skip(1).ToArray();
             }
         }
@@ -149,7 +149,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_DeviceNamesList.Length == 0)
             {
                 GUILayout.Button("All devices", EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth));
-                
             }
             else if (GUILayout.Button(m_DeviceNamesList[m_SelectedDeviceIndex], EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth)))
             {

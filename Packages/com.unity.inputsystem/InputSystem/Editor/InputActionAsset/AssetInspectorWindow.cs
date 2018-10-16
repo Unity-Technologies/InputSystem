@@ -73,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnEnable()
         {
             minSize = new Vector2(600, 300);
-            
+
             if (m_AddActionIconGUI == null)
                 m_AddActionIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
             if (m_AddActionMapIconGUI == null)
@@ -93,7 +93,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager);
-            
+
             InitializeTrees();
             OnActionMapSelection();
             LoadPropertiesForSelection(false);
@@ -166,11 +166,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.SetSchemeBindingGroupFilter(group);
             };
             m_InputActionWindowToolbar.OnDeviceChanged = m_ActionsTree.SetDeviceFilter;
-            
+
             m_ActionsTree.SetNameFilter(m_InputActionWindowToolbar.nameFilter);
             if (m_InputActionWindowToolbar.selectedControlSchemeName != null)
             {
-                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(m_InputActionWindowToolbar.selectedControlSchemeName ).bindingGroup;
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(m_InputActionWindowToolbar.selectedControlSchemeName).bindingGroup;
                 m_ActionsTree.SetSchemeBindingGroupFilter(group);
             }
             m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);

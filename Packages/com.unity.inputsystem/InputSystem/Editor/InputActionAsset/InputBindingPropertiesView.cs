@@ -195,7 +195,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (toolbar.selectedDevice != null)
                 {
-                    w.SetDeviceFilter(new[]{toolbar.selectedDevice});
+                    w.SetDeviceFilter(new[] {toolbar.selectedDevice});
                 }
                 else
                 {

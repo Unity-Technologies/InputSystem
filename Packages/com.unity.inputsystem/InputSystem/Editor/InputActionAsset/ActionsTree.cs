@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public SerializedProperty actionMapProperty;
         public Action<TreeViewItem, Rect> OnRowGUI;
-        
+
         private string m_NameFilter;
         private string m_SchemeBindingGroupFilter;
         private string m_DeviceFilter;
@@ -80,8 +80,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 ParseActionMap(root, actionMapProperty, 0);
                 // is searching
-                if (!string.IsNullOrEmpty(m_NameFilter) 
-                    || !string.IsNullOrEmpty(m_SchemeBindingGroupFilter) 
+                if (!string.IsNullOrEmpty(m_NameFilter)
+                    || !string.IsNullOrEmpty(m_SchemeBindingGroupFilter)
                     || !string.IsNullOrEmpty(m_DeviceFilter))
                 {
                     FilterResults(root, FilterByGroup);
@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 parent.AddChild(bindingsItem);
             }
         }
-        
+
         // Return true is the child node should be removed from the parent
         private bool FilterResults(TreeViewItem item, Func<TreeViewItem, bool> filterMatch)
         {
@@ -180,7 +180,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return false;
             return item.displayName.ToLower().Contains(m_NameFilter);
         }
-     
+
         private bool FilterByGroup(TreeViewItem item)
         {
             if (string.IsNullOrEmpty(m_SchemeBindingGroupFilter))
@@ -198,7 +198,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return true;
         }
-     
+
         private bool FilterByDevice(TreeViewItem item)
         {
             if (string.IsNullOrEmpty(m_DeviceFilter))
@@ -254,7 +254,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return DragAndDropVisualMode.Move;
         }
-        
+
         private void MoveAction(DragAndDropArgs args, ActionTreeViewItem row)
         {
             var action = (ActionTreeItem)row;
