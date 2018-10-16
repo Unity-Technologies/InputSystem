@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Editor.Lists;
@@ -191,7 +192,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 width = rect.width,
             };
             if (toolbar != null)
-                w.SetDeviceFilter(toolbar.deviceFilter);
+            {
+                if (toolbar.selectedDevice != null)
+                {
+                    w.SetDeviceFilter(new[]{toolbar.selectedDevice});
+                }
+                else
+                {
+                    w.SetDeviceFilter(toolbar.allDevices);
+                }
+            }
             PopupWindow.Show(rect, w);
         }
 

@@ -171,7 +171,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(m_InputActionWindowToolbar.selectedControlSchemeName ).bindingGroup;
                 m_ActionsTree.SetSchemeBindingGroupFilter(group);
             }
-            m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.deviceFilter.Length == 1 ? m_InputActionWindowToolbar.deviceFilter[0] : null);
+            m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)

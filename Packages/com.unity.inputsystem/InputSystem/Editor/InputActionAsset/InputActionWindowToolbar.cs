@@ -43,20 +43,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public string[] deviceFilter
+        public string selectedDevice
         {
             get
             {
-                if (m_SelectedDeviceIndex < 0)
-                {
-                    return null;
-                }
-                if (m_SelectedDeviceIndex == 0)
-                {
-                    // All devices
-                    return m_DeviceIdList.Skip(1).ToArray();
-                }
-                return m_DeviceIdList.Skip(m_SelectedDeviceIndex).Take(1).ToArray();
+                return m_SelectedDeviceIndex <= 0 ? null : m_DeviceIdList[m_SelectedDeviceIndex];
+            }
+        }
+        
+        public string[] allDevices
+        {
+            get
+            {            
+                return m_DeviceIdList.Skip(1).ToArray();
             }
         }
 
@@ -221,7 +220,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(selectedControlSchemeName);
             m_SelectedControlSchemeIndex = -1;
-            m_SelectedDeviceIndex = -1;
+            m_SelectedDeviceIndex = 0;
             m_Apply();
             RebuildData();
         }
