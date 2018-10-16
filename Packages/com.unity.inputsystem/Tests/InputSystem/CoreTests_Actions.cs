@@ -71,6 +71,7 @@ partial class CoreTests
     public void TODO_Actions_CanLayerMapsOnTopOfEachOther()
     {
         // Make up a layered control scheme three levels deep.
+        /*
         var fpsControls = new InputActionMap("fpsControls");
         var moveAction = fpsControls.AddAction("move");
         var shootAction = fpsControls.AddAction("shoot");
@@ -78,7 +79,7 @@ partial class CoreTests
         var sniperControls = new InputActionMap("sniper", extend: fpsControls);
         var scopeAction = sniperControls.AddAction("scope");
         var swapScopeControls = new InputActionMap("swapScope", extend: sniperControls);
-        /*
+   
         swapScopeControls.AddBinding();
 
         // Information from 'baseMap' coming through on 'derivedMap'.

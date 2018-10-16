@@ -2828,7 +2828,7 @@ namespace UnityEngine.Experimental.Input
                                 deviceDescription: m_AvailableDevices[i].description,
                                 deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                         }
-                        catch (Exception exception)
+                        catch (Exception)
                         {
                             // Just ignore. Simply means we still can't really turn the device into something useful.
                         }

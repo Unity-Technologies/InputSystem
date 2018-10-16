@@ -153,7 +153,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private int m_SelectedInteraction;
             private ReorderableList m_InteractionListView;
 
-            public Action<SerializedProperty> onApplyCallback;
+            public Action<SerializedProperty> onApplyCallback = null;
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
