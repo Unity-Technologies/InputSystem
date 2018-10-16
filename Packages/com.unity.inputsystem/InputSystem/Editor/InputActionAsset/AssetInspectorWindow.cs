@@ -72,6 +72,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnEnable()
         {
+            minSize = new Vector2(600, 300);
+            
             if (m_AddActionIconGUI == null)
                 m_AddActionIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
             if (m_AddActionMapIconGUI == null)
