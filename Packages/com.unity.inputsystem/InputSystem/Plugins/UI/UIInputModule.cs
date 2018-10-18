@@ -265,8 +265,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.button = PointerEventData.InputButton.Left;
             eventData.pointerCurrentRaycast = PerformRaycast(eventData);
 
-            Debug.DrawLine(Camera.main.ScreenToWorldPoint(eventData.position), Camera.main.transform.position);
-
             ProcessMouseButton(deviceState.selectDelta, eventData);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData);
