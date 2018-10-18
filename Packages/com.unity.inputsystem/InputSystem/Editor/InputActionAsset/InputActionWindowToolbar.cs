@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -15,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public Action<string> OnDeviceChanged;
 
         [SerializeField]
-        private int m_SelectedControlSchemeIndex;
+        private int m_SelectedControlSchemeIndex = -1;
         [SerializeField]
         private int m_SelectedDeviceIndex;
 
@@ -34,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete Control Scheme...");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save Asset");
         private static readonly float m_MininumButtonWidth = 110f;
-
+        
         public string selectedControlSchemeName
         {
             get
@@ -63,6 +64,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return m_SearchText; }
         }
+
+        public ReadOnlyArray<InputControlScheme> controlSchemes
+        {
+            get { return m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes; }
+        } 
 
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager, Action apply)
         {

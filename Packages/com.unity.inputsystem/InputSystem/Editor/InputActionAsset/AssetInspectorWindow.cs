@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             InitializeTrees();
             OnActionMapSelection();
-            LoadPropertiesForSelection(false);
+            LoadPropertiesForSelection();
         }
 
         private void OnDisable()
@@ -141,7 +141,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionMapsTree.SelectFirstRow();
             OnActionMapSelection();
             m_ActionsTree.ExpandAll();
-            LoadPropertiesForSelection(true);
+            LoadPropertiesForSelection();
         }
 
         private void InitializeTrees()
@@ -201,14 +201,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnActionSelection()
         {
-            LoadPropertiesForSelection(true);
+            LoadPropertiesForSelection();
         }
 
-        private void LoadPropertiesForSelection(bool checkFocus)
+        private void LoadPropertiesForSelection()
         {
             m_PropertyView = null;
 
-            if ((!checkFocus || m_ActionMapsTree.HasFocus()) && m_ActionMapsTree.GetSelectedRow() != null)
+            if (m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
                 if (row != null)
@@ -217,7 +217,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
-            if ((!checkFocus || m_ActionsTree.HasFocus()) && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
+            if (m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p != null && p.hasProperties)
@@ -225,9 +225,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_PropertyView = p.GetPropertiesView(() =>
                     {
                         Apply();
-                        LoadPropertiesForSelection(false);
-                    }, m_PickerTreeViewState);
-                    m_PropertyView.toolbar = m_InputActionWindowToolbar;
+                        LoadPropertiesForSelection();
+                    }, m_PickerTreeViewState, m_InputActionWindowToolbar);
                 }
             }
         }
@@ -249,7 +248,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-            OnActionSelection();
+            
+            LoadPropertiesForSelection();
         }
 
         private void OnGUI()
@@ -411,7 +411,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ActionAssetManager.CreateWorkingCopyAsset();
                 InitializeTrees();
-                LoadPropertiesForSelection(false);
+                LoadPropertiesForSelection();
                 Repaint();
             }
         }

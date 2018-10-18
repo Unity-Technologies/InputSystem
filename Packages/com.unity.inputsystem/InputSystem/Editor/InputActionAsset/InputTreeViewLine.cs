@@ -123,9 +123,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public abstract string SerializeToString();
 
-        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
+        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
         {
-            return new InputBindingPropertiesView(elementProperty, apply, state);
+            return new InputBindingPropertiesView(elementProperty, apply, state, toolbar);
         }
 
         public abstract int GetIdForName(string argsNewName);
@@ -302,9 +302,9 @@ namespace UnityEngine.Experimental.Input.Editor
             InputActionSerializationHelpers.RenameComposite(elementProperty, newName);
         }
 
-        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
+        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
         {
-            return new CompositeGroupPropertiesView(elementProperty, apply, state);
+            return new CompositeGroupPropertiesView(elementProperty, apply, state, toolbar);
         }
     }
 
