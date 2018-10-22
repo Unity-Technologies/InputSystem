@@ -181,6 +181,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         public void CopyFrom(TrackedPointerEventData eventData)
         {
+            m_InternalData.pointerTarget = eventData.pointerEnter;
             m_InternalData.isDragging = eventData.dragging;
             m_InternalData.pressedTime = eventData.clickTime;
             m_InternalData.pressedPosition = eventData.pressPosition;

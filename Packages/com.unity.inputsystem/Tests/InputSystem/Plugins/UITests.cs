@@ -6,9 +6,11 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
@@ -311,13 +313,47 @@ public class UITests : InputTestFixture
         rightChildReceiver.Reset();
     }
 
+    private struct TestTrackedDeviceLayout : IInputStateTypeInfo
+    {
+        public const int kSizeInBytes = 29;
+
+        [InputControl(name = "position", layout = "Vector3")]
+        public Vector3 position;
+        [InputControl(name = "orientation", layout = "Quaternion", offset = 12)]
+        public Quaternion orientation;
+        [InputControl(name = "select", layout = "Button", offset = 28, sizeInBits = 8)]
+        public byte select;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(TestTrackedDeviceLayout))]
+    class TestTrackedDevice : InputDevice
+    {
+        public Vector3Control position { get; private set; }
+        public QuaternionControl orientation { get; private set; }
+        public ButtonControl select { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            position = builder.GetControl<Vector3Control>("position");
+            orientation = builder.GetControl<QuaternionControl>("orientation");
+            select = builder.GetControl<ButtonControl>("select");
+        }
+    }
 
     [UnityTest]
     [Category("Actions")]
     public IEnumerator TrackedDeviceActions_CanDriveUI()
     {
         // Create device.
-        var trackedDevice = InputSystem.AddDevice<DaydreamController>();
+        InputSystem.RegisterLayout<TestTrackedDevice>();
+        var trackedDevice = InputSystem.AddDevice<TestTrackedDevice>();
 
         var objects = CreateScene();
         var uiModule = objects.uiModule;
@@ -333,9 +369,9 @@ public class UITests : InputTestFixture
         var trackedOrientationAction = map.AddAction("orientation");
         var trackedSelectAction = map.AddAction("selection");
 
-        trackedPositionAction.AddBinding(trackedDevice.devicePosition);
-        trackedOrientationAction.AddBinding(trackedDevice.deviceRotation);
-        trackedSelectAction.AddBinding(trackedDevice.app);
+        trackedPositionAction.AddBinding(trackedDevice.position);
+        trackedOrientationAction.AddBinding(trackedDevice.orientation);
+        trackedSelectAction.AddBinding(trackedDevice.select);
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
@@ -343,94 +379,105 @@ public class UITests : InputTestFixture
         uiModule.trackedOrientation = new InputActionProperty(trackedOrientationAction);
         uiModule.trackedSelect = new InputActionProperty(trackedSelectAction);
 
-        InputSystem.QueueDeltaStateEvent<Vector3>(trackedDevice.devicePosition, Vector3.zero); //TODO TB
-        InputSystem.QueueDeltaStateEvent<Quaternion>(trackedDevice.deviceRotation, Quaternion.Euler(0.0f, -90.0f, 0.0f));
-        InputSystem.Update();
-
-        leftChildReceiver.Reset();
-        rightChildReceiver.Reset();
-
         // Enable the whole thing.
         map.Enable();
 
         // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
-        //yield return new WaitForSeconds(1000.0f);
 
-        // Move over left child.
-        InputSystem.QueueDeltaStateEvent<Quaternion>(trackedDevice.deviceRotation, Quaternion.Euler(0.0f, -30.0f, 0.0f));
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+        InputEventPtr stateEvent;
+        using (StateEvent.From(trackedDevice, out stateEvent))
+        {
+            // Reset to Defaults
+            trackedDevice.position.WriteValueInto(stateEvent, Vector3.zero);
+            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, -90.0f, 0.0f));
+            trackedDevice.select.WriteValueInto(stateEvent, (byte)0);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-        Assert.That(rightChildReceiver.events[1].type, Is.EqualTo(EventType.Exit));
-        rightChildReceiver.Reset();
+            leftChildReceiver.Reset();
+            rightChildReceiver.Reset();
 
-        // Check basic down/up
-        InputSystem.QueueDeltaStateEvent<byte>(trackedDevice.app, byte.MaxValue);
-        InputSystem.QueueDeltaStateEvent<byte>(trackedDevice.app, (byte)0);
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            // Move over left child.
+            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, -30.0f, 0.0f));
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-        Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
-        Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
+            rightChildReceiver.Reset();
 
-        // Check down and drag
-        InputSystem.QueueDeltaStateEvent<byte>(trackedDevice.app, byte.MaxValue);
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            // Check basic down/up
+            trackedDevice.select.WriteValueInto(stateEvent, byte.MaxValue);
+            InputSystem.QueueEvent(stateEvent);
+            trackedDevice.select.WriteValueInto(stateEvent, (byte)0);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+            Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
+            Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
-        // Move to new location on left child
-        InputSystem.QueueDeltaStateEvent<Quaternion>(trackedDevice.deviceRotation, Quaternion.Euler(0.0f, -10.0f, 0.0f));
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            // Check down and drag
+            trackedDevice.select.WriteValueInto(stateEvent, byte.MaxValue);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
-        // Move children
-        InputSystem.QueueDeltaStateEvent<Quaternion>(trackedDevice.deviceRotation, Quaternion.Euler(0.0f, 30.0f, 0.0f));
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            // Move to new location on left child
+            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, -10.0f, 0.0f));
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-        rightChildReceiver.Reset();
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
-        // Release button
-        InputSystem.QueueDeltaStateEvent<byte>(trackedDevice.app, (byte)0);
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            // Move children
+            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, 30.0f, 0.0f));
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Up));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.EndDrag));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Drop));
-        rightChildReceiver.Reset();
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            rightChildReceiver.Reset();
+
+            trackedDevice.select.WriteValueInto(stateEvent, (byte)0);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Up));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.EndDrag));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Drop));
+            rightChildReceiver.Reset();
+        }
     }
 
     [Test]
