@@ -216,7 +216,12 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
             popup.SetUniqueName();
-            PopupWindow.Show((Rect)position, popup);
+            // Since it's a callback, we need to manually handle ExitGUIException
+            try
+            {
+                PopupWindow.Show((Rect)position, popup);
+            }
+            catch (ExitGUIException) {}
         }
 
         private void DeleteControlScheme()
@@ -230,6 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SelectedDeviceIndex = 0;
             m_Apply();
             RebuildData();
+            OnSchemeChanged(selectedControlSchemeName);
         }
 
         private void DuplicateControlScheme(object position)

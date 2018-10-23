@@ -67,7 +67,9 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddBindingGUI;
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+        [SerializeField]
         GUIContent m_DirtyTitle;
+        [SerializeField]
         GUIContent m_Title;
 
         private void OnEnable()
