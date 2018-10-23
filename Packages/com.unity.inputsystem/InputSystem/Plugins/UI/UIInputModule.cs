@@ -253,10 +253,40 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
+        internal void ProcessTouch(ref TouchModel touchState)
+        {
+            if (!touchState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.Reset();
+
+            touchState.CopyTo(eventData);
+
+            if (touchState.selectPhase == PointerPhase.Cancelled)
+            {
+                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Cancelled) ? new RaycastResult() : PerformRaycast(eventData);
+            }
+            else
+            {
+                eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+            }
+
+            eventData.button = PointerEventData.InputButton.Left;
+
+            ProcessMouseButton(touchState.selectDelta, eventData);
+            ProcessMouseMovement(eventData);
+            ProcessMouseButtonDrag(eventData);
+
+            touchState.CopyFrom(eventData);
+
+            touchState.OnFrameFinished();
+        }
+
         internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
         {
-            //if (!deviceState.changedThisFrame)
-            //    return;
+            if (!deviceState.changedThisFrame)
+                return;
 
             TrackedPointerEventData eventData = GetOrCreateCachedTrackedPointerEvent();
             eventData.Reset();

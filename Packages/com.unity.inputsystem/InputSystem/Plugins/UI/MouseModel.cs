@@ -192,9 +192,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (m_Position != value)
                 {
-                    changedThisFrame = true;
                     deltaPosition = value - m_Position;
                     m_Position = value;
+                    changedThisFrame = true;
                 }
             }
         }

@@ -51,6 +51,14 @@ public class UIActionInputModuleEnabler : MonoBehaviour
             var trackedSelectAction = inputModule.trackedSelect.action;
             if (trackedSelectAction != null && !trackedSelectAction.enabled)
                 trackedSelectAction.Enable();
+
+            var touchPositionAction = inputModule.touchPosition.action;
+            if (touchPositionAction != null && !touchPositionAction.enabled)
+                touchPositionAction.Enable();
+
+            var touchPhaseAction = inputModule.touchPhase.action;
+            if (touchPhaseAction != null && !touchPhaseAction.enabled)
+                touchPhaseAction.Enable();
         }
     }
 
@@ -98,6 +106,14 @@ public class UIActionInputModuleEnabler : MonoBehaviour
             var trackedSelectAction = inputModule.trackedSelect.action;
             if (trackedSelectAction != null && trackedSelectAction.enabled)
                 trackedSelectAction.Disable();
+
+            var touchPositionAction = inputModule.touchPosition.action;
+            if (touchPositionAction != null && touchPositionAction.enabled)
+                touchPositionAction.Disable();
+
+            var touchPhaseAction = inputModule.touchPhase.action;
+            if (touchPhaseAction != null && touchPhaseAction.enabled)
+                touchPhaseAction.Disable();
         }
     }
 }

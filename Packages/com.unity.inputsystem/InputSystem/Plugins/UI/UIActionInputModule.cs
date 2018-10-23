@@ -9,6 +9,7 @@ using UnityEngine.EventSystems;
 namespace UnityEngine.Experimental.Input.Plugins.UI
 {
     /// <summary>
+    /// <summary>
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
     /// </summary>
     /// <remarks>
@@ -18,6 +19,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public class UIActionInputModule : UIInputModule
     {
+        public bool ForceEventsWithoutFocus
+        {
+            get { return m_ForceInputWithoutFocus; }
+            set { m_ForceInputWithoutFocus = value; }
+        }
+
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
@@ -93,6 +100,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             set { SwapProperty(ref m_TrackedSelectAction, value); }
         }
 
+        //Touch Stuff
+        public InputActionProperty touchPosition
+        {
+            get { return m_TouchPositionAction; }
+            set { SwapProperty(ref m_TouchPositionAction, value); }
+        }
+
+        public InputActionProperty touchPhase
+        {
+            get { return m_TouchPhaseAction; }
+            set { SwapProperty(ref m_TouchPhaseAction, value); }
+        }
+
         protected override void Awake()
         {
             base.Awake();
@@ -101,6 +121,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             mouseState = new MouseModel(0);
             joystickState.Reset();
             trackedDeviceState = new TrackedDeviceModel(1);
+            touchState = new TouchModel(2);
         }
 
         protected override void OnDestroy()
@@ -126,6 +147,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private bool ShouldIgnoreEventsOnNoFocus()
         {
+            if (m_ForceInputWithoutFocus)
+                return true;
+
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.Windows:
@@ -194,6 +218,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 trackedDeviceState.select = context.ReadValue<float>() != 0.0f;
             }
+            else if (action == m_TouchPositionAction)
+            {
+                touchState.position = context.ReadValue<Vector2>();
+            }
+            else if (action == m_TouchPhaseAction)
+            {
+                touchState.selectPhase = context.ReadValue<PointerPhase>();
+            }
         }
 
         public override void Process()
@@ -209,11 +241,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
                 trackedDeviceState.OnFrameFinished();
+                touchState.OnFrameFinished();
             }
-
-            ProcessJoystick(ref joystickState);
-            ProcessMouse(ref mouseState);
-            ProcessTrackedDevice(ref trackedDeviceState);
+            else
+            {
+                ProcessJoystick(ref joystickState);
+                ProcessMouse(ref mouseState);
+                ProcessTrackedDevice(ref trackedDeviceState);
+                ProcessTouch(ref touchState);
+            }
         }
 
         private void HookActions()
@@ -265,6 +301,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var trackedSelectAction = m_TrackedSelectAction.action;
             if (trackedSelectAction != null)
                 trackedSelectAction.performed += m_ActionCallback;
+
+            var touchPositionAction = m_TouchPositionAction.action;
+            if (touchPositionAction != null)
+                touchPositionAction.performed += m_ActionCallback;
+
+            var touchPhaseAction = m_TouchPhaseAction.action;
+            if (touchPhaseAction != null)
+                touchPhaseAction.performed += m_ActionCallback;
         }
 
         private void UnhookActions()
@@ -313,6 +357,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var trackedSelectAction = m_TrackedSelectAction.action;
             if (trackedSelectAction != null)
                 trackedSelectAction.performed -= m_ActionCallback;
+
+            var touchPositionAction = m_TouchPositionAction.action;
+            if (touchPositionAction != null)
+                touchPositionAction.performed -= m_ActionCallback;
+
+            var touchPhaseAction = m_TouchPhaseAction.action;
+            if (touchPhaseAction != null)
+                touchPhaseAction.performed -= m_ActionCallback;
         }
 
         private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
@@ -331,6 +383,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     oldProperty.action.performed += m_ActionCallback;
             }
         }
+
+        [Tooltip("Enables UI events regardless of focus state.")]
+        [SerializeField]
+        private bool m_ForceInputWithoutFocus;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
@@ -381,6 +437,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [SerializeField]
         private InputActionProperty m_TrackedSelectAction;
 
+        [SerializeField]
+        private InputActionProperty m_TouchPositionAction;
+
+        [SerializeField]
+        private InputActionProperty m_TouchPhaseAction;
+
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
@@ -388,5 +450,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
         [NonSerialized] private TrackedDeviceModel trackedDeviceState;
+        [NonSerialized] private TouchModel touchState;
     }
 }
