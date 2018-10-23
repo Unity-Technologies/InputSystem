@@ -111,9 +111,11 @@ namespace UnityEngine.Experimental.Input.Editor
             if (selectedSchema == null)
                 selectedSchema = "No Control Scheme";
 
-            if (GUILayout.Button(selectedSchema, EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth)))
+            var buttonGUI = new GUIContent(selectedSchema);
+            var buttonRect = GUILayoutUtility.GetRect(buttonGUI, EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth));
+            if (GUI.Button(buttonRect, buttonGUI, EditorStyles.toolbarPopup))
             {
-                var buttonRect = GUILayoutUtility.GetLastRect();
+                buttonRect = EditorGUIUtility.GUIToScreenRect(buttonRect);
                 var menu = new GenericMenu();
                 menu.AddItem(m_NoControlScheme, m_SelectedControlSchemeIndex == -1, OnControlSchemeSelected, -1);
                 for (int i = 0; i < m_AllControlSchemeNames.Length; i++)
