@@ -9,7 +9,6 @@ using UnityEngine.EventSystems;
 namespace UnityEngine.Experimental.Input.Plugins.UI
 {
     /// <summary>
-    /// <summary>
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
     /// </summary>
     /// <remarks>
@@ -19,6 +18,107 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public class UIActionInputModule : UIInputModule
     {
+        private static void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
+        {
+            if (oldProperty != null)
+            {
+                if (actionsHooked)
+                    oldProperty.action.performed -= actionCallback;
+            }
+
+            oldProperty = newProperty;
+
+            if (oldProperty != null)
+            {
+                if (actionsHooked)
+                    oldProperty.action.performed += actionCallback;
+            }
+        }
+
+        struct TouchResponder
+        {
+            public TouchModel state;
+
+            public InputActionProperty position
+            {
+                get { return m_Position; }
+                set { SwapProperty(ref m_Position, value, m_ActionsHooked, OnAction); }
+            }
+
+            public InputActionProperty phase
+            {
+                get { return m_Phase; }
+                set { SwapProperty(ref m_Phase, value, m_ActionsHooked, OnAction); }
+            }
+
+            private bool m_ActionsHooked;
+            [SerializeField]
+            private InputActionProperty m_Position;
+            [SerializeField]
+            private InputActionProperty m_Phase;
+
+            void HookActions()
+            {
+                if (!m_ActionsHooked)
+                {
+                    m_ActionsHooked = true;
+
+                    var positionAction = m_Position.action;
+                    if (positionAction != null)
+                        positionAction.performed += OnAction;
+
+                    var phaseAction = m_Phase.action;
+                    if (phaseAction != null)
+                        phaseAction.performed += OnAction;
+                }
+            }
+
+            void UnhookActions()
+            {
+                if (m_ActionsHooked)
+                {
+                    if (!m_ActionsHooked)
+                    {
+                        m_ActionsHooked = false;
+
+                        var positionAction = m_Position.action;
+                        if (positionAction != null)
+                            positionAction.performed -= OnAction;
+
+                        var phaseAction = m_Phase.action;
+                        if (phaseAction != null)
+                            phaseAction.performed -= OnAction;
+                    }
+                }
+            }
+
+            private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
+            {
+                if (oldProperty != null)
+                {
+                    if (m_ActionsHooked)
+                        oldProperty.action.performed -= OnAction;
+                }
+
+                oldProperty = newProperty;
+
+                if (oldProperty != null)
+                {
+                    if (m_ActionsHooked)
+                        oldProperty.action.performed += OnAction;
+                }
+            }
+
+            public void OnAction(InputAction.CallbackContext context)
+            {
+                var action = context.action;
+                if (action == m_Position)
+                    state.position = context.ReadValue<Vector2>();
+                else if (action == m_Phase)
+                    state.selectPhase = context.ReadValue<PointerPhase>();
+            }
+        }
+
         public bool ForceEventsWithoutFocus
         {
             get { return m_ForceInputWithoutFocus; }
@@ -42,86 +142,86 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty move
         {
             get { return m_MoveAction; }
-            set { SwapProperty(ref m_MoveAction, value); }
+            set { SwapProperty(ref m_MoveAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty scrollWheel
         {
             get { return m_ScrollWheelAction; }
-            set { SwapProperty(ref m_ScrollWheelAction, value); }
+            set { SwapProperty(ref m_ScrollWheelAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty leftClick
         {
             get { return m_LeftClickAction; }
-            set { SwapProperty(ref m_LeftClickAction, value); }
+            set { SwapProperty(ref m_LeftClickAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty middleClick
         {
             get { return m_MiddleClickAction; }
-            set { SwapProperty(ref m_MiddleClickAction, value); }
+            set { SwapProperty(ref m_MiddleClickAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty rightClick
         {
             get { return m_RightClickAction; }
-            set { SwapProperty(ref m_RightClickAction, value); }
+            set { SwapProperty(ref m_RightClickAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty submit
         {
             get { return m_SubmitAction; }
-            set { SwapProperty(ref m_SubmitAction, value); }
+            set { SwapProperty(ref m_SubmitAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty cancel
         {
             get { return m_CancelAction; }
-            set { SwapProperty(ref m_CancelAction, value); }
+            set { SwapProperty(ref m_CancelAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         //XR Stuff
         public InputActionProperty trackedPosition
         {
             get { return m_TrackedPositionAction; }
-            set { SwapProperty(ref m_TrackedPositionAction, value); }
+            set { SwapProperty(ref m_TrackedPositionAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty trackedOrientation
         {
             get { return m_TrackedOrientationAction; }
-            set { SwapProperty(ref m_TrackedOrientationAction, value); }
+            set { SwapProperty(ref m_TrackedOrientationAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty trackedSelect
         {
             get { return m_TrackedSelectAction; }
-            set { SwapProperty(ref m_TrackedSelectAction, value); }
+            set { SwapProperty(ref m_TrackedSelectAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         //Touch Stuff
         public InputActionProperty touchPosition
         {
             get { return m_TouchPositionAction; }
-            set { SwapProperty(ref m_TouchPositionAction, value); }
+            set { SwapProperty(ref m_TouchPositionAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         public InputActionProperty touchPhase
         {
             get { return m_TouchPhaseAction; }
-            set { SwapProperty(ref m_TouchPhaseAction, value); }
+            set { SwapProperty(ref m_TouchPhaseAction, value, m_ActionsHooked, m_ActionCallback); }
         }
 
         protected override void Awake()
         {
             base.Awake();
 
-            /// TODO TB: We don't have proper mouse pointer Ids atm, use 0 for single mouse state.
-            mouseState = new MouseModel(0);
+            int rollingPointerIndex = 0;
+            mouseState = new MouseModel(rollingPointerIndex++);
             joystickState.Reset();
-            trackedDeviceState = new TrackedDeviceModel(1);
-            touchState = new TouchModel(2);
+            trackedDeviceState = new TrackedDeviceModel(rollingPointerIndex++);
+            touchState = new TouchModel(rollingPointerIndex++);
         }
 
         protected override void OnDestroy()
