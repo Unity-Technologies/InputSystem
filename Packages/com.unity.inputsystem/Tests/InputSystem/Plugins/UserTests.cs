@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -122,7 +123,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanMonitorForChanges()
+    public void Users_CanBeMonitoredForChanges()
     {
         InputUser.Add(new TestUser()); // Noise.
         InputUser.Add(new TestUser()); // Noise.
@@ -205,6 +206,9 @@ public class UserTests : InputTestFixture
 
         Assert.That(receivedUser, Is.SameAs(user));
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.Removed));
+
+        ////TODO: actions
+        ////TODO: activate, passivate
     }
 
     [Test]
@@ -369,17 +373,80 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    [Ignore("TODO")]
-    public void TODO_Users_CanAssignActionsToUsers()
+    public void Users_CanAssignActionsToUsers()
     {
+        var action = new InputAction();
+
         var user = new TestUser();
         InputUser.Add(user);
 
-        var action = new InputAction();
+        Assert.That(user.GetInputActions(), Is.Empty);
 
         user.GetInputActions().Push(action);
 
-        Assert.Fail();
+        Assert.That(user.GetInputActions(), Is.EquivalentTo(new[] { action }));
+
+        user.GetInputActions().Clear();
+
+        Assert.That(user.GetInputActions(), Is.Empty);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanAssignActionMapsToUsers()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        var user = new TestUser();
+        InputUser.Add(user);
+
+        user.SetInputActions(map);
+
+        Assert.That(user.GetInputActions(), Is.EquivalentTo(new[] { action1, action2 }));
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanActivateAndPassivateInput()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var actionWasTriggered = false;
+        action.performed += _ => actionWasTriggered = true;
+
+        var user = new TestUser();
+        InputUser.Add(user);
+
+        user.GetInputActions().Push(action);
+
+        // Make sure user is passive by default.
+        Assert.That(user.IsInputActive(), Is.False);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.124f });
+        InputSystem.Update();
+
+        Assert.That(actionWasTriggered, Is.False);
+
+        // Activate user input.
+        user.ActivateInput();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
+        InputSystem.Update();
+
+        Assert.That(actionWasTriggered, Is.True);
+        actionWasTriggered = false;
+
+        // Passivate user input again.
+        user.PassivateInput();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
+        InputSystem.Update();
+
+        Assert.That(actionWasTriggered, Is.False);
     }
 
     [Test]

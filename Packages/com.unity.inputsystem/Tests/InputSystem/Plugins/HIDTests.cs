@@ -799,6 +799,17 @@ public class HIDTests : InputTestFixture
         Assert.Fail();
     }
 
+    // It should be possible to reuse parts of the HID layout builder for building custom HID-based layouts
+    // without having to individually hardwire each element. Or at least it should be possible to leverage
+    // the descriptor processing part of the HID layout builder to help building layouts.
+    [Test]
+    [Category("Layouts")]
+    [Ignore("TODO")]
+    public void TODO_Layouts_CanBuildCustomLayoutsBasedOnTheHIDLayoutBuilder()
+    {
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Utilities")]
     public void Utilities_CanRecognizeVendorDefinedUsages()

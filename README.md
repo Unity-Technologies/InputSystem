@@ -24,11 +24,11 @@ When you open the input debugger now (`Window >> Input Debugger`), you should se
 The planned development timeline for the new input system is as follows:
 
 - *Early November 2018*: Feature cut-off
-- *November 2018 - February 2019*: Stabilization & documentation
+- *November 2018 - March 2019*: Stabilization & documentation
 - *January - March 2019*: Official beta
 - *March 2019*: 1.0-preview release together with Unity 2019.1
 - *Unity 2019.2*: "Verified" package status (i.e. full part of Unity proper)
 
-Note that the existing input system in Unity (i.e. `UnityEngine.Input`) will be unaffected for now. The new input system is developed in parallel and presents a choice to the user to employ one or the other. Once the new input system has become both fully featured and fully stable, the old input system will be put on a path towards deprecation.
+Note that the existing input system in Unity (i.e. `UnityEngine.Input`) will be unaffected for now. The new input system is developed in parallel and presents a choice to the user to employ one or the other. Once the new input system has become both fully featured and fully stable, the old input system will likely be put on a path towards deprecation.
 
 >Disclaimer: This is tentative. The usual disclaimer applies about these plans being subject to change according to whatever natural and unnatural disasters are on the menu of the day.

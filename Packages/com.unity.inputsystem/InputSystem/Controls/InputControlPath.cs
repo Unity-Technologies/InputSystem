@@ -369,7 +369,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (control == null)
                 throw new ArgumentNullException("control");
-            if (path == null)
+            if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException("path");
 
             if (indexInPath == 0 && path[0] == '/')

@@ -85,7 +85,11 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// <summary>
     /// One-time initialization for a player controller.
     /// </summary>
-    public void Initialize(int playerIndex)
+    /// <remarks>
+    /// Once spawned, we are reusing player instances over and over. The setup we perform in here,
+    /// however, is done only once.
+    /// </remarks>
+    public void PerformOneTimeInitialization(int playerIndex)
     {
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
@@ -106,6 +110,34 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     }
 
     /// <summary>
+    /// Called when the player has entered a single-player game.
+    /// </summary>
+    public void StartSinglePlayerGame()
+    {
+        // We still select one control scheme and make it the active one so that we can display UI hints
+        // for it. When the player uses bindings not in the scheme, the control scheme will automatically
+        // switch.
+        var defaultScheme = InferDefaultControlSchemeForSinglePlayer();
+
+        ////TODO: make sure we enable all bindings instead of just the ones from the default control scheme
+        ////TODO: handle failure
+        // Switch to default control scheme and give the player whatever controls
+        // it needs.
+        this.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
+
+        this.SetInputActions(controls.gameplay);
+
+        this.ActivateInput();
+    }
+
+    /// <summary>
+    /// Called when the player has joined a multi-player game.
+    /// </summary>
+    public void StartMultiPlayerGame()
+    {
+    }
+
+    /// <summary>
     /// Return the control scheme that makes a good default.
     /// </summary>
     /// <returns>Control scheme from <see cref="controls"/> to use by default.</returns>
@@ -118,7 +150,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// So, based on what platform we are on and what devices we have available locally, we select
     /// one of the control schemes to start out with.
     /// </remarks>
-    public InputControlScheme InferDefaultControlSchemeForSinglePlayer()
+    private InputControlScheme InferDefaultControlSchemeForSinglePlayer()
     {
         ////TODO: check if we have VR devices; if so, use VR control scheme by default
 

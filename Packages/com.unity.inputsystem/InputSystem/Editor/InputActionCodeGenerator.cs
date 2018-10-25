@@ -226,6 +226,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Enable/disable methods.
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
                 writer.WriteLine("public void Disable() { Get().Disable(); }");
+                writer.WriteLine("public bool enabled { get { return Get().enabled; } }");
 
                 // Clone method.
                 writer.WriteLine("public InputActionMap Clone() { return Get().Clone(); }");
