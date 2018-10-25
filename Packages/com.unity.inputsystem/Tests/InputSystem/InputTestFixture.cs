@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
+using UnityEngine.Animations;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
@@ -145,61 +146,90 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public void Trigger<TValue>(InputAction action, InputControl<TValue> control, TValue value)
+            where TValue : struct
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Perform the input action without having to know what it is bound to.
+        /// </summary>
+        /// <param name="action">An input action that is currently enabled and has controls it is bound to.</param>
+        /// <remarks>
+        /// Blindly triggering an action requires making a few assumptions. Actions are not built to be able to trigger
+        /// without any input. This means that this method has to generate input on a control that the action is bound to.
+        ///
+        /// Note that this method has no understanding of the interactions that may be present on the action and thus
+        /// does not know how they may affect the triggering of the action.
+        /// </remarks>
+        public void Trigger(InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            if (!action.enabled)
+                throw new ArgumentException(
+                    string.Format("Action '{0}' must be enabled in order to be able to trigger it", action), "action");
+
+            var controls = action.controls;
+            if (controls.Count == 0)
+                throw new ArgumentException(
+                    string.Format("Action '{0}' must be bound to controls in order to be able to trigger it", action), "action");
+
+            // See if we have a button we can trigger.
+            for (var i = 0; i < controls.Count; ++i)
+            {
+                var button = controls[i] as ButtonControl;
+                if (button == null)
+                    continue;
+
+                // We do, so flip its state and we're done.
+                var device = button.device;
+                InputEventPtr inputEvent;
+                using (StateEvent.From(device, out inputEvent))
+                {
+                    button.WriteValueInto(inputEvent, button.isPressed ? 0 : 1);
+                    InputSystem.QueueEvent(inputEvent);
+                    InputSystem.Update();
+                }
+
+                return;
+            }
+
+            // See if we have an axis we can slide a bit.
+            for (var i = 0; i < controls.Count; ++i)
+            {
+                var axis = controls[i] as AxisControl;
+                if (axis == null)
+                    continue;
+
+                // We do, so nudge its value a bit.
+                var device = axis.device;
+                InputEventPtr inputEvent;
+                using (StateEvent.From(device, out inputEvent))
+                {
+                    var currentValue = axis.ReadValue();
+                    var newValue = currentValue + 0.01f;
+
+                    if (axis.clamp && newValue > axis.clampMax)
+                        newValue = axis.clampMin;
+
+                    axis.WriteValueInto(inputEvent, newValue);
+                    InputSystem.QueueEvent(inputEvent);
+                    InputSystem.Update();
+                }
+
+                return;
+            }
+
+            ////TODO: support a wider range of controls
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// The input runtime used during testing.
         /// </summary>
         public InputTestRuntime testRuntime { get; private set; }
-
-        private Vector3Comparer m_Vector3Comparer;
-        public Vector3Comparer vector3Comparer
-        {
-            get
-            {
-                if (m_Vector3Comparer == null)
-                    m_Vector3Comparer = new Vector3Comparer();
-                return m_Vector3Comparer;
-            }
-        }
-
-        private Vector2Comparer m_Vector2Comparer;
-        public Vector2Comparer vector2Comparer
-        {
-            get
-            {
-                if (m_Vector2Comparer == null)
-                    m_Vector2Comparer = new Vector2Comparer();
-                return m_Vector2Comparer;
-            }
-        }
-
-        public class Vector3Comparer : IComparer<Vector3>
-        {
-            private float m_Epsilon;
-
-            public Vector3Comparer(float epsilon = 0.0001f)
-            {
-                m_Epsilon = epsilon;
-            }
-
-            public int Compare(Vector3 a, Vector3 b)
-            {
-                return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
-            }
-        }
-
-        public class Vector2Comparer : IComparer<Vector2>
-        {
-            private float m_Epsilon;
-
-            public Vector2Comparer(float epsilon = 0.0001f)
-            {
-                m_Epsilon = epsilon;
-            }
-
-            public int Compare(Vector2 a, Vector2 b)
-            {
-                return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon ? 0 : 1;
-            }
-        }
     }
 }

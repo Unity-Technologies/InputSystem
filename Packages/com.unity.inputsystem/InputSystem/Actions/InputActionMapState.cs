@@ -59,11 +59,6 @@ namespace UnityEngine.Experimental.Input
         public InputControl[] controls;
 
         /// <summary>
-        /// List of all unique devices shared by the <see cref="controls">resolved controls</see>.
-        /// </summary>
-        public InlinedArray<InputDevice> devices;
-
-        /// <summary>
         /// Array of instantiated interaction objects.
         /// </summary>
         /// <remarks>
@@ -166,7 +161,6 @@ namespace UnityEngine.Experimental.Input
             composites = resolver.composites;
             controls = resolver.controls;
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
-            devices = resolver.devices;
         }
 
         public void Destroy()

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Haptics;
@@ -142,7 +141,7 @@ namespace UnityEngine.Experimental.Input
     [InputControlLayout(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
-        ////REVEIEW: add PS4 and Xbox style alternate accessors?
+        ////REVIEW: add PS4 and Xbox style alternate accessors?
         public ButtonControl buttonWest { get; private set; }
         public ButtonControl buttonNorth { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
@@ -164,8 +163,6 @@ namespace UnityEngine.Experimental.Input
 
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
-
-        ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
         ////TODO: noise filtering
         /// <summary>

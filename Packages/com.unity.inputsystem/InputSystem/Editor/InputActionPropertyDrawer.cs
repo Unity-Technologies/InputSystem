@@ -3,6 +3,7 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
+    /*
     /// <summary>
     /// A custom property drawer for <see cref="InputActionProperty"/>.
     /// </summary>
@@ -18,5 +19,6 @@ namespace UnityEngine.Experimental.Input.Editor
             ////TODO
         }
     }
+    */
 }
 #endif // UNITY_EDITOR

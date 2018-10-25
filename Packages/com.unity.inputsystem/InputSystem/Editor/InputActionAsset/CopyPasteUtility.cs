@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -11,7 +12,10 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private const string k_InputAssetMarker = "INPUTASSET ";
 
-        private InputActionListTreeView m_TreeView;
+        private InspectorTree m_Tree;
+        private ActionMapsTree m_ActionMapsTree;
+        private ActionsTree m_ActionsTree;
+
         private SerializedObject m_SerializedObject;
         private Action m_Apply;
 
@@ -19,19 +23,25 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
         private readonly GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
         private readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        private readonly GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
+        private readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
+        private readonly GUIContent m_RenameGUI = EditorGUIUtility.TrTextContent("Rename");
 
-        public CopyPasteUtility(Action apply, InputActionListTreeView tree, SerializedObject serializedObject)
+        public CopyPasteUtility(Action apply, ActionMapsTree actionMapsTree, ActionsTree actionsTree, SerializedObject serializedObject)
         {
             m_Apply = apply;
-            m_TreeView = tree;
+            m_ActionMapsTree = actionMapsTree;
+            m_ActionsTree = actionsTree;
             m_SerializedObject = serializedObject;
         }
 
-        public CopyPasteUtility(InputActionListTreeView treeView)
+        public CopyPasteUtility(InspectorTree tree)
         {
-            m_TreeView = treeView;
-            m_Apply = () => { m_TreeView.Reload();};
+            m_Tree = tree;
+            m_Apply = () =>
+            {
+                if (m_Tree != null)
+                    m_Tree.Reload();
+            };
         }
 
         private void HandleCopyEvent()
@@ -43,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
-            var selectedRows = m_TreeView.GetSelectedRows();
+            var selectedRows = GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
 
             // Don't allow to copy different type. It will hard to handle pasting
@@ -60,6 +70,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 copyList.Append(row.GetType().Name + "\n");
                 copyList.Append(row.SerializeToString());
                 copyList.Append(k_InputAssetMarker);
+
+                if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
+                {
+                    CopyChildrenItems(m_ActionsTree.GetRootElement(), copyList);
+                }
                 if (row.hasChildren)
                 {
                     CopyChildrenItems(row, copyList);
@@ -68,7 +83,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
         }
 
-        private static void CopyChildrenItems(ActionTreeViewItem parent, StringBuilder result)
+        private static void CopyChildrenItems(TreeViewItem parent, StringBuilder result)
         {
             foreach (var treeViewItem in parent.children)
             {
@@ -85,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private bool CanCopySelection()
         {
-            var selectedRows = m_TreeView.GetSelectedRows();
+            var selectedRows = GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
             if (rowTypes.Count != 1)
                 return false;
@@ -101,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!copyBufferString.StartsWith(k_InputAssetMarker))
                 return;
             SerializedProperty currentActionMapProperty = null;
-            var selectedActionMap = m_TreeView.GetSelectedActionMap();
+            var selectedActionMap = GetSelectedActionMap();
             if (selectedActionMap != null)
                 currentActionMapProperty = selectedActionMap.elementProperty;
             for (var i = 0; i < elements.Length; i++)
@@ -160,7 +175,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     || IsRowOfType<CompositeGroupTreeItem>(ref row)
                     || IsRowOfType<CompositeTreeItem>(ref row))
                 {
-                    var selectedRow = m_TreeView.GetSelectedAction();
+                    var selectedRow = GetSelectedAction();
                     if (selectedRow == null)
                     {
                         EditorApplication.Beep();
@@ -237,7 +252,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DeleteSelectedRows()
         {
-            var rows = m_TreeView.GetSelectedRows().ToArray();
+            var rows = GetSelectedRows().ToArray();
             var rowTypes = rows.Select(r => r.GetType()).Distinct().ToList();
             // Don't allow to delete different types at once because it's hard to handle.
             if (rowTypes.Count() > 1)
@@ -269,7 +284,15 @@ namespace UnityEngine.Experimental.Input.Editor
             foreach (var actionRow in FindRowsToDeleteOfType<ActionTreeItem>(rows))
             {
                 var action = actionRow;
-                var actionMap = actionRow.parent as ActionMapTreeItem;
+                ActionMapTreeItem actionMap;
+                if (m_Tree != null)
+                {
+                    actionMap = actionRow.parent as ActionMapTreeItem;
+                }
+                else
+                {
+                    actionMap = m_ActionMapsTree.GetSelectedActionMap();
+                }
 
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(actionMap.bindingsProperty, action.actionName);
                 for (var i = bindingsCount - 1; i >= 0; i--)
@@ -287,7 +310,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
 
-            m_TreeView.SetSelection(new List<int>());
+            SetEmptySelection();
             m_Apply();
         }
 
@@ -311,15 +334,85 @@ namespace UnityEngine.Experimental.Input.Editor
                 menu.AddDisabledItem(m_CopyGUI, false);
             }
             menu.AddItem(m_PasteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
-            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
-            if (canCopySelection)
+            menu.AddSeparator("");
+            if (CanRenameCurrentSelection())
             {
-                menu.AddItem(m_Duplicate, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+                menu.AddItem(m_RenameGUI, false, BeginRename);
             }
             else
             {
-                menu.AddDisabledItem(m_Duplicate, false);
+                menu.AddDisabledItem(new GUIContent(m_RenameGUI));
             }
+            if (canCopySelection)
+            {
+                menu.AddItem(m_DuplicateGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+            }
+            else
+            {
+                menu.AddDisabledItem(m_DuplicateGUI, false);
+            }
+            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
+        }
+
+        IEnumerable<ActionTreeViewItem> GetSelectedRows()
+        {
+            if (m_Tree != null && m_Tree.HasFocus())
+                return m_Tree.GetSelectedRows();
+            if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
+                return m_ActionMapsTree.GetSelectedRows();
+            if (m_ActionsTree != null && m_ActionsTree.HasFocus())
+                return m_ActionsTree.GetSelectedRows();
+            return null;
+        }
+
+        ActionTreeItem GetSelectedAction()
+        {
+            if (m_Tree != null)
+                return m_Tree.GetSelectedAction();
+            if (m_ActionsTree != null)
+                return m_ActionsTree.GetSelectedAction();
+            return null;
+        }
+
+        ActionMapTreeItem GetSelectedActionMap()
+        {
+            if (m_Tree != null)
+                return m_Tree.GetSelectedActionMap();
+            if (m_ActionMapsTree != null)
+                return m_ActionMapsTree.GetSelectedActionMap();
+            return null;
+        }
+
+        bool CanRenameCurrentSelection()
+        {
+            if (m_Tree != null && m_Tree.HasFocus())
+                return m_Tree.CanRenameCurrentSelection();
+            if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
+                return m_ActionMapsTree.CanRenameCurrentSelection();
+            if (m_ActionsTree != null && m_ActionsTree.HasFocus())
+                return m_ActionsTree.CanRenameCurrentSelection();
+            return false;
+        }
+
+        void SetEmptySelection()
+        {
+            if (m_Tree != null && m_Tree.HasFocus())
+                m_Tree.SetSelection(new int[0]);
+            if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
+                m_ActionMapsTree.SetSelection(new int[0]);
+            if (m_ActionsTree != null && m_ActionsTree.HasFocus())
+                m_ActionsTree.SetSelection(new int[0]);
+            ;
+        }
+
+        void BeginRename()
+        {
+            if (m_Tree != null && m_Tree.HasFocus())
+                m_Tree.BeginRename(m_Tree.GetSelectedRow());
+            if (m_ActionMapsTree != null && m_ActionMapsTree.HasFocus())
+                m_ActionMapsTree.BeginRename(m_ActionMapsTree.GetSelectedRow());
+            if (m_ActionsTree != null && m_ActionsTree.HasFocus())
+                m_ActionsTree.BeginRename(m_ActionsTree.GetSelectedRow());
         }
     }
 }

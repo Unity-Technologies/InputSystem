@@ -9,6 +9,8 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: show input users
+
 ////TODO: append " (Disabled) to disabled devices and grey them out
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
@@ -324,6 +326,16 @@ namespace UnityEngine.Experimental.Input.Editor
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
+                var disconnectedDevices = InputSystem.disconnectedDevices;
+                if (disconnectedDevices.Count > 0)
+                {
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var disconnectedDevicesNode = AddChild(parent, string.Format("Disconnected ({0})", disconnectedDevices.Count), ref id);
+                    foreach (var device in disconnectedDevices)
+                        AddChild(disconnectedDevicesNode, device.ToString(), ref id);
+                    disconnectedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
+
                 // Layouts.
                 layoutsItem = AddChild(root, "Layouts", ref id);
                 AddControlLayouts(layoutsItem, ref id);
@@ -366,7 +378,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            ////TODO: split remote and local layouts
             private void AddControlLayouts(TreeViewItem parent, ref int id)
             {
                 // Split root into three different groups:
@@ -375,8 +386,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 // 3) Device layouts that match specific products
 
                 var controls = AddChild(parent, "Controls", ref id);
-                var devices = AddChild(parent, "Devices", ref id);
-                var products = AddChild(parent, "Products", ref id);
+                var devices = AddChild(parent, "Abstract Devices", ref id);
+                var products = AddChild(parent, "Specific Devices", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
                     AddControlLayoutItem(layout, controls, ref id);

@@ -96,6 +96,99 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// Find an <see cref="InputAction">action</see> by its name in of of the <see cref="InputActionMap">
+        /// action maps</see> in the asset.
+        /// </summary>
+        /// <param name="name">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
+        /// a simple name. In the former case, the name is split at the '/' slash and the first part is used to find
+        /// a map with that name and the second part is used to find an action with that name inside the map. In the
+        /// latter case, all maps are searched in order and the first action that has the given name in any of the maps
+        /// is returned. Note that name comparisons are case-insensitive.</param>
+        /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty.</exception>
+        /// <remarks>
+        /// Does not allocate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+        ///
+        /// var map1 = new InputActionMap("map1");
+        /// var map2 = new InputActionMap("map2");
+        ///
+        /// asset.AddActionMap(map1);
+        /// asset.AddActionMap(map2);
+        ///
+        /// var action1 = map1.AddAction("action1");
+        /// var action2 = map1.AddAction("action2");
+        /// var action3 = map2.AddAction("action3");
+        ///
+        /// // Search all maps in the asset for any action that has the given name.
+        /// asset.FindAction("action1") // Returns action1.
+        /// asset.FindAction("action2") // Returns action2
+        /// asset.FindAction("action3") // Returns action3.
+        ///
+        /// // Search for a specific action in a specific map.
+        /// asset.FindAction("map1/action1") // Returns action1.
+        /// asset.FindAction("map2/action2") // Returns action2.
+        /// asset.FindAction("map3/action3") // Returns action3.
+        /// </code>
+        /// </example>
+        public InputAction FindAction(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            if (m_ActionMaps == null)
+                return null;
+
+            // Check if we have a "map/action" path.
+            var indexOfSlash = name.IndexOf('/');
+            if (indexOfSlash == -1)
+            {
+                // No slash so it's just a simple action name.
+                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                {
+                    var actions = m_ActionMaps[i].m_Actions;
+                    for (var n = 0; n < actions.Length; ++n)
+                    {
+                        var action = actions[n];
+                        if (string.Compare(action.name, name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                            return action;
+                    }
+                }
+            }
+            else
+            {
+                // Have a path. First search for the map, then for the action.
+                var mapName = new Substring(name, 0, indexOfSlash);
+                var actionName = new Substring(name, indexOfSlash + 1);
+
+                if (mapName.isEmpty || actionName.isEmpty)
+                    throw new ArgumentException("Malformed action path: " + name, "name");
+
+                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                {
+                    var map = m_ActionMaps[i];
+                    if (Substring.Compare(map.name, mapName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                        continue;
+
+                    var actions = map.m_Actions;
+                    for (var n = 0; n < actions.Length; ++n)
+                    {
+                        var action = actions[n];
+                        if (Substring.Compare(action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                            return action;
+                    }
+
+                    break;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Add an action map to the asset.
         /// </summary>
         /// <param name="map">A named action map.</param>
@@ -236,6 +329,14 @@ namespace UnityEngine.Experimental.Input
                 return null;
 
             return m_ControlSchemes[index];
+        }
+
+        public void RemoveControlScheme(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            ArrayHelpers.EraseAt(ref m_ControlSchemes, GetControlSchemeIndex(name));
         }
 
         public InputControlScheme GetControlScheme(string name)

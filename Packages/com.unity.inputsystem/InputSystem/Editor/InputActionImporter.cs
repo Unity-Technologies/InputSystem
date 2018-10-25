@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.Editor
     [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 3;
+        private const int kVersion = 4;
 
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Refresh editors.
-            ActionInspectorWindow.RefreshAllAfterImport();
+            AssetInspectorWindow.RefreshAllOnAssetReimport();
         }
 
         ////REVIEW: actually pre-populate with some stuff?

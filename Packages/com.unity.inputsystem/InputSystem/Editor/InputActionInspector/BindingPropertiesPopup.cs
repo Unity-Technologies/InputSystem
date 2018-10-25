@@ -10,18 +10,18 @@ namespace UnityEngine.Experimental.Input.Editor
         InputBindingPropertiesView m_BindingPropertyView;
         Action OnChange;
 
-        public static void Show(Rect btnRect, ActionTreeViewItem treeViewItem, Action reload)
+        public static void Show(Rect btnRect, ActionTreeViewItem treeViewLine, Action reload)
         {
             var w = CreateInstance<BindingPropertiesPopup>();
             w.OnChange = reload;
-            w.SetProperty(treeViewItem);
+            w.SetProperty(treeViewLine);
             w.ShowPopup();
             w.ShowAsDropDown(btnRect, new Vector2(250, 350));
         }
 
-        void SetProperty(ActionTreeViewItem treeViewItem)
+        void SetProperty(ActionTreeViewItem treeViewLine)
         {
-            m_BindingPropertyView = treeViewItem.GetPropertiesView(OnChange, new TreeViewState());
+            m_BindingPropertyView = treeViewLine.GetPropertiesView(OnChange, new TreeViewState());
         }
 
         void OnGUI()

@@ -262,6 +262,31 @@ namespace UnityEngine.Experimental.Input
             return new ControlSchemeSyntax(asset, index);
         }
 
+        public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
+        {
+            return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Finish();
+        }
+
+        public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
+        {
+            return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Finish();
+        }
+
+        public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
+        {
+            return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Finish();
+        }
+
+        public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
+        {
+            return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Finish();
+        }
+
+        public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
+        {
+            return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Finish();
+        }
+
         /// <summary>
         /// Syntax to configure a binding added to an <see cref="InputAction"/> or an
         /// <see cref="InputActionMap"/>.
@@ -468,11 +493,20 @@ namespace UnityEngine.Experimental.Input
         {
             private InputActionAsset m_Asset;
             private int m_ControlSchemeIndex;
+            private InputControlScheme m_ControlScheme;
 
             internal ControlSchemeSyntax(InputActionAsset asset, int index)
             {
                 m_Asset = asset;
                 m_ControlSchemeIndex = index;
+                m_ControlScheme = new InputControlScheme();
+            }
+
+            internal ControlSchemeSyntax(InputControlScheme controlScheme)
+            {
+                m_Asset = null;
+                m_ControlSchemeIndex = -1;
+                m_ControlScheme = controlScheme;
             }
 
             public ControlSchemeSyntax BasedOn(string baseControlScheme)
@@ -480,7 +514,11 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(baseControlScheme))
                     throw new ArgumentNullException("baseControlScheme");
 
-                m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
+                if (m_Asset == null)
+                    m_ControlScheme.m_BaseSchemeName = baseControlScheme;
+                else
+                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
+
                 return this;
             }
 
@@ -489,35 +527,64 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(bindingGroup))
                     throw new ArgumentNullException("bindingGroup");
 
-                m_Asset.m_ControlSchemes[m_ControlSchemeIndex].bindingGroup = bindingGroup;
+                if (m_Asset == null)
+                    m_ControlScheme.m_BindingGroup = bindingGroup;
+                else
+                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex].bindingGroup = bindingGroup;
+
                 return this;
             }
 
-            public ControlSchemeSyntax WithRequiredDevice(string devicePath)
+            public ControlSchemeSyntax WithRequiredDevice(string controlPath)
             {
-                AddDeviceEntry(devicePath, false);
+                AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.None);
                 return this;
             }
 
-            public ControlSchemeSyntax WithOptionalDevice(string devicePath)
+            public ControlSchemeSyntax WithOptionalDevice(string controlPath)
             {
-                AddDeviceEntry(devicePath, true);
+                AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Optional);
                 return this;
             }
 
-            private void AddDeviceEntry(string devicePath, bool isOptional)
+            public ControlSchemeSyntax OrWithRequiredDevice(string controlPath)
             {
-                if (string.IsNullOrEmpty(devicePath))
-                    throw new ArgumentNullException("devicePath");
+                AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Or);
+                return this;
+            }
 
-                var scheme = m_Asset.m_ControlSchemes[m_ControlSchemeIndex];
-                ArrayHelpers.Append(ref scheme.m_Devices,
-                    new InputControlScheme.DeviceEntry
+            public ControlSchemeSyntax OrWithOptionalDevice(string controlPath)
+            {
+                AddDeviceEntry(controlPath,
+                    InputControlScheme.DeviceRequirement.Flags.Optional |
+                    InputControlScheme.DeviceRequirement.Flags.Or);
+                return this;
+            }
+
+            public InputControlScheme Finish()
+            {
+                if (m_Asset != null)
+                    return m_Asset.m_ControlSchemes[m_ControlSchemeIndex];
+                return m_ControlScheme;
+            }
+
+            private void AddDeviceEntry(string controlPath, InputControlScheme.DeviceRequirement.Flags flags)
+            {
+                if (string.IsNullOrEmpty(controlPath))
+                    throw new ArgumentNullException("controlPath");
+
+                var scheme = m_Asset != null ? m_Asset.m_ControlSchemes[m_ControlSchemeIndex] : m_ControlScheme;
+                ArrayHelpers.Append(ref scheme.m_DeviceRequirements,
+                    new InputControlScheme.DeviceRequirement
                     {
-                        devicePath = devicePath,
-                        isOptional = isOptional,
+                        m_ControlPath = controlPath,
+                        m_Flags = flags,
                     });
-                m_Asset.m_ControlSchemes[m_ControlSchemeIndex] = scheme;
+
+                if (m_Asset == null)
+                    m_ControlScheme = scheme;
+                else
+                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex] = scheme;
             }
         }
     }

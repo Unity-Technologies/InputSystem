@@ -8,9 +8,10 @@ using UnityEngine.Experimental.Input.Layouts;
 namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>
-    /// A PS4 DualShock controller.
+    /// A Sony DualShock controller.
     /// </summary>
-    public abstract class DualShockGamepad : Gamepad, IDualShockHaptics
+    [InputControlLayout] // Unset state type inherited from base.
+    public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
         public ButtonControl touchpadButton { get; private set; }
         public ButtonControl optionsButton { get; private set; }
@@ -63,6 +64,8 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             current = this;
         }
 
-        public abstract void SetLightBarColor(Color color);
+        public virtual void SetLightBarColor(Color color)
+        {
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 
-////REVIEW: add a 'devicePath' field for a platform-dependent device path?
+////TODO: add a 'devicePath' property that platforms can use to relay their internal device locators
+////      (but do *not* take it into account when comparing descriptions for disconnected devices)
 
 namespace UnityEngine.Experimental.Input.Layouts
 {
@@ -12,14 +13,18 @@ namespace UnityEngine.Experimental.Input.Layouts
     /// instance from that matches the device.
     /// </remarks>
     [Serializable]
-    public struct InputDeviceDescription
+    public struct InputDeviceDescription : IEquatable<InputDeviceDescription>
     {
         /// <summary>
         /// How we talk to the device; usually name of the underlying backend that feeds
         /// state for the device.
         /// </summary>
         /// <example>Examples: "HID", "XInput"</example>
-        public string interfaceName;
+        public string interfaceName
+        {
+            get { return m_InterfaceName; }
+            set { m_InterfaceName = value; }
+        }
 
         /// <summary>
         /// What the interface thinks the device classifies as.
@@ -29,24 +34,44 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// the device class is used as as fallback. If, for example, this field
         /// is set to "Gamepad", the "Gamepad" layout is used as a fallback.
         /// </remarks>
-        public string deviceClass;
+        public string deviceClass
+        {
+            get { return m_DeviceClass; }
+            set { m_DeviceClass = value; }
+        }
 
         /// <summary>
         /// Name of the vendor that produced the device.
         /// </summary>
-        public string manufacturer;
+        public string manufacturer
+        {
+            get { return m_Manufacturer; }
+            set { m_Manufacturer = value; }
+        }
 
         /// <summary>
         /// Name of the product assigned by the vendor to the device.
         /// </summary>
-        public string product;
+        public string product
+        {
+            get { return m_Product; }
+            set { m_Product = value; }
+        }
 
         /// <summary>
         /// If available, serial number for the device.
         /// </summary>
-        public string serial;
+        public string serial
+        {
+            get { return m_Serial; }
+            set { m_Serial = value; }
+        }
 
-        public string version;
+        public string version
+        {
+            get { return m_Version; }
+            set { m_Version = value; }
+        }
 
         /// <summary>
         /// An optional JSON string listing device-specific capabilities.
@@ -61,19 +86,23 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// contains information about all I/O elements on the device which can be used
         /// to determine the control setup and data format used by the device.
         /// </remarks>
-        public string capabilities;
+        public string capabilities
+        {
+            get { return m_Capabilities; }
+            set { m_Capabilities = value; }
+        }
 
         public bool empty
         {
             get
             {
-                return string.IsNullOrEmpty(interfaceName) &&
-                    string.IsNullOrEmpty(deviceClass) &&
-                    string.IsNullOrEmpty(manufacturer) &&
-                    string.IsNullOrEmpty(product) &&
-                    string.IsNullOrEmpty(serial) &&
-                    string.IsNullOrEmpty(version) &&
-                    string.IsNullOrEmpty(capabilities);
+                return string.IsNullOrEmpty(m_InterfaceName) &&
+                    string.IsNullOrEmpty(m_DeviceClass) &&
+                    string.IsNullOrEmpty(m_Manufacturer) &&
+                    string.IsNullOrEmpty(m_Product) &&
+                    string.IsNullOrEmpty(m_Serial) &&
+                    string.IsNullOrEmpty(m_Version) &&
+                    string.IsNullOrEmpty(m_Capabilities);
             }
         }
 
@@ -130,6 +159,49 @@ namespace UnityEngine.Experimental.Input.Layouts
             return "<Empty Device Description>";
         }
 
+        public bool Equals(InputDeviceDescription other)
+        {
+            return string.Equals(m_InterfaceName, other.m_InterfaceName) &&
+                string.Equals(m_DeviceClass, other.m_DeviceClass) &&
+                string.Equals(m_Manufacturer, other.m_Manufacturer) &&
+                string.Equals(m_Product, other.m_Product) &&
+                string.Equals(m_Serial, other.m_Serial) &&
+                string.Equals(m_Version, other.m_Version) &&
+                string.Equals(m_Capabilities, other.m_Capabilities);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            return obj is InputDeviceDescription && Equals((InputDeviceDescription)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (m_InterfaceName != null ? m_InterfaceName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_DeviceClass != null ? m_DeviceClass.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_Manufacturer != null ? m_Manufacturer.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_Product != null ? m_Product.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_Serial != null ? m_Serial.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_Version != null ? m_Version.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (m_Capabilities != null ? m_Capabilities.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        public static bool operator==(InputDeviceDescription left, InputDeviceDescription right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator!=(InputDeviceDescription left, InputDeviceDescription right)
+        {
+            return !left.Equals(right);
+        }
+
         public string ToJson()
         {
             var data = new DeviceDescriptionJson
@@ -160,6 +232,14 @@ namespace UnityEngine.Experimental.Input.Layouts
                 capabilities = data.capabilities
             };
         }
+
+        [SerializeField] private string m_InterfaceName;
+        [SerializeField] private string m_DeviceClass;
+        [SerializeField] private string m_Manufacturer;
+        [SerializeField] private string m_Product;
+        [SerializeField] private string m_Serial;
+        [SerializeField] private string m_Version;
+        [SerializeField] private string m_Capabilities;
 
         private struct DeviceDescriptionJson
         {

@@ -3,7 +3,6 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEditor.VersionControl;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;

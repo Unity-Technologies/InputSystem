@@ -20,6 +20,8 @@ using UnityEditor;
 
 ////TODO: make capitalization consistent in the generated code
 
+////REVIEW: what about generating an interface based on the available actions and automatically hooking up an InputActionQueue internally?
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -224,6 +226,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Enable/disable methods.
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
                 writer.WriteLine("public void Disable() { Get().Disable(); }");
+                writer.WriteLine("public bool enabled { get { return Get().enabled; } }");
 
                 // Clone method.
                 writer.WriteLine("public InputActionMap Clone() { return Get().Clone(); }");
