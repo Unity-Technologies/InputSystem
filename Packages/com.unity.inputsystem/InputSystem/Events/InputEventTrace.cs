@@ -8,6 +8,8 @@ using UnityEngine.Profiling;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 
+////TODO: Use InputEventBuffer
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     // Helper to simplify recording events. Can record events for a specific device
@@ -246,7 +248,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             ++m_ChangeCounter;
 
             // Notify listeners.
-            for (var i = 0; i < m_EventListeners.Count; ++i)
+            for (var i = 0; i < m_EventListeners.length; ++i)
                 m_EventListeners[i](new InputEventPtr((InputEvent*)buffer));
 
             Profiler.EndSample();

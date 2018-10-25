@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2ee4ea685e32944ceb54f9af86809c57
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - unmapped_button_list: {instanceID: 0}
+  - highlight_input_manager: {fileID: 198773322244654988, guid: 934906f496a0847c8bc0115a9fef4339,
+      type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

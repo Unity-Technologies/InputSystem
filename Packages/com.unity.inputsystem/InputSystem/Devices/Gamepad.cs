@@ -1,7 +1,7 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -48,32 +48,32 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(variant = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
-        [InputControl(variant = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(variant = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
-        [InputControl(variant = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
         /// <summary>
         /// Position of the left trigger.
         /// </summary>
-        [InputControl(variant = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
-        [InputControl(variant = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
         /// Position of the right trigger.
         /// </summary>
-        [InputControl(variant = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
-        [InputControl(variant = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
         [FieldOffset(24)]
         public float rightTrigger;
 
@@ -141,7 +141,7 @@ namespace UnityEngine.Experimental.Input
     [InputControlLayout(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
-        ////REVEIEW: add PS4 and Xbox style alternate accessors?
+        ////REVIEW: add PS4 and Xbox style alternate accessors?
         public ButtonControl buttonWest { get; private set; }
         public ButtonControl buttonNorth { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
@@ -163,8 +163,6 @@ namespace UnityEngine.Experimental.Input
 
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
-
-        ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
         ////TODO: noise filtering
         /// <summary>

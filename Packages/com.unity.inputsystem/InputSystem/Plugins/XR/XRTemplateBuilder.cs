@@ -3,15 +3,19 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Text;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     [Serializable]
     class XRLayoutBuilder
     {
-        public string parentLayout;
-        public string interfaceName;
-        public XRDeviceDescriptor descriptor;
+        [SerializeField]
+        string parentLayout;
+        [SerializeField]
+        string interfaceName;
+        [SerializeField]
+        XRDeviceDescriptor descriptor;
 
         static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
         {
@@ -50,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return sanitizedName.ToString();
         }
 
-        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
@@ -93,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             if (string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = string.Format("{0}::{1}", SanitizeName(description.interfaceName),
-                        SanitizeName(description.product));
+                    SanitizeName(description.product));
             }
             else
             {
@@ -105,7 +109,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return layoutName;
 
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
+            InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }
@@ -114,7 +118,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             InternedString internedNameOrAlias = new InternedString(nameOrAlias);
             ReadOnlyArray<InputControlLayout.ControlItem> controls = layout.controls;
-            for(int i = 0; i < controls.Count; i++)
+            for (int i = 0; i < controls.Count; i++)
             {
                 InputControlLayout.ControlItem controlItem = controls[i];
 
@@ -122,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     return nameOrAlias;
 
                 ReadOnlyArray<InternedString> aliases = controlItem.aliases;
-                for(int j = 0; j < aliases.Count; j++)
+                for (int j = 0; j < aliases.Count; j++)
                 {
                     if (aliases[j] == nameOrAlias)
                         return controlItem.name.ToString();
@@ -131,7 +135,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return nameOrAlias;
         }
 
-        public InputControlLayout Build()
+        internal InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
             {
@@ -159,80 +163,82 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 }
 
                 string featureName = feature.name;
+                featureName = SanitizeName(featureName);
                 if (inherittedLayout != null)
                     featureName = ConvertPotentialAliasToName(inherittedLayout, featureName);
-                featureName = SanitizeName(featureName);
+
+                featureName = featureName.ToLower();
 
                 uint nextOffset = GetSizeOfFeature(feature);
 
-                if(interfaceName == XRUtilities.kXRInterfaceV1)
+                if (interfaceName == XRUtilities.kXRInterfaceV1)
                 {
 #if UNITY_ANDROID
-                    if(nextOffset < 4)
+                    if (nextOffset < 4)
                         nextOffset = 4;
-#endif           
+#endif
                 }
                 else
                 {
                     if (nextOffset >= 4 && (currentOffset % 4 != 0))
                         currentOffset += (4 - (currentOffset % 4));
                 }
-                
+
 
                 switch (feature.featureType)
                 {
                     case FeatureType.Binary:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Button")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeBit)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Button")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeBit)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.DiscreteStates:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Integer")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeInt)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Integer")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Axis1D:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Analog")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeFloat)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Analog")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeFloat)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Axis2D:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Vector2")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeVector2)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Vector2")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeVector2)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Axis3D:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Vector3")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeVector3)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Vector3")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeVector3)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Rotation:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Quaternion")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeQuaternion)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Quaternion")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeQuaternion)
+                            .WithUsages(currentUsages);
                         break;
                     }
                 }

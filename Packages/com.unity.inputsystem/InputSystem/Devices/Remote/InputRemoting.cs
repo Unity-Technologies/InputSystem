@@ -1,15 +1,21 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: support actions
+
+////TODO: support input users
+
 ////TODO: text input events
+
+////TODO: remove remoting of layout information
 
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player
@@ -37,8 +43,6 @@ namespace UnityEngine.Experimental.Input
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
     public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
-        public const string kRemoteLayoutNamespacePrefix = "remote";
-
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
         /// </summary>
@@ -111,7 +115,7 @@ namespace UnityEngine.Experimental.Input
 
             sending = true;
 
-            SendAllCurrentData();
+            SendAllDevices();
         }
 
         public void StopSending()
@@ -174,28 +178,6 @@ namespace UnityEngine.Experimental.Input
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
 
             return subscriber;
-        }
-
-        private void SendAllCurrentData(int recipientId = 0)
-        {
-            SendAllLayouts();
-            SendAllDevices();
-        }
-
-        private void SendAllLayouts()
-        {
-            var allLayouts = new List<string>();
-            m_LocalManager.ListControlLayouts(allLayouts);
-
-            foreach (var layoutName in allLayouts)
-                SendLayout(layoutName);
-        }
-
-        private void SendLayout(string layoutName)
-        {
-            var message = NewLayoutMsg.Create(this, layoutName);
-            if (message != null)
-                Send(message.Value);
         }
 
         private void SendAllDevices()
@@ -261,10 +243,6 @@ namespace UnityEngine.Experimental.Input
             if (m_Subscribers == null)
                 return;
 
-            // Don't mirror remoted layouts to other remotes.
-            if (layout.StartsWith(kRemoteLayoutNamespacePrefix))
-                return;
-
             Message msg;
             switch (change)
             {
@@ -307,7 +285,6 @@ namespace UnityEngine.Experimental.Input
             var sender = new RemoteSender
             {
                 senderId = senderId,
-                layoutNamespace = string.Format("{0}{1}", kRemoteLayoutNamespacePrefix, senderId)
             };
             return ArrayHelpers.Append(ref m_Senders, sender);
         }
@@ -354,7 +331,6 @@ namespace UnityEngine.Experimental.Input
         internal struct RemoteSender
         {
             public int senderId;
-            public string layoutNamespace;
             public string[] layouts;
             public RemoteInputDevice[] devices;
         }
@@ -364,18 +340,9 @@ namespace UnityEngine.Experimental.Input
         {
             public int remoteId; // Device ID used by sender.
             public int localId; // Device ID used by us in local system.
+            public string layoutName;
 
             public InputDeviceDescription description;
-
-            // Senders give us the full layouts in JSON for the devices they
-            // are using so we can recreate devices exactly like they appear
-            // in the player. This also means that we don't need to have the same
-            // layouts available that the player does.
-            //
-            // When registering layouts from remote senders, we prefix them
-            // with "remote{senderId}::" to distinguish them from normal local
-            // layouts.
-            public string layoutName;
         }
 
         internal class Subscriber : IDisposable
@@ -393,7 +360,9 @@ namespace UnityEngine.Experimental.Input
             public static void Process(InputRemoting receiver, Message msg)
             {
                 if (receiver.sending)
-                    receiver.SendAllCurrentData(msg.participantId);
+                {
+                    receiver.SendAllDevices();
+                }
                 else if ((receiver.m_Flags & Flags.StartSendingOnConnect) == Flags.StartSendingOnConnect)
                     receiver.StartSending();
             }
@@ -439,16 +408,16 @@ namespace UnityEngine.Experimental.Input
                     if (layout == null)
                     {
                         Debug.Log(string.Format(
-                                "Could not find layout '{0}' meant to be sent through remote connection; this should not happen",
-                                layoutName));
+                            "Could not find layout '{0}' meant to be sent through remote connection; this should not happen",
+                            layoutName));
                         return null;
                     }
                 }
                 catch (Exception exception)
                 {
                     Debug.Log(string.Format(
-                            "Could not load layout '{0}'; not sending to remote listeners (exception: {1})", layoutName,
-                            exception));
+                        "Could not load layout '{0}'; not sending to remote listeners (exception: {1})", layoutName,
+                        exception));
                     return null;
                 }
 
@@ -466,9 +435,8 @@ namespace UnityEngine.Experimental.Input
             {
                 var json = Encoding.UTF8.GetString(msg.data);
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-                var @namespace = receiver.m_Senders[senderIndex].layoutNamespace;
 
-                receiver.m_LocalManager.RegisterControlLayout(json, @namespace: @namespace);
+                receiver.m_LocalManager.RegisterControlLayout(json);
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].layouts, json);
             }
         }
@@ -487,11 +455,9 @@ namespace UnityEngine.Experimental.Input
 
             public static void Process(InputRemoting receiver, Message msg)
             {
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-                var @namespace = receiver.m_Senders[senderIndex].layoutNamespace;
-
+                ////REVIEW: we probably don't want to do this blindly
                 var layoutName = Encoding.UTF8.GetString(msg.data);
-                receiver.m_LocalManager.RemoveControlLayout(layoutName, @namespace: @namespace);
+                receiver.m_LocalManager.RemoveControlLayout(layoutName);
             }
         }
 
@@ -542,21 +508,19 @@ namespace UnityEngine.Experimental.Input
                         if (entry.remoteId == data.deviceId)
                         {
                             Debug.LogError(string.Format(
-                                    "Already received device with id {0} (layout '{1}', description '{3}) from remote {2}",
-                                    data.deviceId,
-                                    data.layout, msg.participantId, data.description));
+                                "Already received device with id {0} (layout '{1}', description '{3}) from remote {2}",
+                                data.deviceId,
+                                data.layout, msg.participantId, data.description));
                             return;
                         }
                 }
 
                 // Create device.
-                var layout = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].layoutNamespace,
-                        data.layout);
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(layout,
-                            string.Format("Remote{0}::{1}", msg.participantId, data.name));
+                    device = receiver.m_LocalManager.AddDevice(data.layout,
+                        string.Format("Remote{0}::{1}", msg.participantId, data.name));
                 }
                 catch (Exception exception)
                 {
@@ -567,7 +531,7 @@ namespace UnityEngine.Experimental.Input
                     return;
                 }
                 device.m_Description = data.description;
-                device.m_Flags |= InputDevice.Flags.Remote;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
 
                 // Remember it.
                 var record = new RemoteInputDevice
@@ -575,7 +539,7 @@ namespace UnityEngine.Experimental.Input
                     remoteId = data.deviceId,
                     localId = device.id,
                     description = data.description,
-                    layoutName = layout
+                    layoutName = data.layout
                 };
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].devices, record);
             }
@@ -716,9 +680,7 @@ namespace UnityEngine.Experimental.Input
             return JsonUtility.FromJson<TData>(json);
         }
 
-        // Domain reload survival. Kept separate as making the entire class [Serializable]
-        // would signal the wrong thing to users as it's part of the public API.
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         // State we want to take across domain reloads. We can only take some of the
         // state across. Subscriptions will be lost and have to be manually restored.
         [Serializable]

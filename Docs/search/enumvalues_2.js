@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['none',['None',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#a9cf177d84108b41ce3e8b1a75f03e5c6a6adf97f83acf6453d4a6a4b1070f3754',1,'UnityEngine::Experimental::Input']]]
+  ['composite',['Composite',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#aa705cf7e79a21c2352b00ffe20cd295fa141a5b46e2087dc7a80a43710c2dacfb',1,'UnityEngine::Experimental::Input::InputBinding']]],
+  ['configurationchanged',['ConfigurationChanged',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba31e4c3ad63d178cb96c2a70ea23cbaf5',1,'UnityEngine::Experimental::Input']]]
 ];

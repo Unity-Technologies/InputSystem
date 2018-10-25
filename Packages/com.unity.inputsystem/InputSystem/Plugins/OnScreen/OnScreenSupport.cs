@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_UWP
+#if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
     /// <summary>
@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     {
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<OnScreenKeyboard>();
+            InputSystem.RegisterLayout<OnScreenKeyboard>();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -42,8 +43,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "pointerId", layout = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
         [InputControl(layout = "Digital")]
@@ -57,6 +58,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Middle,
             Forward,
             Back
+        }
+
+        ////REVIEW: move this and the same methods in other states to extension methods?
+        public MouseState WithButton(Button button, bool state = true)
+        {
+            var bit = 1 << (int)button;
+            if (state)
+                buttons |= (ushort)bit;
+            else
+                buttons &= (ushort)~bit;
+            return this;
         }
 
         public FourCC GetFormat()
@@ -78,7 +90,7 @@ namespace UnityEngine.Experimental.Input
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState))]
-    public class Mouse : Pointer
+    public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
         /// The horizontal and vertical scroll wheels.
@@ -141,6 +153,23 @@ namespace UnityEngine.Experimental.Input
             middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
             rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
             base.FinishSetup(builder);
+        }
+
+        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        {
+            var deltaXChanged = ResetDelta(statePtr, delta.x);
+            var deltaYChanged = ResetDelta(statePtr, delta.y);
+            var scrollXChanged = ResetDelta(statePtr, scroll.x);
+            var scrollYChanged = ResetDelta(statePtr, scroll.y);
+            return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
+            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
+            AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
+            AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
         }
     }
 

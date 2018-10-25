@@ -2,12 +2,13 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR || UNITY_XBOXONE
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 #endif
 
-class XInputTests : InputTestFixture
+public class XInputTests : InputTestFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
@@ -16,7 +17,7 @@ class XInputTests : InputTestFixture
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
     [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XInputControllerOSX")]
 #endif
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
@@ -31,14 +32,17 @@ class XInputTests : InputTestFixture
         InputDevice device = null;
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
 
-        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", layoutName)), Has.Exactly(1).SameAs(device));
+        using (var matches = InputSystem.FindControls(string.Format("/<{0}>", layoutName)))
+            Assert.That(matches, Has.Exactly(1).SameAs(device));
+
         Assert.That(device.name, Is.EqualTo(layoutName));
         Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
     }
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    ////FIXME: we should not have tests that only run in players
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [Test]
     [Category("Devices")]
     public void Devices_CanGetSubTypeOfXInputDevice()
@@ -77,12 +81,12 @@ class XInputTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new XboxOneGamepadState
-        {
-            leftStick = new Vector2(0.123f, 0.456f),
-            rightStick = new Vector2(0.789f, 0.234f),
-            leftTrigger = 0.567f,
-            rightTrigger = 0.891f,
-        });
+            {
+                leftStick = new Vector2(0.123f, 0.456f),
+                rightStick = new Vector2(0.789f, 0.234f),
+                leftTrigger = 0.567f,
+                rightTrigger = 0.891f,
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));

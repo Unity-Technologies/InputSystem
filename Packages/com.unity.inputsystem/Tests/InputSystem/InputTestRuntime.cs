@@ -4,6 +4,8 @@ using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -56,6 +58,7 @@ namespace UnityEngine.Experimental.Input
 
                 m_EventCount = 0;
                 m_EventWritePosition = 0;
+                ++frameCount;
             }
         }
 
@@ -63,6 +66,7 @@ namespace UnityEngine.Experimental.Input
         {
             var eventPtr = (InputEvent*)ptr;
             var eventSize = eventPtr->sizeInBytes;
+            var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
 
             lock (m_Lock)
             {
@@ -70,18 +74,18 @@ namespace UnityEngine.Experimental.Input
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
-                if ((m_EventWritePosition + eventSize) > m_EventBuffer.Length)
+                if ((m_EventWritePosition + alignedEventSize) > m_EventBuffer.Length)
                 {
-                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)eventSize, 1024);
+                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)alignedEventSize, 1024);
                     var newBuffer = new NativeArray<byte>(newBufferSize, Allocator.Persistent);
-                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventBuffer.Length);
+                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventWritePosition);
                     m_EventBuffer.Dispose();
                     m_EventBuffer = newBuffer;
                 }
 
                 // Copy event.
                 UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
-                m_EventWritePosition += (int)eventSize;
+                m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
         }
@@ -100,10 +104,10 @@ namespace UnityEngine.Experimental.Input
             where TCommand : struct, IInputDeviceCommandInfo
         {
             bool? receivedCommand = null;
-            SetDeviceCommandCallback(deviceId,
-                (id, commandPtr) =>
-                {
-                    unsafe
+            unsafe
+            {
+                SetDeviceCommandCallback(deviceId,
+                    (id, commandPtr) =>
                     {
                         if (commandPtr->type == result.GetTypeStatic())
                         {
@@ -113,9 +117,10 @@ namespace UnityEngine.Experimental.Input
                                 UnsafeUtility.SizeOf<TCommand>());
                             return InputDeviceCommand.kGenericSuccess;
                         }
+
                         return InputDeviceCommand.kGenericFailure;
-                    }
-                });
+                    });
+            }
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
@@ -148,16 +153,59 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId)
+        {
+            return ReportNewInputDevice(description.ToJson(), deviceId);
+        }
+
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
+        public Action onShutdown { get; set; }
         public float pollingFrequency { get; set; }
+        public double currentTime { get; set; }
         public InputUpdateType updateMask { get; set; }
+        public int frameCount { get; set; }
+
+        public ScreenOrientation screenOrientation
+        {
+            set
+            {
+                m_ScreenOrientation = value;
+            }
+
+            get
+            {
+                return m_ScreenOrientation;
+            }
+        }
+
+        public Vector2 screenSize
+        {
+            set
+            {
+                m_ScreenSize = value;
+            }
+            get
+            {
+                return m_ScreenSize;
+            }
+        }
 
         public void Dispose()
         {
             m_EventBuffer.Dispose();
             GC.SuppressFinalize(this);
+        }
+
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            set
+            {
+                m_CurrentTimeOffsetToRealtimeSinceStartup = value;
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
+            }
         }
 
         private int m_NextDeviceId = 1;
@@ -168,5 +216,27 @@ namespace UnityEngine.Experimental.Input
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
+        private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
+        private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+        private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
+        public Action<string, object> onSendAnalyticsEvent { get; set; }
+
+        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        {
+            if (onRegisterAnalyticsEvent != null)
+                onRegisterAnalyticsEvent(name, maxPerHour, maxPropertiesPerEvent);
+        }
+
+        public void SendAnalyticsEvent(string name, object data)
+        {
+            if (onSendAnalyticsEvent != null)
+                onSendAnalyticsEvent(name, data);
+        }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

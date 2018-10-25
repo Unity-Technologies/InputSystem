@@ -1,6 +1,10 @@
 using System;
 using UnityEngineInternal.Input;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -78,30 +82,106 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set { NativeInputSystem.onDeviceDiscovered = value; }
         }
 
+        public Action onShutdown
+        {
+            set
+            {
+                if (value == null)
+                {
+                    #if UNITY_EDITOR
+                    EditorApplication.quitting -= OnShutdown;
+                    #else
+                    Application.quitting -= OnShutdown;
+                    #endif
+                }
+                else if (m_ShutdownMethod == null)
+                {
+                    #if UNITY_EDITOR
+                    EditorApplication.quitting += OnShutdown;
+                    #else
+                    Application.quitting += OnShutdown;
+                    #endif
+                }
+
+                m_ShutdownMethod = value;
+            }
+        }
+
         public float pollingFrequency
         {
             set { NativeInputSystem.SetPollingFrequency(value); }
+        }
+
+        public double currentTime
+        {
+            get
+            {
+                return NativeInputSystem.currentTime;
+            }
+        }
+
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get
+            {
+                return NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
+            }
         }
 
         public InputUpdateType updateMask
         {
             set
             {
-                ////TODO: remove the detour through reflection once we have landed the native change in the 2018.2 beta
-                ////      the reflection detour here is only to keep it compiling and running without the native change
-                if (m_SetUpdateMaskMethod == null)
-                {
-                    var method = typeof(NativeInputSystem).GetMethod("SetUpdateMask");
-                    if (method != null)
-                        m_SetUpdateMaskMethod = mask => method.Invoke(null, new object[] {mask});
-                    else
-                        m_SetUpdateMaskMethod = mask => {};
-                }
-
-                m_SetUpdateMaskMethod((NativeInputUpdateType)value);
+                NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
             }
         }
 
-        private Action<NativeInputUpdateType> m_SetUpdateMaskMethod;
+        private Action m_ShutdownMethod;
+
+        private void OnShutdown()
+        {
+            m_ShutdownMethod();
+        }
+
+        public ScreenOrientation screenOrientation
+        {
+            get
+            {
+                return Screen.orientation;
+            }
+        }
+
+        public Vector2 screenSize
+        {
+            get { return new Vector2(Screen.width, Screen.height); }
+        }
+
+        public int frameCount
+        {
+            get { return Time.frameCount; }
+        }
+
+#if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        {
+            const string vendorKey = "unity.input";
+            #if UNITY_EDITOR
+            UnityEditor.EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            #else
+            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            #endif
+        }
+
+        public void SendAnalyticsEvent(string name, object data)
+        {
+            #if UNITY_EDITOR
+            UnityEditor.EditorAnalytics.SendEventWithLimit(name, data);
+            #else
+            Analytics.Analytics.SendEvent(name, data);
+            #endif
+        }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

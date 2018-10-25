@@ -87,6 +87,7 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
 
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -94,14 +95,25 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
 </div><!--header-->
 <div class="contents">
 
-<p>A combination of a control path and modifiers.  
+<p>A mapping of control input to an action.  
  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:aa705cf7e79a21c2352b00ffe20cd295f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#aa705cf7e79a21c2352b00ffe20cd295f">Flags</a> { <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#aa705cf7e79a21c2352b00ffe20cd295fa5aa0f17783761b7ba47f43ecb411f314">ThisAndNextCombine</a> = 1 &lt;&lt; 5
+, <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#aa705cf7e79a21c2352b00ffe20cd295fa141a5b46e2087dc7a80a43710c2dacfb">Composite</a> = 1 &lt;&lt; 2
+, <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#aa705cf7e79a21c2352b00ffe20cd295faaf33018ce8529c190f3d3bec23587300">PushBindingLevel</a> = 1 &lt;&lt; 3
+ }</td></tr>
+<tr class="separator:aa705cf7e79a21c2352b00ffe20cd295f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a662407a4db7e569dae3c4885bdc6a329"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a662407a4db7e569dae3c4885bdc6a329">modifiers</a></td></tr>
-<tr class="memdesc:a662407a4db7e569dae3c4885bdc6a329"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional list of modifiers and their parameters.  <a href="#a662407a4db7e569dae3c4885bdc6a329">More...</a><br /></td></tr>
-<tr class="separator:a662407a4db7e569dae3c4885bdc6a329"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a30da6629d5b550c2025d3788d49cb9"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a6a30da6629d5b550c2025d3788d49cb9">action</a></td></tr>
+<tr class="memdesc:a6a30da6629d5b550c2025d3788d49cb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Name of the action triggered by the binding.  <a href="#a6a30da6629d5b550c2025d3788d49cb9">More...</a><br /></td></tr>
+<tr class="separator:a6a30da6629d5b550c2025d3788d49cb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03a47aaf14cab88ae0cd2a1596a68049"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a03a47aaf14cab88ae0cd2a1596a68049">interactions</a></td></tr>
+<tr class="memdesc:a03a47aaf14cab88ae0cd2a1596a68049"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional list of interactions and their parameters.  <a href="#a03a47aaf14cab88ae0cd2a1596a68049">More...</a><br /></td></tr>
+<tr class="separator:a03a47aaf14cab88ae0cd2a1596a68049"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ccf841cb59e451791bcb2e1ac4f1edc"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a8ccf841cb59e451791bcb2e1ac4f1edc">name</a></td></tr>
 <tr class="memdesc:a8ccf841cb59e451791bcb2e1ac4f1edc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional name for the binding.  <a href="#a8ccf841cb59e451791bcb2e1ac4f1edc">More...</a><br /></td></tr>
 <tr class="separator:a8ccf841cb59e451791bcb2e1ac4f1edc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -111,24 +123,79 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a46c20eb2a26abeb1e934cd66e1dd6484"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a46c20eb2a26abeb1e934cd66e1dd6484">path</a></td></tr>
 <tr class="memdesc:a46c20eb2a26abeb1e934cd66e1dd6484"><td class="mdescLeft">&#160;</td><td class="mdescRight">Control path being bound to.  <a href="#a46c20eb2a26abeb1e934cd66e1dd6484">More...</a><br /></td></tr>
 <tr class="separator:a46c20eb2a26abeb1e934cd66e1dd6484"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17b84944123b6697dc2c82aae44e5776"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a17b84944123b6697dc2c82aae44e5776">processors</a></td></tr>
+<tr class="memdesc:a17b84944123b6697dc2c82aae44e5776"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional list of processors to apply to control values.  <a href="#a17b84944123b6697dc2c82aae44e5776">More...</a><br /></td></tr>
+<tr class="separator:a17b84944123b6697dc2c82aae44e5776"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A combination of a control path and modifiers. </p>
-<p>A single binding can match arbitrary many controls through its path. </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a662407a4db7e569dae3c4885bdc6a329"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a662407a4db7e569dae3c4885bdc6a329">&#9670;&nbsp;</a></span>modifiers</h2>
+<div class="textblock"><p>A mapping of control input to an action. </p>
+<p>A single binding can match arbitrary many controls through its path and then map their input to a single action.</p>
+<p>A binding can also be used as a override specification. In that scenario, <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a46c20eb2a26abeb1e934cd66e1dd6484" title="Control path being bound to. ">path</a>, <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a6a30da6629d5b550c2025d3788d49cb9" title="Name of the action triggered by the binding. ">action</a>, and groups become search criteria that can be used to find existing bindings, and <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a7baceb97d7a352281d125c11a950cdbd" title="If the binding is overridden, this is the overriding path. Otherwise it is null. ">overridePath</a> becomes the path to override existing binding paths with. </p>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="aa705cf7e79a21c2352b00ffe20cd295f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa705cf7e79a21c2352b00ffe20cd295f">&#9670;&nbsp;</a></span>Flags</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#aa705cf7e79a21c2352b00ffe20cd295f">Flags</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aa705cf7e79a21c2352b00ffe20cd295fa5aa0f17783761b7ba47f43ecb411f314"></a>ThisAndNextCombine&#160;</td><td class="fielddoc"><p>This and the next binding in the list combine such that both need to be triggered to trigger the associated action. </p>
+<p>The order in which the bindings trigger does not matter.</p>
+<p>An arbitrarily long sequence of bindings can be arranged as having to trigger together.</p>
+<p>If this is set, ThisAndPreviousCombine has to be set on the subsequent binding. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aa705cf7e79a21c2352b00ffe20cd295fa141a5b46e2087dc7a80a43710c2dacfb"></a>Composite&#160;</td><td class="fielddoc"><p>Whether this binding starts a composite binding group. </p>
+<p>This flag implies PushBindingLevel. The composite is comprised of all bindings at the same grouping level. The name of each binding in the composite is used to determine which role the resolved controls play in the composite. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aa705cf7e79a21c2352b00ffe20cd295faaf33018ce8529c190f3d3bec23587300"></a>PushBindingLevel&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="a6a30da6629d5b550c2025d3788d49cb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a30da6629d5b550c2025d3788d49cb9">&#9670;&nbsp;</a></span>action</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">string modifiers</td>
+          <td class="memname">string action</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Optional list of modifiers and their parameters. </p>
+<p>Name of the action triggered by the binding. </p>
+<p>This is null if the binding does not trigger an action. </p>
+
+</div>
+</div>
+<a id="a03a47aaf14cab88ae0cd2a1596a68049"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03a47aaf14cab88ae0cd2a1596a68049">&#9670;&nbsp;</a></span>interactions</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">string interactions</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Optional list of interactions and their parameters. </p>
 <div class="fragment"><div class="line"><span class="stringliteral">&quot;tap,slowTap(duration=1.2)&quot;</span></div></div><!-- fragment --> 
 </div>
 </div>
@@ -145,6 +212,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Optional name for the binding. </p>
+<p>For bindings that <a class="el" href="">are part of composites</a>, this is the name of the field on the binding composite object that should be initialized with the control target of the binding. </p>
 
 </div>
 </div>
@@ -180,6 +248,23 @@ Public Attributes</h2></td></tr>
 <p>Control path being bound to. </p>
 <p>If the binding is a composite (isComposite), the path is the composite string instead. </p>
 <div class="fragment"><div class="line"><span class="stringliteral">&quot;/*/{PrimaryAction}&quot;</span></div></div><!-- fragment --> 
+</div>
+</div>
+<a id="a17b84944123b6697dc2c82aae44e5776"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17b84944123b6697dc2c82aae44e5776">&#9670;&nbsp;</a></span>processors</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">string processors</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Optional list of processors to apply to control values. </p>
+<p>This list has the same format as InputControlAttribute.processors. </p>
+
 </div>
 </div>
 </div><!-- contents -->

@@ -2,11 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: property that tells whether a Touchscreen is multi-touch capable
+
+////TODO: property that tells whether a Touchscreen supports pressure
+
 ////TODO: if activeTouches is called multiple times in a single frame, only update the array once
+
+////TODO: click detection / primaryaction handling
 
 ////TODO: add orientation
 
@@ -34,13 +41,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         [InputControl(layout = "Integer")][FieldOffset(0)] public int touchId;
-        [InputControl][FieldOffset(4)] public Vector2 position;
+        [InputControl(processors = "TouchPositionTransform")][FieldOffset(4)] public Vector2 position;
         [InputControl][FieldOffset(12)] public Vector2 delta;
         [InputControl(layout = "Axis")][FieldOffset(20)] public float pressure;
         [InputControl][FieldOffset(24)] public Vector2 radius;
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
-        [InputControl(name = "touchType", layout = "TouchType", format = "SBYT")][FieldOffset(35)] public sbyte touchTypeId;
+        [InputControl(name = "indirectTouch", layout = "Button", bit = (int)TouchFlags.IndirectTouch)][FieldOffset(35)] public sbyte flags;
 
         public PointerPhase phase
         {
@@ -48,17 +55,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set { phaseId = (ushort)value; }
         }
 
-        public TouchType type
-        {
-            get { return (TouchType)touchTypeId; }
-            set { touchTypeId = (sbyte)value; }
-        }
-
         public FourCC GetFormat()
         {
             return kFormat;
         }
     }
+
+    public class TouchPositionTransformProcessor : IInputControlProcessor<Vector2>
+    {
+        public Vector2 Process(Vector2 value, InputControl control)
+        {
+#if UNITY_EDITOR
+            return value;
+#elif PLATFORM_ANDROID
+            return new Vector2(value.x, InputRuntime.s_Instance.screenSize.y - value.y);
+#else
+            return value;
+#endif
+        }
+    }
+
 
     /// <summary>
     /// Default state layout for touch devices.
@@ -129,11 +145,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    public enum TouchType
+    [Flags]
+    public enum TouchFlags
     {
-        Direct,
-        Indirect,
-        Stylus
+        IndirectTouch
     }
 
     ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?
@@ -165,7 +180,8 @@ namespace UnityEngine.Experimental.Input
             {
                 var touchCount = 0;
                 bool? hadActivityThisFrame = null;
-                for (var i = 0; i < allTouchControls.Count; ++i)
+                var numTouchControls = allTouchControls.Count;
+                for (var i = 0; i < numTouchControls; ++i)
                 {
                     // Determine whether we consider the touch "active".
                     var isActive = false;
@@ -326,22 +342,24 @@ namespace UnityEngine.Experimental.Input
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
             // unlike other devices, is hardwired to a single memory layout only.
 
-            var touch = (TouchState*)statePtr;
-            var phase = touch->phase;
-            var touchStatePtr = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
+            var newTouchState = (TouchState*)statePtr;
+            var currentTouchState = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
 
             // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
             // previously.
+            var phase = newTouchState->phase;
             if (phase != PointerPhase.Began)
             {
-                var touchId = touch->touchId;
-                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+                var touchId = newTouchState->touchId;
+                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
                 {
-                    if (touchStatePtr->touchId == touchId)
+                    if (currentTouchState->touchId == touchId)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
-                        touch->delta = touch->position - touchStatePtr->position;
-                        touch->delta += touchStatePtr->delta;
+                        // We're going to copy the new state over the old state so update the delta
+                        // on the new state to accumulate the old state.
+                        newTouchState->delta = newTouchState->position - currentTouchState->position;
+                        newTouchState->delta += currentTouchState->delta;
                         Profiler.EndSample();
                         return true;
                     }
@@ -353,26 +371,23 @@ namespace UnityEngine.Experimental.Input
                 Profiler.EndSample();
                 return false;
             }
-            else
+
+            // It's a new touch. Try to find an unused TouchState.
+            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
             {
-                // It's a new touch. Try to find an unused TouchState.
-                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+                if (currentTouchState->phase == PointerPhase.None)
                 {
-                    if (touchStatePtr->phase == PointerPhase.None)
-                    {
-                        offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
-                        touch->delta = Vector2.zero;
-                        Profiler.EndSample();
-                        return true;
-                    }
+                    offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                    newTouchState->delta = Vector2.zero;
+                    Profiler.EndSample();
+                    return true;
                 }
-
-                // We ran out of state and we don't want to stomp an existing ongoing touch.
-                // Drop this touch entirely.
-
-                Profiler.EndSample();
-                return false;
             }
+
+            // We ran out of state and we don't want to stomp an existing ongoing touch.
+            // Drop this touch entirely.
+            Profiler.EndSample();
+            return false;
         }
 
         void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)

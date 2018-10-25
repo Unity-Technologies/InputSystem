@@ -1,8 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////REVIEW: should we put lock state directly on Pointer?
+
+////REVIEW: should pointer IDs be required to be globally unique across pointing devices?
 
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
@@ -35,6 +40,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #endif
         public Vector2 position;
 
+        ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
         [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
@@ -50,9 +56,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", layout = "PointerPhase", sizeInBits = 4)]
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4)]
         ////TODO: give this control a better name
-        [InputControl(name = "button", layout = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "button", layout = "Button", format = "BIT", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
         [InputControl(layout = "Digital")]
@@ -172,47 +178,33 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected bool OnCarryStateForward(IntPtr statePtr)
+        protected bool ResetDelta(IntPtr statePtr, InputControl<float> control)
         {
-            var x = delta.x;
-            var y = delta.y;
-
-            var xValue = x.ReadValueFrom(statePtr);
-            var yValue = y.ReadValueFrom(statePtr);
-
-            if (Mathf.Approximately(0f, xValue) && Mathf.Approximately(0f, yValue))
+            var value = control.ReadValueFrom(statePtr);
+            if (Mathf.Approximately(0f, value))
                 return false;
-
-            // Reset delta.
-            x.WriteValueInto(statePtr, 0f);
-            y.WriteValueInto(statePtr, 0f);
-
+            control.WriteValueInto(statePtr, 0f);
             return true;
         }
 
-        protected void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        protected void AccumulateDelta(IntPtr oldStatePtr, IntPtr newStatePtr, InputControl<float> control)
         {
-            var x = delta.x;
-            var y = delta.y;
-
-            // Accumulate delta.
-            var oldDeltaX = x.ReadValueFrom(oldStatePtr);
-            var oldDeltaY = y.ReadValueFrom(oldStatePtr);
-            var newDeltaX = x.ReadValueFrom(newStatePtr);
-            var newDeltaY = y.ReadValueFrom(newStatePtr);
-
-            x.WriteValueInto(newStatePtr, oldDeltaX + newDeltaX);
-            y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
+            var oldDelta = control.ReadValueFrom(oldStatePtr);
+            var newDelta = control.ReadValueFrom(newStatePtr);
+            control.WriteValueInto(newStatePtr, oldDelta + newDelta);
         }
 
         bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
         {
-            return OnCarryStateForward(statePtr);
+            var deltaXChanged = ResetDelta(statePtr, delta.x);
+            var deltaYChanged = ResetDelta(statePtr, delta.y);
+            return deltaXChanged || deltaYChanged;
         }
 
         void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
         {
-            OnBeforeWriteNewState(oldStatePtr, newStatePtr);
+            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
+            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
         bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)

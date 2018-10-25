@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: d02d9ded5de750e47bf2594b09f7b6b5
+ScriptedImporter:
+  fileIDToRecycleName:
+    11400000: <root>
+    11400002: default/SwitchToKeyboardandMouse
+    11400004: default/SwitchToTouch
+    11400006: default/SwitchToXboxController
+    11400008: default/SwitchToControllerDiagram
+    11400010: default/SwitchToPen
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: e2fdc6edf8744b38b702a2a5ee3541b2, type: 3}
+  generateWrapperCode: 0
+  wrapperCodePath: 
+  wrapperClassName: 
+  wrapperCodeNamespace: 

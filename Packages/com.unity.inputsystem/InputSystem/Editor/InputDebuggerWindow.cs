@@ -6,6 +6,12 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: show input users
+
+////TODO: append " (Disabled) to disabled devices and grey them out
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
@@ -19,6 +25,11 @@ using UnityEditor.Networking.PlayerConnection;
 ////TODO: make configuration update when changed
 
 ////TODO: refresh when unrecognized device pops up
+
+////TODO: context menu
+////      devices: open debugger window, remove device, disable device
+////      layouts: copy as json, remove layout
+////      actions: disable action
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -77,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Refresh();
         }
 
-        private void OnEnabledActionsChanged()
+        private void OnActionChange(object actionOrMap, InputActionChange change)
         {
             Refresh();
         }
@@ -96,8 +107,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void Refresh()
         {
-            if (m_TreeView != null)
-                m_TreeView.Reload();
+            m_NeedReload = true;
             Repaint();
         }
 
@@ -109,22 +119,17 @@ namespace UnityEngine.Experimental.Input.Editor
         private void InstallHooks()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
-            InputSystem.onControlLayoutChange += OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice += OnFindLayout;
-
-            if (InputActionSet.s_OnEnabledActionsChanged == null)
-                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionSet.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
+            InputSystem.onLayoutChange += OnLayoutChange;
+            InputSystem.onFindLayoutForDevice += OnFindLayout;
+            InputSystem.onActionChange += OnActionChange;
         }
 
         private void UninstallHooks()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
-            InputSystem.onControlLayoutChange -= OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
-
-            if (InputActionSet.s_OnEnabledActionsChanged != null)
-                InputActionSet.s_OnEnabledActionsChanged.Remove(OnEnabledActionsChanged);
+            InputSystem.onLayoutChange -= OnLayoutChange;
+            InputSystem.onFindLayoutForDevice -= OnFindLayout;
+            InputSystem.onActionChange -= OnActionChange;
         }
 
         private void Initialize()
@@ -155,6 +160,11 @@ namespace UnityEngine.Experimental.Input.Editor
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
                 Initialize();
+            else if (m_NeedReload)
+            {
+                m_TreeView.Reload();
+                m_NeedReload = false;
+            }
 
             DrawToolbarGUI();
 
@@ -184,7 +194,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
-                    Contents.lockInputToGameContent, EditorStyles.toolbarButton);
+                Contents.lockInputToGameContent, EditorStyles.toolbarButton);
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -196,15 +206,14 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private InputDiagnostics m_Diagnostics;
         [NonSerialized] private InputSystemTreeView m_TreeView;
         [NonSerialized] private bool m_Initialized;
+        [NonSerialized] private bool m_NeedReload;
 
         internal static void ReviveAfterDomainReload()
         {
             if (s_Instance != null)
             {
-                InputSystem.onDeviceChange += s_Instance.OnDeviceChange;
-
-                // Trigger an initial repaint now that we know the input system has come
-                // back to life.
+                // Trigger initial repaint. Will call Initialize() to install hooks and
+                // refresh tree.
                 s_Instance.Repaint();
             }
         }
@@ -230,6 +239,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public TreeViewItem devicesItem { get; private set; }
             public TreeViewItem layoutsItem { get; private set; }
             public TreeViewItem configurationItem { get; private set; }
+            public TreeViewItem usersItem { get; private set; }
 
             public InputSystemTreeView(TreeViewState state)
                 : base(state)
@@ -274,6 +284,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddEnabledActions(actionsItem, ref id);
                 }
 
+                // Users.
+                ////TODO
+
                 // Devices.
                 var devices = InputSystem.devices;
                 devicesItem = AddChild(root, string.Format("Devices ({0})", devices.Count), ref id);
@@ -311,6 +324,16 @@ namespace UnityEngine.Experimental.Input.Editor
                     foreach (var device in m_UnsupportedDevices)
                         AddChild(unsupportedDevicesNode, device.ToString(), ref id);
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
+
+                var disconnectedDevices = InputSystem.disconnectedDevices;
+                if (disconnectedDevices.Count > 0)
+                {
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var disconnectedDevicesNode = AddChild(parent, string.Format("Disconnected ({0})", disconnectedDevices.Count), ref id);
+                    foreach (var device in disconnectedDevices)
+                        AddChild(disconnectedDevicesNode, device.ToString(), ref id);
+                    disconnectedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 // Layouts.
@@ -355,7 +378,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            ////TODO: split remote and local layouts
             private void AddControlLayouts(TreeViewItem parent, ref int id)
             {
                 // Split root into three different groups:
@@ -364,8 +386,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 // 3) Device layouts that match specific products
 
                 var controls = AddChild(parent, "Controls", ref id);
-                var devices = AddChild(parent, "Devices", ref id);
-                var products = AddChild(parent, "Products", ref id);
+                var devices = AddChild(parent, "Abstract Devices", ref id);
+                var products = AddChild(parent, "Specific Devices", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
                     AddControlLayoutItem(layout, controls, ref id);
@@ -406,8 +428,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 // Header.
                 AddChild(item, "Type: " + layout.type.Name, ref id);
-                if (!string.IsNullOrEmpty(layout.extendsLayout))
-                    AddChild(item, "Extends: " + layout.extendsLayout, ref id);
+                var baseLayouts = StringHelpers.Join(layout.baseLayouts, ", ");
+                if (!string.IsNullOrEmpty(baseLayouts))
+                    AddChild(item, "Extends: " + baseLayouts, ref id);
                 if (layout.stateFormat != 0)
                     AddChild(item, "Format: " + layout.stateFormat, ref id);
                 if (layout.m_UpdateBeforeRender != null)
@@ -421,10 +444,14 @@ namespace UnityEngine.Experimental.Input.Editor
                         "Common Usages: " +
                         string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
                 }
-                if (!layout.deviceMatcher.empty)
+
+                ////TODO: find a more elegant solution than multiple "Matching Devices" parents when having multiple
+                ////      matchers
+                // Device matchers.
+                foreach (var matcher in EditorInputControlLayoutCache.GetDeviceMatchers(layout.name))
                 {
                     var node = AddChild(item, "Matching Devices", ref id);
-                    foreach (var pattern in layout.deviceMatcher.patterns)
+                    foreach (var pattern in matcher.patterns)
                         AddChild(node, string.Format("{0} => \"{1}\"", pattern.Key, pattern.Value), ref id);
                 }
 
@@ -443,16 +470,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
             private void AddControlItem(InputControlLayout.ControlItem control, TreeViewItem parent, ref int id)
             {
-                var item = AddChild(parent, control.variant.IsEmpty() ? control.name : string.Format("{0} ({1})",
-                            control.name, control.variant), ref id);
+                var item = AddChild(parent, control.variants.IsEmpty() ? control.name : string.Format("{0} ({1})",
+                    control.name, control.variants), ref id);
 
                 ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
 
                 ////TODO: allow clicking this field to jump to the layout
                 if (!control.layout.IsEmpty())
                     AddChild(item, string.Format("Layout: {0}", control.layout), ref id);
-                if (!control.variant.IsEmpty())
-                    AddChild(item, string.Format("Variant: {0}", control.variant), ref id);
+                if (!control.variants.IsEmpty())
+                    AddChild(item, string.Format("Variant: {0}", control.variants), ref id);
                 if (control.format != 0)
                     AddChild(item, string.Format("Format: {0}", control.format), ref id);
                 if (control.offset != InputStateBlock.kInvalidOffset)
@@ -465,6 +492,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Array Size: {0}", control.arraySize), ref id);
                 if (!string.IsNullOrEmpty(control.useStateFrom))
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
+                if (!control.defaultState.isEmpty)
+                    AddChild(item, string.Format("Default State: {0}", control.defaultState.ToString()), ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages.Select(x => x.ToString()).ToArray()), ref id);
@@ -507,7 +536,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 foreach (var action in m_EnabledActions)
                 {
                     // Add item for action.
-                    var set = action.set;
+                    var set = action.actionMap;
                     var setName = set != null ? set.name + "/" : string.Empty;
                     var item = AddChild(parent, setName + action.name, ref id);
 

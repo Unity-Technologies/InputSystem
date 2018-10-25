@@ -5,37 +5,58 @@ using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.TestTools.Utils;
 
-class DualShockTests : InputTestFixture
+#if UNITY_WSA
+using UnityEngine.Experimental.Input.Plugins.HID;
+#endif
+
+public class DualShockTests : InputTestFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID()
     {
+#if !UNITY_WSA
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             product = "Wireless Controller",
             manufacturer = "Sony Interactive Entertainment",
-            interfaceName = "HID"
+            interfaceName = "HID",
         });
+#else // UWP requires different query logic (manufacture not available)
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            interfaceName = "HID",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+#endif
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
         var gamepad = (DualShockGamepad)device;
 
+        // Dpad has default state value so make sure that one is coming through.
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
         InputSystem.QueueStateEvent(gamepad,
             new DualShockHIDInputReport
-        {
-            leftStickX = 32,
-            leftStickY = 64,
-            rightStickX = 128,
-            rightStickY = 255,
-            leftTrigger = 20,
-            rightTrigger = 40,
-            buttons1 = 0xf7,     // Low order 4 bits is Dpad but effectively uses only 3 bits.
-            buttons2 = 0xff,
-            buttons3 = 0xff
-        });
+            {
+                leftStickX = 32,
+                leftStickY = 64,
+                rightStickX = 128,
+                rightStickY = 255,
+                leftTrigger = 20,
+                rightTrigger = 40,
+                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
+                buttons2 = 0xff,
+                buttons3 = 0xff
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
@@ -70,15 +91,63 @@ class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_SupportsDualShockAsHID_WithAlternateManufacturerName()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            manufacturer = "Sony Computer Entertainment",
+            interfaceName = "HID"
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+#if UNITY_WSA
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHIDOnUWP()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+#endif
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualShockHID_HasDpadInNullStateByDefault()
+    {
+        // The DualShock's dpad has a default state of 8 (indicating dpad isn't pressed in any direction),
+        // not of 0 (which actually means "up" is pressed). Make sure this is set up correctly.
+
+        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
+
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanSetLightBarColorAndMotorSpeedsOnDualShockHID()
     {
         var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
 
         DualShockHIDOutputReport? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(gamepad.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(gamepad.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockHIDOutputReport.Type)
                     {
@@ -89,9 +158,8 @@ class DualShockTests : InputTestFixture
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         ////REVIEW: This illustrates a weekness of the current haptics API; each call results in a separate output command whereas
         ////        what the device really wants is to receive both motor speed and light bar settings in one single command
 
@@ -129,26 +197,26 @@ class DualShockTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockGamepadStatePS4
-        {
-            buttons = 0xffffffff,
-            leftStick = new Vector2(0.123f, 0.456f),
-            rightStick = new Vector2(0.789f, 0.234f),
-            leftTrigger = 0.567f,
-            rightTrigger = 0.891f,
-            acceleration = new Vector3(0.987f, 0.654f, 0.321f),
-            orientation = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
-            angularVelocity = new Vector3(0.444f, 0.555f, 0.666f),
-            touch0 = new PS4Touch
             {
-                touchId = 123,
-                position = new Vector2(0.231f, 0.342f)
-            },
-            touch1 = new PS4Touch
-            {
-                touchId = 456,
-                position = new Vector2(0.453f, 0.564f)
-            },
-        });
+                buttons = 0xffffffff,
+                leftStick = new Vector2(0.123f, 0.456f),
+                rightStick = new Vector2(0.789f, 0.234f),
+                leftTrigger = 0.567f,
+                rightTrigger = 0.891f,
+                acceleration = new Vector3(0.987f, 0.654f, 0.321f),
+                orientation = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
+                angularVelocity = new Vector3(0.444f, 0.555f, 0.666f),
+                touch0 = new PS4Touch
+                {
+                    touchId = 123,
+                    position = new Vector2(0.231f, 0.342f)
+                },
+                touch1 = new PS4Touch
+                {
+                    touchId = 456,
+                    position = new Vector2(0.453f, 0.564f)
+                },
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.squareButton.isPressed);
@@ -203,10 +271,10 @@ class DualShockTests : InputTestFixture
         var gamepad = (DualShockGamepadPS4)device;
 
         DualShockPS4OuputCommand? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(gamepad.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(gamepad.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockPS4OuputCommand.Type)
                     {
@@ -217,9 +285,8 @@ class DualShockTests : InputTestFixture
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
 
         Assert.That(receivedCommand.HasValue, Is.True);
@@ -294,10 +361,10 @@ class DualShockTests : InputTestFixture
         }.ToJson(), 1);
 
         bool? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(1,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(1,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryPS4ControllerInfo.Type)
                     {
@@ -310,8 +377,8 @@ class DualShockTests : InputTestFixture
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
+                });
+        }
         InputSystem.Update();
         var gamepad = (DualShockGamepadPS4)InputSystem.devices[0];
 

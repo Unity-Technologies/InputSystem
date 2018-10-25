@@ -26,6 +26,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return Type;
         }
 
+        public unsafe InputEventPtr ToEventPtr()
+        {
+            fixed(DeviceRemoveEvent * ptr = &this)
+            {
+                return new InputEventPtr((InputEvent*)ptr);
+            }
+        }
+
         public static DeviceRemoveEvent Create(int deviceId, double time)
         {
             var inputEvent =

@@ -2,8 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: use deltastateevents as basis for ActionEvent
-
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
@@ -50,7 +48,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 throw new ArgumentNullException("ptr");
             if (!ptr.IsA<DeltaStateEvent>())
                 throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into DeltaStateEvent",
-                        ptr.type));
+                    ptr.type));
 
             return (DeltaStateEvent*)ptr.data;
         }

@@ -120,27 +120,40 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab2c774ecbeac0f0c5ddbe103b7aa5669"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#ab2c774ecbeac0f0c5ddbe103b7aa5669">QueueEvent</a> (IntPtr ptr)</td></tr>
 <tr class="memdesc:ab2c774ecbeac0f0c5ddbe103b7aa5669"><td class="mdescLeft">&#160;</td><td class="mdescRight">Queue an input event.  <a href="#ab2c774ecbeac0f0c5ddbe103b7aa5669">More...</a><br /></td></tr>
 <tr class="separator:ab2c774ecbeac0f0c5ddbe103b7aa5669"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40008cbc6856577f9aa0d35aba5c1893"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a40008cbc6856577f9aa0d35aba5c1893">Update</a> (InputUpdateType type)</td></tr>
+<tr class="memitem:a40008cbc6856577f9aa0d35aba5c1893"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a40008cbc6856577f9aa0d35aba5c1893">Update</a> (<a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a> type)</td></tr>
 <tr class="memdesc:a40008cbc6856577f9aa0d35aba5c1893"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manually trigger an update.  <a href="#a40008cbc6856577f9aa0d35aba5c1893">More...</a><br /></td></tr>
 <tr class="separator:a40008cbc6856577f9aa0d35aba5c1893"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
-<tr class="memitem:ad2a41f7521b440186429edd7b2f05f57"><td class="memItemLeft" align="right" valign="top">Action&lt; InputUpdateType &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#ad2a41f7521b440186429edd7b2f05f57">onBeforeUpdate</a><code> [set]</code></td></tr>
+<tr class="memitem:a272038ad264893a568c808f13d818b17"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a272038ad264893a568c808f13d818b17">currentTime</a><code> [get]</code></td></tr>
+<tr class="memdesc:a272038ad264893a568c808f13d818b17"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current time on the same timeline that input events are delivered on.  <a href="#a272038ad264893a568c808f13d818b17">More...</a><br /></td></tr>
+<tr class="separator:a272038ad264893a568c808f13d818b17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31c81dcd3cfc2b5599e4f61142b500ff"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a31c81dcd3cfc2b5599e4f61142b500ff">currentTimeOffsetToRealtimeSinceStartup</a><code> [get]</code></td></tr>
+<tr class="memdesc:a31c81dcd3cfc2b5599e4f61142b500ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">The time offset that <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a272038ad264893a568c808f13d818b17" title="The current time on the same timeline that input events are delivered on. ">currentTime</a> currently has to Time.realtimeSinceStartup.  <a href="#a31c81dcd3cfc2b5599e4f61142b500ff">More...</a><br /></td></tr>
+<tr class="separator:a31c81dcd3cfc2b5599e4f61142b500ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2a41f7521b440186429edd7b2f05f57"><td class="memItemLeft" align="right" valign="top">Action&lt; <a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#ad2a41f7521b440186429edd7b2f05f57">onBeforeUpdate</a><code> [set]</code></td></tr>
 <tr class="memdesc:ad2a41f7521b440186429edd7b2f05f57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set delegate to be called right before <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a30c5357411d1df73e7942b9573bea972" title="Set delegate to be called on input updates. ">onUpdate</a>.  <a href="#ad2a41f7521b440186429edd7b2f05f57">More...</a><br /></td></tr>
 <tr class="separator:ad2a41f7521b440186429edd7b2f05f57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5711edbd7f9ab3b2a80437d87a62ade"><td class="memItemLeft" align="right" valign="top">Action&lt; int, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#ad5711edbd7f9ab3b2a80437d87a62ade">onDeviceDiscovered</a><code> [set]</code></td></tr>
 <tr class="memdesc:ad5711edbd7f9ab3b2a80437d87a62ade"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set delegate to be called when a new device is discovered.  <a href="#ad5711edbd7f9ab3b2a80437d87a62ade">More...</a><br /></td></tr>
 <tr class="separator:ad5711edbd7f9ab3b2a80437d87a62ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30c5357411d1df73e7942b9573bea972"><td class="memItemLeft" align="right" valign="top">Action&lt; InputUpdateType, int, IntPtr &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a30c5357411d1df73e7942b9573bea972">onUpdate</a><code> [set]</code></td></tr>
+<tr class="memitem:a5eae37371766c35287f5e3fe085ccb4e"><td class="memItemLeft" align="right" valign="top">Action&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a5eae37371766c35287f5e3fe085ccb4e">onShutdown</a><code> [set]</code></td></tr>
+<tr class="memdesc:a5eae37371766c35287f5e3fe085ccb4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set delegate to invoke when system is shutting down.  <a href="#a5eae37371766c35287f5e3fe085ccb4e">More...</a><br /></td></tr>
+<tr class="separator:a5eae37371766c35287f5e3fe085ccb4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30c5357411d1df73e7942b9573bea972"><td class="memItemLeft" align="right" valign="top">Action&lt; <a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a>, int, IntPtr &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a30c5357411d1df73e7942b9573bea972">onUpdate</a><code> [set]</code></td></tr>
 <tr class="memdesc:a30c5357411d1df73e7942b9573bea972"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set delegate to be called on input updates.  <a href="#a30c5357411d1df73e7942b9573bea972">More...</a><br /></td></tr>
 <tr class="separator:a30c5357411d1df73e7942b9573bea972"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61c58de716bc19b745a0ea262db7f737"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a61c58de716bc19b745a0ea262db7f737">pollingFrequency</a><code> [set]</code></td></tr>
 <tr class="memdesc:a61c58de716bc19b745a0ea262db7f737"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the background polling frequency for devices that have to be polled.  <a href="#a61c58de716bc19b745a0ea262db7f737">More...</a><br /></td></tr>
 <tr class="separator:a61c58de716bc19b745a0ea262db7f737"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af162eccc520de20a2c653c3a9e07d091"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#af162eccc520de20a2c653c3a9e07d091">updateMask</a><code> [set]</code></td></tr>
+<tr class="memdesc:af162eccc520de20a2c653c3a9e07d091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mask that determines which input updates are executed by the runtime.  <a href="#af162eccc520de20a2c653c3a9e07d091">More...</a><br /></td></tr>
+<tr class="separator:af162eccc520de20a2c653c3a9e07d091"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Input functions that have to be performed by the underlying input runtime. </p>
+<p>The runtime owns the input event queue, reports device discoveries, and runs periodic updates that flushes out events from the queue. Updates can also be manually triggered by calling <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a40008cbc6856577f9aa0d35aba5c1893" title="Manually trigger an update. ">Update</a>. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a109c31f17f74a37f3504752479a890c3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a109c31f17f74a37f3504752479a890c3">&#9670;&nbsp;</a></span>AllocateDeviceId()</h2>
@@ -239,7 +252,7 @@ Properties</h2></td></tr>
         <tr>
           <td class="memname">void Update </td>
           <td>(</td>
-          <td class="paramtype">InputUpdateType&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a>&#160;</td>
           <td class="paramname"><em>type</em></td><td>)</td>
           <td></td>
         </tr>
@@ -258,6 +271,57 @@ Properties</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Property Documentation</h2>
+<a id="a272038ad264893a568c808f13d818b17"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a272038ad264893a568c808f13d818b17">&#9670;&nbsp;</a></span>currentTime</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double currentTime</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The current time on the same timeline that input events are delivered on. </p>
+<p>This is used to timestamp events that are not explicitly supplied with timestamps.</p>
+<p>Time in the input system progresses linearly and in real-time and relates to when Unity was started. In the editor, this always corresponds to EditorApplication.timeSinceStartup.</p>
+<p>Input time, however, is offset in relation to Time.realtimeSinceStartup. This is because in the player, Time.realtimeSinceStartup is reset to 0 upon loading the first scene and in the editor, Time.realtimeSinceStartup is reset to 0 whenever the editor enters play mode. As the resetting runs counter to the need of linearly progressing time for input, the input system will not reset time along with Time.realtimeSinceStartup. </p>
+
+</div>
+</div>
+<a id="a31c81dcd3cfc2b5599e4f61142b500ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31c81dcd3cfc2b5599e4f61142b500ff">&#9670;&nbsp;</a></span>currentTimeOffsetToRealtimeSinceStartup</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double currentTimeOffsetToRealtimeSinceStartup</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The time offset that <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a272038ad264893a568c808f13d818b17" title="The current time on the same timeline that input events are delivered on. ">currentTime</a> currently has to Time.realtimeSinceStartup. </p>
+
+</div>
+</div>
 <a id="ad2a41f7521b440186429edd7b2f05f57"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad2a41f7521b440186429edd7b2f05f57">&#9670;&nbsp;</a></span>onBeforeUpdate</h2>
 
@@ -268,7 +332,7 @@ Properties</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Action&lt;InputUpdateType&gt; onBeforeUpdate</td>
+          <td class="memname">Action&lt;<a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a>&gt; onBeforeUpdate</td>
         </tr>
       </table>
   </td>
@@ -309,6 +373,30 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a id="a5eae37371766c35287f5e3fe085ccb4e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5eae37371766c35287f5e3fe085ccb4e">&#9670;&nbsp;</a></span>onShutdown</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Action onShutdown</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set delegate to invoke when system is shutting down. </p>
+
+</div>
+</div>
 <a id="a30c5357411d1df73e7942b9573bea972"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a30c5357411d1df73e7942b9573bea972">&#9670;&nbsp;</a></span>onUpdate</h2>
 
@@ -319,7 +407,7 @@ Properties</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Action&lt;InputUpdateType, int, IntPtr&gt; onUpdate</td>
+          <td class="memname">Action&lt;<a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a>, int, IntPtr&gt; onUpdate</td>
         </tr>
       </table>
   </td>
@@ -354,6 +442,32 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set the background polling frequency for devices that have to be polled. </p>
+<p>The frequency is in Hz. A value of 60 means that polled devices get sampled 60 times a second. </p>
+
+</div>
+</div>
+<a id="af162eccc520de20a2c653c3a9e07d091"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af162eccc520de20a2c653c3a9e07d091">&#9670;&nbsp;</a></span>updateMask</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5">InputUpdateType</a> updateMask</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Mask that determines which input updates are executed by the runtime. </p>
+<p>This can be used to turn off unneeded updates (like fixed updates) or turn on updates that are disabled by default (like before-render updates). </p>
 
 </div>
 </div>
