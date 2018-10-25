@@ -379,9 +379,7 @@ public class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.trackedPosition = new InputActionProperty(trackedPositionAction);
-        uiModule.trackedOrientation = new InputActionProperty(trackedOrientationAction);
-        uiModule.trackedSelect = new InputActionProperty(trackedSelectAction);
+        uiModule.AddTrackedDevice(new InputActionProperty(trackedPositionAction), new InputActionProperty(trackedOrientationAction), new InputActionProperty(trackedSelectAction));
 
         // Enable the whole thing.
         map.Enable();
@@ -534,8 +532,7 @@ public class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.touchPosition = new InputActionProperty(positionAction);
-        uiModule.touchPhase = new InputActionProperty(phaseAction);
+        uiModule.AddTouch(new InputActionProperty(positionAction), new InputActionProperty(phaseAction));
 
         // Enable the whole thing.
         map.Enable();

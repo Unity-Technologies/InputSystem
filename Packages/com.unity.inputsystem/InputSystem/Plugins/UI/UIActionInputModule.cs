@@ -35,29 +35,42 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        struct TouchResponder
+        [Serializable]
+        private struct TouchResponder
         {
+            public TouchResponder(int pointerId, InputActionProperty position, InputActionProperty phase)
+            {
+                actionCallback = null;
+                m_ActionsHooked = false;
+                state = new TouchModel(pointerId);
+                m_Position = position;
+                m_Phase = phase;
+            }
+
+            [NonSerialized]
             public TouchModel state;
+
+            [NonSerialized]
+            public Action<InputAction.CallbackContext> actionCallback;
 
             public InputActionProperty position
             {
                 get { return m_Position; }
-                set { SwapProperty(ref m_Position, value, m_ActionsHooked, OnAction); }
+                set { SwapProperty(ref m_Position, value, m_ActionsHooked, actionCallback); }
             }
 
             public InputActionProperty phase
             {
                 get { return m_Phase; }
-                set { SwapProperty(ref m_Phase, value, m_ActionsHooked, OnAction); }
+                set { SwapProperty(ref m_Phase, value, m_ActionsHooked, actionCallback); }
             }
 
-            private bool m_ActionsHooked;
-            [SerializeField]
-            private InputActionProperty m_Position;
-            [SerializeField]
-            private InputActionProperty m_Phase;
+            public bool ActionsHooked
+            {
+                get { return m_ActionsHooked; }
+            }
 
-            void HookActions()
+            public void HookActions()
             {
                 if (!m_ActionsHooked)
                 {
@@ -65,15 +78,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                     var positionAction = m_Position.action;
                     if (positionAction != null)
-                        positionAction.performed += OnAction;
+                        positionAction.performed += actionCallback;
 
                     var phaseAction = m_Phase.action;
                     if (phaseAction != null)
-                        phaseAction.performed += OnAction;
+                        phaseAction.performed += actionCallback;
                 }
             }
 
-            void UnhookActions()
+            public void UnhookActions()
             {
                 if (m_ActionsHooked)
                 {
@@ -83,42 +96,121 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                         var positionAction = m_Position.action;
                         if (positionAction != null)
-                            positionAction.performed -= OnAction;
+                            positionAction.performed -= actionCallback;
 
                         var phaseAction = m_Phase.action;
                         if (phaseAction != null)
-                            phaseAction.performed -= OnAction;
+                            phaseAction.performed -= actionCallback;
                     }
                 }
             }
 
-            private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
-            {
-                if (oldProperty != null)
-                {
-                    if (m_ActionsHooked)
-                        oldProperty.action.performed -= OnAction;
-                }
+            private bool m_ActionsHooked;
 
-                oldProperty = newProperty;
-
-                if (oldProperty != null)
-                {
-                    if (m_ActionsHooked)
-                        oldProperty.action.performed += OnAction;
-                }
-            }
-
-            public void OnAction(InputAction.CallbackContext context)
-            {
-                var action = context.action;
-                if (action == m_Position)
-                    state.position = context.ReadValue<Vector2>();
-                else if (action == m_Phase)
-                    state.selectPhase = context.ReadValue<PointerPhase>();
-            }
+            [SerializeField]
+            private InputActionProperty m_Position;
+            [SerializeField]
+            private InputActionProperty m_Phase;
         }
 
+        [Serializable]
+        private struct TrackedDeviceResponder
+        {
+            public TrackedDeviceResponder(int pointerId, InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
+            {
+                actionCallback = null;
+                m_ActionsHooked = false;
+                state = new TrackedDeviceModel(pointerId);
+                m_Position = position;
+                m_Orientation = orientation;
+                m_Select = select;
+            }
+
+            [NonSerialized]
+            public TrackedDeviceModel state;
+
+            [NonSerialized]
+            public Action<InputAction.CallbackContext> actionCallback;
+
+            public InputActionProperty position
+            {
+                get { return m_Position; }
+                set { SwapProperty(ref m_Position, value, m_ActionsHooked, actionCallback); }
+            }
+
+            public InputActionProperty orientation
+            {
+                get { return m_Orientation; }
+                set { SwapProperty(ref m_Orientation, value, m_ActionsHooked, actionCallback); }
+            }
+
+            public InputActionProperty select
+            {
+                get { return m_Select; }
+                set { SwapProperty(ref m_Select, value, m_ActionsHooked, actionCallback); }
+            }
+
+            public bool ActionsHooked
+            {
+                get { return m_ActionsHooked; }
+            }
+
+            public void HookActions()
+            {
+                if (!m_ActionsHooked)
+                {
+                    m_ActionsHooked = true;
+
+                    var positionAction = m_Position.action;
+                    if (positionAction != null)
+                        positionAction.performed += actionCallback;
+
+                    var orientationAction = m_Orientation.action;
+                    if (orientationAction != null)
+                        orientationAction.performed += actionCallback;
+
+                    var selectAction = m_Select.action;
+                    if (selectAction != null)
+                        selectAction.performed += actionCallback;
+                }
+            }
+
+            public void UnhookActions()
+            {
+                if (m_ActionsHooked)
+                {
+                    if (!m_ActionsHooked)
+                    {
+                        m_ActionsHooked = false;
+
+                        var positionAction = m_Position.action;
+                        if (positionAction != null)
+                            positionAction.performed -= actionCallback;
+
+                        var orientationAction = m_Orientation.action;
+                        if (orientationAction != null)
+                            orientationAction.performed -= actionCallback;
+
+                        var selectAction = m_Orientation.action;
+                        if (selectAction != null)
+                            selectAction.performed -= actionCallback;
+                    }
+                }
+            }
+
+            private bool m_ActionsHooked;
+
+            [SerializeField]
+            private InputActionProperty m_Position;
+            [SerializeField]
+            private InputActionProperty m_Orientation;
+            [SerializeField]
+            private InputActionProperty m_Select;
+        }
+
+        /// <summary>
+        /// This enables background event processing, so that the Input Module can continue sending UI events even in the background.
+        /// </summary>
         public bool ForceEventsWithoutFocus
         {
             get { return m_ForceInputWithoutFocus; }
@@ -126,102 +218,120 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
+        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
         public InputActionProperty point
         {
             get { return m_PointAction; }
-            set { SwapProperty(ref m_PointAction, value); }
+            set { SwapProperty(ref m_PointAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
+        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector.
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
         public InputActionProperty move
         {
             get { return m_MoveAction; }
-            set { SwapProperty(ref m_MoveAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_MoveAction, value, m_ActionsHooked, OnAction); }
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"> scroll wheel value.
+        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// </summary>
         public InputActionProperty scrollWheel
         {
             get { return m_ScrollWheelAction; }
-            set { SwapProperty(ref m_ScrollWheelAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction); }
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
+        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// </summary>
         public InputActionProperty leftClick
         {
             get { return m_LeftClickAction; }
-            set { SwapProperty(ref m_LeftClickAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_LeftClickAction, value, m_ActionsHooked, OnAction); }
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
+        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// </summary>
         public InputActionProperty middleClick
         {
             get { return m_MiddleClickAction; }
-            set { SwapProperty(ref m_MiddleClickAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction); }
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
+        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// </summary>
         public InputActionProperty rightClick
         {
             get { return m_RightClickAction; }
-            set { SwapProperty(ref m_RightClickAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_RightClickAction, value, m_ActionsHooked, OnAction); }
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
+        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// </summary>
         public InputActionProperty submit
         {
             get { return m_SubmitAction; }
-            set { SwapProperty(ref m_SubmitAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_SubmitAction, value, m_ActionsHooked, OnAction); }
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
+        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// </summary>
         public InputActionProperty cancel
         {
             get { return m_CancelAction; }
-            set { SwapProperty(ref m_CancelAction, value, m_ActionsHooked, m_ActionCallback); }
-        }
-
-        //XR Stuff
-        public InputActionProperty trackedPosition
-        {
-            get { return m_TrackedPositionAction; }
-            set { SwapProperty(ref m_TrackedPositionAction, value, m_ActionsHooked, m_ActionCallback); }
-        }
-
-        public InputActionProperty trackedOrientation
-        {
-            get { return m_TrackedOrientationAction; }
-            set { SwapProperty(ref m_TrackedOrientationAction, value, m_ActionsHooked, m_ActionCallback); }
-        }
-
-        public InputActionProperty trackedSelect
-        {
-            get { return m_TrackedSelectAction; }
-            set { SwapProperty(ref m_TrackedSelectAction, value, m_ActionsHooked, m_ActionCallback); }
-        }
-
-        //Touch Stuff
-        public InputActionProperty touchPosition
-        {
-            get { return m_TouchPositionAction; }
-            set { SwapProperty(ref m_TouchPositionAction, value, m_ActionsHooked, m_ActionCallback); }
-        }
-
-        public InputActionProperty touchPhase
-        {
-            get { return m_TouchPhaseAction; }
-            set { SwapProperty(ref m_TouchPhaseAction, value, m_ActionsHooked, m_ActionCallback); }
+            set { SwapProperty(ref m_CancelAction, value, m_ActionsHooked, OnAction); }
         }
 
         protected override void Awake()
         {
             base.Awake();
 
-            int rollingPointerIndex = 0;
-            mouseState = new MouseModel(rollingPointerIndex++);
+            m_RollingPointerId = 0;
+            mouseState = new MouseModel(m_RollingPointerId++);
             joystickState.Reset();
-            trackedDeviceState = new TrackedDeviceModel(rollingPointerIndex++);
-            touchState = new TouchModel(rollingPointerIndex++);
+
+            if (m_Touches == null)
+                m_Touches = new List<TouchResponder>();
+
+            for (int i = 0; i < m_Touches.Count; i++)
+            {
+                TouchResponder responder = m_Touches[i];
+                responder.state = new TouchModel(m_RollingPointerId++);
+                responder.actionCallback = delegate(InputAction.CallbackContext context)
+                {
+                    OnTouchAction(i, context);
+                };
+                m_Touches[i] = responder;
+            }
+
+            if (m_TrackedDevices == null)
+                m_TrackedDevices = new List<TrackedDeviceResponder>();
+
+            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            {
+                TrackedDeviceResponder responder = m_TrackedDevices[i];
+                responder.state = new TrackedDeviceModel(m_RollingPointerId++);
+                responder.actionCallback = delegate(InputAction.CallbackContext context)
+                {
+                    OnTrackedDeviceAction(i, context);
+                };
+                m_TrackedDevices[i] = responder;
+            }
         }
 
         protected override void OnDestroy()
@@ -265,7 +375,60 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        public void OnAction(InputAction.CallbackContext context)
+        /// <summary>
+        /// Adds Touch UI responses based the Actions provided.
+        /// </summary>
+        /// <param name="position">A <see cref="Vector2"/> screen space value that represents the position of the touch.</param>
+        /// <param name="phase">A <see cref="PointerPhase"/> value that represents the current state of the touch event.</param>
+        /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
+        public int AddTouch(InputActionProperty position, InputActionProperty phase)
+        {
+            int id = m_RollingPointerId++;
+
+            TouchResponder newResponder = new TouchResponder(id, position, phase);
+
+            int index = m_Touches.Count;
+            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
+            {
+                OnTouchAction(index, context);
+            };
+
+            m_Touches.Add(newResponder);
+
+            if (m_ActionsHooked)
+                newResponder.HookActions();
+
+            return id;
+        }
+
+        /// <summary>
+        /// Adds Tracked Device UI responses based the Actions provided.
+        /// </summary>
+        /// <param name="position">A <see cref="Vector3"/> unity world space position that represents the position in the world of the device.</param>
+        /// <param name="orientation">A <see cref="Quaternion"/> rotation value representing the orientation of the device.</param>
+        /// <param name="select">A <see cref="bool"/> selection value that represents whether the user wants to select objects or not.</param>
+        /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
+        public int AddTrackedDevice(InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
+        {
+            int id = m_RollingPointerId++;
+
+            TrackedDeviceResponder newResponder = new TrackedDeviceResponder(id, position, orientation, select);
+
+            int index = m_TrackedDevices.Count;
+            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
+            {
+                OnTrackedDeviceAction(index, context);
+            };
+
+            m_TrackedDevices.Add(newResponder);
+
+            if (m_ActionsHooked)
+                newResponder.HookActions();
+
+            return id;
+        }
+
+        void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
             if (action == m_PointAction)
@@ -306,25 +469,51 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() != 0.0f;
             }
-            else if (action == m_TrackedPositionAction)
+        }
+
+        void OnTouchAction(int touchIndex, InputAction.CallbackContext context)
+        {
+            if (touchIndex >= 0 && touchIndex < m_Touches.Count)
             {
-                trackedDeviceState.position = context.ReadValue<Vector3>();
+                TouchResponder responder = m_Touches[touchIndex];
+                TouchModel state = responder.state;
+
+                var action = context.action;
+                if (action == responder.position)
+                {
+                    responder.state.position = context.ReadValue<Vector2>();
+                }
+                if (action == responder.phase)
+                {
+                    responder.state.selectPhase = context.ReadValue<PointerPhase>();
+                }
+
+                m_Touches[touchIndex] = responder;
             }
-            else if (action == m_TrackedOrientationAction)
+        }
+
+        void OnTrackedDeviceAction(int deviceIndex, InputAction.CallbackContext context)
+        {
+            if (deviceIndex >= 0 && deviceIndex < m_TrackedDevices.Count)
             {
-                trackedDeviceState.orientation = context.ReadValue<Quaternion>();
-            }
-            else if (action == m_TrackedSelectAction)
-            {
-                trackedDeviceState.select = context.ReadValue<float>() != 0.0f;
-            }
-            else if (action == m_TouchPositionAction)
-            {
-                touchState.position = context.ReadValue<Vector2>();
-            }
-            else if (action == m_TouchPhaseAction)
-            {
-                touchState.selectPhase = context.ReadValue<PointerPhase>();
+                TrackedDeviceResponder responder = m_TrackedDevices[deviceIndex];
+                TrackedDeviceModel state = responder.state;
+
+                var action = context.action;
+                if (action == responder.position)
+                {
+                    responder.state.position = context.ReadValue<Vector3>();
+                }
+                if (action == responder.orientation)
+                {
+                    responder.state.orientation = context.ReadValue<Quaternion>();
+                }
+                if (action == responder.select)
+                {
+                    responder.state.select = context.ReadValue<float>() != 0.0f;
+                }
+
+                m_TrackedDevices[deviceIndex] = responder;
             }
         }
 
@@ -340,15 +529,31 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
-                trackedDeviceState.OnFrameFinished();
-                touchState.OnFrameFinished();
+
+                for (int i = 0; i < m_Touches.Count; i++)
+                    m_Touches[i].state.OnFrameFinished();
+
+                for (int i = 0; i < m_TrackedDevices.Count; i++)
+                    m_TrackedDevices[i].state.OnFrameFinished();
             }
             else
             {
                 ProcessJoystick(ref joystickState);
                 ProcessMouse(ref mouseState);
-                ProcessTrackedDevice(ref trackedDeviceState);
-                ProcessTouch(ref touchState);
+
+                for (int i = 0; i < m_Touches.Count; i++)
+                {
+                    TouchResponder responder = m_Touches[i];
+                    ProcessTouch(ref responder.state);
+                    m_Touches[i] = responder;
+                }
+
+                for (int i = 0; i < m_TrackedDevices.Count; i++)
+                {
+                    TrackedDeviceResponder responder = m_TrackedDevices[i];
+                    ProcessTrackedDevice(ref responder.state);
+                    m_TrackedDevices[i] = responder;
+                }
             }
         }
 
@@ -357,58 +562,41 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (m_ActionsHooked)
                 return;
 
-            if (m_ActionCallback == null)
-                m_ActionCallback = OnAction;
-
             m_ActionsHooked = true;
 
             var pointAction = m_PointAction.action;
             if (pointAction != null)
-                pointAction.performed += m_ActionCallback;
+                pointAction.performed += OnAction;
 
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
-                moveAction.performed += m_ActionCallback;
+                moveAction.performed += OnAction;
 
             var leftClickAction = m_LeftClickAction.action;
             if (leftClickAction != null)
-                leftClickAction.performed += m_ActionCallback;
+                leftClickAction.performed += OnAction;
 
             var rightClickAction = m_RightClickAction.action;
             if (rightClickAction != null)
-                rightClickAction.performed += m_ActionCallback;
+                rightClickAction.performed += OnAction;
 
             var middleClickAction = m_MiddleClickAction.action;
             if (middleClickAction != null)
-                middleClickAction.performed += m_ActionCallback;
+                middleClickAction.performed += OnAction;
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
-                submitAction.performed += m_ActionCallback;
+                submitAction.performed += OnAction;
 
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
-                cancelAction.performed += m_ActionCallback;
+                cancelAction.performed += OnAction;
 
-            var trackedPositionAction = m_TrackedPositionAction.action;
-            if (trackedPositionAction != null)
-                trackedPositionAction.performed += m_ActionCallback;
+            for (int i = 0; i < m_Touches.Count; i++)
+                m_Touches[i].HookActions();
 
-            var trackedOrientationAction = m_TrackedOrientationAction.action;
-            if (trackedOrientationAction != null)
-                trackedOrientationAction.performed += m_ActionCallback;
-
-            var trackedSelectAction = m_TrackedSelectAction.action;
-            if (trackedSelectAction != null)
-                trackedSelectAction.performed += m_ActionCallback;
-
-            var touchPositionAction = m_TouchPositionAction.action;
-            if (touchPositionAction != null)
-                touchPositionAction.performed += m_ActionCallback;
-
-            var touchPhaseAction = m_TouchPhaseAction.action;
-            if (touchPhaseAction != null)
-                touchPhaseAction.performed += m_ActionCallback;
+            for (int i = 0; i < m_TrackedDevices.Count; i++)
+                m_TrackedDevices[i].HookActions();
         }
 
         private void UnhookActions()
@@ -420,68 +608,37 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             var pointAction = m_PointAction.action;
             if (pointAction != null)
-                pointAction.performed -= m_ActionCallback;
+                pointAction.performed -= OnAction;
 
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
-                moveAction.performed -= m_ActionCallback;
+                moveAction.performed -= OnAction;
 
             var leftClickAction = m_LeftClickAction.action;
             if (leftClickAction != null)
-                leftClickAction.performed -= m_ActionCallback;
+                leftClickAction.performed -= OnAction;
 
             var rightClickAction = m_RightClickAction.action;
             if (rightClickAction != null)
-                rightClickAction.performed -= m_ActionCallback;
+                rightClickAction.performed -= OnAction;
 
             var middleClickAction = m_MiddleClickAction.action;
             if (middleClickAction != null)
-                middleClickAction.performed -= m_ActionCallback;
+                middleClickAction.performed -= OnAction;
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
-                submitAction.performed -= m_ActionCallback;
+                submitAction.performed -= OnAction;
 
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
-                cancelAction.performed -= m_ActionCallback;
+                cancelAction.performed -= OnAction;
 
-            var trackedPositionAction = m_TrackedPositionAction.action;
-            if (trackedPositionAction != null)
-                trackedPositionAction.performed -= m_ActionCallback;
+            for (int i = 0; i < m_Touches.Count; i++)
+                m_Touches[i].UnhookActions();
 
-            var trackedOrientationAction = m_TrackedOrientationAction.action;
-            if (trackedOrientationAction != null)
-                trackedOrientationAction.performed -= m_ActionCallback;
-
-            var trackedSelectAction = m_TrackedSelectAction.action;
-            if (trackedSelectAction != null)
-                trackedSelectAction.performed -= m_ActionCallback;
-
-            var touchPositionAction = m_TouchPositionAction.action;
-            if (touchPositionAction != null)
-                touchPositionAction.performed -= m_ActionCallback;
-
-            var touchPhaseAction = m_TouchPhaseAction.action;
-            if (touchPhaseAction != null)
-                touchPhaseAction.performed -= m_ActionCallback;
-        }
-
-        private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
-        {
-            if (oldProperty != null)
-            {
-                if (m_ActionsHooked)
-                    oldProperty.action.performed -= m_ActionCallback;
-            }
-
-            oldProperty = newProperty;
-
-            if (oldProperty != null)
-            {
-                if (m_ActionsHooked)
-                    oldProperty.action.performed += m_ActionCallback;
-            }
+            for (int i = 0; i < m_TrackedDevices.Count; i++)
+                m_TrackedDevices[i].UnhookActions();
         }
 
         [Tooltip("Enables UI events regardless of focus state.")]
@@ -529,27 +686,16 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private InputActionProperty m_ScrollWheelAction;
 
         [SerializeField]
-        private InputActionProperty m_TrackedPositionAction;
+        private List<TouchResponder> m_Touches;
 
         [SerializeField]
-        private InputActionProperty m_TrackedOrientationAction;
+        private List<TrackedDeviceResponder> m_TrackedDevices;
 
-        [SerializeField]
-        private InputActionProperty m_TrackedSelectAction;
-
-        [SerializeField]
-        private InputActionProperty m_TouchPositionAction;
-
-        [SerializeField]
-        private InputActionProperty m_TouchPhaseAction;
-
+        [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private bool m_ActionsEnabled;
-        [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
 
         [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
-        [NonSerialized] private TrackedDeviceModel trackedDeviceState;
-        [NonSerialized] private TouchModel touchState;
     }
 }
