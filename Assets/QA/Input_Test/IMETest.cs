@@ -64,7 +64,7 @@ public class IMETest : MonoBehaviour
             outputStringText.text = outputString;
     }
 
-    void OnIMECompositionChange(IMEComposition composition)
+    void OnIMECompositionChange(IMECompositionString composition)
     {
         compositionString = "";
         foreach (char c in composition)

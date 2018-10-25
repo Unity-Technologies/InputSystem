@@ -3379,7 +3379,7 @@ partial class CoreTests
         bool callbackWasCalled = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        keyboard.onIMECompositionChange += (IMEComposition composition) =>
+        keyboard.onIMECompositionChange += (IMECompositionString composition) =>
         {
             Assert.That(callbackWasCalled, Is.False);
             callbackWasCalled = true;

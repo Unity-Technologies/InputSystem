@@ -21,18 +21,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public IMEComposition composition;
+        public IMECompositionString compositionString;
 
         public FourCC GetTypeStatic()
         {
             return Type;
         }
 
-        public static IMECompositionEvent Create(int deviceId, string composition, double time)
+        public static IMECompositionEvent Create(int deviceId, string compositionString, double time)
         {
             var inputEvent = new IMECompositionEvent();
             inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * kIMECharBufferSize), deviceId, time);
-            inputEvent.composition = new IMEComposition(composition);
+            inputEvent.compositionString = new IMECompositionString(compositionString);
             return inputEvent;
         }
     }
@@ -41,31 +41,31 @@ namespace UnityEngine.Experimental.Input.LowLevel
 namespace UnityEngine.Experimental.Input
 {
     [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + (sizeof(char) * LowLevel.IMECompositionEvent.kIMECharBufferSize))]
-    public unsafe struct IMEComposition : IEnumerable<char>
+    public unsafe struct IMECompositionString : IEnumerable<char>
     {
         internal unsafe struct Enumerator : IEnumerator<char>
         {
-            IMEComposition m_Composition;
+            IMECompositionString m_CompositionString;
             char m_CurrentCharacter;
             int m_CurrentIndex;
 
-            public Enumerator(IMEComposition composition)
+            public Enumerator(IMECompositionString compositionString)
             {
-                m_Composition = composition;
+                m_CompositionString = compositionString;
                 m_CurrentCharacter = '\0';
                 m_CurrentIndex = -1;
             }
 
             public bool MoveNext()
             {
-                int size = m_Composition.Count;
+                int size = m_CompositionString.Count;
 
                 m_CurrentIndex++;
 
                 if (m_CurrentIndex == size)
                     return false;
 
-                fixed(char* ptr = m_Composition.buffer)
+                fixed(char* ptr = m_CompositionString.buffer)
                 {
                     m_CurrentCharacter = *(ptr + m_CurrentIndex);
                 }
@@ -124,7 +124,7 @@ namespace UnityEngine.Experimental.Input
         [FieldOffset(sizeof(int))]
         fixed char buffer[LowLevel.IMECompositionEvent.kIMECharBufferSize];
 
-        public IMEComposition(string characters)
+        public IMECompositionString(string characters)
         {
             Debug.Assert(characters.Length < LowLevel.IMECompositionEvent.kIMECharBufferSize);
             size = characters.Length;
