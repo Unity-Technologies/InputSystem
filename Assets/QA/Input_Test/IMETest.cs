@@ -64,14 +64,14 @@ public class IMETest : MonoBehaviour
             outputStringText.text = outputString;
     }
 
-    void OnIMECompositionChange(IMECompositionString composition)
+    void OnIMECompositionChange(IMECompositionString compositionString)
     {
-        compositionString = "";
-        foreach (char c in composition)
-            compositionString += c;
+        this.compositionString = "";
+        foreach (char c in compositionString)
+            this.compositionString += c;
 
         if (compositionStringText != null)
-            compositionStringText.text = compositionString;
+            compositionStringText.text = this.compositionString;
     }
 
     // Update is called once per frame

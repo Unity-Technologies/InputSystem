@@ -12,7 +12,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.UIElements;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;

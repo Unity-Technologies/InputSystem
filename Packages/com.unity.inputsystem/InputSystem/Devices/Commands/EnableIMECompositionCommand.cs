@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -17,6 +16,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        /// <summary>
+        /// Set to true, and if true, Input Method Editors will be used while typing.
+        /// </summary>
         public bool imeEnabled
         {
             get { return m_ImeEnabled != 0; }
