@@ -13,9 +13,6 @@ namespace UnityEngine.Experimental.Input.Editor
         public Action<SerializedProperty> OnContextClick;
         protected Action m_ApplyAction;
 
-        [SerializeField]
-        protected string m_NameFilter;
-
         ////TODO: move to a better place
         public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
         public static string ResourcesPath
@@ -32,43 +29,6 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(state)
         {
             m_ApplyAction = applyAction;
-        }
-
-        // Return true is the child node should be removed from the parent
-        protected bool FilterResults(TreeViewItem root)
-        {
-            if (root.hasChildren)
-            {
-                var listToRemove = new List<TreeViewItem>();
-                foreach (var child in root.children)
-                {
-                    if (root.displayName != null && root.displayName.ToLower().Contains(m_NameFilter))
-                    {
-                        continue;
-                    }
-
-                    if (FilterResults(child))
-                    {
-                        listToRemove.Add(child);
-                    }
-                }
-                foreach (var item in listToRemove)
-                {
-                    root.children.Remove(item);
-                }
-
-                return !root.hasChildren;
-            }
-
-            if (root.displayName == null)
-                return false;
-            return !root.displayName.ToLower().Contains(m_NameFilter);
-        }
-
-        public void SetNameFilter(string filter)
-        {
-            m_NameFilter = filter.ToLower();
-            Reload();
         }
 
         public ActionTreeViewItem GetSelectedRow()
