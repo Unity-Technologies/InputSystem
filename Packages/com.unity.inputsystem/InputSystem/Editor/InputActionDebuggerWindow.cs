@@ -9,6 +9,8 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     public class InputActionDebuggerWindow : EditorWindow
     {
+        [NonSerialized] private InputAction m_Action = null;
+
         public static void CreateOrShowExisting(InputAction action)
         {
             // See if we have an existing window for the action and if so pop it in front.
@@ -37,7 +39,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
         }
 
-        [NonSerialized] private InputAction m_Action;
+ 
 
         private static List<InputActionDebuggerWindow> s_OpenDebuggerWindows;
 

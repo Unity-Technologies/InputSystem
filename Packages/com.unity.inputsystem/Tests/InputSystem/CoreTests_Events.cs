@@ -637,10 +637,9 @@ partial class CoreTests
 
     private struct CustomNestedDeviceState : IInputStateTypeInfo
     {
-        [InputControl(name = "button1", layout = "Button")]
-        public int buttons;
 
-        [InputControl(layout = "Axis")] public float axis2;
+
+
 
         public FourCC GetFormat()
         {
@@ -652,7 +651,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public float axis;
 
-        public CustomNestedDeviceState nested;
+
 
         public FourCC GetFormat()
         {
@@ -714,7 +713,7 @@ partial class CoreTests
     private struct ExtendedCustomDeviceState : IInputStateTypeInfo
     {
         public CustomDeviceState baseState;
-        public int extra;
+
 
         public FourCC GetFormat()
         {

@@ -932,7 +932,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     usage = usage,
                     usagePage = usagePage,
                     elements = m_Elements != null ? m_Elements.ToArray() : null,
-                    collections = m_Collections != null ? m_Collections.ToArray() : null,
+                    collections =  null,
                 };
 
                 return descriptor;

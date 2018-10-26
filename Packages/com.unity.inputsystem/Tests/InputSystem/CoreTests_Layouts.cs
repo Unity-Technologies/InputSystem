@@ -1101,13 +1101,11 @@ partial class CoreTests
     // comes out with an "INT" format and not a "FLT" format.
     private struct StateStructWithPrimitiveFields : IInputStateTypeInfo
     {
-        [InputControl(layout = "Axis")] public byte byteAxis;
-        [InputControl(layout = "Axis")] public short shortAxis;
 
-        [InputControl(layout = "Axis")] public int intAxis;
 
-        // No float as that is the default format for Axis anyway.
-        [InputControl(layout = "Axis")] public double doubleAxis;
+
+
+
 
         public FourCC GetFormat()
         {
@@ -1628,11 +1626,9 @@ partial class CoreTests
 
     private struct StateWithTwoLayoutVariants : IInputStateTypeInfo
     {
-        [InputControl(name = "button", layout = "Button", variants = "A")]
-        public int buttons;
 
-        [InputControl(name = "axis", layout = "Axis", variants = "B")]
-        public float axis;
+
+
 
         public FourCC GetFormat()
         {
@@ -1882,8 +1878,8 @@ partial class CoreTests
     //[InputControl(name = "axis", offset = InputStateBlock.kInvalidOffset)]
     private struct BaseInputState : IInputStateTypeInfo
     {
-        [InputControl(layout = "Axis")] public float axis;
-        public int padding;
+
+
         public FourCC GetFormat()
         {
             return new FourCC("BASE");
