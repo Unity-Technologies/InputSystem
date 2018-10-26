@@ -20,8 +20,6 @@ using UnityEditor;
 
 ////TODO: make capitalization consistent in the generated code
 
-////REVIEW: what about generating an interface based on the available actions and automatically hooking up an InputActionQueue internally?
-
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -37,6 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public string namespaceName { get; set; }
             public string sourceAssetPath { get; set; }
             public bool generateEvents { get; set; }
+            public bool generateInterfaces { get; set; }
         }
 
         public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
@@ -53,12 +52,13 @@ namespace UnityEngine.Experimental.Input.Editor
         // action sets in code.
         public static string GenerateWrapperCode(IEnumerable<InputActionMap> maps, IEnumerable<InputControlScheme> schemes, Options options)
         {
-            if (string.IsNullOrEmpty(options.sourceAssetPath))
-                throw new ArgumentException("options.sourceAssetPath");
-
             if (string.IsNullOrEmpty(options.className))
+            {
+                if (string.IsNullOrEmpty(options.sourceAssetPath))
+                    throw new ArgumentException("options.sourceAssetPath");
                 options.className =
                     CSharpCodeHelpers.MakeTypeName(Path.GetFileNameWithoutExtension(options.sourceAssetPath));
+            }
 
             var writer = new Writer
             {
@@ -66,7 +66,8 @@ namespace UnityEngine.Experimental.Input.Editor
             };
 
             // Header.
-            writer.WriteLine(string.Format("// GENERATED AUTOMATICALLY FROM '{0}'\n", options.sourceAssetPath));
+            if (!string.IsNullOrEmpty(options.sourceAssetPath))
+                writer.WriteLine(string.Format("// GENERATED AUTOMATICALLY FROM '{0}'\n", options.sourceAssetPath));
 
             // Usings.
             writer.WriteLine("using System;");
@@ -173,33 +174,35 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 writer.WriteLine(string.Format("// {0}", map.name));
 
-                var setName = CSharpCodeHelpers.MakeIdentifier(map.name);
-                var setStructName = CSharpCodeHelpers.MakeTypeName(setName, "Actions");
+                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                var mapTypeName = CSharpCodeHelpers.MakeTypeName(mapName, "Actions");
 
-                // Caching field for action set.
-                writer.WriteLine(string.Format("private InputActionMap m_{0};", setName));
+                // Caching field for action map.
+                writer.WriteLine(string.Format("private InputActionMap m_{0};", mapName));
+                if (options.generateInterfaces)
+                    writer.WriteLine(string.Format("private I{0} m_{0}CallbackInterface;", mapTypeName));
 
                 // Caching fields for all actions.
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine(string.Format("private InputAction m_{0}_{1};", setName, actionName));
+                    writer.WriteLine(string.Format("private InputAction m_{0}_{1};", mapName, actionName));
 
                     if (options.generateEvents)
                     {
-                        WriteActionEventField(setName, actionName, InputActionPhase.Started, writer);
-                        WriteActionEventField(setName, actionName, InputActionPhase.Performed, writer);
-                        WriteActionEventField(setName, actionName, InputActionPhase.Cancelled, writer);
+                        WriteActionEventField(mapName, actionName, InputActionPhase.Started, writer);
+                        WriteActionEventField(mapName, actionName, InputActionPhase.Performed, writer);
+                        WriteActionEventField(mapName, actionName, InputActionPhase.Cancelled, writer);
                     }
                 }
 
                 // Struct wrapping access to action set.
-                writer.WriteLine(string.Format("public struct {0}", setStructName));
+                writer.WriteLine(string.Format("public struct {0}", mapTypeName));
                 writer.BeginBlock();
 
                 // Constructor.
                 writer.WriteLine(string.Format("private {0} m_Wrapper;", options.className));
-                writer.WriteLine(string.Format("public {0}({1} wrapper) {{ m_Wrapper = wrapper; }}", setStructName,
+                writer.WriteLine(string.Format("public {0}({1} wrapper) {{ m_Wrapper = wrapper; }}", mapTypeName,
                     options.className));
 
                 // Getter for each action.
@@ -208,20 +211,20 @@ namespace UnityEngine.Experimental.Input.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(string.Format(
                         "public InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", actionName,
-                        setName, actionName));
+                        mapName, actionName));
 
                     // Action event getters.
                     if (options.generateEvents)
                     {
-                        WriteActionEventGetter(setName, actionName, InputActionPhase.Started, writer);
-                        WriteActionEventGetter(setName, actionName, InputActionPhase.Performed, writer);
-                        WriteActionEventGetter(setName, actionName, InputActionPhase.Cancelled, writer);
+                        WriteActionEventGetter(mapName, actionName, InputActionPhase.Started, writer);
+                        WriteActionEventGetter(mapName, actionName, InputActionPhase.Performed, writer);
+                        WriteActionEventGetter(mapName, actionName, InputActionPhase.Cancelled, writer);
                     }
                 }
 
-                // Action set getter.
+                // Action map getter.
                 writer.WriteLine(string.Format("public InputActionMap Get() {{ return m_Wrapper.m_{0}; }}",
-                    setName));
+                    mapName));
 
                 // Enable/disable methods.
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
@@ -234,18 +237,58 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Implicit conversion operator.
                 writer.WriteLine(string.Format(
                     "public static implicit operator InputActionMap({0} set) {{ return set.Get(); }}",
-                    setStructName));
+                    mapTypeName));
+
+                // SetCallbacks method.
+                if (options.generateInterfaces)
+                {
+                    writer.WriteLine(string.Format("public void SetCallbacks(I{0} instance)", mapTypeName));
+                    writer.BeginBlock();
+
+                    ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
+
+                    // Uninitialize existing interface.
+                    writer.WriteLine(string.Format("if (m_Wrapper.m_{0}CallbackInterface != null)", mapTypeName));
+                    writer.BeginBlock();
+                    foreach (var action in map.actions)
+                    {
+                        var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                        var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
+
+                        writer.WriteLine(string.Format("{1}.started -= m_Wrapper.m_{0}CallbackInterface.On{2};", mapTypeName, actionName, actionTypeName));
+                        writer.WriteLine(string.Format("{1}.performed -= m_Wrapper.m_{0}CallbackInterface.On{2};", mapTypeName, actionName, actionTypeName));
+                        writer.WriteLine(string.Format("{1}.cancelled -= m_Wrapper.m_{0}CallbackInterface.On{2};", mapTypeName, actionName, actionTypeName));
+                    }
+                    writer.EndBlock();
+
+                    // Initialize new interface.
+                    writer.WriteLine(string.Format("m_Wrapper.m_{0}CallbackInterface = instance;", mapTypeName));
+                    writer.WriteLine("if (instance != null)");
+                    writer.BeginBlock();
+                    foreach (var action in map.actions)
+                    {
+                        var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                        var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
+
+                        writer.WriteLine(string.Format("{0}.started += instance.On{1};", actionName, actionTypeName));
+                        writer.WriteLine(string.Format("{0}.performed += instance.On{1};", actionName, actionTypeName));
+                        writer.WriteLine(string.Format("{0}.cancelled += instance.On{1};", actionName, actionTypeName));
+                    }
+                    writer.EndBlock();
+
+                    writer.EndBlock();
+                }
 
                 writer.EndBlock();
 
                 // Getter for instance of struct.
-                writer.WriteLine(string.Format("public {0} @{1}", setStructName, setName));
+                writer.WriteLine(string.Format("public {0} @{1}", mapTypeName, mapName));
                 writer.BeginBlock();
 
                 writer.WriteLine("get");
                 writer.BeginBlock();
                 writer.WriteLine("if (!m_Initialized) Initialize();");
-                writer.WriteLine(string.Format("return new {0}(this);", setStructName));
+                writer.WriteLine(string.Format("return new {0}(this);", mapTypeName));
                 writer.EndBlock();
 
                 writer.EndBlock();
@@ -280,6 +323,25 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // End class.
             writer.EndBlock();
+
+            // Generate interfaces.
+            if (options.generateInterfaces)
+            {
+                foreach (var map in maps)
+                {
+                    var typeName = CSharpCodeHelpers.MakeTypeName(map.name);
+                    writer.WriteLine(string.Format("public interface I{0}Actions", typeName));
+                    writer.BeginBlock();
+
+                    foreach (var action in map.actions)
+                    {
+                        var methodName = CSharpCodeHelpers.MakeTypeName(action.name);
+                        writer.WriteLine(string.Format("void On{0}(InputAction.CallbackContext context);", methodName));
+                    }
+
+                    writer.EndBlock();
+                }
+            }
 
             // End namespace.
             if (haveNamespace)
