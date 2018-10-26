@@ -1,6 +1,8 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public static class UnityExtensions
+public static class Extensions
 {
     public static bool IsDesktopPlatform(this RuntimePlatform platform)
     {
@@ -17,5 +19,11 @@ public static class UnityExtensions
         }
 
         return false;
+    }
+
+    public static void Each<TValue>(this IEnumerable<TValue> enumerable, Action<TValue> action)
+    {
+        foreach (var element in enumerable)
+            action(element);
     }
 }

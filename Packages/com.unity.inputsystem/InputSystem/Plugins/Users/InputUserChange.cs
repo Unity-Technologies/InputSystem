@@ -41,6 +41,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
         NameChanged,
 
+        HandleChanged,
+
         BindingsChanged,
 
         /// <summary>

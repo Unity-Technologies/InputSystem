@@ -3,7 +3,9 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
+using UnityEngine.Experimental.Input.Plugins.Steam;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.SceneManagement;
@@ -18,7 +20,8 @@ using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 public class DemoGameTestFixture
 {
     public DemoGame game { get; set; }
-    public InputTestFixture inputFixture { get; set; }
+    public InputTestFixture input { get; set; }
+    public SteamTestFixture steam { get; set; }
     public RuntimePlatform platform { get; private set; }
 
     public Mouse mouse { get; set; }
@@ -32,14 +35,20 @@ public class DemoGameTestFixture
     public XRHMD hmd { get; set; }
     public XRController leftHand { get; set; }
     public XRController rightHand { get; set; }
+    public InputDevice steamController { get; set; }
     ////TODO: on-screen controls
+
+    public DemoPlayerController player1
+    {
+        get { return game.players[0]; }
+    }
 
     [UnitySetUp]
     public IEnumerator SetUp()
     {
         // Set up input.
-        inputFixture = new InputTestFixture();
-        inputFixture.Setup();
+        input = new InputTestFixture();
+        input.Setup();
 
         // See if we have a platform set for the current test.
         var testProperties = TestContext.CurrentContext.Test.Properties;
@@ -48,8 +57,24 @@ public class DemoGameTestFixture
             var value = (string)testProperties["Platform"][0];
             switch (value.ToLower())
             {
-                case "osx": platform = RuntimePlatform.OSXPlayer; break;
-                default: throw new NotImplementedException();
+                case "windows":
+                    platform = RuntimePlatform.WindowsPlayer;
+                    break;
+
+                case "osx":
+                    platform = RuntimePlatform.OSXPlayer;
+                    break;
+
+                case "android":
+                    platform = RuntimePlatform.Android;
+                    break;
+
+                case "ios":
+                    platform = RuntimePlatform.IPhonePlayer;
+                    break;
+
+                default:
+                    throw new NotImplementedException();
             }
         }
         else
@@ -62,22 +87,63 @@ public class DemoGameTestFixture
         yield return SceneManager.LoadSceneAsync("Assets/Demo/Demo.unity", LoadSceneMode.Single);
         game = GameObject.Find("DemoGame").GetComponent<DemoGame>();
 
-        // Set up default device matrix for current platform.
-        // NOTE: We use strings here instead of types as not all devices are available in all players.
-        switch (platform)
+        // If there's a "Platform" property on the test or no specific "Device" property, add the default
+        // set of devices for the current platform.
+        if (testProperties.ContainsKey("Platform") || !testProperties.ContainsKey("Device"))
         {
-            case RuntimePlatform.OSXPlayer:
-            case RuntimePlatform.OSXEditor:
-                keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
-                mouse = (Mouse)InputSystem.AddDevice("Mouse");
-                ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
-                xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
-                ////TODO: joystick
-                break;
+            // Set up default device matrix for current platform.
+            // NOTE: We use strings here instead of types as not all devices are available in all players.
+            switch (platform)
+            {
+                case RuntimePlatform.WindowsEditor:
+                case RuntimePlatform.WindowsPlayer:
+                    keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+                    mouse = (Mouse)InputSystem.AddDevice("Mouse");
+                    pen = (Pen)InputSystem.AddDevice("Pen");
+                    touchscreen = (Touchscreen)InputSystem.AddDevice("Touchscreen");
+                    ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
+                    xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
+                    ////TODO: joystick
+                    break;
 
-            ////TODO: other platforms
-            default:
-                throw new NotImplementedException();
+                case RuntimePlatform.OSXPlayer:
+                case RuntimePlatform.OSXEditor:
+                    keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+                    mouse = (Mouse)InputSystem.AddDevice("Mouse");
+                    ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
+                    xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
+                    ////TODO: joystick
+                    break;
+
+                ////TODO: other platforms
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        // Add whatever devices are specified in explicit "Device" properties.
+        if (testProperties.ContainsKey("Device"))
+        {
+            foreach (var value in testProperties["Device"])
+            {
+                switch (((string)value).ToLower())
+                {
+                    case "gamepad":
+                        InputSystem.AddDevice<Gamepad>();
+                        break;
+
+                    case "keyboard":
+                        InputSystem.AddDevice<Keyboard>();
+                        break;
+
+                    case "mouse":
+                        InputSystem.AddDevice<Mouse>();
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
         }
 
         // Check if we should add VR support.
@@ -103,12 +169,19 @@ public class DemoGameTestFixture
 
             DemoGame.vrSupported = true;
         }
+
+        // Check if we should add Steam support.
+        if (testProperties.ContainsKey("Steam"))
+        {
+            ////TODO: create steam test fixture
+            steamController = InputSystem.AddDevice("SteamDemoController");
+        }
     }
 
     [TearDown]
     public void TearDown()
     {
-        inputFixture.TearDown();
+        input.TearDown();
     }
 
     public void Click(string button, int playerIndex = 0)
@@ -131,6 +204,37 @@ public class DemoGameTestFixture
             throw new ArgumentException("action");
 
         // And trigger it.
-        inputFixture.Trigger(actionInstance);
+        input.Trigger(actionInstance);
+    }
+
+    /// <summary>
+    /// Press a key on the keyboard.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <remarks>
+    /// Requires the current platform to have a keyboard.
+    /// </remarks>
+    public void Press(Key key)
+    {
+        Debug.Assert(keyboard != null);
+        input.Set(keyboard[key], 1);
+    }
+
+    /// <summary>
+    /// Release a key on the keyboard.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <remarks>
+    /// Requires the current platform to have a keyboard.
+    /// </remarks>
+    public void Release(Key key)
+    {
+        Debug.Assert(keyboard != null);
+        input.Set(keyboard[key], 1);
+    }
+
+    public void Press(ButtonControl button)
+    {
+        throw new NotImplementedException();
     }
 }

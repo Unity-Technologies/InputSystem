@@ -60,6 +60,12 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputAction>(m_Actions, 0, m_ActionCount); }
         }
 
+        public InputBinding? bindingMask
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         /// <summary>
         /// Push all actions in the given map onto the stack.
         /// </summary>
@@ -225,6 +231,11 @@ namespace UnityEngine.Experimental.Input
             }
 
             m_ActionCount = 0;
+        }
+
+        public bool Contains(InputAction action)
+        {
+            return ArrayHelpers.ContainsReferenceTo(m_Actions, m_ActionCount, action);
         }
 
         /// <summary>

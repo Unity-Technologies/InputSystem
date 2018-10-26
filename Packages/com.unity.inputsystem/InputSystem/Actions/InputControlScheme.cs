@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Serialization;
 
 ////REVIEW: allow associating control schemes with platforms, too?
 
@@ -99,6 +98,20 @@ namespace UnityEngine.Experimental.Input
                 if (m_DeviceRequirements.Length == 0)
                     m_DeviceRequirements = null;
             }
+        }
+
+        public static InputControlScheme? FindControlSchemeForControl<TList>(InputDevice control, TList schemes)
+            where TList : IEnumerable<InputControlScheme>
+        {
+            foreach (var scheme in schemes)
+            {
+                var requirements = scheme.m_DeviceRequirements;
+                for (var i = 0; i < requirements.Length; ++i)
+                    if (InputControlPath.TryFindControl(control, requirements[i].controlPath) != null)
+                        return scheme;
+            }
+
+            return null;
         }
 
         ////REVIEW: have mode where instead of matching only the first device that matches a requirement, we match as many

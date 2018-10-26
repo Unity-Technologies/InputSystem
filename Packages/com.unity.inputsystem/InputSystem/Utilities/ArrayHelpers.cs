@@ -62,7 +62,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (array == null)
                 return false;
 
-            for (var i = 0; i < array.Length; ++i)
+            return ContainsReferenceTo(array, array.Length, value);
+        }
+
+        public static bool ContainsReferenceTo<TValue>(TValue[] array, int count, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return false;
+
+            for (var i = 0; i < count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return true;
 

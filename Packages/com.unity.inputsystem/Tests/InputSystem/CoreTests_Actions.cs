@@ -2378,6 +2378,28 @@ partial class CoreTests
 
     #endif
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanFindControlSchemeUsingGivenDevice()
+    {
+        var scheme1 = new InputControlScheme()
+            .WithRequiredDevice("<Gamepad>");
+        var scheme2 = new InputControlScheme()
+            .WithRequiredDevice("<Keyboard>")
+            .WithRequiredDevice("<Mouse>");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(InputControlScheme.FindControlSchemeForControl(gamepad, new[] {scheme1, scheme2}),
+            Is.EqualTo(scheme1));
+        Assert.That(InputControlScheme.FindControlSchemeForControl(keyboard, new[] {scheme1, scheme2}),
+            Is.EqualTo(scheme2));
+        Assert.That(InputControlScheme.FindControlSchemeForControl(mouse, new[] {scheme1, scheme2}),
+            Is.Null);
+    }
+
     // The bindings targeting an action can be masked out such that only specific
     // bindings take effect and others are ignored.
     [Test]
@@ -3610,6 +3632,10 @@ partial class CoreTests
 
         stack.Push(action1);
         stack.Push(action2);
+
+        Assert.That(stack.Contains(action1));
+        Assert.That(stack.Contains(action2));
+        Assert.That(stack.Contains(action3), Is.False);
 
         Assert.That(stack.actions, Has.Count.EqualTo(2));
         Assert.That(stack.actions[0], Is.SameAs(action1));

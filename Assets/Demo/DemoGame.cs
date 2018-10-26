@@ -294,9 +294,6 @@ public class DemoGame : MonoBehaviour
         // Register as input user with input system.
         InputUser.Add(playerComponent);
 
-        // Every player starts out with gameplay actions active.
-        //playerComponent.SetInputActions(playerComponent.controls.gameplay);
-
         return playerComponent;
     }
 

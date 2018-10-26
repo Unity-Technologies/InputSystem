@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Plugins.Users;
 
 // Single-player mode tests for the demo game.
 
@@ -61,11 +63,40 @@ public partial class DemoGameTests
 
     [Test]
     [Category("Demo")]
-    [Ignore("TODO")]
-    public void TODO_Demo_SinglePlayer_CanSwitchBetweenDevicesOnTheFly()
+    [Property("Device", "Gamepad")]
+    [Property("Device", "Keyboard")]
+    [Property("Device", "Mouse")]
+    public void Demo_SinglePlayer_CanSwitchBetweenControlSchemesOnTheFly()
     {
         Click("SinglePlayerButton");
 
-        Assert.Fail();
+        Press(Gamepad.all[0].buttonSouth);
+
+        Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.GamepadScheme));
+
+        Press(Key.A);
+
+        Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.KeyboardMouseScheme));
+    }
+
+    [Test]
+    [Category("Demo")]
+    [Property("Device", "Gamepad")]
+    [Property("Device", "Gamepad")]
+    public void Demo_SinglePlayer_CanSwitchBetweenMultipleGamepads()
+    {
+        Click("SinglePlayerButton");
+
+        // Press A button on gamepad #0.
+        Press(Gamepad.all[0].buttonSouth);
+
+        Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.GamepadScheme));
+        Assert.That(player1.GetAssignedInputDevices(), Is.SameAs(Gamepad.all[0]));
+
+        // Press A button on gamepad #1.
+        Press(Gamepad.all[1].buttonSouth);
+
+        Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.GamepadScheme));
+        Assert.That(player1.GetAssignedInputDevices(), Is.SameAs(Gamepad.all[1]));
     }
 }

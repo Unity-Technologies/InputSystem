@@ -13,7 +13,7 @@ using Random = UnityEngine.Random;
 /// <summary>
 /// Controller for a single player in the game.
 /// </summary>
-public class DemoPlayerController : MonoBehaviour, IInputUser
+public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 {
     public float moveSpeed;
     public float rotateSpeed;
@@ -97,6 +97,11 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         if (playerIndex != 0)
             controls.DuplicateAndSwitchAsset();
 
+        // Wire our callbacks into gameplay actions. We don't need to do the same
+        // for menu actions as it's the UI using those and not us.
+        controls.gameplay.SetCallbacks(this);
+
+        ////REVIEW: we have to figure out who controls the enabling/disabling of actions used by UIs
         // Wire our input actions into the UI. Doing this manually here instead of setting it up
         // in the inspector ensure that when we duplicate DemoControls.inputactions above, we
         // end up with the UI using the right actions.
@@ -114,19 +119,28 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// </summary>
     public void StartSinglePlayerGame()
     {
-        // We still select one control scheme and make it the active one so that we can display UI hints
-        // for it. When the player uses bindings not in the scheme, the control scheme will automatically
-        // switch.
+        // Even without the user having picked up any device, we want to be able to display UI hints and have
+        // them make sense for the current platform. So we dynamically decide on a default control scheme.
+        // If necessary, the user's first input will switch to a different scheme automatically.
         var defaultScheme = InferDefaultControlSchemeForSinglePlayer();
 
-        ////TODO: make sure we enable all bindings instead of just the ones from the default control scheme
-        ////TODO: handle failure
-        // Switch to default control scheme and give the player whatever controls
-        // it needs.
-        this.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
+        // Switch to default control scheme and give the player whatever devices it needs.
+        if (!this.AssignControlScheme(defaultScheme).AndAssignMatchingDevices())
+        {
+            // We couldn't successfully switch to the scheme we decided on as a default.
+            // Fall back to just trying one scheme after the other until we have one that
+            // we can set successfully.
 
+            var controlSchemes = controls.asset.controlSchemes;
+            for (var i = 0; i < controlSchemes.Count; ++i)
+            {
+                if (this.AssignControlScheme(controlSchemes[i]).AndAssignMatchingDevices())
+                    break;
+            }
+        }
+
+        // Start with the gameplay actions being active.
         this.SetInputActions(controls.gameplay);
-
         this.ActivateInput();
     }
 
@@ -181,10 +195,6 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         throw new NotImplementedException();
     }
 
-    public void ConnectInput()
-    {
-    }
-
     public void Reset()
     {
         m_Score = 0;
@@ -202,46 +212,48 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         m_Look = context.ReadValue<Vector2>();
     }
 
-    public void OnFireStarted(InputAction.CallbackContext context)
+    public void OnFire(InputAction.CallbackContext context)
     {
-        if (context.interaction is SlowTapInteraction)
-            m_Charging = true;
+        switch (context.phase)
+        {
+            case InputActionPhase.Started:
+                if (context.interaction is SlowTapInteraction)
+                    m_Charging = true;
+                break;
+
+            case InputActionPhase.Performed:
+                if (context.interaction is SlowTapInteraction)
+                {
+                    StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
+                }
+                else
+                {
+                    FireProjectile();
+                }
+                m_Charging = false;
+                break;
+
+            case InputActionPhase.Cancelled:
+                m_Charging = false;
+                break;
+        }
     }
 
-    public void OnFirePerformed(InputAction.CallbackContext context)
+    public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.interaction is SlowTapInteraction)
+        if (context.performed)
         {
-            StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
+            var jump = new Vector3(0.0f, jumpForce, 0.0f);
+            if (m_IsGrounded)
+            {
+                m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
+                m_IsGrounded = false;
+            }
         }
-        else
-        {
-            FireProjectile();
-        }
-        m_Charging = false;
     }
 
-    /// <summary>
-    /// Called when the "gameplay/fire" action is cancelled.
-    /// </summary>
-    /// <param name="context"></param>
-    public void OnFireCancelled(InputAction.CallbackContext context)
+    public void OnEscape(InputAction.CallbackContext context)
     {
-        m_Charging = false;
-    }
-
-    /// <summary>
-    /// Called when the "gameplay/jump" action is performed.
-    /// </summary>
-    /// <param name="context"></param>
-    public void OnJumpPerformed(InputAction.CallbackContext context)
-    {
-        var jump = new Vector3(0.0f, jumpForce, 0.0f);
-        if (m_IsGrounded)
-        {
-            m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
-            m_IsGrounded = false;
-        }
     }
 
     /// <summary>
