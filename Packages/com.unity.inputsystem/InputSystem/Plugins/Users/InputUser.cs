@@ -199,18 +199,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             Notify(user, InputUserChange.NameChanged);
         }
 
-        public static InputActionAssetReference GetControls<TUser>(this TUser user)
-            where TUser : class, IInputUser
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void SetControls<TUser>(this TUser user, InputActionAssetReference controls)
-            where TUser : class, IInputUser
-        {
-            throw new NotImplementedException();
-        }
-
         public static bool IsInputActive<TUser>(this TUser user)
             where TUser : class, IInputUser
         {
@@ -232,6 +220,28 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             where TUser : class, IInputUser
         {
             user.GetInputActions().Disable();
+        }
+
+        public static void PushInputAction<TUser>(this TUser user, InputAction action)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (action == null)
+                throw new ArgumentNullException("action");
+            
+            user.GetInputActions().Push(action);
+        }
+        
+        public static void PushInputActions<TUser>(this TUser user, InputActionMap map)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (map == null)
+                throw new ArgumentNullException("map");
+            
+            user.GetInputActions().Push(map);
         }
 
         /// <summary>
@@ -276,6 +286,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             }
 
             return result;
+        }
+
+        public static void ClearInputActions<TUser>(this TUser user)
+            where TUser : class, IInputUser
+        {
+            user.GetInputActions().Clear();
         }
 
         /// <summary>

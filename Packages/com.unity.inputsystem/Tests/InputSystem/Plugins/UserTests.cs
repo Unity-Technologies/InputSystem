@@ -1,11 +1,9 @@
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
-
-//much of this is so fucking arcane
-//the control scheme and action stuff should be simple
 
 //on platforms, we probably want to hook this up to system stuff; look at the Xbox API
 
@@ -397,16 +395,32 @@ internal class UserTests : InputTestFixture
         }
     }
     
-    //this is where the shit starts
+    //remove InputActionStack
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanAssignActionAssetToUser()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var user = new TestUser();
+        InputUser.Add(user);
+
+        user.AssignInputActions(asset);
+    }
     
-    //what if we take enabling/disabling away from the user?
-    //meaning, to enable/disable, you continue to just call Enable() and Disable(). simple.
-    
-    //and then.. what if we simplify associating actions to just correlating an asset with the user?
-    //we won't support lose actions and maps but so what?
-    
-    //the current stuff not only moves enabling/disabling over into the user's domain, it also
-    //blows up that domain further by involving a stack
+    [Test]
+    [Category("Users")]
+    public void Users_CanAssignActionAssetReferenceToUser()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var reference = new InputActionAssetReference(asset);
+
+        var user = new TestUser();
+        InputUser.Add(user);
+
+        user.AssignInputActions(reference);
+    }
 
     [Test]
     [Category("Users")]
@@ -419,11 +433,11 @@ internal class UserTests : InputTestFixture
 
         Assert.That(user.GetInputActions(), Is.Empty);
 
-        user.GetInputActions().Push(action);
+        user.PushInputAction(action);
 
         Assert.That(user.GetInputActions(), Is.EquivalentTo(new[] { action }));
 
-        user.GetInputActions().Clear();
+        user.ClearInputActions();
 
         Assert.That(user.GetInputActions(), Is.Empty);
     }
@@ -454,7 +468,7 @@ internal class UserTests : InputTestFixture
         var user = new TestUser();
         InputUser.Add(user);
 
-        user.GetInputActions().Push(action);
+        user.PushInputAction(action);
 
         // Make sure user is passive by default.
         Assert.That(user.IsInputActive(), Is.False);

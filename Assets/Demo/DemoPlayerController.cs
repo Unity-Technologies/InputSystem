@@ -119,6 +119,33 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// </summary>
     public void StartSinglePlayerGame()
     {
+        this.AssignInputActions(controls);
+        
+        // Even without the user having picked up any device, we want to be able to display UI hints and have
+        // them make sense for the current platform. So we dynamically decide on a default control scheme.
+        // If necessary, the user's first input will switch to a different scheme automatically.
+        var defaultScheme = InferDefaultControlSchemeForSinglePlayer();
+
+        // Switch to default control scheme and give the player whatever devices it needs.
+        if (!this.AssignControlScheme(defaultScheme).AndAssignMatchingDevices())
+        {
+            // We couldn't successfully switch to the scheme we decided on as a default.
+            // Fall back to just trying one scheme after the other until we have one that
+            // we can set successfully.
+
+            var controlSchemes = controls.asset.controlSchemes;
+            for (var i = 0; i < controlSchemes.Count; ++i)
+            {
+                if (this.AssignControlScheme(controlSchemes[i]).AndAssignMatchingDevices())
+                    break;
+            }
+        }
+
+        // Start with the gameplay actions being active.
+        controls.gameplay.Enable();
+    }
+    public void StartSinglePlayerGame()
+    {
         // Even without the user having picked up any device, we want to be able to display UI hints and have
         // them make sense for the current platform. So we dynamically decide on a default control scheme.
         // If necessary, the user's first input will switch to a different scheme automatically.

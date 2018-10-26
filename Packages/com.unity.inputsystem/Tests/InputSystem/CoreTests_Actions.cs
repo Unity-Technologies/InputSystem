@@ -3805,5 +3805,16 @@ partial class CoreTests
         Assert.That(action4.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
         Assert.That(action5.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
         Assert.That(map.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        
+        // Can change binding mask while enabled.
+        stack.Enable();
+        stack.bindingMask = new InputBinding {groups = "other"};
+        
+        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
+        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
+        Assert.That(action3.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
+        Assert.That(action4.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
+        Assert.That(action5.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
+        Assert.That(map.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
     }
 }

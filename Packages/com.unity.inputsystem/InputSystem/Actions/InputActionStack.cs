@@ -59,11 +59,39 @@ namespace UnityEngine.Experimental.Input
         {
             get { return new ReadOnlyArray<InputAction>(m_Actions, 0, m_ActionCount); }
         }
+        
+        //this is happening at the wrong place
+        //what we want is to set the mask once on a while InputActionAsset and then not worry about it again
 
         public InputBinding? bindingMask
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return m_BindingMask; }
+            set
+            {
+                if (m_BindingMask == value)
+                    return;
+                
+                m_BindingMask = value;
+
+                // Set mask on current set of actions.
+                var bindingMask = value.HasValue ? value.Value : new InputBinding();
+                for (var i = 0; i < m_ActionCount; ++i)
+                {
+                    var action = m_Actions[i];
+                    var map = action.actionMap;
+                    
+                    if (map == null)
+                    {
+                        if (action.bindingMask != bindingMask)
+                            action.SetBindingMask(bindingMask);
+                    }
+                    else
+                    {
+                        if (map.bindingMask != bindingMask)
+                            map.SetBindingMask(bindingMask);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -280,6 +308,7 @@ namespace UnityEngine.Experimental.Input
 
         private int m_ActionCount;
         private InputAction[] m_Actions;
+        private InputBinding? m_BindingMask;
         private Flags m_Flags;
 
         [Flags]

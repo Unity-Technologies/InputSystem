@@ -26,6 +26,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="InputUser.AssignInputDevices{TUser,TDevices}"/>
         DevicesChanged,
 
+        ////REVIEW: nuke this one entirely?
+        ////REVIEW: does this need to be more granular?
         /// <summary>
         /// The user switched to a different set of actions.
         /// </summary>
