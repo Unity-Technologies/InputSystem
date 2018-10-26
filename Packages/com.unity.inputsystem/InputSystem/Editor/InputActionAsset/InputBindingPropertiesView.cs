@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_ProcessorsProperty;
 
         private SerializedProperty m_GroupsProperty;
-        
+
         private SerializedProperty m_BindingProperty;
 
         private Action m_ReloadTree;
@@ -67,11 +67,11 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(m_InteractionsProperty, ApplyModifiers);
             m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, ApplyModifiers);
             m_Toolbar = toolbar;
-            if(m_Toolbar!=null)
+            if (m_Toolbar != null)
                 m_ControlSchemes = toolbar.controlSchemes;
             m_BingingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
         }
-        
+
         private void ApplyModifiers()
         {
             m_InteractionsProperty.stringValue = m_InteractionsReorderableReorderableList.ToSerializableString();

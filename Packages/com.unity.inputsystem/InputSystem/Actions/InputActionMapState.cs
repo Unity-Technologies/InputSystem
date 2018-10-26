@@ -578,6 +578,7 @@ namespace UnityEngine.Experimental.Input
             interactions[interactionIndex].Process(ref context);
         }
 
+        ////REVIEW: shouldn't this be based on event time rather than current time?
         internal void StartTimeout(float seconds, ref TriggerState trigger)
         {
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount);

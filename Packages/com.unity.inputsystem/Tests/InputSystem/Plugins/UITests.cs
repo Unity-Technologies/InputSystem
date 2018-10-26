@@ -14,7 +14,7 @@ using UnityEngine.UI;
 ////TODO: app focus handling
 ////TODO: send IUpdateSelectedHandler.OnUpdateSelected event
 
-public class UITests : InputTestFixture
+internal class UITests : InputTestFixture
 {
     // Set up a UIActionInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI

@@ -152,6 +152,8 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
+        ////TODO: return Substring and use path parser; should get rid of allocations
+
         // From the given control path, try to determine the control layout being used.
         //
         // NOTE: This function will only use information available in the path itself or

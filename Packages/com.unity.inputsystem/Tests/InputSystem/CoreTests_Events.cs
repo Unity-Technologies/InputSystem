@@ -116,8 +116,8 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
 
-        testRuntime.currentTime = 1234;
-        testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1123;
+        runtime.currentTime = 1234;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 1123;
 
         double? receivedTime = null;
         double? receivedInternalTime = null;
@@ -147,7 +147,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 2);
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3);
 
-        //testRuntime.
+        //runtime.
         //InputSystem.Update(InputUpdateType.Fixed);
 
         Assert.Fail();
@@ -175,7 +175,7 @@ partial class CoreTests
 
             var stateEventPtr = StateEvent.From(eventPtr);
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
-            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(testRuntime.currentTime));
+            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes,
                 Is.EqualTo(InputEvent.kBaseEventSize + sizeof(FourCC) + mouse.stateBlock.alignedSizeInBytes));
@@ -604,7 +604,7 @@ partial class CoreTests
             ++receivedUpdateCalls;
             receivedEventCount += eventCount;
         };
-        testRuntime.onUpdate += onUpdate;
+        runtime.onUpdate += onUpdate;
 
         InputSystem.Update();
 

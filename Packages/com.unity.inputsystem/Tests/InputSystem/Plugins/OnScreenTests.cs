@@ -7,7 +7,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.OnScreen;
 using UnityEngine.TestTools.Utils;
 
-public class OnScreenTests : InputTestFixture
+internal class OnScreenTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]

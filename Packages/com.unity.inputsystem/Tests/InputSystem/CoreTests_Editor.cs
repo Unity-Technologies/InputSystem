@@ -54,7 +54,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
         InputSystem.AddDevice("MyDevice");
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             product = "Product",
             manufacturer = "Manufacturer",
@@ -100,7 +100,7 @@ partial class CoreTests
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,

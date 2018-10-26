@@ -9,6 +9,8 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add warning if input backends are not enabled
+
 ////TODO: show input users
 
 ////TODO: append " (Disabled) to disabled devices and grey them out

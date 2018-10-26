@@ -250,7 +250,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-            
+
             LoadPropertiesForSelection();
         }
 

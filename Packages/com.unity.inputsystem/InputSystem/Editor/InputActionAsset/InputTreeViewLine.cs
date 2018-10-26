@@ -25,10 +25,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
                     InputActionTreeBase.ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
-                
+
                 border.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
                     InputActionTreeBase.ResourcesPath + "actionTreeBackground.png");
-                border.border = new RectOffset(0,0,0,1);
+                border.border = new RectOffset(0, 0, 0, 1);
 
                 textStyle.alignment = TextAnchor.MiddleLeft;
 
@@ -110,7 +110,7 @@ namespace UnityEngine.Experimental.Input.Editor
             boxRect.width = (depth + 1) * 6;
             boxRect.height -= 2;
             rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            
+
             // background color at the beginning the the row
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);

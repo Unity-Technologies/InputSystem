@@ -7,6 +7,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      per device, multiple devices per stack, etc.); should also resolve the problem of having
 ////      two bindings stack on top of each other and making the one on top suppress the one below
 
+////REVIEW: given we have the global ActionTriggered callback, do we really need the per-map callback?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

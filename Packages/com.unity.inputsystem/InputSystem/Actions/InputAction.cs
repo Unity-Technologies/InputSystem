@@ -1,6 +1,11 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: I think the action system as it is today offers too many ways to shoot yourself in the foot. It has
+////        flexibility but at the same time has abundant opportunity for ending up with dysfunction. Common setups
+////        have to come preconfigured and work robustly for the user without requiring much understanding of how
+////        the system fits together.
+
 ////REVIEW: have single delegate instead of separate performed/started/cancelled callbacks?
 
 ////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls' and 'bindings')
@@ -19,6 +24,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      a single start cycle
 
 ////TODO: allow changing bindings without having to disable
+
+////REVIVEW: what about having the concept of "consumed" on the callback context?
 
 ////REVIEW: should actions basically be handles to data that is stored in an array in the map?
 ////        (with this, we could also implement more efficient duplication where we duplicate all the binding data but not the action data)
@@ -135,6 +142,7 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
+                ////REVIEW: if no mask is set on the action but one is set on the map, should we return that one?
                 if (m_BindingMask.isEmpty)
                     return null;
                 return m_BindingMask;
@@ -544,6 +552,21 @@ namespace UnityEngine.Experimental.Input
                         return InputActionPhase.Disabled;
                     return m_State.triggerStates[actionIndex].phase;
                 }
+            }
+
+            public bool started
+            {
+                get { return phase == InputActionPhase.Started; }
+            }
+
+            public bool performed
+            {
+                get { return phase == InputActionPhase.Performed; }
+            }
+
+            public bool cancelled
+            {
+                get { return phase == InputActionPhase.Cancelled; }
             }
 
             /// <summary>
