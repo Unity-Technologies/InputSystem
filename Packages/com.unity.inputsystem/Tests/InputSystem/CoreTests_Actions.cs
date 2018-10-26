@@ -168,7 +168,7 @@ partial class CoreTests
 
         derivedMap.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.North));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
         InputSystem.Update();
 
         Assert.That(actionWasPerformed);
@@ -274,7 +274,7 @@ partial class CoreTests
             receivedValue = ctx.ReadValue<float>();
         };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
 
         Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
@@ -357,7 +357,7 @@ partial class CoreTests
                     .And.With.Message.Contains("Vector2"));
         };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
 
         Assert.That(receivedCall, Is.True);
@@ -608,7 +608,7 @@ partial class CoreTests
             ctx => { ++receivedCalls; };
         action.Enable();
 
-        var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         var secondState = new GamepadState {buttons = 0};
 
         InputSystem.QueueStateEvent(gamepad, firstState);
@@ -654,7 +654,7 @@ partial class CoreTests
         };
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.South}, 0.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.South}, 0.0);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
@@ -711,7 +711,7 @@ partial class CoreTests
         };
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.South}, 0.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.South}, 0.0);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
@@ -749,7 +749,7 @@ partial class CoreTests
             ctx => ++ startedReceivedCalls;
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South), 1);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 1);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
@@ -1483,7 +1483,7 @@ partial class CoreTests
         action.cancelled += ctx => cancelled.Add(ctx);
 
         // Perform tap.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 0.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.A}, 0.0);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, 0.05);
         InputSystem.Update();
 
@@ -1503,7 +1503,7 @@ partial class CoreTests
         cancelled.Clear();
 
         // Perform slow tap.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 2.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.A}, 2.0);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0},
             2.0 + InputConfiguration.SlowTapTime + 0.0001);
         InputSystem.Update();
@@ -1620,7 +1620,7 @@ partial class CoreTests
         Assert.That(performed, Is.Empty);
 
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A});
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A});
         InputSystem.Update();
 
         Assert.That(performed, Has.Count.EqualTo(1));
@@ -1643,7 +1643,7 @@ partial class CoreTests
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A});
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A});
         InputSystem.Update();
 
         Assert.That(performed, Has.Count.EqualTo(1));
@@ -1664,9 +1664,9 @@ partial class CoreTests
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {buttons = 1 << (int)GamepadState.Button.A});
+            new GamepadState {buttons = 1 << (int)GamepadButton.A});
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A});
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A});
         InputSystem.Update();
 
         Assert.That(performed, Is.Empty);
@@ -1692,7 +1692,7 @@ partial class CoreTests
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A}, 0.0);
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A}, 0.0);
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputConfiguration.SlowTapTime + 0.1);
         InputSystem.Update();
@@ -1764,7 +1764,7 @@ partial class CoreTests
         Assert.That(action.lastTriggerControl, Is.SameAs(gamepad1.leftTrigger));
 
         // Also make sure that this device creation path gets it right.
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription {product = "Test", deviceClass = "Gamepad"}.ToJson());
         InputSystem.Update();
         var gamepad2 = (Gamepad)InputSystem.devices.First(x => x.description.product == "Test");
@@ -2592,14 +2592,14 @@ partial class CoreTests
         float? value = null;
         action.performed += ctx => { value = ctx.ReadValue<float>(); };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.LeftShoulder));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.LeftShoulder));
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(-1).Within(0.00001));
 
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.RightShoulder));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.RightShoulder));
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -3482,7 +3482,7 @@ partial class CoreTests
                 ".*InvalidOperationException thrown during execution of callback for 'Performed' phase of 'testAction' action in map 'testMap'.*"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
     }
 
@@ -3717,7 +3717,7 @@ partial class CoreTests
 
         stack.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
 
         Assert.That(action1Performed, Is.False);
@@ -3733,5 +3733,51 @@ partial class CoreTests
 
         Assert.That(action1Performed, Is.True);
         Assert.That(action2Performed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ArrangedInStack_CanHaveSharedBindingMask()
+    {
+        var stack = new InputActionStack();
+        var action1 = new InputAction("action1");
+        var action2 = new InputAction("action2");
+        var action3 = new InputAction("action3");
+
+        var map = new InputActionMap();
+        var action4 = map.AddAction("action4");
+        var action5 = map.AddAction("action5");
+
+        Assert.That(stack.bindingMask, Is.Null);
+
+        stack.Push(action1);
+        stack.Push(action2);
+
+        stack.bindingMask = new InputBinding {groups = "test"};
+
+        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action3.bindingMask, Is.Null);
+        Assert.That(action4.bindingMask, Is.Null);
+        Assert.That(action5.bindingMask, Is.Null);
+        Assert.That(map.bindingMask, Is.Null);
+
+        stack.Push(action3);
+
+        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action3.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action4.bindingMask, Is.Null);
+        Assert.That(action5.bindingMask, Is.Null);
+        Assert.That(map.bindingMask, Is.Null);
+
+        stack.Push(map);
+
+        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action3.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action4.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(action5.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
+        Assert.That(map.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
     }
 }
