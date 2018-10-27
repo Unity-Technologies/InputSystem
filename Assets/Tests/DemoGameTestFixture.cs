@@ -181,7 +181,27 @@ public class DemoGameTestFixture
     [TearDown]
     public void TearDown()
     {
+        // It looks like the test runner is stupidly reusing test fixture instances instead of
+        // creating a new object for every run. So we really have to clean up well.
+
         input.TearDown();
+
+        game = null;
+        input = null;
+        steam = null;
+
+        mouse = null;
+        keyboard = null;
+        touchscreen = null;
+        ps4Gamepad = null;
+        xboxGamepad = null;
+        joystick = null;
+        pen = null;
+        gyro = null;
+        hmd = null;
+        leftHand = null;
+        rightHand = null;
+        steamController = null;
     }
 
     public void Click(string button, int playerIndex = 0)
@@ -216,6 +236,7 @@ public class DemoGameTestFixture
     /// </remarks>
     public void Press(Key key)
     {
+        var keyboard = InputSystem.GetDevice<Keyboard>();
         Debug.Assert(keyboard != null);
         input.Set(keyboard[key], 1);
     }
@@ -229,12 +250,26 @@ public class DemoGameTestFixture
     /// </remarks>
     public void Release(Key key)
     {
+        var keyboard = InputSystem.GetDevice<Keyboard>();
         Debug.Assert(keyboard != null);
         input.Set(keyboard[key], 1);
     }
 
+    /// <summary>
+    /// Press a button on a device.
+    /// </summary>
+    /// <param name="button"></param>
     public void Press(ButtonControl button)
     {
-        throw new NotImplementedException();
+        input.Set(button, 1);
+    }
+
+    /// <summary>
+    /// Release a button on a device.
+    /// </summary>
+    /// <param name="button"></param>
+    public void Release(ButtonControl button)
+    {
+        input.Set(button, 0);
     }
 }

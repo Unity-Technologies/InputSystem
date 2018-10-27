@@ -816,6 +816,37 @@ partial class CoreTests
             Assert.That(list.Contains(keyboard.spaceKey));
             Assert.That(!list.Contains(keyboard));
 
+            list.AddRange(new InputControl[] {keyboard.aKey, keyboard.bKey}, count: 1, destinationIndex: 0);
+
+            Assert.That(list.Count, Is.EqualTo(3));
+            Assert.That(list.Capacity, Is.EqualTo(7));
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey}));
+
+            list.AddRange(new InputControl[] {keyboard.bKey, keyboard.cKey});
+
+            Assert.That(list.Count, Is.EqualTo(5));
+            Assert.That(list.Capacity, Is.EqualTo(5));
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+
+            using (var toAdd = new InputControl[] {gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest}.ToControlList())
+                list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
+
+            Assert.That(list.Count, Is.EqualTo(6));
+            Assert.That(list.Capacity, Is.EqualTo(4));
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+
+            list[0] = keyboard.zKey;
+
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.zKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+
             list.Clear();
 
             Assert.That(list.Count, Is.Zero);

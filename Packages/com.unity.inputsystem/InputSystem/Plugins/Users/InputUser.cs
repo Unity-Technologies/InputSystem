@@ -3,17 +3,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
-//should enabling/resolving bindings be a separate, explicit step?
-
-//make users actually *own* their actions
-
-//do we need to make users have ties to assets?
-
-//does this take control of enabling/disabling actions in some form?
-//does it have all possible actions for the user or just whatever applies in the user's current context?
-
-////TODO: have the importer generate an interface for actions and have the user code automatically wire that up, if present
-
 ////TODO: kill InputDevice.userId
 
 ////REVIEW: should we reference the control scheme by name only instead of passing InputControlSchemes around?
@@ -57,6 +46,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             remove { s_OnChange.RemoveByMovingTailWithCapacity(value); }
         }
 
+        ////REVIEW: should this make the binding that triggered available to the callback?
         /// <summary>
         /// Event that is triggered when an action that is associated with a user is triggered from
         /// a device that is not currently assigned to the user.
@@ -160,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             Notify(user, InputUserChange.HandleChanged);
         }
 
-        ////REVIEW: do we really need/want this?
+        ////REVIEW: do we really need/want this? should this be a property on IInputUser instead?
         /// <summary>
         /// Get the human-readable name of the user.
         /// </summary>
@@ -199,76 +189,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             Notify(user, InputUserChange.NameChanged);
         }
 
-        public static bool IsInputActive<TUser>(this TUser user)
-            where TUser : class, IInputUser
-        {
-            return user.GetInputActions().enabled;
-        }
-
-        public static void ActivateInput<TUser>(this TUser user)
-            where TUser : class, IInputUser
-        {
-            user.GetInputActions().Enable();
-        }
-
-        /// <summary>
-        /// Silence all input on <paramref name="user"/>'s actions.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <typeparam name="TUser"></typeparam>
-        public static void PassivateInput<TUser>(this TUser user)
-            where TUser : class, IInputUser
-        {
-            user.GetInputActions().Disable();
-        }
-
-        public static void PushInputAction<TUser>(this TUser user, InputAction action)
-            where TUser : class, IInputUser
-        {
-            if (user == null)
-                throw new ArgumentNullException("user");
-            if (action == null)
-                throw new ArgumentNullException("action");
-            
-            user.GetInputActions().Push(action);
-        }
-        
-        public static void PushInputActions<TUser>(this TUser user, InputActionMap map)
-            where TUser : class, IInputUser
-        {
-            if (user == null)
-                throw new ArgumentNullException("user");
-            if (map == null)
-                throw new ArgumentNullException("map");
-            
-            user.GetInputActions().Push(map);
-        }
-
-        /// <summary>
-        /// Clear the current action stack and switch to the given set of actions.
-        /// </summary>
-        /// <param name="user">An input user that has been <see cref="Add">added</see> to the system.</param>
-        /// <param name="actions">Set of actions to switch to. Can be null in which case the stack is simply
-        /// cleared and no further action is taken.</param>
-        /// <typeparam name="TUser">Type of <see cref="IInputUser"/>.</typeparam>
-        /// <exception cref="ArgumentNullException"><paramref name="user"/> is null.</exception>
-        public static void SetInputActions<TUser>(this TUser user, InputActionMap actions)
-            where TUser : class, IInputUser
-        {
-            if (user == null)
-                throw new ArgumentNullException("user");
-
-            var stack = user.GetInputActions();
-            stack.Clear();
-
-            if (actions != null)
-                stack.Push(actions);
-        }
-
-        /// <summary>
-        /// Get the <see cref="InputActionMap">input action maps</see> that are currently active for the user.
-        /// </summary>
-        public static InputActionStack GetInputActions<TUser>(this TUser user)
+        public static IInputActionCollection GetInputActions<TUser>(this TUser user)
             where TUser : class, IInputUser
         {
             if (user == null)
@@ -278,20 +199,40 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (index == -1)
                 return null;
 
-            var result = s_AllUserData[index].actionStack;
-            if (result == null)
-            {
-                result = new InputActionStack();
-                s_AllUserData[index].actionStack = result;
-            }
-
-            return result;
+            return s_AllUserData[index].actions;
         }
 
-        public static void ClearInputActions<TUser>(this TUser user)
+        /// <summary>
+        /// Associate an .inputactions asset with the given user.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="actions"></param>
+        /// <typeparam name="TUser"></typeparam>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void AssignInputActions<TUser>(this TUser user, IInputActionCollection actions)
             where TUser : class, IInputUser
         {
-            user.GetInputActions().Clear();
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (actions == null)
+                throw new ArgumentNullException("actions");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            s_AllUserData[index].actions = actions;
+        }
+
+        public static void AssignInputActions<TUser>(this TUser user, InputActionAssetReference assetReference)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (assetReference == null)
+                throw new ArgumentNullException("assetReference");
+
+            AssignInputActions(user, assetReference.asset);
         }
 
         /// <summary>
@@ -641,7 +582,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             for (var i = 0; i < s_AllUserCount; ++i)
             {
                 var startIndex = s_AllUserData[i].deviceStartIndex;
-                if (startIndex >= i && i < startIndex + s_AllUserData[i].deviceCount)
+                if (startIndex >= indexOfDevice && indexOfDevice < startIndex + s_AllUserData[i].deviceCount)
                     return s_AllUsers[i];
             }
 
@@ -670,6 +611,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (change != InputActionChange.ActionTriggered)
                 return;
 
+            ////REVIEW: filter for noise here?
+
             // Grab control that triggered the action.
             var action = (InputAction)obj;
             var control = action.lastTriggerControl;
@@ -689,8 +632,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             var userIndex = -1;
             for (var i = 0; i < s_AllUserCount; ++i)
             {
-                var actions = s_AllUserData[i].actionStack;
-                if (actions.Contains(action))
+                var actions = s_AllUserData[i].actions;
+                if (actions != null && actions.Contains(action))
                 {
                     userIndex = i;
                     break;
@@ -715,27 +658,52 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             /// devices matching the newly assigned control scheme.
             /// </summary>
             /// <returns></returns>
-            public ControlSchemeSyntax AndAssignMatchingDevices()
+            public ControlSchemeSyntax AndAssignDevices()
             {
-                InputControlScheme.MatchResult? matchResult = null;
+                return AndAssignDevicesInternal(addMissingOnly: false);
+            }
+
+            /// <summary>
+            /// Leave the user's assigned devices in place but assign any available devices
+            /// that are still required by the control scheme.
+            /// </summary>
+            /// <returns></returns>
+            public ControlSchemeSyntax AndAssignMissingDevices()
+            {
+                return AndAssignDevicesInternal(addMissingOnly: true);
+            }
+
+            public ControlSchemeSyntax AndAssignDevices(out InputControlScheme.MatchResult matchResult)
+            {
+                return AndAssignDevicesInternal(out matchResult, addMissingOnly: false);
+            }
+
+            public ControlSchemeSyntax AndAssignMissingDevices(out InputControlScheme.MatchResult matchResult)
+            {
+                return AndAssignDevicesInternal(out matchResult, addMissingOnly: true);
+            }
+
+            private ControlSchemeSyntax AndAssignDevicesInternal(bool addMissingOnly)
+            {
+                var matchResult = new InputControlScheme.MatchResult();
                 try
                 {
-                    return AndAssignMatchingDevices(out matchResult);
+                    return AndAssignDevicesInternal(out matchResult, addMissingOnly: addMissingOnly);
                 }
                 finally
                 {
-                    if (matchResult.HasValue)
-                        matchResult.Value.Dispose();
+                    matchResult.Dispose();
                 }
             }
 
-            public ControlSchemeSyntax AndAssignMatchingDevices(out InputControlScheme.MatchResult? matchResult)
+            private ControlSchemeSyntax AndAssignDevicesInternal(out InputControlScheme.MatchResult matchResult, bool addMissingOnly)
             {
-                matchResult = null;
+                matchResult = new InputControlScheme.MatchResult();
 
-                // If we are currently assigned devices, unassign them first.
+                // If we are currently assigned devices and we're supposed to assign devices from scratch,
+                // unassign what we have first.
                 var needToNotifyAboutChangedDevices = false;
-                if (s_AllUserData[m_UserIndex].deviceCount > 0)
+                if (!addMissingOnly && s_AllUserData[m_UserIndex].deviceCount > 0)
                 {
                     ClearAssignedInputDevicesInternal(m_UserIndex);
                     needToNotifyAboutChangedDevices = true;
@@ -754,19 +722,27 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     // requirements.
                     using (var availableDevices = GetUnassignedInputDevices())
                     {
-                        matchResult = scheme.PickDevicesFrom(availableDevices);
-                        if (!matchResult.Value.isSuccessfulMatch)
-                        {
-                            // Control scheme isn't satisfied with the devices we have available.
-                            return this;
-                        }
+                        // If we're only supposed to add missing devices, we need to take the devices already
+                        // already assigned to the user into account when picking devices. Add them to the beginning
+                        // of the list so that they get matched first.
+                        if (addMissingOnly)
+                            availableDevices.AddSlice(s_AllUsers[m_UserIndex].GetAssignedInputDevices(), destinationIndex: 0);
 
-                        // Assign selected devices to user.
-                        if (availableDevices.Count > 0)
+                        matchResult = scheme.PickDevicesFrom(availableDevices);
+                        if (matchResult.isSuccessfulMatch)
                         {
-                            foreach (var device in matchResult.Value.devices)
-                                AssignDeviceInternal(m_UserIndex, device);
-                            needToNotifyAboutChangedDevices = true;
+                            // Control scheme is satisfied with the devices we have available.
+                            // Assign selected devices to user.
+                            foreach (var device in matchResult.devices)
+                            {
+                                if (AssignDeviceInternal(m_UserIndex, device))
+                                    needToNotifyAboutChangedDevices = true;
+                            }
+                        }
+                        else
+                        {
+                            // Control scheme isn't satisfied with the devices we got.
+                            m_Failure = true;
                         }
                     }
                 }
@@ -783,16 +759,23 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 if (!s_AllUserData[m_UserIndex].controlScheme.HasValue)
                     return this;
 
+                var actions = s_AllUserData[m_UserIndex].actions;
+                if (actions == null)
+                    throw new InvalidOperationException(string.Format("No actions have been assigned to user '{0}'; call AssignInputActions() first",
+                        s_AllUsers[m_UserIndex]));
+
                 var bindingGroup = s_AllUserData[m_UserIndex].controlScheme.Value.bindingGroup;
-                throw new NotImplementedException();
+                actions.SetBindingMask(new InputBinding {groups = bindingGroup});
+                return this;
             }
 
             public static implicit operator bool(ControlSchemeSyntax syntax)
             {
-                throw new NotImplementedException();
+                return !syntax.m_Failure;
             }
 
             internal int m_UserIndex;
+            internal bool m_Failure;
         }
 
         /// <summary>
@@ -807,7 +790,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             public int deviceCount;
             public int deviceStartIndex;
 
-            public InputActionStack actionStack;
+            public IInputActionCollection actions;
             public InputControlScheme? controlScheme;
         }
 

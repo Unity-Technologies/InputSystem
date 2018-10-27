@@ -91,12 +91,16 @@ public partial class DemoGameTests
         Press(Gamepad.all[0].buttonSouth);
 
         Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.GamepadScheme));
-        Assert.That(player1.GetAssignedInputDevices(), Is.SameAs(Gamepad.all[0]));
+        Assert.That(player1.GetAssignedInputDevices(), Is.EquivalentTo(new[] {Gamepad.all[0]}));
 
-        // Press A button on gamepad #1.
+        ////REVIEW: because of the interactions on the fire button, we need to release before we can press
+        ////        again; should this be dealt with and the switching be allowed?
+
+        // Release A button on gamepad #0 and press it on gamepad #1.
+        Release(Gamepad.all[0].buttonSouth);
         Press(Gamepad.all[1].buttonSouth);
 
         Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.GamepadScheme));
-        Assert.That(player1.GetAssignedInputDevices(), Is.SameAs(Gamepad.all[1]));
+        Assert.That(player1.GetAssignedInputDevices(), Is.EquivalentTo(new[] {Gamepad.all[1]}));
     }
 }

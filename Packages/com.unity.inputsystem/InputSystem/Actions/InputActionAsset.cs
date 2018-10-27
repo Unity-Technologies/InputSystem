@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -38,7 +39,7 @@ namespace UnityEngine.Experimental.Input
     /// Note also that all action maps in an asset share binding state. This means that if
     /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
-    public class InputActionAsset : ScriptableObject, ICloneable
+    public class InputActionAsset : ScriptableObject, ICloneable, IInputActionCollection
     {
         public const string kExtension = "inputactions";
 
@@ -56,6 +57,11 @@ namespace UnityEngine.Experimental.Input
         public ReadOnlyArray<InputControlScheme> controlSchemes
         {
             get { return new ReadOnlyArray<InputControlScheme>(m_ControlSchemes); }
+        }
+
+        public InputBinding? bindingMask
+        {
+            get { return m_BindingMask; }
         }
 
         /// <summary>
@@ -397,6 +403,38 @@ namespace UnityEngine.Experimental.Input
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public bool Contains(InputAction action)
+        {
+            if (action == null)
+                return false;
+
+            var map = action.actionMap;
+            if (map == null)
+                return false;
+
+            return map.asset == this;
+        }
+
+        public IEnumerator<InputAction> GetEnumerator()
+        {
+            if (m_ActionMaps == null)
+                yield break;
+
+            for (var i = 0; i < m_ActionMaps.Length; ++i)
+            {
+                var actions = m_ActionMaps[i].actions;
+                var actionCount = actions.Count;
+
+                for (var n = 0; n < actionCount; ++n)
+                    yield return actions[n];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides

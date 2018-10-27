@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -17,6 +18,7 @@ using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 #endif
 
+[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 partial class CoreTests
 {
     [Test]
@@ -2391,12 +2393,15 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
 
         Assert.That(InputControlScheme.FindControlSchemeForControl(gamepad, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme1));
         Assert.That(InputControlScheme.FindControlSchemeForControl(keyboard, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme2));
         Assert.That(InputControlScheme.FindControlSchemeForControl(mouse, new[] {scheme1, scheme2}),
+            Is.EqualTo(scheme2));
+        Assert.That(InputControlScheme.FindControlSchemeForControl(touch, new[] {scheme1, scheme2}),
             Is.Null);
     }
 
@@ -3619,202 +3624,33 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanBeArrangedInStack()
+    public void Actions_CanIterateOverActionsInAsset()
     {
-        var stack = new InputActionStack();
-        var action1 = new InputAction("action1");
-        var action2 = new InputAction("action2");
-        var action3 = new InputAction("action3");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var action1 = map1.AddAction("action1");
+        var action2 = map1.AddAction("action2");
+        var action3 = map2.AddAction("action3");
+
+        Assert.That(asset.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanIterateOverActionsInMap()
+    {
         var map = new InputActionMap();
-        var action4 = map.AddAction("action4");
-        var action5 = map.AddAction("action5");
 
-        stack.Push(action1);
-        stack.Push(action2);
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        var action3 = map.AddAction("action3");
 
-        Assert.That(stack.Contains(action1));
-        Assert.That(stack.Contains(action2));
-        Assert.That(stack.Contains(action3), Is.False);
-
-        Assert.That(stack.actions, Has.Count.EqualTo(2));
-        Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action2));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2 }));
-
-        stack.Push(map);
-
-        Assert.That(stack.actions, Has.Count.EqualTo(4));
-        Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action2));
-        Assert.That(stack.actions[2], Is.SameAs(action4));
-        Assert.That(stack.actions[3], Is.SameAs(action5));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5 }));
-
-        stack.Push(action3);
-
-        Assert.That(stack.actions, Has.Count.EqualTo(5));
-        Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action2));
-        Assert.That(stack.actions[2], Is.SameAs(action4));
-        Assert.That(stack.actions[3], Is.SameAs(action5));
-        Assert.That(stack.actions[4], Is.SameAs(action3));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5, action3 }));
-
-        stack.Pop();
-
-        Assert.That(stack.actions, Has.Count.EqualTo(4));
-        Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action2));
-        Assert.That(stack.actions[2], Is.SameAs(action4));
-        Assert.That(stack.actions[3], Is.SameAs(action5));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action2, action4, action5 }));
-
-        stack.Pop(action2);
-
-        Assert.That(stack.actions, Has.Count.EqualTo(3));
-        Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action4));
-        Assert.That(stack.actions[2], Is.SameAs(action5));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action4, action5 }));
-
-        stack.Pop();
-
-        Assert.That(stack.actions, Has.Count.EqualTo(2));
-        Assert.That(stack.actions[0], Is.SameAs(action1));
-        Assert.That(stack.actions[1], Is.SameAs(action4));
-        Assert.That(stack.ToList(), Is.EquivalentTo(new[] { action1, action4 }));
-
-        stack.Clear();
-
-        Assert.That(stack.actions, Is.Empty);
-        Assert.That(stack.ToList(), Is.Empty);
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_ArrangedInStack_CanBeEnabledAndDisabledInBulk()
-    {
-        var stack = new InputActionStack();
-        var action1 = new InputAction("action1");
-        var action2 = new InputAction("action2");
-        var action3 = new InputAction("action3");
-
-        stack.Push(action1);
-        stack.Push(action2);
-
-        stack.Enable();
-
-        Assert.That(stack.enabled);
-        Assert.That(action1.enabled);
-        Assert.That(action2.enabled);
-
-        stack.Push(action3);
-
-        Assert.That(action3.enabled);
-
-        stack.Disable();
-
-        Assert.That(stack.enabled, Is.False);
-        Assert.That(action1.enabled, Is.False);
-        Assert.That(action2.enabled, Is.False);
-        Assert.That(action3.enabled, Is.False);
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_ArrangedInStack_OverrideEachOthersBindings()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var stack = new InputActionStack();
-        var action1 = new InputAction("action1", binding: "<Gamepad>/buttonSouth");
-        var action2 = new InputAction("action2", binding: "<Gamepad>/buttonSouth");
-
-        var action1Performed = false;
-        var action2Performed = false;
-
-        action1.performed += ctx => action1Performed = true;
-        action2.performed += ctx => action2Performed = true;
-
-        stack.Push(action1);
-        stack.Push(action2);
-
-        stack.Enable();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-        InputSystem.Update();
-
-        Assert.That(action1Performed, Is.False);
-        Assert.That(action2Performed, Is.True);
-
-        stack.Pop(action2);
-
-        action1Performed = false;
-        action2Performed = false;
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
-
-        Assert.That(action1Performed, Is.True);
-        Assert.That(action2Performed, Is.False);
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_ArrangedInStack_CanHaveSharedBindingMask()
-    {
-        var stack = new InputActionStack();
-        var action1 = new InputAction("action1");
-        var action2 = new InputAction("action2");
-        var action3 = new InputAction("action3");
-
-        var map = new InputActionMap();
-        var action4 = map.AddAction("action4");
-        var action5 = map.AddAction("action5");
-
-        Assert.That(stack.bindingMask, Is.Null);
-
-        stack.Push(action1);
-        stack.Push(action2);
-
-        stack.bindingMask = new InputBinding {groups = "test"};
-
-        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action3.bindingMask, Is.Null);
-        Assert.That(action4.bindingMask, Is.Null);
-        Assert.That(action5.bindingMask, Is.Null);
-        Assert.That(map.bindingMask, Is.Null);
-
-        stack.Push(action3);
-
-        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action3.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action4.bindingMask, Is.Null);
-        Assert.That(action5.bindingMask, Is.Null);
-        Assert.That(map.bindingMask, Is.Null);
-
-        stack.Push(map);
-
-        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action3.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action4.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(action5.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        Assert.That(map.bindingMask, Is.EqualTo(new InputBinding {groups = "test"}));
-        
-        // Can change binding mask while enabled.
-        stack.Enable();
-        stack.bindingMask = new InputBinding {groups = "other"};
-        
-        Assert.That(action1.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
-        Assert.That(action2.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
-        Assert.That(action3.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
-        Assert.That(action4.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
-        Assert.That(action5.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
-        Assert.That(map.bindingMask, Is.EqualTo(new InputBinding {groups = "other"}));
+        Assert.That(map.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
     }
 }

@@ -6,6 +6,10 @@ using System.Text;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
+
 ////REVIEW: allow associating control schemes with platforms, too?
 
 ////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
@@ -126,7 +130,8 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// Does not allocate managed memory.
         /// </remarks>
-        public MatchResult PickDevicesFrom(InputControlList<InputDevice> devices)
+        public MatchResult PickDevicesFrom<TDevices>(TDevices devices)
+            where TDevices : IReadOnlyList<InputDevice>
         {
             // Empty device requirements match anything while not really picking anything.
             if (m_DeviceRequirements == null || m_DeviceRequirements.Length == 0)
@@ -176,7 +181,6 @@ namespace UnityEngine.Experimental.Input
                     for (var n = 0; n < devices.Count; ++n)
                     {
                         var device = devices[n];
-
 
                         // See if we have a match.
                         var matchedControl = InputControlPath.TryFindControl(device, path);
@@ -446,7 +450,7 @@ namespace UnityEngine.Experimental.Input
 
                                 var device = control.device;
                                 if (m_Devices.Contains(device))
-                                    continue;
+                                    continue; // Duplicate match of same device.
 
                                 m_Devices.Add(device);
                             }
@@ -454,6 +458,21 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     return m_Devices;
+                }
+            }
+
+            public Match this[int index]
+            {
+                get
+                {
+                    if (index < 0 || m_Requirements == null || index >= m_Requirements.Length)
+                        throw new ArgumentOutOfRangeException("index");
+                    return new Match
+                    {
+                        m_RequirementIndex = index,
+                        m_Requirements = m_Requirements,
+                        m_Controls = m_Controls,
+                    };
                 }
             }
 
@@ -730,8 +749,8 @@ namespace UnityEngine.Experimental.Input
                 if (!string.IsNullOrEmpty(controlPath))
                 {
                     if (isOptional)
-                        return controlPath + "(Optional)";
-                    return controlPath + "(Required)";
+                        return controlPath + " (Optional)";
+                    return controlPath + " (Required)";
                 }
 
                 return base.ToString();

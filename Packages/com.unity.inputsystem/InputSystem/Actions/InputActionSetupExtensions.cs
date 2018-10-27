@@ -55,6 +55,7 @@ namespace UnityEngine.Experimental.Input
             return action;
         }
 
+        ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
         public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))

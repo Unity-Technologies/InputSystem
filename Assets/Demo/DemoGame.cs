@@ -103,10 +103,24 @@ public class DemoGame : MonoBehaviour
     // - auto-switching logic for single player
     // - cross-device input where input response code isn't aware of type of device generating the input
 
+    private bool m_SinglePlayer;
     private int m_ActivePlayerCount;
     private DemoPlayerController[] m_Players;
     private DemoFishController m_Fish;
     private State m_State;
+
+    public void Awake()
+    {
+        // In single player games we want to know when the player switches to a device
+        // that isn't among the ones currently assigned to the player so that we can
+        // detect when to switch to a different control scheme.
+        InputUser.onUnassignedDeviceUsed += OnUnassignedDeviceUsed;
+    }
+
+    public void OnDestroy()
+    {
+        InputUser.onUnassignedDeviceUsed -= OnUnassignedDeviceUsed;
+    }
 
     /// <summary>
     /// Start the game.
@@ -141,6 +155,8 @@ public class DemoGame : MonoBehaviour
     /// </remarks>
     public void StartSinglePlayerGame()
     {
+        m_SinglePlayer = true;
+
         // Spawn a player at index #0.
         var player = SpawnPlayer(0);
 
@@ -162,6 +178,8 @@ public class DemoGame : MonoBehaviour
     /// </remarks>
     public void StartMultiPlayerGame()
     {
+        m_SinglePlayer = false;
+
         //nuke joinAction and rather listen to event stream; any button press anywhere on a device that isn't
         //assigned yet should be a join
         // Start listening for joins.
@@ -226,7 +244,7 @@ public class DemoGame : MonoBehaviour
         //       combinations of devices explicitly, this would have to be handled with a more complicated
         //       device selection procedure (by, for example, having the player go through an additional
         //       step of pressing buttons on additional devices).
-        var controlScheme = player.SelectControlSchemeBasedOnDeviceForMultiPlayer(device);
+        var controlScheme = player.SelectControlSchemeBasedOnDevice(device);
 
         // If the control scheme involves additional devices, find unused devices.
         if (controlScheme.deviceRequirements.Count > 1)
@@ -242,10 +260,57 @@ public class DemoGame : MonoBehaviour
         // Enable just the bindings that are part of the control scheme.
         // NOTE: This also means that the player's `controlScheme` will not change automatically
         //       as no bindings are active outside the given control scheme.
-        player.controls.Enable(controlScheme);
+        //player.controls.Enable(controlScheme);
 
         // Enable control scheme on player.
         player.AssignControlScheme(controlScheme);
+    }
+
+    /// <summary>
+    /// Called when an action is triggered from a device that isn't assigned to any user.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="action"></param>
+    /// <param name="control"></param>
+    /// <remarks>
+    /// In single-player mode, we concurrently enable all our bindings from all available control schemes.
+    /// This means that the actions will bind to whatever devices are available. However, we only assign
+    /// the devices actively used with the current control scheme to the user. This means that we always know
+    /// how the player is currently controlling the game.
+    ///
+    /// When the player uses a binding that isn't part of the current control scheme, this method will
+    /// be called. In here we automatically switch control schemes by looking at which control scheme is
+    /// suited to the unassigned device.
+    ///
+    /// Note that the logic here also covers the case where there are multiple devices meant to be used
+    /// with the same control scheme. For example, there may be two gamepads and the player is free to
+    /// switch from one or the other. In that case, while we will stay on the Gamepad control scheme,
+    /// we will still unassign the previously used gamepad from the player and assign the newly used one.
+    /// </remarks>
+    private void OnUnassignedDeviceUsed(IInputUser user, InputAction action, InputControl control)
+    {
+        // We only support control scheme switching in single player.
+        if (!m_SinglePlayer)
+            return;
+
+        // All our IInputUsers are expected to be DemoPlayerControllers.
+        var player = user as DemoPlayerController;
+        if (player == null)
+            return;
+
+        ////REVIEW: should we just look at the binding that triggered and go by the binding group it is in?
+
+        // Select a control scheme based on the device that was used.
+        var device = control.device;
+        var controlScheme = player.SelectControlSchemeBasedOnDevice(device);
+
+        // Give the device to the user and then switch control schemes.
+        // If the control scheme requires additional devices, we select them automatically using
+        // AndAssignMissingDevices().
+        user.ClearAssignedInputDevices();
+        user.AssignInputDevice(device);
+        user.AssignControlScheme(controlScheme)
+            .AndAssignMissingDevices();
     }
 
     /// <summary>

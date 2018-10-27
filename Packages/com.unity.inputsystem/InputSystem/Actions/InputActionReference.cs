@@ -110,6 +110,11 @@ namespace UnityEngine.Experimental.Input
             return base.ToString();
         }
 
+        public static implicit operator InputAction(InputActionReference reference)
+        {
+            return reference.action;
+        }
+
         [SerializeField] internal InputActionAsset m_Asset;
         // Can't serialize System.Guid and Unity's GUID is editor only so these
         // go out as strings.
