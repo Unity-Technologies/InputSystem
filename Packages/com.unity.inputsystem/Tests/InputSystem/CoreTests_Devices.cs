@@ -1635,6 +1635,28 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanGetButtonOnGamepadUsingEnum()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad[GamepadButton.North], Is.SameAs(gamepad.buttonNorth));
+        Assert.That(gamepad[GamepadButton.South], Is.SameAs(gamepad.buttonSouth));
+        Assert.That(gamepad[GamepadButton.East], Is.SameAs(gamepad.buttonEast));
+        Assert.That(gamepad[GamepadButton.West], Is.SameAs(gamepad.buttonWest));
+        Assert.That(gamepad[GamepadButton.Start], Is.SameAs(gamepad.startButton));
+        Assert.That(gamepad[GamepadButton.Select], Is.SameAs(gamepad.selectButton));
+        Assert.That(gamepad[GamepadButton.LeftShoulder], Is.SameAs(gamepad.leftShoulder));
+        Assert.That(gamepad[GamepadButton.RightShoulder], Is.SameAs(gamepad.rightShoulder));
+        Assert.That(gamepad[GamepadButton.LeftStick], Is.SameAs(gamepad.leftStickButton));
+        Assert.That(gamepad[GamepadButton.RightStick], Is.SameAs(gamepad.rightStickButton));
+        Assert.That(gamepad[GamepadButton.DpadUp], Is.SameAs(gamepad.dpad.up));
+        Assert.That(gamepad[GamepadButton.DpadDown], Is.SameAs(gamepad.dpad.down));
+        Assert.That(gamepad[GamepadButton.DpadLeft], Is.SameAs(gamepad.dpad.left));
+        Assert.That(gamepad[GamepadButton.DpadRight], Is.SameAs(gamepad.dpad.right));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanCreateGenericJoystick()
     {
         var json = @"

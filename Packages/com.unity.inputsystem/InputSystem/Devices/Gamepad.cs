@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Haptics;
@@ -165,6 +166,32 @@ namespace UnityEngine.Experimental.Input
 
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
+
+        public ButtonControl this[GamepadButton button]
+        {
+            get
+            {
+                switch (button)
+                {
+                    case GamepadButton.North: return buttonNorth;
+                    case GamepadButton.South: return buttonSouth;
+                    case GamepadButton.East: return buttonEast;
+                    case GamepadButton.West: return buttonWest;
+                    case GamepadButton.Start: return startButton;
+                    case GamepadButton.Select: return selectButton;
+                    case GamepadButton.LeftShoulder: return leftShoulder;
+                    case GamepadButton.RightShoulder: return rightShoulder;
+                    case GamepadButton.LeftStick: return leftStickButton;
+                    case GamepadButton.RightStick: return rightStickButton;
+                    case GamepadButton.DpadUp: return dpad.up;
+                    case GamepadButton.DpadDown: return dpad.down;
+                    case GamepadButton.DpadLeft: return dpad.left;
+                    case GamepadButton.DpadRight: return dpad.right;
+                    default:
+                        throw new InvalidEnumArgumentException("button");
+                }
+            }
+        }
 
         ////TODO: noise filtering
         /// <summary>
