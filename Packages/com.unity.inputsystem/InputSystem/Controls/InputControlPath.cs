@@ -69,23 +69,7 @@ namespace UnityEngine.Experimental.Input
             // First level is taken to be device.
             if (parser.MoveToNextComponent())
             {
-                // If all we have is a usage, create a simple string with just that.
-                if (parser.current.isWildcard && parser.current.layout.isEmpty && parser.current.usage.isEmpty)
-                {
-                    var savedParser = parser;
-                    if (parser.MoveToNextComponent() && !parser.current.usage.isEmpty && parser.current.name.isEmpty &&
-                        parser.current.layout.isEmpty)
-                    {
-                        var usage = parser.current.usage.ToString();
-                        if (!parser.MoveToNextComponent())
-                            return usage;
-                    }
-
-                    // Reset.
-                    parser = savedParser;
-                }
-
-                result += parser.current.ToHumanReadableString();
+                var device = parser.current.ToHumanReadableString();
 
                 // Any additional levels (if present) are taken to form a control path on the device.
                 var isFirstControlLevel = true;
@@ -97,6 +81,13 @@ namespace UnityEngine.Experimental.Input
                         result += ' ';
                     result += parser.current.ToHumanReadableString();
                     isFirstControlLevel = false;
+                }
+
+                if (!string.IsNullOrEmpty(device))
+                {
+                    result += " [";
+                    result += device;
+                    result += "]";
                 }
             }
 
