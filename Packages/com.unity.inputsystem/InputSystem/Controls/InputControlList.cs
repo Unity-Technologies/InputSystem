@@ -178,8 +178,13 @@ namespace UnityEngine.Experimental.Input
             if (Capacity < count)
                 Capacity = Math.Max(count, 10);
             if (destinationIndex < Count)
+                #if UNITY_2018_3_OR_NEWER
                 NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
-                    Count - destinationIndex);
+                Count - destinationIndex);
+                #else
+                Unity2018_2_Compatibility.Copy<ulong>(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
+                Count - destinationIndex);
+                #endif
 
             // Add elements.
             for (var i = 0; i < count; ++i)
@@ -201,8 +206,13 @@ namespace UnityEngine.Experimental.Input
             if (Capacity < count)
                 Capacity = Math.Max(count, 10);
             if (destinationIndex < Count)
+                #if UNITY_2018_3_OR_NEWER
                 NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
-                    Count - destinationIndex);
+                Count - destinationIndex);
+                #else
+                Unity2018_2_Compatibility.Copy<ulong>(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
+                Count - destinationIndex);
+                #endif
 
             // Add elements.
             foreach (var element in list)
