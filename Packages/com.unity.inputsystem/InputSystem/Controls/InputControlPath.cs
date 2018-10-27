@@ -77,8 +77,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (!isFirstControlLevel)
                         result += '/';
-                    else
-                        result += ' ';
+
                     result += parser.current.ToHumanReadableString();
                     isFirstControlLevel = false;
                 }
