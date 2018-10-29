@@ -548,6 +548,34 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanAlterDeviceDescriptionsForDiscoveredDevices()
+    {
+        // Add a callback returning a layout name both before and after the callback that
+        // alters the device description. This way we can make sure that no matter which order
+        // the callbacks are processed in, the system should call our callback in the middle
+        // and not stop at one of the callbacks returning a layout name.
+        InputSystem.onFindLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+                "Keyboard";
+
+        InputSystem.onFindLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+        {
+            description.product = "Test";
+            return null;
+        };
+
+        InputSystem.onFindLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+                "Keyboard";
+
+        var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad", product = "Original"});
+
+        Assert.That(device.description.product, Is.EqualTo("Test"));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanRegisterMultipleMatchersForSingleLayout()
     {
         const string json = @"
@@ -920,7 +948,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(initialJson);
 
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
+        runtime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
         InputSystem.Update();
 
         var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");

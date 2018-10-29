@@ -59,6 +59,11 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
+        public static implicit operator InputActionAsset(InputActionAssetReference reference)
+        {
+            return reference.m_Asset;
+        }
+
         [SerializeField] private InputActionAsset m_Asset;
     }
 }

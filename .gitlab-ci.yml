@@ -1,11 +1,103 @@
 stages:
-- test
+  - test
 
-Windows-2018.2-default:
+test:windows:2018-2:
   stage: test
-  image: input-system/win-2018.2:stable
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
   tags:
-    - bokken-job
+   - bokken-runner
   script:
-  - cd "C:\Program Files\Unity\Editor"
-  - unity.exe -batchmode -automated -quit -nographics -runTests -projectPath "C:\users\bokken\builds\vm\InputSystem" -testPlatform playmode
+    - python.exe -u testrunner.py StandaloneWindows64 StandaloneWindows Editor --version=2018.2
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2018-3:
+  stage: test
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  script:
+    - python.exe -u testrunner.py StandaloneWindows64 StandaloneWindows Editor --version=2018.3
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2019-1:
+  stage: test
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  script:
+    - echo "Running Playmode Tests"
+    - python.exe -u testrunner.py StandaloneWindows64 StandaloneWindows Editor --version=2019.1
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:osx:2018-2:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py StandaloneOSX Editor --version=2018.2
+  after_script:
+    - /opt/post_build_script.sh
+
+test:osx:2018-3:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py StandaloneOSX Editor --version=2018.3
+  after_script:
+    - /opt/post_build_script.sh
+    
+test:osx:2019-1:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py StandaloneOSX Editor --version=2019.1
+  after_script:
+    - /opt/post_build_script.sh
+

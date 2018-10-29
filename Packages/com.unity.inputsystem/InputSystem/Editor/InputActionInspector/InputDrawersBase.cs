@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 actionTreeBackground.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackground.png");
+                        InputActionTreeBase.ResourcesPath + "actionTreeBackground.png");
                 actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
@@ -23,12 +23,14 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        protected InputActionListTreeView m_TreeView;
+        protected InspectorTree m_Tree;
         private CopyPasteUtility m_CopyPasteUtility;
 
         protected GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         protected GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
         protected GUIContent m_CompositeGUI = EditorGUIUtility.TrTextContent("Composite");
+        private GUIContent m_PlusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
+        private GUIContent m_MinusIconContext = EditorGUIUtility.IconContent("Toolbar Minus");
 
         protected InputDrawersBase()
         {
@@ -37,24 +39,24 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnUndoRedoCallback()
         {
-            if (m_TreeView == null)
+            if (m_Tree == null)
             {
                 //TODO how to unregister it in a better way?
                 Undo.undoRedoPerformed -= OnUndoRedoCallback;
                 return;
             }
             // Force tree rebuild
-            m_TreeView = null;
+            m_Tree = null;
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             InitTreeIfNeeded(property);
-            if (m_TreeView.totalHeight == 0)
+            if (m_Tree.totalHeight == 0)
             {
                 return Styles.columnHeaderLabel.fixedHeight + 10;
             }
-            return Styles.columnHeaderLabel.fixedHeight + EditorGUIUtility.standardVerticalSpacing + m_TreeView.totalHeight;
+            return Styles.columnHeaderLabel.fixedHeight + EditorGUIUtility.standardVerticalSpacing + m_Tree.totalHeight;
         }
 
         public override bool CanCacheInspectorGUI(SerializedProperty property)
@@ -75,10 +77,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            var plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
-            if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, m_PlusIconContext, GUIStyle.none))
             {
                 OpenAddMenu(property);
+            }
+
+            labelRect.x += labelRect.width;
+            if (GUI.Button(labelRect, m_MinusIconContext, GUIStyle.none))
+            {
+                EditorWindow.focusedWindow.SendEvent(EditorGUIUtility.CommandEvent("Delete"));
             }
 
             InitTreeIfNeeded(property);
@@ -87,9 +94,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var treeRect = new Rect(position.x + 1, position.y + 1,
                 position.width - 2, position.height - Styles.columnHeaderLabel.fixedHeight - 2);
 
-            m_TreeView.OnGUI(treeRect);
+            m_Tree.OnGUI(treeRect);
 
-            if (m_TreeView.HasFocus())
+            if (m_Tree.HasFocus())
             {
                 if (Event.current.type == EventType.ValidateCommand)
                 {
@@ -110,11 +117,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void InitTreeIfNeeded(SerializedProperty property)
         {
-            if (m_TreeView == null)
+            if (m_Tree == null)
             {
-                m_TreeView = CreateTree(property);
-                m_TreeView.OnContextClick = OnContextClick;
-                m_CopyPasteUtility = new CopyPasteUtility(m_TreeView);
+                m_Tree = CreateTree(property);
+                m_Tree.OnContextClick = OnContextClick;
+                m_CopyPasteUtility = new CopyPasteUtility(m_Tree);
             }
         }
 
@@ -144,7 +151,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected abstract void OpenAddMenu(SerializedProperty property);
-        protected abstract InputActionListTreeView CreateTree(SerializedProperty property);
+        protected abstract InspectorTree CreateTree(SerializedProperty property);
         protected abstract string GetSuffix();
     }
 }

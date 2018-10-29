@@ -38,7 +38,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var property = (SerializedProperty)propertyObj;
             InputActionSerializationHelpers.AddAction(property);
             property.serializedObject.ApplyModifiedProperties();
-            m_TreeView.Reload();
+            m_Tree.Reload();
         }
 
         internal void AddBinding(object propertyObj)
@@ -47,15 +47,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             var property = (SerializedProperty)propertyObj;
             var actionMapProperty = (SerializedProperty)propertyObj;
-            var action = m_TreeView.GetSelectedAction();
+            var action = m_Tree.GetSelectedAction();
             InputActionSerializationHelpers.AddBinding(action.elementProperty, actionMapProperty);
             property.serializedObject.ApplyModifiedProperties();
-            m_TreeView.Reload();
+            m_Tree.Reload();
         }
 
         protected bool CanAddBinding()
         {
-            return m_TreeView.GetSelectedAction() != null;
+            return m_Tree.GetSelectedAction() != null;
         }
 
         internal void OnAddCompositeBinding(object paramList)
@@ -66,15 +66,15 @@ namespace UnityEngine.Experimental.Input.Editor
             var compositeName = (string)((List<object>)paramList)[0];
             var property = (SerializedProperty)((List<object>)paramList)[1];
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            var action = m_TreeView.GetSelectedAction();
+            var action = m_Tree.GetSelectedAction();
             InputActionSerializationHelpers.AddCompositeBinding(action.elementProperty, property, compositeName, compositeType);
             property.serializedObject.ApplyModifiedProperties();
-            m_TreeView.Reload();
+            m_Tree.Reload();
         }
 
-        protected override InputActionListTreeView CreateTree(SerializedProperty property)
+        protected override InspectorTree CreateTree(SerializedProperty property)
         {
-            return InputActionComponentListTreeView.CreateFromActionMapProperty(() => {}, property);
+            return InspectorTree.CreateFromActionMapProperty(() => {}, property);
         }
 
         protected override string GetSuffix()

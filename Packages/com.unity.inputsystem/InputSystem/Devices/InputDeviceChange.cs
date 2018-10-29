@@ -14,6 +14,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <seealso cref="InputSystem.AddDevice(string,string,string)"/>
         /// <seealso cref="InputSystem.AddDevice{TDevice}(string)"/>
+        /// <seealso cref="InputDevice.added"/>
         Added,
 
         /// <summary>
@@ -28,8 +29,33 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputSystem.RemoveDevice"/>
         Removed,
 
+        /// <summary>
+        /// A device reported by the <see cref="IInputRuntime"/> was <see cref="Removed"/> but was
+        /// retained by the system as <see cref="InputSystem.disconnectedDevices">disconnected</see>.
+        /// </summary>
+        /// <seealso cref="InputSystem.disconnectedDevices"/>
+        Disconnected,
+
+        /// <summary>
+        /// A device that was previously retained as <see cref="Disconnected"/> has been re-discovered
+        /// and has been <see cref="Added"/> to the system again.
+        /// </summary>
+        /// <seealso cref="InputSystem.disconnectedDevices"/>
+        /// <seealso cref="IInputRuntime.onDeviceDiscovered"/>
+        Reconnected,
+
+        /// <summary>
+        /// An existing device was re-enabled after having been <see cref="Disabled"/>.
+        /// </summary>
+        /// <seealso cref="InputSystem.EnableDevice"/>
+        /// <seealso cref="InputDevice.enabled"/>
         Enabled,
 
+        /// <summary>
+        /// An existing device was disabled.
+        /// </summary>
+        /// <seealso cref="InputSystem.DisableDevice"/>
+        /// <seealso cref="InputDevice.enabled"/>
         Disabled,
 
         /// <summary>
@@ -39,11 +65,11 @@ namespace UnityEngine.Experimental.Input
         /// This may signal, for example, that what was the right hand XR controller before
         /// is now the left hand controller.
         /// </remarks>
-        /// <seealso cref="InputSystem.SetDeviceUsage(UnityEngine.Experimental.Input.InputDevice,UnityEngine.Experimental.Input.Utilities.InternedString)"/>
+        /// <seealso cref="InputSystem.SetDeviceUsage(InputDevice,InternedString)"/>
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 
-        VariantChanged,
+        LayoutVariantChanged,
 
         /// <summary>
         /// The configuration of a device has changed.
@@ -60,8 +86,7 @@ namespace UnityEngine.Experimental.Input
         ////        as the other low-frequency changes
         StateChanged,
 
-        ////REVIEW: should 'current' be renamed to 'lastActive'?
-
+        ////TODO: nuke this along with the entire Current machinery
         CurrentChanged
     }
 }
