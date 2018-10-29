@@ -25,6 +25,8 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: the onXXX event stuff needs to be thread-safe in order to allow finalizers to clean them up
+
 ////TODO: move state change monitor API out of here (static InputStateChangeMonitor class?)
 
 ////TODO: rename RegisterControlProcessor to just RegisterProcessor

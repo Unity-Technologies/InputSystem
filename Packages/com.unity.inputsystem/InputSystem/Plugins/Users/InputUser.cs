@@ -723,7 +723,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     using (var availableDevices = GetUnassignedInputDevices())
                     {
                         // If we're only supposed to add missing devices, we need to take the devices already
-                        // already assigned to the user into account when picking devices. Add them to the beginning
+                        // assigned to the user into account when picking devices. Add them to the beginning
                         // of the list so that they get matched first.
                         if (addMissingOnly)
                             availableDevices.AddSlice(s_AllUsers[m_UserIndex].GetAssignedInputDevices(), destinationIndex: 0);

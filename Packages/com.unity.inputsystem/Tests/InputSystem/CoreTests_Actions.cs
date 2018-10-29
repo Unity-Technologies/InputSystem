@@ -3219,18 +3219,164 @@ partial class CoreTests
         Assert.That(clone.actionMaps[1].name, Is.EqualTo("set2"));
     }
 
+    ////REVIEW: can we can this work with chained bindings and e.g. bind "Shift+W" successfully?
+
+    ////REVIEW: how should we handle the paths we generate? ATM we just take the actual path of the control at runtime
+    ////        but that will likely be brittle for saving in-between runs
+    ////        (probably needs to be configurable)
+
+    ////TODO: allow restricting by control paths so that we can restrict it by device requirements found in control schemes
+    ////      (this will implicitly allow restricting rebinds to specific types of devices)
+
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanRebindFromUserInput()
+    public void Actions_CanPerformInteractiveRebinding()
     {
-        var action = new InputAction(binding: "/gamepad/leftStick");
-        //var gamepad = InputSystem.AddDevice("Gamepad");
+        // Most straightforward test:
+        // - Take action with existing binding to A button
+        // - Initiate rebind
+        // - Press Y button
 
-        using (var rebind = InputActionRebindingExtensions.PerformUserRebind(action))
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCompleteCallback = false;
+        InputControl selectedControl = null;
+
+        using (var rebind =
+                   action.PerformInteractiveRebinding()
+                       .OnComplete(
+                           operation =>
+                           {
+                               Assert.That(receivedCompleteCallback, Is.False);
+                               Assert.That(operation.started);
+                               Assert.That(operation.completed);
+                               Assert.That(operation.action, Is.SameAs(action));
+                               receivedCompleteCallback = true;
+                               selectedControl = operation.selectedControl;
+                           })
+                       .Start())
         {
-        }
+            Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
 
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
+            InputSystem.Update();
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonNorth }));
+            Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("/Gamepad/buttonNorth"));
+            Assert.That(rebind.completed);
+            Assert.That(receivedCompleteCallback);
+            Assert.That(selectedControl, Is.SameAs(gamepad.buttonNorth));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCancelInteractiveRebinding_ThroughAction()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCancelInteractiveRebinding_Manually()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_IgnoresUnrelatedInput()
+    {
+        Assert.Fail();
+    }
+
+    // Make sure we take things like deadzone processors into account and don't react to controls that
+    // are below their threshold.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_IgnoresControlsWithNoEffectiveValueChange()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_RequiresAtLeastOneBindingToBePresent()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_RequiresActionToBeDisabled()
+    {
+        Assert.Fail();
+    }
+
+    //we may want to allow users to turn this one off; if the other matching checks are good enough, we may be able
+    //to bind reliably even to noisy controls
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_IgnoresNoisyControls()
+    {
+        Assert.Fail();
+    }
+
+    // InputAction.expectedControlLayout, if set, will guide the rebinding process as to which
+    // controls we are looking for.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_RespectsExpectedControlLayoutIfSet()
+    {
+        Assert.Fail();
+    }
+
+    // If a control is already actuated when we initiate a rebind, we first require it to go
+    // back to its default value.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_RequiresControlToBeActuatedStartingWithDefaultValue()
+    {
+        Assert.Fail();
+    }
+
+    // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
+    // machinery allows specifying a binding mask to respect.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanBeRestrictedToSpecificBindingGroups()
+    {
+        Assert.Fail();
+    }
+
+    // A timeout can be specified to wait after we have a match to see if there's more matches and if so,
+    // have them get picked instead. This is useful when trying to bind to just one axis of the stick,
+    // for example. We'll invariably get motion on both axes but we want to pick the motion axis with the
+    // greatest amount of movement.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanWaitForAndPickBetterMatch()
+    {
+        Assert.Fail();
+    }
+
+    // Optionally, a fixed timeout on the entire operation can be specified. If no relevant input registers
+    // within the given time, the operation is automatically cancelled.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanBeMadeToTimeOut()
+    {
+        Assert.Fail();
+    }
+
+    // By default, rebinds non-destructively apply as overrides. Optionally, they can be made to destructively
+    // edit the path on bindings.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanBeMadeToOverwritePath()
+    {
         Assert.Fail();
     }
 

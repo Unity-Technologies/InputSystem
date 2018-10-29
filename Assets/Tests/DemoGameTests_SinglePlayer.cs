@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Plugins.Users;
 
 // Single-player mode tests for the demo game.
 
-public partial class DemoGameTests
+partial class DemoGameTests
 {
     [Test]
     [Category("Demo")]
@@ -19,6 +19,8 @@ public partial class DemoGameTests
         Assert.That(!game.players[0].controls.menu.enabled);
         Assert.That(game.fish, Is.Not.Null);
     }
+
+    ////REVIEW: a number of these tests we can probably just share between single and multiplayer
 
     [Test]
     [Category("Demo")]

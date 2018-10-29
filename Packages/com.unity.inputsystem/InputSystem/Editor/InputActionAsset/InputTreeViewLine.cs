@@ -2,9 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+
+////REVIEW: would be great to align all "[device]" parts of binding strings neatly in a column
 
 namespace UnityEngine.Experimental.Input.Editor
 {

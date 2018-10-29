@@ -276,6 +276,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// </remarks>
     public void OnControlSchemeChanged()
     {
+        //cache UI hints per device
     }
 
     public void OnDevicesChanged()
@@ -319,18 +320,20 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         transform.rotation = localRotation;
     }
 
+    public const float DelayBetweenBurstProjectiles = 0.1f;
+
     /// <summary>
     /// Fire <paramref name="projectileCount"/> projectiles over time.
     /// </summary>
     /// <param name="projectileCount"></param>
     /// <param name="delayBetweenProjectiles"></param>
     /// <returns></returns>
-    private IEnumerator ExecuteChargedFire(int projectileCount, float delayBetweenProjectiles = 0.1f)
+    private IEnumerator ExecuteChargedFire(int projectileCount)
     {
         for (var i = 0; i < projectileCount; ++i)
         {
             FireProjectile();
-            yield return new WaitForSeconds(delayBetweenProjectiles);
+            yield return new WaitForSeconds(DelayBetweenBurstProjectiles);
         }
     }
 

@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input
         /// Set(gamepad.leftButton, 1);
         /// </code>
         /// </example>
-        public void Set<TValue>(InputControl<TValue> control, TValue state)
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double timeOffset = 0)
             where TValue : struct
         {
             if (control == null)
@@ -170,6 +170,7 @@ namespace UnityEngine.Experimental.Input
             InputEventPtr eventPtr;
             using (StateEvent.From(control.device, out eventPtr))
             {
+                eventPtr.time += timeOffset;
                 control.WriteValueInto(eventPtr, state);
                 InputSystem.QueueEvent(eventPtr);
             }
@@ -214,6 +215,8 @@ namespace UnityEngine.Experimental.Input
                 var button = controls[i] as ButtonControl;
                 if (button == null)
                     continue;
+
+                ////REVIEW: shouldn't this both press *and* release?
 
                 // We do, so flip its state and we're done.
                 var device = button.device;

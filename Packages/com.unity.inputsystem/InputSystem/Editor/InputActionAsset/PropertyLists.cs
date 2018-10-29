@@ -182,10 +182,12 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
             if (m_ListView.index >= 0)
             {
-                for (int i = 0; i < m_SelectedParameterList.Length; i++)
+                for (var i = 0; i < m_SelectedParameterList.Length; i++)
                 {
                     var parameterValue = m_SelectedParameterList[i];
                     EditorGUI.BeginChangeCheck();
+
+                    ////TODO: need to detect when value is at default
 
                     string result = null;
                     if (parameterValue.type == InputControlLayout.ParameterType.Integer)

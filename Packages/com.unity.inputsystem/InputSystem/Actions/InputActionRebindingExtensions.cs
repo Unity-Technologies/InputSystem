@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.Experimental.Input.LowLevel;
 
 // The way target bindings for overrides are found:
 // - If specified, directly by index (e.g. "apply this override to the third binding in the map")
@@ -353,25 +355,122 @@ namespace UnityEngine.Experimental.Input
         // it adds robustness to not just wait for input in the very first frame but rather listen for
         // input for a while after the first relevant input and then decide which the dominate axis was.
         // This way we can reliably filter out noise from other sticks, too.
-        public class RebindOperation : IDisposable
+
+        /// <summary>
+        /// An ongoing rebinding operation.
+        /// </summary>
+        /// <remarks>
+        /// This class acts as both a configuration interface for rebinds as well as a controller while
+        /// the rebind is ongoing. An instance can be reused arbitrary many times. Doing so avoids allocating
+        /// GC memory (the class internally retains state that it can reuse for multiple rebinds).
+        /// </remarks>
+        /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
+        public class RebindingOperation : IDisposable
         {
-            private InputAction m_ActionToRebind;
-            private string m_GroupsToRebind;
-
-            private InputAction m_CancelAction;
-            private InputAction m_RebindAction;
-
-            private List<string> m_SuitableControlLayouts;
-
-            private int m_NumInputUpdatesToAggregate;
-            private int m_NumInputUpdatesReceived;
-
-            protected virtual void DetermineSuitableControlLayouts(List<string> result)
+            /// <summary>
+            /// The action that rebinding is being performed on.
+            /// </summary>
+            /// <seealso cref="WithAction"/>
+            public InputAction action
             {
+                get { return m_ActionToRebind; }
             }
 
-            public void Start(InputAction actionToRebind, string groupsToRebind = null)
+            /// <summary>
+            /// Controls that had input and were deemed potential matches to rebind to.
+            /// </summary>
+            public InputControlList<InputControl> candidates
             {
+                get { throw new NotImplementedException(); }
+            }
+
+            public InputControl selectedControl
+            {
+                get
+                {
+                    if (m_Candidates.Count == 0)
+                        return null;
+
+                    return m_Candidates[0];
+                }
+            }
+
+            public bool started
+            {
+                get { return (m_Flags & Flags.Started) != 0; }
+            }
+
+            public bool completed
+            {
+                get { return (m_Flags & Flags.Completed) != 0; }
+            }
+
+            public bool cancelled
+            {
+                get { return (m_Flags & Flags.Cancelled) != 0; }
+            }
+
+            public RebindingOperation WithAction(InputAction action)
+            {
+                ThrowIfRebindInProgress();
+
+                if (action == null)
+                    throw new ArgumentNullException("action");
+                if (action.bindings.Count == 0)
+                    throw new ArgumentException(
+                        string.Format("For rebinding, action must have at least one existing binding (action: {0})",
+                            action), "action");
+
+                m_ActionToRebind = action;
+                return this;
+            }
+
+            public RebindingOperation WithBindingMask(InputBinding? bindingMask)
+            {
+                return this;
+            }
+
+            public RebindingOperation WithRebindApplyingAsOverride()
+            {
+                return this;
+            }
+
+            public RebindingOperation WithRebindOverwritingCurrentPath()
+            {
+                return this;
+            }
+
+            public RebindingOperation OnComplete(Action<RebindingOperation> callback)
+            {
+                m_OnComplete = callback;
+                return this;
+            }
+
+            public RebindingOperation OnCancel(Action<RebindingOperation> callback)
+            {
+                m_OnCancel = callback;
+                return this;
+            }
+
+            public RebindingOperation OnPotentialMatch(Action<RebindingOperation> callback)
+            {
+                return this;
+            }
+
+            public RebindingOperation OnMatchWaitForAnother(float seconds)
+            {
+                return this;
+            }
+
+            public RebindingOperation Start()
+            {
+                // Ignore if already started.
+                if ((m_Flags & Flags.Started) != 0)
+                    return this;
+
+                HookOnEvent();
+                m_Flags |= Flags.Started;
+                return this;
             }
 
             // Manually cancel a pending rebind.
@@ -379,14 +478,118 @@ namespace UnityEngine.Experimental.Input
             {
             }
 
-            public virtual void Dispose()
+            public void Dispose()
             {
-                GC.SuppressFinalize(this);
+                UnhookOnEvent();
+                m_Candidates.Dispose();
+            }
+
+            private void HookOnEvent()
+            {
+                if ((m_Flags & Flags.OnEventHooked) != 0)
+                    return;
+
+                if (m_OnEventDelegate == null)
+                    m_OnEventDelegate = OnEvent;
+
+                InputSystem.onEvent += m_OnEventDelegate;
+                m_Flags |= Flags.OnEventHooked;
+            }
+
+            private void UnhookOnEvent()
+            {
+                if ((m_Flags & Flags.OnEventHooked) == 0)
+                    return;
+
+                InputSystem.onEvent -= m_OnEventDelegate;
+                m_Flags &= ~Flags.OnEventHooked;
+            }
+
+            private void OnEvent(InputEventPtr eventPtr)
+            {
+                // Ignore if not a state event.
+                if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                    return;
+
+                // Fetch device.
+                var device = InputSystem.GetDeviceById(eventPtr.deviceId);
+                if (device == null)
+                    return;
+
+                // Go through controls and see if there's anything interesting in the event.
+                var controls = device.allControls;
+                var controlCount = controls.Count;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var control = controls[i];
+
+                    ////TODO: skip noisy controls
+
+                    // Skip controls that have no state in the event.
+                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
+                    if (statePtr == IntPtr.Zero)
+                        continue;
+
+                    // Skip controls that are in their default state.
+                    if (control.CheckStateIsAtDefault(statePtr))
+                        continue;
+
+                    //see if it's a type of control we're interested in
+                    //see if it has an interesting change
+
+                    m_Candidates.Add(control);
+                    OnComplete();
+                    break;
+                }
+            }
+
+            private void OnComplete()
+            {
+                Debug.Assert(m_Candidates.Count > 0);
+
+                var selectedControl = m_Candidates[0];
+                m_ActionToRebind.ApplyBindingOverride(selectedControl.path);
+
+                m_Flags |= Flags.Completed;
+
+                if (m_OnComplete != null)
+                    m_OnComplete(this);
+
+                m_Flags &= ~Flags.Started;
+                m_Candidates.Clear();
+                m_Candidates.Capacity = 0; // Release our unmanaged memory.
+            }
+
+            private void OnCancel()
+            {
+            }
+
+            private void ThrowIfRebindInProgress()
+            {
+                if (started)
+                    throw new InvalidOperationException("Cannot reconfigure rebinding while operation is in progress");
+            }
+
+            private InputAction m_ActionToRebind;
+            private InputAction m_CancelAction;
+            private InputBinding? m_BindingMask;
+            private InputControlList<InputControl> m_Candidates;
+            private Action<RebindingOperation> m_OnComplete;
+            private Action<RebindingOperation> m_OnCancel;
+            private Action<InputEventPtr> m_OnEventDelegate;
+            private Flags m_Flags;
+
+            [Flags]
+            private enum Flags
+            {
+                Started = 1 << 0,
+                Completed = 1 << 1,
+                Cancelled = 1 << 2,
+                OnEventHooked = 1 << 3,
+                OverwritePath = 1 << 4,
             }
         }
 
-        // Wait for the user to actuate a control on a device to rebind the
-        // given action to.
         //
         // Invokes the given callback when the rebinding happens. Also passes
         // a bool that tells whether the rebind operation has successfully completed
@@ -403,7 +606,15 @@ namespace UnityEngine.Experimental.Input
         //       then only buttons will be considered. If it has bindings to both button
         //       and touch controls, on the other hand, then both button and touch controls
         //       will be listened for.
-        public static RebindOperation PerformUserRebind(InputAction action, InputAction cancel = null)
+
+        /// <summary>
+        /// Initiate an operation that interactively rebinds the given action based on received input.
+        /// </summary>
+        /// <param name="action">Action to perform rebinding on.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public static RebindingOperation PerformInteractiveRebinding(this InputAction action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -412,17 +623,7 @@ namespace UnityEngine.Experimental.Input
                     string.Format("For rebinding, action must have at least one existing binding (action: {0})",
                         action), "action");
 
-            throw new NotImplementedException();
-        }
-
-        public static RebindOperation PerformUserRebind(InputAction action, InputControl cancel)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static RebindOperation PerformUserRebind(InputAction action, string cancel)
-        {
-            throw new NotImplementedException();
+            return new RebindingOperation().WithAction(action);
         }
     }
 }

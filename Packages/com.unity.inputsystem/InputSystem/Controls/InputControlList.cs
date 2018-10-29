@@ -63,6 +63,14 @@ namespace UnityEngine.Experimental.Input
                 if (value < 0)
                     throw new ArgumentException("Capacity cannot be negative", "value");
 
+                if (value == 0)
+                {
+                    if (m_Count != 0)
+                        m_Indices.Dispose();
+                    m_Count = 0;
+                    return;
+                }
+
                 var newSize = Count + value;
                 var allocator = m_Allocator != Allocator.Invalid ? m_Allocator : Allocator.Persistent;
                 ArrayHelpers.Resize(ref m_Indices, newSize, allocator);

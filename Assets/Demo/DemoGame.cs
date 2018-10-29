@@ -114,12 +114,12 @@ public class DemoGame : MonoBehaviour
         // In single player games we want to know when the player switches to a device
         // that isn't among the ones currently assigned to the player so that we can
         // detect when to switch to a different control scheme.
-        InputUser.onUnassignedDeviceUsed += OnUnassignedDeviceUsed;
+        InputUser.onUnassignedDeviceUsed += OnUnassignedInputDeviceUsed;
     }
 
     public void OnDestroy()
     {
-        InputUser.onUnassignedDeviceUsed -= OnUnassignedDeviceUsed;
+        InputUser.onUnassignedDeviceUsed -= OnUnassignedInputDeviceUsed;
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ public class DemoGame : MonoBehaviour
     }
 
     /// <summary>
-    /// Called when an action is triggered from a device that isn't assigned to any user.
+    /// Called when an action is triggered from an input device that isn't assigned to any user.
     /// </summary>
     /// <param name="user"></param>
     /// <param name="action"></param>
@@ -287,7 +287,7 @@ public class DemoGame : MonoBehaviour
     /// switch from one or the other. In that case, while we will stay on the Gamepad control scheme,
     /// we will still unassign the previously used gamepad from the player and assign the newly used one.
     /// </remarks>
-    private void OnUnassignedDeviceUsed(IInputUser user, InputAction action, InputControl control)
+    private void OnUnassignedInputDeviceUsed(IInputUser user, InputAction action, InputControl control)
     {
         // We only support control scheme switching in single player.
         if (!m_SinglePlayer)
@@ -307,9 +307,9 @@ public class DemoGame : MonoBehaviour
         // Give the device to the user and then switch control schemes.
         // If the control scheme requires additional devices, we select them automatically using
         // AndAssignMissingDevices().
-        user.ClearAssignedInputDevices();
-        user.AssignInputDevice(device);
-        user.AssignControlScheme(controlScheme)
+        player.ClearAssignedInputDevices();
+        player.AssignInputDevice(device);
+        player.AssignControlScheme(controlScheme)
             .AndAssignMissingDevices();
     }
 

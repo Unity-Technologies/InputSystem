@@ -1,11 +1,10 @@
-using System.Linq;
 using NUnit.Framework;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Users;
 
 // Platform-specific tests for the demo game.
 
-public partial class DemoGameTests
+partial class DemoGameTests
 {
     #if UNITY_STANDALONE_OSX || UNITY_EDITOR
 
