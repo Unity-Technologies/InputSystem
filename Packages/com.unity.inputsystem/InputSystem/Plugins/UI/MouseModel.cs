@@ -313,15 +313,17 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.pointerEnter = m_InternalData.pointerTarget;
             eventData.hovered.Clear();
             eventData.hovered.AddRange(m_InternalData.hoverTargets);
-
+            
             // This is unset in legacy systems and can safely assumed to stay true.
             eventData.useDragThreshold = true;
         }
 
         public void CopyFrom(PointerEventData eventData)
         {
-            m_InternalData.hoverTargets.ClearWithCapacity();
-            m_InternalData.hoverTargets.Append(eventData.hovered);
+            InlinedArray<GameObject> hoverTargets = m_InternalData.hoverTargets;
+            hoverTargets.ClearWithCapacity();
+            hoverTargets.Append(eventData.hovered);
+            m_InternalData.hoverTargets = hoverTargets;
             m_InternalData.pointerTarget = eventData.pointerEnter;
         }
 

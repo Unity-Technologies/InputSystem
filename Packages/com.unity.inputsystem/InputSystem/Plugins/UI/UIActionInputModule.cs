@@ -427,6 +427,137 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             return id;
         }
+          
+        
+        /// <summary>
+        /// This is a quick accessor for enabling all actions.  Currently, action ownership is ambiguous,
+        /// and we need a way to enable/disable inspector-set actions.
+        /// </summary>
+        public void EnableAllActions()
+        {
+            var pointAction = m_PointAction.action;
+            if (pointAction != null && !pointAction.enabled)
+                pointAction.Enable();
+
+            var leftClickAction = m_LeftClickAction.action;
+            if (leftClickAction != null && !leftClickAction.enabled)
+                leftClickAction.Enable();
+
+            var rightClickAction = m_RightClickAction.action;
+            if (rightClickAction != null && !rightClickAction.enabled)
+                rightClickAction.Enable();
+
+            var middleClickAction = m_MiddleClickAction.action;
+            if (middleClickAction != null && !middleClickAction.enabled)
+                middleClickAction.Enable();
+
+            var moveAction = m_MoveAction.action;
+            if (moveAction != null && !moveAction.enabled)
+                moveAction.Enable();
+
+            var submitAction = m_SubmitAction.action;
+            if (submitAction != null && !submitAction.enabled)
+                submitAction.Enable();
+
+            var cancelAction = m_CancelAction.action;
+            if (cancelAction != null && !cancelAction.enabled)
+                cancelAction.Enable();
+
+            for (int i = 0; i < m_Touches.Count; i++)
+            {
+                var touch = m_Touches[i];
+                
+                var positionAction = touch.position.action;
+                if (positionAction != null && !positionAction.enabled)
+                    positionAction.Enable();
+
+                var phaseAction = touch.phase.action;
+                if (phaseAction != null && !phaseAction.enabled)
+                    phaseAction.Enable();
+            }
+
+            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            {
+                var trackedDevice = m_TrackedDevices[i];
+
+                var positionAction = trackedDevice.position.action;
+                if (positionAction != null && !positionAction.enabled)
+                    positionAction.Enable();
+
+                var orientationAction = trackedDevice.orientation.action;
+                if (orientationAction != null && !orientationAction.enabled)
+                    orientationAction.Enable();
+
+                var selectAction = trackedDevice.select.action;
+                if (selectAction != null && !selectAction.enabled)
+                    selectAction.Enable();
+            }
+        }
+
+        /// <summary>
+        /// This is a quick accessor for disabling all actions currently enabled.  Currently, action ownership is ambiguous,
+        /// and we need a way to enable/disable inspector-set actions.
+        /// </summary>
+        public void DisableAllActions()
+        {
+            var pointAction = m_PointAction.action;
+            if (pointAction != null && pointAction.enabled)
+                pointAction.Disable();
+
+            var leftClickAction = m_LeftClickAction.action;
+            if (leftClickAction != null && leftClickAction.enabled)
+                leftClickAction.Disable();
+
+            var rightClickAction = m_RightClickAction.action;
+            if (rightClickAction != null && rightClickAction.enabled)
+                rightClickAction.Disable();
+
+            var middleClickAction = m_MiddleClickAction.action;
+            if (middleClickAction != null && middleClickAction.enabled)
+                middleClickAction.Disable();
+
+            var moveAction = m_MoveAction.action;
+            if (moveAction != null && moveAction.enabled)
+                moveAction.Disable();
+
+            var submitAction = m_SubmitAction.action;
+            if (submitAction != null && submitAction.enabled)
+                submitAction.Disable();
+
+            var cancelAction = m_CancelAction.action;
+            if (cancelAction != null && cancelAction.enabled)
+                cancelAction.Disable();
+            
+            for (int i = 0; i < m_Touches.Count; i++)
+            {
+                var touch = m_Touches[i];
+                
+                var positionAction = touch.position.action;
+                if (positionAction != null && positionAction.enabled)
+                    positionAction.Disable();
+
+                var phaseAction = touch.phase.action;
+                if (phaseAction != null && phaseAction.enabled)
+                    phaseAction.Disable();
+            }
+
+            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            {
+                var trackedDevice = m_TrackedDevices[i];
+
+                var positionAction = trackedDevice.position.action;
+                if (positionAction != null && positionAction.enabled)
+                    positionAction.Disable();
+
+                var orientationAction = trackedDevice.orientation.action;
+                if (orientationAction != null && orientationAction.enabled)
+                    orientationAction.Disable();
+
+                var selectAction = trackedDevice.select.action;
+                if (selectAction != null && selectAction.enabled)
+                    selectAction.Disable();
+            }
+        }
 
         void OnAction(InputAction.CallbackContext context)
         {
