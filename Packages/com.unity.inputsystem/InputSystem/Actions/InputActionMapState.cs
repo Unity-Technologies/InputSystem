@@ -764,7 +764,7 @@ namespace UnityEngine.Experimental.Input
 
             // Let listeners know.
             var map = maps[trigger.mapIndex];
-            var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
+            var action = map.m_Actions[actionIndex];
             switch (newPhase)
             {
                 case InputActionPhase.Started:
