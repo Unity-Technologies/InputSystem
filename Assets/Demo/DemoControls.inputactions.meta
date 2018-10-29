@@ -19,7 +19,8 @@ ScriptedImporter:
   wrapperCodePath: 
   wrapperClassName: 
   wrapperCodeNamespace: 
-  generateActionEvents: 1
+  generateActionEvents: 0
+  generateInterfaces: 1
   actionGuids:
   - name: gameplay/fire
     guid: 1077f913-a9f9-41b1-acb3-b9ee0adbc744

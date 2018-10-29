@@ -1,6 +1,5 @@
+#if UNITY_STANDALONE && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using Steamworks;
-
-#if UNITY_STANDALONE
 
 ////REVIEW: this should ideally be part of the itself system itself but we can't reference the Steamworks.NET
 ////        API from there; find another packaging solution?
@@ -85,4 +84,4 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     }
 }
 
-#endif // UNITY_STANDALONE
+#endif // UNITY_STANDALONE && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT

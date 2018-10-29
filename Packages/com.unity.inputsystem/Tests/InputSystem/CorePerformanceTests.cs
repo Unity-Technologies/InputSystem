@@ -5,7 +5,9 @@ using UnityEngine.Experimental.Input.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 
-public class CorePerformanceTests
+////TODO: just fold performance tests into "normal" tests; performance should be a functional aspect like everything else
+
+internal class CorePerformanceTests
 {
     [SetUp]
     public void Setup()

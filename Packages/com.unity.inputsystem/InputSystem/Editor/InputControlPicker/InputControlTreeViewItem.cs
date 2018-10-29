@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using System.Text;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 
@@ -22,9 +23,12 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get
             {
+                var path = new StringBuilder(string.Format("<{0}>", m_Device));
                 if (!string.IsNullOrEmpty(m_Usage))
-                    return string.Format("<{0}>{{{1}}}/{2}", m_Device, m_Usage, m_ControlPath);
-                return string.Format("<{0}>/{1}", m_Device,  m_ControlPath);
+                    path.Append(string.Format("{{{0}}}", m_Usage));
+                if (!string.IsNullOrEmpty(m_ControlPath))
+                    path.Append(string.Format("/{0}", m_ControlPath));
+                return path.ToString();
             }
         }
 
@@ -78,6 +82,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public DeviceTreeViewItem(InputControlLayout layout, string commonUsage)
         {
             displayName = layout.name;
+            m_Device = layout.name;
+            m_Usage = commonUsage;
             if (commonUsage != null)
                 displayName += " (" + commonUsage + ")";
             id = (displayName).GetHashCode();
