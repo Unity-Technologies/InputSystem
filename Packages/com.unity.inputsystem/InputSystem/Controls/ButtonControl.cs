@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// By default stored as a single bit. In that format, buttons will only yield 0
     /// and 1 as values.
     ///
-    /// Note that While it may seem unnatural to derive ButtonControl from AxisControl,
+    /// It may seem unnatural to derive ButtonControl from AxisControl, but
     /// doing so brings many benefits through allowing code to flexibly target buttons
     /// and axes the same way.
     /// </remarks>

@@ -42,7 +42,7 @@
                     "path": "*/{PrimaryAction}",
                     "interactions": "Tap,SlowTap",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse;Gamepad",
                     "action": "fire",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -54,7 +54,7 @@
                     "path": "<SteamDemoController>/fire",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Steam",
                     "action": "fire",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -66,7 +66,7 @@
                     "path": "<Gamepad>/leftStick",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Gamepad",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -78,7 +78,7 @@
                     "path": "Dpad",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": true,
@@ -90,7 +90,7 @@
                     "path": "<Keyboard>/w",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -102,7 +102,7 @@
                     "path": "<Keyboard>/s",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -114,7 +114,7 @@
                     "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -126,7 +126,7 @@
                     "path": "<Keyboard>/d",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -138,7 +138,7 @@
                     "path": "<SteamDemoController>/move",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Steam",
                     "action": "move",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -150,7 +150,7 @@
                     "path": "<Gamepad>/rightStick",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Gamepad",
                     "action": "look",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -162,7 +162,7 @@
                     "path": "<Pointer>/delta",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "look",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -174,7 +174,7 @@
                     "path": "<SteamDemoController>/look",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Steam",
                     "action": "look",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -186,7 +186,7 @@
                     "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "jump",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -198,7 +198,7 @@
                     "path": "<Gamepad>/buttonNorth",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Gamepad",
                     "action": "jump",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -210,7 +210,7 @@
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "KeyboardMouse",
                     "action": "escape",
                     "chainWithPrevious": false,
                     "isComposite": false,
@@ -242,7 +242,7 @@
     "controlSchemes": [
         {
             "name" : "Keyboard&Mouse",
-            "bindingGroup" : "Keyboard&Mouse",
+            "bindingGroup" : "KeyboardMouse",
             "devices" : [
                 {
                     "devicePath" : "<Keyboard>",
@@ -260,6 +260,34 @@
             "devices" : [
                 {
                     "devicePath" : "<Gamepad>",
+                    "isOptional" : false
+                }
+            ]
+        },
+        {
+            "name" : "Steam",
+            "bindingGroup" : "Steam",
+            "devices" : [
+                {
+                    "devicePath" : "<SteamDemoController>",
+                    "isOptional" : false
+                }
+            ]
+        },
+        {
+            "name" : "VR",
+            "bindingGroup" : "VR",
+            "devices" : [
+                {
+                    "devicePath" : "<XRHMD>",
+                    "isOptional" : false
+                },
+                {
+                    "devicePath" : "<XRController>{LeftHand}",
+                    "isOptional" : false
+                },
+                {
+                    "devicePath" : "<XRController>{RightHand}",
                     "isOptional" : false
                 }
             ]

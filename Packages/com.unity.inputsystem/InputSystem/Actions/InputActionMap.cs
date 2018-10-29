@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
@@ -6,6 +7,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: add public InputActionManager that supports various device allocation strategies (one stack
 ////      per device, multiple devices per stack, etc.); should also resolve the problem of having
 ////      two bindings stack on top of each other and making the one on top suppress the one below
+
+////REVIEW: given we have the global ActionTriggered callback, do we really need the per-map callback?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -26,7 +29,7 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver
+    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection
     {
         /// <summary>
         /// Name of the action map.
@@ -338,6 +341,32 @@ namespace UnityEngine.Experimental.Input
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public bool Contains(InputAction action)
+        {
+            if (action == null)
+                return false;
+
+            return action.actionMap == this;
+        }
+
+        /// <summary>
+        /// Enumerate the actions in the map.
+        /// </summary>
+        /// <returns>An enumerator going over the actions in the map.</returns>
+        /// <remarks>
+        /// This method supports to generically iterate over the actions in a map. However, it will usually
+        /// lead to GC allocation. Iterating directly over <see cref="actions"/> avoids allocating GC memory.
+        /// </remarks>
+        public IEnumerator<InputAction> GetEnumerator()
+        {
+            return actions.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         // The state we persist is pretty much just a name, a flat list of actions, and a flat

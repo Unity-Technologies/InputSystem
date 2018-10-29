@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using NUnit.Framework;
 
-public class CoreStressTests
+internal class CoreStressTests
 {
     [Test]
     [Category("Stress")]

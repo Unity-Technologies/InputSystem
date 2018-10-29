@@ -3,7 +3,7 @@ using System;
 namespace UnityEngine.Experimental.Input.Utilities
 {
     // Work with substrings without actually allocating strings.
-    internal struct Substring : IComparable<Substring>
+    internal struct Substring : IComparable<Substring>, IEquatable<Substring>
     {
         internal string m_String;
         internal int m_Index;
@@ -32,6 +32,15 @@ namespace UnityEngine.Experimental.Input.Utilities
             m_String = str;
             m_Index = index;
             m_Length = length;
+        }
+
+        public Substring(string str, int index)
+        {
+            Debug.Assert(str == null || index < str.Length);
+
+            m_String = str;
+            m_Index = index;
+            m_Length = str.Length - index;
         }
 
         public override bool Equals(object obj)
@@ -79,14 +88,20 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public int CompareTo(Substring other)
         {
-            if (length != other.length)
+            return Compare(this, other, StringComparison.CurrentCulture);
+        }
+
+        public static int Compare(Substring left, Substring right, StringComparison comparison)
+        {
+            if (left.m_Length != right.m_Length)
             {
-                if (length < other.length)
+                if (left.m_Length < right.m_Length)
                     return -1;
                 return 1;
             }
 
-            return string.Compare(m_String, m_Index, other.m_String, other.m_Index, m_Length);
+            return string.Compare(left.m_String, left.m_Index, right.m_String, right.m_Index, left.m_Length,
+                comparison);
         }
 
         public override string ToString()

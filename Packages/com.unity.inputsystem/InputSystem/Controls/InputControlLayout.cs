@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: allow layouts to set default device names
+
 ////TODO: allow creating generic controls as parents just to group child controls
 
 ////TODO: allow things like "-something" and "+something" for usages, processors, etc

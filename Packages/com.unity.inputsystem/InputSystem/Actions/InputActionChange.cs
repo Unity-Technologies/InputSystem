@@ -30,11 +30,17 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputActionMap.Disable"/>
         ActionMapDisabled,
 
-        ////TODO
+        /// <summary>
+        /// An <see cref="InputAction"/> was <see cref="InputActionPhase.Started">started</see>,
+        /// <see cref="InputActionPhase.Performed">performed</see> or <see cref="InputActionPhase.Cancelled">
+        /// cancelled</see>.
+        /// </summary>
+        /// <seealso cref="InputAction.started"/>
+        /// <seealso cref="InputAction.performed"/>
+        /// <seealso cref="InputAction.cancelled"/>
         ActionTriggered,
 
-        ////REVIEW: should this just be a general notification we fire whenever we bind controls on an action?
-        ////        (and fire it regardless of whether the action is enabled or not)
+        ////TODO: turn this into BoundControlsChanged and fire it whenever we change the set of controls on an action or map
         /// <summary>
         /// An action had its set of bound controls change while the action
         /// was enabled.

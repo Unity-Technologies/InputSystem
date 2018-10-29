@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input
     {
         public ReadOnlyArray<InputDevice> devices
         {
-            get { return new ReadOnlyArray<InputDevice>(m_Devices); }
+            get { return new ReadOnlyArray<InputDevice>(m_Devices, 0, m_DevicesCount); }
         }
 
         public TypeTable processors
@@ -99,7 +99,7 @@ namespace UnityEngine.Experimental.Input
                     m_Runtime.updateMask = m_UpdateMask;
 
                 // Recreate state buffers.
-                if (m_Devices != null)
+                if (m_DevicesCount > 0)
                     ReallocateStateBuffers();
             }
         }
@@ -125,6 +125,7 @@ namespace UnityEngine.Experimental.Input
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
+        ////REVIEW: would be great to have a way to sort out precedence between two callbacks
         public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
         {
             add { m_DeviceFindLayoutCallbacks.Append(value); }
@@ -352,13 +353,13 @@ namespace UnityEngine.Experimental.Input
 
         private void RecreateDevicesUsingLayout(InternedString layout, bool isKnownToBeDeviceLayout = false)
         {
-            if (m_Devices == null)
+            if (m_DevicesCount == 0)
                 return;
 
             List<InputDevice> devicesUsingLayout = null;
 
             // Find all devices using the layout.
-            for (var i = 0; i < m_Devices.Length; ++i)
+            for (var i = 0; i < m_DevicesCount; ++i)
             {
                 var device = m_Devices[i];
 
@@ -440,11 +441,11 @@ namespace UnityEngine.Experimental.Input
 
         private void RecreateDevicesUsingLayoutWithInferiorMatch(InputDeviceMatcher deviceMatcher)
         {
-            if (m_Devices == null)
+            if (m_DevicesCount == 0)
                 return;
 
             InputDeviceBuilder builder = null;
-            var deviceCount = m_Devices.Length;
+            var deviceCount = m_DevicesCount;
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
@@ -533,7 +534,7 @@ namespace UnityEngine.Experimental.Input
             var internedName = new InternedString(name);
 
             // Remove all devices using the layout.
-            for (var i = 0; m_Devices != null && i < m_Devices.Length;)
+            for (var i = 0; i < m_DevicesCount;)
             {
                 var device = m_Devices[i];
                 if (IsControlOrChildUsingLayoutRecursive(device, internedName))
@@ -590,14 +591,16 @@ namespace UnityEngine.Experimental.Input
             }
 
             ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
+            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks?
             // Give listeners a shot to select/create a layout.
+            var haveOverriddenLayoutName = false;
             for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
             {
                 var newLayout = m_DeviceFindLayoutCallbacks[i](deviceId, ref deviceDescription, layoutName, m_Runtime);
-                if (!string.IsNullOrEmpty(newLayout))
+                if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
                 {
                     layoutName = new InternedString(newLayout);
-                    break;
+                    haveOverriddenLayoutName = true;
                 }
             }
 
@@ -685,10 +688,10 @@ namespace UnityEngine.Experimental.Input
         {
             if (string.IsNullOrEmpty(path))
                 return 0;
-            if (m_Devices == null)
+            if (m_DevicesCount == 0)
                 return 0;
 
-            var deviceCount = m_Devices.Length;
+            var deviceCount = m_DevicesCount;
             var numMatches = 0;
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -810,7 +813,7 @@ namespace UnityEngine.Experimental.Input
             AssignUniqueDeviceId(device);
 
             // Add to list.
-            device.m_DeviceIndex = ArrayHelpers.Append(ref m_Devices, device);
+            device.m_DeviceIndex = ArrayHelpers.AppendWithCapacity(ref m_Devices, ref m_DevicesCount, device);
 
             ////REVIEW: Not sure a full-blown dictionary is the right way here. Alternatives are to keep
             ////        a sparse array that directly indexes using the linearly increasing IDs (though that
@@ -828,7 +831,7 @@ namespace UnityEngine.Experimental.Input
             InitializeDefaultState(device);
 
             // Update metrics.
-            m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
+            m_Metrics.maxNumDevices = Mathf.Max(m_DevicesCount, m_Metrics.maxNumDevices);
             m_Metrics.maxStateSizeInBytes = Mathf.Max((int)m_StateBuffers.totalSize, m_Metrics.maxStateSizeInBytes);
 
             ////REVIEW: we may want to suppress this during the initial device discovery phase
@@ -856,7 +859,7 @@ namespace UnityEngine.Experimental.Input
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
 
-            InputNoiseFilter interactionFilter = device.userInteractionFilter;
+            var interactionFilter = device.userInteractionFilter;
             interactionFilter.Apply(device);
 
             // Notify device.
@@ -918,14 +921,14 @@ namespace UnityEngine.Experimental.Input
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.id;
-            ArrayHelpers.EraseAt(ref m_Devices, deviceIndex);
+            ArrayHelpers.EraseAtWithCapacity(ref m_Devices, ref m_DevicesCount, deviceIndex);
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
             m_DevicesById.Remove(deviceId);
 
             if (m_Devices != null)
             {
-                var oldDeviceIndices = new int[m_Devices.Length];
-                for (var i = 0; i < m_Devices.Length; ++i)
+                var oldDeviceIndices = new int[m_DevicesCount];
+                for (var i = 0; i < m_DevicesCount; ++i)
                 {
                     oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
                     m_Devices[i].m_DeviceIndex = i;
@@ -973,13 +976,12 @@ namespace UnityEngine.Experimental.Input
             if (device.updateBeforeRender)
             {
                 var haveDeviceRequiringBeforeRender = false;
-                if (m_Devices != null)
-                    for (var i = 0; i < m_Devices.Length; ++i)
-                        if (m_Devices[i].updateBeforeRender)
-                        {
-                            haveDeviceRequiringBeforeRender = true;
-                            break;
-                        }
+                for (var i = 0; i < m_DevicesCount; ++i)
+                    if (m_Devices[i].updateBeforeRender)
+                    {
+                        haveDeviceRequiringBeforeRender = true;
+                        break;
+                    }
 
                 if (!haveDeviceRequiringBeforeRender)
                     updateMask &= ~InputUpdateType.BeforeRender;
@@ -998,12 +1000,12 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(nameOrLayout))
                 throw new ArgumentException("nameOrLayout");
 
-            if (m_Devices == null)
+            if (m_DevicesCount == 0)
                 return null;
 
             var nameOrLayoutLowerCase = nameOrLayout.ToLower();
 
-            for (var i = 0; i < m_Devices.Length; ++i)
+            for (var i = 0; i < m_DevicesCount; ++i)
             {
                 var device = m_Devices[i];
                 if (device.m_Name.ToLower() == nameOrLayoutLowerCase ||
@@ -1096,7 +1098,7 @@ namespace UnityEngine.Experimental.Input
         ////TODO: support combining monitors for bitfields
         public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
         {
-            Debug.Assert(m_Devices != null);
+            Debug.Assert(m_DevicesCount > 0);
 
             var device = control.device;
             var deviceIndex = device.m_DeviceIndex;
@@ -1105,9 +1107,9 @@ namespace UnityEngine.Experimental.Input
             // Allocate/reallocate monitor arrays, if necessary.
             // We lazy-sync it to array of devices.
             if (m_StateChangeMonitors == null)
-                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_Devices.Length];
+                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_DevicesCount];
             else if (m_StateChangeMonitors.Length <= deviceIndex)
-                Array.Resize(ref m_StateChangeMonitors, m_Devices.Length);
+                Array.Resize(ref m_StateChangeMonitors, m_DevicesCount);
 
             // Add record.
             m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
@@ -1211,9 +1213,8 @@ namespace UnityEngine.Experimental.Input
             // There isn't really much of a point in removing devices but we still
             // want to clear out any global state they may be keeping. So just tell
             // the devices that they got removed without actually removing them.
-            if (m_Devices != null)
-                foreach (var device in m_Devices)
-                    device.NotifyRemoved();
+            for (var i = 0; i < m_DevicesCount; ++i)
+                m_Devices[i].NotifyRemoved();
 
             // Free all state memory.
             m_StateBuffers.FreeAll();
@@ -1335,7 +1336,7 @@ namespace UnityEngine.Experimental.Input
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
-            m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
+            m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.updateMask = updateMask;
             m_Runtime.pollingFrequency = pollingFrequency;
 
@@ -1385,7 +1386,7 @@ namespace UnityEngine.Experimental.Input
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
-        internal int m_DeviceSetupVersion;
+        internal int m_DeviceSetupVersion;////TODO
         private float m_PollingFrequency;
 
         internal InputControlLayout.Collection m_Layouts;
@@ -1393,10 +1394,15 @@ namespace UnityEngine.Experimental.Input
         private TypeTable m_Interactions;
         private TypeTable m_Composites;
 
+        private int m_DevicesCount;
         private InputDevice[] m_Devices;
+
         private Dictionary<int, InputDevice> m_DevicesById;
         internal int m_AvailableDeviceCount;
         internal AvailableDevice[] m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
+
+        internal int m_DisconnectedDevicesCount;
+        internal InputDevice[] m_DisconnectedDevices;
 
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         internal InputStateBuffers m_StateBuffers;
@@ -1548,14 +1554,14 @@ namespace UnityEngine.Experimental.Input
 
         private void MakeDeviceNameUnique(InputDevice device)
         {
-            if (m_Devices == null)
+            if (m_DevicesCount == 0)
                 return;
 
-            var deviceName = StringHelpers.MakeUniqueName(device.name, m_Devices, x => x.name);
+            var deviceName = StringHelpers.MakeUniqueName(device.name, m_Devices, x => x != null ? x.name : string.Empty);
             if (deviceName != device.name)
             {
                 // If we have changed the name of the device, nuke all path strings in the control
-                // hiearchy so that they will get re-recreated when queried.
+                // hierarchy so that they will get re-recreated when queried.
                 ResetControlPathsRecursive(device);
 
                 // Assign name.
@@ -1599,15 +1605,14 @@ namespace UnityEngine.Experimental.Input
         // NOTE: Installs the buffers globally.
         private void ReallocateStateBuffers(int[] oldDeviceIndices = null)
         {
-            var devices = m_Devices;
             var oldBuffers = m_StateBuffers;
 
             // Allocate new buffers.
             var newBuffers = new InputStateBuffers();
-            var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, devices);
+            var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, m_Devices, m_DevicesCount);
 
             // Migrate state.
-            newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
+            newBuffers.MigrateAll(m_Devices, m_DevicesCount, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
 
             // Install the new buffers.
             oldBuffers.FreeAll();
@@ -1678,17 +1683,43 @@ namespace UnityEngine.Experimental.Input
 #endif
         }
 
-        private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
+        private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
-            // Try to add it.
+            // See if we have a disconnected device we can revive.
+            InputDevice device = null;
+            for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
+            {
+                if (m_DisconnectedDevices[i].description == description)
+                {
+                    device = m_DisconnectedDevices[i];
+                    ArrayHelpers.EraseAtWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
+                    break;
+                }
+            }
+
+            // Add it.
             try
             {
-                // Try to turn it into a device instance.
-                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId,
-                    deviceFlags: InputDevice.DeviceFlags.Native);
+                if (device != null)
+                {
+                    // It's a device we pulled from the disconnected list. Update the device with the
+                    // new ID, re-add it and notify that we've reconnected.
+
+                    device.m_Id = deviceId;
+                    AddDevice(device);
+
+                    for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
+                        m_DeviceChangeListeners[i](device, InputDeviceChange.Reconnected);
+                }
+                else
+                {
+                    // Go through normal machinery to try to create a new device.
+                    AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId,
+                        deviceFlags: InputDevice.DeviceFlags.Native);
+                }
             }
             // We're catching exceptions very aggressively here. The reason is that we don't want
             // exceptions thrown as a result of trying to create devices from device discoveries reported
@@ -1752,7 +1783,7 @@ namespace UnityEngine.Experimental.Input
                     var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
                     var currentTimeExternal = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
-                    for (var i = 0; i < m_Devices.Length; ++i)
+                    for (var i = 0; i < m_DevicesCount; ++i)
                     {
                         var device = m_Devices[i];
                         if ((device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) != InputDevice.DeviceFlags.HasStateCallbacks)
@@ -1909,7 +1940,7 @@ namespace UnityEngine.Experimental.Input
             //
             // In before render updates, we will only access StateEvents and DeltaEvents (the latter should
             // be used to, for example, *only* update tracking on a device that also contains buttons -- which
-            // should not get updated in berfore render).
+            // should not get updated in before render).
 
             var currentEventPtr = (InputEvent*)eventData;
             var remainingEventCount = eventCount;
@@ -2102,7 +2133,6 @@ namespace UnityEngine.Experimental.Input
                                 new IntPtr(deviceBuffer.ToInt64() + stateBlockOfDevice.byteOffset),
                                 sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
 
-
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
 
                         // Use a filter to see if any significant changes are occuring on the device.
@@ -2246,9 +2276,20 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     case DeviceRemoveEvent.Type:
+                    {
                         RemoveDevice(device);
                         doNotMakeDeviceCurrent = true;
+
+                        // If it's a native device with a description, put it on the list of disconnected
+                        // devices.
+                        if (device.native && !device.description.empty)
+                        {
+                            ArrayHelpers.AppendWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, device);
+                            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
+                                m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
+                        }
                         break;
+                    }
 
                     case DeviceConfigurationEvent.Type:
                         device.OnConfigurationChanged();
@@ -2565,7 +2606,6 @@ namespace UnityEngine.Experimental.Input
             public string[] usages;
             public NoiseFilterElementState[] noisyElements;
             public int deviceId;
-            public uint stateOffset;
             public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
@@ -2583,8 +2623,10 @@ namespace UnityEngine.Experimental.Input
                 if (noisyElements == null || noisyElements.Length == 0)
                     return;
 
-                InputNoiseFilter newUserInteractionFilter = new InputNoiseFilter();
-                var index = ArrayHelpers.Append(ref newUserInteractionFilter.elements, noisyElements.Select(filterElement => new InputNoiseFilter.FilterElement { controlIndex = filterElement.index, type = filterElement.type}));
+                var newUserInteractionFilter = new InputNoiseFilter();
+                ArrayHelpers.Append(ref newUserInteractionFilter.elements,
+                    noisyElements.Select(filterElement => new InputNoiseFilter.FilterElement
+                        {controlIndex = filterElement.index, type = filterElement.type}));
                 device.userInteractionFilter = newUserInteractionFilter;
             }
         }
@@ -2620,7 +2662,7 @@ namespace UnityEngine.Experimental.Input
         internal SerializedState SaveState()
         {
             // Devices.
-            var deviceCount = m_Devices != null ? m_Devices.Length : 0;
+            var deviceCount = m_DevicesCount;
             var deviceArray = new DeviceState[deviceCount];
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -2641,7 +2683,6 @@ namespace UnityEngine.Experimental.Input
                     deviceId = device.id,
                     usages = usages,
                     noisyElements = elements,
-                    stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
                 };
@@ -2780,9 +2821,18 @@ namespace UnityEngine.Experimental.Input
                     var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
                         m_AvailableDevices[i].deviceId);
                     if (!layout.IsEmpty())
-                        AddDevice(layout, m_AvailableDevices[i].deviceId,
-                            deviceDescription: m_AvailableDevices[i].description,
-                            deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                    {
+                        try
+                        {
+                            AddDevice(layout, m_AvailableDevices[i].deviceId,
+                                deviceDescription: m_AvailableDevices[i].description,
+                                deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                        }
+                        catch (Exception exception)
+                        {
+                            // Just ignore. Simply means we still can't really turn the device into something useful.
+                        }
+                    }
                 }
 
                 // Done. Discard saved arrays.

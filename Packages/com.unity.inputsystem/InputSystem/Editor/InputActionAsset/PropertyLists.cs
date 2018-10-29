@@ -191,17 +191,17 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                     if (parameterValue.type == InputControlLayout.ParameterType.Integer)
                     {
                         var intValue = int.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.IntField(parameterValue.name, intValue).ToString();
+                        result = EditorGUILayout.IntField(ObjectNames.NicifyVariableName(parameterValue.name), intValue).ToString();
                     }
                     else if (parameterValue.type == InputControlLayout.ParameterType.Float)
                     {
                         var floatValue = float.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.FloatField(parameterValue.name, floatValue).ToString();
+                        result = EditorGUILayout.FloatField(ObjectNames.NicifyVariableName(parameterValue.name), floatValue).ToString();
                     }
                     else if (parameterValue.type == InputControlLayout.ParameterType.Boolean)
                     {
                         var boolValue = bool.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.Toggle(parameterValue.name, boolValue).ToString();
+                        result = EditorGUILayout.Toggle(ObjectNames.NicifyVariableName(parameterValue.name), boolValue).ToString();
                     }
 
                     if (EditorGUI.EndChangeCheck())

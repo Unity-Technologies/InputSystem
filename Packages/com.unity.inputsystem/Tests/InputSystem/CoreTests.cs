@@ -1,5 +1,5 @@
 using UnityEngine.Experimental.Input;
 
-partial class CoreTests : InputTestFixture
+internal partial class CoreTests : InputTestFixture
 {
 }

@@ -2,14 +2,21 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
+
+////REVIEW: can we have a read-only version of this
+
+////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
 
 namespace UnityEngine.Experimental.Input
 {
@@ -28,7 +35,7 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     [DebuggerDisplay("Count = {Count}")]
     [DebuggerTypeProxy(typeof(InputControlListDebugView<>))]
-    public unsafe struct InputControlList<TControl> : IEnumerable<TControl>, IDisposable
+    public unsafe struct InputControlList<TControl> : IList<TControl>, IReadOnlyList<TControl>, IDisposable
         where TControl : InputControl
     {
         /// <summary>
@@ -62,6 +69,11 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
         /// <summary>
         /// Return the control at the given index.
         /// </summary>
@@ -81,6 +93,14 @@ namespace UnityEngine.Experimental.Input
                         string.Format("Index {0} is out of range in list with {1} entries", index, m_Count), "index");
 
                 return FromIndex(m_Indices[index]);
+            }
+            set
+            {
+                if (index < 0 || index >= m_Count)
+                    throw new ArgumentOutOfRangeException(
+                        string.Format("Index {0} is out of range in list with {1} entries", index, m_Count), "index");
+
+                m_Indices[index] = ToIndex(value);
             }
         }
 
@@ -130,10 +150,85 @@ namespace UnityEngine.Experimental.Input
             ArrayHelpers.AppendWithCapacity(ref m_Indices, ref m_Count, index, allocator: allocator);
         }
 
-        public void Remove(TControl control)
+        /// <summary>
+        /// Add a slice of elements taken from the given list.
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="count"></param>
+        /// <param name="destinationIndex"></param>
+        /// <param name="sourceIndex"></param>
+        /// <typeparam name="TList"></typeparam>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public void AddSlice<TList>(TList list, int count = -1, int destinationIndex = -1, int sourceIndex = 0)
+            where TList : IReadOnlyList<TControl>
+        {
+            if (count < 0)
+                count = list.Count;
+            if (destinationIndex < 0)
+                destinationIndex = Count;
+
+            if (count == 0)
+                return;
+            if (sourceIndex + count > list.Count)
+                throw new ArgumentOutOfRangeException(string.Format(
+                    "Count of {0} elements starting at index {1} exceeds length of list of {2}", count, sourceIndex,
+                    list.Count), "count");
+
+            // Make space in the list.
+            if (Capacity < count)
+                Capacity = Math.Max(count, 10);
+            if (destinationIndex < Count)
+                #if UNITY_2018_3_OR_NEWER
+                NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
+                Count - destinationIndex);
+                #else
+                Unity2018_2_Compatibility.Copy<ulong>(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
+                Count - destinationIndex);
+                #endif
+
+            // Add elements.
+            for (var i = 0; i < count; ++i)
+                m_Indices[destinationIndex + i] = ToIndex(list[sourceIndex + i]);
+            m_Count += count;
+        }
+
+        public void AddRange(IEnumerable<TControl> list, int count = -1, int destinationIndex = -1)
+        {
+            if (count < 0)
+                count = list.Count();
+            if (destinationIndex < 0)
+                destinationIndex = Count;
+
+            if (count == 0)
+                return;
+
+            // Make space in the list.
+            if (Capacity < count)
+                Capacity = Math.Max(count, 10);
+            if (destinationIndex < Count)
+                #if UNITY_2018_3_OR_NEWER
+                NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
+                Count - destinationIndex);
+                #else
+                Unity2018_2_Compatibility.Copy<ulong>(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
+                Count - destinationIndex);
+                #endif
+
+            // Add elements.
+            foreach (var element in list)
+            {
+                m_Indices[destinationIndex++] = ToIndex(element);
+                ++m_Count;
+                --count;
+                if (count == 0)
+                    break;
+            }
+        }
+
+        public bool Remove(TControl control)
         {
             if (m_Count == 0)
-                return;
+                return false;
 
             var index = ToIndex(control);
             for (var i = 0; i < m_Count; ++i)
@@ -141,9 +236,11 @@ namespace UnityEngine.Experimental.Input
                 if (m_Indices[i] == index)
                 {
                     ArrayHelpers.EraseAtWithCapacity(ref m_Indices, ref m_Count, i);
-                    break;
+                    return true;
                 }
             }
+
+            return false;
         }
 
         public void RemoveAt(int index)
@@ -153,6 +250,21 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Index {0} is out of range in list with {1} elements", index, m_Count), "index");
 
             ArrayHelpers.EraseAtWithCapacity(ref m_Indices, ref m_Count, index);
+        }
+
+        public void CopyTo(TControl[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int IndexOf(TControl item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Insert(int index, TControl item)
+        {
+            throw new NotImplementedException();
         }
 
         public void Clear()
@@ -304,6 +416,27 @@ namespace UnityEngine.Experimental.Input
         public TControl[] controls
         {
             get { return m_Controls; }
+        }
+    }
+
+    public static class InputControlListExtensions
+    {
+        public static InputControlList<TControl> ToControlList<TControl>(this IEnumerable<TControl> list)
+            where TControl : InputControl
+        {
+            var result = new InputControlList<TControl>();
+            foreach (var element in list)
+                result.AddRange(list);
+            return result;
+        }
+
+        public static InputControlList<TControl> ToControlList<TControl>(this IReadOnlyList<TControl> list)
+            where TControl : InputControl
+        {
+            var result = new InputControlList<TControl>();
+            foreach (var element in list)
+                result.AddSlice(list);
+            return result;
         }
     }
 }

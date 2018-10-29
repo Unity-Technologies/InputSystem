@@ -68,6 +68,7 @@ public class SimpleControls : InputActionAssetReference
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
+        public bool enabled { get { return Get().enabled; } }
         public InputActionMap Clone() { return Get().Clone(); }
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
     }

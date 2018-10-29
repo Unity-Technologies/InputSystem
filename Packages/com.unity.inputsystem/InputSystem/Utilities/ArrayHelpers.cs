@@ -11,6 +11,38 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// </summary>
     internal static class ArrayHelpers
     {
+        public static void EnsureCapacity<TValue>(ref TValue[] array, int count, int capacity, int capacityIncrement = 10)
+        {
+            if (capacity == 0)
+                return;
+
+            if (array == null)
+            {
+                array = new TValue[Math.Max(capacity, capacityIncrement)];
+                return;
+            }
+
+            var currentCapacity = array.Length - count;
+            if (currentCapacity >= capacity)
+                return;
+
+            DuplicateWithCapacity(ref array, count, capacity, capacityIncrement);
+        }
+
+        public static void DuplicateWithCapacity<TValue>(ref TValue[] array, int count, int capacity, int capacityIncrement = 10)
+        {
+            if (array == null)
+            {
+                array = new TValue[Math.Max(capacity, capacityIncrement)];
+                return;
+            }
+
+            var newSize = count + Math.Max(capacity, capacityIncrement);
+            var newArray = new TValue[newSize];
+            Array.Copy(array, newArray, count);
+            array = newArray;
+        }
+
         public static bool Contains<TValue>(TValue[] array, TValue value)
         {
             if (array == null)
@@ -30,7 +62,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (array == null)
                 return false;
 
-            for (var i = 0; i < array.Length; ++i)
+            return ContainsReferenceTo(array, array.Length, value);
+        }
+
+        public static bool ContainsReferenceTo<TValue>(TValue[] array, int count, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return false;
+
+            for (var i = 0; i < count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return true;
 
@@ -78,6 +119,19 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             var length = array.Length;
             for (var i = 0; i < length; ++i)
+                if (ReferenceEquals(array[i], value))
+                    return i;
+
+            return -1;
+        }
+
+        public static int IndexOfReference<TValue>(TValue[] array, int count, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return -1;
+
+            for (var i = 0; i < count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return i;
 

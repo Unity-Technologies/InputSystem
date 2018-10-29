@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
 ////TODO: come up with an action response system that doesn't require hooking and unhooking all those delegates
@@ -24,14 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty point
         {
             get { return m_PointAction; }
-            set
-            {
-                if (m_PointAction != null && m_ActionsHooked)
-                    m_PointAction.action.performed -= m_ActionCallback;
-                m_PointAction = value;
-                if (m_PointAction != null && m_ActionsHooked)
-                    m_PointAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_PointAction, value); }
         }
 
         /// <summary>
@@ -41,109 +35,151 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty move
         {
             get { return m_MoveAction; }
-            set
-            {
-                if (m_MoveAction != null && m_ActionsHooked)
-                    m_MoveAction.action.performed -= m_ActionCallback;
-                m_MoveAction = value;
-                if (m_PointAction != null && m_ActionsHooked)
-                    m_PointAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_MoveAction, value); }
+        }
+
+        public InputActionProperty scrollWheel
+        {
+            get { return m_ScrollWheelAction; }
+            set { SwapProperty(ref m_ScrollWheelAction, value); }
+        }
+
+        public InputActionProperty leftClick
+        {
+            get { return m_LeftClickAction; }
+            set { SwapProperty(ref m_LeftClickAction, value); }
+        }
+
+        public InputActionProperty middleClick
+        {
+            get { return m_MiddleClickAction; }
+            set { SwapProperty(ref m_MiddleClickAction, value); }
+        }
+
+        public InputActionProperty rightClick
+        {
+            get { return m_RightClickAction; }
+            set { SwapProperty(ref m_RightClickAction, value); }
         }
 
         public InputActionProperty submit
         {
             get { return m_SubmitAction; }
-            set
-            {
-                if (m_SubmitAction != null && m_ActionsHooked)
-                    m_SubmitAction.action.performed -= m_ActionCallback;
-                m_SubmitAction = value;
-                if (m_SubmitAction != null && m_ActionsHooked)
-                    m_SubmitAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_SubmitAction, value); }
         }
 
         public InputActionProperty cancel
         {
             get { return m_CancelAction; }
-            set
-            {
-                if (m_CancelAction != null && m_ActionsHooked)
-                    m_CancelAction.action.performed -= m_ActionCallback;
-                m_CancelAction = value;
-                if (m_CancelAction != null && m_ActionsHooked)
-                    m_CancelAction.action.performed += m_ActionCallback;
-            }
+            set { SwapProperty(ref m_CancelAction, value); }
         }
 
-        public InputActionProperty leftClick;
-
-        public InputActionProperty middleClick;
-
-        public InputActionProperty rightClick;
-
-        public InputActionProperty scroll;
-
-        public void OnDestroy()
+        protected override void Awake()
         {
-            UnhookActions();
+            base.Awake();
 
-            if (m_ActionQueue != null)
-            {
-                m_ActionQueue.Dispose();
-                m_ActionQueue = null;
-            }
+            /// TODO TB: We don't have proper mouse pointer Ids atm, use 0 for single mouse state.
+            mouseState = new MouseModel(eventSystem, 0);
+            joystickState.Reset();
         }
 
-        public void OnEnable()
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            UnhookActions();
+        }
+
+        protected override void OnEnable()
         {
             base.OnEnable();
+
             HookActions();
         }
 
-        public void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
+
             UnhookActions();
+        }
+
+        private bool ShouldIgnoreEventsOnNoFocus()
+        {
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.Windows:
+                case OperatingSystemFamily.Linux:
+                case OperatingSystemFamily.MacOSX:
+#if UNITY_EDITOR
+                    if (UnityEditor.EditorApplication.isRemoteConnected)
+                        return false;
+#endif
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public void OnAction(InputAction.CallbackContext context)
+        {
+            var action = context.action;
+            if (action == m_PointAction)
+            {
+                mouseState.position = context.ReadValue<Vector2>();
+            }
+            else if (action == m_ScrollWheelAction)
+            {
+                mouseState.scrollPosition = context.ReadValue<Vector2>();
+            }
+            else if (action == m_LeftClickAction)
+            {
+                var buttonState = mouseState.leftButton;
+                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                mouseState.leftButton = buttonState;
+            }
+            else if (action == m_RightClickAction)
+            {
+                var buttonState = mouseState.rightButton;
+                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                mouseState.rightButton = buttonState;
+            }
+            else if (action == m_MiddleClickAction)
+            {
+                var buttonState = mouseState.middleButton;
+                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                mouseState.middleButton = buttonState;
+            }
+            else if (action == m_MoveAction)
+            {
+                joystickState.move = context.ReadValue<Vector2>();
+            }
+            else if (action == m_SubmitAction)
+            {
+                joystickState.submitButtonDown = context.ReadValue<float>() != 0.0f;
+            }
+            else if (action == m_CancelAction)
+            {
+                joystickState.cancelButtonDown = context.ReadValue<float>() != 0.0f;
+            }
         }
 
         public override void Process()
         {
-            foreach (var entry in m_ActionQueue)
+            DoProcess();
+        }
+
+        private void DoProcess()
+        {
+            // Reset devices of changes since we don't want to spool up changes once we gain focus.
+            if (!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
             {
-                var action = entry.action;
-                Debug.Assert(action != null);
-                if (action == null)
-                    continue;
-
-                if (action == m_PointAction)
-                {
-                    var control = entry.control;
-                    var device = control != null ? control.device : null;
-                    var pointer = device as Pointer;
-                    var pointerId = pointer != null ? pointer.pointerId.ReadValue() : 0;
-
-                    // Initialize event.
-                    var eventData = GetOrCreateCachedPointerEvent();
-                    eventData.pointerId = pointerId;
-                    eventData.position = entry.ReadValue<Vector2>();
-                    PerformRaycast(eventData);
-
-                    // Fire events.
-                    HandlePointerExitAndEnter(eventData, eventData.pointerCurrentRaycast.gameObject);
-
-                    eventData.Reset();
-                }
-                else if (action == m_MoveAction)
-                {
-                    // Don't send move events if disabled in the EventSystem.
-                    if (!eventSystem.sendNavigationEvents)
-                        continue;
-
-                    throw new NotImplementedException();
-                }
+                joystickState.OnFrameFinished();
+                mouseState.OnFrameFinished();
             }
-            m_ActionQueue.Clear();
+
+            ProcessJoystick(ref joystickState);
+            ProcessMouse(ref mouseState);
         }
 
         private void HookActions()
@@ -151,10 +187,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (m_ActionsHooked)
                 return;
 
-            if (m_ActionQueue == null)
-                m_ActionQueue = new InputActionQueue();
             if (m_ActionCallback == null)
-                m_ActionCallback = m_ActionQueue.RecordAction;
+                m_ActionCallback = OnAction;
 
             m_ActionsHooked = true;
 
@@ -165,6 +199,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
                 moveAction.performed += m_ActionCallback;
+
+            var leftClickAction = m_LeftClickAction.action;
+            if (leftClickAction != null)
+                leftClickAction.performed += m_ActionCallback;
+
+            var rightClickAction = m_RightClickAction.action;
+            if (rightClickAction != null)
+                rightClickAction.performed += m_ActionCallback;
+
+            var middleClickAction = m_MiddleClickAction.action;
+            if (middleClickAction != null)
+                middleClickAction.performed += m_ActionCallback;
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
@@ -190,6 +236,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (moveAction != null)
                 moveAction.performed -= m_ActionCallback;
 
+            var leftClickAction = m_LeftClickAction.action;
+            if (leftClickAction != null)
+                leftClickAction.performed -= m_ActionCallback;
+
+            var rightClickAction = m_RightClickAction.action;
+            if (rightClickAction != null)
+                rightClickAction.performed -= m_ActionCallback;
+
+            var middleClickAction = m_MiddleClickAction.action;
+            if (middleClickAction != null)
+                middleClickAction.performed -= m_ActionCallback;
+
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
                 submitAction.performed -= m_ActionCallback;
@@ -197,6 +255,23 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
                 cancelAction.performed -= m_ActionCallback;
+        }
+
+        private void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty)
+        {
+            if (oldProperty != null)
+            {
+                if (m_ActionsHooked)
+                    oldProperty.action.performed -= m_ActionCallback;
+            }
+
+            oldProperty = newProperty;
+
+            if (oldProperty != null)
+            {
+                if (m_ActionsHooked)
+                    oldProperty.action.performed += m_ActionCallback;
+            }
         }
 
         /// <summary>
@@ -237,31 +312,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         [Tooltip("Vector2 action that represents horizontal and vertical scrolling.")]
         [SerializeField]
-        private InputActionProperty m_ScrollAction;
+        private InputActionProperty m_ScrollWheelAction;
 
         [NonSerialized] private bool m_ActionsHooked;
+        [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionCallback;
 
-        [NonSerialized] private int m_LastPointerId;
-        [NonSerialized] private Vector2 m_LastPointerPosition;
-
-        /// <summary>
-        /// Queue where we record action events.
-        /// </summary>
-        /// <remarks>
-        /// The callback-based interface isn't of much use to us as we cannot respond to actions immediately
-        /// but have to wait until <see cref="Process"/> is called by <see cref="EventSystem"/>. So instead
-        /// we trace everything that happens to the actions we're linked to by recording events into this queue
-        /// and then during <see cref="Process"/> we replay any activity that has occurred since the last
-        /// call to <see cref="Process"/> and translate it into <see cref="BaseEventData">UI events</see>.
-        /// </remarks>
-        [NonSerialized] private InputActionQueue m_ActionQueue;
-
-        /// <summary>
-        /// If the left click button is currently held, this is the button control.
-        /// </summary>
-        [NonSerialized] private InputControl m_LeftClickControl;
-        [NonSerialized] private InputControl m_RightClickControl;
-        [NonSerialized] private InputControl m_MiddleClickControl;
+        [NonSerialized] private MouseModel mouseState;
+        [NonSerialized] private JoystickModel joystickState;
     }
 }

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Unity.Collections;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -45,7 +45,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.8")]
+[assembly: AssemblyVersion("0.0.9")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -426,13 +426,62 @@ namespace UnityEngine.Experimental.Input
         /// Note that accessing this property does not allocate. It gives read-only access
         /// directly to the system's internal array of devices.
         ///
-        /// The value return by this property should not be held on to. When the device
+        /// The value returned by this property should not be held on to. When the device
         /// setup in the system changes, any value previously returned by this property
         /// becomes invalid. Query the property directly whenever you need it.
         /// </remarks>
         public static ReadOnlyArray<InputDevice> devices
         {
             get { return s_Manager.devices; }
+        }
+
+        /// <summary>
+        /// Devices that have been disconnected but are retained by the input system in case
+        /// they are plugged back in.
+        /// </summary>
+        /// <remarks>
+        /// During gameplay it is undesirable to have the system allocate and release managed memory
+        /// as devices are unplugged and plugged back in as it would ultimately lead to GC spikes
+        /// during gameplay. To avoid that, input devices that have been reported by the <see cref="IInputRuntime">
+        /// runtime</see> and are removed through <see cref="DeviceRemoveEvent">events</see> are retained
+        /// by the system and then reused if the device is plugged back in.
+        ///
+        /// Note that the devices moved to disconnected status will still see a <see cref="InputDeviceChange.Removed"/>
+        /// notification and a <see cref="InputDeviceChange.Added"/> notification when plugged back in.
+        ///
+        /// To determine if a newly discovered device is one we have seen before, the system uses a
+        /// simple approach of comparing <see cref="InputDeviceDescription">device descriptions</see>.
+        /// Note that there can be errors and a device may be incorrectly classified as <see cref="InputDeviceChange.Reconnected"/>
+        /// when in fact it is a different device from before. The problem is that based on information
+        /// made available by platforms, it can be inherently difficult to determine whether a device is
+        /// indeed the very same one.
+        ///
+        /// For example, it is often not possible to determine with 100% certainty whether an identical looking device
+        /// to one we've previously seen on a different USB port is indeed the very same device. OSs will usually
+        /// reattach a USB device to its previous instance if it is plugged into the same USB port but create a
+        /// new instance of the same device is plugged into a different port.
+        ///
+        /// For devices that do relay their <see cref="InputDeviceDescription.serial">serials</see> the matching
+        /// is reliable.
+        ///
+        /// The list can be purged by calling <see cref="RemoveDisconnetedDevices"/>. Doing so, will release
+        /// all reference we hold to the devices or any controls inside of them and allow the devices to be
+        /// reclaimed by the garbage collector.
+        ///
+        /// Note that if you call <see cref="RemoveDevice"/> explicitly, the given device is not retained
+        /// by the input system and will not appear on this list.
+        ///
+        /// Also note that devices on this list will be lost when domain reloads happen in the editor (i.e. on
+        /// script recompilation and when entering play mode).
+        /// </remarks>
+        /// <seealso cref="RemoveDisconnectedDevices"/>
+        public static ReadOnlyArray<InputDevice> disconnectedDevices
+        {
+            get
+            {
+                return new ReadOnlyArray<InputDevice>(s_Manager.m_DisconnectedDevices, 0,
+                    s_Manager.m_DisconnectedDevicesCount);
+            }
         }
 
         /// <summary>
@@ -593,11 +642,25 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RemoveDevice(device);
         }
 
+        /// <summary>
+        /// Purge all disconnected devices from <see cref="disconnectedDevices"/>.
+        /// </summary>
+        /// <remarks>
+        /// This will release all references held on to for these devices or any of their controls and will
+        /// allow the devices to be reclaimed by the garbage collector.
+        /// </remarks>
+        /// <seealso cref="disconnectedDevices"/>
+        public static void RemoveDisconnectedDevices()
+        {
+            throw new NotImplementedException();
+        }
+
         public static InputDevice GetDevice(string nameOrLayout)
         {
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
+        ////TODO: add optional index (i.e. "nth device of given type")
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
@@ -611,11 +674,33 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
+        /// <summary>
+        /// Look up a device by its unique ID.
+        /// </summary>
+        /// <param name="deviceId">Unique ID of device. Such as given by <see cref="InputEvent.deviceId"/>.</param>
+        /// <returns>The device for the given ID or null if no device with the given ID exists (or no longer exists).</returns>
+        /// <remarks>
+        /// Device IDs are not reused in a given session of the application (or Unity editor).
+        /// </remarks>
+        /// <seealso cref="InputEvent.deviceId"/>
+        /// <seealso cref="InputDevice.id"/>
+        /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
         public static InputDevice GetDeviceById(int deviceId)
         {
             return s_Manager.TryGetDeviceById(deviceId);
         }
 
+        /// <summary>
+        /// Return the list of devices that have been reported by the <see cref="IInputRuntime">runtime</see>
+        /// but could not be matched to any known <see cref="InputControlLayout">layout</see>.
+        /// </summary>
+        /// <returns>A list of descriptions of devices that could not be recognized.</returns>
+        /// <remarks>
+        /// If new layouts are added to the system or if additional <see cref="InputDeviceMatcher">matches</see>
+        /// are added to existing layouts, devices in this list may appear or disappear.
+        /// </remarks>
+        /// <seealso cref="InputDeviceMatcher"/>
+        /// <seealso cref="RegisterLayoutMatcher"/>
         public static List<InputDeviceDescription> GetUnsupportedDevices()
         {
             var list = new List<InputDeviceDescription>();
@@ -798,6 +883,7 @@ namespace UnityEngine.Experimental.Input
 
         #endregion
 
+        ////TODO: move this entire API out of InputSystem; too low-level and specialized
         #region State Change Monitors
 
         public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
@@ -1121,6 +1207,25 @@ namespace UnityEngine.Experimental.Input
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
         /// </summary>
+        /// <remarks>
+        /// The object received by the callback is either an <see cref="InputAction"/> or an
+        /// <see cref="InputActionMap"/> depending on whether the <see cref="InputActionChange"/>
+        /// affects a single action or an entire action map.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.onActionChange +=
+        ///     (obj, change) =>
+        ///     {
+        ///         if (change == InputActionChange.ActionTriggered)
+        ///         {
+        ///             var action = (InputAction)obj;
+        ///             var control = action.lastTriggerControl;
+        ///             ....
+        ///         }
+        ///     };
+        /// </code>
+        /// </example>
         public static event Action<object, InputActionChange> onActionChange
         {
             add { InputActionMapState.s_OnActionChange.Append(value); }
@@ -1414,7 +1519,7 @@ namespace UnityEngine.Experimental.Input
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettings.newSystemBackendsEnabled)
             {
-                const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
+                const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
                     "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
 
@@ -1543,6 +1648,8 @@ namespace UnityEngine.Experimental.Input
             #else
             InitializeInPlayer();
             #endif
+
+            InputUser.ResetGlobals();
         }
 
         /// <summary>

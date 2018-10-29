@@ -3,12 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
-//make users actually *own* their actions
-
-//do we need to make users have ties to assets?
-
-//does this take control of enabling/disabling actions in some form?
-//does it have all possible actions for the user or just whatever applies in the user's current context?
+////TODO: kill InputDevice.userId
 
 ////REVIEW: should we reference the control scheme by name only instead of passing InputControlSchemes around?
 
@@ -33,21 +28,52 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public const ulong kInvalidId = 0;
 
         /// <summary>
-        /// Event that is triggered when the <see cref="InputUser">user</see> setup in the system
-        /// changes.
-        /// </summary>
-        public static event Action<IInputUser, InputUserChange> onChange
-        {
-            add { s_OnChange.Append(value); }
-            remove { s_OnChange.Remove(value); }
-        }
-
-        /// <summary>
         /// List of all current users.
         /// </summary>
         public static ReadOnlyArray<IInputUser> all
         {
             get { return new ReadOnlyArray<IInputUser>(s_AllUsers, 0, s_AllUserCount); }
+        }
+
+        /// <summary>
+        /// Event that is triggered when the <see cref="InputUser">user</see> setup in the system
+        /// changes.
+        /// </summary>
+        public static event Action<IInputUser, InputUserChange> onChange
+        {
+            add { s_OnChange.AppendWithCapacity(value); }
+            ////TODO: probably don't want to move tail
+            remove { s_OnChange.RemoveByMovingTailWithCapacity(value); }
+        }
+
+        ////REVIEW: should this make the binding that triggered available to the callback?
+        /// <summary>
+        /// Event that is triggered when an action that is associated with a user is triggered from
+        /// a device that is not currently assigned to the user.
+        /// </summary>
+        public static event Action<IInputUser, InputAction, InputControl> onUnassignedDeviceUsed
+        {
+            add
+            {
+                s_OnUnassignedDeviceUsed.AppendWithCapacity(value);
+                if (!s_OnActionChangedHooked)
+                {
+                    if (s_OnActionTriggered == null)
+                        s_OnActionTriggered = OnActionTriggered;
+                    InputSystem.onActionChange += s_OnActionTriggered;
+                    s_OnActionChangedHooked = true;
+                }
+            }
+            remove
+            {
+                ////TODO: probably don't want to move tail
+                s_OnUnassignedDeviceUsed.RemoveByMovingTailWithCapacity(value);
+                if (s_OnUnassignedDeviceUsed.length == 0)
+                {
+                    InputSystem.onActionChange -= OnActionTriggered;
+                    s_OnActionChangedHooked = false;
+                }
+            }
         }
 
         /// <summary>
@@ -113,10 +139,18 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public static void SetUserHandle<TUser>(this TUser user, InputUserHandle? handle)
             where TUser : class, IInputUser
         {
-            throw new NotImplementedException();
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            s_AllUserData[index].handle = handle;
+            Notify(user, InputUserChange.HandleChanged);
         }
 
-        ////REVIEW: do we really need/want this?
+        ////REVIEW: do we really need/want this? should this be a property on IInputUser instead?
         /// <summary>
         /// Get the human-readable name of the user.
         /// </summary>
@@ -155,12 +189,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             Notify(user, InputUserChange.NameChanged);
         }
 
-        //do we really need a stack on this? is a single InputActionMap or even a list of InputActionMaps not enough?
-        //what's the problem that the stack here is trying to solve?
-        /// <summary>
-        /// Get the <see cref="InputAction">input actions</see> that are currently active for the user.
-        /// </summary>
-        public static InputActionStack GetInputActions<TUser>(this TUser user)
+        public static IInputActionCollection GetInputActions<TUser>(this TUser user)
             where TUser : class, IInputUser
         {
             if (user == null)
@@ -170,14 +199,40 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (index == -1)
                 return null;
 
-            var result = s_AllUserData[index].actionStack;
-            if (result == null)
-            {
-                result = new InputActionStack();
-                s_AllUserData[index].actionStack = result;
-            }
+            return s_AllUserData[index].actions;
+        }
 
-            return result;
+        /// <summary>
+        /// Associate an .inputactions asset with the given user.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="actions"></param>
+        /// <typeparam name="TUser"></typeparam>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void AssignInputActions<TUser>(this TUser user, IInputActionCollection actions)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (actions == null)
+                throw new ArgumentNullException("actions");
+
+            var index = FindUserIndex(user);
+            if (index == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            s_AllUserData[index].actions = actions;
+        }
+
+        public static void AssignInputActions<TUser>(this TUser user, InputActionAssetReference assetReference)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+            if (assetReference == null)
+                throw new ArgumentNullException("assetReference");
+
+            AssignInputActions(user, assetReference.asset);
         }
 
         /// <summary>
@@ -206,74 +261,22 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return s_AllUserData[index].controlScheme;
         }
 
-        public static bool AssignControlScheme<TUser>(this TUser user, InputControlScheme scheme, bool assignMatchingUnusedDevices = false)
+        public static ControlSchemeSyntax AssignControlScheme<TUser>(this TUser user, string schemeName)
             where TUser : class, IInputUser
         {
-            if (user == null)
-                throw new ArgumentNullException("user");
-
-            var index = FindUserIndex(user);
-            if (index == -1)
-                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
-
-            // Ignore if the control scheme is already set on the user.
-            if (s_AllUserData[index].controlScheme.HasValue && s_AllUserData[index].controlScheme == scheme)
-                return true;
-
-            s_AllUserData[index].controlScheme = scheme;
-
-            // If we're supposed to automatically add devices, look for matching devices now which aren't
-            // used by any other user.
-            if (assignMatchingUnusedDevices)
-            {
-                var needToNotify = false;
-
-                // If we are currently assigned devices, unassign them first.
-                if (s_AllUserData[index].deviceCount > 0)
-                {
-                    ClearAssignedInputDevicesInternal(index);
-                    needToNotify = true;
-                }
-
-                // Only go through the matching process if we actually have device requirements.
-                if (scheme.devices.Count > 0)
-                {
-                    // Grab all unused devices and then select a set of devices matching the scheme's
-                    // requirements.
-                    var availableDevices = GetUnusedDevices();
-                    try
-                    {
-                        if (scheme.PickMatchingDevices(ref availableDevices) == InputControlScheme.MatchResult.NoMatch)
-                        {
-                            // Control scheme isn't satisfied with the devices we have available.
-                            // Fail setting the control scheme.
-                            s_AllUserData[index].controlScheme = null;
-                            return false;
-                        }
-
-                        // Assign selected devices to user.
-                        if (availableDevices.Count > 0)
-                        {
-                            foreach (var device in availableDevices)
-                                AssignDeviceInternal(index, device);
-                            needToNotify = true;
-                        }
-                    }
-                    finally
-                    {
-                        availableDevices.Dispose();
-                    }
-                }
-
-                if (needToNotify)
-                    Notify(user, InputUserChange.DevicesChanged);
-            }
-
-            Notify(user, InputUserChange.ControlSchemeChanged);
-            return true;
+            return AssignControlScheme(user, new InputControlScheme(schemeName));
         }
 
-        public static void AssignControlScheme<TUser>(this TUser user, string schemeName)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="scheme"></param>
+        /// <typeparam name="TUser"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static ControlSchemeSyntax AssignControlScheme<TUser>(this TUser user, InputControlScheme scheme)
             where TUser : class, IInputUser
         {
             if (user == null)
@@ -283,20 +286,22 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (index == -1)
                 throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
 
-            if (string.IsNullOrEmpty(schemeName) && !s_AllUserData[index].controlScheme.HasValue)
-                return;
-            if (!string.IsNullOrEmpty(schemeName) && s_AllUserData[index].controlScheme.HasValue &&
-                string.Compare(
-                    s_AllUserData[index].controlScheme.Value.m_Name, schemeName,
-                    StringComparison.InvariantCultureIgnoreCase) == 0)
-                return;
+            if (string.IsNullOrEmpty(scheme.name) && !s_AllUserData[index].controlScheme.HasValue)
+                return new ControlSchemeSyntax {m_UserIndex = index};
 
-            if (string.IsNullOrEmpty(schemeName))
+            if (!string.IsNullOrEmpty(scheme.name) && s_AllUserData[index].controlScheme.HasValue &&
+                string.Compare(
+                    s_AllUserData[index].controlScheme.Value.m_Name, scheme.name,
+                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                return new ControlSchemeSyntax {m_UserIndex = index};
+
+            if (string.IsNullOrEmpty(scheme.name))
                 s_AllUserData[index].controlScheme = null;
             else
-                s_AllUserData[index].controlScheme = new InputControlScheme(schemeName);
+                s_AllUserData[index].controlScheme = scheme;
 
             Notify(user, InputUserChange.ControlSchemeChanged);
+            return new ControlSchemeSyntax {m_UserIndex = index};
         }
 
         /// <summary>
@@ -308,7 +313,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// another user uses the right side of the keyboard. Another example is a game where players
         /// take turns on the same machine.
         /// </remarks>
-        public static ReadOnlyArray<InputDevice> GetAssignedInputDevices(this IInputUser user)
+        public static ReadOnlyArray<InputDevice> GetAssignedInputDevices<TUser>(this TUser user)
+            where TUser : class, IInputUser
         {
             if (user == null)
                 throw new ArgumentNullException("user");
@@ -319,6 +325,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
             return new ReadOnlyArray<InputDevice>(s_AllDevices, s_AllUserData[index].deviceStartIndex,
                 s_AllUserData[index].deviceCount);
+        }
+
+        /// <summary>
+        /// Get the list of devices that the user is missing to satisfy all requirements in the current
+        /// control scheme.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <typeparam name="TUser"></typeparam>
+        /// <returns></returns>
+        public static ReadOnlyArray<InputControlScheme.DeviceRequirement> GetMissingInputDevices<TUser>(this TUser user)
+            where TUser : class, IInputUser
+        {
+            throw new NotImplementedException();
         }
 
         public static void AssignInputDevice<TUser>(this TUser user, InputDevice device)
@@ -445,7 +464,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// The resulting list uses <see cref="Allocator.Temp"> temporary, unmanaged memory</see>. If not disposed of
         /// explicitly, the list will automatically be deallocated at the end of the frame and will become unusable.
         /// </remarks>
-        public static InputControlList<InputDevice> GetUnusedDevices()
+        public static InputControlList<InputDevice> GetUnassignedInputDevices()
         {
             var unusedDevices = new InputControlList<InputDevice>(Allocator.Temp);
 
@@ -453,7 +472,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             {
                 // If it's in s_AllDevices, there is *some* user that is using the device.
                 // We don't care which one it is here.
-                if (ArrayHelpers.ContainsReferenceTo(s_AllDevices, device))
+                if (ArrayHelpers.ContainsReferenceTo(s_AllDevices, s_AllDeviceCount, device))
                     continue;
 
                 unusedDevices.Add(device);
@@ -556,7 +575,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (device == null)
                 throw new ArgumentNullException("device");
 
-            throw new NotImplementedException();
+            var indexOfDevice = ArrayHelpers.IndexOfReference(s_AllDevices, s_AllDeviceCount, device);
+            if (indexOfDevice == -1)
+                return null;
+
+            for (var i = 0; i < s_AllUserCount; ++i)
+            {
+                var startIndex = s_AllUserData[i].deviceStartIndex;
+                if (startIndex >= indexOfDevice && indexOfDevice < startIndex + s_AllUserData[i].deviceCount)
+                    return s_AllUsers[i];
+            }
+
+            Debug.Assert(false, "Should not reach here");
+            return null;
         }
 
         private static void Notify(IInputUser user, InputUserChange change)
@@ -575,15 +606,192 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return -1;
         }
 
+        private static void OnActionTriggered(object obj, InputActionChange change)
+        {
+            if (change != InputActionChange.ActionTriggered)
+                return;
+
+            ////REVIEW: filter for noise here?
+
+            // Grab control that triggered the action.
+            var action = (InputAction)obj;
+            var control = action.lastTriggerControl;
+            if (control == null)
+                return;
+
+            // See if it's coming from a device not belonging to any user.
+            var device = control.device;
+            if (ArrayHelpers.ContainsReferenceTo(s_AllDevices, s_AllDeviceCount, device))
+            {
+                // No, it's a device already assigned to a player so do nothing.
+                return;
+            }
+
+            // Ok, we know it's a device not assigned to a user and it triggered action. The only
+            // thing that remains is to determine whether it was from an action assigned to a user.
+            var userIndex = -1;
+            for (var i = 0; i < s_AllUserCount; ++i)
+            {
+                var actions = s_AllUserData[i].actions;
+                if (actions != null && actions.Contains(action))
+                {
+                    userIndex = i;
+                    break;
+                }
+            }
+
+            if (userIndex != -1)
+            {
+                var user = s_AllUsers[userIndex];
+                for (var i = 0; i < s_OnUnassignedDeviceUsed.length; ++i)
+                    s_OnUnassignedDeviceUsed[i](user, action, control);
+            }
+        }
+
+        /// <summary>
+        /// Syntax for configuring a control scheme on a user.
+        /// </summary>
+        public struct ControlSchemeSyntax
+        {
+            /// <summary>
+            /// Unassign the user's currently assigned devices (if any) and assign available
+            /// devices matching the newly assigned control scheme.
+            /// </summary>
+            /// <returns></returns>
+            public ControlSchemeSyntax AndAssignDevices()
+            {
+                return AndAssignDevicesInternal(addMissingOnly: false);
+            }
+
+            /// <summary>
+            /// Leave the user's assigned devices in place but assign any available devices
+            /// that are still required by the control scheme.
+            /// </summary>
+            /// <returns></returns>
+            public ControlSchemeSyntax AndAssignMissingDevices()
+            {
+                return AndAssignDevicesInternal(addMissingOnly: true);
+            }
+
+            public ControlSchemeSyntax AndAssignDevices(out InputControlScheme.MatchResult matchResult)
+            {
+                return AndAssignDevicesInternal(out matchResult, addMissingOnly: false);
+            }
+
+            public ControlSchemeSyntax AndAssignMissingDevices(out InputControlScheme.MatchResult matchResult)
+            {
+                return AndAssignDevicesInternal(out matchResult, addMissingOnly: true);
+            }
+
+            private ControlSchemeSyntax AndAssignDevicesInternal(bool addMissingOnly)
+            {
+                var matchResult = new InputControlScheme.MatchResult();
+                try
+                {
+                    return AndAssignDevicesInternal(out matchResult, addMissingOnly: addMissingOnly);
+                }
+                finally
+                {
+                    matchResult.Dispose();
+                }
+            }
+
+            private ControlSchemeSyntax AndAssignDevicesInternal(out InputControlScheme.MatchResult matchResult, bool addMissingOnly)
+            {
+                matchResult = new InputControlScheme.MatchResult();
+
+                // If we are currently assigned devices and we're supposed to assign devices from scratch,
+                // unassign what we have first.
+                var needToNotifyAboutChangedDevices = false;
+                if (!addMissingOnly && s_AllUserData[m_UserIndex].deviceCount > 0)
+                {
+                    ClearAssignedInputDevicesInternal(m_UserIndex);
+                    needToNotifyAboutChangedDevices = true;
+                }
+
+                // Nothing to do if we don't have a control scheme.
+                if (!s_AllUserData[m_UserIndex].controlScheme.HasValue)
+                    return this;
+
+                // Look for matching devices now which aren't used by any other user.
+                // Only go through the matching process if we actually have device requirements.
+                var scheme = s_AllUserData[m_UserIndex].controlScheme.Value;
+                if (scheme.deviceRequirements.Count > 0)
+                {
+                    // Grab all unused devices and then select a set of devices matching the scheme's
+                    // requirements.
+                    using (var availableDevices = GetUnassignedInputDevices())
+                    {
+                        // If we're only supposed to add missing devices, we need to take the devices already
+                        // already assigned to the user into account when picking devices. Add them to the beginning
+                        // of the list so that they get matched first.
+                        if (addMissingOnly)
+                            availableDevices.AddSlice(s_AllUsers[m_UserIndex].GetAssignedInputDevices(), destinationIndex: 0);
+
+                        matchResult = scheme.PickDevicesFrom(availableDevices);
+                        if (matchResult.isSuccessfulMatch)
+                        {
+                            // Control scheme is satisfied with the devices we have available.
+                            // Assign selected devices to user.
+                            foreach (var device in matchResult.devices)
+                            {
+                                if (AssignDeviceInternal(m_UserIndex, device))
+                                    needToNotifyAboutChangedDevices = true;
+                            }
+                        }
+                        else
+                        {
+                            // Control scheme isn't satisfied with the devices we got.
+                            m_Failure = true;
+                        }
+                    }
+                }
+
+                if (needToNotifyAboutChangedDevices)
+                    Notify(s_AllUsers[m_UserIndex], InputUserChange.DevicesChanged);
+
+                return this;
+            }
+
+            public ControlSchemeSyntax AndMaskBindingsFromOtherControlSchemes()
+            {
+                // Nothing to do if we don't have a control scheme.
+                if (!s_AllUserData[m_UserIndex].controlScheme.HasValue)
+                    return this;
+
+                var actions = s_AllUserData[m_UserIndex].actions;
+                if (actions == null)
+                    throw new InvalidOperationException(string.Format("No actions have been assigned to user '{0}'; call AssignInputActions() first",
+                        s_AllUsers[m_UserIndex]));
+
+                var bindingGroup = s_AllUserData[m_UserIndex].controlScheme.Value.bindingGroup;
+                actions.SetBindingMask(new InputBinding {groups = bindingGroup});
+                return this;
+            }
+
+            public static implicit operator bool(ControlSchemeSyntax syntax)
+            {
+                return !syntax.m_Failure;
+            }
+
+            internal int m_UserIndex;
+            internal bool m_Failure;
+        }
+
+        /// <summary>
+        /// Data we store for each user.
+        /// </summary>
         internal struct UserData
         {
             public ulong id;
             public string userName;
+            public InputUserHandle? handle;
+
             public int deviceCount;
             public int deviceStartIndex;
-            public InputActionStack actionStack;
-            public InputControlScheme? controlScheme; ////TODO: this will have to be relayed to actions/bindings
-            public InputUserHandle? handle;
+
+            public IInputActionCollection actions;
+            public InputControlScheme? controlScheme;
         }
 
         internal static uint s_LastUserId;
@@ -593,6 +801,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         internal static UserData[] s_AllUserData;
         internal static InputDevice[] s_AllDevices; // We keep a single array that we slice out to each user.
         internal static InlinedArray<Action<IInputUser, InputUserChange>> s_OnChange;
+        internal static InlinedArray<Action<IInputUser, InputAction, InputControl>> s_OnUnassignedDeviceUsed;
+        internal static Action<object, InputActionChange> s_OnActionTriggered;
+        internal static bool s_OnActionChangedHooked;
+
+        internal static void ResetGlobals()
+        {
+            s_AllUserCount = 0;
+            s_AllUsers = null;
+            s_AllUserData = null;
+            s_AllDeviceCount = 0;
+            s_AllDevices = null;
+            s_OnChange = new InlinedArray<Action<IInputUser, InputUserChange>>();
+            s_OnUnassignedDeviceUsed = new InlinedArray<Action<IInputUser, InputAction, InputControl>>();
+            s_OnActionTriggered = null;
+        }
 
         ////WIP
         /*
@@ -612,16 +835,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get { throw new NotImplementedException(); }
             set { throw new NotImplementedException(); }
-        }
-
-        public void EnableControls()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisableControls()
-        {
-            throw new NotImplementedException();
         }
 
         */

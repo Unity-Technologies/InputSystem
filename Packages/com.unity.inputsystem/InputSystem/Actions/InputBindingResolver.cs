@@ -41,7 +41,6 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: make InlinedArray?
         public InputActionMap[] maps;
         public InputControl[] controls;
-        public InlinedArray<InputDevice> devices;
         public InputActionMapState.InteractionState[] interactionStates;
         public InputActionMapState.BindingState[] bindingStates;
         public InputActionMapState.TriggerState[] actionStates;
@@ -89,7 +88,6 @@ namespace UnityEngine.Experimental.Input
             processors = state.processors;
             composites = state.composites;
             controls = state.controls;
-            devices = state.devices;
             controlIndexToBindingIndex = state.controlIndexToBindingIndex;
         }
 
@@ -236,25 +234,6 @@ namespace UnityEngine.Experimental.Input
                     {
                         resolvedControls.AppendTo(ref controls, ref totalControlCount);
                         resolvedControls.Clear();
-                    }
-
-                    // Add unique devices.
-                    for (var i = 0; i < numControls; ++i)
-                    {
-                        var control = controls[firstControlIndex + i];
-                        var device = control.device;
-                        var deviceIndex = 0;
-                        for (; deviceIndex < totalDeviceCount; ++deviceIndex)
-                        {
-                            if (devices[deviceIndex] == device)
-                                break;
-                        }
-
-                        if (deviceIndex == totalDeviceCount)
-                        {
-                            devices.AppendWithCapacity(device, 4);
-                            ++totalDeviceCount;
-                        }
                     }
 
                     // Add entry for resolved binding.

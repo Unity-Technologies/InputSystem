@@ -7,7 +7,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
 
-public class SwitchTests : InputTestFixture
+internal class SwitchTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -82,7 +82,7 @@ public class SwitchTests : InputTestFixture
         NPadStatusReport? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NPadStatusReport.Type)
@@ -127,7 +127,7 @@ public class SwitchTests : InputTestFixture
         NpadDeviceIOCTLSetOrientation? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NpadDeviceIOCTLSetOrientation.Type)
@@ -162,7 +162,7 @@ public class SwitchTests : InputTestFixture
         NpadDeviceIOCTLStartSixAxisSensor? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NpadDeviceIOCTLStartSixAxisSensor.Type)
@@ -190,7 +190,7 @@ public class SwitchTests : InputTestFixture
         NpadDeviceIOCTLStopSixAxisSensor? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NpadDeviceIOCTLStopSixAxisSensor.Type)
