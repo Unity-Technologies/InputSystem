@@ -294,6 +294,11 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
+        public override bool HasValueChangeIn(IntPtr statePtr)
+        {
+            throw new NotImplementedException();
+        }
+
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
         {

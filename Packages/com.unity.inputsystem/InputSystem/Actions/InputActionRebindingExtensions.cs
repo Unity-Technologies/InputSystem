@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 // The way target bindings for overrides are found:
 // - If specified, directly by index (e.g. "apply this override to the third binding in the map")
@@ -361,8 +363,12 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <remarks>
         /// This class acts as both a configuration interface for rebinds as well as a controller while
-        /// the rebind is ongoing. An instance can be reused arbitrary many times. Doing so avoids allocating
-        /// GC memory (the class internally retains state that it can reuse for multiple rebinds).
+        /// the rebind is ongoing. An instance can be reused arbitrary many times. Doing so can avoid allocating
+        /// additional GC memory (the class internally retains state that it can reuse for multiple rebinds).
+        ///
+        /// Note, however, that during rebinding it can be necessary to look at the <see cref="InputControlLayout"/>
+        /// information registered in the system which means that layouts may have to be loaded. These will be
+        /// cached for as long as the rebind operation is not disposed of.
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public class RebindingOperation : IDisposable
@@ -374,6 +380,11 @@ namespace UnityEngine.Experimental.Input
             public InputAction action
             {
                 get { return m_ActionToRebind; }
+            }
+
+            public InputBinding? bindingMask
+            {
+                get { return m_BindingMask; }
             }
 
             /// <summary>
@@ -422,12 +433,61 @@ namespace UnityEngine.Experimental.Input
                             action), "action");
 
                 m_ActionToRebind = action;
+
+                // If the action has an associated expected layout, constrain ourselves by it.
+                // NOTE: We do *NOT* translate this to a control type and constrain by that as a whole chain
+                //       of derived layouts may share the same control type.
+                if (!string.IsNullOrEmpty(action.expectedControlLayout))
+                    WithExpectedControlLayout(action.expectedControlLayout);
+
                 return this;
+            }
+
+            public RebindingOperation WithCancelAction(InputAction action)
+            {
+                return this;
+            }
+
+            public RebindingOperation WithCancellingThrough(string binding)
+            {
+                m_CancelBinding = binding;
+                return this;
+            }
+
+            public RebindingOperation WithCancellingThrough(InputControl control)
+            {
+                return WithCancellingThrough(control.path);
+            }
+
+            public RebindingOperation WithExpectedControlLayout(string layoutName)
+            {
+                m_ExpectedLayout = new InternedString(layoutName);
+                return this;
+            }
+
+            public RebindingOperation WithExpectedControlType(Type type)
+            {
+                if (type != null && !typeof(InputControl).IsAssignableFrom(type))
+                    throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+                m_ControlType = type;
+                return this;
+            }
+
+            public RebindingOperation WithExpectedControlType<TControl>()
+                where TControl : InputControl
+            {
+                return WithExpectedControlType(typeof(TControl));
             }
 
             public RebindingOperation WithBindingMask(InputBinding? bindingMask)
             {
+                m_BindingMask = bindingMask;
                 return this;
+            }
+
+            public RebindingOperation WithBindingGroup(string group)
+            {
+                return WithBindingMask(new InputBinding {groups = group});
             }
 
             public RebindingOperation WithRebindApplyingAsOverride()
@@ -436,6 +496,26 @@ namespace UnityEngine.Experimental.Input
             }
 
             public RebindingOperation WithRebindOverwritingCurrentPath()
+            {
+                return this;
+            }
+
+            /// <summary>
+            /// Disable the default behavior of automatically generalizing the path of a selected control.
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks>
+            /// At runtime, every <see cref="InputControl"/> has a unique path in the system (<see cref="InputControl.path"/>).
+            /// However, when performing rebinds, we are not generally interested in the specific runtime path of the
+            /// control -- which may depend on the number and types of devices present. In fact, most of the time we are not
+            /// even interested in what particular brand of device the user is rebinding to but rather want to just bind based
+            /// on the device's broad category.
+            ///
+            /// For example, if you user has a DualShock controller and performs an interactive rebind, we usually do not want
+            /// to generate override paths that reflect which out of how many ...
+            /// </remarks>
+            /// <seealso cref="InputBinding.overridePath"/>
+            public RebindingOperation WithoutGeneralizingPathOfSelectedControl()
             {
                 return this;
             }
@@ -465,7 +545,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation Start()
             {
                 // Ignore if already started.
-                if ((m_Flags & Flags.Started) != 0)
+                if (started)
                     return this;
 
                 HookOnEvent();
@@ -473,15 +553,19 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
-            // Manually cancel a pending rebind.
             public void Cancel()
             {
+                if (!started)
+                    return;
+
+                OnCancel();
             }
 
             public void Dispose()
             {
                 UnhookOnEvent();
                 m_Candidates.Dispose();
+                m_LayoutCache.Clear();
             }
 
             private void HookOnEvent()
@@ -530,12 +614,34 @@ namespace UnityEngine.Experimental.Input
                     if (statePtr == IntPtr.Zero)
                         continue;
 
+                    // If we're expecting controls of a certain type, skip if control isn't of
+                    // the right type.
+                    if (m_ControlType != null && !m_ControlType.IsInstanceOfType(control))
+                        continue;
+
+                    // If we're expecting controls to be based on a specific layout, skip if control
+                    // isn't based on that layout.
+                    if (!m_ExpectedLayout.IsEmpty() &&
+                        InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
+                        continue;
+
                     // Skip controls that are in their default state.
+                    // NOTE: This is the cheapest check with respect to looking at actual state. So
+                    //       do this first before looking further at the state.
                     if (control.CheckStateIsAtDefault(statePtr))
                         continue;
 
-                    //see if it's a type of control we're interested in
-                    //see if it has an interesting change
+                    // Skip controls that have no effective value change.
+                    // NOTE: This will run the full processor stack and is move involved.
+                    if (!control.HasValueChangeIn(statePtr))
+                        continue;
+
+                    // If it's the control that cancels, abort the operation now.
+                    if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control))
+                    {
+                        OnCancel();
+                        break;
+                    }
 
                     m_Candidates.Add(control);
                     OnComplete();
@@ -547,21 +653,47 @@ namespace UnityEngine.Experimental.Input
             {
                 Debug.Assert(m_Candidates.Count > 0);
 
+                // Create a path from the selected control.
                 var selectedControl = m_Candidates[0];
-                m_ActionToRebind.ApplyBindingOverride(selectedControl.path);
+                var path = selectedControl.path;
+                if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
+                    path = GeneratePathForControl(selectedControl);
 
+                // Apply binding override.
+                if (m_BindingMask != null)
+                {
+                    var bindingOverride = m_BindingMask.Value;
+                    bindingOverride.overridePath = path;
+                    m_ActionToRebind.ApplyBindingOverride(bindingOverride);
+                }
+                else
+                {
+                    m_ActionToRebind.ApplyBindingOverride(path);
+                }
+
+                // Complete.
                 m_Flags |= Flags.Completed;
-
                 if (m_OnComplete != null)
                     m_OnComplete(this);
 
-                m_Flags &= ~Flags.Started;
-                m_Candidates.Clear();
-                m_Candidates.Capacity = 0; // Release our unmanaged memory.
+                Reset();
             }
 
             private void OnCancel()
             {
+                m_Flags |= Flags.Cancelled;
+
+                if (m_OnCancel != null)
+                    m_OnCancel(this);
+
+                Reset();
+            }
+
+            private void Reset()
+            {
+                m_Flags &= ~Flags.Started;
+                m_Candidates.Clear();
+                m_Candidates.Capacity = 0; // Release our unmanaged memory.
             }
 
             private void ThrowIfRebindInProgress()
@@ -570,13 +702,72 @@ namespace UnityEngine.Experimental.Input
                     throw new InvalidOperationException("Cannot reconfigure rebinding while operation is in progress");
             }
 
+            /// <summary>
+            /// Based on the chosen control, generate an override path to rebind to.
+            /// </summary>
+            /// <param name="control"></param>
+            /// <returns></returns>
+            private string GeneratePathForControl(InputControl control)
+            {
+                var device = control.device;
+                Debug.Assert(device != control, "Control must not be a device!");
+
+                // Find the topmost child control on the device. A device layout can only
+                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
+                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
+                // To determine which device contributes the control has a whole, we have to be looking
+                // at the topmost child of the device.
+                var topmostChild = control;
+                while (topmostChild.parent != device)
+                    topmostChild = topmostChild.parent;
+
+                // Find the layout in the device's base layout chain that first mentions the given control.
+                // If we don't find it, we know it's first defined directly in the layout of the given device,
+                // i.e. it's not an inherited control.
+                var deviceLayoutName = device.m_Layout;
+                var baseLayoutName = deviceLayoutName;
+                while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
+                {
+                    var layout = m_LayoutCache.FindOrLoadLayout(baseLayoutName);
+
+                    var controlItem = layout.FindControl(topmostChild.m_Name);
+                    if (controlItem != null)
+                        deviceLayoutName = baseLayoutName;
+                }
+
+                // Create a path with the given device layout
+                if (m_PathBuilder == null)
+                    m_PathBuilder = new StringBuilder();
+                else
+                    m_PathBuilder.Length = 0;
+
+                m_PathBuilder.Append('<');
+                m_PathBuilder.Append(deviceLayoutName);
+                m_PathBuilder.Append('>');
+
+                ////TODO: usages
+
+                m_PathBuilder.Append('/');
+
+                var devicePath = device.path;
+                var controlPath = control.path;
+                m_PathBuilder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
+
+                return m_PathBuilder.ToString();
+            }
+
             private InputAction m_ActionToRebind;
             private InputAction m_CancelAction;
             private InputBinding? m_BindingMask;
+            private Type m_ControlType;
+            private InternedString m_ExpectedLayout;
+            private string m_CancelBinding;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;
             private Action<RebindingOperation> m_OnCancel;
             private Action<InputEventPtr> m_OnEventDelegate;
+            private InputControlLayout.Cache m_LayoutCache;
+            private StringBuilder m_PathBuilder;
             private Flags m_Flags;
 
             [Flags]
@@ -587,6 +778,8 @@ namespace UnityEngine.Experimental.Input
                 Cancelled = 1 << 2,
                 OnEventHooked = 1 << 3,
                 OverwritePath = 1 << 4,
+                DontIgnoreNoisyControls = 1 << 5,
+                DontGeneralizePathOfSelectedControl = 1 << 6,
             }
         }
 

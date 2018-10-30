@@ -48,6 +48,10 @@ namespace UnityEngine.Experimental.Input
                 sets[i].Disable();
         }
 
+        public virtual void MakePrivateCopyOfActions()
+        {
+        }
+
         public InputActionAssetReference Clone()
         {
             var clone = (InputActionAssetReference)MemberwiseClone();

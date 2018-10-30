@@ -224,6 +224,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             s_AllUserData[index].actions = actions;
         }
 
+        ////TODO: keep copy of reference and if two users end up with the same reference, automatically all MakePrivateCopyOfActions
+
         public static void AssignInputActions<TUser>(this TUser user, InputActionAssetReference assetReference)
             where TUser : class, IInputUser
         {

@@ -1191,9 +1191,7 @@ partial class CoreTests
         using (var runtime = new InputTestRuntime())
         {
             var manager = new InputManager();
-
-            manager.InitializeData();
-            manager.InstallRuntime(runtime);
+            manager.Initialize(runtime);
 
             // Create a device layout that will fail to instantiate.
             const string layout = @"
@@ -3451,7 +3449,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_IMECursorPositionSendsCorrectIOCTLCommand()
     {
-        bool commandWasSent = false;
+        var commandWasSent = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 

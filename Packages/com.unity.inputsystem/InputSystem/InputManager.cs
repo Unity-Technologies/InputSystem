@@ -382,7 +382,7 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             // Remove and re-add the matching devices.
-            var setup = new InputDeviceBuilder(m_Layouts);
+            var setup = new InputDeviceBuilder();
             for (var i = 0; i < devicesUsingLayout.Count; ++i)
             {
                 ////TODO: preserve state where possible
@@ -460,7 +460,7 @@ namespace UnityEngine.Experimental.Input
                     device.m_Description = deviceDescription;
 
                     if (builder == null)
-                        builder = new InputDeviceBuilder(m_Layouts);
+                        builder = new InputDeviceBuilder();
 
                     RecreateDevice(device, layoutName, builder);
 
@@ -763,7 +763,7 @@ namespace UnityEngine.Experimental.Input
 
             var internedLayoutName = new InternedString(layout);
 
-            var setup = new InputDeviceBuilder(m_Layouts);
+            var setup = new InputDeviceBuilder();
             setup.Setup(internedLayoutName, variants);
             var device = setup.Finish();
 
@@ -781,7 +781,7 @@ namespace UnityEngine.Experimental.Input
             InputDevice.DeviceFlags deviceFlags = 0,
             InternedString variants = default(InternedString))
         {
-            var setup = new InputDeviceBuilder(m_Layouts);
+            var setup = new InputDeviceBuilder();
             setup.Setup(new InternedString(layout), deviceDescription: deviceDescription, variants: variants);
             var device = setup.Finish();
 

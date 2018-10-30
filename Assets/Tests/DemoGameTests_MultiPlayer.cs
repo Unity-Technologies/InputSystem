@@ -1,5 +1,7 @@
 using NUnit.Framework;
 
+////TODO: test that two players can both use the gamepad scheme but end up with their own independent actions specialized on their specific gamepad
+
 // Multi-player mode tests for the demo game.
 
 partial class DemoGameTests
