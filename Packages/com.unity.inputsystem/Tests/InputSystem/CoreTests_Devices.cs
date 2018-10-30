@@ -3399,7 +3399,7 @@ partial class CoreTests
     public void Devices_IMECompositionEventsGoThroughKeyboard()
     {
         const string imeCompositionCharacters = "CompositionTestCharacters! ɝ";
-        bool callbackWasCalled = false;
+        var callbackWasCalled = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         keyboard.onIMECompositionChange += (IMECompositionString composition) =>
@@ -3421,12 +3421,12 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_IMEEnableSendsCorrectIOCTLCommand()
     {
-        bool commandWasSent = false;
+        var commandWasSent = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(keyboard.id,
+            runtime.SetDeviceCommandCallback(keyboard.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == EnableIMECompositionCommand.Type)
@@ -3457,7 +3457,7 @@ partial class CoreTests
 
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(keyboard.id,
+            runtime.SetDeviceCommandCallback(keyboard.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == SetIMECursorPositionCommand.Type)
