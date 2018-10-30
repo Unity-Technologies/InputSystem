@@ -542,6 +542,50 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanAssignControlScheme_AndBindOnlyToAssignedInputDevices()
+    {
+        var gamepadScheme = new InputControlScheme("Gamepad")
+            .WithRequiredDevice("<Gamepad>");
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        var map1 = new InputActionMap("map");
+        map1.AddAction("action").AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        var map2 = map1.Clone();
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        user1.AssignInputDevice(gamepad1);
+        user2.AssignInputDevice(gamepad2);
+
+        user1.AssignInputActions(map1);
+        user2.AssignInputActions(map2);
+
+        user1.AssignControlScheme(gamepadScheme)
+            .AndBindOnlyToAssignedInputDevices();
+        user2.AssignControlScheme(gamepadScheme)
+            .AndBindOnlyToAssignedInputDevices();
+
+        Assert.That(map1["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth}));
+        Assert.That(map2["action"].controls, Is.EquivalentTo(new[] {gamepad2.buttonSouth}));
+
+        ////REVIEW: how do we want to handle the case where the assigned devices then change?
+        /*
+        user2.AssignInputDevice(gamepad3);
+
+        Assert.That(map1["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth}));
+        Assert.That(map2["action"].controls, Is.EquivalentTo(new[] {gamepad3.buttonSouth}));
+        */
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CanDetectWhenUnassignedDeviceIsUsed()
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
@@ -633,9 +677,10 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    [Ignore("TODO")]
-    public void TODO_Users_CanGetAndSetCustomBindings()
+    public void Users_CanGetAndSetCustomBindings()
     {
+        var user = new TestUser();
+
         Assert.Fail();
     }
 

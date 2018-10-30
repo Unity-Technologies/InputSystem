@@ -755,6 +755,28 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 return this;
             }
 
+            /// <summary>
+            /// Mask out (i.e. disable) every binding that doesn't belong to the assigned control scheme.
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks>
+            /// When using a specific control scheme, it can be desirable to either render any binding outside
+            /// the control scheme unusable or to leave all bindings enabled such that it is possible to
+            /// automatically detect when the user switches to a different control scheme.
+            ///
+            /// The first case, where we mask out any other binding, is supported by this method. When called,
+            /// the binding group of the current control scheme (<see cref="InputControlScheme.bindingGroup)"/>)
+            /// will be applied to the actions assigned to the user (<see
+            /// cref="InputUser.AssignInputActions{TUser}(TUser,IInputActionCollection)"/>).
+            ///
+            /// Note that for this method to work, actions have to be assigned to the user first.
+            ///
+            /// By default, bindings will not get masked and every binding will activate when actions
+            /// are enabled.
+            /// </remarks>
+            /// <seealso cref="InputUser.AssignInputActions{TUser}(TUser,IInputActionCollection)"/>
+            /// <seealso cref="IInputActionCollection.bindingMask"/>
+            /// <seealso cref="IInputActionCollection.SetBindingMask"/>
             public ControlSchemeSyntax AndMaskBindingsFromOtherControlSchemes()
             {
                 // Nothing to do if we don't have a control scheme.
@@ -763,11 +785,42 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
                 var actions = s_AllUserData[m_UserIndex].actions;
                 if (actions == null)
-                    throw new InvalidOperationException(string.Format("No actions have been assigned to user '{0}'; call AssignInputActions() first",
+                    throw new InvalidOperationException(string.Format(
+                        "No actions have been assigned to user '{0}'; call AssignInputActions() first",
                         s_AllUsers[m_UserIndex]));
 
                 var bindingGroup = s_AllUserData[m_UserIndex].controlScheme.Value.bindingGroup;
-                actions.SetBindingMask(new InputBinding {groups = bindingGroup});
+                actions.bindingMask = new InputBinding {groups = bindingGroup};
+                return this;
+            }
+
+            ////REVIEW: wouldn't a better approach be to keep unrelated devices entirely out of what we bind to
+            ////        and then, if we register input on an unassigned device, see if it's compatible with a
+            ////        user's actions and only then switch?
+
+            /// <summary>
+            /// Make bindings specific to the devices assigned to the user.
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks>
+            /// By default, assigning devices (<see cref="InputUser.AssignInputDevice{TUser}(TUser,InputDevice)"/> to
+            /// a user will not restrict which devices the user's actions will bind to. This is desirable, for example,
+            /// to allow the user to be assigned on specific Gamepad in the system, yet also allow the user to switch
+            /// to another Gamepad seamlessly.
+            /// </remarks>
+            public ControlSchemeSyntax AndBindOnlyToAssignedInputDevices()
+            {
+                // Nothing to do if we don't have a control scheme.
+                if (!s_AllUserData[m_UserIndex].controlScheme.HasValue)
+                    return this;
+
+                var actions = s_AllUserData[m_UserIndex].actions;
+                if (actions == null)
+                    throw new InvalidOperationException(string.Format(
+                        "No actions have been assigned to user '{0}'; call AssignInputActions() first",
+                        s_AllUsers[m_UserIndex]));
+
+
                 return this;
             }
 

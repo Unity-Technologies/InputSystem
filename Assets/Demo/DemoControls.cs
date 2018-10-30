@@ -36,28 +36,40 @@ public class DemoControls : InputActionAssetReference
 
     private void Uninitialize()
     {
+        if (m_GameplayActionsCallbackInterface != null)
+        {
+            gameplay.SetCallbacks(null);
+        }
         m_gameplay = null;
         m_gameplay_fire = null;
         m_gameplay_move = null;
         m_gameplay_look = null;
         m_gameplay_jump = null;
         m_gameplay_escape = null;
+        if (m_MenuActionsCallbackInterface != null)
+        {
+            menu.SetCallbacks(null);
+        }
         m_menu = null;
         m_menu_navigate = null;
         m_menu_click = null;
         m_Initialized = false;
     }
 
-    public void SwitchAsset(InputActionAsset newAsset)
+    public void SetAsset(InputActionAsset newAsset)
     {
         if (newAsset == asset) return;
+        var gameplayCallbacks = m_GameplayActionsCallbackInterface;
+        var menuCallbacks = m_MenuActionsCallbackInterface;
         if (m_Initialized) Uninitialize();
         asset = newAsset;
+        gameplay.SetCallbacks(gameplayCallbacks);
+        menu.SetCallbacks(menuCallbacks);
     }
 
-    public void DuplicateAndSwitchAsset()
+    public override void MakePrivateCopyOfActions()
     {
-        SwitchAsset(ScriptableObject.Instantiate(asset));
+        SetAsset(ScriptableObject.Instantiate(asset));
     }
 
     // gameplay

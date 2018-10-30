@@ -133,21 +133,31 @@ namespace UnityEngine.Experimental.Input.Editor
             // Uninitialize method.
             writer.WriteLine("private void Uninitialize()");
             writer.BeginBlock();
-            foreach (var set in maps)
+            foreach (var map in maps)
             {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine(string.Format("m_{0} = null;", setName));
+                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
 
-                foreach (var action in set.actions)
+                if (options.generateInterfaces)
+                {
+                    var mapTypeName = CSharpCodeHelpers.MakeTypeName(map.name, "Actions");
+                    writer.WriteLine(string.Format("if (m_{0}CallbackInterface != null)", mapTypeName));
+                    writer.BeginBlock();
+                    writer.WriteLine(string.Format("{0}.SetCallbacks(null);", mapName));
+                    writer.EndBlock();
+                }
+
+                writer.WriteLine(string.Format("m_{0} = null;", mapName));
+
+                foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine(string.Format("m_{0}_{1} = null;", setName, actionName));
+                    writer.WriteLine(string.Format("m_{0}_{1} = null;", mapName, actionName));
 
                     if (options.generateEvents)
                     {
-                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Started, writer, removeCallback: true);
-                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Performed, writer, removeCallback: true);
-                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Cancelled, writer, removeCallback: true);
+                        WriteActionEventInitializer(mapName, actionName, InputActionPhase.Started, writer, removeCallback: true);
+                        WriteActionEventInitializer(mapName, actionName, InputActionPhase.Performed, writer, removeCallback: true);
+                        WriteActionEventInitializer(mapName, actionName, InputActionPhase.Cancelled, writer, removeCallback: true);
                     }
                 }
             }
@@ -155,18 +165,34 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.EndBlock();
 
             // SwitchAsset method.
-            writer.WriteLine("public void SwitchAsset(InputActionAsset newAsset)");
+            writer.WriteLine("public void SetAsset(InputActionAsset newAsset)");
             writer.BeginBlock();
             writer.WriteLine("if (newAsset == asset) return;");
+            if (options.generateInterfaces)
+            {
+                foreach (var map in maps)
+                {
+                    var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                    var mapTypeName = CSharpCodeHelpers.MakeTypeName(map.name, "Actions");
+                    writer.WriteLine(string.Format("var {0}Callbacks = m_{1}CallbackInterface;", mapName, mapTypeName));
+                }
+            }
             writer.WriteLine("if (m_Initialized) Uninitialize();");
             writer.WriteLine("asset = newAsset;");
+            if (options.generateInterfaces)
+            {
+                foreach (var map in maps)
+                {
+                    var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                    writer.WriteLine(string.Format("{0}.SetCallbacks({0}Callbacks);", mapName));
+                }
+            }
             writer.EndBlock();
 
-            ////REVIEW: DuplicateActionsAndBindings?
-            // DuplicateAndSwitchAsset method.
-            writer.WriteLine("public void DuplicateAndSwitchAsset()");
+            // MakePrivateCopyOfActions method.
+            writer.WriteLine("public override void MakePrivateCopyOfActions()");
             writer.BeginBlock();
-            writer.WriteLine("SwitchAsset(ScriptableObject.Instantiate(asset));");
+            writer.WriteLine("SetAsset(ScriptableObject.Instantiate(asset));");
             writer.EndBlock();
 
             // Action map accessors.

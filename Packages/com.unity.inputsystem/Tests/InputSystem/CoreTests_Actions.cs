@@ -1267,6 +1267,66 @@ partial class CoreTests
         Assert.That(performedControl, Is.SameAs(gamepad.rightStick));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRestrictMapsToSpecificDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action = map.AddAction("action", binding: "<Gamepad>/leftStick");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
+
+        map.devices = new[] {gamepad2};
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.None.SameAs(gamepad1.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
+
+        map.devices = null;
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRestrictAssetsToSpecificDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap("map");
+        var action = map.AddAction("action", binding: "<Gamepad>/leftStick");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        Assert.That(map.devices, Is.Null);
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
+
+        asset.devices = new[] {gamepad2};
+
+        Assert.That(map.devices, Is.EquivalentTo(asset.devices));
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.None.SameAs(gamepad1.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
+
+        asset.devices = null;
+
+        Assert.That(map.devices, Is.Null);
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
+    }
+
     class ConstantVector2TestProcessor : IInputControlProcessor<Vector2>
     {
         public Vector2 Process(Vector2 value, InputControl control)
@@ -2462,7 +2522,7 @@ partial class CoreTests
         Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(mouse.leftButton));
 
-        map.SetBindingMask("gamepad");
+        map.bindingMask = new InputBinding {groups = "gamepad"};
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
         Assert.That(action2.controls, Has.Count.Zero);
@@ -2489,21 +2549,21 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        asset.SetBindingMask("gamepad");
+        asset.bindingMask = new InputBinding {groups = "gamepad"};
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
         Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action2.controls, Has.Count.EqualTo(1));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
 
-        asset.SetBindingMask("keyboard");
+        asset.bindingMask = new InputBinding {groups = "keyboard"};
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
         Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
         Assert.That(action2.controls, Has.Count.EqualTo(1));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
 
-        asset.ClearBindingMask();
+        asset.bindingMask = null;
 
         Assert.That(action1.controls, Has.Count.EqualTo(2));
         Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -3426,7 +3486,8 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_InteractiveRebinding_CanAutomaticallyRejectComponentControls()
+    [Ignore("TODO")]
+    public void TODO_Actions_InteractiveRebinding_CanAutomaticallyRejectComponentControls()
     {
         Assert.Fail();
     }
@@ -4074,5 +4135,47 @@ partial class CoreTests
         var action3 = map.AddAction("action3");
 
         Assert.That(map.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateReferenceToAsset()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var reference = new InputActionAssetReference(asset);
+
+        ////REVIEW: would be great to test serializability
+
+        Assert.That(reference.asset, Is.SameAs(asset));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanMakePrivateCopyOfActionsThroughAssetReference()
+    {
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        var action1 = map1.AddAction("action1", "<Gamepad>/leftStick");
+        var action2 = map1.AddAction("action2", "<Gamepad>/rightStick");
+        var action3 = map2.AddAction("action3", "<Keyboard>/space");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var reference = new InputActionAssetReference(asset);
+        reference.MakePrivateCopyOfActions();
+
+        Assert.That(reference.asset, Is.Not.SameAs(asset));
+        Assert.That(reference.asset.actionMaps, Has.Count.EqualTo(2));
+        Assert.That(reference.asset.actionMaps[0].name, Is.EqualTo("map1"));
+        Assert.That(reference.asset.actionMaps[1].name, Is.EqualTo("map2"));
+        Assert.That(reference.asset.actionMaps[0].actions, Has.Count.EqualTo(2));
+        Assert.That(reference.asset.actionMaps[1].actions, Has.Count.EqualTo(1));
+        Assert.That(reference.asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
+        Assert.That(reference.asset.actionMaps[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(reference.asset.actionMaps[1].actions[0].name, Is.EqualTo("action3"));
+        Assert.That(reference.asset.actionMaps[0].bindings, Has.Count.EqualTo(2));
+        Assert.That(reference.asset.actionMaps[1].bindings, Has.Count.EqualTo(1));
     }
 }

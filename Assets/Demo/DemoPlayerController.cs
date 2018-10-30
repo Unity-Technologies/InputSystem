@@ -94,13 +94,13 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// Once spawned, we are reusing player instances over and over. The setup we perform in here,
     /// however, is done only once.
     /// </remarks>
-    public void PerformOneTimeInitialization(int playerIndex)////TODO: remove playerIndex argument
+    public void PerformOneTimeInitialization(bool isFirstPlayer)
     {
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
         // the original actions.
-        if (playerIndex != 0)
-            controls.DuplicateAndSwitchAsset();
+        if (isFirstPlayer)
+            controls.MakePrivateCopyOfActions();
 
         // Wire our callbacks into gameplay actions. We don't need to do the same
         // for menu actions as it's the UI using those and not us.

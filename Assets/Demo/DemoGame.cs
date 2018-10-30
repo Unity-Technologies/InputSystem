@@ -371,7 +371,7 @@ public class DemoGame : MonoBehaviour
             player = playerObject.GetComponent<DemoPlayerController>();
             if (player == null)
                 throw new Exception("Missing DemoPlayerController component on " + playerObject);
-            player.PerformOneTimeInitialization(m_ActivePlayerCount);
+            player.PerformOneTimeInitialization(m_ActivePlayerCount == 0);
             player.onLeaveGame = OnPlayerLeavesGame;
 
             // Add to list.
