@@ -168,6 +168,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             eventData.ray = new Ray(m_Position, m_Orientation * Vector3.forward);
             eventData.maxDistance = 1000;
+            // Demolish the position so we don't trigger any checks from the Graphics Raycaster.
+            eventData.position = new Vector2(float.MinValue, float.MinValue);
 
             eventData.pointerEnter = m_InternalData.pointerTarget;
             eventData.dragging = m_InternalData.isDragging;

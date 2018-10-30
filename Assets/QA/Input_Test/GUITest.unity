@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.49641275, b: 0.57481736, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1239,6 +1239,7 @@ MonoBehaviour:
   moveDeadzone: 0.6
   repeatDelay: 0.6
   repeatRate: 0.1
+  trackedDeviceDragThresholdMultiplier: 2
   m_ForceInputWithoutFocus: 0
   m_PointAction:
     m_UseReference: 0
@@ -1340,7 +1341,52 @@ MonoBehaviour:
       m_SingletonActionBindings: []
     m_Reference: {fileID: 0}
   m_Touches: []
-  m_TrackedDevices: []
+  m_TrackedDevices:
+  - m_Position:
+      m_UseReference: 0
+      m_Action:
+        m_Name: Action
+        m_ExpectedControlLayout: 
+        m_Id: 
+        m_SingletonActionBindings:
+        - m_Name: 
+          m_Path: <WMRSpatialController>{LeftHand}/devicePosition
+          m_Interactions: 
+          m_Processors: 
+          m_Groups: 
+          m_Action: Action
+          m_Flags: 0
+      m_Reference: {fileID: 0}
+    m_Orientation:
+      m_UseReference: 0
+      m_Action:
+        m_Name: Action
+        m_ExpectedControlLayout: 
+        m_Id: 
+        m_SingletonActionBindings:
+        - m_Name: 
+          m_Path: <WMRSpatialController>{LeftHand}/deviceRotation
+          m_Interactions: 
+          m_Processors: 
+          m_Groups: 
+          m_Action: Action
+          m_Flags: 0
+      m_Reference: {fileID: 0}
+    m_Select:
+      m_UseReference: 0
+      m_Action:
+        m_Name: Action
+        m_ExpectedControlLayout: 
+        m_Id: 
+        m_SingletonActionBindings:
+        - m_Name: 
+          m_Path: <WMRSpatialController>{LeftHand}/trigger
+          m_Interactions: 
+          m_Processors: 
+          m_Groups: 
+          m_Action: Action
+          m_Flags: 0
+      m_Reference: {fileID: 0}
 --- !u!114 &975778828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1856,8 +1902,8 @@ MonoBehaviour:
     m_Mode: 4
     m_SelectOnUp: {fileID: 404769689}
     m_SelectOnDown: {fileID: 276180193}
-    m_SelectOnLeft: {fileID: 404769689}
-    m_SelectOnRight: {fileID: 276180193}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}

@@ -310,11 +310,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             for (int i = 0; i < m_Touches.Count; i++)
             {
-                TouchResponder responder = m_Touches[i];
+                var responder = m_Touches[i];
                 responder.state = new TouchModel(m_RollingPointerId++);
+
+                var newIndex = i;
                 responder.actionCallback = delegate(InputAction.CallbackContext context)
                 {
-                    OnTouchAction(i, context);
+                    OnTouchAction(newIndex, context);
                 };
                 m_Touches[i] = responder;
             }
@@ -324,11 +326,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             for (int i = 0; i < m_TrackedDevices.Count; i++)
             {
-                TrackedDeviceResponder responder = m_TrackedDevices[i];
+                var responder = m_TrackedDevices[i];
                 responder.state = new TrackedDeviceModel(m_RollingPointerId++);
+
+                var newIndex = i;
                 responder.actionCallback = delegate(InputAction.CallbackContext context)
                 {
-                    OnTrackedDeviceAction(i, context);
+                    OnTrackedDeviceAction(newIndex, context);
                 };
                 m_TrackedDevices[i] = responder;
             }
@@ -383,11 +387,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
         public int AddTouch(InputActionProperty position, InputActionProperty phase)
         {
-            int id = m_RollingPointerId++;
+            var id = m_RollingPointerId++;
 
-            TouchResponder newResponder = new TouchResponder(id, position, phase);
+            var newResponder = new TouchResponder(id, position, phase);
 
-            int index = m_Touches.Count;
+            var index = m_Touches.Count;
             newResponder.actionCallback = delegate(InputAction.CallbackContext context)
             {
                 OnTouchAction(index, context);
@@ -410,11 +414,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
         public int AddTrackedDevice(InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
         {
-            int id = m_RollingPointerId++;
+            var id = m_RollingPointerId++;
 
-            TrackedDeviceResponder newResponder = new TrackedDeviceResponder(id, position, orientation, select);
+            var newResponder = new TrackedDeviceResponder(id, position, orientation, select);
 
-            int index = m_TrackedDevices.Count;
+            var index = m_TrackedDevices.Count;
             newResponder.actionCallback = delegate(InputAction.CallbackContext context)
             {
                 OnTrackedDeviceAction(index, context);
@@ -605,7 +609,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             if (touchIndex >= 0 && touchIndex < m_Touches.Count)
             {
-                TouchResponder responder = m_Touches[touchIndex];
+                var responder = m_Touches[touchIndex];
 
                 var action = context.action;
                 if (action == responder.position)
@@ -625,7 +629,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             if (deviceIndex >= 0 && deviceIndex < m_TrackedDevices.Count)
             {
-                TrackedDeviceResponder responder = m_TrackedDevices[deviceIndex];
+                var responder = m_TrackedDevices[deviceIndex];
 
                 var action = context.action;
                 if (action == responder.position)
@@ -671,14 +675,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 for (int i = 0; i < m_Touches.Count; i++)
                 {
-                    TouchResponder responder = m_Touches[i];
+                    var responder = m_Touches[i];
                     ProcessTouch(ref responder.state);
                     m_Touches[i] = responder;
                 }
 
                 for (int i = 0; i < m_TrackedDevices.Count; i++)
                 {
-                    TrackedDeviceResponder responder = m_TrackedDevices[i];
+                    var responder = m_TrackedDevices[i];
                     ProcessTrackedDevice(ref responder.state);
                     m_TrackedDevices[i] = responder;
                 }
@@ -721,10 +725,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 cancelAction.performed += OnAction;
 
             for (int i = 0; i < m_Touches.Count; i++)
-                m_Touches[i].HookActions();
+            {
+                var responder = m_Touches[i];
+                responder.HookActions();
+                m_Touches[i] = responder;
+            }
+                
 
             for (int i = 0; i < m_TrackedDevices.Count; i++)
-                m_TrackedDevices[i].HookActions();
+            {
+                var responder = m_TrackedDevices[i];
+                responder.HookActions();
+                m_TrackedDevices[i] = responder;
+
+            }
+                
         }
 
         private void UnhookActions()
@@ -763,10 +778,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 cancelAction.performed -= OnAction;
 
             for (int i = 0; i < m_Touches.Count; i++)
-                m_Touches[i].UnhookActions();
+            {
+                var responder = m_Touches[i];
+                responder.UnhookActions();
+                m_Touches[i] = responder;
+            }
 
             for (int i = 0; i < m_TrackedDevices.Count; i++)
-                m_TrackedDevices[i].UnhookActions();
+            {
+                var responder = m_TrackedDevices[i];
+                responder.UnhookActions();
+                m_TrackedDevices[i] = responder;
+            }
         }
 
         [Tooltip("Enables UI events regardless of focus state.")]

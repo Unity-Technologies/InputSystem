@@ -212,7 +212,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private void ProcessMouseButtonDrag(PointerEventData eventData)
+        private void ProcessMouseButtonDrag(PointerEventData eventData, float pixelDragThresholdMultiplier = 1.0f)
         {
             if (!eventData.IsPointerMoving() ||
                 Cursor.lockState == CursorLockMode.Locked ||
@@ -221,7 +221,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             if (!eventData.dragging)
             {
-                if ((eventData.pressPosition - eventData.position).sqrMagnitude >= (eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold))
+                if ((eventData.pressPosition - eventData.position).sqrMagnitude >= ((eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold) * pixelDragThresholdMultiplier))
                 {
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
                     eventData.dragging = true;
@@ -297,7 +297,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             ProcessMouseButton(deviceState.selectDelta, eventData);
             ProcessMouseMovement(eventData);
-            ProcessMouseButtonDrag(eventData);
+            ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
 
             deviceState.CopyFrom(eventData);
 
@@ -443,6 +443,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
         public float repeatRate = 0.1f;
+
+        [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
+        public float trackedDeviceDragThresholdMultiplier = 2.0f;
 
         private AxisEventData m_CachedAxisEvent;
         private PointerEventData m_CachedPointerEvent;
