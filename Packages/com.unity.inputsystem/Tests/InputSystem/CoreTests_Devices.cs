@@ -3393,4 +3393,90 @@ partial class CoreTests
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_IMECompositionEventsGoThroughKeyboard()
+    {
+        const string imeCompositionCharacters = "CompositionTestCharacters! ɝ";
+        bool callbackWasCalled = false;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        keyboard.onIMECompositionChange += (IMECompositionString composition) =>
+        {
+            Assert.That(callbackWasCalled, Is.False);
+            callbackWasCalled = true;
+            Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
+        };
+
+        IMECompositionEvent inputEvent = IMECompositionEvent.Create(keyboard.id, imeCompositionCharacters,
+            InputRuntime.s_Instance.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(callbackWasCalled, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_IMEEnableSendsCorrectIOCTLCommand()
+    {
+        bool commandWasSent = false;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(keyboard.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == EnableIMECompositionCommand.Type)
+                    {
+                        Assert.That(commandWasSent, Is.False);
+                        commandWasSent = true;
+
+                        EnableIMECompositionCommand command = *((EnableIMECompositionCommand*)commandPtr);
+                        Assert.That(command.imeEnabled, Is.True);
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+
+        keyboard.imeEnabled = true;
+        Assert.That(commandWasSent, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_IMECursorPositionSendsCorrectIOCTLCommand()
+    {
+        bool commandWasSent = false;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(keyboard.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == SetIMECursorPositionCommand.Type)
+                    {
+                        Assert.That(commandWasSent, Is.False);
+                        commandWasSent = true;
+
+                        SetIMECursorPositionCommand command = *((SetIMECursorPositionCommand*)commandPtr);
+                        Assert.AreEqual(Vector2.one, command.position);
+                        return InputDeviceCommand.kGenericSuccess;
+
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+
+        keyboard.imeCursorPosition = Vector2.one;
+        Assert.That(commandWasSent, Is.True);
+    }
 }
