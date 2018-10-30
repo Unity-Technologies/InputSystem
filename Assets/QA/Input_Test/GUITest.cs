@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 public class GUITest : MonoBehaviour
 {
     public GameObject initialSelectedGameObject;
-    
+
     public void OnEnable()
     {
         if (initialSelectedGameObject != null)
@@ -12,7 +12,7 @@ public class GUITest : MonoBehaviour
             EventSystem current = EventSystem.current;
             if (current != null)
                 EventSystem.current.SetSelectedGameObject(initialSelectedGameObject);
-        }      
+        }
     }
 
     public void OnButtonClick()

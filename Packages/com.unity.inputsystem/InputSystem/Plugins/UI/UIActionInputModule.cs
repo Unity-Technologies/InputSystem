@@ -427,8 +427,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             return id;
         }
-          
-        
+
         /// <summary>
         /// This is a quick accessor for enabling all actions.  Currently, action ownership is ambiguous,
         /// and we need a way to enable/disable inspector-set actions.
@@ -466,7 +465,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             for (int i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
-                
+
                 var positionAction = touch.position.action;
                 if (positionAction != null && !positionAction.enabled)
                     positionAction.Enable();
@@ -527,11 +526,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null && cancelAction.enabled)
                 cancelAction.Disable();
-            
+
             for (int i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
-                
+
                 var positionAction = touch.position.action;
                 if (positionAction != null && positionAction.enabled)
                     positionAction.Disable();
@@ -607,7 +606,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (touchIndex >= 0 && touchIndex < m_Touches.Count)
             {
                 TouchResponder responder = m_Touches[touchIndex];
-                TouchModel state = responder.state;
 
                 var action = context.action;
                 if (action == responder.position)
@@ -628,7 +626,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (deviceIndex >= 0 && deviceIndex < m_TrackedDevices.Count)
             {
                 TrackedDeviceResponder responder = m_TrackedDevices[deviceIndex];
-                TrackedDeviceModel state = responder.state;
 
                 var action = context.action;
                 if (action == responder.position)
