@@ -117,6 +117,14 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Test]
     [Category("Demo")]
     [Ignore("TODO")]
+    public void TODO_Demo_CanRebindControls()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Demo")]
+    [Ignore("TODO")]
     public void TODO_Demo_CanProcess4PlayersInLessThan2PercentFrameTime()
     {
         Assert.Fail();
@@ -126,6 +134,14 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Category("Demo")]
     [Ignore("TODO")]
     public void TODO_Demo_DoesNotProduceGarbageWhenDeviceIsUnpluggedAndPluggedBackIn()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Demo")]
+    [Ignore("TODO")]
+    public void TODO_Demo_WhenPlayersDeviceIsDisconnected_ShowsControllerLostStatus()
     {
         Assert.Fail();
     }

@@ -73,6 +73,11 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         get { return m_Score; }
     }
 
+    public bool isInMenu
+    {
+        get { return false; }
+    }
+
     public void Start()
     {
         Debug.Assert(ui != null);
@@ -89,7 +94,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// Once spawned, we are reusing player instances over and over. The setup we perform in here,
     /// however, is done only once.
     /// </remarks>
-    public void PerformOneTimeInitialization(int playerIndex)
+    public void PerformOneTimeInitialization(int playerIndex)////TODO: remove playerIndex argument
     {
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
@@ -154,6 +159,30 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// </summary>
     public void StartMultiPlayerGame()
     {
+        // In multi-player, we always join players through specific devices. These should get
+        // assigned to the player right away.
+        Debug.Assert(this.GetAssignedInputDevices().Count > 0);
+
+        // Associate our InputUser with the actions we're using.
+        this.AssignInputActions(controls);
+
+        // Find which control scheme to use based on the device we have.
+        var controlScheme = SelectControlSchemeBasedOnDevice(this.GetAssignedInputDevices()[0]);
+        Debug.Assert(controlScheme != null);
+
+        // Activate the control scheme and automatically assign whatever other devices we need
+        // which aren't already assigned to someone else.
+        // NOTE: We also make sure to disable any other control scheme so that the user cannot
+        //       switch between devices.
+        if (!this.AssignControlScheme(controlScheme)
+            .AndAssignMissingDevices()
+            .AndMaskBindingsFromOtherControlSchemes())
+        {
+            ////TODO: what to do here?
+        }
+
+        // Start with the gameplay actions being active.
+        controls.gameplay.Enable();
     }
 
     /// <summary>

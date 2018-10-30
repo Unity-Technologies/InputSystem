@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
@@ -215,6 +214,7 @@ public class DemoGameTestFixture
         mouse = null;
         keyboard = null;
         touchscreen = null;
+        gamepad = null;
         ps4Gamepad = null;
         xboxGamepad = null;
         joystick = null;

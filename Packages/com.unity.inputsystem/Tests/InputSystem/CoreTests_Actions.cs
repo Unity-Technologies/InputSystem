@@ -3424,6 +3424,13 @@ partial class CoreTests
         Assert.Fail();
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanAutomaticallyRejectComponentControls()
+    {
+        Assert.Fail();
+    }
+
     ////FIXME: this doesn't yet work because the system will find that leftStick/left or leftStick/right
     ////       have been actuated and since they are buttons, will go for them; we need overall better picking
     ////       logic to reliably deal with sticks
