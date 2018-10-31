@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
+////FIXME: with BindOnlyToAssignedInputDevices on, we can easily end up in situations where reconfiguring the devices
+////       and/or control schemes on a user will lead to bindings getting resolved multiple times
+
 ////TODO: kill InputDevice.userId
 
 ////REVIEW: should we reference the control scheme by name only instead of passing InputControlSchemes around?
@@ -238,6 +241,54 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         }
 
         /// <summary>
+        /// Make bindings specific to the devices assigned to the user.
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// By default, assigning devices (<see cref="InputUser.AssignInputDevice{TUser}(TUser,InputDevice)"/> to
+        /// a user will not restrict which devices the user's actions will bind to. This is desirable, for example,
+        /// to allow the user to be assigned on specific Gamepad in the system, yet also allow the user to switch
+        /// to another Gamepad seamlessly.
+        ///
+        /// By passing true for <paramref name="value"/>, the user's binding will
+        /// </remarks>
+        public static void BindOnlyToAssignedInputDevices<TUser>(this TUser user, bool value = true)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var userIndex = FindUserIndex(user);
+            if (userIndex == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            if (value)
+            {
+                // Do nothing if already enabled.
+                if ((s_AllUserData[userIndex].flags & UserFlags.BindOnlyToAssignedInputDevices) != 0)
+                    return;
+
+                s_AllUserData[userIndex].flags |= UserFlags.BindOnlyToAssignedInputDevices;
+
+                // If we already have actions assigned to the user, assign our set of devices (may be empty) to them.
+                AssignDevicesToActionsIfNecessary(userIndex);
+            }
+            else
+            {
+                // Do nothing if already disabled.
+                if ((s_AllUserData[userIndex].flags & UserFlags.BindOnlyToAssignedInputDevices) == 0)
+                    return;
+
+                s_AllUserData[userIndex].flags &= ~UserFlags.BindOnlyToAssignedInputDevices;
+
+                // Reset device list on actions, if we have any.
+                var actions = s_AllUserData[userIndex].actions;
+                if (actions != null)
+                    actions.devices = null;
+            }
+        }
+
+        /// <summary>
         /// Get the control scheme currently employed by the user.
         /// </summary>
         /// <remarks>
@@ -329,19 +380,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 s_AllUserData[index].deviceCount);
         }
 
-        /// <summary>
-        /// Get the list of devices that the user is missing to satisfy all requirements in the current
-        /// control scheme.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <typeparam name="TUser"></typeparam>
-        /// <returns></returns>
-        public static ReadOnlyArray<InputControlScheme.DeviceRequirement> GetMissingInputDevices<TUser>(this TUser user)
-            where TUser : class, IInputUser
-        {
-            throw new NotImplementedException();
-        }
-
         public static void AssignInputDevice<TUser>(this TUser user, InputDevice device)
             where TUser : class, IInputUser
         {
@@ -355,7 +393,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
 
             if (AssignDeviceInternal(userIndex, device))
+            {
+                AssignDevicesToActionsIfNecessary(userIndex);
                 Notify(user, InputUserChange.DevicesChanged);
+            }
         }
 
         public static void AssignInputDevices<TUser, TDevices>(this TUser user, TDevices devices)
@@ -378,7 +419,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             }
 
             if (wasAdded)
+            {
+                AssignDevicesToActionsIfNecessary(userIndex);
                 Notify(user, InputUserChange.DevicesChanged);
+            }
         }
 
         private static bool AssignDeviceInternal(int userIndex, InputDevice device)
@@ -417,6 +461,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             ++s_AllUserData[userIndex].deviceCount;
 
             return true;
+        }
+
+        private static void AssignDevicesToActionsIfNecessary(int userIndex)
+        {
+            // Ignore if not enabled.
+            if ((s_AllUserData[userIndex].flags & UserFlags.BindOnlyToAssignedInputDevices) == 0)
+                return;
+
+            // Ignore if not having actions.
+            var actions = s_AllUserData[userIndex].actions;
+            if (actions == null)
+                return;
+
+            actions.devices = s_AllUsers[userIndex].GetAssignedInputDevices();
         }
 
         public static void ClearAssignedInputDevices<TUser>(this TUser user)
@@ -794,36 +852,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 return this;
             }
 
-            ////REVIEW: wouldn't a better approach be to keep unrelated devices entirely out of what we bind to
-            ////        and then, if we register input on an unassigned device, see if it's compatible with a
-            ////        user's actions and only then switch?
-
-            /// <summary>
-            /// Make bindings specific to the devices assigned to the user.
-            /// </summary>
-            /// <returns></returns>
-            /// <remarks>
-            /// By default, assigning devices (<see cref="InputUser.AssignInputDevice{TUser}(TUser,InputDevice)"/> to
-            /// a user will not restrict which devices the user's actions will bind to. This is desirable, for example,
-            /// to allow the user to be assigned on specific Gamepad in the system, yet also allow the user to switch
-            /// to another Gamepad seamlessly.
-            /// </remarks>
-            public ControlSchemeSyntax AndBindOnlyToAssignedInputDevices()
-            {
-                // Nothing to do if we don't have a control scheme.
-                if (!s_AllUserData[m_UserIndex].controlScheme.HasValue)
-                    return this;
-
-                var actions = s_AllUserData[m_UserIndex].actions;
-                if (actions == null)
-                    throw new InvalidOperationException(string.Format(
-                        "No actions have been assigned to user '{0}'; call AssignInputActions() first",
-                        s_AllUsers[m_UserIndex]));
-
-
-                return this;
-            }
-
             public static implicit operator bool(ControlSchemeSyntax syntax)
             {
                 return !syntax.m_Failure;
@@ -831,6 +859,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
             internal int m_UserIndex;
             internal bool m_Failure;
+        }
+
+        [Flags]
+        internal enum UserFlags
+        {
+            BindOnlyToAssignedInputDevices = 1 << 0,
         }
 
         /// <summary>
@@ -841,6 +875,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             public ulong id;
             public string userName;
             public InputUserHandle? handle;
+            public UserFlags flags;
 
             public int deviceCount;
             public int deviceStartIndex;

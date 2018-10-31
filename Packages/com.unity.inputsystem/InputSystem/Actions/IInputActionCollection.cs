@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input
         /// If this is set, actions in the collection will exclusively bind to devices
         /// in the given list. For example, if two gamepads are present in the system yet
         /// only one gamepad is listed here, then a "&lt;Gamepad&gt;/leftStick" binding will
-        /// only binding to the gamepad in the list and not to the one that is only available
+        /// only bind to the gamepad in the list and not to the one that is only available
         /// globally.
         /// </remarks>
         ReadOnlyArray<InputDevice>? devices { get; set; }

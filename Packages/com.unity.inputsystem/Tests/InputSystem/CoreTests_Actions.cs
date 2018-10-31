@@ -2486,13 +2486,13 @@ partial class CoreTests
         Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
         Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
 
-        action.SetBindingMask("gamepad");
+        action.bindingMask = new InputBinding {groups = "gamepad"};
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
         Assert.That(action.bindingMask, Is.EqualTo(new InputBinding {groups = "gamepad"}));
 
-        action.ClearBindingMask();
+        action.bindingMask = null;
 
         Assert.That(action.controls, Has.Count.EqualTo(3));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));

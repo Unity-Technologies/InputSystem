@@ -152,22 +152,25 @@ namespace UnityEngine.Experimental.Input
                     // Try to find action.
                     // NOTE: Technically, we allow individual bindings of composites to trigger actions independent
                     //       of the action triggered by the composite.
-                    var actionIndex = InputActionMapState.kInvalidIndex;
+                    var actionIndexInMap = InputActionMapState.kInvalidIndex;
                     var actionName = unresolvedBinding.action;
                     if (!string.IsNullOrEmpty(actionName))
                     {
-                        actionIndex = map.TryGetActionIndex(actionName);
+                        actionIndexInMap = map.TryGetActionIndex(actionName);
                     }
                     else if (map.m_SingletonAction != null)
                     {
                         // Special-case for singleton actions that don't have names.
-                        actionIndex = 0;
+                        actionIndexInMap = 0;
                     }
 
                     // Skip binding if it doesn't match the binding mask on the action (might be empty).
-                    if (actionIndex != InputActionMapState.kInvalidIndex &&
-                        !map.m_Actions[actionIndex].m_BindingMask.Matches(ref unresolvedBinding))
-                        continue;
+                    if (actionIndexInMap != InputActionMapState.kInvalidIndex)
+                    {
+                        var action = actionsInThisMap[actionIndexInMap];
+                        if (action.m_BindingMask != null && !action.m_BindingMask.Value.Matches(ref unresolvedBinding))
+                            continue;
+                    }
 
                     // Instantiate processors.
                     var firstProcessorIndex = 0;
@@ -204,7 +207,7 @@ namespace UnityEngine.Experimental.Input
                         currentCompositeBindingIndex = bindingIndex;
                         bindingStates[bindingIndex] = new InputActionMapState.BindingState
                         {
-                            actionIndex = actionIndex,
+                            actionIndex = actionStartIndex + actionIndexInMap,
                             compositeOrCompositeBindingIndex = currentCompositeIndex,
                             processorStartIndex = firstProcessorIndex,
                             processorCount = numProcessors,
@@ -262,7 +265,7 @@ namespace UnityEngine.Experimental.Input
                         processorStartIndex = firstProcessorIndex,
                         processorCount = numProcessors,
                         isPartOfComposite = unresolvedBinding.isPartOfComposite,
-                        actionIndex = actionIndex,
+                        actionIndex = actionIndexInMap,
                         compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                         mapIndex = totalMapCount,
                     };

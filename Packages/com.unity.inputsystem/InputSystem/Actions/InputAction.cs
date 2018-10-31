@@ -143,9 +143,25 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 ////REVIEW: if no mask is set on the action but one is set on the map, should we return that one?
-                if (m_BindingMask.isEmpty)
-                    return null;
                 return m_BindingMask;
+            }
+            set
+            {
+                if (value == m_BindingMask)
+                    return;
+
+                if (value != null)
+                {
+                    var v = value.Value;
+                    v.action = name;
+                    value = v;
+                }
+
+                m_BindingMask = value;
+
+                var map = GetOrCreateActionMap();
+                if (map.m_State != null)
+                    map.ResolveBindings();
             }
         }
 
@@ -382,32 +398,6 @@ namespace UnityEngine.Experimental.Input
             --m_ActionMap.m_EnabledActionsCount;
         }
 
-        public void SetBindingMask(InputBinding bindingMask)
-        {
-            if (m_BindingMask == bindingMask)
-                return;
-
-            m_BindingMask = bindingMask;
-            if (!m_BindingMask.isEmpty)
-                m_BindingMask.action = name;
-
-            var map = GetOrCreateActionMap();
-            if (map.m_State != null)
-                map.ResolveBindings();
-        }
-
-        public void SetBindingMask(string bindingGroups)
-        {
-            if (string.IsNullOrEmpty(bindingGroups))
-                bindingGroups = null;
-            SetBindingMask(new InputBinding {groups = bindingGroups});
-        }
-
-        public void ClearBindingMask()
-        {
-            SetBindingMask(new InputBinding());
-        }
-
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
         // If you clone an action from a set, you get a singleton action in return.
         public InputAction Clone()
@@ -432,7 +422,7 @@ namespace UnityEngine.Experimental.Input
         // For any other type of action, this is null.
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
 
-        [NonSerialized] internal InputBinding m_BindingMask;
+        [NonSerialized] internal InputBinding? m_BindingMask;
         [NonSerialized] internal int m_BindingsStartIndex;
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
