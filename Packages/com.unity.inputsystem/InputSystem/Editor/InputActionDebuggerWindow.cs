@@ -39,8 +39,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
         }
 
- 
-
         private static List<InputActionDebuggerWindow> s_OpenDebuggerWindows;
 
         private void AddToList()

@@ -230,12 +230,12 @@ namespace UnityEngine.Experimental.Input
 
             // There is a known documented bug with the new Rosyln
             // compiler where it warns on casts with following line that
-            // was perfectly legaly in previous CSC compiler.  
+            // was perfectly legaly in previous CSC compiler.
             // Below is silly conversion to get rid of warning, or we can pragma
             // out the warning.
             //return ((ulong)deviceIndex << 32) | (ulong)controlIndex;
-            var shiftedDeviceIndex = (ulong) deviceIndex << 32;
-            var unsignedControlIndex = (ulong) controlIndex;
+            var shiftedDeviceIndex = (ulong)deviceIndex << 32;
+            var unsignedControlIndex = (ulong)controlIndex;
 
             return shiftedDeviceIndex | unsignedControlIndex;
         }

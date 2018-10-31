@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: reordering support for interactions
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
@@ -153,7 +154,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private int m_SelectedInteraction;
             private ReorderableList m_InteractionListView;
 
-            public Action<SerializedProperty> onApplyCallback = null;
+            public Action<SerializedProperty> onApplyCallback;
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {

@@ -15,14 +15,13 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.TestTools;
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Serializable]
+
     struct PackageJson
     {
-        // Need to pragma out this warning, its a known limitation 
-        // of the compiler to warn when the field is assigned thru serialization
-        #pragma warning disable CS0649
         public string version;
     }
 

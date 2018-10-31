@@ -79,7 +79,7 @@ partial class CoreTests
         var sniperControls = new InputActionMap("sniper", extend: fpsControls);
         var scopeAction = sniperControls.AddAction("scope");
         var swapScopeControls = new InputActionMap("swapScope", extend: sniperControls);
-   
+
         swapScopeControls.AddBinding();
 
         // Information from 'baseMap' coming through on 'derivedMap'.

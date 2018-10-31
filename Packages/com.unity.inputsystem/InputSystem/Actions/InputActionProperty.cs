@@ -53,16 +53,16 @@ namespace UnityEngine.Experimental.Input
             return m_Reference == other;
         }
 
-        public override bool Equals(object o)  
-        {  
+        public override bool Equals(object o)
+        {
             if (m_UseReference)
                 return this.Equals(o as InputActionReference);
             else
                 return this.Equals(o as InputAction);
-        }  
+        }
 
-        public override int GetHashCode()  
-        {  
+        public override int GetHashCode()
+        {
             if (m_UseReference)
                 return m_Reference.GetHashCode();
             else

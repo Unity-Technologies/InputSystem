@@ -5,6 +5,7 @@ using System.Collections.Generic;
 ////TODO: delimiter support
 ////TODO: designator support
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
@@ -361,7 +362,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             public int? usage;
             public int? usageMinimum;
             public int? usageMaximum;
-
+            public int? designatorIndex;
+            public int? designatorMinimum;
+            public int? designatorMaximum;
+            public int? stringIndex;
+            public int? stringMinimum;
+            public int? stringMaximum;
 
             public List<int> usageList;
 
