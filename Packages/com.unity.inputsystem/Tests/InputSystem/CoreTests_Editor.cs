@@ -15,9 +15,11 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.TestTools;
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Serializable]
+
     struct PackageJson
     {
         public string version;

@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         protected override void AddElement(object data)
         {
-            if (m_ListView.list.Count == 1 && m_ListView.list[0] == "")
+            if (m_ListView.list.Count == 1 && (string)m_ListView.list[0] == "")
             {
                 m_ListView.list.Clear();
             }
@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         protected override void AddElement(object data)
         {
-            if (m_ListView.list.Count == 1 && m_ListView.list[0] == "")
+            if (m_ListView.list.Count == 1 && (string)m_ListView.list[0] == "")
             {
                 m_ListView.list.Clear();
             }

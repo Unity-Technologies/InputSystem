@@ -27,7 +27,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
 
 ////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
-
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
@@ -2828,7 +2828,7 @@ namespace UnityEngine.Experimental.Input
                                 deviceDescription: m_AvailableDevices[i].description,
                                 deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                         }
-                        catch (Exception exception)
+                        catch (Exception)
                         {
                             // Just ignore. Simply means we still can't really turn the device into something useful.
                         }

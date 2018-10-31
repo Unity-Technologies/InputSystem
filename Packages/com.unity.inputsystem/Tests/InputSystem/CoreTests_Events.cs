@@ -15,6 +15,7 @@ using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 #endif
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     // This is one of the most central tests. If this one breaks, it most often
@@ -639,7 +640,6 @@ partial class CoreTests
     {
         [InputControl(name = "button1", layout = "Button")]
         public int buttons;
-
         [InputControl(layout = "Axis")] public float axis2;
 
         public FourCC GetFormat()
