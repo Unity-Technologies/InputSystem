@@ -280,7 +280,7 @@ public class DemoGame : MonoBehaviour
         }
     }
 
-    private void OnJoin(InputDevice device)
+    private void OnJoin(UnityEngine.Experimental.Input.InputDevice device)
     {
         // Spawn player.
         var player = SpawnPlayer();
