@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     || !string.IsNullOrEmpty(m_SchemeBindingGroupFilter)
                     || !string.IsNullOrEmpty(m_DeviceFilter))
                 {
-                    FilterResults(root, FilterByGroup);
+                    FilterResultsByGroup(root);
                     FilterResults(root, FilterByDevice);
                     FilterResults(root, FilterByName);
                 }
@@ -145,6 +145,30 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // Return true is the child node should be removed from the parent
+        private bool FilterResultsByGroup(TreeViewItem item)
+        {
+            if (item.hasChildren)
+            {
+                var listToRemove = new List<TreeViewItem>();
+                foreach (var child in item.children)
+                {
+                    if (!FilterByGroup(child))
+                    {
+                        listToRemove.Add(child);
+                    }
+                    FilterResultsByGroup(child);
+                }
+                foreach (var itemToRemove in listToRemove)
+                {
+                    item.children.Remove(itemToRemove);
+                }
+
+                return !item.hasChildren;
+            }
+            return true;
+        }
+        
+        // Return true is the child node should be removed from the parent
         private bool FilterResults(TreeViewItem item, Func<TreeViewItem, bool> filterMatch)
         {
             if (item.hasChildren)
@@ -186,6 +210,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (string.IsNullOrEmpty(m_SchemeBindingGroupFilter))
                 return true;
 
+            if (item is ActionTreeItem)
+                return true;
+
+            if (item is CompositeGroupTreeItem)
+            {
+                return !FilterResults(item, FilterByGroup);
+            }
+            
             var binding = item as BindingTreeItem;
             if (binding != null)
             {
