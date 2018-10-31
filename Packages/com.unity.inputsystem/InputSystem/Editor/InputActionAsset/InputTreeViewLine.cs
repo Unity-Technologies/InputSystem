@@ -236,15 +236,15 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return true; }
         }
 
-        public void AddCompositeBinding(string compositeName)
+        public void AddCompositeBinding(string compositeName, string group)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType, group);
         }
 
-        public void AddBinding()
+        public void AddBinding(string group)
         {
-            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty, group);
         }
 
         public void AddBindingFromSavedProperties(Dictionary<string, string> values)

@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionAssetManager.SetReferences(SetTitle);
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
-            m_ContextMenu.SetReferences(this, m_ActionAssetManager);
+            m_ContextMenu.SetReferences(this, m_ActionAssetManager, m_InputActionWindowToolbar);
 
             InitializeTrees();
             OnActionMapSelection();
@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionAssetManager.SetReferences(SetTitle);
             m_ActionAssetManager.InitializeObjectReferences();
             m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
-            m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager);
+            m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager, m_InputActionWindowToolbar);
             InitializeTrees();
 
             // Make sure first actions map selected and actions tree expanded

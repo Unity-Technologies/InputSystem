@@ -163,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // Equivalent to InputAction.AddBinding().
-        public static SerializedProperty AddBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        public static SerializedProperty AddBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null, string group = "")
         {
             var bindingsArrayProperty = actionMapProperty != null
                 ? actionMapProperty.FindPropertyRelative("m_Bindings")
@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var newActionProperty = bindingsArrayProperty.GetArrayElementAtIndex(bindingIndex);
             newActionProperty.FindPropertyRelative("m_Path").stringValue = string.Empty;
-            newActionProperty.FindPropertyRelative("m_Groups").stringValue = string.Empty;
+            newActionProperty.FindPropertyRelative("m_Groups").stringValue = group;
             newActionProperty.FindPropertyRelative("m_Interactions").stringValue = string.Empty;
             newActionProperty.FindPropertyRelative("m_Flags").intValue = 0;
             newActionProperty.FindPropertyRelative("m_Action").stringValue = actionName;
@@ -312,7 +312,7 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = newName;
         }
 
-        public static void AddCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type)
+        public static void AddCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type, string group = "")
         {
             var newProperty = AddBinding(actionProperty, actionMapProperty);
             newProperty.FindPropertyRelative("m_Name").stringValue = compositeName;
@@ -326,7 +326,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
                     continue;
 
-                newProperty = AddBinding(actionProperty, actionMapProperty);
+                newProperty = AddBinding(actionProperty, actionMapProperty, group);
                 newProperty.FindPropertyRelative("m_Name").stringValue = field.Name;
                 newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.PartOfComposite;
             }

@@ -44,6 +44,14 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        public string selectedControlSchemeBindingGroup
+        {             
+            get
+            {
+                return m_SelectedControlSchemeIndex < 0 ? null : controlSchemes[m_SelectedControlSchemeIndex].bindingGroup;
+            } 
+        }
+
         public string selectedDevice
         {
             get

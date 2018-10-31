@@ -90,7 +90,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
             DrawPathPicker();
-            DrawUseInControlSchemes();
             EditorGUILayout.Space();
             DrawInteractionsPicker();
             EditorGUILayout.Space();
@@ -127,9 +126,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
+            EditorGUI.indentLevel++;
             if (m_GeneralFoldout)
             {
-                EditorGUI.indentLevel++;
 
                 var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
                 DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
@@ -139,8 +138,9 @@ namespace UnityEngine.Experimental.Input.Editor
                         OnBindingModified(s);
                     });
 
-                EditorGUI.indentLevel--;
+                DrawUseInControlSchemes();
             }
+            EditorGUI.indentLevel--;
         }
 
         protected virtual void DrawUseInControlSchemes()
@@ -149,7 +149,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUI.indentLevel++;
             EditorGUILayout.LabelField(s_UseInSchemesGui, EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical();
             foreach (var scheme in m_ControlSchemes)
@@ -170,7 +169,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
             EditorGUILayout.EndVertical();
-            EditorGUI.indentLevel--;
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
