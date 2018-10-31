@@ -663,8 +663,8 @@ MonoBehaviour:
   controls:
     m_Asset: {fileID: 11400000, guid: e0f46a37bbc4f4bf8ad42ad37bb6d56a, type: 3}
   ui: {fileID: 223924828555847734}
-  menuUI: {fileID: 0}
-  inGameUI: {fileID: 0}
+  menuUI: {fileID: 1592809613891828}
+  inGameUI: {fileID: 1714024106017884}
   fireHintsUI: {fileID: 0}
   moveHintsUI: {fileID: 0}
   lookHintsUI: {fileID: 0}

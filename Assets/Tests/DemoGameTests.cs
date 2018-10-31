@@ -108,10 +108,32 @@ public partial class DemoGameTests : DemoGameTestFixture
 
     [Test]
     [Category("Demo")]
-    [Ignore("TODO")]
-    public void TODO_Demo_CanEnterInGameMenu()
+    public void Demo_CanEnterAndExitInGameMenu()
     {
-        Assert.Fail();
+        Click("SinglePlayerButton");
+
+        Assert.That(game.players[0].isInMenu, Is.False);
+
+        Trigger(game.players[0].controls.gameplay.menu);
+
+        Assert.That(game.players[0].isInMenu, Is.True);
+
+        Trigger(game.players[0].controls.gameplay.menu);
+
+        Assert.That(game.players[0].isInMenu, Is.False);
+    }
+
+    [Test]
+    [Category("Demo")]
+    public void Demo_CannotControlPlayerWhileInMenu()
+    {
+        Click("SinglePlayerButton");
+
+        Trigger(game.players[0].controls.gameplay.menu);
+
+        Assert.That(game.players[0].controls.gameplay.move.enabled, Is.False);
+        Assert.That(game.players[0].controls.gameplay.look.enabled, Is.False);
+        Assert.That(game.players[0].controls.gameplay.fire.enabled, Is.False);
     }
 
     [Test]

@@ -28,7 +28,7 @@ partial class DemoGameTests
     public void TODO_Demo_SinglePlayer_CanEndGame()
     {
         Click("SinglePlayerButton");
-        Trigger("gameplay/escape");
+        Trigger("gameplay/menu");
         Click("ExitButton");
 
         Assert.That(game.state, Is.EqualTo(DemoGame.State.InMainMenu));
@@ -42,7 +42,7 @@ partial class DemoGameTests
     public void TODO_Demo_SinglePlayer_CanEndGame_AndStartNewGame()
     {
         Click("SinglePlayerButton");
-        Trigger("gameplay/escape");
+        Trigger("gameplay/menu");
         Click("ExitButton");
         Click("SinglePlayerButton");
 
@@ -57,7 +57,7 @@ partial class DemoGameTests
     public void TODO_Demo_SinglePlayer_CanBringUpInGameMenu()
     {
         Click("SinglePlayerButton");
-        Trigger("gameplay/escape");
+        Trigger("gameplay/menu");
 
         Assert.That(game.players[0].ui.enabled, Is.True);
         Assert.That(game.players[0].controls.gameplay.enabled, Is.False);

@@ -220,11 +220,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (actions == null)
                 throw new ArgumentNullException("actions");
 
-            var index = FindUserIndex(user);
-            if (index == -1)
+            var userIndex = FindUserIndex(user);
+            if (userIndex == -1)
                 throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
 
-            s_AllUserData[index].actions = actions;
+            s_AllUserData[userIndex].actions = actions;
+            AssignDevicesToActionsIfNecessary(userIndex);
         }
 
         ////TODO: keep copy of reference and if two users end up with the same reference, automatically all MakePrivateCopyOfActions
@@ -543,17 +544,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
         public static void PauseHaptics(this IInputUser user)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         public static void ResumeHaptics(this IInputUser user)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         public static void ResetHaptics(this IInputUser user)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         /// <summary>
@@ -808,7 +809,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 }
 
                 if (needToNotifyAboutChangedDevices)
+                {
+                    AssignDevicesToActionsIfNecessary(m_UserIndex);
                     Notify(s_AllUsers[m_UserIndex], InputUserChange.DevicesChanged);
+                }
 
                 return this;
             }

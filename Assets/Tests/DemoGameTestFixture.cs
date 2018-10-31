@@ -246,7 +246,12 @@ public class DemoGameTestFixture
             throw new ArgumentException("action");
 
         // And trigger it.
-        input.Trigger(actionInstance);
+        Trigger(actionInstance);
+    }
+
+    public void Trigger(InputAction action)
+    {
+        input.Trigger(action);
     }
 
     /// <summary>

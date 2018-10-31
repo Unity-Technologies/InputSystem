@@ -71,9 +71,9 @@ partial class DemoGameTests
         Assert.That(game.players[1].GetAssignedInputDevices(), Is.EquivalentTo(new[] {Gamepad.all[1]}));
 
         Assert.That(game.players[0].controls.gameplay.move.controls,
-            Is.Not.EquivalentTo(game.players[0].controls.gameplay.move.controls));
+            Is.Not.EquivalentTo(game.players[1].controls.gameplay.move.controls));
 
-        // Press escape on gamepad #2 to bring up in-game menu for second player.
+        // Press menu button on gamepad #2 to bring up in-game menu for second player.
         Press(Gamepad.all[1].startButton);
 
         Assert.That(game.players[0].isInMenu, Is.False);

@@ -75,7 +75,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 
     public bool isInMenu
     {
-        get { return false; }
+        get { return menuUI.activeSelf; }
     }
 
     public void Start()
@@ -150,8 +150,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
             }
         }
 
-        // Start with the gameplay actions being active.
-        controls.gameplay.Enable();
+        StartGame();
     }
 
     /// <summary>
@@ -162,6 +161,10 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         // In multi-player, we always join players through specific devices. These should get
         // assigned to the player right away.
         Debug.Assert(this.GetAssignedInputDevices().Count > 0);
+
+        // In multi-player, we don't want players to be able to seamlessly switch between devices
+        // so we restrict players to just their assigned devices when binding actions.
+        this.BindOnlyToAssignedInputDevices();
 
         // Associate our InputUser with the actions we're using.
         this.AssignInputActions(controls);
@@ -181,8 +184,16 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
             ////TODO: what to do here?
         }
 
+        StartGame();
+    }
+
+    private void StartGame()
+    {
         // Start with the gameplay actions being active.
         controls.gameplay.Enable();
+
+        // And menu not being active.
+        menuUI.SetActive(false);
     }
 
     /// <summary>
@@ -290,8 +301,36 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         }
     }
 
-    public void OnEscape(InputAction.CallbackContext context)
+    public void OnMenu(InputAction.CallbackContext context)
     {
+        if (isInMenu)
+        {
+            // Leave menu.
+
+            this.ResumeHaptics();
+
+            controls.gameplay.Enable();
+            controls.menu.Disable();///REVIEW: this should likely be left to the UI input module
+
+            menuUI.SetActive(false);
+        }
+        else
+        {
+            // Enter menu.
+
+            this.PauseHaptics();
+
+            controls.gameplay.Disable();
+            controls.menu.Enable();///REVIEW: this should likely be left to the UI input module
+
+            // We do want the menu toggle to remain active. Rather than moving the action to its
+            // own separate action map, we just go and enable that one single action from the
+            // gameplay actions.
+            // NOTE: This will cause gameplay.enabled to remain true.
+            controls.gameplay.menu.Enable();
+
+            menuUI.SetActive(true);
+        }
     }
 
     /// <summary>
@@ -315,12 +354,6 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     public void OnCollisionStay()
     {
         m_IsGrounded = true;
-    }
-
-    public void ShowMenu()
-    {
-        //pause haptics
-        //disable game controls / switch to menu actions
     }
 
     public void Update()
@@ -378,29 +411,5 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);
         newProjectile.GetComponent<MeshRenderer>().material.color =
             new Color(Random.value, Random.value, Random.value, 1.0f);
-    }
-
-    private void OnGotoMenu()
-    {
-        // Pause haptics effects while we are in the menu.
-        this.PauseHaptics();
-
-        // Switch from gameplay actions to menu actions.
-        //user.SetActions(controls.menu);
-
-        // Activate the UI.
-        ui.gameObject.SetActive(true);
-    }
-
-    private void OnResumeGame()
-    {
-        // Deactivate the UI.
-        ui.gameObject.SetActive(false);
-
-        // Resume playback of haptics effects.
-        this.ResumeHaptics();
-
-        // Switch back to gameplay controls.
-        //user.SetActions(controls.gameplay);
     }
 }

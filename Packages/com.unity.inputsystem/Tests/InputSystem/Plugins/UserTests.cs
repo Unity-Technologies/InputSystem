@@ -684,8 +684,14 @@ internal class UserTests : InputTestFixture
     [Ignore("TODO")]
     public void TODO_Users_CanGetAndSetCustomBindings()
     {
-        var user = new TestUser();
+        Assert.Fail();
+    }
 
+    [Test]
+    [Category("Users")]
+    [Ignore("TODO")]
+    public void TODO_Users_CanPauseAndResumeHaptics()
+    {
         Assert.Fail();
     }
 

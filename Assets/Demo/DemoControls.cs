@@ -26,7 +26,7 @@ public class DemoControls : InputActionAssetReference
         m_gameplay_move = m_gameplay.GetAction("move");
         m_gameplay_look = m_gameplay.GetAction("look");
         m_gameplay_jump = m_gameplay.GetAction("jump");
-        m_gameplay_escape = m_gameplay.GetAction("escape");
+        m_gameplay_menu = m_gameplay.GetAction("menu");
         // menu
         m_menu = asset.GetActionMap("menu");
         m_menu_navigate = m_menu.GetAction("navigate");
@@ -45,7 +45,7 @@ public class DemoControls : InputActionAssetReference
         m_gameplay_move = null;
         m_gameplay_look = null;
         m_gameplay_jump = null;
-        m_gameplay_escape = null;
+        m_gameplay_menu = null;
         if (m_MenuActionsCallbackInterface != null)
         {
             menu.SetCallbacks(null);
@@ -79,7 +79,7 @@ public class DemoControls : InputActionAssetReference
     private InputAction m_gameplay_move;
     private InputAction m_gameplay_look;
     private InputAction m_gameplay_jump;
-    private InputAction m_gameplay_escape;
+    private InputAction m_gameplay_menu;
     public struct GameplayActions
     {
         private DemoControls m_Wrapper;
@@ -88,7 +88,7 @@ public class DemoControls : InputActionAssetReference
         public InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
         public InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
         public InputAction @jump { get { return m_Wrapper.m_gameplay_jump; } }
-        public InputAction @escape { get { return m_Wrapper.m_gameplay_escape; } }
+        public InputAction @menu { get { return m_Wrapper.m_gameplay_menu; } }
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -111,9 +111,9 @@ public class DemoControls : InputActionAssetReference
                 jump.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
                 jump.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
                 jump.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
-                escape.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnEscape;
-                escape.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnEscape;
-                escape.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnEscape;
+                menu.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
+                menu.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
+                menu.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -130,9 +130,9 @@ public class DemoControls : InputActionAssetReference
                 jump.started += instance.OnJump;
                 jump.performed += instance.OnJump;
                 jump.cancelled += instance.OnJump;
-                escape.started += instance.OnEscape;
-                escape.performed += instance.OnEscape;
-                escape.cancelled += instance.OnEscape;
+                menu.started += instance.OnMenu;
+                menu.performed += instance.OnMenu;
+                menu.cancelled += instance.OnMenu;
             }
         }
     }
@@ -235,7 +235,7 @@ public interface IGameplayActions
     void OnMove(InputAction.CallbackContext context);
     void OnLook(InputAction.CallbackContext context);
     void OnJump(InputAction.CallbackContext context);
-    void OnEscape(InputAction.CallbackContext context);
+    void OnMenu(InputAction.CallbackContext context);
 }
 public interface IMenuActions
 {
