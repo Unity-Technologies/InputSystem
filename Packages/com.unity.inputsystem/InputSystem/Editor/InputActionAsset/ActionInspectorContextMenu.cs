@@ -102,6 +102,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             actionLine.AddCompositeBinding((string)compositeName, m_Toolbar.selectedControlSchemeBindingGroup);
             m_AssetInspectorWindow.Apply();
+            // We need to delay one frame because the tree needs to rebuild first
+            EditorApplication.delayCall += () =>
+            {
+                m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
+            };
         }
 
         private void OnAddBinding(object actionLineObj)
@@ -111,6 +116,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             actionLine.AddBinding(m_Toolbar.selectedControlSchemeBindingGroup);
             m_AssetInspectorWindow.Apply();
+            // We need to delay one frame because the tree needs to rebuild first
+            EditorApplication.delayCall += () =>
+            {
+                m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
+            };
         }
 
         public void OnAddAction()

@@ -344,6 +344,23 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
         }
+
+        public void SelectNewBindingRow(ActionTreeItem actionLine)
+        {
+            // Since the tree is rebuilt, we need to find action line with matching id of the current tree
+            ActionTreeItem action = (ActionTreeItem) FindItem(actionLine.id, rootItem);
+            var newRow = action.children.Last();
+            if (newRow.hasChildren)
+                newRow = newRow.children.First();
+            SetSelection(new List<int>() { newRow.id });
+            var selectedRow = FindItem(newRow.id, rootItem);
+            while (selectedRow.parent != null)
+            {
+                SetExpanded(selectedRow.id, true);
+                selectedRow = selectedRow.parent;
+            }
+            OnSelectionChanged();
+        }
     }
 }
 #endif // UNITY_EDITOR
