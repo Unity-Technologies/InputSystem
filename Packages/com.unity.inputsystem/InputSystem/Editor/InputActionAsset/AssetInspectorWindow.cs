@@ -31,9 +31,11 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 actionTreeBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
                 actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
+                actionTreeBackground.margin = new RectOffset(4, 4, 4, 4);
 
                 propertiesBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "propertiesBackground.png");
                 propertiesBackground.border = new RectOffset(3, 3, 3, 3);
+                propertiesBackground.margin = new RectOffset(4, 4, 4, 4);
 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
@@ -71,6 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_DirtyTitle;
         [SerializeField]
         GUIContent m_Title;
+        Vector2 m_PropertiesScroll;
 
         private void OnEnable()
         {
@@ -273,19 +276,15 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.Space(5);
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.Space();
-
             //Draw columns
             EditorGUILayout.BeginHorizontal();
-            var columnOneRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
-            var columnTwoRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
-            DrawActionMapsColumn(columnOneRect);
-            DrawActionsColumn(columnTwoRect);
-            DrawPropertiesColumn();
+
+            var columnAreaWidth = position.width - Styles.actionTreeBackground.margin.left - Styles.actionTreeBackground.margin.left - Styles.propertiesBackground.margin.right;
+            DrawActionMapsColumn(columnAreaWidth * 0.22f);
+            DrawActionsColumn(columnAreaWidth * 0.38f);
+            DrawPropertiesColumn(columnAreaWidth * 0.40f);
             EditorGUILayout.EndHorizontal();
 
-            // Bottom margin
-            GUILayout.Space(3);
             EditorGUILayout.EndVertical();
 
             if (Event.current.type == EventType.ValidateCommand)
@@ -301,8 +300,13 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void DrawActionMapsColumn(Rect columnRect)
+        private void DrawActionMapsColumn(float width)
         {
+            EditorGUILayout.BeginVertical(Styles.actionTreeBackground, GUILayout.MinWidth(width), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+            var columnRect = GUILayoutUtility.GetLastRect();
+            
             var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             columnRect.y += labelRect.height;
@@ -329,8 +333,13 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionMapsTree.OnGUI(columnRect);
         }
 
-        private void DrawActionsColumn(Rect columnRect)
+        private void DrawActionsColumn(float width)
         {
+            EditorGUILayout.BeginVertical(Styles.actionTreeBackground, GUILayout.MaxWidth(width), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+            var columnRect = GUILayoutUtility.GetLastRect();
+            
             var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             columnRect.y += labelRect.height;
@@ -356,9 +365,10 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree.OnGUI(columnRect);
         }
 
-        private void DrawPropertiesColumn()
+        private void DrawPropertiesColumn(float width)
         {
-            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width * (1 / 3f)));
+            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(width));
+
 
             var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2, GUILayout.ExpandWidth(true));
             rect.x -= 2;
@@ -371,12 +381,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (m_PropertyView != null)
             {
+                m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
                 m_PropertyView.OnGUI();
+                EditorGUILayout.EndScrollView();
             }
             else
             {
                 GUILayout.FlexibleSpace();
             }
+            
 
             EditorGUILayout.EndVertical();
         }
