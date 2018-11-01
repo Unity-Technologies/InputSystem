@@ -85,8 +85,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     || !string.IsNullOrEmpty(m_DeviceFilter))
                 {
                     FilterResultsByGroup(root);
-                    FilterResults(root, FilterByDevice);
-                    FilterResults(root, FilterByName);
+                    FilterResultsByDevice(root);
+                    FilterResults(root, MatchNameFilter);
                 }
             }
             return root;
@@ -152,11 +152,35 @@ namespace UnityEngine.Experimental.Input.Editor
                 var listToRemove = new List<TreeViewItem>();
                 foreach (var child in item.children)
                 {
-                    if (!FilterByGroup(child))
+                    if (!MatchGroupFilter(child))
                     {
                         listToRemove.Add(child);
                     }
                     FilterResultsByGroup(child);
+                }
+                foreach (var itemToRemove in listToRemove)
+                {
+                    item.children.Remove(itemToRemove);
+                }
+
+                return !item.hasChildren;
+            }
+            return true;
+        }
+
+        // Return true is the child node should be removed from the parent
+        private bool FilterResultsByDevice(TreeViewItem item)
+        {
+            if (item.hasChildren)
+            {
+                var listToRemove = new List<TreeViewItem>();
+                foreach (var child in item.children)
+                {
+                    if (!MatchDeviceFilter(child))
+                    {
+                        listToRemove.Add(child);
+                    }
+                    FilterResultsByDevice(child);
                 }
                 foreach (var itemToRemove in listToRemove)
                 {
@@ -196,7 +220,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return true;
         }
 
-        private bool FilterByName(TreeViewItem item)
+        private bool MatchNameFilter(TreeViewItem item)
         {
             if (string.IsNullOrEmpty(m_NameFilter))
                 return true;
@@ -205,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return item.displayName.ToLower().Contains(m_NameFilter);
         }
 
-        private bool FilterByGroup(TreeViewItem item)
+        private bool MatchGroupFilter(TreeViewItem item)
         {
             if (string.IsNullOrEmpty(m_SchemeBindingGroupFilter))
                 return true;
@@ -214,39 +238,37 @@ namespace UnityEngine.Experimental.Input.Editor
                 return true;
 
             if (item is CompositeGroupTreeItem)
-            {
-                return !FilterResults(item, FilterByGroup);
-            }
+                return !FilterResults(item, MatchGroupFilter);
             
             var binding = item as BindingTreeItem;
             if (binding != null)
             {
-                if (!binding.groups.Contains(m_SchemeBindingGroupFilter))
-                    return false;
+                if (string.IsNullOrEmpty(binding.path))
+                    return true;
+                return binding.groups.Contains(m_SchemeBindingGroupFilter);
             }
-            else
-            {
-                return false;
-            }
-            return true;
+            return false;
         }
 
-        private bool FilterByDevice(TreeViewItem item)
+        private bool MatchDeviceFilter(TreeViewItem item)
         {
             if (string.IsNullOrEmpty(m_DeviceFilter))
                 return true;
 
+            if (item is ActionTreeItem)
+                return true;
+
+            if (item is CompositeGroupTreeItem)
+                return !FilterResults(item, MatchDeviceFilter);
+            
             var binding = item as BindingTreeItem;
             if (binding != null)
             {
-                if (!binding.path.StartsWith(m_DeviceFilter))
-                    return false;
+                if (string.IsNullOrEmpty(binding.path))
+                    return true;
+                return binding.path.StartsWith(m_DeviceFilter);
             }
-            else
-            {
-                return false;
-            }
-            return true;
+            return false;
         }
 
         protected override void RowGUI(RowGUIArgs args)
