@@ -54,14 +54,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             get
             {
-                Canvas myCanvas = canvas;
+                var myCanvas = canvas;
                 return myCanvas != null ? myCanvas.worldCamera : null;
             }
         }
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            TrackedPointerEventData trackedEventData = eventData as TrackedPointerEventData;
+            var trackedEventData = eventData as TrackedPointerEventData;
             if (trackedEventData != null)
             {
                 PerformRaycast(trackedEventData, resultAppendList);
@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             m_RaycastResultsCache.Clear();
             SortedRaycastGraphics(canvas, ray, m_RaycastResultsCache);
-            Vector2 screenPosition = Vector2.zero;
+            var screenPosition = Vector2.zero;
             if (m_RaycastResultsCache.Count == 0)
             {
                 Vector3 endPosition = ray.origin + (ray.direction.normalized * hitDistance);
@@ -117,16 +117,16 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 screenPosition = m_RaycastResultsCache[0].screenPosition;
             }
 
-            Vector2 thisFrameDelta = screenPosition - eventData.position;
+            var thisFrameDelta = screenPosition - eventData.position;
             eventData.position = screenPosition;
             eventData.delta = thisFrameDelta;
 
             //Now that we have a list of sorted hits, process any extra settings and filters.
             for (var i = 0; i < m_RaycastResultsCache.Count; i++)
             {
-                bool validHit = true;
+                var validHit = true;
 
-                RaycastHitData hitData = m_RaycastResultsCache[i];
+                var hitData = m_RaycastResultsCache[i];
 
                 var go = hitData.graphic.gameObject;
                 if (ignoreReversedGraphics)
@@ -179,18 +179,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     {
                         s_SortedGraphics.Add(new RaycastHitData(graphic, worldPos, screenPos, distance));
                     }
-
-                    {
-                        Vector3[] corners = new Vector3[4];
-                        graphic.rectTransform.GetWorldCorners(corners);
-                    }
-                }
-                else
-                {
-                    {
-                        Vector3[] corners = new Vector3[4];
-                        graphic.rectTransform.GetWorldCorners(corners);
-                    }
                 }
             }
 
@@ -201,27 +189,27 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private bool RayIntersectsRectTransform(RectTransform transform, Ray ray, out Vector3 worldPosition, out float distance)
         {
-            Vector3[] corners = new Vector3[4];
+            var corners = new Vector3[4];
             transform.GetWorldCorners(corners);
-            Plane plane = new Plane(corners[0], corners[1], corners[2]);
+            var plane = new Plane(corners[0], corners[1], corners[2]);
 
             float enter;
             if (plane.Raycast(ray, out enter))
             {
-                Vector3 intersection = ray.GetPoint(enter);
+                var intersection = ray.GetPoint(enter);
 
-                Vector3 bottomEdge = corners[3] - corners[0];
-                Vector3 leftEdge = corners[1] - corners[0];
-                float bottomDot = Vector3.Dot(intersection - corners[0], bottomEdge);
-                float leftDot = Vector3.Dot(intersection - corners[0], leftEdge);
+                var bottomEdge = corners[3] - corners[0];
+                var leftEdge = corners[1] - corners[0];
+                var bottomDot = Vector3.Dot(intersection - corners[0], bottomEdge);
+                var leftDot = Vector3.Dot(intersection - corners[0], leftEdge);
 
                 // If the intersection is right of the left edge and above the bottom edge.
                 if (leftDot >= 0 && bottomDot >= 0)
                 {
-                    Vector3 topEdge = corners[1] - corners[2];
-                    Vector3 rightEdge = corners[3] - corners[2];
-                    float topDot = Vector3.Dot(intersection - corners[2], topEdge);
-                    float rightDot = Vector3.Dot(intersection - corners[2], rightEdge);
+                    var topEdge = corners[1] - corners[2];
+                    var rightEdge = corners[3] - corners[2];
+                    var topDot = Vector3.Dot(intersection - corners[2], topEdge);
+                    var rightDot = Vector3.Dot(intersection - corners[2], rightEdge);
 
                     //If the intersection is left of the right edge, and below the top edge
                     if (topDot >= 0 && rightDot >= 0)

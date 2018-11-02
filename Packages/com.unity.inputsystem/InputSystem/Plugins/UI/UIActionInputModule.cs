@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public class UIActionInputModule : UIInputModule
     {
-        private static void SwapProperty(ref InputActionProperty oldProperty, InputActionProperty newProperty, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
+        private static void SwapAction(ref InputActionProperty oldProperty, InputActionProperty newProperty, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
             if (oldProperty != null)
             {
@@ -56,16 +56,16 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             public InputActionProperty position
             {
                 get { return m_Position; }
-                set { SwapProperty(ref m_Position, value, m_ActionsHooked, actionCallback); }
+                set { SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback); }
             }
 
             public InputActionProperty phase
             {
                 get { return m_Phase; }
-                set { SwapProperty(ref m_Phase, value, m_ActionsHooked, actionCallback); }
+                set { SwapAction(ref m_Phase, value, m_ActionsHooked, actionCallback); }
             }
 
-            public bool ActionsHooked
+            public bool actionsHooked
             {
                 get { return m_ActionsHooked; }
             }
@@ -135,22 +135,22 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             public InputActionProperty position
             {
                 get { return m_Position; }
-                set { SwapProperty(ref m_Position, value, m_ActionsHooked, actionCallback); }
+                set { SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback); }
             }
 
             public InputActionProperty orientation
             {
                 get { return m_Orientation; }
-                set { SwapProperty(ref m_Orientation, value, m_ActionsHooked, actionCallback); }
+                set { SwapAction(ref m_Orientation, value, m_ActionsHooked, actionCallback); }
             }
 
             public InputActionProperty select
             {
                 get { return m_Select; }
-                set { SwapProperty(ref m_Select, value, m_ActionsHooked, actionCallback); }
+                set { SwapAction(ref m_Select, value, m_ActionsHooked, actionCallback); }
             }
 
-            public bool ActionsHooked
+            public bool actionsHooked
             {
                 get { return m_ActionsHooked; }
             }
@@ -211,10 +211,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <summary>
         /// This enables background event processing, so that the Input Module can continue sending UI events even in the background.
         /// </summary>
-        public bool ForceEventsWithoutFocus
+        public bool sendEventsWhenInBackground
         {
-            get { return m_ForceInputWithoutFocus; }
-            set { m_ForceInputWithoutFocus = value; }
+            get { return m_SendEventsWhenInBackground; }
+            set { m_SendEventsWhenInBackground = value; }
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty point
         {
             get { return m_PointAction; }
-            set { SwapProperty(ref m_PointAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_PointAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty move
         {
             get { return m_MoveAction; }
-            set { SwapProperty(ref m_MoveAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_MoveAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -244,7 +244,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty scrollWheel
         {
             get { return m_ScrollWheelAction; }
-            set { SwapProperty(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty leftClick
         {
             get { return m_LeftClickAction; }
-            set { SwapProperty(ref m_LeftClickAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_LeftClickAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty middleClick
         {
             get { return m_MiddleClickAction; }
-            set { SwapProperty(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty rightClick
         {
             get { return m_RightClickAction; }
-            set { SwapProperty(ref m_RightClickAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_RightClickAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty submit
         {
             get { return m_SubmitAction; }
-            set { SwapProperty(ref m_SubmitAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_SubmitAction, value, m_ActionsHooked, OnAction); }
         }
 
         /// <summary>
@@ -294,7 +294,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public InputActionProperty cancel
         {
             get { return m_CancelAction; }
-            set { SwapProperty(ref m_CancelAction, value, m_ActionsHooked, OnAction); }
+            set { SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction); }
         }
 
         protected override void Awake()
@@ -361,7 +361,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private bool ShouldIgnoreEventsOnNoFocus()
         {
-            if (m_ForceInputWithoutFocus)
+            if (m_SendEventsWhenInBackground)
                 return true;
 
             switch (SystemInfo.operatingSystemFamily)
@@ -730,16 +730,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 responder.HookActions();
                 m_Touches[i] = responder;
             }
-                
+
 
             for (int i = 0; i < m_TrackedDevices.Count; i++)
             {
                 var responder = m_TrackedDevices[i];
                 responder.HookActions();
                 m_TrackedDevices[i] = responder;
-
             }
-                
         }
 
         private void UnhookActions()
@@ -794,7 +792,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         [Tooltip("Enables UI events regardless of focus state.")]
         [SerializeField]
-        private bool m_ForceInputWithoutFocus;
+        private bool m_SendEventsWhenInBackground;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position

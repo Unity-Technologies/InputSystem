@@ -288,7 +288,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (!deviceState.changedThisFrame)
                 return;
 
-            TrackedPointerEventData eventData = GetOrCreateCachedTrackedPointerEvent();
+            var eventData = GetOrCreateCachedTrackedPointerEvent();
             eventData.Reset();
             deviceState.CopyTo(eventData);
 
@@ -328,7 +328,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var movement = joystickState.move;
             if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
             {
-                float time = Time.unscaledTime;
+                var time = Time.unscaledTime;
 
                 var moveVector = joystickState.move;
 
@@ -348,7 +348,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 if (moveDirection != MoveDirection.None)
                 {
-                    bool allow = true;
+                    var allow = true;
                     if (internalJoystickState.consecutiveMoveCount != 0)
                     {
                         if (internalJoystickState.consecutiveMoveCount > 1)

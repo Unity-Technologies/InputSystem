@@ -320,7 +320,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         public void CopyFrom(PointerEventData eventData)
         {
-            InlinedArray<GameObject> hoverTargets = m_InternalData.hoverTargets;
+            var hoverTargets = m_InternalData.hoverTargets;
             hoverTargets.ClearWithCapacity();
             hoverTargets.Append(eventData.hovered);
             m_InternalData.hoverTargets = hoverTargets;

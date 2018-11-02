@@ -37,8 +37,8 @@ internal class UITests : InputTestFixture
         // Set up GameObject with EventSystem.
         var systemObject = new GameObject("System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
-        UIActionInputModule uiModule = systemObject.AddComponent<UIActionInputModule>();
-        uiModule.ForceEventsWithoutFocus = true;
+        var uiModule = systemObject.AddComponent<UIActionInputModule>();
+        uiModule.sendEventsWhenInBackground = true;
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
         objects.eventSystem.InvokeUpdate(); // Initial update only sets current module.
@@ -605,84 +605,6 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
         Assert.That(rightChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
         Assert.That(rightChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
-        /*
-
-
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
-
-        // Check basic down/up
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = (ushort)(1 << (int)MouseState.Button.Left) });
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = (ushort)0 });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
-
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
-
-        // Check down and drag
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = (ushort)(1 << (int)MouseState.Button.Right) });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
-
-        // Move to new location on left child
-        InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(100, 200));
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
-
-        // Move children
-        InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(400, 200));
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-        rightChildReceiver.Reset();
-
-        // Release button
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 200), buttons = (ushort)0 });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Up));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.EndDrag));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Drop));
-        rightChildReceiver.Reset();
-
-        // Check Scroll
-        InputSystem.QueueDeltaStateEvent(mouse.scroll, Vector2.one);
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
-
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(0));
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Scroll));
-        rightChildReceiver.Reset();
-        */
     }
 
     [Test]

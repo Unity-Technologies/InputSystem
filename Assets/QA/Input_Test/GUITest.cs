@@ -9,14 +9,14 @@ public class GUITest : MonoBehaviour
     {
         if (initialSelectedGameObject != null)
         {
-            EventSystem current = EventSystem.current;
-            if (current != null)
-                EventSystem.current.SetSelectedGameObject(initialSelectedGameObject);
+            var eventSystem = EventSystem.current;
+            if (eventSystem != null)
+                eventSystem.SetSelectedGameObject(initialSelectedGameObject);
         }
     }
 
     public void OnButtonClick()
     {
-        Debug.Log("Button Click Recieved");
+        Debug.Log("Button Click Received");
     }
 }

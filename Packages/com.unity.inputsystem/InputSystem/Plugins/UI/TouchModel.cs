@@ -163,6 +163,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.pointerPress = m_InternalData.pressedGameObject;
             eventData.rawPointerPress = m_InternalData.pressedGameObjectRaw;
             eventData.pointerDrag = m_InternalData.draggedGameObject;
+
+            eventData.hovered.Clear();
+            eventData.hovered.AddRange(m_InternalData.hoverTargets);
         }
 
         public void CopyFrom(PointerEventData eventData)
@@ -175,6 +178,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_InternalData.pressedGameObject = eventData.pointerPress;
             m_InternalData.pressedGameObjectRaw = eventData.rawPointerPress;
             m_InternalData.draggedGameObject = eventData.pointerDrag;
+
+            var hoverTargets = m_InternalData.hoverTargets;
+            hoverTargets.ClearWithCapacity();
+            hoverTargets.Append(eventData.hovered);
+            m_InternalData.hoverTargets = hoverTargets;
         }
 
         private PointerPhase m_SelectPhase;
