@@ -1329,6 +1329,36 @@ partial class CoreTests
         Assert.That(device.leftStick.x.displayName, Is.EqualTo("Horizontal"));
     }
 
+    class BaseClassWithControl : InputDevice
+    {
+        public AxisControl controlFromBase { get; set; }
+    }
+
+    class DerivedClassModifyingcontrolFromBaseClass : BaseClassWithControl
+    {
+        // One kink is that InputControlAttribute can only go on fields and properties
+        // so we have to put it on some unrelated control.
+        [InputControl(name = "controlFromBase", format = "SHRT")]
+        public ButtonControl controlFromDerived { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanModifyControlDefinedInBaseClass()
+    {
+        InputSystem.RegisterLayout<BaseClassWithControl>();
+        InputSystem.RegisterLayout<DerivedClassModifyingcontrolFromBaseClass>();
+
+        var baseLayout = InputSystem.TryLoadLayout<BaseClassWithControl>();
+        var derivedLayout = InputSystem.TryLoadLayout<DerivedClassModifyingcontrolFromBaseClass>();
+
+        Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
+        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
+
+        // This is probably somewhat counterintuitive but if there's InputControlAttributes on a property or field,
+        // there won't be a control generated automatically from the field or property.
+        Assert.That(() => derivedLayout["controlFromDerived"], Throws.TypeOf<KeyNotFoundException>());
+    }
     [Test]
     [Category("Layouts")]
     public void Layouts_CanMarkControlAsNoisy()

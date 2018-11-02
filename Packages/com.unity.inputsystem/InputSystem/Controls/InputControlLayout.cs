@@ -789,7 +789,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         // InputControlAttribute applied to it or has an InputControl-derived value type.
         private static void AddControlItemsFromFields(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             AddControlItemsFromMembers(fields, controlLayouts, layoutName);
         }
 
@@ -797,7 +797,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         // InputControlAttribute applied to it or has an InputControl-derived value type.
         private static void AddControlItemsFromProperties(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             AddControlItemsFromMembers(properties, controlLayouts, layoutName);
         }
 
@@ -860,7 +860,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
         {
             // InputControlAttribute can be applied multiple times to the same member,
-            // generating a separate control for each ocurrence. However, it can also
+            // generating a separate control for each occurrence. However, it can also
+            // generating a separate control for each occurrence. However, it can also
             // not be applied at all in which case we still add a control layout (the
             // logic that called us already made sure the member is eligible for this kind
             // of operation).

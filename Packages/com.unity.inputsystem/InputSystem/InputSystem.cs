@@ -385,6 +385,12 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
+        public static InputControlLayout TryLoadLayout<TControl>()
+            where TControl : InputControl
+        {
+            return s_Manager.TryLoadControlLayout(typeof(TControl));
+        }
+
         #endregion
 
         #region Processors

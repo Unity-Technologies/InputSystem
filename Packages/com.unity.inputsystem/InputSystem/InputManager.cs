@@ -561,6 +561,22 @@ namespace UnityEngine.Experimental.Input
                 m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
         }
 
+        public InputControlLayout TryLoadControlLayout(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+            if (!typeof(InputControl).IsAssignableFrom(type))
+                throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+
+            // Find the layout name that the given type was registered with.
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
+                throw new ArgumentException(
+                    string.Format("Type '{0}' has not been registered as a control layout", type.Name), "type");
+
+            return m_Layouts.TryLoadLayout(layoutName);
+        }
+
         public InputControlLayout TryLoadControlLayout(InternedString name)
         {
             return m_Layouts.TryLoadLayout(name);

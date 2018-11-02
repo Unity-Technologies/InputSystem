@@ -6,7 +6,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 
-////TODO: IME support
+////TODO: usages on modifiers so they can be identified regardless of platform conventions
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
