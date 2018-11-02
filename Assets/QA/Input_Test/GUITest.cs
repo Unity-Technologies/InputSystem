@@ -3,6 +3,11 @@ using UnityEngine.EventSystems;
 
 public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandler, ISubmitHandler, ICancelHandler
 {
+    protected override void Awake()
+    {
+        Application.runInBackground = true;
+    }
+
     protected override void OnEnable()
     {
         base.OnEnable();
