@@ -14,6 +14,10 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </remarks>
     public class StickControl : Vector2Control
     {
+        // Set min&max on XY axes.
+        [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis")]
+        [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis")]
+
         [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=0,clampMax=1")]
         public ButtonControl up { get; private set; }
         [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=-1,clampMax=0,invert")]

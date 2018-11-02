@@ -244,6 +244,30 @@ namespace UnityEngine.Experimental.Input
             return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
         }
 
+        /// <summary>
+        /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
+        /// is actuated.
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// Magnitudes do not make sense for all types of controls. For example, a control that represents
+        /// an enumeration of values (such as <see cref="PointerPhaseControl"/>), there is no meaningful
+        /// linear ordering of values (one could derive a linear ordering through the actual enum values but
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Cancelled"/>
+        /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
+        ///
+        /// Controls that have no meaningful magnitude will return -1 when calling this method.
+        /// </remarks>
+        public float EvaluateMagnitude()
+        {
+            return EvaluateMagnitude(currentStatePtr);
+        }
+
+        public virtual float EvaluateMagnitude(IntPtr statePtr)
+        {
+            return -1;
+        }
+
         ////TODO: setting value
 
         // Current value as boxed object.

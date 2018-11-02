@@ -112,11 +112,11 @@ namespace UnityEngine.Experimental.Input.Editor
             boxRect.height -= 2;
             rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
 
-            // background color at the beginning the the row
+            // Background color at the beginning of the row.
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
 
-            // bottom line
+            // Bottom line.
             rowRect.y += rowRect.height - 2;
             rowRect.height = 1;
             Styles.border.Draw(rowRect, GUIContent.none, false, false, false, false);

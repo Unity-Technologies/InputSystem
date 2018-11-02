@@ -60,5 +60,11 @@ namespace UnityEngine.Experimental.Input.Controls
             x.WriteValueInto(statePtr, value.x);
             y.WriteValueInto(statePtr, value.y);
         }
+
+        public override float EvaluateMagnitude(IntPtr statePtr)
+        {
+            ////REVIEW: this can go beyond 1; that okay?
+            return ReadValueFrom(statePtr).magnitude;
+        }
     }
 }

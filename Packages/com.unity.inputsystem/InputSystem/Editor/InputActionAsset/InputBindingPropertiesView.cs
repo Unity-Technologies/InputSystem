@@ -173,6 +173,9 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.indentLevel--;
         }
 
+        ////TODO: interactive picker; if more than one control makes it through the filters, present list of
+        ////      candidates for user to choose from
+
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
         internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
         {

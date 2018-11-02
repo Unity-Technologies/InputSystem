@@ -417,6 +417,66 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             throw new ArgumentException(string.Format("Cannot convert '{0}' to primitive value", value), "value");
         }
+
+        public static implicit operator PrimitiveValue(bool value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(char value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(byte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(sbyte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(short value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(ushort value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(int value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(uint value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(long value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(ulong value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(float value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(double value)
+        {
+            return new PrimitiveValue(value);
+        }
     }
 
     public struct PrimitiveValueOrArray

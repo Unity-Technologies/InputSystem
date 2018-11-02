@@ -567,9 +567,12 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (!control.m_DefaultValue.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
 
-            // Set min and max value.
-            control.m_MinValue = controlItem.minValue;
-            control.m_MaxValue = controlItem.maxValue;
+            // Set min and max value. Don't just overwrite here as the control's constructor may
+            // have set a default value.
+            if (!controlItem.minValue.isEmpty)
+                control.m_MinValue = controlItem.minValue;
+            if (!controlItem.maxValue.isEmpty)
+                control.m_MaxValue = controlItem.maxValue;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);

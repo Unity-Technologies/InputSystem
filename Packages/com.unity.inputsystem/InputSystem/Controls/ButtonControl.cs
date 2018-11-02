@@ -1,4 +1,5 @@
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
@@ -26,6 +27,8 @@ namespace UnityEngine.Experimental.Input.Controls
         public ButtonControl()
         {
             m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_MinValue = 0f;
+            m_MaxValue = 1f;
         }
 
         protected bool IsValueConsideredPressed(float value)

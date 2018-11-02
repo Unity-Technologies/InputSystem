@@ -263,6 +263,28 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanEvaluateMagnitude()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState
+            {
+                leftStick = new Vector2(0.5f, 0.5f),
+                leftTrigger = 0.5f
+            }.WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(gamepad.rightStick.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(gamepad.leftStick.EvaluateMagnitude(),
+            Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick).magnitude).Within(0.00001));
+        Assert.That(gamepad.buttonNorth.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(gamepad.buttonSouth.EvaluateMagnitude(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.EvaluateMagnitude(), Is.EqualTo(0.5).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanReadDefaultValue()
     {
         InputSystem.RegisterLayout<TestDeviceWithDefaultState>();
