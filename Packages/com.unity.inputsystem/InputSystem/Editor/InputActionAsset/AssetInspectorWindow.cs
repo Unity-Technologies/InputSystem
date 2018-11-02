@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
             public static string ResourcesPath
             {
-                get
+                get    
                 {
                     if (EditorGUIUtility.isProSkin)
                         return SharedResourcesPath + "pro/";
@@ -52,9 +52,9 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
-        private InputActionWindowToolbar m_InputActionWindowToolbar;
+        internal InputActionWindowToolbar m_InputActionWindowToolbar;
         [SerializeField]
-        private ActionInspectorContextMenu m_ContextMenu;
+        internal ActionInspectorContextMenu m_ContextMenu;
 
         private InputBindingPropertiesView m_PropertyView;
         internal ActionMapsTree m_ActionMapsTree;
