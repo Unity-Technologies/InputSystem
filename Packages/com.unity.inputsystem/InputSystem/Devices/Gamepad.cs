@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Haptics;
@@ -27,21 +28,21 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Button bit mask.
         /// </summary>
-        /// <seealso cref="Button"/>
+        /// <seealso cref="GamepadButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)Button.North, aliases = new[] { "y", "triangle" })]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" })]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" })]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
-        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)Button.LeftStick)]
-        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)Button.RightStick)]
-        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)Button.LeftShoulder)]
-        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)Button.RightShoulder)]
+        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick)]
+        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick)]
+        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)GamepadButton.LeftShoulder)]
+        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)GamepadButton.RightShoulder)]
         ////REVIEW: seems like these two should get less ambiguous names as well
-        [InputControl(name = "start", layout = "Button", bit = (uint)Button.Start, usage = "Menu")]
-        [InputControl(name = "select", layout = "Button", bit = (uint)Button.Select)]
+        [InputControl(name = "start", layout = "Button", bit = (uint)GamepadButton.Start, usage = "Menu")]
+        [InputControl(name = "select", layout = "Button", bit = (uint)GamepadButton.Select)]
         [FieldOffset(0)]
         public uint buttons;
 
@@ -77,50 +78,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public enum Button
-        {
-            // Dpad buttons. Important to be first in the bitfield as we'll
-            // point the DpadControl to it.
-            // IMPORTANT: Order has to match what is expected by DpadControl.
-            DpadUp,
-            DpadDown,
-            DpadLeft,
-            DpadRight,
-
-            // Face buttons. We go with a north/south/east/west naming as that
-            // clearly disambiguates where we expect the respective button to be.
-            North,
-            East,
-            South,
-            West,
-
-            LeftStick,
-            RightStick,
-            LeftShoulder,
-            RightShoulder,
-
-            Start,
-            Select,
-
-            // Aliases Xbox style.
-            X = West,
-            Y = North,
-            A = South,
-            B = East,
-
-            // Aliases PS4 style.
-            Cross = South,
-            Square = West,
-            Triangle = North,
-            Circle = East,
-        }
-
         public FourCC GetFormat()
         {
             return kFormat;
         }
 
-        public GamepadState WithButton(Button button, bool value = true)
+        public GamepadState WithButton(GamepadButton button, bool value = true)
         {
             var bit = (uint)1 << (int)button;
             if (value)
@@ -129,6 +92,44 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 buttons &= ~bit;
             return this;
         }
+    }
+
+    public enum GamepadButton
+    {
+        // Dpad buttons. Important to be first in the bitfield as we'll
+        // point the DpadControl to it.
+        // IMPORTANT: Order has to match what is expected by DpadControl.
+        DpadUp,
+        DpadDown,
+        DpadLeft,
+        DpadRight,
+
+        // Face buttons. We go with a north/south/east/west naming as that
+        // clearly disambiguates where we expect the respective button to be.
+        North,
+        East,
+        South,
+        West,
+
+        LeftStick,
+        RightStick,
+        LeftShoulder,
+        RightShoulder,
+
+        Start,
+        Select,
+
+        // Aliases Xbox style.
+        X = West,
+        Y = North,
+        A = South,
+        B = East,
+
+        // Aliases PS4 style.
+        Cross = South,
+        Square = West,
+        Triangle = North,
+        Circle = East,
     }
 }
 
@@ -163,6 +164,33 @@ namespace UnityEngine.Experimental.Input
 
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
+
+        ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
+        public ButtonControl this[GamepadButton button]
+        {
+            get
+            {
+                switch (button)
+                {
+                    case GamepadButton.North: return buttonNorth;
+                    case GamepadButton.South: return buttonSouth;
+                    case GamepadButton.East: return buttonEast;
+                    case GamepadButton.West: return buttonWest;
+                    case GamepadButton.Start: return startButton;
+                    case GamepadButton.Select: return selectButton;
+                    case GamepadButton.LeftShoulder: return leftShoulder;
+                    case GamepadButton.RightShoulder: return rightShoulder;
+                    case GamepadButton.LeftStick: return leftStickButton;
+                    case GamepadButton.RightStick: return rightStickButton;
+                    case GamepadButton.DpadUp: return dpad.up;
+                    case GamepadButton.DpadDown: return dpad.down;
+                    case GamepadButton.DpadLeft: return dpad.left;
+                    case GamepadButton.DpadRight: return dpad.right;
+                    default:
+                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
+                }
+            }
+        }
 
         ////TODO: noise filtering
         /// <summary>

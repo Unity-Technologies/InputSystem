@@ -26,35 +26,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="InputUser.AssignInputDevices{TUser,TDevices}"/>
         DevicesChanged,
 
-        /// <summary>
-        /// The user switched to a different set of actions.
-        /// </summary>
-        /// <remarks>
-        /// The changing of actions usually happens when a player changes context. For example,
-        /// when going from gameplay to the menu.
-        /// </remarks>
-        /// <seealso cref="InputUser.GetInputActions{TUser}"/>
-        /// <seealso cref="InputUser.SetInputActions{TUser}"/>
-        ActionsChanged,
-
         ControlSchemeChanged,
 
         NameChanged,
 
+        HandleChanged,
+
         BindingsChanged,
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <seealso cref="InputUser.IsInputActive{TUser}"/>
-        /// <seealso cref="InputUser.ActivateInput{TUser}"/>
-        Activated,
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <seealso cref="InputUser.IsInputActive{TUser}"/>
-        /// <seealso cref="InputUser.PassivateInput{TUser}"/>
-        Passivated,
     }
 }

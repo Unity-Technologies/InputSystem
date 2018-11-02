@@ -17,7 +17,7 @@ using UnityEngine.UI;
 ////TODO: app focus handling
 ////TODO: send IUpdateSelectedHandler.OnUpdateSelected event
 
-public class UITests : InputTestFixture
+internal class UITests : InputTestFixture
 {
     private struct TestObjects
     {
@@ -277,7 +277,7 @@ public class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check Submit
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = (uint)(1 << (int)GamepadState.Button.South) });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = (uint)(1 << (int)GamepadButton.South) });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -287,7 +287,7 @@ public class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check Cancel
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = (uint)(1 << (int)GamepadState.Button.East) });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = (uint)(1 << (int)GamepadButton.East) });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 

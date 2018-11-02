@@ -2,7 +2,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
-public class ArrayHelperTests
+internal class ArrayHelperTests
 {
     [Test]
     [Category("Utilities")]

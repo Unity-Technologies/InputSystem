@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: make this one thread-safe
+
 ////TODO: invalidate data when associated actions re-resolve
 
 ////TODO: add random access capability

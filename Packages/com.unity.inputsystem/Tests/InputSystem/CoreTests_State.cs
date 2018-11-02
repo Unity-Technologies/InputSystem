@@ -349,7 +349,7 @@ partial class CoreTests
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
 
-        var newState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        var newState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
@@ -365,7 +365,7 @@ partial class CoreTests
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
-        var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
@@ -394,7 +394,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         var secondState = new GamepadState {buttons = 0};
 
         InputSystem.QueueStateEvent(gamepad, firstState);
@@ -791,15 +791,15 @@ partial class CoreTests
             });
 
         // Add and immediately expire timeout.
-        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, testRuntime.currentTime + 1,
+        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 1234);
-        testRuntime.currentTime += 2;
+        runtime.currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutFired);
         Assert.That(!monitorFired);
         Assert.That(receivedTimerIndex.Value, Is.EqualTo(1234));
-        Assert.That(receivedTime.Value, Is.EqualTo(testRuntime.currentTime).Within(0.00001));
+        Assert.That(receivedTime.Value, Is.EqualTo(runtime.currentTime).Within(0.00001));
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
 
         timeoutFired = false;
@@ -808,7 +808,7 @@ partial class CoreTests
 
         // Add timeout and obsolete it by state change. Then advance past timeout time
         // and make sure we *don't* get a notification.
-        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, testRuntime.currentTime + 1,
+        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
         InputSystem.Update();
@@ -816,14 +816,14 @@ partial class CoreTests
         Assert.That(monitorFired);
         Assert.That(!timeoutFired);
 
-        testRuntime.currentTime += 2;
+        runtime.currentTime += 2;
         InputSystem.Update();
 
         Assert.That(!timeoutFired);
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.
-        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, testRuntime.currentTime + 1,
+        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 1423);
         InputSystem.RemoveStateChangeMonitorTimeout(monitor, timerIndex: 1423);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
@@ -850,7 +850,7 @@ partial class CoreTests
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor,
-                    testRuntime.currentTime + 1);
+                    runtime.currentTime + 1);
             }, timerExpiredCallback:
             (control, time, monitorIndex, timerIndex) =>
             {
@@ -865,7 +865,7 @@ partial class CoreTests
         Assert.That(monitorFired);
 
         // Expire timer.
-        testRuntime.currentTime += 2;
+        runtime.currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutFired);

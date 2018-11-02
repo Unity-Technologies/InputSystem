@@ -475,6 +475,20 @@ namespace UnityEngine.Experimental.Input.Layouts
             }
         }
 
+        public ControlItem? FindControl(InternedString path)
+        {
+            if (m_Controls == null)
+                return null;
+
+            for (var i = 0; i < m_Controls.Length; ++i)
+            {
+                if (m_Controls[i].name == path)
+                    return m_Controls[i];
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Build a layout programmatically. Primarily for use by layout builders
         /// registered with the system.
@@ -1691,27 +1705,21 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             public const float kBaseScoreForNonGeneratedLayouts = 1.0f;
 
+            public struct LayoutMatcher
+            {
+                public InternedString layoutName;
+                public InputDeviceMatcher deviceMatcher;
+            }
+
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
             public Dictionary<InternedString, BuilderInfo> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InternedString[]> layoutOverrides;
-
-            public struct LayoutMatcher
-            {
-                public InternedString layoutName;
-                public InputDeviceMatcher deviceMatcher;
-
-                // In the editor, when we perform a domain reload, we only want to preserve device matchers
-                // coming from
-                #if UNITY_EDITOR
-                //public bool;
-                #endif
-            }
-
             ////TODO: find a smarter approach that doesn't require linearly scanning through all matchers
-            public int layoutMatcherCount;
-            public KeyValuePair<InputDeviceMatcher, InternedString>[] layoutMatchers;
+            ////  (also ideally shouldn't be a List but with Collection being a struct and given how it's
+            ////  stored by InputManager.m_Layouts and in s_Layouts; we can't make it a plain array)
+            public List<LayoutMatcher> layoutMatchers;
 
             public void Allocate()
             {
@@ -1720,6 +1728,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 layoutBuilders = new Dictionary<InternedString, BuilderInfo>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
+                layoutMatchers = new List<LayoutMatcher>();
             }
 
             public InternedString TryFindLayoutForType(Type layoutType)
@@ -1735,21 +1744,22 @@ namespace UnityEngine.Experimental.Input.Layouts
                 var highestScore = 0f;
                 var highestScoringLayout = new InternedString();
 
+                var layoutMatcherCount = layoutMatchers.Count;
                 for (var i = 0; i < layoutMatcherCount; ++i)
                 {
-                    var matcher = layoutMatchers[i].Key;
+                    var matcher = layoutMatchers[i].deviceMatcher;
                     var score = matcher.MatchPercentage(deviceDescription);
 
                     // We want auto-generated layouts to take a backseat compared to manually created
                     // layouts. We do this by boosting the score of every layout that isn't coming from
                     // a layout builder.
-                    if (score > 0 && !layoutBuilders.ContainsKey(layoutMatchers[i].Value))
+                    if (score > 0 && !layoutBuilders.ContainsKey(layoutMatchers[i].layoutName))
                         score += kBaseScoreForNonGeneratedLayouts;
 
                     if (score > highestScore)
                     {
                         highestScore = score;
-                        highestScoringLayout = layoutMatchers[i].Value;
+                        highestScoringLayout = layoutMatchers[i].layoutName;
                     }
                 }
 
@@ -1893,13 +1903,13 @@ namespace UnityEngine.Experimental.Input.Layouts
             public void AddMatcher(InternedString layout, InputDeviceMatcher matcher)
             {
                 // Ignore if already added.
+                var layoutMatcherCount = layoutMatchers.Count;
                 for (var i = 0; i < layoutMatcherCount; ++i)
-                    if (layoutMatchers[i].Key == matcher)
+                    if (layoutMatchers[i].deviceMatcher == matcher)
                         return;
 
                 // Append.
-                ArrayHelpers.AppendWithCapacity(ref layoutMatchers, ref layoutMatcherCount,
-                    new KeyValuePair<InputDeviceMatcher, InternedString>(matcher, layout));
+                layoutMatchers.Add(new LayoutMatcher {layoutName = layout, deviceMatcher = matcher});
             }
         }
 
@@ -1925,8 +1935,12 @@ namespace UnityEngine.Experimental.Input.Layouts
         // Constructs InputControlLayout instances and caches them.
         internal struct Cache
         {
-            public Collection layouts;
             public Dictionary<InternedString, InputControlLayout> table;
+
+            public void Clear()
+            {
+                table = null;
+            }
 
             public InputControlLayout FindOrLoadLayout(string name)
             {
@@ -1940,7 +1954,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 if (table == null)
                     table = new Dictionary<InternedString, InputControlLayout>();
 
-                layout = layouts.TryLoadLayout(internedName, table);
+                layout = s_Layouts.TryLoadLayout(internedName, table);
                 if (layout != null)
                     return layout;
 

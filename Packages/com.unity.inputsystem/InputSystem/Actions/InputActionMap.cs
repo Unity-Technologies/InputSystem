@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
@@ -6,6 +7,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: add public InputActionManager that supports various device allocation strategies (one stack
 ////      per device, multiple devices per stack, etc.); should also resolve the problem of having
 ////      two bindings stack on top of each other and making the one on top suppress the one below
+
+////REVIEW: given we have the global ActionTriggered callback, do we really need the per-map callback?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -26,7 +29,7 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver
+    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection
     {
         /// <summary>
         /// Name of the action map.
@@ -120,18 +123,51 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
         }
 
-        public ReadOnlyArray<InputControl> controls
+        /// <inheritdoc />
+        public InputBinding? bindingMask
         {
-            get { throw new NotImplementedException(); }
+            get { return m_BindingMask; }
+            set
+            {
+                if (m_BindingMask == value)
+                    return;
+
+                m_BindingMask = value;
+
+                if (m_State != null)
+                    ResolveBindings();
+            }
         }
 
-        public InputBinding? bindingMask
+        /// <inheritdoc />
+        public ReadOnlyArray<InputDevice>? devices
         {
             get
             {
-                if (m_BindingMask.isEmpty)
-                    return null;
-                return m_BindingMask;
+                // Return asset's device list if we have none (only if we're part of an asset).
+                if (m_Devices == null && asset != null)
+                    return asset.devices;
+
+                return m_Devices;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    if (m_DevicesArray != null)
+                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
+                    m_DevicesCount = 0;
+                    m_Devices = null;
+                }
+                else
+                {
+                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
+                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
+                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
+                }
+
+                if (m_State != null)
+                    ResolveBindings();
             }
         }
 
@@ -244,29 +280,6 @@ namespace UnityEngine.Experimental.Input
             return action;
         }
 
-        public void SetBindingMask(InputBinding bindingMask)
-        {
-            if (bindingMask == m_BindingMask)
-                return;
-
-            m_BindingMask = bindingMask;
-
-            if (m_State != null)
-                ResolveBindings();
-        }
-
-        public void SetBindingMask(string bindingGroups)
-        {
-            if (string.IsNullOrEmpty(bindingGroups))
-                bindingGroups = null;
-            SetBindingMask(new InputBinding {groups = bindingGroups});
-        }
-
-        public void ClearBindingMask()
-        {
-            SetBindingMask(new InputBinding());
-        }
-
         /// <summary>
         /// Enable all the actions in the map.
         /// </summary>
@@ -340,6 +353,32 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
+        public bool Contains(InputAction action)
+        {
+            if (action == null)
+                return false;
+
+            return action.actionMap == this;
+        }
+
+        /// <summary>
+        /// Enumerate the actions in the map.
+        /// </summary>
+        /// <returns>An enumerator going over the actions in the map.</returns>
+        /// <remarks>
+        /// This method supports to generically iterate over the actions in a map. However, it will usually
+        /// lead to GC allocation. Iterating directly over <see cref="actions"/> avoids allocating GC memory.
+        /// </remarks>
+        public IEnumerator<InputAction> GetEnumerator()
+        {
+            return actions.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
@@ -398,7 +437,11 @@ namespace UnityEngine.Experimental.Input
         /// Initialized when map (or any action in it) is first enabled.
         /// </remarks>
         [NonSerialized] internal InputActionMapState m_State;
-        [NonSerialized] internal InputBinding m_BindingMask;
+        [NonSerialized] internal InputBinding? m_BindingMask;
+
+        [NonSerialized] internal ReadOnlyArray<InputDevice>? m_Devices;
+        [NonSerialized] internal int m_DevicesCount;
+        [NonSerialized] internal InputDevice[] m_DevicesArray;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 

@@ -78,6 +78,11 @@ namespace UnityEngine.Experimental.Input.Utilities
             return GetEnumerator();
         }
 
+        public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
+        {
+            return new ReadOnlyArray<TValue>(array);
+        }
+
         /// <summary>
         /// Number of elements in the array.
         /// </summary>
