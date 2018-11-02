@@ -35,5 +35,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         public string imageName;
         public bool noisy;
         public object defaultState;
+        public object minValue;
+        public object maxValue;
     }
 }

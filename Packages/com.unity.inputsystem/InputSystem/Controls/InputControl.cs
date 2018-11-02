@@ -15,6 +15,8 @@ using UnityEngine.Experimental.Input.Layouts;
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
 ////        the InputDevice reference itself.
 
+////REVIEW: how do we do stuff like smoothing over time?
+
 ////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
 ////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
 
@@ -132,7 +134,6 @@ namespace UnityEngine.Experimental.Input
         {
             get { return m_Layout; }
         }
-
 
         /// <summary>
         /// Semicolon-separated list of variants of the control layout or "default".
@@ -355,7 +356,11 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal ControlFlags m_ControlFlags;
+
+        ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValueOrArray m_DefaultValue;
+        internal PrimitiveValue m_MinValue;
+        internal PrimitiveValue m_MaxValue;
 
         [Flags]
         internal enum ControlFlags

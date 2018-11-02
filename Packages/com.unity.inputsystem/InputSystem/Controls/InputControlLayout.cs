@@ -284,6 +284,9 @@ namespace UnityEngine.Experimental.Input.Layouts
             /// </summary>
             public PrimitiveValueOrArray defaultState;
 
+            public PrimitiveValue minValue;
+            public PrimitiveValue maxValue;
+
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
             // just the X axis control of the left stick directly from within a gamepad
@@ -393,6 +396,16 @@ namespace UnityEngine.Experimental.Input.Layouts
                     result.defaultState = defaultState;
                 else
                     result.defaultState = other.defaultState;
+
+                if (!minValue.isEmpty)
+                    result.minValue = minValue;
+                else
+                    result.minValue = other.minValue;
+
+                if (!maxValue.isEmpty)
+                    result.maxValue = maxValue;
+                else
+                    result.maxValue = other.maxValue;
 
                 return result;
             }
@@ -986,6 +999,15 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (attribute != null)
                 defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
 
+            // Determine min and max value.
+            var minValue = new PrimitiveValue();
+            var maxValue = new PrimitiveValue();
+            if (attribute != null)
+            {
+                minValue = PrimitiveValue.FromObject(attribute.minValue);
+                maxValue = PrimitiveValue.FromObject(attribute.maxValue);
+            }
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -1004,6 +1026,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                 isNoisy = isNoisy,
                 arraySize = arraySize,
                 defaultState = defaultState,
+                minValue = minValue,
+                maxValue = maxValue,
             };
         }
 
@@ -1603,6 +1627,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
             // for this later but for now, we use a string-based value fallback instead.
             public string defaultState;
+            public string minValue;
+            public string maxValue;
 
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
@@ -1662,6 +1688,10 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 if (defaultState != null)
                     layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
+                if (minValue != null)
+                    layout.minValue = PrimitiveValue.FromObject(minValue);
+                if (maxValue != null)
+                    layout.maxValue = PrimitiveValue.FromObject(maxValue);
 
                 return layout;
             }
@@ -1694,6 +1724,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
                         arraySize = item.arraySize,
+                        defaultState = item.defaultState.ToString(),
+                        minValue = item.minValue.ToString(),
+                        maxValue = item.maxValue.ToString(),
                     };
                 }
 

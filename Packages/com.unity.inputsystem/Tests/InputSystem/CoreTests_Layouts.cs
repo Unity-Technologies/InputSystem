@@ -1329,6 +1329,53 @@ partial class CoreTests
         Assert.That(device.leftStick.x.displayName, Is.EqualTo("Horizontal"));
     }
 
+    class TestDeviceWithMinMaxValue : InputDevice
+    {
+        [InputControl(minValue = 0.1234f, maxValue = 0.5432f)]
+        public AxisControl control { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyMinAndMaxValuesForControlInOnAttribute()
+    {
+        InputSystem.RegisterLayout<TestDeviceWithMinMaxValue>();
+
+        var layout = InputSystem.TryLoadLayout("TestDeviceWithMinMaxValue");
+
+        Assert.That(layout["control"].minValue.isEmpty, Is.False);
+        Assert.That(layout["control"].maxValue.isEmpty, Is.False);
+        Assert.That(layout["control"].minValue.ToFloat(), Is.EqualTo(0.1234f));
+        Assert.That(layout["control"].maxValue.ToFloat(), Is.EqualTo(0.5432f));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyMinAndMaxValuesForControlInJson()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control"",
+                        ""layout"" : ""Axis"",
+                        ""minValue"" : ""-123"",
+                        ""maxValue"" : ""123""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var layout = InputSystem.TryLoadLayout("TestLayout");
+
+        Assert.That(layout["control"].minValue.isEmpty, Is.False);
+        Assert.That(layout["control"].maxValue.isEmpty, Is.False);
+        Assert.That(layout["control"].minValue.ToInt(), Is.EqualTo(-123));
+        Assert.That(layout["control"].maxValue.ToInt(), Is.EqualTo(123));
+    }
+
     class BaseClassWithControl : InputDevice
     {
         public AxisControl controlFromBase { get; set; }
@@ -1359,6 +1406,7 @@ partial class CoreTests
         // there won't be a control generated automatically from the field or property.
         Assert.That(() => derivedLayout["controlFromDerived"], Throws.TypeOf<KeyNotFoundException>());
     }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanMarkControlAsNoisy()

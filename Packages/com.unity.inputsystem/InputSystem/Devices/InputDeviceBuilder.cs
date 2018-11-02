@@ -567,6 +567,10 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (!control.m_DefaultValue.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
 
+            // Set min and max value.
+            control.m_MinValue = controlItem.minValue;
+            control.m_MaxValue = controlItem.maxValue;
+
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
             if (!usesStateFromOtherControl)
@@ -711,6 +715,10 @@ namespace UnityEngine.Experimental.Input.Layouts
                     child.m_DefaultValue = controlItem.defaultState;
                     m_Device.hasControlsWithDefaultState = true;
                 }
+                if (!controlItem.minValue.isEmpty)
+                    child.m_MinValue = controlItem.minValue;
+                if (!controlItem.maxValue.isEmpty)
+                    child.m_MaxValue = controlItem.maxValue;
 
                 ////TODO: other modifications
             }
