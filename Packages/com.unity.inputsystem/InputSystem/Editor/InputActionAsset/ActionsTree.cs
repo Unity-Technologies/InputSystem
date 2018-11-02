@@ -51,11 +51,6 @@ namespace UnityEngine.Experimental.Input.Editor
             Reload();
         }
 
-        public TreeViewItem GetRootElement()
-        {
-            return rootItem;
-        }
-
         public void SetNameFilter(string filter)
         {
             m_NameFilter = string.IsNullOrEmpty(filter) ? null : filter.ToLower();

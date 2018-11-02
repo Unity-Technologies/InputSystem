@@ -131,15 +131,54 @@ public class AssetEditorTests
         var assetWindow = GetTestAssetWindow();
 
         var args = new object[2] 
-            { 
-                assetWindow.m_ActionsTree.GetRootElement().children[0], 
-                InputBindingComposite.s_Composites.names.First()
-            };
+        { 
+            assetWindow.m_ActionsTree.GetRootElement().children[0], 
+            InputBindingComposite.s_Composites.names.First()
+        };
         assetWindow.m_ContextMenu.OnAddCompositeBinding(args);
         yield return null;
 
         // Is new composite selected
         var selectedRow = (BindingTreeItem) assetWindow.m_ActionsTree.GetSelectedRow();
         Assert.That(selectedRow.path, Is.Null.Or.Empty);
+    }
+    
+    [UnityTest]
+    public IEnumerator NewActionMapIsSelected()
+    {
+        var assetWindow = GetTestAssetWindow();
+
+        assetWindow.m_ContextMenu.OnAddActionMap();
+        yield return null;
+
+        // Is new composite selected
+        var selectedRow = (ActionMapTreeItem) assetWindow.m_ActionMapsTree.GetSelectedRow();
+        Assert.That(selectedRow.displayName, Is.EqualTo("default"));
+    }
+    
+    [UnityTest]
+    [Ignore("For some reason it's impossible to focus the tree view from the test")]
+    public IEnumerator CanCopyAndPaste()
+    {
+        EditorUtility.ClearProgressBar();
+        var assetWindow = GetTestAssetWindow();
+
+        assetWindow.m_ActionsTree.SetSelection(new[]{assetWindow.m_ActionsTree.GetRootElement().children[1].id});
+
+        var e = new Event();
+        e.type = EventType.ExecuteCommand;
+        e.commandName = "Copy";
+        assetWindow.SendEvent(e);
+        
+        yield return null;
+        
+        assetWindow.m_ActionMapsTree.SetSelection(new[]{assetWindow.m_ActionMapsTree.GetRootElement().children[1].id});
+        assetWindow.m_ActionMapsTree.OnSelectionChanged();
+        e.type = EventType.ExecuteCommand;
+        e.commandName = "Paste";
+        assetWindow.SendEvent(e);
+        
+        yield return null;
+
     }
 }
