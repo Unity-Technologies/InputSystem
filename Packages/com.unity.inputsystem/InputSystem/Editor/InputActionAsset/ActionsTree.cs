@@ -383,6 +383,14 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             OnSelectionChanged();
         }
+
+        public void SelectNewActionRow()
+        {
+            var newRow = rootItem.children.Last();
+            SetSelection(new List<int>() { newRow.id });
+            OnSelectionChanged();
+            BeginRename(newRow);
+        }
     }
 }
 #endif // UNITY_EDITOR

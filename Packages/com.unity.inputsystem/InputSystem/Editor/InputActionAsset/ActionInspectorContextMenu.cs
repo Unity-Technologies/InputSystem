@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void OnAddCompositeBinding(object objs)
+        internal void OnAddCompositeBinding(object objs)
         {
             var actionLine = ((object[])objs)[0] as ActionTreeItem;
             var compositeName = ((object[])objs)[1] as string;
@@ -109,7 +109,7 @@ namespace UnityEngine.Experimental.Input.Editor
             };
         }
 
-        private void OnAddBinding(object actionLineObj)
+        internal void OnAddBinding(object actionLineObj)
         {
             var actionLine = actionLineObj as ActionTreeItem;
             if (actionLine == null)
@@ -130,12 +130,22 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             actionMapLine.AddAction();
             m_AssetInspectorWindow.Apply();
+            // We need to delay one frame because the tree needs to rebuild first
+            EditorApplication.delayCall += () =>
+            {
+                m_AssetInspectorWindow.m_ActionsTree.SelectNewActionRow();
+            };
         }
 
         public void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
             m_AssetInspectorWindow.Apply();
+            // We need to delay one frame because the tree needs to rebuild first
+            EditorApplication.delayCall += () =>
+            {
+                m_AssetInspectorWindow.m_ActionMapsTree.SelectNewActionMapRow();
+            };
         }
 
         private ActionTreeItem GetSelectedActionLine()
