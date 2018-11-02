@@ -162,6 +162,7 @@ namespace UnityEngine.Experimental.Input
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
+        public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public InputUpdateType updateMask { get; set; }

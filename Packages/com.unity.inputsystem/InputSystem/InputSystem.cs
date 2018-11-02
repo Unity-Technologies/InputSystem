@@ -721,11 +721,35 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        ////REVIEW: should this be a device-level reset along with sending the reset IOCTL
-        ////        or a control-level reset on just the memory state?
-        public static void ResetDevice(InputDevice device)
+        public static unsafe void ResetDevice(InputDevice device)
         {
-            throw new NotImplementedException();
+            //And reset the device natively.
+            var resetCommand = ResetDeviceCommand.Create();
+            device.ExecuteCommand<ResetDeviceCommand>(ref resetCommand);
+
+            //Send a default state event to the device
+            var stateSize = device.valueSizeInBytes;
+            var stateOffset = device.m_StateBlock.byteOffset;
+            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
+            var format = device.stateBlock.format;
+            var time = InputRuntime.s_Instance.currentTime;
+
+            // When a device can run in the background, we can just pulse the current state that's accumulated in the background.
+            // Otherwise we need to clear the current state and let the backend re-fill it's known values.
+            var bufferLocation = resetCommand.needsManagedReset ? device.defaultStatePtr : device.currentStatePtr;
+            var sourceStatePtr = (byte*)bufferLocation.ToPointer() + (int)stateOffset;
+
+            StateEventBuffer eventBuffer;
+            eventBuffer.stateEvent =
+                new StateEvent
+                {
+                    baseEvent = new InputEvent(StateEvent.Type, eventSize, device.id, time),
+                    stateFormat = format
+                };
+
+            var ptr = eventBuffer.stateEvent.stateData;
+            UnsafeUtility.MemCpy(ptr, sourceStatePtr, stateSize);
+            s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?

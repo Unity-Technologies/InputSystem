@@ -1235,6 +1235,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
+                m_Runtime.onFocusChanged = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
                     InputRuntime.s_Instance = null;
@@ -1332,11 +1333,13 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onUpdate = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
+                m_Runtime.onFocusChanged = null;
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
+            m_Runtime.onFocusChanged = OnFocusChanged;
             m_Runtime.updateMask = updateMask;
             m_Runtime.pollingFrequency = pollingFrequency;
 
@@ -1853,6 +1856,23 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_BeforeUpdateListeners.length; ++i)
                 m_BeforeUpdateListeners[i](updateType);
+        }
+
+        private void OnFocusChanged(bool focus)
+        {
+            if(focus)
+            {
+                var deviceCount = m_DevicesCount;
+                for (var i = 0; i < deviceCount; ++i)
+                {
+                    var device = m_Devices[i];
+                    InputSystem.ResetDevice(device);
+                }
+            }
+            else
+            {
+
+            }
         }
 
         ////REVIEW: do we want to filter out state events that result in no state change?
@@ -2828,7 +2848,7 @@ namespace UnityEngine.Experimental.Input
                                 deviceDescription: m_AvailableDevices[i].description,
                                 deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                         }
-                        catch (Exception exception)
+                        catch (Exception)
                         {
                             // Just ignore. Simply means we still can't really turn the device into something useful.
                         }

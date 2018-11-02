@@ -7,6 +7,8 @@ public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandl
     {
         base.OnEnable();
 
+        Application.onFocusChanged += OnFocusChanged;
+
         EventSystem current = EventSystem.current;
         if (current != null)
             EventSystem.current.SetSelectedGameObject(gameObject);
@@ -16,9 +18,16 @@ public class GUITest : UIBehaviour, ISelectHandler, IDeselectHandler, IMoveHandl
     {
         base.OnDisable();
 
+        Application.onFocusChanged -= OnFocusChanged;
+
         EventSystem current = EventSystem.current;
         if (current != null)
             EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    void OnFocusChanged(bool focus)
+    {
+        Debug.Log(string.Format("Focus Changed to [{0}]", focus));
     }
 
     public void OnButtonClick()

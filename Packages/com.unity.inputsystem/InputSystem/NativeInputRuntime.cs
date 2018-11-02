@@ -107,6 +107,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        public Action<bool> onFocusChanged
+        {
+            set
+            {
+                if (value == null)
+                    Application.onFocusChanged -= OnFocusChanged;
+                else if (m_ShutdownMethod == null)
+                    Application.onFocusChanged += OnFocusChanged;
+
+                m_FocusChangedMethod = value;
+            }
+        }
+
         public float pollingFrequency
         {
             set { NativeInputSystem.SetPollingFrequency(value); }
@@ -141,6 +154,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         private void OnShutdown()
         {
             m_ShutdownMethod();
+        }
+
+        private Action<bool> m_FocusChangedMethod;
+
+        private void OnFocusChanged(bool focus)
+        {
+            m_FocusChangedMethod(focus);
         }
 
         public ScreenOrientation screenOrientation
