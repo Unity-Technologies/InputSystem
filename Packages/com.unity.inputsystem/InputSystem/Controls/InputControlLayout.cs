@@ -239,6 +239,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
+                IsSynthetic = 1 << 2,
             }
 
             /// <summary>
@@ -317,6 +318,26 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
+            /// <summary>
+            /// If true, the control is considered a "synthetic" control.
+            /// </summary>
+            /// <remarks>
+            /// Synthetic controls are artificial controls that provide input but do not correspond to actual controls
+            /// on the hardware. An example is <see cref="Keyboard.anyKey"/> which is an artificial button that triggers
+            /// if any key on the keyboard is pressed.
+            /// </remarks>
+            public bool isSynthetic
+            {
+                get { return (flags & Flags.IsSynthetic) == Flags.IsSynthetic; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.IsSynthetic;
+                    else
+                        flags &= ~Flags.IsSynthetic;
+                }
+            }
+
             public bool isArray
             {
                 get { return (arraySize != 0); }
@@ -341,6 +362,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                 result.variants = variants.IsEmpty() ? other.variants : variants;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
                 result.arraySize = !isArray ? other.arraySize : arraySize;
+                result.isNoisy = isNoisy || other.isNoisy;
+                result.isSynthetic = isSynthetic || other.isSynthetic;
 
                 if (offset != InputStateBlock.kInvalidOffset)
                     result.offset = offset;
@@ -989,6 +1012,11 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
+            // Determine if it's a synthetic control.
+            var isSynthetic = false;
+            if (attribute != null)
+                isSynthetic = attribute.synthetic;
+
             // Determine array size.
             var arraySize = 0;
             if (attribute != null)
@@ -1024,6 +1052,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
+                isSynthetic = isSynthetic,
                 arraySize = arraySize,
                 defaultState = defaultState,
                 minValue = minValue,
@@ -1621,6 +1650,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string displayName;
             public string resourceName;
             public bool noisy;
+            public bool synthetic;
 
             // This should be an object type field and allow any JSON primitive value type as well
             // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
@@ -1654,6 +1684,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     sizeInBits = sizeInBits,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    isSynthetic = synthetic,
                     arraySize = arraySize,
                 };
 
@@ -1723,6 +1754,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                         usages = item.usages.Select(x => x.ToString()).ToArray(),
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
+                        synthetic = item.isSynthetic,
                         arraySize = item.arraySize,
                         defaultState = item.defaultState.ToString(),
                         minValue = item.minValue.ToString(),

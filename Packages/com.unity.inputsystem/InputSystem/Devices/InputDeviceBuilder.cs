@@ -561,6 +561,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             // Set flags and misc things.
             control.m_DisplayNameFromLayout = controlItem.displayName;
             control.noisy = controlItem.isNoisy;
+            control.synthetic = controlItem.isSynthetic;
 
             // Set default value.
             control.m_DefaultValue = controlItem.defaultState;

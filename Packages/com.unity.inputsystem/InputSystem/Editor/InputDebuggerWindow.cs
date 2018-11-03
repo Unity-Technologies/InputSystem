@@ -518,6 +518,21 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (control.aliases.Count > 0)
                     AddChild(item, "Aliases: " + string.Join(", ", control.aliases.Select(x => x.ToString()).ToArray()), ref id);
 
+                if (control.isNoisy || control.isSynthetic)
+                {
+                    var flags = "Flags: ";
+                    if (control.isNoisy)
+                        flags += "Noisy";
+                    if (control.isSynthetic)
+                    {
+                        if (control.isNoisy)
+                            flags += ", Synthetic";
+                        else
+                            flags += "Synthetic";
+                    }
+                    AddChild(item, flags, ref id);
+                }
+
                 if (control.parameters.Count > 0)
                 {
                     var parameters = AddChild(item, "Parameters", ref id);

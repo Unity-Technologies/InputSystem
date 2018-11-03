@@ -1431,6 +1431,37 @@ partial class CoreTests
         Assert.That(device["button"].noisy, Is.True);
     }
 
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanMarkControlAsSynthetic()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button"",
+                        ""synthetic"" : true
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("MyLayout");
+
+        Assert.That(device["button"].synthetic, Is.True);
+    }
+
+    class DeviceWithAutoOffsetControl : InputDevice
+    {
+        [InputControl(offset = 4, sizeInBits = 32)]
+        public ButtonControl button1;
+
+        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        public ButtonControl button2 { get; set; }
+    }
 
     [Test]
     [Category("Layouts")]

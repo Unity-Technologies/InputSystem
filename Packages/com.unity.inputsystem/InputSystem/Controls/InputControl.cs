@@ -202,13 +202,25 @@ namespace UnityEngine.Experimental.Input
 
         public bool noisy
         {
-            get { return (m_ControlFlags & ControlFlags.IsNoisy) == ControlFlags.IsNoisy; }
+            get { return (m_ControlFlags & ControlFlags.IsNoisy) != 0; }
             internal set
             {
                 if (value)
                     m_ControlFlags |= ControlFlags.IsNoisy;
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;
+            }
+        }
+
+        public bool synthetic
+        {
+            get { return (m_ControlFlags & ControlFlags.IsSynthetic) != 0; }
+            internal set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsSynthetic;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsSynthetic;
             }
         }
 
@@ -391,6 +403,7 @@ namespace UnityEngine.Experimental.Input
         {
             ConfigUpToDate = 1 << 0,
             IsNoisy = 1 << 1,
+            IsSynthetic = 1 << 2,
         }
 
         internal bool isConfigUpToDate

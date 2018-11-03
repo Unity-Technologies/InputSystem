@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
         public const int kSizeInBits = kSizeInBytes * 8;
 
-        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits)]
+        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", layout = "Key", bit = (int)Key.Space)]
         [InputControl(name = "enter", layout = "Key", usage = "Accept", bit = (int)Key.Enter)]
@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
-        [InputControl(name = "imeSelected", layout = "Button", bit = (int)Key.imeSelected)]
+        [InputControl(name = "imeSelected", layout = "Button", bit = (int)Key.imeSelected, synthetic = true)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
