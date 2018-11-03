@@ -33,35 +33,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)Button.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        [InputControl(name = "rightButton", layout = "Button", bit = (int)Button.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
-        [InputControl(name = "middleButton", layout = "Button", bit = (int)Button.Middle)]
+        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
+        [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle)]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
-        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
+        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kAutomaticOffset)] // Will stay at 0.
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kAutomaticOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
         [InputControl(layout = "Digital")]
         [FieldOffset(26)]
         public ushort displayIndex;
 
-        public enum Button
-        {
-            Left,
-            Right,
-            Middle,
-            Forward,
-            Back
-        }
-
         ////REVIEW: move this and the same methods in other states to extension methods?
-        public MouseState WithButton(Button button, bool state = true)
+        public MouseState WithButton(MouseButton button, bool state = true)
         {
             var bit = 1 << (int)button;
             if (state)
@@ -75,6 +66,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             return kFormat;
         }
+    }
+
+    public enum MouseButton
+    {
+        Left,
+        Right,
+        Middle,
+        Forward,
+        Back
     }
 }
 

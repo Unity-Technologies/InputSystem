@@ -1431,6 +1431,16 @@ partial class CoreTests
         Assert.That(device["button"].noisy, Is.True);
     }
 
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceControlsAutomatically()
+    {
+        var device = InputSystem.AddDevice<DeviceWithAutoOffsetControl>();
+
+        Assert.That(device["button2"].stateBlock.byteOffset, Is.EqualTo(8));
+    }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanBuildLayoutsInCode()

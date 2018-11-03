@@ -755,6 +755,39 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanDetectWhetherControlIsPartOfEvent()
+    {
+        // We use a mouse here as it has several controls that are "parked" outside MouseState.
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            // For every control that isn't contained in a state event, GetStatePtrFromStateEvent() should
+            // return IntPtr.Zero.
+            if (eventPtr.IsA<StateEvent>())
+            {
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+            }
+            else if (eventPtr.IsA<DeltaStateEvent>())
+            {
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.leftButton.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+            }
+            else
+            {
+                Assert.Fail("Unexpected type of event");
+            }
+        };
+
+        InputSystem.QueueStateEvent(mouse, new MouseState());
+        InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(0.5f, 0.5f));
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
     {
         InputUpdateType? receivedUpdateType = null;

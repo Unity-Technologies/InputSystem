@@ -34,6 +34,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     public struct InputStateBlock
     {
         public const uint kInvalidOffset = 0xffffffff;
+        public const uint kAutomaticOffset = 0xfffffffe;
 
         // Primitive state type codes.
         public static FourCC kTypeBit = new FourCC('B', 'I', 'T');

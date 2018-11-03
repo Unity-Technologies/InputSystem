@@ -458,7 +458,7 @@ namespace UnityEngine.Experimental.Input
                 m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
         }
 
-        internal unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
+        public unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
                 throw new ArgumentNullException("eventPtr");

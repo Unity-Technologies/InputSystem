@@ -906,7 +906,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                         string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
 
                 // Skip children that don't have fixed offsets.
-                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||
+                    child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
                     continue;
 
                 var endOffset =
@@ -928,7 +929,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var child in children)
             {
                 // Skip children with fixed offsets.
-                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset &&
+                    child.m_StateBlock.byteOffset != InputStateBlock.kAutomaticOffset)
                     continue;
 
                 // Skip children using state from other controls.
