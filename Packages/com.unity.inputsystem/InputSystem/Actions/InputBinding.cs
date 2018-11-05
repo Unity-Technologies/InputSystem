@@ -271,6 +271,7 @@ namespace UnityEngine.Experimental.Input
         ////TODO: also support matching by name (taking the binding tree into account so that components
         ////      of composites can be referenced through their parent)
 
+        ////TODO: this must be exposed; matching bindings against each other is a public concept
         internal bool Matches(ref InputBinding other)
         {
             if (path != null)

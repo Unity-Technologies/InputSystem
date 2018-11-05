@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Editor;
 #endif
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Test]
@@ -948,7 +949,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(initialJson);
 
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
+        runtime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
         InputSystem.Update();
 
         var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
@@ -1103,9 +1104,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public byte byteAxis;
         [InputControl(layout = "Axis")] public short shortAxis;
-
         [InputControl(layout = "Axis")] public int intAxis;
-
         // No float as that is the default format for Axis anyway.
         [InputControl(layout = "Axis")] public double doubleAxis;
 
@@ -1884,6 +1883,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
+
         public FourCC GetFormat()
         {
             return new FourCC("BASE");

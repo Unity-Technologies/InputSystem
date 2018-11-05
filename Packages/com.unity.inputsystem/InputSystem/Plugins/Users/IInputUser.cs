@@ -20,7 +20,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     ///
     /// Changes to the input user setup can be listened to with <see cref="InputUser.onChange"/>.
     ///
-    /// Each user may be assigned <see cref="InputDevice">input devices</see>
+    /// Each user may be assigned <see cref="InputDevice">input devices</see> using <see cref="InputUser.AssignInputDevice{TUser}"/>
+    /// and <see cref="InputUser.AssignInputDevices{TUser,TDevices}"/>. The list of currently assigned devices
+    /// can be queried with <see cref="InputUser.GetAssignedInputDevices{TUser}"/>. The list of devices not assigned
+    /// to any user can be queried with <see cref="InputUser.GetUnassignedInputDevices"/>.
+    ///
+    /// Each user may be assigned <see cref="InputAction">actions</see> using the per-user <see cref="InputActionStack"/>
+    /// made available through <see cref="InputUser.GetInputActions{TUser}"/>.
     ///
     /// </remarks>
     /// <seealso cref="InputUser"/>
@@ -37,8 +43,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     ///     {
     ///         InputUser.Add(this);
     ///
+    ///         this.SetInputActions(controls.gameplay);
     ///         this.AssignInputDevice(InputSystem.GetDevice&lt;Gamepad&gt;());
-    ///         this.AssignActions(controls);
     ///         this.AssignControlScheme(controls.KeyboardMouse);
     ///     }
     /// }
