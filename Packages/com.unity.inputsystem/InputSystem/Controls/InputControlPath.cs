@@ -443,6 +443,24 @@ namespace UnityEngine.Experimental.Input
             return MatchesRecursive(ref parser, control);
         }
 
+        public static bool MatchesPrefix(string expected, InputControl control)
+        {
+            if (string.IsNullOrEmpty(expected))
+                throw new ArgumentNullException("expected");
+            if (control == null)
+                throw new ArgumentNullException("control");
+
+            ////REVIEW: this can probably be done more efficiently
+            for (var current = control; current != null; current = current.parent)
+            {
+                var parser = new PathParser(expected);
+                if (MatchesRecursive(ref parser, current) && parser.isAtEnd)
+                    return true;
+            }
+
+            return false;
+        }
+
         private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl)
         {
             // Recurse into parent before looking at the current control. This

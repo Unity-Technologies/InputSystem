@@ -789,7 +789,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanCheckIfPathMatchesGivenPattern()
+    public void Controls_CanCheckIfControlMatchesGivenPath()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -797,6 +797,20 @@ partial class CoreTests
         Assert.That(InputControlPath.Matches("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.Matches("<Gamepad>", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.Matches("<Gamepad>/*", gamepad.leftStick), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCheckIfControlMatchesGivenPathPrefix()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/leftStick", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.rightStick.x), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/*", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
     }
 
     ////TODO: doesnotallocate constraint
