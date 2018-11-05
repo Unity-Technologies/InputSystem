@@ -11,11 +11,6 @@ public class AssetEditorTests
 {
     static AssetInspectorWindow GetTestAssetWindow()
     {
-        foreach (var a in Resources.FindObjectsOfTypeAll<AssetInspectorWindow>())
-        {
-            a.Close();
-        }
-
         var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>("Packages/com.unity.inputsystem/Tests/InputSystem/Editor/TestAsset.inputactions");
         AssetInspectorWindow.OnOpenAsset(asset.GetInstanceID(), -1);
         var w = Resources.FindObjectsOfTypeAll<AssetInspectorWindow>()[0];
@@ -25,8 +20,10 @@ public class AssetEditorTests
     [TearDown]
     public void Cleanup()
     {
-        //Use for debugging tests that modify the asset
-//        Undo.ClearAll();
+        foreach (var w in Resources.FindObjectsOfTypeAll<AssetInspectorWindow>())
+        {
+            w.CloseWithoutSaving();
+        }
     }
 
     [Test]
@@ -116,7 +113,7 @@ public class AssetEditorTests
 
         assetWindow.m_ContextMenu.OnAddBinding(assetWindow.m_ActionsTree.GetRootElement().children[0]);
         yield return null;
-
+        
         // Is new binding selected
         var selectedRow = (BindingTreeItem)assetWindow.m_ActionsTree.GetSelectedRow();
         Assert.That(selectedRow.path, Is.Null.Or.Empty);
@@ -147,10 +144,23 @@ public class AssetEditorTests
 
         assetWindow.m_ContextMenu.OnAddActionMap();
         yield return null;
-
+            
         // Is new composite selected
         var selectedRow = (ActionMapTreeItem)assetWindow.m_ActionMapsTree.GetSelectedRow();
         Assert.That(selectedRow.displayName, Is.EqualTo("default"));
+    }
+
+    [UnityTest]
+    public IEnumerator NewActionIsSelected()
+    {
+        var assetWindow = GetTestAssetWindow();
+
+        assetWindow.m_ContextMenu.OnAddAction();
+        yield return null;
+            
+        // Is new composite selected
+        var selectedRow = (ActionTreeItem)assetWindow.m_ActionsTree.GetSelectedRow();
+        Assert.That(selectedRow.displayName, Is.EqualTo("action"));
     }
 
     [UnityTest]
@@ -174,7 +184,5 @@ public class AssetEditorTests
         e.type = EventType.ExecuteCommand;
         e.commandName = "Paste";
         assetWindow.SendEvent(e);
-
-        yield return null;
     }
 }

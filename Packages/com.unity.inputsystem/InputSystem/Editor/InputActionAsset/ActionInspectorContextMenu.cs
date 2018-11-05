@@ -100,13 +100,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var compositeName = ((object[])objs)[1] as string;
             if (actionLine == null)
                 return;
-            actionLine.AddCompositeBinding((string)compositeName, m_Toolbar.selectedControlSchemeBindingGroup);
+            actionLine.AddCompositeBinding(compositeName, m_Toolbar.selectedControlSchemeBindingGroup);
             m_AssetInspectorWindow.Apply();
-            // We need to delay one frame because the tree needs to rebuild first
-            EditorApplication.delayCall += () =>
-            {
-                m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
-            };
+            m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
         internal void OnAddBinding(object actionLineObj)
@@ -116,11 +112,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             actionLine.AddBinding(m_Toolbar.selectedControlSchemeBindingGroup);
             m_AssetInspectorWindow.Apply();
-            // We need to delay one frame because the tree needs to rebuild first
-            EditorApplication.delayCall += () =>
-            {
-                m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
-            };
+            m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
         public void OnAddAction()
@@ -130,22 +122,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             actionMapLine.AddAction();
             m_AssetInspectorWindow.Apply();
-            // We need to delay one frame because the tree needs to rebuild first
-            EditorApplication.delayCall += () =>
-            {
-                m_AssetInspectorWindow.m_ActionsTree.SelectNewActionRow();
-            };
+            m_AssetInspectorWindow.m_ActionsTree.SelectNewActionRow();
         }
 
         public void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
             m_AssetInspectorWindow.Apply();
-            // We need to delay one frame because the tree needs to rebuild first
-            EditorApplication.delayCall += () =>
-            {
-                m_AssetInspectorWindow.m_ActionMapsTree.SelectNewActionMapRow();
-            };
+            m_AssetInspectorWindow.m_ActionMapsTree.SelectNewActionMapRow();
         }
 
         private ActionTreeItem GetSelectedActionLine()

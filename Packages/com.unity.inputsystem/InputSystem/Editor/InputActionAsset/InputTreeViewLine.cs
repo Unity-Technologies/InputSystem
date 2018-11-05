@@ -49,7 +49,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public bool renaming;
         private SerializedProperty m_ElementProperty;
         private int m_Index;
 
@@ -99,8 +98,7 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.y += 1;
             rect.height -= 2;
 
-            if (!renaming)
-                Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
+            Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
 
             DrawCustomRect(rowRect);
         }

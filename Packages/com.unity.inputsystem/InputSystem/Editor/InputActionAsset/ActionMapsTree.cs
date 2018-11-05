@@ -104,6 +104,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var newRow = rootItem.children.Last();
             SetSelection(new List<int>() { newRow.id });
             OnSelectionChanged();
+            EndRename();
             BeginRename(newRow);
         }
     }

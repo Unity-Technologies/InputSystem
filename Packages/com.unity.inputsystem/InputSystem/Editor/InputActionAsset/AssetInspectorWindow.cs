@@ -74,6 +74,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         GUIContent m_Title;
         Vector2 m_PropertiesScroll;
+        bool m_ForceQuit;
 
         private void OnEnable()
         {
@@ -111,7 +112,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnDestroy()
         {
-            if (m_ActionAssetManager.dirty)
+            if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
                 var result = EditorUtility.DisplayDialogComplex("Unsaved changes", "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
                 switch (result)
@@ -507,6 +508,12 @@ namespace UnityEngine.Experimental.Input.Editor
         void SetTitle(bool dirty)
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
+        }
+
+        internal void CloseWithoutSaving()
+        {
+            m_ForceQuit = true;
+            Close();
         }
     }
 }
