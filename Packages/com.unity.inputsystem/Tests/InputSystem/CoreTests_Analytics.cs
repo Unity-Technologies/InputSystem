@@ -23,7 +23,7 @@ partial class CoreTests
         var receivedMaxPerHours = new List<int>();
         var receivedMaxPropertiesPerEvents = new List<int>();
 
-        testRuntime.onRegisterAnalyticsEvent =
+        runtime.onRegisterAnalyticsEvent =
             (name, maxPerHour, maxPropertiesPerEvent) =>
         {
             receivedNames.Add(name);
@@ -34,7 +34,7 @@ partial class CoreTests
         // The test fixture has already initialized the input system.
         // Create a new manager to test registration.
         var manager = new InputManager();
-        manager.Initialize(testRuntime);
+        manager.Initialize(runtime);
 
         Assert.That(receivedNames,
             Is.EquivalentTo(new[]
@@ -52,7 +52,7 @@ partial class CoreTests
         string receivedName = null;
         object receivedData = null;
 
-        testRuntime.onSendAnalyticsEvent =
+        runtime.onSendAnalyticsEvent =
             (name, data) =>
         {
             Assert.That(receivedName, Is.Null);
@@ -61,21 +61,21 @@ partial class CoreTests
         };
 
         // Add some data to the system.
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             product = "TestProductA",
             manufacturer = "TestManufacturerA",
             deviceClass = "Mouse",
             interfaceName = "TestA"
         }.ToJson());
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             product = "TestProductB",
             manufacturer = "TestManufacturerB",
             deviceClass = "Keyboard",
             interfaceName = "TestB"
         }.ToJson());
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription // Unrecognized; won't result in device.
+        runtime.ReportNewInputDevice(new InputDeviceDescription // Unrecognized; won't result in device.
         {
             product = "TestProductC",
             manufacturer = "TestManufacturerC",
@@ -121,7 +121,7 @@ partial class CoreTests
     public void Analytics_SendsStartupEventOnlyOnFirstUpdate()
     {
         var numReceivedCalls = 0;
-        testRuntime.onSendAnalyticsEvent =
+        runtime.onSendAnalyticsEvent =
             (name, data) => ++ numReceivedCalls;
 
         InputSystem.Update();
@@ -146,7 +146,7 @@ partial class CoreTests
             EditorPlayerSettings.oldSystemBackendsEnabled = false;
 
             object receivedData = null;
-            testRuntime.onSendAnalyticsEvent =
+            runtime.onSendAnalyticsEvent =
                 (name, data) =>
             {
                 Assert.That(receivedData, Is.Null);
@@ -185,7 +185,7 @@ partial class CoreTests
 
         string receivedName = null;
         object receivedData = null;
-        testRuntime.onSendAnalyticsEvent =
+        runtime.onSendAnalyticsEvent =
             (name, data) =>
         {
             Assert.That(receivedData, Is.Null);
@@ -194,7 +194,7 @@ partial class CoreTests
         };
 
         // Simulate shutdown.
-        testRuntime.onShutdown();
+        runtime.onShutdown();
 
         Assert.That(receivedName, Is.EqualTo(InputAnalytics.kEventShutdown));
         Assert.That(receivedData, Is.TypeOf<InputAnalytics.ShutdownEventData>());

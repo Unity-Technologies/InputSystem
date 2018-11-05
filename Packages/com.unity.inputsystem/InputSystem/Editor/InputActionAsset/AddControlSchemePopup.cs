@@ -321,6 +321,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_AssetManager.m_AssetObjectForEditing.AddControlScheme(controlScheme);
             m_Apply();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
+            m_Toolbar.OnSchemeChanged(m_Toolbar.selectedControlSchemeName);
             editorWindow.Close();
         }
 

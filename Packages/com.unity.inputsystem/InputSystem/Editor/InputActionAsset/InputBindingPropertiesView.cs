@@ -1,8 +1,11 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Editor.Lists;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -30,6 +33,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private ProcessorsReorderableReorderableList m_ProcessorsReorderableReorderableListView;
         private SerializedProperty m_ProcessorsProperty;
 
+        private SerializedProperty m_GroupsProperty;
+
         private SerializedProperty m_BindingProperty;
 
         private Action m_ReloadTree;
@@ -44,21 +49,28 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent s_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
         private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
         private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
+        private static readonly GUIContent s_UseInSchemesGui = EditorGUIUtility.TrTextContent("Use in control scheme");
 
         private bool m_ManualPathEditMode;
+        private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
+        private List<string> m_BingingGroups;
+        private InputActionWindowToolbar m_Toolbar;
 
-        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, TreeViewState controlPickerTreeViewState)
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, TreeViewState controlPickerTreeViewState, InputActionWindowToolbar toolbar)
         {
             m_ControlPickerTreeViewState = controlPickerTreeViewState;
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("m_Processors");
+            m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(m_InteractionsProperty, ApplyModifiers);
             m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, ApplyModifiers);
+            m_Toolbar = toolbar;
+            if (m_Toolbar != null)
+                m_ControlSchemes = toolbar.controlSchemes;
+            m_BingingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
         }
-
-        public InputActionWindowToolbar toolbar { get; set; }
 
         private void ApplyModifiers()
         {
@@ -66,6 +78,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
             m_ProcessorsProperty.stringValue = m_ProcessorsReorderableReorderableListView.ToSerializableString();
             m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
+            m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BingingGroups.ToArray());
+            m_GroupsProperty.serializedObject.ApplyModifiedProperties();
             m_ReloadTree();
         }
 
@@ -76,6 +90,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
             DrawPathPicker();
+            DrawUseInControlSchemes();
             EditorGUILayout.Space();
             DrawInteractionsPicker();
             EditorGUILayout.Space();
@@ -126,6 +141,36 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 EditorGUI.indentLevel--;
             }
+        }
+
+        protected virtual void DrawUseInControlSchemes()
+        {
+            if (m_Toolbar == null)
+                return;
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField(s_UseInSchemesGui, EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical();
+            foreach (var scheme in m_ControlSchemes)
+            {
+                EditorGUI.BeginChangeCheck();
+                var result = EditorGUILayout.Toggle(scheme.name, m_BingingGroups.Contains(scheme.bindingGroup));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    if (result)
+                    {
+                        m_BingingGroups.Add(scheme.bindingGroup);
+                    }
+                    else
+                    {
+                        m_BingingGroups.Remove(scheme.bindingGroup);
+                    }
+                    ApplyModifiers();
+                }
+            }
+            EditorGUILayout.EndVertical();
+            EditorGUI.indentLevel--;
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
@@ -190,8 +235,17 @@ namespace UnityEngine.Experimental.Input.Editor
                 onPickCallback = onPickCallback,
                 width = rect.width,
             };
-            if (toolbar != null)
-                w.SetDeviceFilter(toolbar.deviceFilter);
+            if (m_Toolbar != null)
+            {
+                if (m_Toolbar.selectedDevice != null)
+                {
+                    w.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
+                }
+                else
+                {
+                    w.SetDeviceFilter(m_Toolbar.allDevices);
+                }
+            }
             PopupWindow.Show(rect, w);
         }
 
@@ -211,12 +265,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
     internal class CompositeGroupPropertiesView : InputBindingPropertiesView
     {
-        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state)
-            : base(property, apply, state)
+        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
+            : base(property, apply, state, toolbar)
         {
         }
 
         protected override void DrawPathPicker()
+        {
+        }
+
+        protected override void DrawUseInControlSchemes()
         {
         }
     }

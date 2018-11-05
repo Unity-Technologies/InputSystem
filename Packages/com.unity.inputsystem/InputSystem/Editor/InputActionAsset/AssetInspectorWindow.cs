@@ -66,13 +66,16 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionMapIconGUI;
         GUIContent m_AddBindingGUI;
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
-        GUIContent m_ActionsSearchingGUI = EditorGUIUtility.TrTextContent("Actions (Searching)");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+        [SerializeField]
         GUIContent m_DirtyTitle;
+        [SerializeField]
         GUIContent m_Title;
 
         private void OnEnable()
         {
+            minSize = new Vector2(600, 300);
+
             if (m_AddActionIconGUI == null)
                 m_AddActionIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
             if (m_AddActionMapIconGUI == null)
@@ -95,7 +98,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             InitializeTrees();
             OnActionMapSelection();
-            LoadPropertiesForSelection(false);
+            LoadPropertiesForSelection();
         }
 
         private void OnDisable()
@@ -140,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionMapsTree.SelectFirstRow();
             OnActionMapSelection();
             m_ActionsTree.ExpandAll();
-            LoadPropertiesForSelection(true);
+            LoadPropertiesForSelection();
         }
 
         private void InitializeTrees()
@@ -154,6 +157,25 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
             m_ActionsTree.OnRowGUI = OnActionRowGUI;
             m_InputActionWindowToolbar.OnSearchChanged = m_ActionsTree.SetNameFilter;
+            m_InputActionWindowToolbar.OnSchemeChanged = a =>
+            {
+                if (a == null)
+                {
+                    m_ActionsTree.SetSchemeBindingGroupFilter(null);
+                    return;
+                }
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(a).bindingGroup;
+                m_ActionsTree.SetSchemeBindingGroupFilter(group);
+            };
+            m_InputActionWindowToolbar.OnDeviceChanged = m_ActionsTree.SetDeviceFilter;
+
+            m_ActionsTree.SetNameFilter(m_InputActionWindowToolbar.nameFilter);
+            if (m_InputActionWindowToolbar.selectedControlSchemeName != null)
+            {
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(m_InputActionWindowToolbar.selectedControlSchemeName).bindingGroup;
+                m_ActionsTree.SetSchemeBindingGroupFilter(group);
+            }
+            m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
@@ -181,14 +203,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnActionSelection()
         {
-            LoadPropertiesForSelection(true);
+            LoadPropertiesForSelection();
         }
 
-        private void LoadPropertiesForSelection(bool checkFocus)
+        private void LoadPropertiesForSelection()
         {
             m_PropertyView = null;
 
-            if ((!checkFocus || m_ActionMapsTree.HasFocus()) && m_ActionMapsTree.GetSelectedRow() != null)
+            if (m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
                 if (row != null)
@@ -197,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
-            if ((!checkFocus || m_ActionsTree.HasFocus()) && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
+            if (m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
                 var p = m_ActionsTree.GetSelectedRow();
                 if (p != null && p.hasProperties)
@@ -205,9 +227,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_PropertyView = p.GetPropertiesView(() =>
                     {
                         Apply();
-                        LoadPropertiesForSelection(false);
-                    }, m_PickerTreeViewState);
-                    m_PropertyView.toolbar = m_InputActionWindowToolbar;
+                        LoadPropertiesForSelection();
+                    }, m_PickerTreeViewState, m_InputActionWindowToolbar);
                 }
             }
         }
@@ -229,7 +250,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-            OnActionSelection();
+
+            LoadPropertiesForSelection();
         }
 
         private void OnGUI()
@@ -314,15 +336,9 @@ namespace UnityEngine.Experimental.Input.Editor
             columnRect.y += labelRect.height;
             columnRect.height -= labelRect.height;
 
-            GUIContent header;
-            if (m_InputActionWindowToolbar.searching)
-                header = m_ActionsSearchingGUI;
-            else
-                header = m_ActionsGUI;
-
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
-            EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
+            EditorGUI.LabelField(headerRect, m_ActionsGUI, Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -397,7 +413,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ActionAssetManager.CreateWorkingCopyAsset();
                 InitializeTrees();
-                LoadPropertiesForSelection(false);
+                LoadPropertiesForSelection();
                 Repaint();
             }
         }

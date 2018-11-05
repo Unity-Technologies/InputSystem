@@ -55,6 +55,7 @@ namespace UnityEngine.Experimental.Input
             return action;
         }
 
+        ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
         public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
@@ -264,27 +265,27 @@ namespace UnityEngine.Experimental.Input
 
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
-            return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Finish();
+            return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
         }
 
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
-            return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Finish();
+            return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
         }
 
         public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
-            return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Finish();
+            return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
         }
 
         public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
-            return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Finish();
+            return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
         }
 
         public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
-            return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Finish();
+            return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Done();
         }
 
         /// <summary>
@@ -561,7 +562,7 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
-            public InputControlScheme Finish()
+            public InputControlScheme Done()
             {
                 if (m_Asset != null)
                     return m_Asset.m_ControlSchemes[m_ControlSchemeIndex];

@@ -48,6 +48,24 @@ namespace UnityEngine.Experimental.Input
                 sets[i].Disable();
         }
 
+        /// <summary>
+        /// Duplicate the referenced <see cref="asset"/> and all its action maps and actions.
+        /// </summary>
+        /// <remarks>
+        /// This method is useful to be able to use the same asset multiple times but configure it
+        /// differently each time. A common example of this use case is local multiplayer where each
+        /// player uses the same set of actions supported by the game but each player's actions are
+        /// configured to respond to just the devices assigned to the specific player.
+        /// </remarks>
+        public virtual void MakePrivateCopyOfActions()
+        {
+            if (asset == null)
+                return;
+
+            // Make a duplicate that keeps all GUIDs but nukes all callbacks and such.
+            asset = ScriptableObject.Instantiate(asset);
+        }
+
         public InputActionAssetReference Clone()
         {
             var clone = (InputActionAssetReference)MemberwiseClone();
@@ -57,6 +75,11 @@ namespace UnityEngine.Experimental.Input
         object ICloneable.Clone()
         {
             throw new NotImplementedException();
+        }
+
+        public static implicit operator InputActionAsset(InputActionAssetReference reference)
+        {
+            return reference.m_Asset;
         }
 
         [SerializeField] private InputActionAsset m_Asset;

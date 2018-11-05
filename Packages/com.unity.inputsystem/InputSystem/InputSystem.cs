@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -23,6 +24,8 @@ using UnityEngine.Networking.PlayerConnection;
 #if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: the onXXX event stuff needs to be thread-safe in order to allow finalizers to clean them up
 
 ////TODO: move state change monitor API out of here (static InputStateChangeMonitor class?)
 
@@ -44,7 +47,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.9")]
+[assembly: AssemblyVersion("0.0.10")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -659,6 +662,7 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
+        ////TODO: add optional index (i.e. "nth device of given type")
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
@@ -1205,6 +1209,25 @@ namespace UnityEngine.Experimental.Input
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
         /// </summary>
+        /// <remarks>
+        /// The object received by the callback is either an <see cref="InputAction"/> or an
+        /// <see cref="InputActionMap"/> depending on whether the <see cref="InputActionChange"/>
+        /// affects a single action or an entire action map.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.onActionChange +=
+        ///     (obj, change) =>
+        ///     {
+        ///         if (change == InputActionChange.ActionTriggered)
+        ///         {
+        ///             var action = (InputAction)obj;
+        ///             var control = action.lastTriggerControl;
+        ///             ....
+        ///         }
+        ///     };
+        /// </code>
+        /// </example>
         public static event Action<object, InputActionChange> onActionChange
         {
             add { InputActionMapState.s_OnActionChange.Append(value); }
@@ -1627,6 +1650,8 @@ namespace UnityEngine.Experimental.Input
             #else
             InitializeInPlayer();
             #endif
+
+            InputUser.ResetGlobals();
         }
 
         /// <summary>

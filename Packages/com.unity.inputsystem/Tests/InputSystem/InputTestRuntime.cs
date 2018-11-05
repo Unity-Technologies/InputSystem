@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// The test runtime replaces the services usually supplied by <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
     /// </remarks>
-    /// <seealso cref="InputTestFixture.testRuntime"/>
+    /// <seealso cref="InputTestFixture.runtime"/>
     public class InputTestRuntime : IInputRuntime, IDisposable
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
@@ -88,6 +88,11 @@ namespace UnityEngine.Experimental.Input
                 m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
+        }
+
+        public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
+        {
+            SetDeviceCommandCallback(device.id, callback);
         }
 
         public void SetDeviceCommandCallback(int deviceId, DeviceCommandCallback callback)

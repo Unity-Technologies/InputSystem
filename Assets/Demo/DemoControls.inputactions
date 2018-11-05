@@ -30,7 +30,7 @@
                     "bindings": []
                 },
                 {
-                    "name": "escape",
+                    "name": "menu",
                     "id": "4ad24240-1211-418c-9678-760c0f5e2f0f",
                     "expectedControlLayout": "Button",
                     "bindings": []
@@ -184,7 +184,7 @@
                 {
                     "name": "",
                     "path": "<Keyboard>/space",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "KeyboardMouse",
                     "action": "jump",
@@ -196,7 +196,7 @@
                 {
                     "name": "",
                     "path": "<Gamepad>/buttonNorth",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "jump",
@@ -208,10 +208,22 @@
                 {
                     "name": "",
                     "path": "<Keyboard>/escape",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "KeyboardMouse",
-                    "action": "escape",
+                    "action": "menu",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Gamepad>/{Menu}",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "menu",
                     "chainWithPrevious": false,
                     "isComposite": false,
                     "isPartOfComposite": false,

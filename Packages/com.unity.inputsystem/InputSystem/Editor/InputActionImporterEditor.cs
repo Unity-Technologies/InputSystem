@@ -31,19 +31,21 @@ namespace UnityEngine.Experimental.Input.Editor
                 var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
                 var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
                 var generateActionEventsProperty = serializedObject.FindProperty("m_GenerateActionEvents");
+                var generateInterfacesProperty = serializedObject.FindProperty("m_GenerateInterfaces");
 
                 ////TODO: tie a file selector to this
-                EditorGUILayout.PropertyField(wrapperCodePathProperty);
+                EditorGUILayout.PropertyField(wrapperCodePathProperty, m_WrapperCodePathLabel);
 
-                EditorGUILayout.PropertyField(wrapperClassNameProperty);
+                EditorGUILayout.PropertyField(wrapperClassNameProperty, m_WrapperClassNameLabel);
                 if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
 
-                EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty);
+                EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty, m_WrapperCodeNamespaceLabel);
                 if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
 
-                EditorGUILayout.PropertyField(generateActionEventsProperty);
+                EditorGUILayout.PropertyField(generateActionEventsProperty, m_GenerateActionEventsLabel);
+                EditorGUILayout.PropertyField(generateInterfacesProperty);
             }
 
             ApplyRevertGUI();
@@ -57,7 +59,11 @@ namespace UnityEngine.Experimental.Input.Editor
             return asset;
         }
 
-        private GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Wrapper Class");
+        private GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
+        private GUIContent m_GenerateActionEventsLabel = EditorGUIUtility.TrTextContent("Generate Events");
+        private GUIContent m_WrapperCodePathLabel = EditorGUIUtility.TrTextContent("C# Class File");
+        private GUIContent m_WrapperClassNameLabel = EditorGUIUtility.TrTextContent("C# Class Name");
+        private GUIContent m_WrapperCodeNamespaceLabel = EditorGUIUtility.TrTextContent("C# Class Namespace");
     }
 }
 #endif // UNITY_EDITOR

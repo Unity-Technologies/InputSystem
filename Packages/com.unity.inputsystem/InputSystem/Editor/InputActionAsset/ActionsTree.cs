@@ -12,6 +12,10 @@ namespace UnityEngine.Experimental.Input.Editor
         public SerializedProperty actionMapProperty;
         public Action<TreeViewItem, Rect> OnRowGUI;
 
+        private string m_NameFilter;
+        private string m_SchemeBindingGroupFilter;
+        private string m_DeviceFilter;
+
         public static ActionsTree CreateFromSerializedObject(Action applyAction, ref TreeViewState treeViewState)
         {
             if (treeViewState == null)
@@ -24,6 +28,16 @@ namespace UnityEngine.Experimental.Input.Editor
             return treeView;
         }
 
+        private ActionsTree(Action applyAction, TreeViewState state)
+            : base(applyAction, state)
+        {
+            ////REVIEW: good enough like this for 2018.2?
+            #if UNITY_2018_3_OR_NEWER
+            foldoutOverride += OnFoldoutDraw;
+            #endif
+            Reload();
+        }
+
         static bool OnFoldoutDraw(Rect position, bool expandedState, GUIStyle style)
         {
             var indent = (int)(position.x / 15);
@@ -31,13 +45,26 @@ namespace UnityEngine.Experimental.Input.Editor
             return EditorGUI.Foldout(position, expandedState, GUIContent.none, style);
         }
 
-        protected ActionsTree(Action applyAction, TreeViewState state)
-            : base(applyAction, state)
+        public void SetSchemeBindingGroupFilter(string schemeBindingGroupName)
         {
-            ////REVIEW: good enough like this for 2018.2?
-            #if UNITY_2018_3_OR_NEWER
-            foldoutOverride += OnFoldoutDraw;
-            #endif
+            m_SchemeBindingGroupFilter = schemeBindingGroupName;
+            Reload();
+        }
+
+        public TreeViewItem GetRootElement()
+        {
+            return rootItem;
+        }
+
+        public void SetNameFilter(string filter)
+        {
+            m_NameFilter = string.IsNullOrEmpty(filter) ? null : filter.ToLower();
+            Reload();
+        }
+
+        public void SetDeviceFilter(string deviceId)
+        {
+            m_DeviceFilter = deviceId;
             Reload();
         }
 
@@ -53,51 +80,19 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 ParseActionMap(root, actionMapProperty, 0);
                 // is searching
-                if (!string.IsNullOrEmpty(m_NameFilter))
+                if (!string.IsNullOrEmpty(m_NameFilter)
+                    || !string.IsNullOrEmpty(m_SchemeBindingGroupFilter)
+                    || !string.IsNullOrEmpty(m_DeviceFilter))
                 {
-                    FilterResultsByName(root);
-                    // is searching
-                    if (!string.IsNullOrEmpty(m_NameFilter))
-                    {
-                        FilterResultsByName(root);
-                    }
+                    FilterResults(root, FilterByGroup);
+                    FilterResults(root, FilterByDevice);
+                    FilterResults(root, FilterByName);
                 }
             }
             return root;
         }
 
-        // Return true is the child node should be removed from the parent
-        private bool FilterResultsByName(TreeViewItem root)
-        {
-            if (root.hasChildren)
-            {
-                var listToRemove = new List<TreeViewItem>();
-                foreach (var child in root.children)
-                {
-                    if (root.displayName != null && root.displayName.ToLower().Contains(m_NameFilter))
-                    {
-                        continue;
-                    }
-
-                    if (FilterResultsByName(child))
-                    {
-                        listToRemove.Add(child);
-                    }
-                }
-                foreach (var item in listToRemove)
-                {
-                    root.children.Remove(item);
-                }
-
-                return !root.hasChildren;
-            }
-
-            if (root.displayName == null)
-                return false;
-            return !root.displayName.ToLower().Contains(m_NameFilter);
-        }
-
-        protected void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, int depth)
+        private void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, int depth)
         {
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
@@ -120,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Editor
             parentTreeItem.AddChild(actionItem);
         }
 
-        protected void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
+        private void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
         {
             var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
             CompositeGroupTreeItem compositeGroupTreeItem = null;
@@ -149,9 +144,84 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public TreeViewItem GetRootElement()
+        // Return true is the child node should be removed from the parent
+        private bool FilterResults(TreeViewItem item, Func<TreeViewItem, bool> filterMatch)
         {
-            return rootItem;
+            if (item.hasChildren)
+            {
+                var listToRemove = new List<TreeViewItem>();
+                foreach (var child in item.children)
+                {
+                    if (filterMatch(child))
+                    {
+                        continue;
+                    }
+
+                    if (FilterResults(child, filterMatch))
+                    {
+                        listToRemove.Add(child);
+                    }
+                }
+                foreach (var itemToRemove in listToRemove)
+                {
+                    item.children.Remove(itemToRemove);
+                }
+
+                return !item.hasChildren;
+            }
+            return true;
+        }
+
+        private bool FilterByName(TreeViewItem item)
+        {
+            if (string.IsNullOrEmpty(m_NameFilter))
+                return true;
+            if (item.displayName == null)
+                return false;
+            return item.displayName.ToLower().Contains(m_NameFilter);
+        }
+
+        private bool FilterByGroup(TreeViewItem item)
+        {
+            if (string.IsNullOrEmpty(m_SchemeBindingGroupFilter))
+                return true;
+
+            var binding = item as BindingTreeItem;
+            if (binding != null)
+            {
+                if (!binding.groups.Contains(m_SchemeBindingGroupFilter))
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private bool FilterByDevice(TreeViewItem item)
+        {
+            if (string.IsNullOrEmpty(m_DeviceFilter))
+                return true;
+
+            var binding = item as BindingTreeItem;
+            if (binding != null)
+            {
+                if (!binding.path.StartsWith(m_DeviceFilter))
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+            return true;
+        }
+
+        protected override void RowGUI(RowGUIArgs args)
+        {
+            base.RowGUI(args);
+            if (OnRowGUI != null)
+                OnRowGUI(args.item, args.rowRect);
         }
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
@@ -185,7 +255,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return DragAndDropVisualMode.Move;
         }
 
-        void MoveAction(DragAndDropArgs args, ActionTreeViewItem row)
+        private void MoveAction(DragAndDropArgs args, ActionTreeViewItem row)
         {
             var action = (ActionTreeItem)row;
 
@@ -198,7 +268,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InputActionSerializationHelpers.MoveAction(actionMapProperty, srcIndex, dstIndex);
         }
 
-        void MoveBinding(DragAndDropArgs args, ActionTreeViewItem row)
+        private void MoveBinding(DragAndDropArgs args, ActionTreeViewItem row)
         {
             TreeViewItem item;
             var compositeChildrenCount = 0;
@@ -241,13 +311,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     InputActionSerializationHelpers.MoveBinding(actionMapProperty, srcIndex, dstIndex);
                 }
             }
-        }
-
-        protected override void RowGUI(RowGUIArgs args)
-        {
-            base.RowGUI(args);
-            if (OnRowGUI != null)
-                OnRowGUI(args.item, args.rowRect);
         }
     }
 }

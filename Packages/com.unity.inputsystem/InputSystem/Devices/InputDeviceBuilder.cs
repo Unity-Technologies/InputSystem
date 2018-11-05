@@ -41,16 +41,14 @@ namespace UnityEngine.Experimental.Input.Layouts
     public class InputDeviceBuilder
     {
         // We use this constructor when we create devices in batches.
-        internal InputDeviceBuilder(InputControlLayout.Collection layouts)
+        internal InputDeviceBuilder()
         {
-            m_LayoutCache.layouts = layouts;
         }
 
         public InputDeviceBuilder(string layout, string variants = null,
                                   InputDeviceDescription deviceDescription = new InputDeviceDescription(),
                                   InputDevice existingDevice = null)
         {
-            m_LayoutCache.layouts = InputControlLayout.s_Layouts;
             Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 

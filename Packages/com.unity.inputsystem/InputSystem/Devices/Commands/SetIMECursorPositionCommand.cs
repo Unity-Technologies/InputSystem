@@ -17,8 +17,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        public Vector2 position
+        {
+            get { return m_Position; }
+        }
+
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        Vector2 position;
+        Vector2 m_Position;
 
         public FourCC GetTypeStatic()
         {
@@ -30,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return new SetIMECursorPositionCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                position = cursorPosition
+                m_Position = cursorPosition
             };
         }
     }
