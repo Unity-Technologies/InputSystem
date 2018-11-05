@@ -6,6 +6,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: player ID
 
@@ -263,13 +264,13 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             base.FinishSetup(builder);
         }
 
-        public override unsafe PS4Touch ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe PS4Touch ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             var valuePtr = (PS4Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *valuePtr;
         }
 
-        protected override unsafe void WriteRawValueInto(IntPtr statePtr, PS4Touch value)
+        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, PS4Touch value)
         {
             var valuePtr = (PS4Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<PS4Touch>());
@@ -347,6 +348,9 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         protected override void OnRemoved()
         {
             base.OnRemoved();
+
+            if (m_SlotId == -1)
+                return;
 
             var index = slotIndex;
             if (index >= 0 && index < s_Devices.Length && s_Devices[index] == this)

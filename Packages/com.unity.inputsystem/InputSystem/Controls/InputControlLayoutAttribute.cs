@@ -1,7 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
 
-namespace UnityEngine.Experimental.Input
+////REVIEW: should this *not* be inherited? inheritance can lead to surprises
+
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Attribute to control layout settings of a type used to generate an <see cref="InputControlLayout"/>.

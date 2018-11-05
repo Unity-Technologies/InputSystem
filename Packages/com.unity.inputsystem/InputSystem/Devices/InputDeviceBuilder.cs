@@ -4,6 +4,8 @@ using System.Reflection;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add ability to add to existing arrays rather than creating per-device arrays
+
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the layout cache around instead of throwing
 ////        it away after the creation of every single device; best approach may be to just
@@ -12,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
@@ -25,7 +27,7 @@ namespace UnityEngine.Experimental.Input
     /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
-    /// <c>new</c>'d directlty.
+    /// <c>new</c>'d directly.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
@@ -39,18 +41,20 @@ namespace UnityEngine.Experimental.Input
     public class InputDeviceBuilder
     {
         // We use this constructor when we create devices in batches.
-        internal InputDeviceBuilder(InputControlLayout.Collection layouts)
+        internal InputDeviceBuilder()
         {
-            m_LayoutCache.layouts = layouts;
         }
 
-        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variants = null)
+        public InputDeviceBuilder(string layout, string variants = null,
+                                  InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+                                  InputDevice existingDevice = null)
         {
-            m_LayoutCache.layouts = InputControlLayout.s_Layouts;
-            Setup(new InternedString(layout), existingDevice, new InternedString(variants));
+            Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 
-        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variants)
+        internal void Setup(InternedString layout, InternedString variants,
+            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+            InputDevice existingDevice = null)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
@@ -59,17 +63,9 @@ namespace UnityEngine.Experimental.Input
 
             InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
-            m_Device.CallFinishSetupRecursive(this);
-        }
 
-        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variants)
-        {
-            InstantiateLayout(layout, variants, new InternedString(), null, null);
-            FinalizeControlHierarchy();
-
-            if (!deviceDescription.empty)
-                m_Device.m_Description = deviceDescription;
-
+            m_Device.m_Description = deviceDescription;
+            m_Device.m_UserInteractionFilter = InputNoiseFilter.CreateDefaultNoiseFilter(m_Device);
             m_Device.CallFinishSetupRecursive(this);
         }
 
@@ -108,7 +104,7 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        // Look up a direct or indirect chid control expected to be of a specific type.
+        // Look up a direct or indirect child control expected to be of a specific type.
         // Throws if actual type is not compatible.
         public TControl TryGetControl<TControl>(InputControl parent, string path)
             where TControl : InputControl
@@ -501,7 +497,6 @@ namespace UnityEngine.Experimental.Input
             var name = nameOverride ?? controlItem.name;
             var nameLowerCase = name.ToLower();
             var nameInterned = new InternedString(name);
-            string path = null;
 
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
@@ -512,7 +507,7 @@ namespace UnityEngine.Experimental.Input
             InputControlLayout.ControlItem? controlOverride = null;
             if (m_ChildControlOverrides != null)
             {
-                path = string.Format("{0}/{1}", parent.path, name);
+                var path = string.Format("{0}/{1}", parent.path, name);
                 var pathLowerCase = path.ToLower();
 
                 InputControlLayout.ControlItem match;
@@ -558,6 +553,8 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Add to array.
+            // NOTE: AddChildControls and InstantiateLayout take care of growing the array and making
+            //       room for the immediate children of each control.
             m_Device.m_ChildrenForEachControl[childIndex] = control;
             ++childIndex;
 

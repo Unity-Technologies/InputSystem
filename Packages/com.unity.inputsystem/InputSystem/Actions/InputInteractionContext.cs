@@ -108,6 +108,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public TValue ReadValue<TValue>()
+            where TValue : struct
         {
             return m_State.ReadValue<TValue>(m_TriggerState.bindingIndex, m_TriggerState.controlIndex);
         }

@@ -5,12 +5,14 @@ using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
 using UnityEngine.Experimental.Input.Plugins.HID;
 #endif
 
-class DualShockTests : InputTestFixture
+internal class DualShockTests : InputTestFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [Test]
@@ -38,6 +40,9 @@ class DualShockTests : InputTestFixture
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
         var gamepad = (DualShockGamepad)device;
+
+        // Dpad has default state value so make sure that one is coming through.
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockHIDInputReport
@@ -141,7 +146,7 @@ class DualShockTests : InputTestFixture
         DualShockHIDOutputReport? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(gamepad.id,
+            runtime.SetDeviceCommandCallback(gamepad.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockHIDOutputReport.Type)
@@ -268,7 +273,7 @@ class DualShockTests : InputTestFixture
         DualShockPS4OuputCommand? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(gamepad.id,
+            runtime.SetDeviceCommandCallback(gamepad.id,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockPS4OuputCommand.Type)
@@ -301,31 +306,31 @@ class DualShockTests : InputTestFixture
     [Category("Devices")]
     public unsafe void Devices_CanReadSlotIndexAndGetDualShockPS4BySlotIndex()
     {
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             deviceClass = "PS4DualShockGamepad",
             interfaceName = "PS4"
         }.ToJson(), 1);
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             deviceClass = "PS4DualShockGamepad",
             interfaceName = "PS4"
         }.ToJson(), 2);
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             deviceClass = "PS4DualShockGamepad",
             interfaceName = "PS4"
         }.ToJson(), 3);
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             deviceClass = "PS4DualShockGamepad",
             interfaceName = "PS4"
         }.ToJson(), 4);
 
-        testRuntime.SetDeviceCommandCallback(1, QueryPS4ControllerInfo.Create().WithSlotIndex(0));
-        testRuntime.SetDeviceCommandCallback(2, QueryPS4ControllerInfo.Create().WithSlotIndex(1));
-        testRuntime.SetDeviceCommandCallback(3, QueryPS4ControllerInfo.Create().WithSlotIndex(2));
-        testRuntime.SetDeviceCommandCallback(4, QueryPS4ControllerInfo.Create().WithSlotIndex(3));
+        runtime.SetDeviceCommandCallback(1, QueryPS4ControllerInfo.Create().WithSlotIndex(0));
+        runtime.SetDeviceCommandCallback(2, QueryPS4ControllerInfo.Create().WithSlotIndex(1));
+        runtime.SetDeviceCommandCallback(3, QueryPS4ControllerInfo.Create().WithSlotIndex(2));
+        runtime.SetDeviceCommandCallback(4, QueryPS4ControllerInfo.Create().WithSlotIndex(3));
 
         InputSystem.Update();
 
@@ -349,7 +354,7 @@ class DualShockTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanQueryPS4UserIdFromDualShockPS4()
     {
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             deviceClass = "PS4DualShockGamepad",
             interfaceName = "PS4"
@@ -358,7 +363,7 @@ class DualShockTests : InputTestFixture
         bool? receivedCommand = null;
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(1,
+            runtime.SetDeviceCommandCallback(1,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryPS4ControllerInfo.Type)

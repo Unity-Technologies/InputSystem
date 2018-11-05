@@ -1,9 +1,10 @@
 using System;
-using System.Collections.Generic;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
 ////TODO: allow stuff like "/gamepad/**/<button>"
+////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
 ////TODO: store CRC32s of names on controls and use that for first-level matching of name components
 ////TODO: handle arrays
 
@@ -68,23 +69,7 @@ namespace UnityEngine.Experimental.Input
             // First level is taken to be device.
             if (parser.MoveToNextComponent())
             {
-                // If all we have is a usage, create a simple string with just that.
-                if (parser.current.isWildcard && parser.current.layout.isEmpty && parser.current.usage.isEmpty)
-                {
-                    var savedParser = parser;
-                    if (parser.MoveToNextComponent() && !parser.current.usage.isEmpty && parser.current.name.isEmpty &&
-                        parser.current.layout.isEmpty)
-                    {
-                        var usage = parser.current.usage.ToString();
-                        if (!parser.MoveToNextComponent())
-                            return usage;
-                    }
-
-                    // Reset.
-                    parser = savedParser;
-                }
-
-                result += parser.current.ToHumanReadableString();
+                var device = parser.current.ToHumanReadableString();
 
                 // Any additional levels (if present) are taken to form a control path on the device.
                 var isFirstControlLevel = true;
@@ -92,10 +77,16 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (!isFirstControlLevel)
                         result += '/';
-                    else
-                        result += ' ';
+
                     result += parser.current.ToHumanReadableString();
                     isFirstControlLevel = false;
+                }
+
+                if (!string.IsNullOrEmpty(device))
+                {
+                    result += " [";
+                    result += device;
+                    result += "]";
                 }
             }
 
@@ -113,24 +104,22 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        // From the given control path, try to determine the device layout being used.
+        /// From the given control path, try to determine the device layout being used.
         /// </summary>
         /// <remarks>
         /// This function will only use information available in the path itself or
         /// in layouts referenced by the path. It will not look at actual devices
         /// in the system. This is to make the behavior predictable and not dependent
         /// on whether you currently have the right device connected or not.
-        ///
-        /// Note that this function allocates and causes GC.
         /// </remarks>
-        /// <param name="path">A control path (like "/<gamepad>/leftStick")</param>
+        /// <param name="path">A control path (like "/&lt;gamepad&gt;/leftStick")</param>
         /// <returns>The name of the device layout used by the given control path or null
         /// if the path does not specify a device layout or does so in a way that is not
         /// supported by the function.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="path"/> is null</exception>
         /// <example>
         /// <code>
-        /// InputControlPath.TryGetDeviceLayout("/<gamepad>/leftStick"); // Returns "gamepad".
+        /// InputControlPath.TryGetDeviceLayout("/&lt;gamepad&gt;/leftStick"); // Returns "gamepad".
         /// InputControlPath.TryGetDeviceLayout("/*/leftStick"); // Returns "*".
         /// InputControlPath.TryGetDeviceLayout("/gamepad/leftStick"); // Returns null. "gamepad" is a device name here.
         /// </code>
@@ -152,6 +141,8 @@ namespace UnityEngine.Experimental.Input
 
             return null;
         }
+
+        ////TODO: return Substring and use path parser; should get rid of allocations
 
         // From the given control path, try to determine the control layout being used.
         //
@@ -349,11 +340,58 @@ namespace UnityEngine.Experimental.Input
             return (posInMatchTo == matchToLength && posInStr == strLength); // Check if we have consumed all input. Prevent prefix-only match.
         }
 
-        // Return the first control that matches the given path.
-        //
-        // NOTE: Does not allocate!
         public static InputControl TryFindControl(InputControl control, string path, int indexInPath = 0)
         {
+            return TryFindControl<InputControl>(control, path, indexInPath);
+        }
+
+        /// <summary>
+        /// Return the first control that matches the given path.
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="path"></param>
+        /// <param name="indexInPath"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <remarks>
+        /// Does not allocate.
+        /// </remarks>
+        public static TControl TryFindControl<TControl>(InputControl control, string path, int indexInPath = 0)
+            where TControl : InputControl
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException("path");
+
+            if (indexInPath == 0 && path[0] == '/')
+                ++indexInPath;
+
+            var none = new InputControlList<TControl>();
+            return MatchControlsRecursive(control, path, indexInPath, ref none, matchMultiple: false);
+        }
+
+        /// <summary>
+        /// Perform a search for controls starting with the given control as root and matching
+        /// the given path from the given position. Puts all matching controls on the list and
+        /// returns the number of controls that have been matched.
+        /// </summary>
+        /// <param name="control">Control at which the given path is rooted.</param>
+        /// <param name="path"></param>
+        /// <param name="indexInPath"></param>
+        /// <param name="matches"></param>
+        /// <typeparam name="TControl"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <remarks>
+        /// Matching is case-insensitive.
+        ///
+        /// Does not allocate managed memory.
+        /// </remarks>
+        internal static int TryFindControls<TControl>(InputControl control, string path, int indexInPath,
+            ref InputControlList<TControl> matches)
+            where TControl : InputControl
+        {
             if (control == null)
                 throw new ArgumentNullException("control");
             if (path == null)
@@ -362,44 +400,18 @@ namespace UnityEngine.Experimental.Input
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
 
-            var none = new ArrayOrListWrapper<InputControl>();
-            return MatchControlsRecursive(control, path, indexInPath, ref none);
-        }
-
-        // Perform a search for controls starting with the given control as root and matching
-        // the given path from the given position. Puts all matching controls on the list and
-        // returns the number of controls that have been matched.
-        //
-        // Does not tap 'path' strings of controls so we don't create a bunch of
-        // string objects while feeling our way down the hierarchy.
-        //
-        // Matching is case-insensitive.
-        //
-        // NOTE: Does not allocate!
-        public static int TryFindControls(InputControl control, string path, int indexInPath,
-            List<InputControl> matches)
-        {
-            var wrapper = new ArrayOrListWrapper<InputControl>(matches);
-            return TryFindControls(control, path, indexInPath, ref wrapper);
-        }
-
-        internal static int TryFindControls(InputControl control, string path, int indexInPath,
-            ref ArrayOrListWrapper<InputControl> matches)
-        {
-            if (control == null)
-                throw new ArgumentNullException("control");
-            if (path == null)
-                throw new ArgumentNullException("path");
-
-            if (indexInPath == 0 && path[0] == '/')
-                ++indexInPath;
-
-            var countBefore = matches.count;
-            MatchControlsRecursive(control, path, indexInPath, ref matches);
-            return matches.count - countBefore;
+            var countBefore = matches.Count;
+            MatchControlsRecursive(control, path, indexInPath, ref matches, matchMultiple: true);
+            return matches.Count - countBefore;
         }
 
         public static InputControl TryFindChild(InputControl control, string path, int indexInPath = 0)
+        {
+            return TryFindChild<InputControl>(control, path, indexInPath);
+        }
+
+        public static TControl TryFindChild<TControl>(InputControl control, string path, int indexInPath = 0)
+            where TControl : InputControl
         {
             if (control == null)
                 throw new ArgumentNullException("control");
@@ -410,7 +422,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < childCount; ++i)
             {
                 var child = control.m_ChildrenReadOnly[i];
-                var match = TryFindControl(child, path, indexInPath);
+                var match = TryFindControl<TControl>(child, path, indexInPath);
                 if (match != null)
                     return match;
             }
@@ -418,9 +430,50 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
+        ////REVIEW: probably would be good to have a Matches(string,string) version
+
+        public static bool Matches(string expected, InputControl control)
+        {
+            if (string.IsNullOrEmpty(expected))
+                throw new ArgumentNullException("expected");
+            if (control == null)
+                throw new ArgumentNullException("control");
+
+            var parser = new PathParser(expected);
+            return MatchesRecursive(ref parser, control);
+        }
+
+        private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl)
+        {
+            // Recurse into parent before looking at the current control. This
+            // will advance the parser to where our control is in the path.
+            var parent = currentControl.parent;
+            if (parent != null && !MatchesRecursive(ref parser, parent))
+                return false;
+
+            // Fail if there's no more path left.
+            if (!parser.MoveToNextComponent())
+                return false;
+
+            // Match current path component against current control.
+            return parser.current.Matches(currentControl);
+        }
+
         ////TODO: refactor this to use the new PathParser
 
-        private static InputControl MatchControlsRecursive(InputControl control, string path, int indexInPath, ref ArrayOrListWrapper<InputControl> matches)
+        /// <summary>
+        /// Recursively match path elements in <paramref name="path"/>.
+        /// </summary>
+        /// <param name="control">Current control we're at.</param>
+        /// <param name="path">Control path we are matching against.</param>
+        /// <param name="indexInPath">Index of current component in <paramref name="path"/>.</param>
+        /// <param name="matches"></param>
+        /// <param name="matchMultiple"></param>
+        /// <typeparam name="TControl"></typeparam>
+        /// <returns></returns>
+        private static TControl MatchControlsRecursive<TControl>(InputControl control, string path, int indexInPath,
+            ref InputControlList<TControl> matches, bool matchMultiple)
+            where TControl : InputControl
         {
             var pathLength = path.Length;
 
@@ -428,6 +481,8 @@ namespace UnityEngine.Experimental.Input
             //    "<layout>{usage}name"
             // All are optional but at least one component must be present.
             // Names can be aliases, too.
+            // We don't tap InputControl.path strings of controls so as to not create a
+            // bunch of string objects while feeling our way down the hierarchy.
 
             var controlIsMatch = true;
 
@@ -493,9 +548,14 @@ namespace UnityEngine.Experimental.Input
                 // If we've reached the end of the path, we have a match.
                 if (indexInPath == pathLength)
                 {
-                    if (!matches.isNull)
-                        matches.Add(control);
-                    return control;
+                    // Check type.
+                    var match = control as TControl;
+                    if (match == null)
+                        return null;
+
+                    if (matchMultiple)
+                        matches.Add(match);
+                    return match;
                 }
 
                 // If we've reached a separator, dive into our children.
@@ -506,13 +566,18 @@ namespace UnityEngine.Experimental.Input
                     // Silently accept trailing slashes.
                     if (indexInPath == pathLength)
                     {
-                        if (!matches.isNull)
-                            matches.Add(control);
-                        return control;
+                        // Check type.
+                        var match = control as TControl;
+                        if (match == null)
+                            return null;
+
+                        if (matchMultiple)
+                            matches.Add(match);
+                        return match;
                     }
 
                     // See if we want to match children by usage or by name.
-                    InputControl lastMatch = null;
+                    TControl lastMatch;
                     if (path[indexInPath] == '{')
                     {
                         ////TODO: support scavenging a subhierarchy for usages
@@ -523,12 +588,12 @@ namespace UnityEngine.Experimental.Input
                         // Usages are kind of like entry points that can route to anywhere else
                         // on a device's control hierarchy and then we keep going from that re-routed
                         // point.
-                        lastMatch = MatchByUsageAtDeviceRootRecursive(control.device, path, indexInPath, ref matches);
+                        lastMatch = MatchByUsageAtDeviceRootRecursive(control.device, path, indexInPath, ref matches, matchMultiple);
                     }
                     else
                     {
                         // Go through children and see what we can match.
-                        lastMatch = MatchChildrenRecursive(control, path, indexInPath, ref matches);
+                        lastMatch = MatchChildrenRecursive(control, path, indexInPath, ref matches, matchMultiple);
                     }
 
                     return lastMatch;
@@ -538,8 +603,9 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        private static InputControl MatchByUsageAtDeviceRootRecursive(InputDevice device, string path, int indexInPath,
-            ref ArrayOrListWrapper<InputControl> matches)
+        private static TControl MatchByUsageAtDeviceRootRecursive<TControl>(InputDevice device, string path, int indexInPath,
+            ref InputControlList<TControl> matches, bool matchMultiple)
+            where TControl : InputControl
         {
             var usages = device.m_UsagesForEachControl;
             if (usages == null)
@@ -555,7 +621,7 @@ namespace UnityEngine.Experimental.Input
             if (indexInPath == pathLength)
                 throw new Exception(string.Format("Invalid path spec '{0}'; trailing '{{'", path));
 
-            InputControl lastMatch = null;
+            TControl lastMatch = null;
 
             for (var i = 0; i < usageCount; ++i)
             {
@@ -577,7 +643,7 @@ namespace UnityEngine.Experimental.Input
                 if (indexInPath < pathLength && path[indexInPath] == '/')
                 {
                     lastMatch = MatchChildrenRecursive(controlMatchedByUsage, path, indexInPath + 1,
-                        ref matches);
+                        ref matches, matchMultiple);
 
                     // We can stop going through usages if we matched something and the
                     // path component covering usage does not contain wildcards.
@@ -586,18 +652,21 @@ namespace UnityEngine.Experimental.Input
 
                     // We can stop going through usages if we have a match and are only
                     // looking for a single one.
-                    if (lastMatch != null && matches.isNull)
+                    if (lastMatch != null && !matchMultiple)
                         break;
                 }
                 else
                 {
-                    lastMatch = controlMatchedByUsage;
-                    if (!matches.isNull)
-                        matches.Add(controlMatchedByUsage);
-                    else
+                    lastMatch = controlMatchedByUsage as TControl;
+                    if (lastMatch != null)
                     {
-                        // Only looking for single match and we have one.
-                        break;
+                        if (matchMultiple)
+                            matches.Add(lastMatch);
+                        else
+                        {
+                            // Only looking for single match and we have one.
+                            break;
+                        }
                     }
                 }
             }
@@ -605,17 +674,18 @@ namespace UnityEngine.Experimental.Input
             return lastMatch;
         }
 
-        private static InputControl MatchChildrenRecursive(InputControl control, string path, int indexInPath,
-            ref ArrayOrListWrapper<InputControl> matches)
+        private static TControl MatchChildrenRecursive<TControl>(InputControl control, string path, int indexInPath,
+            ref InputControlList<TControl> matches, bool matchMultiple)
+            where TControl : InputControl
         {
             var childCount = control.m_ChildrenReadOnly.Count;
-            InputControl lastMatch = null;
+            TControl lastMatch = null;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
 
             for (var i = 0; i < childCount; ++i)
             {
                 var child = control.m_ChildrenReadOnly[i];
-                var childMatch = MatchControlsRecursive(child, path, indexInPath, ref matches);
+                var childMatch = MatchControlsRecursive(child, path, indexInPath, ref matches, matchMultiple);
 
                 if (childMatch == null)
                     continue;
@@ -627,7 +697,7 @@ namespace UnityEngine.Experimental.Input
 
                 // If we are only looking for the first match and a child matched,
                 // we can also stop.
-                if (matches.isNull)
+                if (!matchMultiple)
                     return childMatch;
 
                 // Otherwise we have to go hunting through the hierarchy in case there are
@@ -781,7 +851,63 @@ namespace UnityEngine.Experimental.Input
                 }
                 return result;
             }
+
+            /// <summary>
+            /// Whether the given control matches the constraints of this path component.
+            /// </summary>
+            /// <param name="control">Control to match against the path spec.</param>
+            /// <returns></returns>
+            public bool Matches(InputControl control)
+            {
+                // Match layout.
+                if (!layout.isEmpty)
+                {
+                    // Check for direct match.
+                    var layoutMatches = Substring.Compare(layout, control.layout,
+                        StringComparison.InvariantCultureIgnoreCase) == 0;
+                    if (!layoutMatches)
+                    {
+                        // No direct match but base layout may match.
+                        var baseLayout = control.m_Layout;
+                        while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout) && !layoutMatches)
+                        {
+                            layoutMatches = Substring.Compare(layout, baseLayout.ToString(),
+                                StringComparison.InvariantCultureIgnoreCase) == 0;
+                        }
+                    }
+
+                    if (!layoutMatches)
+                        return false;
+                }
+
+                // Match usage.
+                if (!usage.isEmpty)
+                {
+                    var usages = control.usages;
+                    var haveUsageMatch = false;
+                    for (var i = 0; i < usages.Count; ++i)
+                        if (Substring.Compare(usages[i].ToString(), usage, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            haveUsageMatch = true;
+                            break;
+                        }
+
+                    if (!haveUsageMatch)
+                        return false;
+                }
+
+                // Match name.
+                if (!name.isEmpty && !isWildcard)
+                {
+                    if (Substring.Compare(control.name, name, StringComparison.InvariantCultureIgnoreCase) != 0)
+                        return false;
+                }
+
+                return true;
+            }
         }
+
+        ////TODO: expose PathParser
 
         // NOTE: Must not allocate!
         internal struct PathParser

@@ -5,9 +5,12 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: "properties" seems wrong; these seems to revert to "parameters" specifically
+
+////TODO: nuke "ReorderableReorderable"
 
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
@@ -24,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         protected override void AddElement(object data)
         {
-            if (m_ListView.list.Count == 1 && m_ListView.list[0] == "")
+            if (m_ListView.list.Count == 1 && (string)m_ListView.list[0] == "")
             {
                 m_ListView.list.Clear();
             }
@@ -51,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         protected override void AddElement(object data)
         {
-            if (m_ListView.list.Count == 1 && m_ListView.list[0] == "")
+            if (m_ListView.list.Count == 1 && (string)m_ListView.list[0] == "")
             {
                 m_ListView.list.Clear();
             }
@@ -179,26 +182,28 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
             if (m_ListView.index >= 0)
             {
-                for (int i = 0; i < m_SelectedParameterList.Length; i++)
+                for (var i = 0; i < m_SelectedParameterList.Length; i++)
                 {
                     var parameterValue = m_SelectedParameterList[i];
                     EditorGUI.BeginChangeCheck();
+
+                    ////TODO: need to detect when value is at default
 
                     string result = null;
                     if (parameterValue.type == InputControlLayout.ParameterType.Integer)
                     {
                         var intValue = int.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.IntField(parameterValue.name, intValue).ToString();
+                        result = EditorGUILayout.IntField(ObjectNames.NicifyVariableName(parameterValue.name), intValue).ToString();
                     }
                     else if (parameterValue.type == InputControlLayout.ParameterType.Float)
                     {
                         var floatValue = float.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.FloatField(parameterValue.name, floatValue).ToString();
+                        result = EditorGUILayout.FloatField(ObjectNames.NicifyVariableName(parameterValue.name), floatValue).ToString();
                     }
                     else if (parameterValue.type == InputControlLayout.ParameterType.Boolean)
                     {
                         var boolValue = bool.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.Toggle(parameterValue.name, boolValue).ToString();
+                        result = EditorGUILayout.Toggle(ObjectNames.NicifyVariableName(parameterValue.name), boolValue).ToString();
                     }
 
                     if (EditorGUI.EndChangeCheck())

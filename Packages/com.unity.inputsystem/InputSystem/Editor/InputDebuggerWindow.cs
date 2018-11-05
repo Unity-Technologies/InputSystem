@@ -6,7 +6,12 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: add warning if input backends are not enabled
+
+////TODO: show input users
 
 ////TODO: append " (Disabled) to disabled devices and grey them out
 
@@ -104,8 +109,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void Refresh()
         {
-            if (m_TreeView != null)
-                m_TreeView.Reload();
+            m_NeedReload = true;
             Repaint();
         }
 
@@ -155,9 +159,26 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            // If the new backends aren't enabled, show a warning in the debugger.
+            if (!EditorPlayerSettings.newSystemBackendsEnabled)
+            {
+                EditorGUILayout.HelpBox(
+                    "Platform backends for the new input system are not enabled. " +
+                    "No devices and input from hardware will come through in the new input system APIs.\n\n" +
+                    "To enable the backends, set 'Active Input Handling' in the player settings to either 'Input System (Preview)' " +
+                    "or 'Both' and restart the editor.", MessageType.Warning);
+            }
+
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
+            {
                 Initialize();
+            }
+            else if (m_NeedReload)
+            {
+                m_TreeView.Reload();
+                m_NeedReload = false;
+            }
 
             DrawToolbarGUI();
 
@@ -199,15 +220,14 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private InputDiagnostics m_Diagnostics;
         [NonSerialized] private InputSystemTreeView m_TreeView;
         [NonSerialized] private bool m_Initialized;
+        [NonSerialized] private bool m_NeedReload;
 
         internal static void ReviveAfterDomainReload()
         {
             if (s_Instance != null)
             {
-                InputSystem.onDeviceChange += s_Instance.OnDeviceChange;
-
-                // Trigger an initial repaint now that we know the input system has come
-                // back to life.
+                // Trigger initial repaint. Will call Initialize() to install hooks and
+                // refresh tree.
                 s_Instance.Repaint();
             }
         }
@@ -233,6 +253,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public TreeViewItem devicesItem { get; private set; }
             public TreeViewItem layoutsItem { get; private set; }
             public TreeViewItem configurationItem { get; private set; }
+            public TreeViewItem usersItem { get; private set; }
 
             public InputSystemTreeView(TreeViewState state)
                 : base(state)
@@ -277,6 +298,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddEnabledActions(actionsItem, ref id);
                 }
 
+                // Users.
+                ////TODO
+
                 // Devices.
                 var devices = InputSystem.devices;
                 devicesItem = AddChild(root, string.Format("Devices ({0})", devices.Count), ref id);
@@ -314,6 +338,16 @@ namespace UnityEngine.Experimental.Input.Editor
                     foreach (var device in m_UnsupportedDevices)
                         AddChild(unsupportedDevicesNode, device.ToString(), ref id);
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
+
+                var disconnectedDevices = InputSystem.disconnectedDevices;
+                if (disconnectedDevices.Count > 0)
+                {
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var disconnectedDevicesNode = AddChild(parent, string.Format("Disconnected ({0})", disconnectedDevices.Count), ref id);
+                    foreach (var device in disconnectedDevices)
+                        AddChild(disconnectedDevicesNode, device.ToString(), ref id);
+                    disconnectedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 // Layouts.
@@ -358,7 +392,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            ////TODO: split remote and local layouts
             private void AddControlLayouts(TreeViewItem parent, ref int id)
             {
                 // Split root into three different groups:
@@ -367,8 +400,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 // 3) Device layouts that match specific products
 
                 var controls = AddChild(parent, "Controls", ref id);
-                var devices = AddChild(parent, "Devices", ref id);
-                var products = AddChild(parent, "Products", ref id);
+                var devices = AddChild(parent, "Abstract Devices", ref id);
+                var products = AddChild(parent, "Specific Devices", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
                     AddControlLayoutItem(layout, controls, ref id);
@@ -425,10 +458,14 @@ namespace UnityEngine.Experimental.Input.Editor
                         "Common Usages: " +
                         string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
                 }
-                if (!layout.deviceMatcher.empty)
+
+                ////TODO: find a more elegant solution than multiple "Matching Devices" parents when having multiple
+                ////      matchers
+                // Device matchers.
+                foreach (var matcher in EditorInputControlLayoutCache.GetDeviceMatchers(layout.name))
                 {
                     var node = AddChild(item, "Matching Devices", ref id);
-                    foreach (var pattern in layout.deviceMatcher.patterns)
+                    foreach (var pattern in matcher.patterns)
                         AddChild(node, string.Format("{0} => \"{1}\"", pattern.Key, pattern.Value), ref id);
                 }
 

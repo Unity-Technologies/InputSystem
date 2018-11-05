@@ -1,5 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: add API to send events in bulk rather than one by one
 

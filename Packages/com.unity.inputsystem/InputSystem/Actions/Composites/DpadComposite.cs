@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Experimental.Input.Controls;
 
 ////TODO: add support for ramp up/down
@@ -12,6 +13,10 @@ namespace UnityEngine.Experimental.Input.Composites
     /// This composite allows to grab arbitrary buttons from a device and arrange them in
     /// a D-Pad like configuration. Based on button presses, the composite will return a
     /// normalized direction vector.
+    ///
+    /// Opposing motions cancel each other out. Meaning that if, for example, both the left
+    /// and right horizontal button are pressed, the resulting horizontal movement value will
+    /// be zero.
     /// </remarks>
     public class DpadComposite : IInputBindingComposite<Vector2>
     {
@@ -26,9 +31,30 @@ namespace UnityEngine.Experimental.Input.Composites
         /// </summary>
         public bool normalize = true;
 
-        public Vector2 ReadValue(ref InputBindingCompositeContext context)
+        public Type valueType
         {
-            ////TODO: unify code path with DpadControl.ReadRawValueFrom()
+            get { return typeof(Vector2); }
+        }
+
+        public unsafe int valueSizeInBytes
+        {
+            get { return sizeof(Vector2); }
+        }
+        public unsafe Vector2 ReadValue(ref InputBindingCompositeContext context)
+        {
+            Vector2 result;
+            ReadValue(ref context, &result, sizeof(Vector2));
+            return result;
+        }
+
+        public unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+            if (bufferSize < sizeof(Vector2))
+                throw new ArgumentException("bufferSize < sizeof(Vector2)", "bufferSize");
+
+            ////TODO: unify code path with DpadControl.ReadUnprocessedValueFrom()
             var upIsPressed = up.isPressed;
             var downIsPressed = down.isPressed;
             var leftIsPressed = left.isPressed;
@@ -47,10 +73,10 @@ namespace UnityEngine.Experimental.Input.Composites
                 // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pow(0.707107)) is ~1.
                 const float diagonal = 0.707107f;
                 if (result.x != 0 && result.y != 0)
-                    return new Vector2(result.x * diagonal, result.y * diagonal);
+                    result = new Vector2(result.x * diagonal, result.y * diagonal);
             }
 
-            return result;
+            *((Vector2*)buffer) = result;
         }
     }
 }

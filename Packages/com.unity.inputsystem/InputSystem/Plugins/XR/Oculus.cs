@@ -1,4 +1,5 @@
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -38,6 +39,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     public class OculusTouchController : XRControllerWithRumble
     {
         public AxisControl combinedTrigger { get; private set; }
+        [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control joystick { get; private set; }
 
         public AxisControl trigger { get; private set; }

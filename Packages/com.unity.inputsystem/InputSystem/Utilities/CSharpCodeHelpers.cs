@@ -60,7 +60,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 }
             }
 
-            // If so, replace them.
+            // If so, create a new string where we remove them.
             if (nameHasInvalidCharacters)
             {
                 var buffer = new StringBuilder();
@@ -69,8 +69,6 @@ namespace UnityEngine.Experimental.Input.Utilities
                     var ch = name[i];
                     if (char.IsLetterOrDigit(ch) || ch == '_')
                         buffer.Append(ch);
-                    else if (ch != ' ') // Spaces we just cut out.
-                        buffer.Append('_');
                 }
 
                 name = buffer.ToString();

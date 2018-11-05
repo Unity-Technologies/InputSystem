@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -42,8 +42,6 @@ namespace UnityEngine.Experimental.Input
                 m_StateBuffer.Dispose();
 
             m_StateBuffer = new NativeArray<byte>();
-            m_Head = 0;
-            m_Tail = 0;
         }
 
         ////REVIEW: make control settable?
@@ -54,8 +52,6 @@ namespace UnityEngine.Experimental.Input
         public int Count { get; private set; }
 
         private NativeArray<byte> m_StateBuffer;
-        private int m_Head;
-        private int m_Tail;
     }
 
     /// <summary>
@@ -63,6 +59,7 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
     public class InputStateHistory<TValue> : InputStateHistory, IReadOnlyList<TValue>, IDisposable
+        where TValue : struct
     {
         public InputStateHistory(InputControl<TValue> control)
             : base(control)

@@ -1,8 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////REVIEW: should we put lock state directly on Pointer?
+
+////REVIEW: should pointer IDs be required to be globally unique across pointing devices?
 
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
@@ -35,6 +40,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #endif
         public Vector2 position;
 
+        ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
         [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
@@ -50,9 +56,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", layout = "PointerPhase", sizeInBits = 4)]
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4)]
         ////TODO: give this control a better name
-        [InputControl(name = "button", layout = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "button", layout = "Button", format = "BIT", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
         [InputControl(layout = "Digital")]

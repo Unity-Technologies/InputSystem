@@ -4,9 +4,9 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
-////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
-////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
+////REVIEW: as soon as we gain the ability to have blittable type constraints, InputControl<TValue> should be constrained such
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
@@ -14,6 +14,9 @@ using Unity.Collections.LowLevel.Unsafe;
 ////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
 ////        the InputDevice reference itself.
+
+////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
+////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
 
 namespace UnityEngine.Experimental.Input
 {
@@ -216,7 +219,19 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Returns the underlying value type of this control.
         /// </summary>
+        /// <remarks>
+        /// This is the type of values that are returned when reading the current value of a control
+        /// or when reading a value of a control from an event.
+        /// </remarks>
+        /// <seealso cref="valueSizeInBytes"/>
+        /// <seealso cref="WriteValueInto"/>
         public abstract Type valueType { get; }
+
+        /// <summary>
+        /// Size in bytes of values that the control returns.
+        /// </summary>
+        /// <seealso cref="valueType"/>
+        public abstract int valueSizeInBytes { get; }
 
         public override string ToString()
         {
@@ -228,7 +243,7 @@ namespace UnityEngine.Experimental.Input
             return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
         }
 
-        ////TODO: setting value (will it also go through the processor stack?)
+        ////TODO: setting value
 
         // Current value as boxed object.
         // NOTE: Calling this will allocate.
@@ -238,6 +253,8 @@ namespace UnityEngine.Experimental.Input
 
         public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
 
+        public abstract unsafe void WriteValueInto(void* buffer, int bufferSize);
+
         public void WriteValueFromObjectInto(InputEventPtr eventPtr, object value)
         {
             var statePtr = GetStatePtrFromStateEvent(eventPtr);
@@ -246,6 +263,15 @@ namespace UnityEngine.Experimental.Input
 
             var bufferSize = m_StateBlock.byteOffset + eventPtr.sizeInBytes;
             WriteValueFromObjectInto(statePtr, bufferSize, value);
+        }
+
+        public abstract bool HasValueChangeIn(IntPtr statePtr);
+
+        ////REVIEW: given we're axing .current and its entire direction of functionality, I'm thinking there's a chance
+        ////        that noise filtering in this form is no longer relevant
+        public virtual bool HasSignificantChange(InputEventPtr eventPtr)
+        {
+            return GetStatePtrFromStateEvent(eventPtr) != IntPtr.Zero;
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -380,25 +406,26 @@ namespace UnityEngine.Experimental.Input
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
-        ////TODO: pass state ptr *NOT* value ptr (it's confusing)
         // NOTE: The given argument should point directly to the value *not* to the
         //       base state to which the state block offset has to be added.
-        internal unsafe bool CheckStateIsAtDefault(IntPtr valuePtr = new IntPtr())
+        internal unsafe bool CheckStateIsAtDefault(IntPtr statePtr = new IntPtr())
         {
             ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
             ////        e.g. from HID input reports
 
-            var defaultPtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
-            if (valuePtr == IntPtr.Zero)
-                valuePtr = new IntPtr(currentStatePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            if (statePtr == IntPtr.Zero)
+                statePtr = currentStatePtr;
+
+            var defaultValuePtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
 
             if (m_StateBlock.sizeInBits == 1)
             {
                 return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ==
-                    MemoryHelpers.ReadSingleBit(defaultPtr, m_StateBlock.bitOffset);
+                    MemoryHelpers.ReadSingleBit(defaultValuePtr, m_StateBlock.bitOffset);
             }
 
-            return MemoryHelpers.MemCmpBitRegion(defaultPtr.ToPointer(), valuePtr.ToPointer(),
+            return MemoryHelpers.MemCmpBitRegion(defaultValuePtr.ToPointer(), valuePtr.ToPointer(),
                 m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
         }
 
@@ -406,35 +433,53 @@ namespace UnityEngine.Experimental.Input
         {
             if (!eventPtr.valid)
                 throw new ArgumentNullException("eventPtr");
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
 
-            ////TODO: support delta events
+            uint stateOffset;
+            FourCC stateFormat;
+            uint stateSizeInBytes;
+            IntPtr statePtr;
             if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
+            {
+                var deltaEvent = DeltaStateEvent.From(eventPtr);
 
-            var stateEvent = StateEvent.From(eventPtr);
+                // If it's a delta event, we need to subtract the delta state offset if it's not set to the root of the device
+                stateOffset = deltaEvent->stateOffset;
+                stateFormat = deltaEvent->stateFormat;
+                stateSizeInBytes = deltaEvent->deltaStateSizeInBytes;
+                statePtr = deltaEvent->deltaState;
+            }
+            else if (eventPtr.IsA<StateEvent>())
+            {
+                var stateEvent = StateEvent.From(eventPtr);
+
+                stateOffset = 0;
+                stateFormat = stateEvent->stateFormat;
+                stateSizeInBytes = stateEvent->stateSizeInBytes;
+                statePtr = stateEvent->state;
+            }
+            else
+            {
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+            }
 
             // Make sure we have a state event compatible with our device. The event doesn't
             // have to be specifically for our device (we don't require device IDs to match) but
             // the formats have to match and the size must be within range of what we're trying
             // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
+            if (stateFormat != device.m_StateBlock.format)
                 throw new InvalidOperationException(
                     string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
+                        "Cannot read control '{0}' from {1} with format {2}; device '{3}' expects format {4}",
+                        path, eventPtr.type, stateFormat, device, device.m_StateBlock.format));
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
+            stateOffset += device.m_StateBlock.byteOffset;
 
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            if (m_StateBlock.byteOffset - stateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return IntPtr.Zero;
 
-            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+            return new IntPtr(statePtr.ToInt64() - (int)stateOffset);
         }
 
         internal int ResolveDeviceIndex()
@@ -462,13 +507,16 @@ namespace UnityEngine.Experimental.Input
     /// that the control has to store data in the given value format. A control that captures float
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
+        where TValue : struct
     {
         public override Type valueType
         {
-            get
-            {
-                return typeof(TValue);
-            }
+            get { return typeof(TValue); }
+        }
+
+        public override int valueSizeInBytes
+        {
+            get { return UnsafeUtility.SizeOf<TValue>(); }
         }
 
         public TValue ReadValue()
@@ -497,6 +545,18 @@ namespace UnityEngine.Experimental.Input
             return ReadDefaultValue();
         }
 
+        public override unsafe void WriteValueInto(void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+            if (bufferSize < UnsafeUtility.AlignOf<TValue>())
+                throw new ArgumentException(
+                    string.Format("bufferSize={0} < sizeof(TValue)={1}", bufferSize, valueSizeInBytes), "bufferSize");
+
+            var adjustedBufferPtr = (byte*)buffer - m_StateBlock.byteOffset;
+            WriteUnprocessedValueInto(new IntPtr(adjustedBufferPtr), ReadValue());
+        }
+
         public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
         {
             if (buffer == IntPtr.Zero)
@@ -512,44 +572,60 @@ namespace UnityEngine.Experimental.Input
             if (!(value is TValue))
                 value = Convert.ChangeType(value, typeof(TValue));
 
-            WriteRawValueInto(buffer, (TValue)value);
+            WriteUnprocessedValueInto(buffer, (TValue)value);
         }
 
-        ////REVIEW: this should return a bool and pass the value as an out parameter; bool should indicate
-        ////        whether value is actually coming from the event or just a default value
-        // Read a control value directly from a state event.
-        //
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
         //       but also profits from the fact that remapping is already established in a control hierarchy
         //       and reading from the right offsets is taken care of.
-        public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        public bool ReadValueFrom(InputEventPtr inputEvent, out TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == IntPtr.Zero)
-                return ReadDefaultValue();
+            {
+                value = ReadDefaultValue();
+                return false;
+            }
 
-            var value = ReadRawValueFrom(statePtr);
-            if (process)
-                value = Process(value);
+            value = ReadValueFrom(statePtr);
+            return true;
+        }
 
-            return value;
+        public TValue ReadUnprocessedValueFrom(InputEventPtr eventPtr)
+        {
+            var result = default(TValue);
+            ReadUnprocessedValueFrom(eventPtr, out result);
+            return result;
+        }
+
+        public bool ReadUnprocessedValueFrom(InputEventPtr inputEvent, out TValue value)
+        {
+            var statePtr = GetStatePtrFromStateEvent(inputEvent);
+            if (statePtr == IntPtr.Zero)
+            {
+                value = ReadDefaultValue();
+                return false;
+            }
+
+            value = ReadUnprocessedValueFrom(statePtr);
+            return true;
         }
 
         public TValue ReadValueFrom(IntPtr statePtr)
         {
-            return Process(ReadRawValueFrom(statePtr));
+            return Process(ReadUnprocessedValueFrom(statePtr));
         }
 
-        public TValue ReadRawValue()
+        public TValue ReadUnprocessedValue()
         {
-            return ReadRawValueFrom(currentStatePtr);
+            return ReadUnprocessedValueFrom(currentStatePtr);
         }
 
-        public abstract TValue ReadRawValueFrom(IntPtr statePtr);
+        public abstract TValue ReadUnprocessedValueFrom(IntPtr statePtr);
 
-        protected virtual void WriteRawValueInto(IntPtr statePtr, TValue value)
+        protected virtual void WriteUnprocessedValueInto(IntPtr statePtr, TValue value)
         {
-            ////TODO: indicate propertly that this control does not support writing
+            ////TODO: indicate properly that this control does not support writing
             throw new NotSupportedException();
         }
 
@@ -575,7 +651,7 @@ namespace UnityEngine.Experimental.Input
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
         {
-            WriteRawValueInto(statePtr, value);
+            WriteUnprocessedValueInto(statePtr, value);
         }
 
         /// <summary>
@@ -599,6 +675,20 @@ namespace UnityEngine.Experimental.Input
             var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
             var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
             WriteValueInto(new IntPtr(adjustedStatePtr), value);
+        }
+
+        public override unsafe bool HasValueChangeIn(IntPtr statePtr)
+        {
+            var currentValue = ReadValue();
+            var valueInState = ReadValueFrom(statePtr);
+
+            var currentValuePtr = UnsafeUtility.AddressOf(ref currentValue);
+            var valueInStatePtr = UnsafeUtility.AddressOf(ref valueInState);
+
+            // NOTE: We're comparing raw memory of processed values here (which are guaranteed to be structs or
+            //       primitives), not state. Means we don't have to take bits into account here.
+
+            return UnsafeUtility.MemCmp(valueInStatePtr, currentValuePtr, UnsafeUtility.SizeOf<TValue>()) != 0;
         }
 
         public TValue Process(TValue value)

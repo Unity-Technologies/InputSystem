@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System.Linq;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 
@@ -83,8 +84,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     ""extend"" : ""AndroidGamepad"",
     ""controls"" : [
         {0},
-        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {3}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
+        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
+        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {3}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
         {{ ""name"" : ""leftShoulder"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {4}, ""variant"" : ""{1}"" }},
         {{ ""name"" : ""rightShoulder"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {5}, ""variant"" : ""{1}"" }},
         {{ ""name"" : ""buttonSouth"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {6}, ""variant"" : ""{1}"" }},
