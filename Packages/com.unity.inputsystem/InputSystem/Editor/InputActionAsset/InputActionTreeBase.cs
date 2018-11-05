@@ -200,7 +200,7 @@ namespace UnityEngine.Experimental.Input.Editor
             DragAndDrop.paths = args.draggedItemIDs.Select(i => "" + i).ToArray();
             DragAndDrop.StartDrag(row.displayName);
         }
-        
+
         public TreeViewItem GetRootElement()
         {
             return rootItem;

@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete Control Scheme...");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save Asset");
         private static readonly float m_MininumButtonWidth = 110f;
-        
+
         public string selectedControlSchemeName
         {
             get
@@ -45,11 +45,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public string selectedControlSchemeBindingGroup
-        {             
+        {
             get
             {
                 return m_SelectedControlSchemeIndex < 0 ? null : controlSchemes[m_SelectedControlSchemeIndex].bindingGroup;
-            } 
+            }
         }
 
         public string selectedDevice
@@ -76,7 +76,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public ReadOnlyArray<InputControlScheme> controlSchemes
         {
             get { return m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes; }
-        } 
+        }
 
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager, Action apply)
         {

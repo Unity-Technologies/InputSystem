@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
             public static string ResourcesPath
             {
-                get    
+                get
                 {
                     if (EditorGUIUtility.isProSkin)
                         return SharedResourcesPath + "pro/";
@@ -253,7 +253,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-            
+
             LoadPropertiesForSelection();
         }
 
@@ -306,7 +306,7 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
             var columnRect = GUILayoutUtility.GetLastRect();
-            
+
             var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             columnRect.y += labelRect.height;
@@ -339,7 +339,7 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
             var columnRect = GUILayoutUtility.GetLastRect();
-            
+
             var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             columnRect.y += labelRect.height;
@@ -389,7 +389,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 GUILayout.FlexibleSpace();
             }
-            
+
 
             EditorGUILayout.EndVertical();
         }

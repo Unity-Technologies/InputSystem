@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return true;
         }
-        
+
         // Return true is the child node should be removed from the parent
         private bool FilterResults(TreeViewItem item, Func<TreeViewItem, bool> filterMatch)
         {
@@ -234,7 +234,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (item is CompositeGroupTreeItem)
                 return !FilterResults(item, MatchGroupFilter);
-            
+
             var binding = item as BindingTreeItem;
             if (binding != null)
             {
@@ -255,7 +255,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (item is CompositeGroupTreeItem)
                 return !FilterResults(item, MatchDeviceFilter);
-            
+
             var binding = item as BindingTreeItem;
             if (binding != null)
             {
@@ -365,7 +365,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public void SelectNewBindingRow(ActionTreeItem actionLine)
         {
             // Since the tree is rebuilt, we need to find action line with matching id of the current tree
-            ActionTreeItem action = (ActionTreeItem) FindItem(actionLine.id, rootItem);
+            ActionTreeItem action = (ActionTreeItem)FindItem(actionLine.id, rootItem);
             var newRow = action.children.Last();
             if (newRow.hasChildren)
                 newRow = newRow.children.First();
