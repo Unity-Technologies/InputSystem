@@ -1,5 +1,3 @@
-using UnityEngine.Experimental.Input.LowLevel;
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

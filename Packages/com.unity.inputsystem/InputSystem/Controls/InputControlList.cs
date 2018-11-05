@@ -63,6 +63,14 @@ namespace UnityEngine.Experimental.Input
                 if (value < 0)
                     throw new ArgumentException("Capacity cannot be negative", "value");
 
+                if (value == 0)
+                {
+                    if (m_Count != 0)
+                        m_Indices.Dispose();
+                    m_Count = 0;
+                    return;
+                }
+
                 var newSize = Count + value;
                 var allocator = m_Allocator != Allocator.Invalid ? m_Allocator : Allocator.Persistent;
                 ArrayHelpers.Resize(ref m_Indices, newSize, allocator);
@@ -338,7 +346,16 @@ namespace UnityEngine.Experimental.Input
                 ? ArrayHelpers.IndexOfReference(device.m_ChildrenForEachControl, control) + 1
                 : 0;
 
-            return ((ulong)deviceIndex << 32) | (ulong)controlIndex;
+            // There is a known documented bug with the new Rosyln
+            // compiler where it warns on casts with following line that
+            // was perfectly legaly in previous CSC compiler.
+            // Below is silly conversion to get rid of warning, or we can pragma
+            // out the warning.
+            //return ((ulong)deviceIndex << 32) | (ulong)controlIndex;
+            var shiftedDeviceIndex = (ulong)deviceIndex << 32;
+            var unsignedControlIndex = (ulong)controlIndex;
+
+            return shiftedDeviceIndex | unsignedControlIndex;
         }
 
         private static TControl FromIndex(ulong index)

@@ -90,6 +90,11 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
+        {
+            SetDeviceCommandCallback(device.id, callback);
+        }
+
         public void SetDeviceCommandCallback(int deviceId, DeviceCommandCallback callback)
         {
             lock (m_Lock)

@@ -123,18 +123,51 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
         }
 
-        public ReadOnlyArray<InputControl> controls
+        /// <inheritdoc />
+        public InputBinding? bindingMask
         {
-            get { throw new NotImplementedException(); }
+            get { return m_BindingMask; }
+            set
+            {
+                if (m_BindingMask == value)
+                    return;
+
+                m_BindingMask = value;
+
+                if (m_State != null)
+                    ResolveBindings();
+            }
         }
 
-        public InputBinding? bindingMask
+        /// <inheritdoc />
+        public ReadOnlyArray<InputDevice>? devices
         {
             get
             {
-                if (m_BindingMask.isEmpty)
-                    return null;
-                return m_BindingMask;
+                // Return asset's device list if we have none (only if we're part of an asset).
+                if (m_Devices == null && asset != null)
+                    return asset.devices;
+
+                return m_Devices;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    if (m_DevicesArray != null)
+                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
+                    m_DevicesCount = 0;
+                    m_Devices = null;
+                }
+                else
+                {
+                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
+                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
+                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
+                }
+
+                if (m_State != null)
+                    ResolveBindings();
             }
         }
 
@@ -245,29 +278,6 @@ namespace UnityEngine.Experimental.Input
                 throw new KeyNotFoundException(string.Format("Could not find action with ID '{0}' in map '{1}'", id,
                     name));
             return action;
-        }
-
-        public void SetBindingMask(InputBinding bindingMask)
-        {
-            if (bindingMask == m_BindingMask)
-                return;
-
-            m_BindingMask = bindingMask;
-
-            if (m_State != null)
-                ResolveBindings();
-        }
-
-        public void SetBindingMask(string bindingGroups)
-        {
-            if (string.IsNullOrEmpty(bindingGroups))
-                bindingGroups = null;
-            SetBindingMask(new InputBinding {groups = bindingGroups});
-        }
-
-        public void ClearBindingMask()
-        {
-            SetBindingMask(new InputBinding());
         }
 
         /// <summary>
@@ -427,7 +437,11 @@ namespace UnityEngine.Experimental.Input
         /// Initialized when map (or any action in it) is first enabled.
         /// </remarks>
         [NonSerialized] internal InputActionMapState m_State;
-        [NonSerialized] internal InputBinding m_BindingMask;
+        [NonSerialized] internal InputBinding? m_BindingMask;
+
+        [NonSerialized] internal ReadOnlyArray<InputDevice>? m_Devices;
+        [NonSerialized] internal int m_DevicesCount;
+        [NonSerialized] internal InputDevice[] m_DevicesArray;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 

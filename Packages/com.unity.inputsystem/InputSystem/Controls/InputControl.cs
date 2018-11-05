@@ -265,6 +265,10 @@ namespace UnityEngine.Experimental.Input
             WriteValueFromObjectInto(statePtr, bufferSize, value);
         }
 
+        public abstract bool HasValueChangeIn(IntPtr statePtr);
+
+        ////REVIEW: given we're axing .current and its entire direction of functionality, I'm thinking there's a chance
+        ////        that noise filtering in this form is no longer relevant
         public virtual bool HasSignificantChange(InputEventPtr eventPtr)
         {
             return GetStatePtrFromStateEvent(eventPtr) != IntPtr.Zero;
@@ -402,25 +406,26 @@ namespace UnityEngine.Experimental.Input
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
-        ////TODO: pass state ptr *NOT* value ptr (it's confusing)
         // NOTE: The given argument should point directly to the value *not* to the
         //       base state to which the state block offset has to be added.
-        internal unsafe bool CheckStateIsAtDefault(IntPtr valuePtr = new IntPtr())
+        internal unsafe bool CheckStateIsAtDefault(IntPtr statePtr = new IntPtr())
         {
             ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
             ////        e.g. from HID input reports
 
-            var defaultPtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
-            if (valuePtr == IntPtr.Zero)
-                valuePtr = new IntPtr(currentStatePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            if (statePtr == IntPtr.Zero)
+                statePtr = currentStatePtr;
+
+            var defaultValuePtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
 
             if (m_StateBlock.sizeInBits == 1)
             {
                 return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ==
-                    MemoryHelpers.ReadSingleBit(defaultPtr, m_StateBlock.bitOffset);
+                    MemoryHelpers.ReadSingleBit(defaultValuePtr, m_StateBlock.bitOffset);
             }
 
-            return MemoryHelpers.MemCmpBitRegion(defaultPtr.ToPointer(), valuePtr.ToPointer(),
+            return MemoryHelpers.MemCmpBitRegion(defaultValuePtr.ToPointer(), valuePtr.ToPointer(),
                 m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
         }
 
@@ -670,6 +675,20 @@ namespace UnityEngine.Experimental.Input
             var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
             var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
             WriteValueInto(new IntPtr(adjustedStatePtr), value);
+        }
+
+        public override unsafe bool HasValueChangeIn(IntPtr statePtr)
+        {
+            var currentValue = ReadValue();
+            var valueInState = ReadValueFrom(statePtr);
+
+            var currentValuePtr = UnsafeUtility.AddressOf(ref currentValue);
+            var valueInStatePtr = UnsafeUtility.AddressOf(ref valueInState);
+
+            // NOTE: We're comparing raw memory of processed values here (which are guaranteed to be structs or
+            //       primitives), not state. Means we don't have to take bits into account here.
+
+            return UnsafeUtility.MemCmp(valueInStatePtr, currentValuePtr, UnsafeUtility.SizeOf<TValue>()) != 0;
         }
 
         public TValue Process(TValue value)

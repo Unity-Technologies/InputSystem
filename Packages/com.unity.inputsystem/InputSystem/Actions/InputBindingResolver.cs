@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input
         /// an entry in <see cref="bindingStates"/>. Otherwise we would have to have a more complicated
         /// mapping from <see cref="InputActionMap.bindings"/> to <see cref="bindingStates"/>.
         /// </remarks>
-        public InputBinding bindingMask;
+        public InputBinding? bindingMask;
 
         private List<InputControlLayout.NameAndParameters> m_Parameters;
 
@@ -121,6 +121,7 @@ namespace UnityEngine.Experimental.Input
             var currentCompositeIndex = InputActionMapState.kInvalidIndex;
             var bindingMaskOnThisMap = map.m_BindingMask;
             var actionsInThisMap = map.m_Actions;
+            var devicesForThisMap = map.devices;
             var actionCountInThisMap = actionsInThisMap != null ? actionsInThisMap.Length : 0;
             var resolvedControls = new InputControlList<InputControl>(Allocator.Temp);
             try
@@ -141,32 +142,35 @@ namespace UnityEngine.Experimental.Input
                         continue;
 
                     // Skip binding if it doesn't match with our binding mask (might be empty).
-                    if (!bindingMask.Matches(ref unresolvedBinding))
+                    if (bindingMask != null && !bindingMask.Value.Matches(ref unresolvedBinding))
                         continue;
 
                     // Skip binding if it doesn't match the binding mask on the map (might be empty).
-                    if (!bindingMaskOnThisMap.Matches(ref unresolvedBinding))
+                    if (bindingMaskOnThisMap != null && !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding))
                         continue;
 
                     // Try to find action.
                     // NOTE: Technically, we allow individual bindings of composites to trigger actions independent
                     //       of the action triggered by the composite.
-                    var actionIndex = InputActionMapState.kInvalidIndex;
+                    var actionIndexInMap = InputActionMapState.kInvalidIndex;
                     var actionName = unresolvedBinding.action;
                     if (!string.IsNullOrEmpty(actionName))
                     {
-                        actionIndex = map.TryGetActionIndex(actionName);
+                        actionIndexInMap = map.TryGetActionIndex(actionName);
                     }
                     else if (map.m_SingletonAction != null)
                     {
                         // Special-case for singleton actions that don't have names.
-                        actionIndex = 0;
+                        actionIndexInMap = 0;
                     }
 
                     // Skip binding if it doesn't match the binding mask on the action (might be empty).
-                    if (actionIndex != InputActionMapState.kInvalidIndex &&
-                        !map.m_Actions[actionIndex].m_BindingMask.Matches(ref unresolvedBinding))
-                        continue;
+                    if (actionIndexInMap != InputActionMapState.kInvalidIndex)
+                    {
+                        var action = actionsInThisMap[actionIndexInMap];
+                        if (action.m_BindingMask != null && !action.m_BindingMask.Value.Matches(ref unresolvedBinding))
+                            continue;
+                    }
 
                     // Instantiate processors.
                     var firstProcessorIndex = 0;
@@ -203,7 +207,7 @@ namespace UnityEngine.Experimental.Input
                         currentCompositeBindingIndex = bindingIndex;
                         bindingStates[bindingIndex] = new InputActionMapState.BindingState
                         {
-                            actionIndex = actionIndex,
+                            actionIndex = actionStartIndex + actionIndexInMap,
                             compositeOrCompositeBindingIndex = currentCompositeIndex,
                             processorStartIndex = firstProcessorIndex,
                             processorCount = numProcessors,
@@ -229,7 +233,22 @@ namespace UnityEngine.Experimental.Input
 
                     // Look up controls.
                     var firstControlIndex = totalControlCount;
-                    var numControls = InputSystem.FindControls(path, ref resolvedControls);
+                    int numControls = 0;
+                    if (devicesForThisMap != null)
+                    {
+                        // Search in devices for only this map.
+                        var list = devicesForThisMap.Value;
+                        for (var i = 0; i < list.Count; ++i)
+                        {
+                            var device = list[i];
+                            numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
+                        }
+                    }
+                    else
+                    {
+                        // Search globally.
+                        numControls = InputSystem.FindControls(path, ref resolvedControls);
+                    }
                     if (numControls > 0)
                     {
                         resolvedControls.AppendTo(ref controls, ref totalControlCount);
@@ -246,7 +265,7 @@ namespace UnityEngine.Experimental.Input
                         processorStartIndex = firstProcessorIndex,
                         processorCount = numProcessors,
                         isPartOfComposite = unresolvedBinding.isPartOfComposite,
-                        actionIndex = actionIndex,
+                        actionIndex = actionIndexInMap,
                         compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                         mapIndex = totalMapCount,
                     };

@@ -765,6 +765,18 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
     }
 
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCheckIfPathMatchesGivenPattern()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(InputControlPath.Matches("<Gamepad>/leftStick", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.Matches("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.Matches("<Gamepad>", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.Matches("<Gamepad>/*", gamepad.leftStick), Is.True);
+    }
+
     ////TODO: doesnotallocate constraint
     [Test]
     [Category("Controls")]

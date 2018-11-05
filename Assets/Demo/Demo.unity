@@ -737,38 +737,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leftClick:
-    m_UseReference: 0
-    m_Action:
-      m_Name: 
-      m_ExpectedControlLayout: 
-      m_Id: 
-      m_SingletonActionBindings: []
-    m_Reference: {fileID: 0}
-  middleClick:
-    m_UseReference: 0
-    m_Action:
-      m_Name: 
-      m_ExpectedControlLayout: 
-      m_Id: 
-      m_SingletonActionBindings: []
-    m_Reference: {fileID: 0}
-  rightClick:
-    m_UseReference: 0
-    m_Action:
-      m_Name: 
-      m_ExpectedControlLayout: 
-      m_Id: 
-      m_SingletonActionBindings: []
-    m_Reference: {fileID: 0}
-  scroll:
-    m_UseReference: 0
-    m_Action:
-      m_Name: 
-      m_ExpectedControlLayout: 
-      m_Id: 
-      m_SingletonActionBindings: []
-    m_Reference: {fileID: 0}
+  clickSpeed: 0.3
+  moveDeadzone: 0.6
+  repeatDelay: 0.5
+  repeatRate: 0.1
   m_PointAction:
     m_UseReference: 0
     m_Action:
@@ -825,7 +797,7 @@ MonoBehaviour:
       m_Id: 
       m_SingletonActionBindings: []
     m_Reference: {fileID: 0}
-  m_ScrollAction:
+  m_ScrollWheelAction:
     m_UseReference: 0
     m_Action:
       m_Name: 
@@ -874,7 +846,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c0ae6160ffe140748a8b4c81fe77265, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 1318950621897070, guid: 4f8973cdb426746fca8f36468a009d49,
+  playerPrefab: {fileID: 1847066105884282, guid: 4f8973cdb426746fca8f36468a009d49,
     type: 2}
   fishPrefab: {fileID: 1468036409290768, guid: 57a5a587ba7f843138b675d7ba112d0a, type: 2}
   joinAction:

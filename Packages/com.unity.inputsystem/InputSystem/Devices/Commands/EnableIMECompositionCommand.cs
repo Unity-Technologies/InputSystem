@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -20,8 +19,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Set to true, and if true, Input Method Editors will be used while typing.
         /// </summary>
+        public bool imeEnabled
+        {
+            get { return m_ImeEnabled != 0; }
+        }
+
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        byte imeEnabled;
+        byte m_ImeEnabled;
 
         public FourCC GetTypeStatic()
         {
@@ -33,7 +37,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return new EnableIMECompositionCommand
             {
                 baseCommand = new InputDeviceCommand(Type, InputDeviceCommand.kBaseCommandSize + sizeof(byte)),
-                imeEnabled = enabled ? byte.MaxValue : (byte)0
+                m_ImeEnabled = enabled ? byte.MaxValue : (byte)0
             };
         }
     }

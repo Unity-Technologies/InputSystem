@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -11,6 +12,15 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// </summary>
     internal static class ArrayHelpers
     {
+        public static void Clear<TValue>(TValue[] array, ref int count)
+        {
+            if (array == null)
+                return;
+
+            Array.Clear(array, 0, count);
+            count = 0;
+        }
+
         public static void EnsureCapacity<TValue>(ref TValue[] array, int count, int capacity, int capacityIncrement = 10)
         {
             if (capacity == 0)
@@ -241,6 +251,35 @@ namespace UnityEngine.Experimental.Input.Utilities
             var index = count;
             array[index] = value;
             ++count;
+
+            return index;
+        }
+
+        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int count, TValues values, int capacityIncrement = 10)
+            where TValues : IReadOnlyList<TValue>
+        {
+            var num = values.Count;
+            if (array == null)
+            {
+                var size = Math.Max(num, capacityIncrement);
+                array = new TValue[size];
+                for (var i = 0; i < num; ++i)
+                    array[i] = values[i];
+                count += num;
+                return 0;
+            }
+
+            var capacity = array.Length;
+            if (capacity < count + num)
+            {
+                capacity += Math.Max(num, capacityIncrement);
+                Array.Resize(ref array, capacity);
+            }
+
+            var index = count;
+            for (var i = 0; i < num; ++i)
+                array[i] = values[i];
+            count += num;
 
             return index;
         }

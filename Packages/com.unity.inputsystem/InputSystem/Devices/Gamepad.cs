@@ -6,8 +6,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add ability to index by GamepadButton (or otherwise get a button control by enumeration)
-
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
 ////REVIEW: should we add a gyro as a standard feature of gamepads?
@@ -167,6 +165,7 @@ namespace UnityEngine.Experimental.Input
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
 
+        ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
         {
             get
@@ -188,7 +187,7 @@ namespace UnityEngine.Experimental.Input
                     case GamepadButton.DpadLeft: return dpad.left;
                     case GamepadButton.DpadRight: return dpad.right;
                     default:
-                        throw new InvalidEnumArgumentException("button");
+                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
                 }
             }
         }
