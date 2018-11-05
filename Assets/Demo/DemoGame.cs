@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.XR;
+using InputDevice = UnityEngine.Experimental.Input.InputDevice;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -231,7 +233,7 @@ public class DemoGame : MonoBehaviour
         }
     }
 
-    ////REVIEW: this logic seems to low-level to be here; can we move this into the input system somehow?
+    ////REVIEW: this logic seems too low-level to be here; can we move this into the input system somehow?
     /// <summary>
     /// In multi-player, we want players to be able to join on new devices simply by pressing
     /// a button. This callback is invoked on every input event and we determine whether we have
@@ -280,7 +282,7 @@ public class DemoGame : MonoBehaviour
         }
     }
 
-    private void OnJoin(UnityEngine.Experimental.Input.InputDevice device)
+    private void OnJoin(InputDevice device)
     {
         // Spawn player.
         var player = SpawnPlayer();
