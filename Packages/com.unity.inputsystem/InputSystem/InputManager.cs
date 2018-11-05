@@ -1278,10 +1278,10 @@ namespace UnityEngine.Experimental.Input
             m_PollingFrequency = 60;
 
             // Register layouts.
-            RegisterControlLayout("Button", typeof(ButtonControl)); // Controls.
+            RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
+            RegisterControlLayout("Button", typeof(ButtonControl));
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
             RegisterControlLayout("Key", typeof(KeyControl));
-            RegisterControlLayout("Axis", typeof(AxisControl));
             RegisterControlLayout("Analog", typeof(AxisControl));
             RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Integer", typeof(IntegerControl));
