@@ -129,20 +129,17 @@ namespace UnityEngine.Experimental.Input.Editor
             var layoutNames = new List<string>();
             manager.ListControlLayouts(layoutNames);
 
-            s_Cache.layouts = manager.m_Layouts;
-
             // Remember which layout maps to which device matchers.
-            for (var i = 0; i < s_Cache.layouts.layoutMatcherCount; ++i)
+            var layoutMatchers = InputControlLayout.s_Layouts.layoutMatchers;
+            for (var i = 0; i < layoutMatchers.Count; ++i)
             {
-                var entry = s_Cache.layouts.layoutMatchers[i];
-                var layoutName = entry.Value;
-                var matcher = entry.Key;
+                var entry = layoutMatchers[i];
 
                 InlinedArray<InputDeviceMatcher> matchers;
-                s_DeviceMatchers.TryGetValue(layoutName, out matchers);
+                s_DeviceMatchers.TryGetValue(entry.layoutName, out matchers);
 
-                matchers.Append(matcher);
-                s_DeviceMatchers[layoutName] = matchers;
+                matchers.Append(entry.deviceMatcher);
+                s_DeviceMatchers[entry.layoutName] = matchers;
             }
 
             // Load and store all layouts.

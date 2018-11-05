@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
-using UnityEngine.Animations;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.SceneManagement;
 
@@ -65,10 +64,10 @@ namespace UnityEngine.Experimental.Input
                 InputDebuggerWindow.Disable();
                 #endif
 
-                testRuntime = new InputTestRuntime();
+                runtime = new InputTestRuntime();
 
                 // Push current input system state on stack.
-                InputSystem.SaveAndReset(enableRemoting: false, runtime: testRuntime);
+                InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
 
                 #if UNITY_EDITOR
                 // Make sure we're not affected by the user giving focus away from the
@@ -107,7 +106,7 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 InputSystem.Restore();
-                testRuntime.Dispose();
+                runtime.Dispose();
 
                 // Re-enable input debugger.
                 #if UNITY_EDITOR
@@ -144,6 +143,39 @@ namespace UnityEngine.Experimental.Input
                     Assert.That(controlAsButton.isPressed, Is.True,
                         string.Format("Expected button {0} to be pressed", controlAsButton));
             }
+        }
+
+        /// <summary>
+        /// Set the control to the given value by sending a state event with the value to the
+        /// control's device.
+        /// </summary>
+        /// <param name="control">An input control on a device that has been added to the system.</param>
+        /// <param name="state">New value for the input control.</param>
+        /// <typeparam name="TValue">Value type of the given control.</typeparam>
+        /// <example>
+        /// <code>
+        /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// Set(gamepad.leftButton, 1);
+        /// </code>
+        /// </example>
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double timeOffset = 0)
+            where TValue : struct
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (!control.device.added)
+                throw new ArgumentException(
+                    string.Format("Device of control '{0}' has not been added to the system", control), "control");
+
+            InputEventPtr eventPtr;
+            using (StateEvent.From(control.device, out eventPtr))
+            {
+                eventPtr.time += timeOffset;
+                control.WriteValueInto(eventPtr, state);
+                InputSystem.QueueEvent(eventPtr);
+            }
+
+            InputSystem.Update();
         }
 
         public void Trigger<TValue>(InputAction action, InputControl<TValue> control, TValue value)
@@ -184,15 +216,9 @@ namespace UnityEngine.Experimental.Input
                 if (button == null)
                     continue;
 
-                // We do, so flip its state and we're done.
-                var device = button.device;
-                InputEventPtr inputEvent;
-                using (StateEvent.From(device, out inputEvent))
-                {
-                    button.WriteValueInto(inputEvent, button.isPressed ? 0 : 1);
-                    InputSystem.QueueEvent(inputEvent);
-                    InputSystem.Update();
-                }
+                // Press and release button.
+                Set(button, 1);
+                Set(button, 0);
 
                 return;
             }
@@ -205,20 +231,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
 
                 // We do, so nudge its value a bit.
-                var device = axis.device;
-                InputEventPtr inputEvent;
-                using (StateEvent.From(device, out inputEvent))
-                {
-                    var currentValue = axis.ReadValue();
-                    var newValue = currentValue + 0.01f;
-
-                    if (axis.clamp && newValue > axis.clampMax)
-                        newValue = axis.clampMin;
-
-                    axis.WriteValueInto(inputEvent, newValue);
-                    InputSystem.QueueEvent(inputEvent);
-                    InputSystem.Update();
-                }
+                Set(axis, axis.ReadValue() + 0.01f);
 
                 return;
             }
@@ -230,6 +243,6 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The input runtime used during testing.
         /// </summary>
-        public InputTestRuntime testRuntime { get; private set; }
+        public InputTestRuntime runtime { get; private set; }
     }
 }

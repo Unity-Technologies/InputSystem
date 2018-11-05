@@ -1,17 +1,26 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.UI;
 
 public class IMETest : MonoBehaviour
 {
     public bool enableIME;
+    public bool activeIME;
     public Vector2 cursorPosition;
 
     public string outputString;
-    public string composition;
+    public string compositionString;
 
     private bool m_AddedTextListeners = false;
+
+    //UI Visual Support
+    public Toggle activeIMEVisual;
+    public Toggle enabledIMEVisual;
+    public InputField outputStringText;
+    public InputField compositionStringText;
+    public InputField cursorXInput;
+    public InputField cursorYInput;
+    public Button cursorPositionButton;
 
     // Use this for initialization
     void OnEnable()
@@ -26,6 +35,11 @@ public class IMETest : MonoBehaviour
                 m_AddedTextListeners = true;
             }
         }
+
+        OnCursorTextEntered();
+
+        if (enabledIMEVisual != null)
+            enabledIMEVisual.isOn = enableIME;
     }
 
     void OnDisable()
@@ -45,13 +59,19 @@ public class IMETest : MonoBehaviour
     void OnTextEvent(char character)
     {
         outputString += character;
+
+        if (outputStringText != null)
+            outputStringText.text = outputString;
     }
 
     void OnIMECompositionChange(IMECompositionString compositionString)
     {
-        this.composition = "";
+        this.compositionString = "";
         foreach (char c in compositionString)
-            this.composition += c;
+            this.compositionString += c;
+
+        if (compositionStringText != null)
+            compositionStringText.text = this.compositionString;
     }
 
     // Update is called once per frame
@@ -69,6 +89,52 @@ public class IMETest : MonoBehaviour
 
             keyboard.imeEnabled = enableIME;
             keyboard.imeCursorPosition = cursorPosition;
+
+            activeIME = keyboard.imeSelected.isPressed;
+
+            if (activeIMEVisual != null)
+                activeIMEVisual.isOn = activeIME;
+        }
+    }
+
+    public void OnCursorTextEntered()
+    {
+        if (cursorXInput != null && cursorYInput != null && cursorPositionButton != null)
+        {
+            float x, y;
+            bool validInput = float.TryParse(cursorXInput.text, out x);
+            validInput &= float.TryParse(cursorYInput.text, out y);
+
+            cursorPositionButton.interactable = validInput;
+        }
+    }
+
+    public void OnClearOutputString()
+    {
+        outputString = "";
+
+        if (outputStringText != null)
+            outputStringText.text = outputString;
+    }
+
+    public void OnEnabledToggleChanged(bool newState)
+    {
+        enableIME = newState;
+    }
+
+    public void OnSubmitCursorPosition()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (cursorXInput != null && cursorYInput != null && keyboard != null)
+        {
+            float x, y;
+            bool validInput = float.TryParse(cursorXInput.text, out x);
+            validInput &= float.TryParse(cursorYInput.text, out y);
+
+            if (validInput)
+            {
+                keyboard.imeCursorPosition = cursorPosition = new Vector2(x, y);
+            }
         }
     }
 }

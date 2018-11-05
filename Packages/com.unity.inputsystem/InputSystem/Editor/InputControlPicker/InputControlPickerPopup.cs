@@ -23,7 +23,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_PathProperty;
         private InputControlTree m_PathTree;
         private TreeViewState m_PathTreeState;
-        private bool m_FirstRenderCompleted;
         string[] m_DeviceFilter;
 
         public InputControlPickerPopup(SerializedProperty pathProperty, TreeViewState treeViewState = null)
@@ -64,7 +63,6 @@ namespace UnityEngine.Experimental.Input.Editor
             var listRect = new Rect(rect.x, rect.y + toolbarRect.height, rect.width, rect.height - toolbarRect.height);
 
             m_PathTree.OnGUI(listRect);
-            m_FirstRenderCompleted = true;
         }
 
         private void OnSelected(string path)

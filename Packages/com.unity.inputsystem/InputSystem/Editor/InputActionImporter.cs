@@ -24,6 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] internal string m_WrapperClassName;
         [SerializeField] internal string m_WrapperCodeNamespace;
         [SerializeField] internal bool m_GenerateActionEvents;
+        [SerializeField] internal bool m_GenerateInterfaces;
 
         // Actions and maps coming in from JSON may not have IDs assigned to them. However,
         // once imported, we want them to have stable IDs. So we do the same thing that Unity's
@@ -176,6 +177,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     namespaceName = m_WrapperCodeNamespace,
                     className = m_WrapperClassName,
                     generateEvents = m_GenerateActionEvents,
+                    generateInterfaces = m_GenerateInterfaces,
                 };
 
                 if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, asset.controlSchemes, options))

@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
             m_ControlPathProperty = serializedObject.FindProperty("m_ControlPath");
             if (m_ControlPickerTreeViewState == null)
                 m_ControlPickerTreeViewState = new TreeViewState();
-            m_PropertyView = new InputBindingPropertiesView(m_ControlPathProperty, null, m_ControlPickerTreeViewState);
+            m_PropertyView = new InputBindingPropertiesView(m_ControlPathProperty, null, m_ControlPickerTreeViewState, null);
         }
 
         public override void OnInspectorGUI()

@@ -13,7 +13,7 @@ using Random = UnityEngine.Random;
 /// <summary>
 /// Controller for a single player in the game.
 /// </summary>
-public class DemoPlayerController : MonoBehaviour, IInputUser
+public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 {
     public float moveSpeed;
     public float rotateSpeed;
@@ -73,6 +73,11 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         get { return m_Score; }
     }
 
+    public bool isInMenu
+    {
+        get { return menuUI.activeSelf; }
+    }
+
     public void Start()
     {
         Debug.Assert(ui != null);
@@ -89,14 +94,19 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// Once spawned, we are reusing player instances over and over. The setup we perform in here,
     /// however, is done only once.
     /// </remarks>
-    public void PerformOneTimeInitialization(int playerIndex)
+    public void PerformOneTimeInitialization(bool isFirstPlayer)
     {
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
         // the original actions.
-        if (playerIndex != 0)
-            controls.DuplicateAndSwitchAsset();
+        if (isFirstPlayer)
+            controls.MakePrivateCopyOfActions();
 
+        // Wire our callbacks into gameplay actions. We don't need to do the same
+        // for menu actions as it's the UI using those and not us.
+        controls.gameplay.SetCallbacks(this);
+
+        ////REVIEW: we have to figure out who controls the enabling/disabling of actions used by UIs
         // Wire our input actions into the UI. Doing this manually here instead of setting it up
         // in the inspector ensure that when we duplicate DemoControls.inputactions above, we
         // end up with the UI using the right actions.
@@ -114,20 +124,33 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// </summary>
     public void StartSinglePlayerGame()
     {
-        // We still select one control scheme and make it the active one so that we can display UI hints
-        // for it. When the player uses bindings not in the scheme, the control scheme will automatically
-        // switch.
+        // Associate our InputUser with the actions we're using.
+        this.AssignInputActions(controls);
+
+        // Even without the user having picked up any device, we want to be able to display UI hints and have
+        // them make sense for the current platform. So we dynamically decide on a default control scheme.
+        // If necessary, the user's first input will switch to a different scheme automatically.
         var defaultScheme = InferDefaultControlSchemeForSinglePlayer();
 
-        ////TODO: make sure we enable all bindings instead of just the ones from the default control scheme
-        ////TODO: handle failure
-        // Switch to default control scheme and give the player whatever controls
-        // it needs.
-        this.AssignControlScheme(defaultScheme, assignMatchingUnusedDevices: true);
+        // Switch to default control scheme and give the player whatever devices it needs.
+        // NOTE: We're not calling AndMaskBindingsFromOtherControlSchemes() here. We want the player to be
+        //       able to freely switch between control schemes so we keep all the bindings we have alive and
+        //       don't mask anything away.
+        if (!this.AssignControlScheme(defaultScheme).AndAssignDevices())
+        {
+            // We couldn't successfully switch to the scheme we decided on as a default.
+            // Fall back to just trying one scheme after the other until we have one that
+            // we can set successfully.
 
-        this.SetInputActions(controls.gameplay);
+            var controlSchemes = controls.asset.controlSchemes;
+            for (var i = 0; i < controlSchemes.Count; ++i)
+            {
+                if (this.AssignControlScheme(controlSchemes[i]).AndAssignDevices())
+                    break;
+            }
+        }
 
-        this.ActivateInput();
+        StartGame();
     }
 
     /// <summary>
@@ -135,6 +158,42 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// </summary>
     public void StartMultiPlayerGame()
     {
+        // In multi-player, we always join players through specific devices. These should get
+        // assigned to the player right away.
+        Debug.Assert(this.GetAssignedInputDevices().Count > 0);
+
+        // In multi-player, we don't want players to be able to seamlessly switch between devices
+        // so we restrict players to just their assigned devices when binding actions.
+        this.BindOnlyToAssignedInputDevices();
+
+        // Associate our InputUser with the actions we're using.
+        this.AssignInputActions(controls);
+
+        // Find which control scheme to use based on the device we have.
+        var controlScheme = SelectControlSchemeBasedOnDevice(this.GetAssignedInputDevices()[0]);
+        Debug.Assert(controlScheme != null);
+
+        // Activate the control scheme and automatically assign whatever other devices we need
+        // which aren't already assigned to someone else.
+        // NOTE: We also make sure to disable any other control scheme so that the user cannot
+        //       switch between devices.
+        if (!this.AssignControlScheme(controlScheme)
+            .AndAssignMissingDevices()
+            .AndMaskBindingsFromOtherControlSchemes())
+        {
+            ////TODO: what to do here?
+        }
+
+        StartGame();
+    }
+
+    private void StartGame()
+    {
+        // Start with the gameplay actions being active.
+        controls.gameplay.Enable();
+
+        // And menu not being active.
+        menuUI.SetActive(false);
     }
 
     /// <summary>
@@ -176,13 +235,13 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// The chosen control scheme may depend also on what other devices are already in use by other
     /// players.
     /// </remarks>
-    public InputControlScheme SelectControlSchemeBasedOnDeviceForMultiPlayer(InputDevice device)
+    public InputControlScheme SelectControlSchemeBasedOnDevice(InputDevice device)
     {
-        throw new NotImplementedException();
-    }
+        var scheme = InputControlScheme.FindControlSchemeForControl(device, controls.asset.controlSchemes);
+        if (scheme.HasValue)
+            return scheme.Value;
 
-    public void ConnectInput()
-    {
+        throw new NotImplementedException();
     }
 
     public void Reset()
@@ -202,45 +261,75 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         m_Look = context.ReadValue<Vector2>();
     }
 
-    public void OnFireStarted(InputAction.CallbackContext context)
+    public void OnFire(InputAction.CallbackContext context)
     {
-        if (context.interaction is SlowTapInteraction)
-            m_Charging = true;
+        switch (context.phase)
+        {
+            case InputActionPhase.Started:
+                if (context.interaction is SlowTapInteraction)
+                    m_Charging = true;
+                break;
+
+            case InputActionPhase.Performed:
+                if (context.interaction is SlowTapInteraction)
+                {
+                    StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
+                }
+                else
+                {
+                    FireProjectile();
+                }
+                m_Charging = false;
+                break;
+
+            case InputActionPhase.Cancelled:
+                m_Charging = false;
+                break;
+        }
     }
 
-    public void OnFirePerformed(InputAction.CallbackContext context)
+    public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.interaction is SlowTapInteraction)
+        if (context.performed)
         {
-            StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
+            var jump = new Vector3(0.0f, jumpForce, 0.0f);
+            if (m_IsGrounded)
+            {
+                m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
+                m_IsGrounded = false;
+            }
+        }
+    }
+
+    public void OnMenu(InputAction.CallbackContext context)
+    {
+        if (isInMenu)
+        {
+            // Leave menu.
+
+            this.ResumeHaptics();
+
+            controls.gameplay.Enable();
+            controls.menu.Disable();///REVIEW: this should likely be left to the UI input module
+
+            menuUI.SetActive(false);
         }
         else
         {
-            FireProjectile();
-        }
-        m_Charging = false;
-    }
+            // Enter menu.
 
-    /// <summary>
-    /// Called when the "gameplay/fire" action is cancelled.
-    /// </summary>
-    /// <param name="context"></param>
-    public void OnFireCancelled(InputAction.CallbackContext context)
-    {
-        m_Charging = false;
-    }
+            this.PauseHaptics();
 
-    /// <summary>
-    /// Called when the "gameplay/jump" action is performed.
-    /// </summary>
-    /// <param name="context"></param>
-    public void OnJumpPerformed(InputAction.CallbackContext context)
-    {
-        var jump = new Vector3(0.0f, jumpForce, 0.0f);
-        if (m_IsGrounded)
-        {
-            m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
-            m_IsGrounded = false;
+            controls.gameplay.Disable();
+            controls.menu.Enable();///REVIEW: this should likely be left to the UI input module
+
+            // We do want the menu toggle to remain active. Rather than moving the action to its
+            // own separate action map, we just go and enable that one single action from the
+            // gameplay actions.
+            // NOTE: This will cause gameplay.enabled to remain true.
+            controls.gameplay.menu.Enable();
+
+            menuUI.SetActive(true);
         }
     }
 
@@ -255,6 +344,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     /// </remarks>
     public void OnControlSchemeChanged()
     {
+        //cache UI hints per device
     }
 
     public void OnDevicesChanged()
@@ -264,12 +354,6 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
     public void OnCollisionStay()
     {
         m_IsGrounded = true;
-    }
-
-    public void ShowMenu()
-    {
-        //pause haptics
-        //disable game controls / switch to menu actions
     }
 
     public void Update()
@@ -298,18 +382,20 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         transform.rotation = localRotation;
     }
 
+    public const float DelayBetweenBurstProjectiles = 0.1f;
+
     /// <summary>
     /// Fire <paramref name="projectileCount"/> projectiles over time.
     /// </summary>
     /// <param name="projectileCount"></param>
     /// <param name="delayBetweenProjectiles"></param>
     /// <returns></returns>
-    private IEnumerator ExecuteChargedFire(int projectileCount, float delayBetweenProjectiles = 0.1f)
+    private IEnumerator ExecuteChargedFire(int projectileCount)
     {
         for (var i = 0; i < projectileCount; ++i)
         {
             FireProjectile();
-            yield return new WaitForSeconds(delayBetweenProjectiles);
+            yield return new WaitForSeconds(DelayBetweenBurstProjectiles);
         }
     }
 
@@ -325,29 +411,5 @@ public class DemoPlayerController : MonoBehaviour, IInputUser
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);
         newProjectile.GetComponent<MeshRenderer>().material.color =
             new Color(Random.value, Random.value, Random.value, 1.0f);
-    }
-
-    private void OnGotoMenu()
-    {
-        // Pause haptics effects while we are in the menu.
-        this.PauseHaptics();
-
-        // Switch from gameplay actions to menu actions.
-        //user.SetActions(controls.menu);
-
-        // Activate the UI.
-        ui.gameObject.SetActive(true);
-    }
-
-    private void OnResumeGame()
-    {
-        // Deactivate the UI.
-        ui.gameObject.SetActive(false);
-
-        // Resume playback of haptics effects.
-        this.ResumeHaptics();
-
-        // Switch back to gameplay controls.
-        //user.SetActions(controls.gameplay);
     }
 }

@@ -19,6 +19,14 @@ Issues are expected at this point. However, feel free to report what you find he
 
 When you open the input debugger now (`Window >> Input Debugger`), you should see the available local devices listed in the debug view.
 
+## Status
+
+Rough assessment of current status:
+
+- Feature Completeness: 80%
+- Stability/Robustness: 40%
+- Documentation: 10%
+
 ## Release Timeline
 
 The planned development timeline for the new input system is as follows:

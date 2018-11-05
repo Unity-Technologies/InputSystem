@@ -9,6 +9,8 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add warning if input backends are not enabled
+
 ////TODO: show input users
 
 ////TODO: append " (Disabled) to disabled devices and grey them out
@@ -157,9 +159,21 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            // If the new backends aren't enabled, show a warning in the debugger.
+            if (!EditorPlayerSettings.newSystemBackendsEnabled)
+            {
+                EditorGUILayout.HelpBox(
+                    "Platform backends for the new input system are not enabled. " +
+                    "No devices and input from hardware will come through in the new input system APIs.\n\n" +
+                    "To enable the backends, set 'Active Input Handling' in the player settings to either 'Input System (Preview)' " +
+                    "or 'Both' and restart the editor.", MessageType.Warning);
+            }
+
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
+            {
                 Initialize();
+            }
             else if (m_NeedReload)
             {
                 m_TreeView.Reload();

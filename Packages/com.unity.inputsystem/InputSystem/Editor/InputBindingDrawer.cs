@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: reordering support for interactions
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this

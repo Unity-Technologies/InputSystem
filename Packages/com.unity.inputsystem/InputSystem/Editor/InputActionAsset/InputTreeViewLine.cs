@@ -5,18 +5,19 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
+////REVIEW: would be great to align all "[device]" parts of binding strings neatly in a column
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     internal abstract class ActionTreeViewItem : TreeViewItem
     {
         protected static class Styles
         {
-            public static GUIStyle actionItemRowStyle = new GUIStyle("Label");
-            public static GUIStyle actionSetItemStyle = new GUIStyle("Label");
-            public static GUIStyle actionItemLabelStyle = new GUIStyle("Label");
+            public static GUIStyle lineStyle = new GUIStyle("TV Line");
+            public static GUIStyle textStyle = new GUIStyle("Label");
             public static GUIStyle backgroundStyle = new GUIStyle("Label");
+            public static GUIStyle border = new GUIStyle("Label");
             public static GUIStyle yellowRect = new GUIStyle("Label");
-            public static GUIStyle orangeRect = new GUIStyle("Label");
             public static GUIStyle greenRect = new GUIStyle("Label");
             public static GUIStyle blueRect = new GUIStyle("Label");
             public static GUIStyle pinkRect = new GUIStyle("Label");
@@ -26,27 +27,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
                     InputActionTreeBase.ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
 
-                actionItemRowStyle.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(InputActionTreeBase.ResourcesPath + "row.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onFocused.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.ResourcesPath + "rowSelected.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onNormal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.ResourcesPath + "rowSelected.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
+                border.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    InputActionTreeBase.ResourcesPath + "actionTreeBackground.png");
+                border.border = new RectOffset(0, 0, 0, 1);
 
-                actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
-                actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
+                textStyle.alignment = TextAnchor.MiddleLeft;
 
                 yellowRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
                         InputActionTreeBase.SharedResourcesPath + "yellow.png");
-                orangeRect.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.SharedResourcesPath + "orange.png");
                 greenRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
                         InputActionTreeBase.SharedResourcesPath + "green.png");
@@ -60,8 +49,8 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public bool renaming;
-        protected SerializedProperty m_ElementProperty;
-        protected int m_Index;
+        private SerializedProperty m_ElementProperty;
+        private int m_Index;
 
         public virtual bool isDraggable
         {
@@ -88,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return false; }
         }
 
-        public ActionTreeViewItem(SerializedProperty elementProperty, int index)
+        protected ActionTreeViewItem(SerializedProperty elementProperty, int index)
         {
             m_ElementProperty = elementProperty;
             m_Index = index;
@@ -102,7 +91,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             rowRect.height += 1;
-            Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
+            Styles.lineStyle.Draw(rowRect, "", false, false, selected, focused);
 
             rect.x += indent;
             rect.width -= indent + 2;
@@ -110,29 +99,34 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.height -= 2;
 
             if (!renaming)
-                Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
+                Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
 
             DrawCustomRect(rowRect);
         }
 
-        public virtual void DrawCustomRect(Rect rowRect)
+        private void DrawCustomRect(Rect rowRect)
         {
+            // colored rect
             var boxRect = rowRect;
             boxRect.width = (depth + 1) * 6;
             boxRect.height -= 2;
-            boxRect.y += 1;
             rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            if (depth == 0)
-                return;
+
+            // background color at the beginning the the row
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+
+            // bottom line
+            rowRect.y += rowRect.height - 2;
+            rowRect.height = 1;
+            Styles.border.Draw(rowRect, GUIContent.none, false, false, false, false);
         }
 
         public abstract string SerializeToString();
 
-        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
+        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
         {
-            return new InputBindingPropertiesView(elementProperty, apply, state);
+            return new InputBindingPropertiesView(elementProperty, apply, state, toolbar);
         }
 
         public abstract int GetIdForName(string argsNewName);
@@ -309,9 +303,9 @@ namespace UnityEngine.Experimental.Input.Editor
             InputActionSerializationHelpers.RenameComposite(elementProperty, newName);
         }
 
-        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
+        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
         {
-            return new CompositeGroupPropertiesView(elementProperty, apply, state);
+            return new CompositeGroupPropertiesView(elementProperty, apply, state, toolbar);
         }
     }
 
@@ -380,17 +374,6 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override GUIStyle rectStyle
         {
             get { return Styles.blueRect; }
-        }
-
-        public override void DrawCustomRect(Rect rowRect)
-        {
-            var boxRect = rowRect;
-            boxRect.width = (depth + 1) * 6;
-            boxRect.y += 1;
-            boxRect.height -= 2;
-            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            boxRect.width = 6 * depth;
-            Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
         }
 
         public override bool hasProperties

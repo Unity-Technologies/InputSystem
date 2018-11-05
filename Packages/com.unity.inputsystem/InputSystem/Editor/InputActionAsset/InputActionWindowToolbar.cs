@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -11,9 +12,11 @@ namespace UnityEngine.Experimental.Input.Editor
     class InputActionWindowToolbar
     {
         public Action<string> OnSearchChanged;
+        public Action<string> OnSchemeChanged;
+        public Action<string> OnDeviceChanged;
 
         [SerializeField]
-        private int m_SelectedControlSchemeIndex;
+        private int m_SelectedControlSchemeIndex = -1;
         [SerializeField]
         private int m_SelectedDeviceIndex;
 
@@ -25,42 +28,46 @@ namespace UnityEngine.Experimental.Input.Editor
         private string m_SearchText;
         private Action m_Apply;
 
-        private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
-        private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        private static readonly GUIContent m_EditGUI = EditorGUIUtility.IconContent("_Popup");
+        private static readonly GUIContent m_NoControlScheme = EditorGUIUtility.TrTextContent("No Control Scheme");
+        private static readonly GUIContent m_AddSchemeGUI = new GUIContent("Add Control Scheme...");
+        private static readonly GUIContent m_EditGUI = EditorGUIUtility.TrTextContent("Edit Control Scheme...");
+        private static readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate Control Scheme...");
+        private static readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete Control Scheme...");
         private static readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save Asset");
+        private static readonly float m_MininumButtonWidth = 110f;
 
-        string selectedControlSchemeName
+        public string selectedControlSchemeName
         {
             get
             {
-                return m_SelectedControlSchemeIndex <= 0 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex - 1];
+                return m_SelectedControlSchemeIndex < 0 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex];
             }
         }
 
-        public bool searching
+        public string selectedDevice
         {
             get
             {
-                return !string.IsNullOrEmpty(m_SearchText);
+                return m_SelectedDeviceIndex <= 0 ? null : m_DeviceIdList[m_SelectedDeviceIndex];
             }
         }
 
-        public string[] deviceFilter
+        public string[] allDevices
         {
             get
             {
-                if (m_SelectedDeviceIndex < 0)
-                {
-                    return null;
-                }
-                if (m_SelectedDeviceIndex == 0)
-                {
-                    // All devices
-                    return m_DeviceIdList.Skip(1).ToArray();
-                }
-                return m_DeviceIdList.Skip(m_SelectedDeviceIndex).Take(1).ToArray();
+                return m_DeviceIdList.Skip(1).ToArray();
             }
+        }
+
+        public string nameFilter
+        {
+            get { return m_SearchText; }
+        }
+
+        public ReadOnlyArray<InputControlScheme> controlSchemes
+        {
+            get { return m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes; }
         }
 
         public InputActionWindowToolbar(InputActionAssetManager actionAssetManager, Action apply)
@@ -77,15 +84,15 @@ namespace UnityEngine.Experimental.Input.Editor
             BuildDeviceList();
         }
 
+        public void SelectControlScheme(string inputControlSchemeName)
+        {
+            m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName);
+            BuildDeviceList();
+        }
+
         public void RebuildData()
         {
             m_AllControlSchemeNames = m_ActionAssetManager.m_AssetObjectForEditing.controlSchemes.Select(a => a.name).ToArray();
-        }
-
-        public void SelectControlScheme(string inputControlSchemeName)
-        {
-            m_SelectedControlSchemeIndex = Array.IndexOf(m_AllControlSchemeNames, inputControlSchemeName) + 1;
-            BuildDeviceList();
         }
 
         public void OnGUI()
@@ -95,54 +102,81 @@ namespace UnityEngine.Experimental.Input.Editor
 
             DrawSchemaSelection();
             DrawDeviceFilterSelection();
-            DrawSchemaEditButton();
             DrawSaveButton();
         }
 
         private void DrawSchemaSelection()
         {
-            var controlSchemes = GetControlSchemesNames();
-            var newScheme = EditorGUILayout.Popup(m_SelectedControlSchemeIndex, controlSchemes);
-            if (controlSchemes.Length > 0 && newScheme == (controlSchemes.Length - 1))
-            {
-                if (controlSchemes.Length == 1 || m_SelectedControlSchemeIndex == (controlSchemes.Length - 1))
-                    m_SelectedControlSchemeIndex = 0;
+            var selectedSchema = selectedControlSchemeName;
+            if (selectedSchema == null)
+                selectedSchema = "No Control Scheme";
 
-                var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
-                popup.SetUniqueName();
-                PopupWindow.Show(GUILayoutUtility.GetLastRect(), popup);
-            }
-            else if (newScheme != m_SelectedControlSchemeIndex)
+            var buttonGUI = new GUIContent(selectedSchema);
+            var buttonRect = GUILayoutUtility.GetRect(buttonGUI, EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth));
+            if (GUI.Button(buttonRect, buttonGUI, EditorStyles.toolbarPopup))
             {
-                m_SelectedControlSchemeIndex = newScheme;
-                m_SelectedDeviceIndex = 0;
-                BuildDeviceList();
+                buttonRect = new Rect(EditorGUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y)), Vector2.zero);
+                var menu = new GenericMenu();
+                menu.AddItem(m_NoControlScheme, m_SelectedControlSchemeIndex == -1, OnControlSchemeSelected, -1);
+                for (int i = 0; i < m_AllControlSchemeNames.Length; i++)
+                {
+                    menu.AddItem(new GUIContent(m_AllControlSchemeNames[i]), m_SelectedControlSchemeIndex == i, OnControlSchemeSelected, i);
+                }
+                menu.AddSeparator("");
+                menu.AddItem(m_AddSchemeGUI, false, AddControlScheme, buttonRect);
+                if (m_SelectedControlSchemeIndex >= 0)
+                {
+                    menu.AddItem(m_EditGUI, false, EditSelectedControlScheme, buttonRect);
+                    menu.AddItem(m_DuplicateGUI, false, DuplicateControlScheme, buttonRect);
+                    menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
+                }
+                else
+                {
+                    menu.AddDisabledItem(m_EditGUI, false);
+                    menu.AddDisabledItem(m_DuplicateGUI, false);
+                    menu.AddDisabledItem(m_DeleteGUI, false);
+                }
+                menu.ShowAsContext();
             }
+        }
+
+        private void OnControlSchemeSelected(object indexObj)
+        {
+            var index = (int)indexObj;
+            if (m_SelectedControlSchemeIndex == index)
+                return;
+            m_SelectedControlSchemeIndex = index;
+            m_SelectedDeviceIndex = 0;
+            BuildDeviceList();
+            OnSchemeChanged(selectedControlSchemeName);
         }
 
         private void DrawDeviceFilterSelection()
         {
-            EditorGUI.BeginDisabledGroup(m_SelectedControlSchemeIndex <= 0);
-            m_SelectedDeviceIndex = EditorGUILayout.Popup(m_SelectedDeviceIndex, m_DeviceNamesList);
-            EditorGUI.EndDisabledGroup();
-        }
-
-        private void DrawSchemaEditButton()
-        {
-            EditorGUI.BeginDisabledGroup(selectedControlSchemeName == null);
-            if (GUILayout.Button(m_EditGUI, EditorStyles.toolbarButton))
+            EditorGUI.BeginDisabledGroup(m_SelectedControlSchemeIndex < 0);
+            if (m_DeviceNamesList.Length == 0)
             {
-                var position = new Rect(Event.current.mousePosition, Vector2.zero);
-                position.x += EditorWindow.focusedWindow.position.x;
-                position.y += EditorWindow.focusedWindow.position.y;
+                GUILayout.Button("All devices", EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth));
+            }
+            else if (GUILayout.Button(m_DeviceNamesList[m_SelectedDeviceIndex], EditorStyles.toolbarPopup, GUILayout.MinWidth(m_MininumButtonWidth)))
+            {
                 var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Edit \"" + selectedControlSchemeName + "\""), false, EditSelectedControlScheme, position);
-                menu.AddSeparator("");
-                menu.AddItem(m_DuplicateGUI, false, DuplicateControlScheme, position);
-                menu.AddItem(m_DeleteGUI, false, DeleteControlScheme);
+                for (int i = 0; i < m_DeviceNamesList.Length; i++)
+                {
+                    menu.AddItem(new GUIContent(m_DeviceNamesList[i]), m_SelectedDeviceIndex == i, OnDeviceSelected, i);
+                }
                 menu.ShowAsContext();
             }
             EditorGUI.EndDisabledGroup();
+        }
+
+        private void OnDeviceSelected(object indexObj)
+        {
+            m_SelectedDeviceIndex = (int)indexObj;
+            if (m_SelectedDeviceIndex == 0)
+                OnDeviceChanged(null);
+            else
+                OnDeviceChanged(m_DeviceIdList[m_SelectedDeviceIndex]);
         }
 
         private void DrawSaveButton()
@@ -165,19 +199,10 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private string[] GetControlSchemesNames()
-        {
-            var controlSchemes = new string[m_AllControlSchemeNames.Length + 2];
-            controlSchemes[0] = "No Control Scheme";
-            Array.Copy(m_AllControlSchemeNames, 0, controlSchemes, 1, m_AllControlSchemeNames.Length);
-            controlSchemes[m_AllControlSchemeNames.Length + 1] = "Add Control Scheme...";
-            return controlSchemes;
-        }
-
         private void BuildDeviceList()
         {
             var devices = new List<string>();
-            if (m_SelectedControlSchemeIndex >= 1)
+            if (m_SelectedControlSchemeIndex >= 0)
             {
                 devices.Add("All devices");
                 var controlScheme = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName);
@@ -187,17 +212,36 @@ namespace UnityEngine.Experimental.Input.Editor
             m_DeviceNamesList = devices.Select(InputControlPath.ToHumanReadableString).ToArray();
         }
 
+        private void AddControlScheme(object position)
+        {
+            var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
+            popup.SetUniqueName();
+            // Since it's a callback, we need to manually handle ExitGUIException
+            try
+            {
+                PopupWindow.Show((Rect)position, popup);
+            }
+            catch (ExitGUIException) {}
+        }
+
         private void DeleteControlScheme()
         {
+            if (!EditorUtility.DisplayDialog("Delete scheme", "Confirm scheme deletion", "Delete", "Cancel"))
+            {
+                return;
+            }
             m_ActionAssetManager.m_AssetObjectForEditing.RemoveControlScheme(selectedControlSchemeName);
-            m_SelectedControlSchemeIndex = 0;
-            m_SelectedDeviceIndex = -1;
+            m_SelectedControlSchemeIndex = -1;
+            m_SelectedDeviceIndex = 0;
             m_Apply();
             RebuildData();
+            OnSchemeChanged(selectedControlSchemeName);
         }
 
         private void DuplicateControlScheme(object position)
         {
+            if (m_SelectedControlSchemeIndex == -1)
+                return;
             var popup = new AddControlSchemePopup(m_ActionAssetManager, this, m_Apply);
             popup.DuplicateParametersFrom(selectedControlSchemeName);
             // Since it's a callback, we need to manually handle ExitGUIException

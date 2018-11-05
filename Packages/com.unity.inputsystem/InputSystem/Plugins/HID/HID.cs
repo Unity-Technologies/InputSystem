@@ -26,6 +26,7 @@ using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
