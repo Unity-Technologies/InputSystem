@@ -35,8 +35,10 @@ namespace UnityEngine.Experimental.Input
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
-    public delegate string DeviceFindControlLayoutCallback(int deviceId, ref InputDeviceDescription description, string matchedLayout,
+    public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
+
+    public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
 
     /// <summary>
     /// Hub of the input system.
@@ -124,9 +126,14 @@ namespace UnityEngine.Experimental.Input
             add { m_DeviceChangeListeners.Append(value); }
             remove { m_DeviceChangeListeners.Remove(value); }
         }
+        public event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { m_DeviceCommandCallbacks.Append(value); }
+            remove { m_DeviceCommandCallbacks.Remove(value); }
+        }
 
         ////REVIEW: would be great to have a way to sort out precedence between two callbacks
-        public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
+        public event InputDeviceFindControlLayoutDelegate onFindControlLayoutForDevice
         {
             add { m_DeviceFindLayoutCallbacks.Append(value); }
             remove { m_DeviceFindLayoutCallbacks.Remove(value); }
@@ -559,6 +566,22 @@ namespace UnityEngine.Experimental.Input
             // Let listeners know.
             for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
+        }
+
+        public InputControlLayout TryLoadControlLayout(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+            if (!typeof(InputControl).IsAssignableFrom(type))
+                throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+
+            // Find the layout name that the given type was registered with.
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
+                throw new ArgumentException(
+                    string.Format("Type '{0}' has not been registered as a control layout", type.Name), "type");
+
+            return m_Layouts.TryLoadLayout(layoutName);
         }
 
         public InputControlLayout TryLoadControlLayout(InternedString name)
@@ -1262,10 +1285,10 @@ namespace UnityEngine.Experimental.Input
             m_PollingFrequency = 60;
 
             // Register layouts.
-            RegisterControlLayout("Button", typeof(ButtonControl)); // Controls.
+            RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
+            RegisterControlLayout("Button", typeof(ButtonControl));
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
             RegisterControlLayout("Key", typeof(KeyControl));
-            RegisterControlLayout("Axis", typeof(AxisControl));
             RegisterControlLayout("Analog", typeof(AxisControl));
             RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Integer", typeof(IntegerControl));
@@ -1299,14 +1322,15 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
-            processors.AddTypeRegistration("Deadzone", typeof(DeadzoneProcessor));
+            processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
+            processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
             processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
@@ -1411,7 +1435,8 @@ namespace UnityEngine.Experimental.Input
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
+        private InlinedArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
+        internal InlinedArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
         private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         private InlinedArray<EventListener> m_EventListeners;
         private InlinedArray<UpdateListener> m_BeforeUpdateListeners;

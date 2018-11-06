@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////REVIEW: should be possible to completely hijack the input stream of a device such that its original input is suppressed
+
 ////REVIEW: nuke MakeCurrent() and replace with (optional) device tracking on InputPlayer?
 
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
@@ -348,6 +350,7 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
+        ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
@@ -363,9 +366,19 @@ namespace UnityEngine.Experimental.Input
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public long ExecuteCommand<TCommand>(ref TCommand command)
+        public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            // Give callbacks first shot.
+            var manager = InputSystem.s_Manager;
+            var callbacks = manager.m_DeviceCommandCallbacks;
+            for (var i = 0; i < callbacks.length; ++i)
+            {
+                var result = callbacks[i](this, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+                if (result.HasValue)
+                    return result.Value;
+            }
+
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
         }
 

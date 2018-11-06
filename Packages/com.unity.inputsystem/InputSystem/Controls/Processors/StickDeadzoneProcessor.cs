@@ -4,7 +4,7 @@ namespace UnityEngine.Experimental.Input.Processors
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
     /// than just clamping individual axes). Normalizes to the min/max range.
     /// </summary>
-    public class DeadzoneProcessor : IInputControlProcessor<Vector2>
+    public class StickDeadzoneProcessor : IInputControlProcessor<Vector2>
     {
         /// <summary>
         /// Value at which the lower bound deadzone starts.

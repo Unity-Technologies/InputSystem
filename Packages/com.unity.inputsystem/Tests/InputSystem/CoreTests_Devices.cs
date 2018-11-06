@@ -3099,6 +3099,60 @@ partial class CoreTests
         Assert.That(runtime.pollingFrequency, Is.EqualTo(60).Within(0.000001));
     }
 
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanInterceptAndHandleDeviceCommands()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputDevice receivedDevice = null;
+        FourCC? receivedCommandType = null;
+
+        InputSystem.onDeviceCommand +=
+            (device, commandPtr) =>
+        {
+            // Only handle first call.
+            if (receivedDevice != null)
+                return null;
+
+            receivedDevice = device;
+            receivedCommandType = commandPtr->type;
+
+            // If we don't return null, should be considered handled.
+            return InputDeviceCommand.kGenericFailure;
+        };
+
+        var receivedRuntimeCommand = false;
+        runtime.SetDeviceCommandCallback(gamepad,
+            (id, command) =>
+            {
+                if (command->type == DualMotorRumbleCommand.Type)
+                    receivedRuntimeCommand = true;
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        gamepad.SetMotorSpeeds(1, 1);
+
+        Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedCommandType, Is.EqualTo(DualMotorRumbleCommand.Type));
+        Assert.That(receivedRuntimeCommand, Is.False);
+
+        gamepad.SetMotorSpeeds(0.5f, 0.5f);
+
+        Assert.That(receivedRuntimeCommand, Is.True);
+    }
+
+    ////TODO: make this an interface that you can register *against* a device to take over its I/O handling
+    // Ability to completely replace the data stream for an existing device. Suppresses all events
+    // coming from the runtime.
+    [Test]
+    [Category("Devices")]
+    [Ignore("TODO")]
+    public void TODO_Devices_CanHijackEventStreamOfDevice()
+    {
+        Assert.Fail();
+    }
+
     //This could be the first step towards being able to simulate input well.
     [Test]
     [Category("Devices")]
@@ -3219,7 +3273,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.5,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.5,max=0.9)""
                     }
                 ]
             }

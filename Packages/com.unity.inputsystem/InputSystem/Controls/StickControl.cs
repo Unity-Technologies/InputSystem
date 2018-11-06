@@ -9,18 +9,33 @@ namespace UnityEngine.Experimental.Input.Controls
     /// <remarks>
     /// State-wise this is still just a Vector2.
     ///
-    /// Unlike <see cref="DpadControl">D-Pads</see>, sticks will usually have <see cref="DeadzoneProcessor">
+    /// Unlike <see cref="DpadControl">D-Pads</see>, sticks will usually have <see cref="StickDeadzoneProcessor">
     /// deadzone processors</see> applied to them.
     /// </remarks>
     public class StickControl : Vector2Control
     {
-        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=0,clampMax=1")]
+        // Set min&max on XY axes.
+        [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis")]
+        [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis")]
+
+        // Buttons for each of the directions. Allows the stick to function as a dpad.
+        // Note that these controls are marked as synthetic as there isn't real buttons for the half-axes
+        // on the device. This aids in interactive picking by making sure that if we have to decide between,
+        // say, leftStick/x and leftStick/left, leftStick/x wins out.
+
+        /// <summary>
+        /// A synthetic button representing the upper half of the stick's Y axis.
+        /// </summary>
+        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true)]
         public ButtonControl up { get; private set; }
-        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=-1,clampMax=0,invert")]
+
+        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=-1,clampMax=0,invert", synthetic = true)]
         public ButtonControl down { get; private set; }
-        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=-1,clampMax=0,invert")]
+
+        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=-1,clampMax=0,invert", synthetic = true)]
         public ButtonControl left { get; private set; }
-        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=0,clampMax=1")]
+
+        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true)]
         public ButtonControl right { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

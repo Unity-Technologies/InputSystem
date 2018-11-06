@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
@@ -15,6 +14,8 @@ using Random = UnityEngine.Random;
 /// </summary>
 public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 {
+    public const float DelayBetweenBurstProjectiles = 0.1f;
+
     public float moveSpeed;
     public float rotateSpeed;
     public float burstSpeed;
@@ -66,6 +67,9 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     private bool m_Charging;
     private Vector2 m_Rotation;
 
+    private int m_BurstProjectileCountRemaining;
+    private float m_LastBurstProjectileTime;
+
     private Rigidbody m_Rigidbody;
 
     public int score
@@ -99,7 +103,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
         // the original actions.
-        if (isFirstPlayer)
+        if (!isFirstPlayer)
             controls.MakePrivateCopyOfActions();
 
         // Wire our callbacks into gameplay actions. We don't need to do the same
@@ -162,7 +166,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         // assigned to the player right away.
         Debug.Assert(this.GetAssignedInputDevices().Count > 0);
 
-        // In multi-player, we don't want players to be able to seamlessly switch between devices
+        // In multi-player, we don't want players to be able to switch between devices
         // so we restrict players to just their assigned devices when binding actions.
         this.BindOnlyToAssignedInputDevices();
 
@@ -271,9 +275,11 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
                 break;
 
             case InputActionPhase.Performed:
+                ////TODO: handle case where we're already running a burst fire
                 if (context.interaction is SlowTapInteraction)
                 {
-                    StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
+                    m_BurstProjectileCountRemaining = (int)(context.duration * burstSpeed);
+                    m_LastBurstProjectileTime = -1;
                 }
                 else
                 {
@@ -360,6 +366,17 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     {
         Move(m_Move);
         Look(m_Look);
+
+        // Execute charged fire.
+        if (m_BurstProjectileCountRemaining > 0 &&
+            (m_LastBurstProjectileTime < 0 ||
+             Time.time - m_LastBurstProjectileTime >
+             DelayBetweenBurstProjectiles))
+        {
+            FireProjectile();
+            m_LastBurstProjectileTime = Time.time;
+            --m_BurstProjectileCountRemaining;
+        }
     }
 
     private void Move(Vector2 direction)
@@ -380,23 +397,6 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 
         var localRotation = Quaternion.Euler(m_Rotation.x, m_Rotation.y, 0.0f);
         transform.rotation = localRotation;
-    }
-
-    public const float DelayBetweenBurstProjectiles = 0.1f;
-
-    /// <summary>
-    /// Fire <paramref name="projectileCount"/> projectiles over time.
-    /// </summary>
-    /// <param name="projectileCount"></param>
-    /// <param name="delayBetweenProjectiles"></param>
-    /// <returns></returns>
-    private IEnumerator ExecuteChargedFire(int projectileCount)
-    {
-        for (var i = 0; i < projectileCount; ++i)
-        {
-            FireProjectile();
-            yield return new WaitForSeconds(DelayBetweenBurstProjectiles);
-        }
     }
 
     private void FireProjectile()

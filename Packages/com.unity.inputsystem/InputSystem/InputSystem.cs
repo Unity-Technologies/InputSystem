@@ -385,6 +385,12 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
+        public static InputControlLayout TryLoadLayout<TControl>()
+            where TControl : InputControl
+        {
+            return s_Manager.TryLoadControlLayout(typeof(TControl));
+        }
+
         #endregion
 
         #region Processors
@@ -519,6 +525,12 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        public static event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { s_Manager.onDeviceCommand += value; }
+            remove { s_Manager.onDeviceCommand -= value; }
+        }
+
         /// <summary>
         /// Event that is signalled when the system is trying to match a layout to
         /// a device it has discovered.
@@ -554,7 +566,7 @@ namespace UnityEngine.Experimental.Input
         ///     };
         /// </code>
         /// </example>
-        public static event DeviceFindControlLayoutCallback onFindLayoutForDevice
+        public static event InputDeviceFindControlLayoutDelegate onFindLayoutForDevice
         {
             add { s_Manager.onFindControlLayoutForDevice += value; }
             remove { s_Manager.onFindControlLayoutForDevice -= value; }

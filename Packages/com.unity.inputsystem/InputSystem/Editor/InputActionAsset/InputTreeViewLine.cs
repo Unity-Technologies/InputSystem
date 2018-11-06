@@ -67,14 +67,9 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_Index; }
         }
 
-        protected abstract GUIStyle rectStyle
+        protected abstract GUIStyle colorTagStyle
         {
             get;
-        }
-
-        public virtual bool hasProperties
-        {
-            get { return false; }
         }
 
         protected ActionTreeViewItem(SerializedProperty elementProperty, int index)
@@ -106,28 +101,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DrawCustomRect(Rect rowRect)
         {
-            // colored rect
+            // Color tag at beginning of line.
             var boxRect = rowRect;
             boxRect.width = (depth + 1) * 6;
             boxRect.height -= 2;
-            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+            colorTagStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
 
-            // background color at the beginning the the row
+            // Background color at the beginning of the row.
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
 
-            // bottom line
+            // Bottom line.
             rowRect.y += rowRect.height - 2;
             rowRect.height = 1;
             Styles.border.Draw(rowRect, GUIContent.none, false, false, false, false);
         }
 
         public abstract string SerializeToString();
-
-        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
-        {
-            return new InputBindingPropertiesView(elementProperty, apply, state, toolbar);
-        }
 
         public abstract int GetIdForName(string argsNewName);
     }
@@ -141,7 +131,7 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(displayName);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.yellowRect; }
         }
@@ -207,12 +197,14 @@ namespace UnityEngine.Experimental.Input.Editor
         public int bindingsStartIndex { get; private set; }
         public int bindingsCount { get; private set; }
         public string actionName { get; private set; }
+        public string expectedControlLayout { get; private set; }
 
         public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty actionProperty, int index)
             : base(actionProperty, index)
         {
             m_ActionMapProperty = actionMapProperty;
             actionName = elementProperty.FindPropertyRelative("m_Name").stringValue;
+            expectedControlLayout = elementProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
             if (m_ActionMapProperty != null)
             {
                 bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
@@ -227,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(displayName);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.greenRect; }
         }
@@ -293,7 +285,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return (actionMapName + " " + action + " " + name + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.blueRect; }
         }
@@ -301,11 +293,6 @@ namespace UnityEngine.Experimental.Input.Editor
         public void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameComposite(elementProperty, newName);
-        }
-
-        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
-        {
-            return new CompositeGroupPropertiesView(elementProperty, apply, state, toolbar);
         }
     }
 
@@ -318,7 +305,7 @@ namespace UnityEngine.Experimental.Input.Editor
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.pinkRect; }
         }
@@ -371,14 +358,9 @@ namespace UnityEngine.Experimental.Input.Editor
             return (actionMapName + " " + action + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.blueRect; }
-        }
-
-        public override bool hasProperties
-        {
-            get { return true; }
         }
 
         public override string SerializeToString()

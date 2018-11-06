@@ -205,6 +205,9 @@ public class DemoGameTestFixture
         // It looks like the test runner is stupidly reusing test fixture instances instead of
         // creating a new object for every run. So we really have to clean up well.
 
+        game.players.Each(UnityEngine.Object.DestroyImmediate);
+        UnityEngine.Object.DestroyImmediate(game.gameObject);
+
         input.TearDown();
 
         game = null;
@@ -298,6 +301,12 @@ public class DemoGameTestFixture
     public void Release(ButtonControl button, double timeOffset = 0)
     {
         input.Set(button, 0, timeOffset);
+    }
+
+    public void Set<TValue>(InputControl<TValue> control, TValue value, double timeOffset = 0)
+        where TValue : struct
+    {
+        input.Set(control, value, timeOffset);
     }
 
     /// <summary>

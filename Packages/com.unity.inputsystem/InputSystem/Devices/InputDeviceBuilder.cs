@@ -561,11 +561,19 @@ namespace UnityEngine.Experimental.Input.Layouts
             // Set flags and misc things.
             control.m_DisplayNameFromLayout = controlItem.displayName;
             control.noisy = controlItem.isNoisy;
+            control.synthetic = controlItem.isSynthetic;
 
             // Set default value.
             control.m_DefaultValue = controlItem.defaultState;
             if (!control.m_DefaultValue.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
+
+            // Set min and max value. Don't just overwrite here as the control's constructor may
+            // have set a default value.
+            if (!controlItem.minValue.isEmpty)
+                control.m_MinValue = controlItem.minValue;
+            if (!controlItem.maxValue.isEmpty)
+                control.m_MaxValue = controlItem.maxValue;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
@@ -711,6 +719,10 @@ namespace UnityEngine.Experimental.Input.Layouts
                     child.m_DefaultValue = controlItem.defaultState;
                     m_Device.hasControlsWithDefaultState = true;
                 }
+                if (!controlItem.minValue.isEmpty)
+                    child.m_MinValue = controlItem.minValue;
+                if (!controlItem.maxValue.isEmpty)
+                    child.m_MaxValue = controlItem.maxValue;
 
                 ////TODO: other modifications
             }
@@ -895,7 +907,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                         string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
 
                 // Skip children that don't have fixed offsets.
-                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||
+                    child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
                     continue;
 
                 var endOffset =
@@ -917,7 +930,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var child in children)
             {
                 // Skip children with fixed offsets.
-                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset &&
+                    child.m_StateBlock.byteOffset != InputStateBlock.kAutomaticOffset)
                     continue;
 
                 // Skip children using state from other controls.

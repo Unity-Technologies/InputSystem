@@ -39,16 +39,16 @@ public class SimpleControls : InputActionAssetReference
         m_Initialized = false;
     }
 
-    public void SwitchAsset(InputActionAsset newAsset)
+    public void SetAsset(InputActionAsset newAsset)
     {
         if (newAsset == asset) return;
         if (m_Initialized) Uninitialize();
         asset = newAsset;
     }
 
-    public void DuplicateAndSwitchAsset()
+    public override void MakePrivateCopyOfActions()
     {
-        SwitchAsset(ScriptableObject.Instantiate(asset));
+        SetAsset(ScriptableObject.Instantiate(asset));
     }
 
     // gameplay

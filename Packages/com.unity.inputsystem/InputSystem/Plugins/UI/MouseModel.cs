@@ -99,11 +99,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         internal ButtonDeltaState lastFrameDelta { get; private set; }
 
         /// <summary>
-        /// Internal bookkeeping data used by the uGUI system.
-        /// </summary>
-        public InternalData internalData { get; set; }
-
-        /// <summary>
         /// Set's this object to it's default, unused state.
         /// </summary>
         public void Reset()
@@ -111,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             lastFrameDelta = ButtonDeltaState.NoChange;
             m_IsDown = false;
 
-            internalData.Reset();
+            m_InternalData.Reset();
         }
 
         /// <summary>
@@ -128,14 +123,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <param name="eventData">These objects are used to send data through the uGUI system.</param>
         public void CopyTo(PointerEventData eventData)
         {
-            InternalData bookkeeping = internalData;
-            eventData.dragging = bookkeeping.isDragging;
-            eventData.clickTime = bookkeeping.pressedTime;
-            eventData.pressPosition = bookkeeping.pressedPosition;
-            eventData.pointerPressRaycast = bookkeeping.pressedRaycast;
-            eventData.pointerPress = bookkeeping.pressedGameObject;
-            eventData.rawPointerPress = bookkeeping.pressedGameObjectRaw;
-            eventData.pointerDrag = bookkeeping.draggedGameObject;
+            eventData.dragging = m_InternalData.isDragging;
+            eventData.clickTime = m_InternalData.pressedTime;
+            eventData.pressPosition = m_InternalData.pressedPosition;
+            eventData.pointerPressRaycast = m_InternalData.pressedRaycast;
+            eventData.pointerPress = m_InternalData.pressedGameObject;
+            eventData.rawPointerPress = m_InternalData.pressedGameObjectRaw;
+            eventData.pointerDrag = m_InternalData.draggedGameObject;
         }
 
         /// <summary>
@@ -144,18 +138,17 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// <param name="eventData">These objects are used to send data through the uGUI system.</param>
         public void CopyFrom(PointerEventData eventData)
         {
-            InternalData bookkeeping = internalData;
-            bookkeeping.isDragging = eventData.dragging;
-            bookkeeping.pressedTime = eventData.clickTime;
-            bookkeeping.pressedPosition = eventData.pressPosition;
-            bookkeeping.pressedRaycast = eventData.pointerPressRaycast;
-            bookkeeping.pressedGameObject = eventData.pointerPress;
-            bookkeeping.pressedGameObjectRaw = eventData.rawPointerPress;
-            bookkeeping.draggedGameObject = eventData.pointerDrag;
-            internalData = bookkeeping;
+            m_InternalData.isDragging = eventData.dragging;
+            m_InternalData.pressedTime = eventData.clickTime;
+            m_InternalData.pressedPosition = eventData.pressPosition;
+            m_InternalData.pressedRaycast = eventData.pointerPressRaycast;
+            m_InternalData.pressedGameObject = eventData.pointerPress;
+            m_InternalData.pressedGameObjectRaw = eventData.rawPointerPress;
+            m_InternalData.draggedGameObject = eventData.pointerDrag;
         }
 
         private bool m_IsDown;
+        private InternalData m_InternalData;
     }
 
     internal struct MouseModel
@@ -171,6 +164,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             ///  Tracks the current enter/exit target being hovered over at any given moment. Syncs up to <see cref="PointerEventData.pointerEnter"/>.
             /// </summary>
             public GameObject pointerTarget { get; set; }
+
+            public void Reset()
+            {
+                pointerTarget = null;
+                hoverTargets = new InlinedArray<GameObject>();
+            }
         }
 
         /// <summary>
@@ -193,9 +192,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (m_Position != value)
                 {
-                    changedThisFrame = true;
                     deltaPosition = value - m_Position;
                     m_Position = value;
+                    changedThisFrame = true;
                 }
             }
         }
@@ -273,12 +272,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        /// <summary>
-        /// Internal bookkeeping data used by the uGUI system.
-        /// </summary>
-        public InternalData internalData { get; set; }
-
-        public MouseModel(EventSystem eventSystem, int pointerId)
+        public MouseModel(int pointerId)
         {
             this.pointerId = pointerId;
             changedThisFrame = false;
@@ -291,10 +285,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_RightButton.Reset();
             m_MiddleButton.Reset();
 
-            InternalData bookkeeping = new InternalData();
-            bookkeeping.pointerTarget = null;
-            bookkeeping.hoverTargets = new InlinedArray<GameObject>();
-            internalData = bookkeeping;
+            m_InternalData = new InternalData();
+            m_InternalData.Reset();
+            m_InternalData.pointerTarget = null;
+            m_InternalData.hoverTargets = new InlinedArray<GameObject>();
         }
 
         /// <summary>
@@ -309,10 +303,36 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_MiddleButton.OnFrameFinished();
         }
 
+        public void CopyTo(PointerEventData eventData)
+        {
+            eventData.pointerId = pointerId;
+            eventData.position = position;
+            eventData.delta = deltaPosition;
+            eventData.scrollDelta = scrollDelta;
+
+            eventData.pointerEnter = m_InternalData.pointerTarget;
+            eventData.hovered.Clear();
+            eventData.hovered.AddRange(m_InternalData.hoverTargets);
+
+            // This is unset in legacy systems and can safely assumed to stay true.
+            eventData.useDragThreshold = true;
+        }
+
+        public void CopyFrom(PointerEventData eventData)
+        {
+            var hoverTargets = m_InternalData.hoverTargets;
+            hoverTargets.ClearWithCapacity();
+            hoverTargets.Append(eventData.hovered);
+            m_InternalData.hoverTargets = hoverTargets;
+            m_InternalData.pointerTarget = eventData.pointerEnter;
+        }
+
         private Vector2 m_Position;
         private Vector2 m_ScrollPosition;
         private MouseButtonModel m_LeftButton;
         private MouseButtonModel m_RightButton;
         private MouseButtonModel m_MiddleButton;
+
+        private InternalData m_InternalData;
     }
 }

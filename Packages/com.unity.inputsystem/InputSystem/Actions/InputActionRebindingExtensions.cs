@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
-    /// actuated by a user.
+    /// actuated by the user.
     /// </remarks>
     public static class InputActionRebindingExtensions
     {
@@ -348,15 +348,7 @@ namespace UnityEngine.Experimental.Input
             return numMatchingControls;
         }
 
-        // Base implementation for user rebinds. Can be derived from to customize rebinding behavior.
-        //
-        // The best control to bind to may not be the very first control that matches selection by
-        // control type. For example, when the user wants to bind to a specific axis on the left stick
-        // on the gamepad, it's not enough to just grab the first axis that actuated. With the sticks
-        // being as noisy as they are, we want to filter for the control that dominates input. For that,
-        // it adds robustness to not just wait for input in the very first frame but rather listen for
-        // input for a while after the first relevant input and then decide which the dominate axis was.
-        // This way we can reliably filter out noise from other sticks, too.
+        ////TODO: allow overwriting magnitude with custom values; maybe turn more into an overall "score" for a control
 
         /// <summary>
         /// An ongoing rebinding operation.
@@ -369,10 +361,16 @@ namespace UnityEngine.Experimental.Input
         /// Note, however, that during rebinding it can be necessary to look at the <see cref="InputControlLayout"/>
         /// information registered in the system which means that layouts may have to be loaded. These will be
         /// cached for as long as the rebind operation is not disposed of.
+        ///
+        /// A rebind operation may take several frames to complete. ...
+        ///
+        /// Note that not all types of controls make sense to perform interactive rebinding on. For example,
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public class RebindingOperation : IDisposable
         {
+            public const float kDefaultMagnitudeThreshold = 0.2f;
+
             /// <summary>
             /// The action that rebinding is being performed on.
             /// </summary>
@@ -382,17 +380,41 @@ namespace UnityEngine.Experimental.Input
                 get { return m_ActionToRebind; }
             }
 
+            /// <summary>
+            /// Optional mask to determine which bindings to apply overrides to.
+            /// </summary>
+            /// <remarks>
+            /// If this is not null, all bindings that match this mask will have overrides applied to them.
+            /// </remarks>
             public InputBinding? bindingMask
             {
                 get { return m_BindingMask; }
             }
 
+            ////REVIEW: exposing this as InputControlList is very misleading as users will not get an error when modifying the list;
+            ////        however, exposing through an interface will lead to boxing...
             /// <summary>
             /// Controls that had input and were deemed potential matches to rebind to.
             /// </summary>
+            /// <remarks>
+            /// Controls in the list should be ordered by priority with the first element in the list being
+            /// considered the best match.
+            /// </remarks>
+            /// <seealso cref="AddCandidate"/>
+            /// <seealso cref="RemoveCandidate"/>
             public InputControlList<InputControl> candidates
             {
-                get { throw new NotImplementedException(); }
+                get { return m_Candidates; }
+            }
+
+            /// <summary>
+            /// The matching score for each control in <see cref="candidates"/>.
+            /// </summary>
+            /// <remarks>
+            /// </remarks>
+            public ReadWriteArray<float> scores
+            {
+                get { return new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count); }
             }
 
             public InputControl selectedControl
@@ -427,10 +449,8 @@ namespace UnityEngine.Experimental.Input
 
                 if (action == null)
                     throw new ArgumentNullException("action");
-                if (action.bindings.Count == 0)
-                    throw new ArgumentException(
-                        string.Format("For rebinding, action must have at least one existing binding (action: {0})",
-                            action), "action");
+                if (action.enabled)
+                    throw new InvalidOperationException(string.Format("Cannot rebind action '{0}' while it is enabled", action));
 
                 m_ActionToRebind = action;
 
@@ -479,6 +499,12 @@ namespace UnityEngine.Experimental.Input
                 return WithExpectedControlType(typeof(TControl));
             }
 
+            public RebindingOperation WithTargetBinding(int bindingIndex)
+            {
+                m_TargetBindingIndex = bindingIndex;
+                return this;
+            }
+
             public RebindingOperation WithBindingMask(InputBinding? bindingMask)
             {
                 m_BindingMask = bindingMask;
@@ -488,16 +514,6 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithBindingGroup(string group)
             {
                 return WithBindingMask(new InputBinding {groups = group});
-            }
-
-            public RebindingOperation WithRebindApplyingAsOverride()
-            {
-                return this;
-            }
-
-            public RebindingOperation WithRebindOverwritingCurrentPath()
-            {
-                return this;
             }
 
             /// <summary>
@@ -517,6 +533,73 @@ namespace UnityEngine.Experimental.Input
             /// <seealso cref="InputBinding.overridePath"/>
             public RebindingOperation WithoutGeneralizingPathOfSelectedControl()
             {
+                m_Flags |= Flags.DontGeneralizePathOfSelectedControl;
+                return this;
+            }
+
+            public RebindingOperation WithRebindApplyingAsOverride()
+            {
+                return this;
+            }
+
+            public RebindingOperation WithRebindOverwritingCurrentPath()
+            {
+                return this;
+            }
+
+            public RebindingOperation WithRebindAddingNewBinding(string group = null)
+            {
+                m_Flags |= Flags.AddNewBinding;
+                m_BindingGroupForNewBinding = group;
+                return this;
+            }
+
+            public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
+            {
+                if (magnitude < 0)
+                    throw new ArgumentException(string.Format("Magnitude has to be positive but was {0}", magnitude),
+                        "magnitude");
+                m_MagnitudeThreshold = magnitude;
+                return this;
+            }
+
+            public RebindingOperation WithoutMagnitudeThreshold()
+            {
+                m_MagnitudeThreshold = -1;
+                return this;
+            }
+
+            public RebindingOperation WithoutIgnoringNoisyControls()
+            {
+                m_Flags |= Flags.DontIgnoreNoisyControls;
+                return this;
+            }
+
+            public RebindingOperation WithControlsHavingToMatchPath(string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+                for (var i = 0; i < m_IncludePathCount; ++i)
+                    if (string.Compare(m_IncludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return this;
+                ArrayHelpers.AppendWithCapacity(ref m_IncludePaths, ref m_IncludePathCount, path);
+                return this;
+            }
+
+            public RebindingOperation WithoutControlsHavingToMatchPath()
+            {
+                m_IncludePathCount = 0;
+                return this;
+            }
+
+            public RebindingOperation WithControlsExcluding(string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+                for (var i = 0; i < m_ExcludePathCount; ++i)
+                    if (string.Compare(m_ExcludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return this;
+                ArrayHelpers.AppendWithCapacity(ref m_ExcludePaths, ref m_ExcludePathCount, path);
                 return this;
             }
 
@@ -534,11 +617,31 @@ namespace UnityEngine.Experimental.Input
 
             public RebindingOperation OnPotentialMatch(Action<RebindingOperation> callback)
             {
+                m_OnPotentialMatch = callback;
+                return this;
+            }
+
+            public RebindingOperation OnGeneratePath(Func<InputControl, string> callback)
+            {
+                m_OnGeneratePath = callback;
+                return this;
+            }
+
+            public RebindingOperation OnComputeScore(Func<InputControl, InputEventPtr, float> callback)
+            {
+                m_OnComputeScore = callback;
+                return this;
+            }
+
+            public RebindingOperation OnApplyBinding(Action<RebindingOperation, string> callback)
+            {
+                m_OnApplyBinding = callback;
                 return this;
             }
 
             public RebindingOperation OnMatchWaitForAnother(float seconds)
             {
+                m_WaitSecondsAfterMatch = seconds;
                 return this;
             }
 
@@ -547,6 +650,22 @@ namespace UnityEngine.Experimental.Input
                 // Ignore if already started.
                 if (started)
                     return this;
+
+                // Make sure our configuration is sound.
+                if (m_ActionToRebind != null && m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
+                    throw new InvalidOperationException(
+                        string.Format(
+                            "Action '{0}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()",
+                            action));
+                if (m_ActionToRebind == null && m_OnApplyBinding == null)
+                    throw new InvalidOperationException(
+                        "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
+
+                if (m_WaitSecondsAfterMatch > 0)
+                {
+                    HookOnAfterUpdate();
+                    m_LastMatchTime = -1;
+                }
 
                 HookOnEvent();
                 m_Flags |= Flags.Started;
@@ -561,11 +680,70 @@ namespace UnityEngine.Experimental.Input
                 OnCancel();
             }
 
+            /// <summary>
+            /// Manually complete the rebinding operation.
+            /// </summary>
+            public void Complete()
+            {
+                if (!started)
+                    return;
+
+                OnComplete();
+            }
+
+            public void AddCandidate(InputControl control, float score)
+            {
+                if (control == null)
+                    throw new ArgumentNullException("control");
+
+                // If it's already added, update score.
+                var index = m_Candidates.IndexOf(control);
+                if (index != -1)
+                {
+                    m_Scores[index] = score;
+                }
+                else
+                {
+                    // Otherwise, add it.
+                    var candidateCount = m_Candidates.Count;
+                    m_Candidates.Add(control);
+                    ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                }
+
+                SortCandidatesByScore();
+            }
+
+            public void RemoveCandidate(InputControl control)
+            {
+                if (control == null)
+                    throw new ArgumentNullException("control");
+
+                var index = m_Candidates.IndexOf(control);
+                if (index == -1)
+                    return;
+
+                var candidateCount = m_Candidates.Count;
+                m_Candidates.RemoveAt(index);
+                ArrayHelpers.EraseAtWithCapacity(ref m_Scores, ref candidateCount, index);
+            }
+
             public void Dispose()
             {
+                ////FIXME: these have to be made thread-safe
                 UnhookOnEvent();
+                UnhookOnAfterUpdate();
                 m_Candidates.Dispose();
                 m_LayoutCache.Clear();
+            }
+
+            ~RebindingOperation()
+            {
+                Dispose();
+            }
+
+            public void ResetConfiguration()
+            {
+                throw new NotImplementedException();
             }
 
             private void HookOnEvent()
@@ -603,15 +781,34 @@ namespace UnityEngine.Experimental.Input
                 // Go through controls and see if there's anything interesting in the event.
                 var controls = device.allControls;
                 var controlCount = controls.Count;
+                var haveChangedCandidates = false;
                 for (var i = 0; i < controlCount; ++i)
                 {
                     var control = controls[i];
 
-                    ////TODO: skip noisy controls
-
                     // Skip controls that have no state in the event.
                     var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
                     if (statePtr == IntPtr.Zero)
+                        continue;
+
+                    // If the control that cancels has been actuated, abort the operation now.
+                    if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
+                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeIn(statePtr))
+                    {
+                        OnCancel();
+                        break;
+                    }
+
+                    // Skip noisy controls.
+                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
+                        continue;
+
+                    // If controls have to match a certain path, check if this one does.
+                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
+                        continue;
+
+                    // If controls must not match certain path, make sure the control doesn't.
+                    if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
 
                     // If we're expecting controls of a certain type, skip if control isn't of
@@ -622,7 +819,8 @@ namespace UnityEngine.Experimental.Input
                     // If we're expecting controls to be based on a specific layout, skip if control
                     // isn't based on that layout.
                     if (!m_ExpectedLayout.IsEmpty() &&
-                        InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
+                        m_ExpectedLayout != control.m_Layout &&
+                        !InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
                         continue;
 
                     // Skip controls that are in their default state.
@@ -636,39 +834,203 @@ namespace UnityEngine.Experimental.Input
                     if (!control.HasValueChangeIn(statePtr))
                         continue;
 
-                    // If it's the control that cancels, abort the operation now.
-                    if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control))
+                    // If we have a magnitude threshold, see if control passes it.
+                    var magnitude = -1f;
+                    if (m_MagnitudeThreshold >= 0f)
                     {
-                        OnCancel();
-                        break;
+                        magnitude = control.EvaluateMagnitude(statePtr);
+                        if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
+                            continue; // No, so skip.
                     }
 
-                    m_Candidates.Add(control);
-                    OnComplete();
-                    break;
+                    // Compute score.
+                    float score;
+                    if (m_OnComputeScore != null)
+                        score = m_OnComputeScore(control, eventPtr);
+                    else
+                    {
+                        score = magnitude;
+
+                        // We don't want synthetic controls to not be bindable at all but they should
+                        // generally cede priority to controls that aren't synthetic. So we bump all
+                        // scores of controls that aren't synthetic.
+                        if (!control.synthetic)
+                            score += 1f;
+                    }
+
+                    // Control is a candidate.
+                    // See if we already singled the control out as a potential candidate.
+                    var candidateIndex = m_Candidates.IndexOf(control);
+                    if (candidateIndex != -1)
+                    {
+                        // Yes, we did. So just check whether it became a better candidate than before.
+                        if (m_Scores[candidateIndex] < score)
+                        {
+                            haveChangedCandidates = true;
+                            m_Scores[candidateIndex] = score;
+
+                            if (m_WaitSecondsAfterMatch > 0)
+                                m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                        }
+                    }
+                    else
+                    {
+                        // No, so add it.
+                        var candidateCount = m_Candidates.Count;
+                        m_Candidates.Add(control);
+                        ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                        haveChangedCandidates = true;
+
+                        if (m_WaitSecondsAfterMatch > 0)
+                            m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                    }
                 }
+
+                if (haveChangedCandidates)
+                {
+                    // If we have a callback that wants to control matching, leave it to the callback to decide
+                    // whether the rebind is complete or not. Otherwise, just complete.
+                    if (m_OnPotentialMatch != null)
+                    {
+                        SortCandidatesByScore();
+                        m_OnPotentialMatch(this);
+                    }
+                    else if (m_WaitSecondsAfterMatch <= 0)
+                    {
+                        OnComplete();
+                    }
+                    else
+                    {
+                        SortCandidatesByScore();
+                    }
+                }
+            }
+
+            private void SortCandidatesByScore()
+            {
+                var candidateCount = m_Candidates.Count;
+                if (candidateCount <= 1)
+                    return;
+
+                // Simple insertion sort that sorts both m_Candidates and m_Scores at the same time.
+                // Note that we're sorting by *decreasing* score here, not by increasing score.
+                for (var i = 1; i < candidateCount; ++i)
+                {
+                    for (var j = i; j > 0 && m_Scores[j - 1] < m_Scores[j]; --j)
+                    {
+                        m_Scores.SwapElements(j, j - 1);
+                        m_Candidates.SwapElements(j, j - 1);
+                    }
+                }
+            }
+
+            private static bool HavePathMatch(InputControl control, string[] paths, int pathCount)
+            {
+                for (var i = 0; i < pathCount; ++i)
+                {
+                    if (InputControlPath.MatchesPrefix(paths[i], control))
+                        return true;
+                }
+
+                return false;
+            }
+
+            private void HookOnAfterUpdate()
+            {
+                if ((m_Flags & Flags.OnAfterUpdateHooked) != 0)
+                    return;
+
+                if (m_OnAfterUpdateDelegate == null)
+                    m_OnAfterUpdateDelegate = OnAfterUpdate;
+
+                InputSystem.onAfterUpdate += m_OnAfterUpdateDelegate;
+                m_Flags |= Flags.OnAfterUpdateHooked;
+            }
+
+            private void UnhookOnAfterUpdate()
+            {
+                if ((m_Flags & Flags.OnAfterUpdateHooked) == 0)
+                    return;
+
+                InputSystem.onAfterUpdate -= m_OnAfterUpdateDelegate;
+                m_Flags &= ~Flags.OnAfterUpdateHooked;
+            }
+
+            private void OnAfterUpdate(InputUpdateType updateType)
+            {
+                // Sanity check to make sure we're actually waiting for completion.
+                if (m_WaitSecondsAfterMatch <= 0)
+                    return;
+
+                // Can't complete if we have no match yet.
+                if (m_LastMatchTime < 0)
+                    return;
+
+                // Complete if timeout has expired.
+                if (InputRuntime.s_Instance.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
+                    Complete();
             }
 
             private void OnComplete()
             {
-                Debug.Assert(m_Candidates.Count > 0);
+                SortCandidatesByScore();
 
-                // Create a path from the selected control.
-                var selectedControl = m_Candidates[0];
-                var path = selectedControl.path;
-                if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
-                    path = GeneratePathForControl(selectedControl);
+                if (m_Candidates.Count > 0)
+                {
+                    // Create a path from the selected control.
+                    var selectedControl = m_Candidates[0];
+                    var path = selectedControl.path;
+                    if (m_OnGeneratePath != null)
+                    {
+                        // We have a callback. Give it a shot to generate a path. If it doesn't,
+                        // fall back to our default logic.
+                        var newPath = m_OnGeneratePath(selectedControl);
+                        if (!string.IsNullOrEmpty(path))
+                            path = newPath;
+                        else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
+                            path = GeneratePathForControl(selectedControl);
+                    }
+                    else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
+                        path = GeneratePathForControl(selectedControl);
 
-                // Apply binding override.
-                if (m_BindingMask != null)
-                {
-                    var bindingOverride = m_BindingMask.Value;
-                    bindingOverride.overridePath = path;
-                    m_ActionToRebind.ApplyBindingOverride(bindingOverride);
-                }
-                else
-                {
-                    m_ActionToRebind.ApplyBindingOverride(path);
+                    // If we have a custom callback for applying the binding, let it handle
+                    // everything.
+                    if (m_OnApplyBinding != null)
+                        m_OnApplyBinding(this, path);
+                    else
+                    {
+                        Debug.Assert(m_ActionToRebind != null);
+
+                        // See if we should modify an existing binding or create a new one.
+                        if ((m_Flags & Flags.AddNewBinding) != 0)
+                        {
+                            // Create new binding.
+                            m_ActionToRebind.AddBinding(path, groups: m_BindingGroupForNewBinding);
+                        }
+                        else
+                        {
+                            // Apply binding override to existing binding.
+                            if (m_TargetBindingIndex >= 0)
+                            {
+                                if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
+                                    throw new Exception(string.Format(
+                                        "Target binding index {0} out of range for action '{1}' with {2} bindings",
+                                        m_TargetBindingIndex, m_ActionToRebind, m_ActionToRebind.bindings.Count));
+
+                                m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);
+                            }
+                            else if (m_BindingMask != null)
+                            {
+                                var bindingOverride = m_BindingMask.Value;
+                                bindingOverride.overridePath = path;
+                                m_ActionToRebind.ApplyBindingOverride(bindingOverride);
+                            }
+                            else
+                            {
+                                m_ActionToRebind.ApplyBindingOverride(path);
+                            }
+                        }
+                    }
                 }
 
                 // Complete.
@@ -694,6 +1056,9 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.Started;
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
+
+                UnhookOnEvent();
+                UnhookOnAfterUpdate();
             }
 
             private void ThrowIfRebindInProgress()
@@ -745,7 +1110,14 @@ namespace UnityEngine.Experimental.Input
                 m_PathBuilder.Append(deviceLayoutName);
                 m_PathBuilder.Append('>');
 
-                ////TODO: usages
+                // Add usages of device, if any.
+                var deviceUsages = device.usages;
+                for (var i = 0; i < deviceUsages.Count; ++i)
+                {
+                    m_PathBuilder.Append('{');
+                    m_PathBuilder.Append(deviceUsages[i]);
+                    m_PathBuilder.Append('}');
+                }
 
                 m_PathBuilder.Append('/');
 
@@ -761,11 +1133,26 @@ namespace UnityEngine.Experimental.Input
             private InputBinding? m_BindingMask;
             private Type m_ControlType;
             private InternedString m_ExpectedLayout;
+            private int m_IncludePathCount;
+            private string[] m_IncludePaths;
+            private int m_ExcludePathCount;
+            private string[] m_ExcludePaths;
+            private int m_TargetBindingIndex = -1;
+            private string m_BindingGroupForNewBinding;
             private string m_CancelBinding;
+            private float m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
+            private float[] m_Scores; // Scores for the controls in m_Candidates.
+            private double m_LastMatchTime; // Last input event time we discovered a better match.
+            private float m_WaitSecondsAfterMatch;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;
             private Action<RebindingOperation> m_OnCancel;
+            private Action<RebindingOperation> m_OnPotentialMatch;
+            private Func<InputControl, string> m_OnGeneratePath;
+            private Func<InputControl, InputEventPtr, float> m_OnComputeScore;
+            private Action<RebindingOperation, string> m_OnApplyBinding;
             private Action<InputEventPtr> m_OnEventDelegate;
+            private Action<InputUpdateType> m_OnAfterUpdateDelegate;
             private InputControlLayout.Cache m_LayoutCache;
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
@@ -777,28 +1164,13 @@ namespace UnityEngine.Experimental.Input
                 Completed = 1 << 1,
                 Cancelled = 1 << 2,
                 OnEventHooked = 1 << 3,
-                OverwritePath = 1 << 4,
-                DontIgnoreNoisyControls = 1 << 5,
-                DontGeneralizePathOfSelectedControl = 1 << 6,
+                OnAfterUpdateHooked = 1 << 4,
+                OverwritePath = 1 << 5,
+                DontIgnoreNoisyControls = 1 << 6,
+                DontGeneralizePathOfSelectedControl = 1 << 7,
+                AddNewBinding = 1 << 8,
             }
         }
-
-        //
-        // Invokes the given callback when the rebinding happens. Also passes
-        // a bool that tells whether the rebind operation has successfully completed
-        // or whether the user aborted it.
-        //
-        // The optional cancel binding allows specifying which controls should be
-        // allowed to cancel the rebind.
-        //
-        // NOTE: Suitable controls to rebind to are determined from the given action.
-        //       The rebind will listen only for controls that match one of th control
-        //       layouts used in an y of the bindings of the action.
-        //
-        //       So, for example, if the given action has only bindings to buttons,
-        //       then only buttons will be considered. If it has bindings to both button
-        //       and touch controls, on the other hand, then both button and touch controls
-        //       will be listened for.
 
         /// <summary>
         /// Initiate an operation that interactively rebinds the given action based on received input.
@@ -809,13 +1181,6 @@ namespace UnityEngine.Experimental.Input
         /// <exception cref="ArgumentException"></exception>
         public static RebindingOperation PerformInteractiveRebinding(this InputAction action)
         {
-            if (action == null)
-                throw new ArgumentNullException("action");
-            if (action.bindings.Count == 0)
-                throw new ArgumentException(
-                    string.Format("For rebinding, action must have at least one existing binding (action: {0})",
-                        action), "action");
-
             return new RebindingOperation().WithAction(action);
         }
     }

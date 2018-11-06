@@ -166,6 +166,48 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
+        public static PrimitiveValue FromString(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return new PrimitiveValue();
+
+            // Bool.
+            if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
+                return new PrimitiveValue(true);
+            if (value.Equals("false", StringComparison.InvariantCultureIgnoreCase))
+                return new PrimitiveValue(false);
+
+            // Double.
+            if (value.IndexOf('.') != -1 || value.Contains("e") || value.Contains("E"))
+            {
+                double doubleResult;
+                if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out doubleResult))
+                    return new PrimitiveValue(doubleResult);
+            }
+
+            // Long.
+            long longResult;
+            if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out longResult))
+            {
+                return new PrimitiveValue(longResult);
+            }
+            // Try hex format. For whatever reason, HexNumber does not allow a 0x prefix so we manually
+            // get rid of it.
+            if (value.IndexOf("0x", StringComparison.InvariantCultureIgnoreCase) != -1)
+            {
+                var hexDigits = value.TrimStart();
+                if (hexDigits.StartsWith("0x"))
+                    hexDigits = hexDigits.Substring(2);
+                if (long.TryParse(hexDigits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out longResult))
+                {
+                    return new PrimitiveValue(longResult);
+                }
+            }
+
+            ////TODO: allow trailing width specifier
+            throw new NotImplementedException();
+        }
+
         public bool ToBool()
         {
             switch (valueType)
@@ -338,6 +380,103 @@ namespace UnityEngine.Experimental.Input.Utilities
                     return default(double);
             }
         }
+
+        public static PrimitiveValue FromObject(object value)
+        {
+            if (value == null)
+                return new PrimitiveValue();
+
+            var stringValue = value as string;
+            if (stringValue != null)
+                return FromString(stringValue);
+
+            if (value is bool)
+                return new PrimitiveValue((bool)value);
+            if (value is char)
+                return new PrimitiveValue((char)value);
+            if (value is byte)
+                return new PrimitiveValue((byte)value);
+            if (value is sbyte)
+                return new PrimitiveValue((sbyte)value);
+            if (value is short)
+                return new PrimitiveValue((short)value);
+            if (value is ushort)
+                return new PrimitiveValue((ushort)value);
+            if (value is int)
+                return new PrimitiveValue((int)value);
+            if (value is uint)
+                return new PrimitiveValue((uint)value);
+            if (value is long)
+                return new PrimitiveValue((long)value);
+            if (value is ulong)
+                return new PrimitiveValue((ulong)value);
+            if (value is float)
+                return new PrimitiveValue((float)value);
+            if (value is double)
+                return new PrimitiveValue((double)value);
+
+            throw new ArgumentException(string.Format("Cannot convert '{0}' to primitive value", value), "value");
+        }
+
+        public static implicit operator PrimitiveValue(bool value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(char value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(byte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(sbyte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(short value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(ushort value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(int value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(uint value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(long value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(ulong value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(float value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static implicit operator PrimitiveValue(double value)
+        {
+            return new PrimitiveValue(value);
+        }
     }
 
     public struct PrimitiveValueOrArray
@@ -452,41 +591,12 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (string.IsNullOrEmpty(value))
                 return new PrimitiveValueOrArray();
 
-            // Bool.
-            if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
-                return new PrimitiveValueOrArray(true);
-            if (value.Equals("false", StringComparison.InvariantCultureIgnoreCase))
-                return new PrimitiveValueOrArray(false);
+            ////TODO: array support
 
-            // Double.
-            if (value.IndexOf('.') != -1 || value.Contains("e") || value.Contains("E"))
+            return new PrimitiveValueOrArray
             {
-                double doubleResult;
-                if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out doubleResult))
-                    return new PrimitiveValueOrArray(doubleResult);
-            }
-
-            // Long.
-            long longResult;
-            if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out longResult))
-            {
-                return new PrimitiveValueOrArray(longResult);
-            }
-            // Try hex format. For whatever reason, HexNumber does not allow a 0x prefix so we manually
-            // get rid of it.
-            if (value.IndexOf("0x", StringComparison.InvariantCultureIgnoreCase) != -1)
-            {
-                var hexDigits = value.TrimStart();
-                if (hexDigits.StartsWith("0x"))
-                    hexDigits = hexDigits.Substring(2);
-                if (long.TryParse(hexDigits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out longResult))
-                {
-                    return new PrimitiveValueOrArray(longResult);
-                }
-            }
-
-            ////TODO: allow trailing width specifier
-            throw new NotImplementedException();
+                primitiveValue = PrimitiveValue.FromString(value)
+            };
         }
 
         public static PrimitiveValueOrArray FromObject(object value)

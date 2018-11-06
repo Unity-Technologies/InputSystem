@@ -35,12 +35,33 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Category("Demo")]
     [Property("Device", "Gamepad")]
     [Ignore("TODO")]
-    public void TODO_Demo_CanFireSingleProjectile()
+    public void TODO_Demo_CanLookAround()
     {
         Click("SinglePlayerButton");
 
-        Press(gamepad.buttonSouth);
-        Release(gamepad.buttonSouth);
+        var initialRotation = game.players[0].transform.eulerAngles;
+
+        // Move leftStick all the way up.
+        Set(gamepad.leftStick.y, 1);
+
+        game.players[0].Update();
+
+        var newRotation = game.players[0].transform.eulerAngles;
+
+        Assert.Fail();
+    }
+
+    ////FIXME: there's a problem with running Unity updates; we're probably getting interferences from the InputManager we have pushed on the stack
+    [UnityTest]
+    [Category("Demo")]
+    [Ignore("TODO")]
+    public IEnumerator TODO_Demo_CanFireSingleProjectile()
+    {
+        Click("SinglePlayerButton");
+        Trigger(game.players[0].controls.gameplay.fire);
+
+        // Wait for physics update so we can check the projectile's Rigidbody properties.
+        yield return new WaitForFixedUpdate();
 
         Assert.That(projectiles, Has.Length.EqualTo(1));
         Assert.That(projectiles[0].GetComponent<Rigidbody>().velocity.magnitude, Is.GreaterThan(0));
@@ -141,6 +162,10 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Ignore("TODO")]
     public void TODO_Demo_CanRebindControls()
     {
+        Click("SingePlayerButton");
+        Trigger(game.players[0].controls.gameplay.menu);
+        Click("OptionsButton");
+
         Assert.Fail();
     }
 

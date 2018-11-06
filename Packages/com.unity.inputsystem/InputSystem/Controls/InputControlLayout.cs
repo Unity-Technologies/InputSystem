@@ -239,6 +239,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
+                IsSynthetic = 1 << 2,
             }
 
             /// <summary>
@@ -284,6 +285,9 @@ namespace UnityEngine.Experimental.Input.Layouts
             /// </summary>
             public PrimitiveValueOrArray defaultState;
 
+            public PrimitiveValue minValue;
+            public PrimitiveValue maxValue;
+
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
             // just the X axis control of the left stick directly from within a gamepad
@@ -314,6 +318,26 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
+            /// <summary>
+            /// If true, the control is considered a "synthetic" control.
+            /// </summary>
+            /// <remarks>
+            /// Synthetic controls are artificial controls that provide input but do not correspond to actual controls
+            /// on the hardware. An example is <see cref="Keyboard.anyKey"/> which is an artificial button that triggers
+            /// if any key on the keyboard is pressed.
+            /// </remarks>
+            public bool isSynthetic
+            {
+                get { return (flags & Flags.IsSynthetic) == Flags.IsSynthetic; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.IsSynthetic;
+                    else
+                        flags &= ~Flags.IsSynthetic;
+                }
+            }
+
             public bool isArray
             {
                 get { return (arraySize != 0); }
@@ -338,6 +362,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                 result.variants = variants.IsEmpty() ? other.variants : variants;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
                 result.arraySize = !isArray ? other.arraySize : arraySize;
+                result.isNoisy = isNoisy || other.isNoisy;
+                result.isSynthetic = isSynthetic || other.isSynthetic;
 
                 if (offset != InputStateBlock.kInvalidOffset)
                     result.offset = offset;
@@ -393,6 +419,16 @@ namespace UnityEngine.Experimental.Input.Layouts
                     result.defaultState = defaultState;
                 else
                     result.defaultState = other.defaultState;
+
+                if (!minValue.isEmpty)
+                    result.minValue = minValue;
+                else
+                    result.minValue = other.minValue;
+
+                if (!maxValue.isEmpty)
+                    result.maxValue = maxValue;
+                else
+                    result.maxValue = other.maxValue;
 
                 return result;
             }
@@ -789,7 +825,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         // InputControlAttribute applied to it or has an InputControl-derived value type.
         private static void AddControlItemsFromFields(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             AddControlItemsFromMembers(fields, controlLayouts, layoutName);
         }
 
@@ -797,7 +833,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         // InputControlAttribute applied to it or has an InputControl-derived value type.
         private static void AddControlItemsFromProperties(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             AddControlItemsFromMembers(properties, controlLayouts, layoutName);
         }
 
@@ -860,7 +896,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
         {
             // InputControlAttribute can be applied multiple times to the same member,
-            // generating a separate control for each ocurrence. However, it can also
+            // generating a separate control for each occurrence. However, it can also
+            // generating a separate control for each occurrence. However, it can also
             // not be applied at all in which case we still add a control layout (the
             // logic that called us already made sure the member is eligible for this kind
             // of operation).
@@ -975,6 +1012,11 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
+            // Determine if it's a synthetic control.
+            var isSynthetic = false;
+            if (attribute != null)
+                isSynthetic = attribute.synthetic;
+
             // Determine array size.
             var arraySize = 0;
             if (attribute != null)
@@ -984,6 +1026,15 @@ namespace UnityEngine.Experimental.Input.Layouts
             var defaultState = new PrimitiveValueOrArray();
             if (attribute != null)
                 defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
+
+            // Determine min and max value.
+            var minValue = new PrimitiveValue();
+            var maxValue = new PrimitiveValue();
+            if (attribute != null)
+            {
+                minValue = PrimitiveValue.FromObject(attribute.minValue);
+                maxValue = PrimitiveValue.FromObject(attribute.maxValue);
+            }
 
             return new ControlItem
             {
@@ -1001,8 +1052,11 @@ namespace UnityEngine.Experimental.Input.Layouts
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
+                isSynthetic = isSynthetic,
                 arraySize = arraySize,
                 defaultState = defaultState,
+                minValue = minValue,
+                maxValue = maxValue,
             };
         }
 
@@ -1596,12 +1650,15 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string displayName;
             public string resourceName;
             public bool noisy;
+            public bool synthetic;
 
             // This should be an object type field and allow any JSON primitive value type as well
             // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
             // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
             // for this later but for now, we use a string-based value fallback instead.
             public string defaultState;
+            public string minValue;
+            public string maxValue;
 
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
@@ -1627,6 +1684,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     sizeInBits = sizeInBits,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    isSynthetic = synthetic,
                     arraySize = arraySize,
                 };
 
@@ -1661,6 +1719,10 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 if (defaultState != null)
                     layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
+                if (minValue != null)
+                    layout.minValue = PrimitiveValue.FromObject(minValue);
+                if (maxValue != null)
+                    layout.maxValue = PrimitiveValue.FromObject(maxValue);
 
                 return layout;
             }
@@ -1692,7 +1754,11 @@ namespace UnityEngine.Experimental.Input.Layouts
                         usages = item.usages.Select(x => x.ToString()).ToArray(),
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
+                        synthetic = item.isSynthetic,
                         arraySize = item.arraySize,
+                        defaultState = item.defaultState.ToString(),
+                        minValue = item.minValue.ToString(),
+                        maxValue = item.maxValue.ToString(),
                     };
                 }
 
