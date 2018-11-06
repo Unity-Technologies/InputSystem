@@ -3825,14 +3825,6 @@ partial class CoreTests
         }
     }
 
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_InteractiveRebinding_FavorsControlOfSameType()
-    {
-        Assert.Fail();
-    }
-
     // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
     // machinery allows specifying a binding mask to respect.
     [Test]
@@ -4002,6 +3994,32 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanExcludeSpecificControlPaths()
+    {
+        var action = new InputAction(binding: "<Gamepad>/leftStick");
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        using (var rebind =
+                   action.PerformInteractiveRebinding()
+                       .WithControlsExcluding("<Mouse>/position")
+                       .Start())
+        {
+            InputSystem.QueueStateEvent(mouse, new MouseState {position = new Vector2(123, 345)});
+            InputSystem.Update();
+
+            Assert.That(rebind.completed, Is.False);
+            Assert.That(rebind.candidates, Is.Empty);
+
+            InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(123, 345)});
+            InputSystem.Update();
+
+            Assert.That(rebind.completed, Is.True);
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Pointer>/delta"));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_InteractiveRebinding_PicksControlWithHigherMagnitude()
     {
         var action = new InputAction(binding: "<Gamepad>/leftStick");
@@ -4068,6 +4086,35 @@ partial class CoreTests
     public void TODO_Actions_InteractiveRebinding_CanBeMadeToOverwritePath()
     {
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanRebindWithoutAction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation())
+        {
+            // Must have OnApplyBinding() callback when not having an action as otherwise
+            // RebindOperation doesn't know where to put the binding.
+            Assert.That(() => rebind.Start(),
+                Throws.InvalidOperationException.With.Message.ContainsSubstring("OnApplyBinding"));
+
+            var receivedOnApplyBindingCall = false;
+            rebind.OnApplyBinding(
+                (operation, path) =>
+                {
+                    receivedOnApplyBindingCall = true;
+                    Assert.That(path, Is.EqualTo("<Gamepad>/leftStick"));
+                })
+                .Start();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(1, 0)});
+            InputSystem.Update();
+
+            Assert.That(rebind.completed, Is.True);
+            Assert.That(receivedOnApplyBindingCall, Is.True);
+        }
     }
 
     [Test]

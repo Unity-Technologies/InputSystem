@@ -579,7 +579,27 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException("path");
-                ArrayHelpers.AppendWithCapacity(ref m_ControlPaths, ref m_ControlPathCount, path);
+                for (var i = 0; i < m_IncludePathCount; ++i)
+                    if (string.Compare(m_IncludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return this;
+                ArrayHelpers.AppendWithCapacity(ref m_IncludePaths, ref m_IncludePathCount, path);
+                return this;
+            }
+
+            public RebindingOperation WithoutControlsHavingToMatchPath()
+            {
+                m_IncludePathCount = 0;
+                return this;
+            }
+
+            public RebindingOperation WithControlsExcluding(string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+                for (var i = 0; i < m_ExcludePathCount; ++i)
+                    if (string.Compare(m_ExcludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return this;
+                ArrayHelpers.AppendWithCapacity(ref m_ExcludePaths, ref m_ExcludePathCount, path);
                 return this;
             }
 
@@ -613,6 +633,12 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
+            public RebindingOperation OnApplyBinding(Action<RebindingOperation, string> callback)
+            {
+                m_OnApplyBinding = callback;
+                return this;
+            }
+
             public RebindingOperation OnMatchWaitForAnother(float seconds)
             {
                 m_WaitSecondsAfterMatch = seconds;
@@ -626,11 +652,14 @@ namespace UnityEngine.Experimental.Input
                     return this;
 
                 // Make sure our configuration is sound.
-                if (m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
+                if (m_ActionToRebind != null && m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
                     throw new InvalidOperationException(
                         string.Format(
                             "Action '{0}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()",
                             action));
+                if (m_ActionToRebind == null && m_OnApplyBinding == null)
+                    throw new InvalidOperationException(
+                        "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
                 if (m_WaitSecondsAfterMatch > 0)
                 {
@@ -700,10 +729,16 @@ namespace UnityEngine.Experimental.Input
 
             public void Dispose()
             {
+                ////FIXME: these have to be made thread-safe
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
                 m_Candidates.Dispose();
                 m_LayoutCache.Clear();
+            }
+
+            ~RebindingOperation()
+            {
+                Dispose();
             }
 
             public void ResetConfiguration()
@@ -769,22 +804,12 @@ namespace UnityEngine.Experimental.Input
                         continue;
 
                     // If controls have to match a certain path, check if this one does.
-                    if (m_ControlPathCount > 0)
-                    {
-                        var haveMatch = false;
-                        for (var n = 0; n < m_ControlPathCount; ++n)
-                        {
-                            if (InputControlPath.MatchesPrefix(m_ControlPaths[n], control))
-                            {
-                                haveMatch = true;
-                                break;
-                            }
-                        }
+                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
+                        continue;
 
-                        if (!haveMatch)
-                            continue;
-                    }
-
+                    // If controls must not match certain path, make sure the control doesn't.
+                    if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
+                        continue;
 
                     // If we're expecting controls of a certain type, skip if control isn't of
                     // the right type.
@@ -899,6 +924,17 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            private static bool HavePathMatch(InputControl control, string[] paths, int pathCount)
+            {
+                for (var i = 0; i < pathCount; ++i)
+                {
+                    if (InputControlPath.MatchesPrefix(paths[i], control))
+                        return true;
+                }
+
+                return false;
+            }
+
             private void HookOnAfterUpdate()
             {
                 if ((m_Flags & Flags.OnAfterUpdateHooked) != 0)
@@ -957,33 +993,42 @@ namespace UnityEngine.Experimental.Input
                     else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
                         path = GeneratePathForControl(selectedControl);
 
-                    // See if we should modify an existing binding or create a new one.
-                    if ((m_Flags & Flags.AddNewBinding) != 0)
-                    {
-                        // Create new binding.
-                        m_ActionToRebind.AddBinding(path, groups: m_BindingGroupForNewBinding);
-                    }
+                    // If we have a custom callback for applying the binding, let it handle
+                    // everything.
+                    if (m_OnApplyBinding != null)
+                        m_OnApplyBinding(this, path);
                     else
                     {
-                        // Apply binding override to existing binding.
-                        if (m_TargetBindingIndex >= 0)
-                        {
-                            if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
-                                throw new Exception(string.Format(
-                                    "Target binding index {0} out of range for action '{1}' with {2} bindings",
-                                    m_TargetBindingIndex, m_ActionToRebind, m_ActionToRebind.bindings.Count));
+                        Debug.Assert(m_ActionToRebind != null);
 
-                            m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);
-                        }
-                        else if (m_BindingMask != null)
+                        // See if we should modify an existing binding or create a new one.
+                        if ((m_Flags & Flags.AddNewBinding) != 0)
                         {
-                            var bindingOverride = m_BindingMask.Value;
-                            bindingOverride.overridePath = path;
-                            m_ActionToRebind.ApplyBindingOverride(bindingOverride);
+                            // Create new binding.
+                            m_ActionToRebind.AddBinding(path, groups: m_BindingGroupForNewBinding);
                         }
                         else
                         {
-                            m_ActionToRebind.ApplyBindingOverride(path);
+                            // Apply binding override to existing binding.
+                            if (m_TargetBindingIndex >= 0)
+                            {
+                                if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
+                                    throw new Exception(string.Format(
+                                        "Target binding index {0} out of range for action '{1}' with {2} bindings",
+                                        m_TargetBindingIndex, m_ActionToRebind, m_ActionToRebind.bindings.Count));
+
+                                m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);
+                            }
+                            else if (m_BindingMask != null)
+                            {
+                                var bindingOverride = m_BindingMask.Value;
+                                bindingOverride.overridePath = path;
+                                m_ActionToRebind.ApplyBindingOverride(bindingOverride);
+                            }
+                            else
+                            {
+                                m_ActionToRebind.ApplyBindingOverride(path);
+                            }
                         }
                     }
                 }
@@ -1088,8 +1133,10 @@ namespace UnityEngine.Experimental.Input
             private InputBinding? m_BindingMask;
             private Type m_ControlType;
             private InternedString m_ExpectedLayout;
-            private int m_ControlPathCount;
-            private string[] m_ControlPaths;
+            private int m_IncludePathCount;
+            private string[] m_IncludePaths;
+            private int m_ExcludePathCount;
+            private string[] m_ExcludePaths;
             private int m_TargetBindingIndex = -1;
             private string m_BindingGroupForNewBinding;
             private string m_CancelBinding;
@@ -1103,6 +1150,7 @@ namespace UnityEngine.Experimental.Input
             private Action<RebindingOperation> m_OnPotentialMatch;
             private Func<InputControl, string> m_OnGeneratePath;
             private Func<InputControl, InputEventPtr, float> m_OnComputeScore;
+            private Action<RebindingOperation, string> m_OnApplyBinding;
             private Action<InputEventPtr> m_OnEventDelegate;
             private Action<InputUpdateType> m_OnAfterUpdateDelegate;
             private InputControlLayout.Cache m_LayoutCache;

@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private ActionInspectorContextMenu m_ContextMenu;
 
-        private InputBindingPropertiesView m_PropertyView;
+        private InputBindingPropertiesView m_BindingPropertyView;
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
         internal CopyPasteUtility m_CopyPasteUtility;
@@ -208,8 +208,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void LoadPropertiesForSelection()
         {
-            m_PropertyView = null;
+            m_BindingPropertyView = null;
 
+            // Column #1: Load selected action map.
             if (m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
@@ -219,17 +220,36 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
+
+            // Column #2: Load selected action or binding.
             if (m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
-                var p = m_ActionsTree.GetSelectedRow();
-                if (p != null && p.hasProperties)
+                var item = m_ActionsTree.GetSelectedRow();
+                if (item is BindingTreeItem)
                 {
-                    m_PropertyView = p.GetPropertiesView(() =>
-                    {
-                        Apply();
-                        LoadPropertiesForSelection();
-                    }, m_PickerTreeViewState, m_InputActionWindowToolbar);
+                    // Grab the action for the binding and see if we have an expected control layout
+                    // set on it. Pass that on to the control picking machinery.
+                    var actionItem = item.parent as ActionTreeItem;
+                    Debug.Assert(actionItem != null);
+
+                    // Show properties for binding.
+                    m_BindingPropertyView =
+                        new InputBindingPropertiesView(
+                            item.elementProperty,
+                            () =>
+                            {
+                                Apply();
+                                LoadPropertiesForSelection();
+                            },
+                            m_PickerTreeViewState,
+                            m_InputActionWindowToolbar,
+                            actionItem.expectedControlLayout);
+
+                    // For composites, don't show the binding path and control scheme section.
+                    if (item is CompositeTreeItem)
+                        m_BindingPropertyView.showPathAndControlSchemeSection = false;
                 }
+                ////TODO: properties for actions
             }
         }
 
@@ -369,9 +389,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
             EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
 
-            if (m_PropertyView != null)
+            if (m_BindingPropertyView != null)
             {
-                m_PropertyView.OnGUI();
+                m_BindingPropertyView.OnGUI();
             }
             else
             {
