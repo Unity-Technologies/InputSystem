@@ -587,8 +587,6 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public ButtonControl imeSelected { get; private set; }
 
-        public static Keyboard current { get; internal set; }
-
         /// <summary>
         /// Look up a key control by its key code.
         /// </summary>
@@ -742,19 +740,6 @@ namespace UnityEngine.Experimental.Input
 
                 throw new ArgumentException("key");
             }
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

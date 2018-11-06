@@ -674,18 +674,54 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        ////TODO: add optional index (i.e. "nth device of given type")
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
+            TDevice result = null;
+            var lastUpdateTime = -1.0;
             foreach (var device in devices)
             {
                 var deviceOfType = device as TDevice;
-                if (deviceOfType != null)
-                    return deviceOfType;
+                if (deviceOfType == null)
+                    continue;
+
+                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                {
+                    result = deviceOfType;
+                    lastUpdateTime = result.lastUpdateTime;
+                }
             }
 
-            return null;
+            return result;
+        }
+
+        public static TDevice GetDevice<TDevice>(InternedString usage)
+            where TDevice : InputDevice
+        {
+            TDevice result = null;
+            var lastUpdateTime = -1.0;
+            foreach (var device in devices)
+            {
+                var deviceOfType = device as TDevice;
+                if (deviceOfType == null)
+                    continue;
+                if (!deviceOfType.usages.Contains(usage))
+                    continue;
+
+                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                {
+                    result = deviceOfType;
+                    lastUpdateTime = result.lastUpdateTime;
+                }
+            }
+
+            return result;
+        }
+
+        public static TDevice GetDevice<TDevice>(string usage)
+            where TDevice : InputDevice
+        {
+            return GetDevice<TDevice>(new InternedString(usage));
         }
 
         /// <summary>

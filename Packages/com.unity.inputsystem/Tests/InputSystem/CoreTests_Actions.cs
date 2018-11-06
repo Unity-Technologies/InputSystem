@@ -4098,7 +4098,7 @@ partial class CoreTests
             // Must have OnApplyBinding() callback when not having an action as otherwise
             // RebindOperation doesn't know where to put the binding.
             Assert.That(() => rebind.Start(),
-                Throws.InvalidOperationException.With.Message.ContainsSubstring("OnApplyBinding"));
+                Throws.InvalidOperationException.With.Message.Contains("OnApplyBinding"));
 
             var receivedOnApplyBindingCall = false;
             rebind.OnApplyBinding(
@@ -4555,9 +4555,9 @@ partial class CoreTests
     {
         var map1 = new InputActionMap("map1");
         var map2 = new InputActionMap("map2");
-        var action1 = map1.AddAction("action1", "<Gamepad>/leftStick");
-        var action2 = map1.AddAction("action2", "<Gamepad>/rightStick");
-        var action3 = map2.AddAction("action3", "<Keyboard>/space");
+        map1.AddAction("action1", "<Gamepad>/leftStick");
+        map1.AddAction("action2", "<Gamepad>/rightStick");
+        map2.AddAction("action3", "<Keyboard>/space");
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);

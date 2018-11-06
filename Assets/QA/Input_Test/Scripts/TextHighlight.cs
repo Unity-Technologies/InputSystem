@@ -11,7 +11,6 @@ public class TextHighlight : MonoBehaviour
 
     private byte fade_speed = 10;
 
-    // Use this for initialization
     void Start()
     {
         text_mesh = GetComponent<TextMesh>();

@@ -144,24 +144,6 @@ namespace UnityEngine.Experimental.Input
         ////TODO: give this a better name; primaryButton?
         public ButtonControl button { get; private set; }
 
-        /// <summary>
-        /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
-        /// device connected to the system.
-        /// </summary>
-        public static Pointer current { get; internal set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             position = builder.GetControl<Vector2Control>(this, "position");

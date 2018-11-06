@@ -3,11 +3,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.XR;
 
 ////REVIEW: should be possible to completely hijack the input stream of a device such that its original input is suppressed
-
-////REVIEW: nuke MakeCurrent() and replace with (optional) device tracking on InputPlayer?
 
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
 ////        the heap objects of devices he doesn't use?
@@ -306,23 +303,6 @@ namespace UnityEngine.Experimental.Input
         {
             m_Id = kInvalidDeviceId;
             m_DeviceIndex = kInvalidDeviceIndex;
-        }
-
-        /// <summary>
-        /// Make this the current device of its type.
-        /// </summary>
-        /// <remarks>
-        /// Use this to set static properties that give fast access to the latest device used of a given
-        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
-        ///
-        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
-        /// be multiple current working directories, one for each type.
-        ///
-        /// A device will be made current by the system initially when it is created and subsequently whenever
-        /// it receives an event.
-        /// </remarks>
-        public virtual void MakeCurrent()
-        {
         }
 
         /// <summary>

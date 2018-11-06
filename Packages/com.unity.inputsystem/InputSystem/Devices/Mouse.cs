@@ -112,12 +112,6 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public ButtonControl rightButton { get; private set; }
 
-        /// <summary>
-        /// The mouse that was added or updated last or null if there is no mouse
-        /// connected to the system.
-        /// </summary>
-        public new static Mouse current { get; internal set; }
-
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>
         /// Move the operating system's mouse cursor.
@@ -131,19 +125,6 @@ namespace UnityEngine.Experimental.Input
         {
             var command = WarpMousePositionCommand.Create(position);
             ExecuteCommand(ref command);
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

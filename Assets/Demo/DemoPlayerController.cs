@@ -175,7 +175,6 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 
         // Find which control scheme to use based on the device we have.
         var controlScheme = SelectControlSchemeBasedOnDevice(this.GetAssignedInputDevices()[0]);
-        Debug.Assert(controlScheme != null);
 
         // Activate the control scheme and automatically assign whatever other devices we need
         // which aren't already assigned to someone else.
