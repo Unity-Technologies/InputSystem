@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// <remarks>
     /// State-wise this is still just a Vector2.
     ///
-    /// Unlike <see cref="DpadControl">D-Pads</see>, sticks will usually have <see cref="DeadzoneProcessor">
+    /// Unlike <see cref="DpadControl">D-Pads</see>, sticks will usually have <see cref="StickDeadzoneProcessor">
     /// deadzone processors</see> applied to them.
     /// </remarks>
     public class StickControl : Vector2Control

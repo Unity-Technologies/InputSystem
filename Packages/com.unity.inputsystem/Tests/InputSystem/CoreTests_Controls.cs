@@ -168,7 +168,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanProcessDeadzones()
+    public void Controls_CanHaveStickDeadzones()
     {
         const string json = @"
             {
@@ -177,7 +177,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.1,max=0.9)""
                     }
                 ]
             }
@@ -187,7 +187,7 @@ partial class CoreTests
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         ////NOTE: Unfortunately, this relies on an internal method ATM.
-        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
@@ -217,7 +217,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone""
+                        ""processors"" : ""stickDeadzone""
                     }
                 ]
             }
@@ -226,7 +226,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
         Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
@@ -277,7 +277,7 @@ partial class CoreTests
 
         Assert.That(gamepad.rightStick.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
         Assert.That(gamepad.leftStick.EvaluateMagnitude(),
-            Is.EqualTo(new DeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick).magnitude).Within(0.00001));
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick).magnitude).Within(0.00001));
         Assert.That(gamepad.buttonNorth.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
         Assert.That(gamepad.buttonSouth.EvaluateMagnitude(), Is.EqualTo(1).Within(0.00001));
         Assert.That(gamepad.leftTrigger.EvaluateMagnitude(), Is.EqualTo(0.5).Within(0.00001));

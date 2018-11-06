@@ -349,7 +349,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.1,max=0.9)""
                     }
                 ]
             }
@@ -361,9 +361,9 @@ partial class CoreTests
 
         // NOTE: Unfortunately, this currently relies on an internal method (TryGetProcessor).
 
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>(), Is.Not.Null);
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>(), Is.Not.Null);
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
     }
 
     private unsafe struct StateStructWithArrayOfControls
@@ -1969,7 +1969,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick/x"",
-                        ""processors"" : ""invert,deadzone""
+                        ""processors"" : ""invert,stickDeadzone""
                     }
                 ]
             }
@@ -1982,7 +1982,7 @@ partial class CoreTests
 
         Assert.That(leftStickX.processors, Has.Length.EqualTo(2));
         Assert.That(leftStickX.processors[0], Is.TypeOf<InvertProcessor>());
-        Assert.That(leftStickX.processors[1], Is.TypeOf<DeadzoneProcessor>());
+        Assert.That(leftStickX.processors[1], Is.TypeOf<StickDeadzoneProcessor>());
     }
 
     [Test]

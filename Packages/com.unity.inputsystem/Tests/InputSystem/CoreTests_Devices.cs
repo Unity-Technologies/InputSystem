@@ -3219,7 +3219,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.5,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.5,max=0.9)""
                     }
                 ]
             }
