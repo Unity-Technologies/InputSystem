@@ -206,6 +206,41 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanHaveAxisDeadzones()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftTrigger"",
+                        ""processors"" : ""axisDeadzone(min=0.1,max=0.9)""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        ////NOTE: Unfortunately, this relies on an internal method ATM.
+        var processor = device.leftTrigger.TryGetProcessor<AxisDeadzoneProcessor>();
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.05f});
+        InputSystem.Update();
+
+        Assert.That(device.leftTrigger.ReadValue(), Is.Zero.Within(0.0001));
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.leftTrigger.ReadValue(),
+            Is.EqualTo(processor.Process(0.5f, device.leftTrigger)));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanChangeDefaultDeadzoneValuesOnTheFly()
     {
         // Deadzone processor with no specified min/max should take default values
