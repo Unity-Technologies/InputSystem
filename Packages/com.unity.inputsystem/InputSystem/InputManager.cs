@@ -35,8 +35,10 @@ namespace UnityEngine.Experimental.Input
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
-    public delegate string DeviceFindControlLayoutCallback(int deviceId, ref InputDeviceDescription description, string matchedLayout,
+    public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
+
+    public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
 
     /// <summary>
     /// Hub of the input system.
@@ -124,9 +126,14 @@ namespace UnityEngine.Experimental.Input
             add { m_DeviceChangeListeners.Append(value); }
             remove { m_DeviceChangeListeners.Remove(value); }
         }
+        public event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { m_DeviceCommandCallbacks.Append(value); }
+            remove { m_DeviceCommandCallbacks.Remove(value); }
+        }
 
         ////REVIEW: would be great to have a way to sort out precedence between two callbacks
-        public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
+        public event InputDeviceFindControlLayoutDelegate onFindControlLayoutForDevice
         {
             add { m_DeviceFindLayoutCallbacks.Append(value); }
             remove { m_DeviceFindLayoutCallbacks.Remove(value); }
@@ -1428,7 +1435,8 @@ namespace UnityEngine.Experimental.Input
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
+        private InlinedArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
+        internal InlinedArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
         private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         private InlinedArray<EventListener> m_EventListeners;
         private InlinedArray<UpdateListener> m_BeforeUpdateListeners;

@@ -119,11 +119,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public abstract string SerializeToString();
 
-        public virtual InputBindingPropertiesView GetBindingPropertiesView(Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
-        {
-            return new InputBindingPropertiesView(elementProperty, apply, state, toolbar);
-        }
-
         public abstract int GetIdForName(string argsNewName);
     }
 

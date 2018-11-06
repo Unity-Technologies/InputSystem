@@ -255,6 +255,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (m_RebindingOperation == null)
                         m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
 
+                    ////TODO: if we have multiple candidates that we can't trivially decide between, let user choose
+
                     m_RebindingOperation
                         .WithExpectedControlLayout(m_ExpectedControlLayout)
                         // Require minimum actuation of 0.15f. This is after deadzoning has been applied.
@@ -263,7 +265,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         // Give us a buffer of 0.25 seconds to see if a better match comes along.
                         .OnMatchWaitForAnother(0.25f)
                         ////REVIEW: should we exclude only the system's active pointing device?
-                        // With the mouse operating the UI, it's cursor control is too fickle a thing to
+                        // With the mouse operating the UI, its cursor control is too fickle a thing to
                         // bind to. Ignore mouse position and delta.
                         // NOTE: We go for all types of pointers here, not just mice.
                         .WithControlsExcluding("<Pointer>/position")

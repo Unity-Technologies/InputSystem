@@ -525,6 +525,12 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        public static event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { s_Manager.onDeviceCommand += value; }
+            remove { s_Manager.onDeviceCommand -= value; }
+        }
+
         /// <summary>
         /// Event that is signalled when the system is trying to match a layout to
         /// a device it has discovered.
@@ -560,7 +566,7 @@ namespace UnityEngine.Experimental.Input
         ///     };
         /// </code>
         /// </example>
-        public static event DeviceFindControlLayoutCallback onFindLayoutForDevice
+        public static event InputDeviceFindControlLayoutDelegate onFindLayoutForDevice
         {
             add { s_Manager.onFindControlLayoutForDevice += value; }
             remove { s_Manager.onFindControlLayoutForDevice -= value; }
