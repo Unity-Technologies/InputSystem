@@ -351,9 +351,11 @@ internal class UITests : InputTestFixture
         }
     }
 
+    ////FIXME: this is suffering from InputTestFixture's problem with running normal frame updates
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator TrackedDeviceActions_CanDriveUI()
+    [Ignore("TODO")]
+    public IEnumerator TODO_TrackedDeviceActions_CanDriveUI()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
