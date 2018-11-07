@@ -1860,18 +1860,11 @@ namespace UnityEngine.Experimental.Input
 
         private void OnFocusChanged(bool focus)
         {
-            if(focus)
+            var deviceCount = m_DevicesCount;
+            for (var i = 0; i < deviceCount; ++i)
             {
-                var deviceCount = m_DevicesCount;
-                for (var i = 0; i < deviceCount; ++i)
-                {
-                    var device = m_Devices[i];
-                    InputSystem.ResetDevice(device);
-                }
-            }
-            else
-            {
-
+                var device = m_Devices[i];
+                InputSystem.ResetDevice(device);
             }
         }
 

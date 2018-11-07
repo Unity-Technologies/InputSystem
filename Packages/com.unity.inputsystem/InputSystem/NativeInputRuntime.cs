@@ -112,9 +112,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (value == null)
-                    Application.onFocusChanged -= OnFocusChanged;
+                    Application.focusChanged -= OnFocusChanged;
                 else if (m_ShutdownMethod == null)
-                    Application.onFocusChanged += OnFocusChanged;
+                    Application.focusChanged += OnFocusChanged;
 
                 m_FocusChangedMethod = value;
             }
