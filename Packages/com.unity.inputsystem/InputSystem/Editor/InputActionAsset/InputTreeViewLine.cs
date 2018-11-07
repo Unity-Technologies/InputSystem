@@ -16,6 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIStyle lineStyle = new GUIStyle("TV Line");
             public static GUIStyle textStyle = new GUIStyle("Label");
+            public static GUIStyle textSelectedStyle = new GUIStyle("Label");
             public static GUIStyle backgroundStyle = new GUIStyle("Label");
             public static GUIStyle border = new GUIStyle("Label");
             public static GUIStyle yellowRect = new GUIStyle("Label");
@@ -33,6 +34,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 border.border = new RectOffset(0, 0, 0, 1);
 
                 textStyle.alignment = TextAnchor.MiddleLeft;
+                textSelectedStyle.alignment = TextAnchor.MiddleLeft;
+                textSelectedStyle.normal.textColor = Color.white;
 
                 yellowRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
@@ -98,7 +101,10 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.y += 1;
             rect.height -= 2;
 
-            Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
+            if(selected)
+                Styles.textSelectedStyle.Draw(rect, displayName, false, false, selected, focused);
+            else
+                Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
 
             DrawCustomRect(rowRect);
         }
