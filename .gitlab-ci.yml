@@ -1,7 +1,7 @@
 stages:
   - test
 
-test:windows:2018-2:
+test:windows:2018-2-net4x:
   stage: test
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
@@ -17,7 +17,7 @@ test:windows:2018-2:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
-test:windows:2018-3:
+test:windows:2018-3-net4x:
   stage: test
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
@@ -33,7 +33,7 @@ test:windows:2018-3:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
-test:windows:2019-1:
+test:windows:2019-1-net4x:
   stage: test
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
@@ -50,7 +50,7 @@ test:windows:2019-1:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
-test:osx:2018-2:
+test:osx:2018-2-net4x:
   stage: test
   artifacts:
     paths:
@@ -67,7 +67,7 @@ test:osx:2018-2:
   after_script:
     - /opt/post_build_script.sh
 
-test:osx:2018-3:
+test:osx:2018-3-net4x:
   stage: test
   artifacts:
     paths:
@@ -84,7 +84,7 @@ test:osx:2018-3:
   after_script:
     - /opt/post_build_script.sh
     
-test:osx:2019-1:
+test:osx:2019-1-net4x:
   stage: test
   artifacts:
     paths:
@@ -101,3 +101,103 @@ test:osx:2019-1:
   after_script:
     - /opt/post_build_script.sh
 
+test:windows:2018-2-net20:
+  stage: test
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=legacy
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2018-3-net20:
+  stage: test
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.3 --runtime=legacy
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2019-1-net20:
+  stage: test
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  script:
+    - echo "Running Playmode Tests"
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=legacy
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:osx:2018-2-net20:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py Editor --version=2018.2 --runtime=legacy
+  after_script:
+    - /opt/post_build_script.sh
+
+test:osx:2018-3-net20:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py Editor --version=2018.3 --runtime=legacy
+  after_script:
+    - /opt/post_build_script.sh
+    
+test:osx:2019-1-net20:
+  stage: test
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  script:
+    - python testrunner.py Editor --version=2019.1 --runtime=legacy
+  after_script:
+    - /opt/post_build_script.sh
+    
