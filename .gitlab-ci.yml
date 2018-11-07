@@ -12,7 +12,7 @@ test:windows:2018-2:
   tags:
    - bokken-runner
   script:
-    - python.exe -u testrunner.py Editor --version=2018.2
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=latest
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
@@ -28,7 +28,7 @@ test:windows:2018-3:
   tags:
    - bokken-runner
   script:
-    - python.exe -u testrunner.py Editor --version=2018.3
+    - python.exe -u testrunner.py Editor --version=2018.3 --runtime=latest
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
@@ -45,7 +45,7 @@ test:windows:2019-1:
    - bokken-runner
   script:
     - echo "Running Playmode Tests"
-    - python.exe -u testrunner.py Editor --version=2019.1
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
@@ -63,7 +63,7 @@ test:osx:2018-2:
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
   script:
-    - python testrunner.py Editor --version=2018.2
+    - python testrunner.py Editor --version=2018.2 --runtime=latest
   after_script:
     - /opt/post_build_script.sh
 
@@ -80,7 +80,7 @@ test:osx:2018-3:
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
   script:
-    - python testrunner.py Editor --version=2018.3
+    - python testrunner.py Editor --version=2018.3 --runtime=latest
   after_script:
     - /opt/post_build_script.sh
     
@@ -97,7 +97,7 @@ test:osx:2019-1:
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
   script:
-    - python testrunner.py Editor --version=2019.1
+    - python testrunner.py Editor --version=2019.1 --runtime=latest
   after_script:
     - /opt/post_build_script.sh
 
