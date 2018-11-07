@@ -59,7 +59,7 @@ public class SteamDemoController : SteamController
         steamExitMenu = builder.GetControl<ButtonControl>("steamExitMenu");
     }
 
-    protected override void ResolveActions(ISteamControllerAPI api)
+    protected override void ResolveSteamActions(ISteamControllerAPI api)
     {
         gameplaySetHandle = api.GetActionSetHandle("gameplay");
         moveHandle = api.GetAnalogActionHandle("move");
@@ -85,24 +85,38 @@ public class SteamDemoController : SteamController
     public SteamHandle<InputAction> navigateHandle { get; private set; }
     public SteamHandle<InputAction> clickHandle { get; private set; }
     public SteamHandle<InputAction> steamExitMenuHandle { get; private set; }
+    private SteamActionSetInfo[] m_ActionSets;
+    public override ReadOnlyArray<SteamActionSetInfo> steamActionSets
+    {
+        get
+        {
+            if (m_ActionSets == null)
+                m_ActionSets = new[]
+                {
+                    new SteamActionSetInfo { name = "gameplay", handle = gameplaySetHandle },
+                    new SteamActionSetInfo { name = "menu", handle = menuSetHandle },
+                };
+            return new ReadOnlyArray<SteamActionSetInfo>(m_ActionSets);
+        }
+    }
 
     protected override unsafe void Update(ISteamControllerAPI api)
     {
         SteamDemoControllerState state;
-        state.move = api.GetAnalogActionData(handle, moveHandle).position;
-        state.look = api.GetAnalogActionData(handle, lookHandle).position;
-        if (api.GetDigitalActionData(handle, fireHandle).pressed)
+        state.move = api.GetAnalogActionData(steamControllerHandle, moveHandle).position;
+        state.look = api.GetAnalogActionData(steamControllerHandle, lookHandle).position;
+        if (api.GetDigitalActionData(steamControllerHandle, fireHandle).pressed)
             state.buttons[0] |= 0;
-        if (api.GetDigitalActionData(handle, jumpHandle).pressed)
+        if (api.GetDigitalActionData(steamControllerHandle, jumpHandle).pressed)
             state.buttons[0] |= 1;
-        if (api.GetDigitalActionData(handle, menuHandle).pressed)
+        if (api.GetDigitalActionData(steamControllerHandle, menuHandle).pressed)
             state.buttons[0] |= 2;
-        if (api.GetDigitalActionData(handle, steamEnterMenuHandle).pressed)
+        if (api.GetDigitalActionData(steamControllerHandle, steamEnterMenuHandle).pressed)
             state.buttons[0] |= 3;
-        state.navigate = api.GetAnalogActionData(handle, navigateHandle).position;
-        if (api.GetDigitalActionData(handle, clickHandle).pressed)
+        state.navigate = api.GetAnalogActionData(steamControllerHandle, navigateHandle).position;
+        if (api.GetDigitalActionData(steamControllerHandle, clickHandle).pressed)
             state.buttons[0] |= 4;
-        if (api.GetDigitalActionData(handle, steamExitMenuHandle).pressed)
+        if (api.GetDigitalActionData(steamControllerHandle, steamExitMenuHandle).pressed)
             state.buttons[0] |= 5;
         InputSystem.QueueStateEvent(this, state);
     }

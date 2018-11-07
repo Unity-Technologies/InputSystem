@@ -217,9 +217,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             }
             builder.Append("    }\n");
 
-            // ResolveActions method.
+            // ResolveSteamActions method.
             builder.Append('\n');
-            builder.Append("    protected override void ResolveActions(ISteamControllerAPI api)\n");
+            builder.Append("    protected override void ResolveSteamActions(ISteamControllerAPI api)\n");
             builder.Append("    {\n");
             foreach (var setEntry in actions)
             {
@@ -294,6 +294,28 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 }
             }
 
+            // steamActionSets property.
+            builder.Append('\n');
+            builder.Append("    private SteamActionSetInfo[] m_ActionSets;\n");
+            builder.Append("    public override ReadOnlyArray<SteamActionSetInfo> steamActionSets\n");
+            builder.Append("    {\n");
+            builder.Append("        get\n");
+            builder.Append("        {\n");
+            builder.Append("            if (m_ActionSets == null)\n");
+            builder.Append("                m_ActionSets = new[]\n");
+            builder.Append("                {\n");
+            foreach (var setEntry in actions)
+            {
+                builder.Append(string.Format(
+                    "                    new SteamActionSetInfo {{ name = \"{0}\", handle = {1}SetHandle }},\n",
+                    setEntry.Key,
+                    CSharpCodeHelpers.MakeIdentifier(setEntry.Key)));
+            }
+            builder.Append("                };\n");
+            builder.Append("            return new ReadOnlyArray<SteamActionSetInfo>(m_ActionSets);\n");
+            builder.Append("        }\n");
+            builder.Append("    }\n");
+
             // Update method.
             builder.Append('\n');
             builder.Append("    protected override unsafe void Update(ISteamControllerAPI api)\n");
@@ -308,7 +330,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
                 foreach (var entry in stickPadGyros)
                 {
-                    builder.Append(string.Format("        state.{0} = api.GetAnalogActionData(handle, {0}Handle).position;\n",
+                    builder.Append(string.Format("        state.{0} = api.GetAnalogActionData(steamControllerHandle, {0}Handle).position;\n",
                         CSharpCodeHelpers.MakeIdentifier(entry.Key)));
                 }
 
@@ -316,7 +338,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
                 foreach (var entry in buttons)
                 {
-                    builder.Append(string.Format("        if (api.GetDigitalActionData(handle, {0}Handle).pressed)\n",
+                    builder.Append(string.Format("        if (api.GetDigitalActionData(steamControllerHandle, {0}Handle).pressed)\n",
                         CSharpCodeHelpers.MakeIdentifier(entry.Key)));
                     builder.Append(string.Format("            state.buttons[{0}] |= {1};\n", currentButtonBit / 8, currentButtonBit % 8));
                     ++currentButtonBit;
@@ -326,7 +348,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
                 foreach (var entry in analogTriggers)
                 {
-                    builder.Append(string.Format("        state.{0} = api.GetAnalogActionData(handle, {0}Handle).position.x;\n",
+                    builder.Append(string.Format("        state.{0} = api.GetAnalogActionData(steamControllerHandle, {0}Handle).position.x;\n",
                         CSharpCodeHelpers.MakeIdentifier(entry.Key)));
                 }
             }
