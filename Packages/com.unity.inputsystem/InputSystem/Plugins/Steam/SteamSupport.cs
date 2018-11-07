@@ -113,6 +113,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                         continue;
                 }
 
+                ////FIXME: this should not create garbage
                 // No, so create a new device.
                 var controllerLayouts = InputSystem.ListLayoutsBasedOn("SteamController");
                 foreach (var layout in controllerLayouts)

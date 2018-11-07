@@ -75,7 +75,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             throw new System.NotImplementedException();
         }
 
-        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle, out SteamHandle<InputActionMap> handlesOut)
+        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle,
+            out SteamHandle<InputActionMap> handlesOut)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public SteamAnalogActionData GetAnalogActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> analogActionHandle)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public SteamDigitalActionData GetDigitalActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> digitalActionHandle)
         {
             throw new System.NotImplementedException();
         }

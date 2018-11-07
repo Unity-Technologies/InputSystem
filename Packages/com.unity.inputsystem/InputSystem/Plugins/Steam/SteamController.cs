@@ -4,6 +4,8 @@ using System;
 using UnityEngine.Experimental.Input.Plugins.Steam.Editor;
 #endif
 
+////TODO: support action set layers
+
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     /// <summary>
@@ -76,7 +78,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
         ///
         /// When on, if an <see cref="InputActionMap">action map</see> has bindings to a SteamController
         /// and is enabled or disabled, the SteamController will automatically enable or disable
-        /// the correspondingly named Steam action set as an action set layer.
+        /// the correspondingly named Steam action set.
         /// </remarks>
         public bool autoActivateSets { get; set; }
 

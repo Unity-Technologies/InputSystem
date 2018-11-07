@@ -7,7 +7,9 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Steam;
+using UnityEngine.Experimental.Input.Utilities;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Plugins.Steam.Editor;
 #endif
@@ -119,8 +121,8 @@ internal class SteamTests : InputTestFixture
 
         device.ActivateActionSet(device.gameplaySetHandle);
 
-        Assert.That(m_SteamAPI.activeActionSetLayers, Is.Not.Null.And.Length.EqualTo(1));
-        Assert.That(m_SteamAPI.activeActionSetLayers[0], Is.EquivalentTo(new[] { device.gameplaySetHandle }));
+        Assert.That(m_SteamAPI.actionSetActivations, Is.Not.Null.And.Length.EqualTo(1));
+        Assert.That(m_SteamAPI.actionSetActivations[0], Is.EquivalentTo(new[] { device.gameplaySetHandle }));
 
         var current = device.GetCurrentActionSet();
 
@@ -130,15 +132,7 @@ internal class SteamTests : InputTestFixture
     // Option 2: Have action sets on SteamControllers activate automatically in sync with InputActionMaps.
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanAutomaticallyActivateActionSetsOnSteamControllers()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanActivateActionSetOnSteamController()
+    public void Devices_CanAutomaticallyActivateActionSetsOnSteamControllers()
     {
         var map = new InputActionMap("gameplay");
         map.AddAction("fire", binding: "<TestController>/fire");
@@ -149,14 +143,13 @@ internal class SteamTests : InputTestFixture
 
         map.Enable();
 
-        //Assert.That(m_SteamAPI.actionSetActivations, Has.Count.EqualTo(1));
-        //Assert.That(m_SteamAPI.actionSetActivations[0].Key, Is.EqualTo(1));
-        //Assert.That(m_SteamAPI.actionSetActivations[0].Value, Is.EqualTo(TestSteamControllerAPI.gameplaySet));
+        Assert.That(m_SteamAPI.actionSetActivations, Is.EquivalentTo(new[] {TestSteamControllerAPI.gameplaySet}));
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanActivateActionSetOnSteamController_WhenAlreadyActivatedAtTimeOfControllerCreation()
+    [Ignore("TODO")]
+    public void TODO_Devices_CanActivateActionSetOnSteamController_WhenAlreadyActivatedAtTimeOfControllerCreation()
     {
         var map = new InputActionMap("gameplay");
         map.AddAction("fire", binding: "<TestController>/fire");
@@ -169,6 +162,7 @@ internal class SteamTests : InputTestFixture
         m_SteamAPI.controllers = new ulong[] {1};
         InputSystem.Update();
 
+        Assert.Fail();
         //Assert.That(m_SteamAPI.actionSetActivations, Has.Count.EqualTo(1));
         //Assert.That(m_SteamAPI.actionSetActivations[0].Key, Is.EqualTo(1));
         //Assert.That(m_SteamAPI.actionSetActivations[0].Value, Is.EqualTo(TestSteamControllerAPI.gameplaySet));
@@ -176,10 +170,42 @@ internal class SteamTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_SteamControllersSendActionStateAsEvents()
+    public void Devices_SteamControllersSendActionStateAsEvents()
     {
-        Assert.Fail();
+        var receivedStateEvent = false;
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            if (!eventPtr.IsA<StateEvent>())
+                return;
+            var device = InputSystem.GetDeviceById(eventPtr.deviceId) as TestController;
+            if (device == null)
+                return;
+
+            receivedStateEvent = true;
+        };
+
+        m_SteamAPI.AddController(1);
+
+        InputSystem.Update();
+        var controller = (TestController)InputSystem.devices.First(x => x is TestController);
+
+        controller.ActivateActionSet(controller.gameplaySetHandle);
+
+        Assert.That(controller.fire.isPressed, Is.False);
+
+        // Press fire button.
+        m_SteamAPI.controllerData[0].digitalData[TestSteamControllerAPI.fireAction] =
+            new SteamDigitalActionData
+        {
+            pressed = true,
+            active = true
+        };
+
+        InputSystem.Update();
+
+        Assert.That(receivedStateEvent, Is.True);
+        Assert.That(controller.fire.isPressed, Is.True);
     }
 
 #if UNITY_EDITOR
@@ -217,8 +243,8 @@ internal class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("base.FinishSetup(builder);"));
         Assert.That(generatedCode, Contains.Substring("new InputDeviceMatcher"));
         Assert.That(generatedCode, Contains.Substring("WithInterface(\"Steam\")"));
-        Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputActionMap> map1Handle"));
-        Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputActionMap> map2Handle"));
+        Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputActionMap> map1SetHandle"));
+        Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputActionMap> map2SetHandle"));
         Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputAction> stickActionHandle"));
         Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputAction> buttonActionHandle"));
         Assert.That(generatedCode, Contains.Substring("public SteamHandle<InputAction> axisActionHandle"));
@@ -232,8 +258,8 @@ internal class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("axisAction = builder.GetControl<AxisControl>(\"axisAction\");"));
         Assert.That(generatedCode, Contains.Substring("vector2Action = builder.GetControl<Vector2Control>(\"vector2Action\");"));
         Assert.That(generatedCode, Contains.Substring("protected override void ResolveActions(ISteamControllerAPI api)"));
-        Assert.That(generatedCode, Contains.Substring("map1Handle = api.GetActionSetHandle(\"map1\");"));
-        Assert.That(generatedCode, Contains.Substring("map2Handle = api.GetActionSetHandle(\"map2\");"));
+        Assert.That(generatedCode, Contains.Substring("map1SetHandle = api.GetActionSetHandle(\"map1\");"));
+        Assert.That(generatedCode, Contains.Substring("map2SetHandle = api.GetActionSetHandle(\"map2\");"));
         Assert.That(generatedCode, Contains.Substring("buttonActionHandle = api.GetDigitalActionHandle(\"buttonAction\");"));
         Assert.That(generatedCode, Contains.Substring("axisActionHandle = api.GetAnalogActionHandle(\"axisAction\");"));
         Assert.That(generatedCode, Contains.Substring("stickActionHandle = api.GetAnalogActionHandle(\"stickAction\");"));
@@ -337,6 +363,20 @@ internal class SteamTests : InputTestFixture
 
 #endif
 
+    struct TestControllerState : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Button")]
+        public bool fire;
+        [InputControl(layout = "Stick")]
+        public Vector2 look;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'e', 's', 't');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(TestControllerState))]
     class TestController : SteamController
     {
         public ButtonControl fire { get; private set; }
@@ -349,6 +389,13 @@ internal class SteamTests : InputTestFixture
         public SteamHandle<InputAction> fireActionHandle;
         public SteamHandle<InputAction> lookActionHandle;
 
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+            fire = builder.GetControl<ButtonControl>("fire");
+            look = builder.GetControl<StickControl>("look");
+        }
+
         protected override void ResolveActions(ISteamControllerAPI api)
         {
             ++resolveActionsCount;
@@ -360,6 +407,16 @@ internal class SteamTests : InputTestFixture
         protected override void Update(ISteamControllerAPI api)
         {
             ++updateCount;
+
+            var fireActionData = api.GetDigitalActionData(handle, fireActionHandle);
+            var lookActionData = api.GetAnalogActionData(handle, lookActionHandle);
+
+            InputSystem.QueueStateEvent(this,
+                new TestControllerState
+                {
+                    fire = fireActionData.pressed,
+                    look = lookActionData.position,
+                });
         }
     }
 
@@ -368,7 +425,15 @@ internal class SteamTests : InputTestFixture
     {
         public int runFrameCount;
         public ulong[] controllers;
-        public SteamHandle<InputActionMap>[][] activeActionSetLayers;
+        public SteamHandle<InputActionMap>[][] actionSetActivations;
+
+        public struct ControllerData
+        {
+            public Dictionary<SteamHandle<InputAction>, SteamAnalogActionData> analogData;
+            public Dictionary<SteamHandle<InputAction>, SteamDigitalActionData> digitalData;
+        }
+
+        public ControllerData[] controllerData;
 
         public static SteamHandle<InputAction> fireAction = new SteamHandle<InputAction>(11);
         public static SteamHandle<InputAction> lookAction = new SteamHandle<InputAction>(12);
@@ -391,6 +456,14 @@ internal class SteamTests : InputTestFixture
         {
             {"gameplay", gameplaySet}
         };
+
+        public void AddController(ulong handle)
+        {
+            ArrayHelpers.Append(ref controllers, handle);
+            var index = ArrayHelpers.Append(ref controllerData, new ControllerData());
+            controllerData[index].analogData = new Dictionary<SteamHandle<InputAction>, SteamAnalogActionData>();
+            controllerData[index].digitalData = new Dictionary<SteamHandle<InputAction>, SteamDigitalActionData>();
+        }
 
         public void RunFrame()
         {
@@ -428,17 +501,49 @@ internal class SteamTests : InputTestFixture
             return result;
         }
 
+        public SteamAnalogActionData GetAnalogActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> analogActionHandle)
+        {
+            for (var i = 0; i < controllers.Length; ++i)
+            {
+                if (controllers[i] != (ulong)controllerHandle)
+                    continue;
+
+                SteamAnalogActionData result;
+                if (controllerData[i].analogData.TryGetValue(analogActionHandle, out result))
+                    return result;
+            }
+
+            return new SteamAnalogActionData();
+        }
+
+        public SteamDigitalActionData GetDigitalActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> digitalActionHandle)
+        {
+            for (var i = 0; i < controllers.Length; ++i)
+            {
+                if (controllers[i] != (ulong)controllerHandle)
+                    continue;
+
+                SteamDigitalActionData result;
+                if (controllerData[i].digitalData.TryGetValue(digitalActionHandle, out result))
+                    return result;
+            }
+
+            return new SteamDigitalActionData();
+        }
+
         public void ActivateActionSet(SteamHandle<SteamController> controllerHandle, SteamHandle<InputActionMap> actionSetHandle)
         {
             var index = Array.IndexOf(controllers, (ulong)controllerHandle);
-            Array.Resize(ref activeActionSetLayers, controllers.Length);
-            activeActionSetLayers[index] = new[] {actionSetHandle};
+            Array.Resize(ref actionSetActivations, controllers.Length);
+            actionSetActivations[index] = new[] {actionSetHandle};
         }
 
         public SteamHandle<InputActionMap> GetCurrentActionSet(SteamHandle<SteamController> controllerHandle)
         {
             var index = Array.IndexOf(controllers, (ulong)controllerHandle);
-            return activeActionSetLayers[index][activeActionSetLayers[index].Length - 1];
+            return actionSetActivations[index][actionSetActivations[index].Length - 1];
         }
 
         public void ActivateActionSetLayer(SteamHandle<SteamController> controllerHandle, SteamHandle<InputActionMap> actionSetLayerHandle)
@@ -456,7 +561,8 @@ internal class SteamTests : InputTestFixture
             throw new NotImplementedException();
         }
 
-        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle, out SteamHandle<InputActionMap> handlesOut)
+        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle,
+            out SteamHandle<InputActionMap> handlesOut)
         {
             throw new NotImplementedException();
         }

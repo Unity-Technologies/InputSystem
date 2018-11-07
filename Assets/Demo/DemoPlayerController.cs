@@ -332,10 +332,19 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
             // own separate action map, we just go and enable that one single action from the
             // gameplay actions.
             // NOTE: This will cause gameplay.enabled to remain true.
+            // NOTE: This setup won't work on Steam where we can only have a single action set active
+            //       at any time. We ignore the gameplay/menu action on Steam and instead handle
+            //       menu toggling via the two separate actions gameplay/steamEnterMenu and menu/steamExitMenu
+            //       that we use only for Steam.
             controls.gameplay.menu.Enable();
 
             menuUI.SetActive(true);
         }
+    }
+
+    public void OnSteamEnterMenu(InputAction.CallbackContext context)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>

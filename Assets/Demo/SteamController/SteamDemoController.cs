@@ -38,6 +38,12 @@ public class SteamDemoController : SteamController
     public StickControl move { get; protected set; }
     public Vector2Control look { get; protected set; }
     public ButtonControl fire { get; protected set; }
+    public ButtonControl jump { get; protected set; }
+    public ButtonControl menu { get; protected set; }
+    public ButtonControl steamEnterMenu { get; protected set; }
+    public Vector2Control navigate { get; protected set; }
+    public ButtonControl click { get; protected set; }
+    public ButtonControl steamExitMenu { get; protected set; }
 
     protected override void FinishSetup(InputDeviceBuilder builder)
     {
@@ -45,24 +51,60 @@ public class SteamDemoController : SteamController
         move = builder.GetControl<StickControl>("move");
         look = builder.GetControl<Vector2Control>("look");
         fire = builder.GetControl<ButtonControl>("fire");
+        jump = builder.GetControl<ButtonControl>("jump");
+        menu = builder.GetControl<ButtonControl>("menu");
+        steamEnterMenu = builder.GetControl<ButtonControl>("steamEnterMenu");
+        navigate = builder.GetControl<Vector2Control>("navigate");
+        click = builder.GetControl<ButtonControl>("click");
+        steamExitMenu = builder.GetControl<ButtonControl>("steamExitMenu");
     }
 
     protected override void ResolveActions(ISteamControllerAPI api)
     {
-        gameplayHandle = api.GetActionSetHandle("gameplay");
+        gameplaySetHandle = api.GetActionSetHandle("gameplay");
         moveHandle = api.GetAnalogActionHandle("move");
         lookHandle = api.GetAnalogActionHandle("look");
         fireHandle = api.GetDigitalActionHandle("fire");
+        jumpHandle = api.GetDigitalActionHandle("jump");
+        menuHandle = api.GetDigitalActionHandle("menu");
+        steamEnterMenuHandle = api.GetDigitalActionHandle("steamEnterMenu");
+        menuSetHandle = api.GetActionSetHandle("menu");
+        navigateHandle = api.GetAnalogActionHandle("navigate");
+        clickHandle = api.GetDigitalActionHandle("click");
+        steamExitMenuHandle = api.GetDigitalActionHandle("steamExitMenu");
     }
 
-    public SteamHandle<InputActionMap> gameplayHandle { get; private set; }
+    public SteamHandle<InputActionMap> gameplaySetHandle { get; private set; }
     public SteamHandle<InputAction> moveHandle { get; private set; }
     public SteamHandle<InputAction> lookHandle { get; private set; }
     public SteamHandle<InputAction> fireHandle { get; private set; }
+    public SteamHandle<InputAction> jumpHandle { get; private set; }
+    public SteamHandle<InputAction> menuHandle { get; private set; }
+    public SteamHandle<InputAction> steamEnterMenuHandle { get; private set; }
+    public SteamHandle<InputActionMap> menuSetHandle { get; private set; }
+    public SteamHandle<InputAction> navigateHandle { get; private set; }
+    public SteamHandle<InputAction> clickHandle { get; private set; }
+    public SteamHandle<InputAction> steamExitMenuHandle { get; private set; }
 
-    protected override void Update(ISteamControllerAPI api)
+    protected override unsafe void Update(ISteamControllerAPI api)
     {
-        ////TODO
+        SteamDemoControllerState state;
+        state.move = api.GetAnalogActionData(handle, moveHandle).position;
+        state.look = api.GetAnalogActionData(handle, lookHandle).position;
+        if (api.GetDigitalActionData(handle, fireHandle).pressed)
+            state.buttons[0] |= 0;
+        if (api.GetDigitalActionData(handle, jumpHandle).pressed)
+            state.buttons[0] |= 1;
+        if (api.GetDigitalActionData(handle, menuHandle).pressed)
+            state.buttons[0] |= 2;
+        if (api.GetDigitalActionData(handle, steamEnterMenuHandle).pressed)
+            state.buttons[0] |= 3;
+        state.navigate = api.GetAnalogActionData(handle, navigateHandle).position;
+        if (api.GetDigitalActionData(handle, clickHandle).pressed)
+            state.buttons[0] |= 4;
+        if (api.GetDigitalActionData(handle, steamExitMenuHandle).pressed)
+            state.buttons[0] |= 5;
+        InputSystem.QueueStateEvent(this, state);
     }
 }
 public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
@@ -72,11 +114,18 @@ public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
         return new FourCC('S', 't', 'e', 'a');
     }
 
+    [InputControl(name = "fire", layout = "Button", bit = 0)]
+    [InputControl(name = "jump", layout = "Button", bit = 1)]
+    [InputControl(name = "menu", layout = "Button", bit = 2)]
+    [InputControl(name = "steamEnterMenu", layout = "Button", bit = 3)]
+    [InputControl(name = "click", layout = "Button", bit = 4)]
+    [InputControl(name = "steamExitMenu", layout = "Button", bit = 5)]
+    public fixed byte buttons[1];
     [InputControl(name = "move", layout = "Stick")]
     public Vector2 move;
     [InputControl(name = "look", layout = "Vector2")]
     public Vector2 look;
-    [InputControl(name = "fire", layout = "Button", bit = 0)]
-    public fixed byte buttons[1];
+    [InputControl(name = "navigate", layout = "Vector2")]
+    public Vector2 navigate;
 }
 #endif

@@ -32,6 +32,24 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
 
         int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle,
             out SteamHandle<InputActionMap> handlesOut);
+
+        SteamAnalogActionData GetAnalogActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> analogActionHandle);
+
+        SteamDigitalActionData GetDigitalActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> digitalActionHandle);
+    }
+
+    public struct SteamDigitalActionData
+    {
+        public bool active { get; set; }
+        public bool pressed { get; set; }
+    }
+
+    public struct SteamAnalogActionData
+    {
+        public bool active { get; set; }
+        public Vector2 position { get; set; }
     }
 }
 

@@ -13,7 +13,9 @@ namespace UnityEngine.Experimental.Input.Controls
     /// <example>
     /// An example is <see cref="Pointer.position"/>.
     /// <code>
-    /// Debug.Log(string.Format("Mouse position x={0} y={1}", Mouse.current.position.x.value, Mouse.current.position.y.value));
+    /// Debug.Log(string.Format("Mouse position x={0} y={1}",
+    ///     InputSystem.GetDevice&lt;Mouse&gt;().position.x.value,
+    ///     Inputsystem.GetDevice&lt;Mouse&gt;().position.y.value));
     /// </code>
     /// </example>
     public class Vector2Control : InputControl<Vector2>
