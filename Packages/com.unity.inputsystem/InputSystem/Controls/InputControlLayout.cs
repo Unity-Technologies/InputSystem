@@ -1080,7 +1080,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 index = closeParenIndex + 1;
             }
 
-            if (index < textLength && text[index] == ',')
+            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.kSeparator ))
                 ++index;
 
             return new NameAndParameters {name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters)};
