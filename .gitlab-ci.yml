@@ -106,7 +106,7 @@ test:windows:2018-2-net20:
   stage: test-net20
   image: 'build-pipeline/addressables_win:stable'
   dependencies:
-    - test-net40
+    - test:windows:2018-2-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -124,7 +124,7 @@ test:windows:2018-3-net20:
   stage: test-net20
   image: 'build-pipeline/addressables_win:stable'
   dependencies:
-    - test-net40
+    - test:windows:2018-3-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -142,7 +142,7 @@ test:windows:2019-1-net20:
   stage: test-net20
   image: 'build-pipeline/addressables_win:stable'
   dependencies:
-    - test-net40
+    - test:windows:2019-1-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -160,7 +160,7 @@ test:windows:2019-1-net20:
 test:osx:2018-2-net20:
   stage: test-net20
   dependencies:
-    - test-net40
+    - test:osx:2018-2-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -179,7 +179,7 @@ test:osx:2018-2-net20:
 test:osx:2018-3-net20:
   stage: test-net20
   dependencies:
-    - test-net40
+    - test:osx:2018-3-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -198,7 +198,7 @@ test:osx:2018-3-net20:
 test:osx:2019-1-net20:
   stage: test-net20
   dependencies:
-    - test-net40
+    - test:osx:2019-1-net4x
   artifacts:
     paths:
       - "TestArtifacts"
