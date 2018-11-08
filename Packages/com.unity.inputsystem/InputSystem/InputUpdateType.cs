@@ -71,6 +71,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         ManualThreaded = Manual | 1 << 5,
 
+        IgnoreFocus = 1 << 31,
+
         Default = Dynamic | Fixed | Editor,
     }
 

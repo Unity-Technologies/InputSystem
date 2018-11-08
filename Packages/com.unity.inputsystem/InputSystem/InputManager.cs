@@ -1899,7 +1899,8 @@ namespace UnityEngine.Experimental.Input
             var buffersToUseForUpdate = updateType;
 #if UNITY_EDITOR
             gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
+                (UnityEditor.EditorApplication.isPlaying && Application.isFocused) ||
+                ((updateMask & InputUpdateType.IgnoreFocus) != 0);
 
             if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
             {
