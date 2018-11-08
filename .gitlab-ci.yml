@@ -1,8 +1,9 @@
 stages:
-  - test
+  - test-net4x
+  - test-net20
 
 test:windows:2018-2-net4x:
-  stage: test
+  stage: test-net4x
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
     paths:
@@ -18,7 +19,7 @@ test:windows:2018-2-net4x:
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:windows:2018-3-net4x:
-  stage: test
+  stage: test-net4x
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
     paths:
@@ -34,7 +35,7 @@ test:windows:2018-3-net4x:
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:windows:2019-1-net4x:
-  stage: test
+  stage: test-net4x
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
     paths:
@@ -51,7 +52,7 @@ test:windows:2019-1-net4x:
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:osx:2018-2-net4x:
-  stage: test
+  stage: test-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -68,7 +69,7 @@ test:osx:2018-2-net4x:
     - /opt/post_build_script.sh
 
 test:osx:2018-3-net4x:
-  stage: test
+  stage: test-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -85,7 +86,7 @@ test:osx:2018-3-net4x:
     - /opt/post_build_script.sh
     
 test:osx:2019-1-net4x:
-  stage: test
+  stage: test-net4x
   artifacts:
     paths:
       - "TestArtifacts"
@@ -102,8 +103,10 @@ test:osx:2019-1-net4x:
     - /opt/post_build_script.sh
 
 test:windows:2018-2-net20:
-  stage: test
+  stage: test-net20
   image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - test-net40
   artifacts:
     paths:
       - "TestArtifacts"
@@ -118,8 +121,10 @@ test:windows:2018-2-net20:
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:windows:2018-3-net20:
-  stage: test
+  stage: test-net20
   image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - test-net40
   artifacts:
     paths:
       - "TestArtifacts"
@@ -134,8 +139,10 @@ test:windows:2018-3-net20:
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:windows:2019-1-net20:
-  stage: test
+  stage: test-net20
   image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - test-net40
   artifacts:
     paths:
       - "TestArtifacts"
@@ -151,7 +158,9 @@ test:windows:2019-1-net20:
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:osx:2018-2-net20:
-  stage: test
+  stage: test-net20
+  dependencies:
+    - test-net40
   artifacts:
     paths:
       - "TestArtifacts"
@@ -168,7 +177,9 @@ test:osx:2018-2-net20:
     - /opt/post_build_script.sh
 
 test:osx:2018-3-net20:
-  stage: test
+  stage: test-net20
+  dependencies:
+    - test-net40
   artifacts:
     paths:
       - "TestArtifacts"
@@ -185,7 +196,9 @@ test:osx:2018-3-net20:
     - /opt/post_build_script.sh
     
 test:osx:2019-1-net20:
-  stage: test
+  stage: test-net20
+  dependencies:
+    - test-net40
   artifacts:
     paths:
       - "TestArtifacts"
