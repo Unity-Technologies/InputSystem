@@ -92,7 +92,7 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Category("Demo")]
     [Property("Device", "Gamepad")]
     [Ignore("TODO")]
-    public void TODO_Demo_FiringShot_RumblesDevice()
+    public unsafe void TODO_Demo_FiringShot_RumblesDevice()
     {
         float? highFreqMotor = null;
         float? lowFreqMotor = null;
