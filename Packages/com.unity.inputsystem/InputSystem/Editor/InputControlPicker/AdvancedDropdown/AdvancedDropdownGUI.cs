@@ -20,13 +20,10 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle leftArrow = "ArrowNavigationLeft";
 
             public static GUIStyle toolbarSearchField = "ToolbarSeachTextField";
-
-            public static GUIContent checkMarkContent = new GUIContent("✔");
         }
 
         //This should ideally match line height
         private Vector2 s_IconSize = new Vector2(13, 13);
-        private AdvancedDropdownDataSource m_DataSource;
 
         internal Rect m_SearchRect;
         internal Rect m_HeaderRect;
@@ -53,11 +50,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal AdvancedDropdownState state { get; set; }
 
-        public AdvancedDropdownGUI(AdvancedDropdownDataSource dataSource)
-        {
-            m_DataSource = dataSource;
-        }
-        
         SearchField m_SearchField = new SearchField();
 
         internal virtual void DrawItem(AdvancedDropdownItem item, string name, Texture2D icon, bool enabled, bool drawArrow, bool selected, bool hasSearch)
@@ -74,18 +66,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             var imageTemp = content.image;
-            if (m_DataSource.selectedIDs.Any() && m_DataSource.selectedIDs.Contains(item.id))
-            {
-                var checkMarkRect = new Rect(rect);
-                checkMarkRect.width = iconSize.x + 1;
-                Styles.checkMark.Draw(checkMarkRect, Styles.checkMarkContent, false, false, selected, selected);
-                rect.x += iconSize.x + 1;
-                rect.width -= iconSize.x + 1;
-
-                //don't draw the icon if the check mark is present
-                content.image = null;
-            }
-            else if (content.image == null)
+            if (content.image == null)
             {
                 lineStyle.Draw(rect, GUIContent.none, false, false, selected, selected);
                 rect.x += iconSize.x + 1;
@@ -175,7 +156,7 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.height += Styles.toolbarSearchField.fixedHeight + paddingY * 3;
             rect.width -= paddingX * 2;
             m_SearchRect = rect;
-            searchString = m_SearchField.OnGUI(m_SearchRect, searchString);
+            searchString = m_SearchField.OnToolbarGUI(m_SearchRect, searchString);
             return searchString;
         }
 

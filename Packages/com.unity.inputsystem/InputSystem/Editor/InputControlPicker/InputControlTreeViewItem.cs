@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return path.ToString();
             }
         }
-        
+
         protected InputControlTreeViewItem(string name)
             : base(name) { }
     }
@@ -47,6 +47,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Device = "*";
             m_ControlPath = usage.Key;
             id = controlPathWithDevice.GetHashCode();
+            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
 
@@ -59,6 +60,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (commonUsage != null)
                 name += " (" + commonUsage + ")";
             id = name.GetHashCode();
+            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
 
         public DeviceTreeViewItem(InputControlLayout layout)
@@ -81,6 +83,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ControlPath += control.name;
             name += control.name;
             id = controlPathWithDevice.GetHashCode();
+            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
 } 

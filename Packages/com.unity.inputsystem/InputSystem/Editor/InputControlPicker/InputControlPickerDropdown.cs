@@ -13,10 +13,10 @@ namespace UnityEngine.Experimental.Input.Editor
         SerializedProperty m_PathProperty;
         Action<SerializedProperty> m_OnPickCallback;
 
-        public InputControlPickerDropdown(SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
-            : base(new AdvancedDropdownState())
+        public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
+            : base(state)
         {
-            minimumSize = new Vector2(250, 250);
+            minimumSize = new Vector2(350, 250);
             m_PathProperty = pathProperty;
             m_OnPickCallback = onPickCallback;
         }

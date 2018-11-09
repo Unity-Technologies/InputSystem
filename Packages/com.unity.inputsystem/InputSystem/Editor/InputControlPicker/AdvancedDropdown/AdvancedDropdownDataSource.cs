@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             foreach (var e in m_SearchableElements)
             {
-                var name = e.name.ToLower().Replace(" ", "");
+                var name = e.searchableName.ToLower().Replace(" ", "");
                 AddMatchItem(e, name, searchWords, matchesStart, matchesWithin);
             }
 

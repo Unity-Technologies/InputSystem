@@ -40,7 +40,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private Action m_ReloadTree;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
-        private TreeViewState m_ControlPickerTreeViewState;
+        private AdvancedDropdownState m_ControlPickerState;
+        private InputControlPickerDropdown m_InputControlPickerDropdown;
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
         private bool m_ProcessorsFoldout = true;
@@ -55,11 +56,10 @@ namespace UnityEngine.Experimental.Input.Editor
         private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
         private List<string> m_BingingGroups;
         private InputActionWindowToolbar m_Toolbar;
-        InputControlPickerDropdown m_InputControlPickerDropdown;
 
-        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, TreeViewState controlPickerTreeViewState, InputActionWindowToolbar toolbar)
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, AdvancedDropdownState controlPickerState, InputActionWindowToolbar toolbar)
         {
-            m_ControlPickerTreeViewState = controlPickerTreeViewState;
+            m_ControlPickerState = controlPickerState;
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
@@ -131,7 +131,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_GeneralFoldout)
             {
                 var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
-                DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
+                DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
                     s =>
                     {
                         m_ManualPathEditMode = false;
@@ -172,7 +172,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
-        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
+        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, AdvancedDropdownState pickerState, Action<SerializedProperty> onModified)
         {
             EditorGUILayout.BeginHorizontal();
 
@@ -207,14 +207,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (GUI.Button(editBtn, "˅"))
                 {
                     btnRect.x += editBtn.width;
-                    ShowInputControlPicker(btnRect, pathProperty, pickerTreeViewState, onModified);
+                    ShowInputControlPicker(btnRect, pathProperty, pickerState, onModified);
                 }
             }
             else
             {
                 if (EditorGUI.DropdownButton(btnRect, new GUIContent(displayName), FocusType.Keyboard))
                 {
-                    ShowInputControlPicker(btnRect, pathProperty, pickerTreeViewState, onModified);
+                    ShowInputControlPicker(btnRect, pathProperty, pickerState, onModified);
                 }
                 if (GUI.Button(editBtn, "..."))
                 {
@@ -225,12 +225,13 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, AdvancedDropdownState pickerState,
             Action<SerializedProperty> onPickCallback)
         {
             if (m_InputControlPickerDropdown == null)
             {
-                m_InputControlPickerDropdown = new InputControlPickerDropdown(pathProperty, onPickCallback);
+                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState, pathProperty, onPickCallback);
+                m_InputControlPickerDropdown.m_Gui = new InputControlPickerGUI();
             }           
             m_InputControlPickerDropdown.Show(rect);
         }
@@ -251,7 +252,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
     internal class CompositeGroupPropertiesView : InputBindingPropertiesView
     {
-        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state, InputActionWindowToolbar toolbar)
+        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, AdvancedDropdownState state, InputActionWindowToolbar toolbar)
             : base(property, apply, state, toolbar)
         {
         }

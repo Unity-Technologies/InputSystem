@@ -155,7 +155,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_DataSource == null)
                 m_DataSource = new MultiLevelDataSource();
             if (m_Gui == null)
-                m_Gui = new AdvancedDropdownGUI(m_DataSource);
+                m_Gui = new AdvancedDropdownGUI();
             m_Gui.state = m_State;
 
             // Has to be done before calling Show / ShowWithMode

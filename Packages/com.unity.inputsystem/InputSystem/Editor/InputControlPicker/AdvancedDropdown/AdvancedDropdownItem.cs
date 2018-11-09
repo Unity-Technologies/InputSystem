@@ -52,6 +52,14 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_Children; }
         }
 
+        protected string m_SearchableName;
+        public virtual string searchableName {
+            get
+            {
+                return string.IsNullOrEmpty(m_SearchableName) ? name : m_SearchableName;
+            }
+        }
+
         public void AddChild(AdvancedDropdownItem child)
         {
             m_Children.Add(child);
