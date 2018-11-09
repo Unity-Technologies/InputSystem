@@ -156,6 +156,14 @@ namespace UnityEngine.Experimental.Input
             return -1;
         }
 
+        public void InvokeFocusChanged(bool newFocusState)
+        {
+            if(onFocusChanged != null)
+            {
+                onFocusChanged.Invoke(newFocusState);
+            }
+        }
+
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
         {
             lock (m_Lock)
