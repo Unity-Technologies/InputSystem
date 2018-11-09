@@ -50,7 +50,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
         private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
         private static readonly GUIContent s_UseInSchemesGui = EditorGUIUtility.TrTextContent("Use in control scheme");
-        private static readonly GUIContent s_WaitingForInputContent = EditorGUIUtility.TrTextContent("Waiting for input...");
 
         private bool m_ManualPathEditMode;
         private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
@@ -60,6 +59,16 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
 
         public bool showPathAndControlSchemeSection { get; set; }
+
+        public bool isInteractivelyPicking
+        {
+            get { return m_RebindingOperation != null && m_RebindingOperation.started; }
+        }
+
+        public string expectedControlLayout
+        {
+            get { return m_ExpectedControlLayout; }
+        }
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree,
                                           TreeViewState controlPickerTreeViewState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
@@ -89,6 +98,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
             m_ReloadTree();
+        }
+
+        public void CancelInteractivePicking()
+        {
+            if (m_RebindingOperation != null)
+                m_RebindingOperation.Cancel();
         }
 
         public void OnGUI()
@@ -258,16 +273,13 @@ namespace UnityEngine.Experimental.Input.Editor
         private void DrawInteractivePickButton(Rect rect, SerializedProperty pathProperty, Action<SerializedProperty> onModified)
         {
             ////FIXME: need to suppress triggering shortcuts in the editor while doing rebinds
-            ////FIXME: need to prevent binding to left click when cancelling
+            ////TODO: need to have good way to cancel binding
 
             var toggleRebind = GUI.Toggle(rect,
                 m_RebindingOperation != null && m_RebindingOperation.started, "0", EditorStyles.miniButton);
             if (toggleRebind && (m_RebindingOperation == null || !m_RebindingOperation.started))
             {
                 // Start rebind.
-
-                var window = EditorWindow.focusedWindow;
-                window.ShowNotification(s_WaitingForInputContent);
 
                 if (m_RebindingOperation == null)
                     m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
@@ -287,18 +299,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     // NOTE: We go for all types of pointers here, not just mice.
                     .WithControlsExcluding("<Pointer>/position")
                     .WithControlsExcluding("<Pointer>/delta")
-                    .OnCancel(
-                        operation =>
-                        {
-                            window.RemoveNotification();
-                            window.Repaint();
-                        })
-                    .OnComplete(
-                        operation =>
-                        {
-                            window.RemoveNotification();
-                            window.Repaint();
-                        })
                     .OnApplyBinding(
                         (operation, newPath) =>
                         {

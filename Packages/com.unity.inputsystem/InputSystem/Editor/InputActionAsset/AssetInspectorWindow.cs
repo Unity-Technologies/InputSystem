@@ -14,6 +14,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle actionTreeBackground = new GUIStyle("Label");
             public static GUIStyle propertiesBackground = new GUIStyle("Label");
             public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
+            public static GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
 
             ////TODO: move to a better place
             public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
@@ -38,6 +39,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
+
+                waitingForInputLabel.fontSize = 40;
             }
         }
 
@@ -67,6 +70,8 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddBindingGUI;
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+        GUIContent m_WaitingForInputContent = EditorGUIUtility.TrTextContent("Waiting for input...");
+        GUIContent m_WaitingForSpecificInputContent = new GUIContent("Waiting for {0}...");// EditorGUIUtility.TrTextContent("Waiting for {0}...");
         [SerializeField]
         GUIContent m_DirtyTitle;
         [SerializeField]
@@ -296,8 +301,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.Space();
 
-            //Draw columns
-            EditorGUILayout.BeginHorizontal();
+            var isPickingInteractively = m_BindingPropertyView != null && m_BindingPropertyView.isInteractivelyPicking;
+            EditorGUI.BeginDisabledGroup(isPickingInteractively);
+
+            // Draw columns.
+            var columnsRect = EditorGUILayout.BeginHorizontal();
             var columnOneRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
             var columnTwoRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
             DrawActionMapsColumn(columnOneRect);
@@ -305,7 +313,16 @@ namespace UnityEngine.Experimental.Input.Editor
             DrawPropertiesColumn();
             EditorGUILayout.EndHorizontal();
 
-            // Bottom margin
+            // If we're currently interactively picking a binding, aside from disabling and dimming the normal UI, display a large text over
+            // the window that says we're waiting for input.
+            // NOTE: We're not using EditorWindow.ShowNotification() as, aside from having trouble displaying our dynamically generated text
+            //       properly without clipping, notifications will automatically disappear after a brief moment. We want the input requester
+            //       to stay visible for as long as we're still looking for input.
+            EditorGUI.EndDisabledGroup();
+            if (isPickingInteractively)
+                DrawInteractivePickingOverlay(columnsRect);
+
+            // Bottom margin.
             GUILayout.Space(3);
             EditorGUILayout.EndVertical();
 
@@ -400,6 +417,46 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawInteractivePickingOverlay(Rect rect)
+        {
+            // If we have an expected control layout, be specific about what kind of input we expect as
+            // otherwise it can be quite confusing to hammer an input control and nothing happens.
+            var expectedControlLayout = m_BindingPropertyView.expectedControlLayout;
+            GUIContent waitingForInputText;
+            if (!string.IsNullOrEmpty(expectedControlLayout))
+            {
+                var text = string.Format(m_WaitingForSpecificInputContent.text, expectedControlLayout);
+                waitingForInputText = new GUIContent(text);
+            }
+            else
+            {
+                waitingForInputText = m_WaitingForInputContent;
+            }
+
+            float minWidth, maxWidth;
+            Styles.waitingForInputLabel.CalcMinMaxWidth(waitingForInputText, out minWidth, out maxWidth);
+
+            var waitingForInputTextRect = rect;
+            waitingForInputTextRect.width = maxWidth;
+            waitingForInputTextRect.height = Styles.waitingForInputLabel.CalcHeight(waitingForInputText, rect.width);
+            waitingForInputTextRect.x = rect.width / 2 - maxWidth / 2;
+            waitingForInputTextRect.y = rect.height / 2 - waitingForInputTextRect.height / 2;
+
+            EditorGUI.DropShadowLabel(waitingForInputTextRect, waitingForInputText, Styles.waitingForInputLabel);
+
+            var cancelButtonRect = waitingForInputTextRect;
+            cancelButtonRect.y += waitingForInputTextRect.height + 3;
+            cancelButtonRect.x = waitingForInputTextRect.x + waitingForInputTextRect.width - 50;
+            cancelButtonRect.width = 50;
+            cancelButtonRect.height = 15;
+
+            if (GUI.Button(cancelButtonRect, "Cancel"))
+            {
+                m_BindingPropertyView.CancelInteractivePicking();
+                Repaint();
+            }
         }
 
         public static void RefreshAllOnAssetReimport()
