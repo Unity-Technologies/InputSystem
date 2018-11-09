@@ -1217,6 +1217,27 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// Tells the Input System to ignore focus, and continue to trigger events and actions regardless of current focus state
+        /// </summary>
+        /// /// <remarks>
+        /// Off by default, this does not work on all platforms and devices, only those that can recieve their own input data while not in focus.
+        /// </remarks>
+        public static bool ignoreFocus
+        {
+            get { return (s_Manager.updateMask & InputUpdateType.IgnoreFocus) != 0; }
+            set
+            {
+                InputUpdateType currentUpdateMask = s_Manager.updateMask;
+                if (value)
+                    currentUpdateMask |= currentUpdateMask & InputUpdateType.IgnoreFocus;
+                else
+                    currentUpdateMask &= ~InputUpdateType.IgnoreFocus;
+
+                s_Manager.updateMask = currentUpdateMask;
+            }
+        }
+
+        /// <summary>
         /// Event that is fired before the input system updates.
         /// </summary>
         /// <remarks>
