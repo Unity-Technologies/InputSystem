@@ -55,6 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
         private List<string> m_BingingGroups;
         private InputActionWindowToolbar m_Toolbar;
+        InputControlPickerDropdown m_InputControlPickerDropdown;
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, TreeViewState controlPickerTreeViewState, InputActionWindowToolbar toolbar)
         {
@@ -227,23 +228,11 @@ namespace UnityEngine.Experimental.Input.Editor
         private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
-            var w = new InputControlPickerPopup(pathProperty, pickerTreeViewState)
+            if (m_InputControlPickerDropdown == null)
             {
-                onPickCallback = onPickCallback,
-                width = rect.width,
-            };
-            if (m_Toolbar != null)
-            {
-                if (m_Toolbar.selectedDevice != null)
-                {
-                    w.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
-                }
-                else
-                {
-                    w.SetDeviceFilter(m_Toolbar.allDevices);
-                }
-            }
-            PopupWindow.Show(rect, w);
+                m_InputControlPickerDropdown = new InputControlPickerDropdown(pathProperty, onPickCallback);
+            }           
+            m_InputControlPickerDropdown.Show(rect);
         }
 
         private static bool DrawFoldout(GUIContent content, bool folded)

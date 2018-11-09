@@ -52,8 +52,9 @@ namespace UnityEngine.Experimental.Input.Editor
             // Pick button.
             if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
-                PopupWindow.Show(pickButtonRect,
-                    new InputControlPickerPopup(pathProperty));
+                // TODO InputControlPickerPopup was replaced with AdvancedDropdown
+//                PopupWindow.Show(pickButtonRect,
+//                    new InputControlPickerPopup(pathProperty));
             }
 
             // Modify button.
