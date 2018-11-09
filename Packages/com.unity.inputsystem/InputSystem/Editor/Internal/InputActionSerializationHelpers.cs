@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -322,8 +324,8 @@ namespace UnityEngine.Experimental.Input.Editor
             var fields = type.GetFields(BindingFlags.GetField | BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in fields)
             {
-                // Skip fields that aren't InputControls.
-                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
+                // Skip fields that aren't marked with [InputControl] attribute.
+                if (field.GetCustomAttribute<InputControlAttribute>(false) == null)
                     continue;
 
                 newProperty = AddBinding(actionProperty, actionMapProperty);

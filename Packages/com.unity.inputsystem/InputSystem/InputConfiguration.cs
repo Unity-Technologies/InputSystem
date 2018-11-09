@@ -27,6 +27,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="AxisDeadzoneProcessor"/>
         public static float DeadzoneMax = 0.925f;
 
+        ////REVIEW: should this simply be deadzone min?
         // If a button is stored as anything but a bit, this is the threshold the value
         // of the button has to cross in order for the button to be considered pressed.
         public static float ButtonPressPoint = 0.15f;

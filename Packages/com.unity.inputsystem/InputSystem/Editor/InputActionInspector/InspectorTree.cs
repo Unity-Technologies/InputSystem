@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        TreeViewItem BuildFromActionSerializedProperty()
+        private TreeViewItem BuildFromActionSerializedProperty()
         {
             var bindingsArrayProperty = m_ActionSerializedProperty.FindPropertyRelative("m_SingletonActionBindings");
             var actionName = m_ActionSerializedProperty.FindPropertyRelative("m_Name").stringValue;
@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return actionItem;
         }
 
-        TreeViewItem BuildFromActionMapSerializedProperty()
+        private TreeViewItem BuildFromActionMapSerializedProperty()
         {
             var actionMapItem = new ActionMapTreeItem(m_ActionMapSerializedProperty, 0);
             actionMapItem.depth = -1;

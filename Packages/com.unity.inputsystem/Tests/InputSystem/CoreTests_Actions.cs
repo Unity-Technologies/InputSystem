@@ -2884,10 +2884,82 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_WhenPartOfCompositeResolvesToMultipleControls_WhatHappensXXX()
+    public void Actions_CanCreateCompositesWithBindingsResolvingToMultipleControls()
     {
-        Assert.Fail();
+        var keyboard1 = InputSystem.AddDevice<Keyboard>();
+        var keyboard2 = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "/<Keyboard>/RightArrow") // These bindings will pick up both keyboards.
+            .With("Negative", "/<Keyboard>/LeftArrow");
+        action.Enable();
+
+        float? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<float>(); };
+
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard1.rightArrowKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard2.rightArrowKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard1.leftArrowKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard2.leftArrowKey));
+
+        InputSystem.QueueStateEvent(keyboard1, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value.HasValue);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(keyboard2, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value.HasValue);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(keyboard2, new KeyboardState(Key.LeftArrow));
+        InputSystem.Update();
+
+        Assert.That(value.HasValue);
+        Assert.That(value, Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateCompositesWithMultipleBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up directional controls that work both with WASD and arrows.
+        // NOTE: This sets up a single Dpad composite that works with either of the keys meaning
+        //       the WASD and arrow block can be mixed. An alternative setup would be to set up
+        //       to separate Dpad composites, one for WASD and one for the arrow block. In that setup,
+        //       the two will not mix but rather produce two independent 2D vectors. Which one gets
+        //       to drive the associated action is whichver had the last input event.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "/<Keyboard>/w")
+            .With("Up", "/<Keyboard>/upArrow")
+            .With("Down", "/<Keyboard>/s")
+            .With("Down", "/<Keyboard>/downArrow")
+            .With("Left", "/<Keyboard>/a")
+            .With("Left", "/<Keyboard>/leftArrow")
+            .With("Right", "/<Keyboard>/d")
+            .With("Right", "/<Keyboard>/rightArrow");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        // Up arrow.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow));
+        InputSystem.Update();
+
+        // Down arrow + 'a'.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow, Key.A));
+        InputSystem.Update();
     }
 
     [Test]

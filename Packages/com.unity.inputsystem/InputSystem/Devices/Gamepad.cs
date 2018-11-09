@@ -62,6 +62,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(12)]
         public Vector2 rightStick;
 
+        ////REVIEW: should left and right trigger get deadzones?
+
         /// <summary>
         /// Position of the left trigger.
         /// </summary>
