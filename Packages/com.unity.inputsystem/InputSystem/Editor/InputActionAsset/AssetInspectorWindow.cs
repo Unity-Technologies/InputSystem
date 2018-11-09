@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     // Grab the action for the binding and see if we have an expected control layout
                     // set on it. Pass that on to the control picking machinery.
-                    var actionItem = item.parent as ActionTreeItem;
+                    var actionItem = (item is CompositeTreeItem ? item.parent.parent : item.parent) as ActionTreeItem;
                     Debug.Assert(actionItem != null);
 
                     // Show properties for binding.
@@ -245,8 +245,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             m_InputActionWindowToolbar,
                             actionItem.expectedControlLayout);
 
-                    // For composites, don't show the binding path and control scheme section.
-                    if (item is CompositeTreeItem)
+                    // For composite groups, don't show the binding path and control scheme section.
+                    if (item is CompositeGroupTreeItem)
                         m_BindingPropertyView.showPathAndControlSchemeSection = false;
                 }
                 ////TODO: properties for actions
