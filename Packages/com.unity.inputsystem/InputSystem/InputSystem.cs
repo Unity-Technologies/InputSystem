@@ -47,7 +47,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.10")]
+[assembly: AssemblyVersion("0.0.11")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -385,6 +385,12 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
+        public static InputControlLayout TryLoadLayout<TControl>()
+            where TControl : InputControl
+        {
+            return s_Manager.TryLoadControlLayout(typeof(TControl));
+        }
+
         #endregion
 
         #region Processors
@@ -519,6 +525,12 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        public static event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { s_Manager.onDeviceCommand += value; }
+            remove { s_Manager.onDeviceCommand -= value; }
+        }
+
         /// <summary>
         /// Event that is signalled when the system is trying to match a layout to
         /// a device it has discovered.
@@ -554,7 +566,7 @@ namespace UnityEngine.Experimental.Input
         ///     };
         /// </code>
         /// </example>
-        public static event DeviceFindControlLayoutCallback onFindLayoutForDevice
+        public static event InputDeviceFindControlLayoutDelegate onFindLayoutForDevice
         {
             add { s_Manager.onFindControlLayoutForDevice += value; }
             remove { s_Manager.onFindControlLayoutForDevice -= value; }
@@ -662,18 +674,54 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        ////TODO: add optional index (i.e. "nth device of given type")
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
+            TDevice result = null;
+            var lastUpdateTime = -1.0;
             foreach (var device in devices)
             {
                 var deviceOfType = device as TDevice;
-                if (deviceOfType != null)
-                    return deviceOfType;
+                if (deviceOfType == null)
+                    continue;
+
+                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                {
+                    result = deviceOfType;
+                    lastUpdateTime = result.lastUpdateTime;
+                }
             }
 
-            return null;
+            return result;
+        }
+
+        public static TDevice GetDevice<TDevice>(InternedString usage)
+            where TDevice : InputDevice
+        {
+            TDevice result = null;
+            var lastUpdateTime = -1.0;
+            foreach (var device in devices)
+            {
+                var deviceOfType = device as TDevice;
+                if (deviceOfType == null)
+                    continue;
+                if (!deviceOfType.usages.Contains(usage))
+                    continue;
+
+                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                {
+                    result = deviceOfType;
+                    lastUpdateTime = result.lastUpdateTime;
+                }
+            }
+
+            return result;
+        }
+
+        public static TDevice GetDevice<TDevice>(string usage)
+            where TDevice : InputDevice
+        {
+            return GetDevice<TDevice>(new InternedString(usage));
         }
 
         /// <summary>

@@ -13,7 +13,6 @@ public class Vector2ControlActionStatus : MonoBehaviour
     public Slider status1Slider;
     public Slider status2Slider;
 
-    // Use this for initialization
     void OnEnable()
     {
         vector2Action.Enable();

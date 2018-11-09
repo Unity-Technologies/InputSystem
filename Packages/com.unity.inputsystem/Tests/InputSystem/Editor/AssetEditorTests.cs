@@ -113,7 +113,7 @@ public class AssetEditorTests
 
         assetWindow.m_ContextMenu.OnAddBinding(assetWindow.m_ActionsTree.GetRootElement().children[0]);
         yield return null;
-        
+
         // Is new binding selected
         var selectedRow = (BindingTreeItem)assetWindow.m_ActionsTree.GetSelectedRow();
         Assert.That(selectedRow.path, Is.Null.Or.Empty);
@@ -144,7 +144,7 @@ public class AssetEditorTests
 
         assetWindow.m_ContextMenu.OnAddActionMap();
         yield return null;
-            
+
         // Is new composite selected
         var selectedRow = (ActionMapTreeItem)assetWindow.m_ActionMapsTree.GetSelectedRow();
         Assert.That(selectedRow.displayName, Is.EqualTo("default"));
@@ -157,7 +157,7 @@ public class AssetEditorTests
 
         assetWindow.m_ContextMenu.OnAddAction();
         yield return null;
-            
+
         // Is new composite selected
         var selectedRow = (ActionTreeItem)assetWindow.m_ActionsTree.GetSelectedRow();
         Assert.That(selectedRow.displayName, Is.EqualTo("action"));

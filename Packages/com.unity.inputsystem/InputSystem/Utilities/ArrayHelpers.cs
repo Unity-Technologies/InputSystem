@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -663,6 +666,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             length -= count;
+        }
+
+        public static void SwapElements<TValue>(this TValue[] array, int index1, int index2)
+        {
+            MemoryHelpers.Swap(ref array[index1], ref array[index2]);
+        }
+
+        public static void SwapElements<TValue>(this NativeArray<TValue> array, int index1, int index2)
+            where TValue : struct
+        {
+            var temp = array[index1];
+            array[index1] = array[index2];
+            array[index2] = temp;
         }
     }
 }

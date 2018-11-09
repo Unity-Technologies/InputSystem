@@ -9,7 +9,6 @@ public class LegacyIMETest : MonoBehaviour
     public string outputString;
     public string compositionString;
 
-    // Update is called once per frame
     void Update()
     {
         if (enabled)

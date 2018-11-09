@@ -3,9 +3,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.XR;
 
-////REVIEW: nuke MakeCurrent() and replace with (optional) device tracking on InputPlayer?
+////REVIEW: should be possible to completely hijack the input stream of a device such that its original input is suppressed
 
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
 ////        the heap objects of devices he doesn't use?
@@ -307,23 +306,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Make this the current device of its type.
-        /// </summary>
-        /// <remarks>
-        /// Use this to set static properties that give fast access to the latest device used of a given
-        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
-        ///
-        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
-        /// be multiple current working directories, one for each type.
-        ///
-        /// A device will be made current by the system initially when it is created and subsequently whenever
-        /// it receives an event.
-        /// </remarks>
-        public virtual void MakeCurrent()
-        {
-        }
-
-        /// <summary>
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
@@ -348,6 +330,7 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
+        ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
@@ -363,9 +346,19 @@ namespace UnityEngine.Experimental.Input
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public long ExecuteCommand<TCommand>(ref TCommand command)
+        public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            // Give callbacks first shot.
+            var manager = InputSystem.s_Manager;
+            var callbacks = manager.m_DeviceCommandCallbacks;
+            for (var i = 0; i < callbacks.length; ++i)
+            {
+                var result = callbacks[i](this, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+                if (result.HasValue)
+                    return result.Value;
+            }
+
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
         }
 

@@ -21,8 +21,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
 
     private const int MOUSE_MOVE_DEADZONE = 0;
 
-    // Use this for initialization
-    void Start()
+    public void Start()
     {
         m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>");
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
@@ -38,7 +37,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         if (m_keyboardAction != null) m_keyboardAction.Enable();
         if (m_mouseAction != null)    m_mouseAction.Enable();
 
-        Keyboard.current.onTextInput += new Action<char>(RecordKey);
+        InputSystem.GetDevice<Keyboard>().onTextInput += new Action<char>(RecordKey);
     }
 
     private void OnDisable()
@@ -46,81 +45,81 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         m_keyboardAction.Disable();
         m_mouseAction.Disable();
 
-        Keyboard.current.onTextInput -= new Action<char>(RecordKey);
+        InputSystem.GetDevice<Keyboard>().onTextInput -= new Action<char>(RecordKey);
     }
 
-    void Update()
+    public void Update()
     {
         // Show mouse actions
-        Mouse mouse = Mouse.current;
-        if (mouse != null)
-        {
-            Vector2 move = mouse.delta.ReadValue();
-            Vector2 scroll = mouse.scroll.ReadValue();
+        var mouse = InputSystem.GetDevice<Mouse>();
+        if (mouse == null)
+            return;
 
-            // Mouse move horizontally
-            if (Mathf.Abs(move.x) > MOUSE_MOVE_DEADZONE)
+        var move = mouse.delta.ReadValue();
+        var scroll = mouse.scroll.ReadValue();
+
+        // Mouse move horizontally
+        if (Mathf.Abs(move.x) > MOUSE_MOVE_DEADZONE)
+        {
+            if (move.x > 0)
             {
-                if (move.x > 0)
-                {
-                    StartMouseHighlight("Move Right");
-                    StopMouseHighlight("Move Left");
-                }
-                else
-                {
-                    StartMouseHighlight("Move Left");
-                    StopMouseHighlight("Move Right");
-                }
-            }
-            else
-            {
-                StopMouseHighlight("Move Right");
+                StartMouseHighlight("Move Right");
                 StopMouseHighlight("Move Left");
             }
-
-            // Mouse move vertically
-            if (Mathf.Abs(move.y) > MOUSE_MOVE_DEADZONE)
-            {
-                if (move.y > 0)
-                {
-                    StartMouseHighlight("Move Up");
-                    StopMouseHighlight("Move Down");
-                }
-                else
-                {
-                    StartMouseHighlight("Move Down");
-                    StopMouseHighlight("Move Up");
-                }
-            }
             else
             {
-                StopMouseHighlight("Move Up");
+                StartMouseHighlight("Move Left");
+                StopMouseHighlight("Move Right");
+            }
+        }
+        else
+        {
+            StopMouseHighlight("Move Right");
+            StopMouseHighlight("Move Left");
+        }
+
+        // Mouse move vertically
+        if (Mathf.Abs(move.y) > MOUSE_MOVE_DEADZONE)
+        {
+            if (move.y > 0)
+            {
+                StartMouseHighlight("Move Up");
                 StopMouseHighlight("Move Down");
             }
-
-            // Mouse Wheel scroll
-            // Only horizontal scroll has UI. Vertical scroll is shown in text box.
-            if (scroll.y > 0)
-            {
-                StartMouseHighlight("Wheel Up");
-                StopMouseHighlight("Wheel Down");
-            }
-            else if (scroll.y < 0)
-            {
-                StartMouseHighlight("Wheel Down");
-                StopMouseHighlight("Wheel Up");
-            }
             else
             {
-                StopMouseHighlight("Wheel Up");
-                StopMouseHighlight("Wheel Down");
+                StartMouseHighlight("Move Down");
+                StopMouseHighlight("Move Up");
             }
-
-            // Update mouse position
-            m_mouseInfoText.text = mouse.position.ReadValue().ToString("F0") + "\n"
-                + scroll.ToString() + "\n"
-                + move.ToString("F3");
         }
+        else
+        {
+            StopMouseHighlight("Move Up");
+            StopMouseHighlight("Move Down");
+        }
+
+        // Mouse Wheel scroll
+        // Only horizontal scroll has UI. Vertical scroll is shown in text box.
+        if (scroll.y > 0)
+        {
+            StartMouseHighlight("Wheel Up");
+            StopMouseHighlight("Wheel Down");
+        }
+        else if (scroll.y < 0)
+        {
+            StartMouseHighlight("Wheel Down");
+            StopMouseHighlight("Wheel Up");
+        }
+        else
+        {
+            StopMouseHighlight("Wheel Up");
+            StopMouseHighlight("Wheel Down");
+        }
+
+        // Update mouse position
+        m_mouseInfoText.text = mouse.position.ReadValue().ToString("F0") + "\n"
+            + scroll.ToString() + "\n"
+            + move.ToString("F3");
     }
 
     private void RecordKey(char c)
@@ -145,17 +144,18 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
     // callback function when a button is pressed on Mouse
     private void MouseKeyPress()
     {
-        if (Mouse.current.leftButton.ReadValue() == 0)
+        var mouse = InputSystem.GetDevice<Mouse>();
+        if (mouse.leftButton.ReadValue() == 0)
             StopKeyHighlight("Mouse0");
         else
             StartKeyHightlight("Mouse0");
 
-        if (Mouse.current.rightButton.ReadValue() == 0)
+        if (mouse.rightButton.ReadValue() == 0)
             StopKeyHighlight("Mouse1");
         else
             StartKeyHightlight("Mouse1");
 
-        if (Mouse.current.middleButton.ReadValue() == 0)
+        if (mouse.middleButton.ReadValue() == 0)
             StopKeyHighlight("Mouse2");
         else
             StartKeyHightlight("Mouse2");
@@ -164,7 +164,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
     // Generate the red square over the key or mouse button
     private void StartKeyHightlight(string keyName)
     {
-        Transform key = transform.Find("Keys/" + keyName);
+        var key = transform.Find("Keys/" + keyName);
         if (key == null)
             ShowMessage(keyName);
         else
@@ -179,28 +179,28 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
 
     private void StopKeyHighlight(string keyName)
     {
-        Transform key = transform.Find("Keys/" + keyName);
-        if (key != null)
+        var key = transform.Find("Keys/" + keyName);
+        if (key == null)
+            return;
+
+        var sr = key.GetComponentsInChildren<SpriteRenderer>();
+        if (sr.Length > 0)
         {
-            SpriteRenderer[] sr = key.GetComponentsInChildren<SpriteRenderer>();
-            if (sr.Length > 0)
-            {
-                foreach (SpriteRenderer s in sr)
-                    Destroy(s.gameObject);
-            }
+            foreach (var s in sr)
+                Destroy(s.gameObject);
         }
     }
 
     private void StartMouseHighlight(string mouseAction)
     {
-        Transform mAction = transform.Find("Mouse/" + mouseAction + "/Highlight_Arrow_Input_System");
+        var mAction = transform.Find("Mouse/" + mouseAction + "/Highlight_Arrow_Input_System");
         if (mAction != null)
             mAction.GetComponent<ArrowHighlight>().Play();
     }
 
     private void StopMouseHighlight(string mouseAction)
     {
-        Transform mAction = transform.Find("Mouse/" + mouseAction + "/Highlight_Arrow_Input_System");
+        var mAction = transform.Find("Mouse/" + mouseAction + "/Highlight_Arrow_Input_System");
         if (mAction != null)
             mAction.GetComponent<ArrowHighlight>().Stop();
     }
@@ -212,7 +212,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
     }
 
     // From "KeyboardLastKey" by @Rene
-    private String StringForNonPrintable(char ascii)
+    private static string StringForNonPrintable(char ascii)
     {
         switch ((int)ascii)
         {

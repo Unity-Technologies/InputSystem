@@ -271,14 +271,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             }
         }
 
-        public new static XboxOneGamepad current { get; set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
         public override void PauseHaptics()
         {
             if (!m_LeftMotor.HasValue && !m_RightMotor.HasValue && !m_LeftTriggerMotor.HasValue && !m_RightTriggerMotor.HasValue)

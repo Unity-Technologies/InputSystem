@@ -671,7 +671,7 @@ partial class CoreTests
 
         public void OnGUI()
         {
-            mousePosition = Mouse.current.position.ReadValue();
+            mousePosition = InputSystem.GetDevice<Mouse>().position.ReadValue();
         }
     }
 

@@ -27,7 +27,7 @@ public class KeyboardLastKey : MonoBehaviour
 
     private void Update()
     {
-        if (m_Keyboard != null && Keyboard.current != null && m_Keyboard != Keyboard.current)
+        if (m_Keyboard != null && InputSystem.GetDevice<Keyboard>() != null && m_Keyboard != InputSystem.GetDevice<Keyboard>())
         {
             ReleaseKB();
             SetCurrentKB();
@@ -59,9 +59,9 @@ public class KeyboardLastKey : MonoBehaviour
 
     void SetCurrentKB()
     {
-        if (Keyboard.current == null) { return; }
+        if (InputSystem.GetDevice<Keyboard>() == null) { return; }
 
-        m_Keyboard = Keyboard.current;
+        m_Keyboard = InputSystem.GetDevice<Keyboard>();
         m_Keyboard.onTextInput += new Action<char>(RecordKey);
     }
 

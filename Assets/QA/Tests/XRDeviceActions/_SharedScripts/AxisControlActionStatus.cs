@@ -12,7 +12,6 @@ public class AxisControlActionStatus : MonoBehaviour
 
     public Slider statusSlider;
 
-    // Use this for initialization
     void OnEnable()
     {
         axisAction.Enable();

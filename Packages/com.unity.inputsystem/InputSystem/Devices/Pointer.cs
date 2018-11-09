@@ -110,7 +110,7 @@ namespace UnityEngine.Experimental.Input
         /// single display, that means the coordinates will always be in window space of the first display.
         ///
         /// Within editor code, the coordinates are in the coordinate space of the current <see cref="UnityEditor.EditorWindow"/>.
-        /// This means that if you query <c>Mouse.current.position</c> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
+        /// This means that if you query <see cref="Mouse.position"/> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
         /// <see cref="UnityEngine.Event.mousePosition"/>).
         /// </remarks>
@@ -143,24 +143,6 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: give this a better name; primaryButton?
         public ButtonControl button { get; private set; }
-
-        /// <summary>
-        /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
-        /// device connected to the system.
-        /// </summary>
-        public static Pointer current { get; internal set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            if (current == this)
-                current = null;
-        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
