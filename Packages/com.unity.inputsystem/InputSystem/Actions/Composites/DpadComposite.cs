@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: add support for ramp up/down
 
@@ -20,10 +21,10 @@ namespace UnityEngine.Experimental.Input.Composites
     /// </remarks>
     public class DpadComposite : IInputBindingComposite<Vector2>
     {
-        public ButtonControl up;
-        public ButtonControl down;
-        public ButtonControl left;
-        public ButtonControl right;
+        [InputControl(layout = "Button")] public int up;
+        [InputControl(layout = "Button")] public int down;
+        [InputControl(layout = "Button")] public int left;
+        [InputControl(layout = "Button")] public int right;
 
         /// <summary>
         /// If true (default), then the resulting vector will be normalized. Otherwise, diagonal
@@ -54,29 +55,20 @@ namespace UnityEngine.Experimental.Input.Composites
             if (bufferSize < sizeof(Vector2))
                 throw new ArgumentException("bufferSize < sizeof(Vector2)", "bufferSize");
 
-            ////TODO: unify code path with DpadControl.ReadUnprocessedValueFrom()
-            var upIsPressed = up.isPressed;
-            var downIsPressed = down.isPressed;
-            var leftIsPressed = left.isPressed;
-            var rightIsPressed = right.isPressed;
+            var upValue = context.ReadValue<float>(up);
+            var downValue = context.ReadValue<float>(down);
+            var leftValue = context.ReadValue<float>(left);
+            var rightValue = context.ReadValue<float>(right);
 
-            var upValue = upIsPressed ? 1.0f : 0.0f;
-            var downValue = downIsPressed ? -1.0f : 0.0f;
-            var leftValue = leftIsPressed ? -1.0f : 0.0f;
-            var rightValue = rightIsPressed ? 1.0f : 0.0f;
+            var upIsPressed = upValue > 0;
+            var downIsPressed = downValue > 0;
+            var leftIsPressed = leftValue > 0;
+            var rightIsPressed = rightValue > 0;
 
-            var result = new Vector2(leftValue + rightValue, upValue + downValue);
+            var result =
+                DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
 
-            if (normalize)
-            {
-                // If press is diagonal, adjust coordinates to produce vector of length 1.
-                // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pow(0.707107)) is ~1.
-                const float diagonal = 0.707107f;
-                if (result.x != 0 && result.y != 0)
-                    result = new Vector2(result.x * diagonal, result.y * diagonal);
-            }
-
-            *((Vector2*)buffer) = result;
+            *(Vector2*)buffer = result;
         }
     }
 }

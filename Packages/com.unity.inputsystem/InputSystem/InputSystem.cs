@@ -25,6 +25,10 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
+////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
+////       simply start losing input but it won't grow infinitely
+
 ////TODO: the onXXX event stuff needs to be thread-safe in order to allow finalizers to clean them up
 
 ////TODO: move state change monitor API out of here (static InputStateChangeMonitor class?)
