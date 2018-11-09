@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.Controls;
 
 public class ControllerDiagramForInputSystem : GamepadForInputSystem
 {
-    // Use this for initialization
     void Start()
     {
         m_buttonAction = new InputAction(name: "ButtonPressAction", binding: "*/<button>");

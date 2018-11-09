@@ -17,9 +17,9 @@ public class DebugInfo : MonoBehaviour
     private float m_startMouseY;
     private float m_startY;
 
-    void Update()
+    public void Update()
     {
-        Keyboard currentKeyboard = Keyboard.current;
+        var currentKeyboard = InputSystem.GetDevice<Keyboard>();
         if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
         {
             if (currentKeyboard.iKey.isPressed)
@@ -29,7 +29,8 @@ public class DebugInfo : MonoBehaviour
 
     public void OnToggleDebugInfo()
     {
-        if (m_isPlaying || m_isDragging) return;
+        if (m_isPlaying || m_isDragging)
+            return;
 
         m_isShowing = !m_isShowing;
         StartCoroutine("SlideToPositionX");
@@ -48,8 +49,8 @@ public class DebugInfo : MonoBehaviour
     {
         if (m_isPlaying) return;
 
-        float delta = Input.mousePosition.y - m_startMouseY;
-        Vector3 pos = transform.position;
+        var delta = Input.mousePosition.y - m_startMouseY;
+        var pos = transform.position;
         pos.y = Mathf.Min(Mathf.Max(m_startY + delta, m_info.rect.height * GetComponentInParent<Canvas>().scaleFactor), Screen.height);
         transform.position = pos;
     }
@@ -60,14 +61,14 @@ public class DebugInfo : MonoBehaviour
     }
 
     // Slide the debug info menu window in/out from view
-    // Ratote the arrow UI 180 degrees
+    // Rotate the arrow UI 180 degrees
     private IEnumerator SlideToPositionX()
     {
         m_isPlaying = true;
 
-        float posDifference = m_isShowing ? -1f * CalculateInfoContainerWidth() : CalculateInfoContainerWidth();
-        float currentX = transform.position.x;
-        float targetX = currentX + posDifference;
+        var posDifference = m_isShowing ? -1f * CalculateInfoContainerWidth() : CalculateInfoContainerWidth();
+        var currentX = transform.position.x;
+        var targetX = currentX + posDifference;
 
         Quaternion targetAngle = m_arrowUI.rotation * Quaternion.Euler(0f, 0f, 180f);
 
@@ -92,13 +93,12 @@ public class DebugInfo : MonoBehaviour
     {
         if (m_info != null)
             return m_info.rect.width * GetComponentInParent<Canvas>().scaleFactor;
-        else
-            throw new Exception("Need assign \"info\" Transform Rect.");
+        throw new Exception("Need assign \"info\" Transform Rect.");
     }
 
     private void SetPositionByX(float posX)
     {
-        Vector3 pos = transform.position;
+        var pos = transform.position;
         pos.x = posX;
         transform.position = pos;
     }

@@ -168,7 +168,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanProcessDeadzones()
+    public void Controls_CanHaveStickDeadzones()
     {
         const string json = @"
             {
@@ -177,7 +177,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.1,max=0.9)""
                     }
                 ]
             }
@@ -187,7 +187,7 @@ partial class CoreTests
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         ////NOTE: Unfortunately, this relies on an internal method ATM.
-        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
@@ -206,6 +206,41 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanHaveAxisDeadzones()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftTrigger"",
+                        ""processors"" : ""axisDeadzone(min=0.1,max=0.9)""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        ////NOTE: Unfortunately, this relies on an internal method ATM.
+        var processor = device.leftTrigger.TryGetProcessor<AxisDeadzoneProcessor>();
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.05f});
+        InputSystem.Update();
+
+        Assert.That(device.leftTrigger.ReadValue(), Is.Zero.Within(0.0001));
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.leftTrigger.ReadValue(),
+            Is.EqualTo(processor.Process(0.5f, device.leftTrigger)));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanChangeDefaultDeadzoneValuesOnTheFly()
     {
         // Deadzone processor with no specified min/max should take default values
@@ -217,7 +252,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone""
+                        ""processors"" : ""stickDeadzone""
                     }
                 ]
             }
@@ -226,7 +261,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
         Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
@@ -259,6 +294,28 @@ partial class CoreTests
         Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
         Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
         Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanEvaluateMagnitude()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState
+            {
+                leftStick = new Vector2(0.5f, 0.5f),
+                leftTrigger = 0.5f
+            }.WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(gamepad.rightStick.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(gamepad.leftStick.EvaluateMagnitude(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick).magnitude).Within(0.00001));
+        Assert.That(gamepad.buttonNorth.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(gamepad.buttonSouth.EvaluateMagnitude(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.EvaluateMagnitude(), Is.EqualTo(0.5).Within(0.00001));
     }
 
     [Test]
@@ -767,7 +824,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanCheckIfPathMatchesGivenPattern()
+    public void Controls_CanCheckIfControlMatchesGivenPath()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -775,6 +832,20 @@ partial class CoreTests
         Assert.That(InputControlPath.Matches("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.Matches("<Gamepad>", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.Matches("<Gamepad>/*", gamepad.leftStick), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCheckIfControlMatchesGivenPathPrefix()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/leftStick", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.rightStick.x), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/*", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
     }
 
     ////TODO: doesnotallocate constraint

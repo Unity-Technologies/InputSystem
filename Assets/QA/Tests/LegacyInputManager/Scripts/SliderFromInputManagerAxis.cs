@@ -8,13 +8,11 @@ public class SliderFromInputManagerAxis : MonoBehaviour
 
     Slider m_Slider;
 
-    // Use this for initialization
     void Start()
     {
         m_Slider = GetComponent<Slider>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         m_Slider.value = Input.GetAxis(axisName);

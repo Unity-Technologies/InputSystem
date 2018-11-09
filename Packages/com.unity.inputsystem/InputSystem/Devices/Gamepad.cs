@@ -49,16 +49,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
@@ -192,12 +192,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        ////TODO: noise filtering
-        /// <summary>
-        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
-        /// </summary>
-        public static Gamepad current { get; internal set; }
-
         /// <summary>
         /// A list of gamepads currently connected to the system.
         /// </summary>
@@ -211,12 +205,6 @@ namespace UnityEngine.Experimental.Input
         public static ReadOnlyArray<Gamepad> all
         {
             get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -259,9 +247,6 @@ namespace UnityEngine.Experimental.Input
 
         protected override void OnRemoved()
         {
-            if (current == this)
-                current = null;
-
             // Remove from array.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
             Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));

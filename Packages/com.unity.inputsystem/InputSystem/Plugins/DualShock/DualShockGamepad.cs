@@ -25,8 +25,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         public QuaternionControl orientation { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
-        public new static DualShockGamepad current { get; private set; }
-
         public ButtonControl L3 { get; private set; }
         public ButtonControl R3 { get; private set; }
         public ButtonControl L2 { get; private set; }
@@ -56,12 +54,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             R2 = rightTrigger;
             L3 = leftStickButton;
             R3 = rightStickButton;
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
         }
 
         public virtual void SetLightBarColor(Color color)

@@ -31,7 +31,7 @@ public class KeyboardPress : MonoBehaviour
 
     void Update()
     {
-        m_Keyboard = Keyboard.current;
+        m_Keyboard = InputSystem.GetDevice<Keyboard>();
 
         if (m_Keyboard == null) { return; }
 

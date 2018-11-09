@@ -146,24 +146,6 @@ namespace UnityEngine.Experimental.Input
             get { throw new NotImplementedException(); }
         }
 
-        /// <summary>
-        /// The pen that was active or connected last or <c>null</c> if there is no pen.
-        /// </summary>
-        public new static Pen current { get; internal set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             tip = builder.GetControl<ButtonControl>("tip");

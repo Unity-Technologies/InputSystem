@@ -1,4 +1,3 @@
-using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using UnityEngine.Experimental.Input.Haptics;
 using UnityEngine.Experimental.Input.Layouts;
@@ -11,24 +10,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout]
     public class XRHMD : InputDevice
     {
-        /// <summary>
-        /// A quick accessor to grab the currently used HMD, regardless of type.
-        /// </summary>
-        /// <remarks>If no HMD is connected, this can be null.</remarks>
-        public static XRHMD current { get; private set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
     }
 
     /// <summary>
@@ -41,13 +22,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         /// A quick accessor for the currently active left handed device.
         /// </summary>
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'LeftHand' device usage.</remarks>
-        public static XRController leftHand { get; private set; }
+        public static XRController leftHand
+        {
+            get { return InputSystem.GetDevice<XRController>(CommonUsages.LeftHand); }
+        }
 
         //// <summary>
         /// A quick accessor for the currently active right handed device.  This is also tracked via usages on the device.
         /// </summary>
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'RightHand' device usage.</remarks>
-        public static XRController rightHand { get; private set; }
+        public static XRController rightHand
+        {
+            get { return InputSystem.GetDevice<XRController>(CommonUsages.RightHand); }
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -67,38 +54,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
                 }
             }
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-
-            if (usages.Contains(CommonUsages.LeftHand))
-            {
-                leftHand = this;
-            }
-            else if (leftHand == this)
-            {
-                leftHand = null;
-            }
-
-            if (usages.Contains(CommonUsages.RightHand))
-            {
-                rightHand = this;
-            }
-            else if (rightHand == this)
-            {
-                rightHand = null;
-            }
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (leftHand == this)
-                leftHand = null;
-            else if (rightHand == this)
-                rightHand = null;
         }
     }
 
@@ -121,7 +76,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             base.OnAdded();
 
             m_BufferedRumble = new BufferedRumble(this);
-            HapticCapabilities capabilities = m_BufferedRumble.capabilities;
         }
 
         /// <summary>

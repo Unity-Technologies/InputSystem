@@ -18,7 +18,6 @@ public class XboxForInputManager : GamepadForInputManager
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
     private Color m_stickButtonColor = new Color(0.4f, 0.4f, 0.55f, 1f);    // The default color for Stick when it is NOT pressed.
 
-    // Use this for initialization
     void Start()
     {
         // Button map is different for each platform
@@ -65,7 +64,6 @@ public class XboxForInputManager : GamepadForInputManager
 #endif
     }
 
-    // Update is called once per frame
     void Update()
     {
         UpdateAllButtons();

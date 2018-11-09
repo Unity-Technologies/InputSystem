@@ -16,7 +16,6 @@ public class ButtonControlActionStatus : MonoBehaviour
     private bool m_isTouched;
     private bool m_isPressed;
 
-    // Use this for initialization
     void OnEnable()
     {
         buttonTouchAction.Enable();

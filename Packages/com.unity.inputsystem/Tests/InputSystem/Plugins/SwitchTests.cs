@@ -99,7 +99,8 @@ internal class SwitchTests : InputTestFixture
                         ((NPadStatusReport*)commandPtr)->colorRightSub = ColorToNNColor(Color.gray);
                         return 1;
                     }
-                    else if (commandPtr->type == QueryUserIdCommand.Type)
+
+                    if (commandPtr->type == QueryUserIdCommand.Type)
                     {
                         // Sending this command happens before refreshing NPad status
                         return 1;
