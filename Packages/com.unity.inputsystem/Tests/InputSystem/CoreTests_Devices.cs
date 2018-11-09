@@ -3193,51 +3193,51 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var keyboardDeviceReset = false;
         runtime.SetDeviceCommandCallback(keyboard.id,
-        (id, commandPtr) =>
-        {
-            if (commandPtr->type == RequestResetCommand.Type)
+            (id, commandPtr) =>
             {
-                Assert.That(keyboardDeviceReset, Is.False);
-                keyboardDeviceReset = true;
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(keyboardDeviceReset, Is.False);
+                    keyboardDeviceReset = true;
 
-                return InputDeviceCommand.kGenericSuccess;
-            }
+                    return InputDeviceCommand.kGenericSuccess;
+                }
 
-            return InputDeviceCommand.kGenericFailure;
-        });
+                return InputDeviceCommand.kGenericFailure;
+            });
 
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var gamepadDeviceReset = false;
         runtime.SetDeviceCommandCallback(gamepad.id,
-        (id, commandPtr) =>
-        {
-            if (commandPtr->type == RequestResetCommand.Type)
+            (id, commandPtr) =>
             {
-                Assert.That(gamepadDeviceReset, Is.False);
-                gamepadDeviceReset = true;
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(gamepadDeviceReset, Is.False);
+                    gamepadDeviceReset = true;
 
-                return InputDeviceCommand.kGenericSuccess;
-            }
+                    return InputDeviceCommand.kGenericSuccess;
+                }
 
-            return InputDeviceCommand.kGenericFailure;
-        });
+                return InputDeviceCommand.kGenericFailure;
+            });
 
         var pointer = InputSystem.AddDevice<Pointer>();
         var pointerDeviceReset = false;
         runtime.SetDeviceCommandCallback(pointer.id,
-        (id, commandPtr) =>
-        {
-            if (commandPtr->type == RequestResetCommand.Type)
+            (id, commandPtr) =>
             {
-                Assert.That(pointerDeviceReset, Is.False);
-                pointerDeviceReset = true;
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(pointerDeviceReset, Is.False);
+                    pointerDeviceReset = true;
 
-                return InputDeviceCommand.kGenericSuccess;
-            }
+                    return InputDeviceCommand.kGenericSuccess;
+                }
 
-            return InputDeviceCommand.kGenericFailure;
-        });
+                return InputDeviceCommand.kGenericFailure;
+            });
 
         runtime.InvokeFocusChanged(true);
 

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.UI;
 
@@ -39,11 +39,10 @@ public class ActionButtonTracker : MonoBehaviour
     // Update is called once per frame
     void OnTriggered(InputAction.CallbackContext context)
     {
-        if(m_Image != null)
+        if (m_Image != null)
         {
             bool newState = context.ReadValue<float>() != 0.0f;
             m_Image.color = newState ? m_EnabledColor : m_DisabledColor;
         }
-       
     }
 }

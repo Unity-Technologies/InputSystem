@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input
 
         public void InvokeFocusChanged(bool newFocusState)
         {
-            if(onFocusChanged != null)
+            if (onFocusChanged != null)
             {
                 onFocusChanged.Invoke(newFocusState);
             }
