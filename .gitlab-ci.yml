@@ -1,6 +1,25 @@
 stages:
+  - check-warnings
   - test-net4x
   - test-net20
+
+
+test:windows:check-warnings-net4x:
+  stage: check-warnings
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=latest
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
 test:windows:2018-2-net4x:
   stage: test-net4x
@@ -13,6 +32,8 @@ test:windows:2018-2-net4x:
   tags:
    - bokken-runner
   allow_failure: true
+  dependencies:
+    - test:windows:check-warnings-net4x
   script:
     - python.exe -u testrunner.py Editor --version=2018.2 --runtime=latest
   before_script:
@@ -30,6 +51,8 @@ test:windows:2018-3-net4x:
   tags:
    - bokken-runner
   allow_failure: true
+  dependencies:
+    - test:windows:check-warnings-net4x
   script:
     - python.exe -u testrunner.py Editor --version=2018.3 --runtime=latest
   before_script:
@@ -47,6 +70,8 @@ test:windows:2019-1-net4x:
   tags:
    - bokken-runner
   allow_failure: true
+  dependencies:
+    - test:windows:check-warnings-net4x
   script:
     - echo "Running Playmode Tests"
     - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest
@@ -67,6 +92,8 @@ test:osx:2018-2-net4x:
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
   allow_failure: true
+  dependencies:
+    - test:windows:check-warnings-net4x
   script:
     - python testrunner.py Editor --version=2018.2 --runtime=latest
   after_script:
@@ -85,6 +112,8 @@ test:osx:2018-3-net4x:
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
   allow_failure: true
+  dependencies:
+    - test:windows:check-warnings-net4x
   script:
     - python testrunner.py Editor --version=2018.3 --runtime=latest
   after_script:
@@ -103,6 +132,8 @@ test:osx:2019-1-net4x:
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
   allow_failure: true
+  dependencies:
+    - test:windows:check-warnings-net4x
   script:
     - python testrunner.py Editor --version=2019.1 --runtime=latest
   after_script:
