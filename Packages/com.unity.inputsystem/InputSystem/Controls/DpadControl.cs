@@ -28,25 +28,25 @@ namespace UnityEngine.Experimental.Input.Controls
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Up)]
+        [InputControl(bit = (int)ButtonBits.Up, displayName = "Up", shortDisplayName = "\u2191")]
         public ButtonControl up { get; private set; }
 
         /// <summary>
         /// The button representing the vertical downwards state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Down)]
+        [InputControl(bit = (int)ButtonBits.Down, displayName = "Down", shortDisplayName = "\u2193")]
         public ButtonControl down { get; private set; }
 
         /// <summary>
         /// The button representing the horizontal left state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Left)]
+        [InputControl(bit = (int)ButtonBits.Left, displayName = "Left", shortDisplayName = "\u2190")]
         public ButtonControl left { get; private set; }
 
         /// <summary>
         /// The button representing the horizontal right state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Right)]
+        [InputControl(bit = (int)ButtonBits.Right, displayName = "Right", shortDisplayName = "\u2192")]
         public ButtonControl right { get; private set; }
 
         ////TODO: should have X and Y child controls as well

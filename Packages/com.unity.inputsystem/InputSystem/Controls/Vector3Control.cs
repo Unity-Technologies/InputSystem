@@ -9,11 +9,11 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </summary>
     public class Vector3Control : InputControl<Vector3>
     {
-        [InputControl(offset = 0)]
+        [InputControl(offset = 0, displayName = "X")]
         public AxisControl x { get; private set; }
-        [InputControl(offset = 4)]
+        [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; private set; }
-        [InputControl(offset = 8)]
+        [InputControl(offset = 8, displayName = "Z")]
         public AxisControl z { get; private set; }
 
         public Vector3Control()

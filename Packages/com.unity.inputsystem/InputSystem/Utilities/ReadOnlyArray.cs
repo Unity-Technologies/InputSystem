@@ -169,5 +169,14 @@ namespace UnityEngine.Experimental.Input.Utilities
                     return true;
             return false;
         }
+
+        public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            for (var i = 0; i < array.m_Length; ++i)
+                if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
+                    return true;
+            return false;
+        }
     }
 }

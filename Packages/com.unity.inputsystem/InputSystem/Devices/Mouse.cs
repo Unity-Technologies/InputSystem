@@ -28,14 +28,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 delta;
 
         [InputControl]
-        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal")]
-        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical")]
+        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
+        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
-        [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle)]
+        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
+        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
+        [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.

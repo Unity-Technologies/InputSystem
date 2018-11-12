@@ -111,6 +111,8 @@ public class DemoGame : MonoBehaviour
 
     public void Awake()
     {
+        InputUser.onChange += OnUserChange;
+
         // In single player games we want to know when the player switches to a device
         // that isn't among the ones currently assigned to the player so that we can
         // detect when to switch to a different control scheme.
@@ -119,6 +121,7 @@ public class DemoGame : MonoBehaviour
 
     public void OnDestroy()
     {
+        InputUser.onChange -= OnUserChange;
         InputUser.onUnassignedDeviceUsed -= OnUnassignedInputDeviceUsed;
     }
 
@@ -327,6 +330,21 @@ public class DemoGame : MonoBehaviour
         player.AssignInputDevice(device);
         player.AssignControlScheme(controlScheme)
             .AndAssignMissingDevices();
+    }
+
+    /// <summary>
+    /// Called when there's a change in the input user setup in the system.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="change"></param>
+    private void OnUserChange(IInputUser user, InputUserChange change)
+    {
+        var player = user as DemoPlayerController;
+        if (player == null)
+            return;
+
+        if (change == InputUserChange.DevicesChanged)
+            player.OnAssignedDevicesChanged();
     }
 
     /// <summary>
