@@ -27,7 +27,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void FilteringByName()
+    public void CanFilteringByName()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -40,7 +40,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void FilteringByGroup()
+    public void CanFilteringByGroup()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -54,7 +54,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void FilteringByGroupAndDevice()
+    public void CanFilterByGroupAndDevice()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -71,7 +71,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void FilteringByGroupDeviceAndName()
+    public void CanFilterByGroupDeviceAndName()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -90,7 +90,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator NewBindingWithGroupFilter()
+    public IEnumerator WhenFilteringWithGroupFilter_NewBindingIsVisible()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -107,7 +107,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator NewBindingIsSelected()
+    public IEnumerator WhenBindingIsAdded_ItGetsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -120,7 +120,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator NewCompositeIsSelected()
+    public IEnumerator WhenCompositeIsAdded_ItGetsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -138,7 +138,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator NewActionMapIsSelected()
+    public IEnumerator WhenActionMapIsAdded_ItGetsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -151,7 +151,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator NewActionIsSelected()
+    public IEnumerator WhenActionIsAdded_ItGetsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -165,7 +165,7 @@ public class AssetEditorTests
 
     [UnityTest]
     [Ignore("For some reason it's impossible to focus the tree view from the test")]
-    public IEnumerator CanCopyAndPaste()
+    public IEnumerator TODO_CanCopyAndPaste()
     {
         EditorUtility.ClearProgressBar();
         var assetWindow = GetTestAssetWindow();
