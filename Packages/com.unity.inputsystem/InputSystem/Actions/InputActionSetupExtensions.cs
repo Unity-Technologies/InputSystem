@@ -55,6 +55,7 @@ namespace UnityEngine.Experimental.Input
             return action;
         }
 
+        ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
         public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
@@ -264,17 +265,27 @@ namespace UnityEngine.Experimental.Input
 
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
-            return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Finish();
+            return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
         }
 
-        public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string devicePath)
+        public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
-            return new ControlSchemeSyntax(scheme).WithRequiredDevice(devicePath).Finish();
+            return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
         }
 
-        public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string devicePath)
+        public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
-            return new ControlSchemeSyntax(scheme).WithOptionalDevice(devicePath).Finish();
+            return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
+        }
+
+        public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
+        {
+            return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
+        }
+
+        public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
+        {
+            return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Done();
         }
 
         /// <summary>
@@ -525,36 +536,50 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
-            public ControlSchemeSyntax WithRequiredDevice(string devicePath)
+            public ControlSchemeSyntax WithRequiredDevice(string controlPath)
             {
-                AddDeviceEntry(devicePath, false);
+                AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.None);
                 return this;
             }
 
-            public ControlSchemeSyntax WithOptionalDevice(string devicePath)
+            public ControlSchemeSyntax WithOptionalDevice(string controlPath)
             {
-                AddDeviceEntry(devicePath, true);
+                AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Optional);
                 return this;
             }
 
-            public InputControlScheme Finish()
+            public ControlSchemeSyntax OrWithRequiredDevice(string controlPath)
+            {
+                AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Or);
+                return this;
+            }
+
+            public ControlSchemeSyntax OrWithOptionalDevice(string controlPath)
+            {
+                AddDeviceEntry(controlPath,
+                    InputControlScheme.DeviceRequirement.Flags.Optional |
+                    InputControlScheme.DeviceRequirement.Flags.Or);
+                return this;
+            }
+
+            public InputControlScheme Done()
             {
                 if (m_Asset != null)
                     return m_Asset.m_ControlSchemes[m_ControlSchemeIndex];
                 return m_ControlScheme;
             }
 
-            private void AddDeviceEntry(string devicePath, bool isOptional)
+            private void AddDeviceEntry(string controlPath, InputControlScheme.DeviceRequirement.Flags flags)
             {
-                if (string.IsNullOrEmpty(devicePath))
-                    throw new ArgumentNullException("devicePath");
+                if (string.IsNullOrEmpty(controlPath))
+                    throw new ArgumentNullException("controlPath");
 
                 var scheme = m_Asset != null ? m_Asset.m_ControlSchemes[m_ControlSchemeIndex] : m_ControlScheme;
-                ArrayHelpers.Append(ref scheme.m_Devices,
-                    new InputControlScheme.DeviceEntry
+                ArrayHelpers.Append(ref scheme.m_DeviceRequirements,
+                    new InputControlScheme.DeviceRequirement
                     {
-                        devicePath = devicePath,
-                        isOptional = isOptional,
+                        m_ControlPath = controlPath,
+                        m_Flags = flags,
                     });
 
                 if (m_Asset == null)

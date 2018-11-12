@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -11,8 +10,37 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 
+#if UNITY_2018_3_OR_NEWER
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
+#endif
+
 partial class CoreTests
 {
+    #if UNITY_2018_3_OR_NEWER
+    [Test]
+    [Category("Controls")]
+    [Ignore("TODO")]
+    public void TODO_Controls_CanFindControls_WithoutAllocatingGCMemory()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        var list = new InputControlList<InputControl>();
+        try
+        {
+            Assert.That(() =>
+            {
+                InputSystem.FindControls("<Gamepad>/*stick", ref list);
+            }, Is.Not.AllocatingGCMemory());
+        }
+        finally
+        {
+            list.Dispose();
+        }
+    }
+
+    #endif
+
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsInSetupByPath()
@@ -140,7 +168,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanProcessDeadzones()
+    public void Controls_CanHaveStickDeadzones()
     {
         const string json = @"
             {
@@ -149,7 +177,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.1,max=0.9)""
                     }
                 ]
             }
@@ -159,7 +187,7 @@ partial class CoreTests
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         ////NOTE: Unfortunately, this relies on an internal method ATM.
-        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
@@ -178,6 +206,41 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanHaveAxisDeadzones()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftTrigger"",
+                        ""processors"" : ""axisDeadzone(min=0.1,max=0.9)""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        ////NOTE: Unfortunately, this relies on an internal method ATM.
+        var processor = device.leftTrigger.TryGetProcessor<AxisDeadzoneProcessor>();
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.05f});
+        InputSystem.Update();
+
+        Assert.That(device.leftTrigger.ReadValue(), Is.Zero.Within(0.0001));
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.leftTrigger.ReadValue(),
+            Is.EqualTo(processor.Process(0.5f, device.leftTrigger)));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanChangeDefaultDeadzoneValuesOnTheFly()
     {
         // Deadzone processor with no specified min/max should take default values
@@ -189,7 +252,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone""
+                        ""processors"" : ""stickDeadzone""
                     }
                 ]
             }
@@ -198,7 +261,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
         Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
@@ -231,6 +294,28 @@ partial class CoreTests
         Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
         Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
         Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanEvaluateMagnitude()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState
+            {
+                leftStick = new Vector2(0.5f, 0.5f),
+                leftTrigger = 0.5f
+            }.WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(gamepad.rightStick.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(gamepad.leftStick.EvaluateMagnitude(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick).magnitude).Within(0.00001));
+        Assert.That(gamepad.buttonNorth.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(gamepad.buttonSouth.EvaluateMagnitude(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.EvaluateMagnitude(), Is.EqualTo(0.5).Within(0.00001));
     }
 
     [Test]
@@ -373,7 +458,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Up.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.DpadUp});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadUp});
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.up));
@@ -382,7 +467,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
             {
-                buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft
+                buttons = 1 << (int)GamepadButton.DpadUp | 1 << (int)GamepadButton.DpadLeft
             });
         InputSystem.Update();
 
@@ -390,7 +475,7 @@ partial class CoreTests
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
 
         // Left.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.DpadLeft});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadLeft});
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.left));
@@ -399,7 +484,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
             {
-                buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft
+                buttons = 1 << (int)GamepadButton.DpadDown | 1 << (int)GamepadButton.DpadLeft
             });
         InputSystem.Update();
 
@@ -407,7 +492,7 @@ partial class CoreTests
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.left).normalized.y).Within(0.00001));
 
         // Down.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.DpadDown});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadDown});
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.down));
@@ -416,7 +501,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
             {
-                buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight
+                buttons = 1 << (int)GamepadButton.DpadDown | 1 << (int)GamepadButton.DpadRight
             });
         InputSystem.Update();
 
@@ -426,7 +511,7 @@ partial class CoreTests
             Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
 
         // Right.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.DpadRight});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadRight});
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.right));
@@ -435,7 +520,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
             {
-                buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight
+                buttons = 1 << (int)GamepadButton.DpadUp | 1 << (int)GamepadButton.DpadRight
             });
         InputSystem.Update();
 
@@ -728,19 +813,45 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_CanTurnControlPathIntoHumanReadableText()
     {
-        Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Gamepad leftStick"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Gamepad leftStick/x"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Gamepad leftStick/x"));
-        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("LeftHand XRController position"));
-        Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("Any leftStick"));
-        Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("Any PrimaryMotion/x"));
+        Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("leftStick [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("leftStick/x [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("leftStick/x [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XRController]"));
+        Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
+        Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCheckIfControlMatchesGivenPath()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(InputControlPath.Matches("<Gamepad>/leftStick", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.Matches("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.Matches("<Gamepad>", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.Matches("<Gamepad>/*", gamepad.leftStick), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCheckIfControlMatchesGivenPathPrefix()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/leftStick", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.rightStick.x), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/*", gamepad.leftStick), Is.True);
+        Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
+        Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
     }
 
     ////TODO: doesnotallocate constraint
     [Test]
     [Category("Controls")]
-    public void Controls_CanKeepListsOfControls_WithoutAllocatingManagedMemory()
+    public void Controls_CanKeepListsOfControls_WithoutAllocatingGCMemory()
     {
         InputSystem.AddDevice<Mouse>(); // Noise.
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -787,6 +898,37 @@ partial class CoreTests
             Assert.That(!list.Contains(null));
             Assert.That(list.Contains(keyboard.spaceKey));
             Assert.That(!list.Contains(keyboard));
+
+            list.AddRange(new InputControl[] {keyboard.aKey, keyboard.bKey}, count: 1, destinationIndex: 0);
+
+            Assert.That(list.Count, Is.EqualTo(3));
+            Assert.That(list.Capacity, Is.EqualTo(7));
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey}));
+
+            list.AddRange(new InputControl[] {keyboard.bKey, keyboard.cKey});
+
+            Assert.That(list.Count, Is.EqualTo(5));
+            Assert.That(list.Capacity, Is.EqualTo(5));
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+
+            using (var toAdd = new InputControl[] {gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest}.ToControlList())
+                list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
+
+            Assert.That(list.Count, Is.EqualTo(6));
+            Assert.That(list.Capacity, Is.EqualTo(4));
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+
+            list[0] = keyboard.zKey;
+
+            Assert.That(list,
+                Is.EquivalentTo(new InputControl[]
+                    {keyboard.zKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
 
             list.Clear();
 

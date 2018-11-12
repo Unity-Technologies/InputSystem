@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
 using UnityEngine.Experimental.Input;
 
 // This script specifically prints out debug statements for
@@ -10,10 +7,9 @@ using UnityEngine.Experimental.Input;
 //
 public class ProblematicKeysDebugLog : MonoBehaviour
 {
-    // Update is called once per frame
     void Update()
     {
-        Keyboard keyboard = Keyboard.current;
+        Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
 
         if (keyboard == null) { return; }
 

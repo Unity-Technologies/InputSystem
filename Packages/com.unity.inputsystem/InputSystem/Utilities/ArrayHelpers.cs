@@ -4,6 +4,10 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
+
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
@@ -11,6 +15,47 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// </summary>
     internal static class ArrayHelpers
     {
+        public static void Clear<TValue>(TValue[] array, ref int count)
+        {
+            if (array == null)
+                return;
+
+            Array.Clear(array, 0, count);
+            count = 0;
+        }
+
+        public static void EnsureCapacity<TValue>(ref TValue[] array, int count, int capacity, int capacityIncrement = 10)
+        {
+            if (capacity == 0)
+                return;
+
+            if (array == null)
+            {
+                array = new TValue[Math.Max(capacity, capacityIncrement)];
+                return;
+            }
+
+            var currentCapacity = array.Length - count;
+            if (currentCapacity >= capacity)
+                return;
+
+            DuplicateWithCapacity(ref array, count, capacity, capacityIncrement);
+        }
+
+        public static void DuplicateWithCapacity<TValue>(ref TValue[] array, int count, int capacity, int capacityIncrement = 10)
+        {
+            if (array == null)
+            {
+                array = new TValue[Math.Max(capacity, capacityIncrement)];
+                return;
+            }
+
+            var newSize = count + Math.Max(capacity, capacityIncrement);
+            var newArray = new TValue[newSize];
+            Array.Copy(array, newArray, count);
+            array = newArray;
+        }
+
         public static bool Contains<TValue>(TValue[] array, TValue value)
         {
             if (array == null)
@@ -30,7 +75,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (array == null)
                 return false;
 
-            for (var i = 0; i < array.Length; ++i)
+            return ContainsReferenceTo(array, array.Length, value);
+        }
+
+        public static bool ContainsReferenceTo<TValue>(TValue[] array, int count, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return false;
+
+            for (var i = 0; i < count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return true;
 
@@ -78,6 +132,19 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             var length = array.Length;
             for (var i = 0; i < length; ++i)
+                if (ReferenceEquals(array[i], value))
+                    return i;
+
+            return -1;
+        }
+
+        public static int IndexOfReference<TValue>(TValue[] array, int count, TValue value)
+            where TValue : class
+        {
+            if (array == null)
+                return -1;
+
+            for (var i = 0; i < count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return i;
 
@@ -187,6 +254,35 @@ namespace UnityEngine.Experimental.Input.Utilities
             var index = count;
             array[index] = value;
             ++count;
+
+            return index;
+        }
+
+        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int count, TValues values, int capacityIncrement = 10)
+            where TValues : IReadOnlyList<TValue>
+        {
+            var num = values.Count;
+            if (array == null)
+            {
+                var size = Math.Max(num, capacityIncrement);
+                array = new TValue[size];
+                for (var i = 0; i < num; ++i)
+                    array[i] = values[i];
+                count += num;
+                return 0;
+            }
+
+            var capacity = array.Length;
+            if (capacity < count + num)
+            {
+                capacity += Math.Max(num, capacityIncrement);
+                Array.Resize(ref array, capacity);
+            }
+
+            var index = count;
+            for (var i = 0; i < num; ++i)
+                array[i] = values[i];
+            count += num;
 
             return index;
         }
@@ -570,6 +666,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             length -= count;
+        }
+
+        public static void SwapElements<TValue>(this TValue[] array, int index1, int index2)
+        {
+            MemoryHelpers.Swap(ref array[index1], ref array[index2]);
+        }
+
+        public static void SwapElements<TValue>(this NativeArray<TValue> array, int index1, int index2)
+            where TValue : struct
+        {
+            var temp = array[index1];
+            array[index1] = array[index2];
+            array[index2] = temp;
         }
     }
 }

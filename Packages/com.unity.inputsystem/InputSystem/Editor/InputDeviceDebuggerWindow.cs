@@ -7,6 +7,10 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add commands to event trace (also clickable)
+
+////TODO: add diff-to-previous-event ability to event window
+
 ////FIXME: doesn't survive domain reload correctly
 
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay

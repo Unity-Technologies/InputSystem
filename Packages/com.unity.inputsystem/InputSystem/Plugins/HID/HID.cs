@@ -13,6 +13,11 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 #endif
 
+////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
+////        have better mechanism to do that without requiring to replace the entire process wholesale
+
+////TODO: expose the layout builder so that other layout builders can use it for their own purposes
+
 ////REVIEW: how are we dealing with multiple different input reports on the same device?
 
 ////REVIEW: move the enums and structs out of here and into UnityEngine.Experimental.Input.HID? Or remove the "HID" name prefixes from them?
@@ -21,6 +26,7 @@ using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>

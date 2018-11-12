@@ -39,16 +39,16 @@ public class SimpleControls : InputActionAssetReference
         m_Initialized = false;
     }
 
-    public void SwitchAsset(InputActionAsset newAsset)
+    public void SetAsset(InputActionAsset newAsset)
     {
         if (newAsset == asset) return;
         if (m_Initialized) Uninitialize();
         asset = newAsset;
     }
 
-    public void DuplicateAndSwitchAsset()
+    public override void MakePrivateCopyOfActions()
     {
-        SwitchAsset(ScriptableObject.Instantiate(asset));
+        SetAsset(ScriptableObject.Instantiate(asset));
     }
 
     // gameplay
@@ -68,6 +68,7 @@ public class SimpleControls : InputActionAssetReference
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
+        public bool enabled { get { return Get().enabled; } }
         public InputActionMap Clone() { return Get().Clone(); }
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
     }

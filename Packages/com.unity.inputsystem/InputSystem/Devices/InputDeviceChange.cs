@@ -85,8 +85,5 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: it doesn't seem smart to deliver this high-frequency change on the same path
         ////        as the other low-frequency changes
         StateChanged,
-
-        ////TODO: nuke this along with the entire Current machinery
-        CurrentChanged
     }
 }

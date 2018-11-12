@@ -15,9 +15,11 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.TestTools;
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Serializable]
+
     struct PackageJson
     {
         public string version;
@@ -54,7 +56,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
         InputSystem.AddDevice("MyDevice");
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             product = "Product",
             manufacturer = "Manufacturer",
@@ -100,7 +102,7 @@ partial class CoreTests
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -444,14 +446,14 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
     {
-        var set1 = new InputActionMap("set1");
-        set1.AddAction(name: "action1", binding: "/gamepad/leftStick");
-        set1.AddAction(name: "action2", binding: "/gamepad/rightStick");
-        var set2 = new InputActionMap("set2");
-        set2.AddAction(name: "action1", binding: "/gamepad/buttonSouth");
+        var map1 = new InputActionMap("set1");
+        map1.AddAction("action1", binding: "/gamepad/leftStick");
+        map1.AddAction("action2", binding: "/gamepad/rightStick");
+        var map2 = new InputActionMap("set2");
+        map2.AddAction("action1", binding: "/gamepad/buttonSouth");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set1);
-        asset.AddActionMap(set2);
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
@@ -464,6 +466,33 @@ partial class CoreTests
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
         Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
+        Assert.That(code, Contains.Substring("public override void MakePrivateCopyOfActions()"));
+        Assert.That(code, Contains.Substring("public void SetAsset(InputActionAsset newAsset)"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGenerateCodeWrapperForInputAsset_WithInterfaces()
+    {
+        var map1 = new InputActionMap("map1");
+        map1.AddAction("action1", binding: "/gamepad/leftStick");
+        map1.AddAction("action2", binding: "/gamepad/rightStick");
+        var map2 = new InputActionMap("map2");
+        map2.AddAction("action3", binding: "/gamepad/buttonSouth");
+
+        var code = InputActionCodeGenerator.GenerateWrapperCode(new[] { map1, map2 },
+            Enumerable.Empty<InputControlScheme>(),
+            new InputActionCodeGenerator.Options { generateInterfaces = true, className = "Test" });
+
+        Assert.That(code, Contains.Substring("public interface IMap1Actions"));
+        Assert.That(code, Contains.Substring("public interface IMap2Actions"));
+        Assert.That(code, Contains.Substring("private IMap1Actions m_Map1ActionsCallbackInterface;"));
+        Assert.That(code, Contains.Substring("private IMap2Actions m_Map2ActionsCallbackInterface;"));
+        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap1Actions instance)"));
+        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap2Actions instance)"));
+        Assert.That(code, Contains.Substring("void OnAction1(InputAction.CallbackContext context)"));
+        Assert.That(code, Contains.Substring("void OnAction2(InputAction.CallbackContext context)"));
+        Assert.That(code, Contains.Substring("void OnAction3(InputAction.CallbackContext context)"));
     }
 
     [Test]
@@ -642,7 +671,7 @@ partial class CoreTests
 
         public void OnGUI()
         {
-            mousePosition = Mouse.current.position.ReadValue();
+            mousePosition = InputSystem.GetDevice<Mouse>().position.ReadValue();
         }
     }
 

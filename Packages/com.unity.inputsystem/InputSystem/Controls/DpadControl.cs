@@ -81,25 +81,42 @@ namespace UnityEngine.Experimental.Input.Controls
             var leftIsPressed = left.ReadValueFrom(statePtr) >= left.pressPointOrDefault;
             var rightIsPressed = right.ReadValueFrom(statePtr) >= right.pressPointOrDefault;
 
-            var upValue = upIsPressed ? 1.0f : 0.0f;
-            var downValue = downIsPressed ? -1.0f : 0.0f;
-            var leftValue = leftIsPressed ? -1.0f : 0.0f;
-            var rightValue = rightIsPressed ? 1.0f : 0.0f;
-
-            var result = new Vector2(leftValue + rightValue, upValue + downValue);
-
-            // If press is diagonal, adjust coordinates to produce vector of length 1.
-            // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pow(0.707107)) is ~1.
-            const float diagonal = 0.707107f;
-            if (result.x != 0 && result.y != 0)
-                return new Vector2(result.x * diagonal, result.y * diagonal);
-
-            return result;
+            return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
         protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector2 value)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Create a direction vector from the given four button states.
+        /// </summary>
+        /// <param name="up"></param>
+        /// <param name="down"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="normalize"></param>
+        /// <returns>A normalized 2D direction vector.</returns>
+        public static Vector2 MakeDpadVector(bool up, bool down, bool left, bool right, bool normalize = true)
+        {
+            var upValue = up ? 1.0f : 0.0f;
+            var downValue = down ? -1.0f : 0.0f;
+            var leftValue = left ? -1.0f : 0.0f;
+            var rightValue = right ? 1.0f : 0.0f;
+
+            var result = new Vector2(leftValue + rightValue, upValue + downValue);
+
+            if (normalize)
+            {
+                // If press is diagonal, adjust coordinates to produce vector of length 1.
+                // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pow(0.707107)) is ~1.
+                const float diagonal = 0.707107f;
+                if (result.x != 0 && result.y != 0)
+                    result = new Vector2(result.x * diagonal, result.y * diagonal);
+            }
+
+            return result;
         }
     }
 }

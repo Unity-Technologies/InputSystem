@@ -1,5 +1,3 @@
-using UnityEngine.Experimental.Input.LowLevel;
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -20,7 +18,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Called when an IME composition is in-progress or finished.
         /// </summary>
-        /// <param name="compositionString">The current composition string.</param>
+        /// <param name="compositionString">The current composition.</param>
         /// <seealso cref="IMECompositionEvent"/>
         /// <seealso cref="Keyboard.onIMECompositionChange"/>
         /// <remarks>

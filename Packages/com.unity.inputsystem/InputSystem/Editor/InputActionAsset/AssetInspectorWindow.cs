@@ -14,6 +14,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle actionTreeBackground = new GUIStyle("Label");
             public static GUIStyle propertiesBackground = new GUIStyle("Label");
             public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
+            public static GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
 
             ////TODO: move to a better place
             public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
@@ -38,6 +39,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
+
+                waitingForInputLabel.fontSize = 40;
             }
         }
 
@@ -54,7 +57,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private ActionInspectorContextMenu m_ContextMenu;
 
-        private InputBindingPropertiesView m_PropertyView;
+        private InputBindingPropertiesView m_BindingPropertyView;
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
         internal CopyPasteUtility m_CopyPasteUtility;
@@ -66,13 +69,18 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionMapIconGUI;
         GUIContent m_AddBindingGUI;
         GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
-        GUIContent m_ActionsSearchingGUI = EditorGUIUtility.TrTextContent("Actions (Searching)");
         GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+        GUIContent m_WaitingForInputContent = EditorGUIUtility.TrTextContent("Waiting for input...");
+        GUIContent m_WaitingForSpecificInputContent = new GUIContent("Waiting for {0}...");// EditorGUIUtility.TrTextContent("Waiting for {0}...");
+        [SerializeField]
         GUIContent m_DirtyTitle;
+        [SerializeField]
         GUIContent m_Title;
 
         private void OnEnable()
         {
+            minSize = new Vector2(600, 300);
+
             if (m_AddActionIconGUI == null)
                 m_AddActionIconGUI = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
             if (m_AddActionMapIconGUI == null)
@@ -95,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             InitializeTrees();
             OnActionMapSelection();
-            LoadPropertiesForSelection(false);
+            LoadPropertiesForSelection();
         }
 
         private void OnDisable()
@@ -140,7 +148,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionMapsTree.SelectFirstRow();
             OnActionMapSelection();
             m_ActionsTree.ExpandAll();
-            LoadPropertiesForSelection(true);
+            LoadPropertiesForSelection();
         }
 
         private void InitializeTrees()
@@ -154,6 +162,25 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
             m_ActionsTree.OnRowGUI = OnActionRowGUI;
             m_InputActionWindowToolbar.OnSearchChanged = m_ActionsTree.SetNameFilter;
+            m_InputActionWindowToolbar.OnSchemeChanged = a =>
+            {
+                if (a == null)
+                {
+                    m_ActionsTree.SetSchemeBindingGroupFilter(null);
+                    return;
+                }
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(a).bindingGroup;
+                m_ActionsTree.SetSchemeBindingGroupFilter(group);
+            };
+            m_InputActionWindowToolbar.OnDeviceChanged = m_ActionsTree.SetDeviceFilter;
+
+            m_ActionsTree.SetNameFilter(m_InputActionWindowToolbar.nameFilter);
+            if (m_InputActionWindowToolbar.selectedControlSchemeName != null)
+            {
+                var group = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(m_InputActionWindowToolbar.selectedControlSchemeName).bindingGroup;
+                m_ActionsTree.SetSchemeBindingGroupFilter(group);
+            }
+            m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
@@ -181,14 +208,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnActionSelection()
         {
-            LoadPropertiesForSelection(true);
+            LoadPropertiesForSelection();
         }
 
-        private void LoadPropertiesForSelection(bool checkFocus)
+        private void LoadPropertiesForSelection()
         {
-            m_PropertyView = null;
+            m_BindingPropertyView = null;
 
-            if ((!checkFocus || m_ActionMapsTree.HasFocus()) && m_ActionMapsTree.GetSelectedRow() != null)
+            // Column #1: Load selected action map.
+            if (m_ActionMapsTree.GetSelectedRow() != null)
             {
                 var row = m_ActionMapsTree.GetSelectedRow();
                 if (row != null)
@@ -197,18 +225,37 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionsTree.Reload();
                 }
             }
-            if ((!checkFocus || m_ActionsTree.HasFocus()) && m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
+
+            // Column #2: Load selected action or binding.
+            if (m_ActionsTree.HasSelection() && m_ActionsTree.GetSelection().Count == 1)
             {
-                var p = m_ActionsTree.GetSelectedRow();
-                if (p != null && p.hasProperties)
+                var item = m_ActionsTree.GetSelectedRow();
+                if (item is BindingTreeItem)
                 {
-                    m_PropertyView = p.GetPropertiesView(() =>
-                    {
-                        Apply();
-                        LoadPropertiesForSelection(false);
-                    }, m_PickerTreeViewState);
-                    m_PropertyView.toolbar = m_InputActionWindowToolbar;
+                    // Grab the action for the binding and see if we have an expected control layout
+                    // set on it. Pass that on to the control picking machinery.
+                    var isCompositeTreeItem = item is CompositeTreeItem;
+                    var actionItem = (isCompositeTreeItem ? item.parent.parent : item.parent) as ActionTreeItem;
+                    Debug.Assert(actionItem != null);
+
+                    // Show properties for binding.
+                    m_BindingPropertyView =
+                        new InputBindingPropertiesView(
+                            item.elementProperty,
+                            () =>
+                            {
+                                Apply();
+                                LoadPropertiesForSelection();
+                            },
+                            m_PickerTreeViewState,
+                            m_InputActionWindowToolbar,
+                            item.expectedControlLayout);
+
+                    // For composite groups, don't show the binding path and control scheme section.
+                    if (item is CompositeGroupTreeItem)
+                        m_BindingPropertyView.showPathAndControlSchemeSection = false;
                 }
+                ////TODO: properties for actions
             }
         }
 
@@ -229,7 +276,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-            OnActionSelection();
+
+            LoadPropertiesForSelection();
         }
 
         private void OnGUI()
@@ -253,8 +301,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.Space();
 
-            //Draw columns
-            EditorGUILayout.BeginHorizontal();
+            var isPickingInteractively = m_BindingPropertyView != null && m_BindingPropertyView.isInteractivelyPicking;
+            EditorGUI.BeginDisabledGroup(isPickingInteractively);
+
+            // Draw columns.
+            var columnsRect = EditorGUILayout.BeginHorizontal();
             var columnOneRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
             var columnTwoRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
             DrawActionMapsColumn(columnOneRect);
@@ -262,7 +313,16 @@ namespace UnityEngine.Experimental.Input.Editor
             DrawPropertiesColumn();
             EditorGUILayout.EndHorizontal();
 
-            // Bottom margin
+            // If we're currently interactively picking a binding, aside from disabling and dimming the normal UI, display a large text over
+            // the window that says we're waiting for input.
+            // NOTE: We're not using EditorWindow.ShowNotification() as, aside from having trouble displaying our dynamically generated text
+            //       properly without clipping, notifications will automatically disappear after a brief moment. We want the input requester
+            //       to stay visible for as long as we're still looking for input.
+            EditorGUI.EndDisabledGroup();
+            if (isPickingInteractively)
+                DrawInteractivePickingOverlay(columnsRect);
+
+            // Bottom margin.
             GUILayout.Space(3);
             EditorGUILayout.EndVertical();
 
@@ -314,15 +374,9 @@ namespace UnityEngine.Experimental.Input.Editor
             columnRect.y += labelRect.height;
             columnRect.height -= labelRect.height;
 
-            GUIContent header;
-            if (m_InputActionWindowToolbar.searching)
-                header = m_ActionsSearchingGUI;
-            else
-                header = m_ActionsGUI;
-
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
-            EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
+            EditorGUI.LabelField(headerRect, m_ActionsGUI, Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -353,9 +407,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
             EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
 
-            if (m_PropertyView != null)
+            if (m_BindingPropertyView != null)
             {
-                m_PropertyView.OnGUI();
+                m_BindingPropertyView.OnGUI();
             }
             else
             {
@@ -363,6 +417,46 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawInteractivePickingOverlay(Rect rect)
+        {
+            // If we have an expected control layout, be specific about what kind of input we expect as
+            // otherwise it can be quite confusing to hammer an input control and nothing happens.
+            var expectedControlLayout = m_BindingPropertyView.expectedControlLayout;
+            GUIContent waitingForInputText;
+            if (!string.IsNullOrEmpty(expectedControlLayout))
+            {
+                var text = string.Format(m_WaitingForSpecificInputContent.text, expectedControlLayout);
+                waitingForInputText = new GUIContent(text);
+            }
+            else
+            {
+                waitingForInputText = m_WaitingForInputContent;
+            }
+
+            float minWidth, maxWidth;
+            Styles.waitingForInputLabel.CalcMinMaxWidth(waitingForInputText, out minWidth, out maxWidth);
+
+            var waitingForInputTextRect = rect;
+            waitingForInputTextRect.width = maxWidth;
+            waitingForInputTextRect.height = Styles.waitingForInputLabel.CalcHeight(waitingForInputText, rect.width);
+            waitingForInputTextRect.x = rect.width / 2 - maxWidth / 2;
+            waitingForInputTextRect.y = rect.height / 2 - waitingForInputTextRect.height / 2;
+
+            EditorGUI.DropShadowLabel(waitingForInputTextRect, waitingForInputText, Styles.waitingForInputLabel);
+
+            var cancelButtonRect = waitingForInputTextRect;
+            cancelButtonRect.y += waitingForInputTextRect.height + 3;
+            cancelButtonRect.x = waitingForInputTextRect.x + waitingForInputTextRect.width - 50;
+            cancelButtonRect.width = 50;
+            cancelButtonRect.height = 15;
+
+            if (GUI.Button(cancelButtonRect, "Cancel"))
+            {
+                m_BindingPropertyView.CancelInteractivePicking();
+                Repaint();
+            }
         }
 
         public static void RefreshAllOnAssetReimport()
@@ -397,7 +491,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ActionAssetManager.CreateWorkingCopyAsset();
                 InitializeTrees();
-                LoadPropertiesForSelection(false);
+                LoadPropertiesForSelection();
                 Repaint();
             }
         }

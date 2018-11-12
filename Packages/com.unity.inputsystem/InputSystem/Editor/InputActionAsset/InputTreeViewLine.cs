@@ -5,18 +5,19 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
+////REVIEW: would be great to align all "[device]" parts of binding strings neatly in a column
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     internal abstract class ActionTreeViewItem : TreeViewItem
     {
         protected static class Styles
         {
-            public static GUIStyle actionItemRowStyle = new GUIStyle("Label");
-            public static GUIStyle actionSetItemStyle = new GUIStyle("Label");
-            public static GUIStyle actionItemLabelStyle = new GUIStyle("Label");
+            public static GUIStyle lineStyle = new GUIStyle("TV Line");
+            public static GUIStyle textStyle = new GUIStyle("Label");
             public static GUIStyle backgroundStyle = new GUIStyle("Label");
+            public static GUIStyle border = new GUIStyle("Label");
             public static GUIStyle yellowRect = new GUIStyle("Label");
-            public static GUIStyle orangeRect = new GUIStyle("Label");
             public static GUIStyle greenRect = new GUIStyle("Label");
             public static GUIStyle blueRect = new GUIStyle("Label");
             public static GUIStyle pinkRect = new GUIStyle("Label");
@@ -26,27 +27,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
                     InputActionTreeBase.ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
 
-                actionItemRowStyle.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(InputActionTreeBase.ResourcesPath + "row.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onFocused.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.ResourcesPath + "rowSelected.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onNormal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.ResourcesPath + "rowSelected.png");
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
+                border.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    InputActionTreeBase.ResourcesPath + "actionTreeBackground.png");
+                border.border = new RectOffset(0, 0, 0, 1);
 
-                actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
-                actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
+                textStyle.alignment = TextAnchor.MiddleLeft;
 
                 yellowRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
                         InputActionTreeBase.SharedResourcesPath + "yellow.png");
-                orangeRect.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.SharedResourcesPath + "orange.png");
                 greenRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
                         InputActionTreeBase.SharedResourcesPath + "green.png");
@@ -60,8 +49,8 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public bool renaming;
-        protected SerializedProperty m_ElementProperty;
-        protected int m_Index;
+        private SerializedProperty m_ElementProperty;
+        private int m_Index;
 
         public virtual bool isDraggable
         {
@@ -78,17 +67,17 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_Index; }
         }
 
-        protected abstract GUIStyle rectStyle
+        public virtual string expectedControlLayout
+        {
+            get { return string.Empty; }
+        }
+
+        protected abstract GUIStyle colorTagStyle
         {
             get;
         }
 
-        public virtual bool hasProperties
-        {
-            get { return false; }
-        }
-
-        public ActionTreeViewItem(SerializedProperty elementProperty, int index)
+        protected ActionTreeViewItem(SerializedProperty elementProperty, int index)
         {
             m_ElementProperty = elementProperty;
             m_Index = index;
@@ -102,7 +91,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             rowRect.height += 1;
-            Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
+            Styles.lineStyle.Draw(rowRect, "", false, false, selected, focused);
 
             rect.x += indent;
             rect.width -= indent + 2;
@@ -110,30 +99,30 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.height -= 2;
 
             if (!renaming)
-                Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
+                Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
 
             DrawCustomRect(rowRect);
         }
 
-        public virtual void DrawCustomRect(Rect rowRect)
+        private void DrawCustomRect(Rect rowRect)
         {
+            // Color tag at beginning of line.
             var boxRect = rowRect;
             boxRect.width = (depth + 1) * 6;
             boxRect.height -= 2;
-            boxRect.y += 1;
-            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            if (depth == 0)
-                return;
+            colorTagStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+
+            // Background color at the beginning of the row.
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+
+            // Bottom line.
+            rowRect.y += rowRect.height - 2;
+            rowRect.height = 1;
+            Styles.border.Draw(rowRect, GUIContent.none, false, false, false, false);
         }
 
         public abstract string SerializeToString();
-
-        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
-        {
-            return new InputBindingPropertiesView(elementProperty, apply, state);
-        }
 
         public abstract int GetIdForName(string argsNewName);
     }
@@ -147,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(displayName);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.yellowRect; }
         }
@@ -209,16 +198,23 @@ namespace UnityEngine.Experimental.Input.Editor
     internal class ActionTreeItem : ActionTreeViewItem
     {
         private SerializedProperty m_ActionMapProperty;
+        private string m_ExpectedControlLayout;
 
         public int bindingsStartIndex { get; private set; }
         public int bindingsCount { get; private set; }
         public string actionName { get; private set; }
+
+        public override string expectedControlLayout
+        {
+            get { return m_ExpectedControlLayout; }
+        }
 
         public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty actionProperty, int index)
             : base(actionProperty, index)
         {
             m_ActionMapProperty = actionMapProperty;
             actionName = elementProperty.FindPropertyRelative("m_Name").stringValue;
+            m_ExpectedControlLayout = elementProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
             if (m_ActionMapProperty != null)
             {
                 bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
@@ -233,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(displayName);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.greenRect; }
         }
@@ -299,7 +295,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return (actionMapName + " " + action + " " + name + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.blueRect; }
         }
@@ -307,11 +303,6 @@ namespace UnityEngine.Experimental.Input.Editor
         public void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameComposite(elementProperty, newName);
-        }
-
-        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
-        {
-            return new CompositeGroupPropertiesView(elementProperty, apply, state);
         }
     }
 
@@ -321,10 +312,11 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(actionMapName, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("m_Path").stringValue;
-            displayName = elementProperty.FindPropertyRelative("m_Name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
+            var name = elementProperty.FindPropertyRelative("m_Name").stringValue;
+            displayName = name + ": " + InputControlPath.ToHumanReadableString(path);
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.pinkRect; }
         }
@@ -333,6 +325,26 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return false; }
         }
+
+        public override string expectedControlLayout
+        {
+            get
+            {
+                if (m_ExpectedControlLayout == null)
+                {
+                    var partName = elementProperty.FindPropertyRelative("m_Name").stringValue;
+                    var compositeName = ((CompositeGroupTreeItem)parent).elementProperty.FindPropertyRelative("m_Name")
+                        .stringValue;
+
+                    var layoutName = InputBindingComposite.GetExpectedControlLayoutName(compositeName, partName);
+                    m_ExpectedControlLayout = layoutName ?? "";
+                }
+
+                return m_ExpectedControlLayout;
+            }
+        }
+
+        private string m_ExpectedControlLayout;
     }
 
     internal class BindingTreeItem : ActionTreeViewItem
@@ -372,30 +384,29 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return true; }
         }
 
+        public override string expectedControlLayout
+        {
+            get
+            {
+                // Find the action we're under and return its expected control layout.
+                for (var item = parent; item != null; item = item.parent)
+                {
+                    var actionItem = item as ActionTreeItem;
+                    if (actionItem != null)
+                        return actionItem.expectedControlLayout;
+                }
+                return string.Empty;
+            }
+        }
+
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)
         {
             return (actionMapName + " " + action + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle rectStyle
+        protected override GUIStyle colorTagStyle
         {
             get { return Styles.blueRect; }
-        }
-
-        public override void DrawCustomRect(Rect rowRect)
-        {
-            var boxRect = rowRect;
-            boxRect.width = (depth + 1) * 6;
-            boxRect.y += 1;
-            boxRect.height -= 2;
-            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-            boxRect.width = 6 * depth;
-            Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-        }
-
-        public override bool hasProperties
-        {
-            get { return true; }
         }
 
         public override string SerializeToString()

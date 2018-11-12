@@ -3,6 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine.Experimental.Input.Layouts;
+
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -120,6 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
             actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
+            actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue = string.Empty;
 
             return actionProperty;
         }
@@ -322,8 +328,8 @@ namespace UnityEngine.Experimental.Input.Editor
             var fields = type.GetFields(BindingFlags.GetField | BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in fields)
             {
-                // Skip fields that aren't InputControls.
-                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
+                // Skip fields that aren't marked with [InputControl] attribute.
+                if (field.GetCustomAttribute<InputControlAttribute>(false) == null)
                     continue;
 
                 newProperty = AddBinding(actionProperty, actionMapProperty);

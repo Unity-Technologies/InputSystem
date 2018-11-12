@@ -16,7 +16,7 @@ using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
-public class HIDTests : InputTestFixture
+internal class HIDTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -38,7 +38,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -130,10 +130,10 @@ public class HIDTests : InputTestFixture
         const int kNumElements = 4 + 1 + 14 + 54 + 31;
 
         // The HID report descriptor is fetched from the device via an IOCTL.
-        var deviceId = testRuntime.AllocateDeviceId();
+        var deviceId = runtime.AllocateDeviceId();
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(deviceId,
+            runtime.SetDeviceCommandCallback(deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
@@ -153,7 +153,7 @@ public class HIDTests : InputTestFixture
                 });
         }
         // Report device.
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -220,10 +220,10 @@ public class HIDTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanCreateGenericHID_FromDeviceWithParsedReportDescriptor()
     {
-        var deviceId = testRuntime.AllocateDeviceId();
+        var deviceId = runtime.AllocateDeviceId();
         unsafe
         {
-            testRuntime.SetDeviceCommandCallback(deviceId,
+            runtime.SetDeviceCommandCallback(deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == HID.QueryHIDParsedReportDescriptorDeviceCommandType)
@@ -258,7 +258,7 @@ public class HIDTests : InputTestFixture
                     return -1;
                 });
         }
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -306,7 +306,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
             interfaceName = HID.kHIDInterface,
             manufacturer = "TestVendor",
@@ -335,7 +335,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -405,7 +405,7 @@ public class HIDTests : InputTestFixture
                 .AddElement(HID.GenericDesktop.Vy, 16).WithLogicalMinMax(-10000, 10000)
                 .Finish();
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -495,7 +495,7 @@ public class HIDTests : InputTestFixture
                     .StartReport(HID.HIDReportType.Input)
                     .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535).Finish();
 
-            testRuntime.ReportNewInputDevice(
+            runtime.ReportNewInputDevice(
                 new InputDeviceDescription
                 {
                     interfaceName = HID.kHIDInterface,
@@ -531,7 +531,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -560,7 +560,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -607,7 +607,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -749,7 +749,7 @@ public class HIDTests : InputTestFixture
             }
         };
 
-        testRuntime.ReportNewInputDevice(
+        runtime.ReportNewInputDevice(
             new InputDeviceDescription
             {
                 interfaceName = HID.kHIDInterface,
@@ -795,6 +795,17 @@ public class HIDTests : InputTestFixture
     [Category("Devices")]
     [Ignore("TODO")]
     public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()
+    {
+        Assert.Fail();
+    }
+
+    // It should be possible to reuse parts of the HID layout builder for building custom HID-based layouts
+    // without having to individually hardwire each element. Or at least it should be possible to leverage
+    // the descriptor processing part of the HID layout builder to help building layouts.
+    [Test]
+    [Category("Layouts")]
+    [Ignore("TODO")]
+    public void TODO_Layouts_CanBuildCustomLayoutsBasedOnTheHIDLayoutBuilder()
     {
         Assert.Fail();
     }

@@ -9,6 +9,8 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add warning if input backends are not enabled
+
 ////TODO: show input users
 
 ////TODO: append " (Disabled) to disabled devices and grey them out
@@ -157,9 +159,21 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            // If the new backends aren't enabled, show a warning in the debugger.
+            if (!EditorPlayerSettings.newSystemBackendsEnabled)
+            {
+                EditorGUILayout.HelpBox(
+                    "Platform backends for the new input system are not enabled. " +
+                    "No devices and input from hardware will come through in the new input system APIs.\n\n" +
+                    "To enable the backends, set 'Active Input Handling' in the player settings to either 'Input System (Preview)' " +
+                    "or 'Both' and restart the editor.", MessageType.Warning);
+            }
+
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
+            {
                 Initialize();
+            }
             else if (m_NeedReload)
             {
                 m_TreeView.Reload();
@@ -378,7 +392,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            ////TODO: split remote and local layouts
             private void AddControlLayouts(TreeViewItem parent, ref int id)
             {
                 // Split root into three different groups:
@@ -387,8 +400,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 // 3) Device layouts that match specific products
 
                 var controls = AddChild(parent, "Controls", ref id);
-                var devices = AddChild(parent, "Devices", ref id);
-                var products = AddChild(parent, "Products", ref id);
+                var devices = AddChild(parent, "Abstract Devices", ref id);
+                var products = AddChild(parent, "Specific Devices", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
                     AddControlLayoutItem(layout, controls, ref id);
@@ -495,11 +508,30 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
                 if (!control.defaultState.isEmpty)
                     AddChild(item, string.Format("Default State: {0}", control.defaultState.ToString()), ref id);
+                if (!control.minValue.isEmpty)
+                    AddChild(item, string.Format("Min Value: {0}", control.minValue.ToString()), ref id);
+                if (!control.maxValue.isEmpty)
+                    AddChild(item, string.Format("Max Value: {0}", control.maxValue.ToString()), ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages.Select(x => x.ToString()).ToArray()), ref id);
                 if (control.aliases.Count > 0)
                     AddChild(item, "Aliases: " + string.Join(", ", control.aliases.Select(x => x.ToString()).ToArray()), ref id);
+
+                if (control.isNoisy || control.isSynthetic)
+                {
+                    var flags = "Flags: ";
+                    if (control.isNoisy)
+                        flags += "Noisy";
+                    if (control.isSynthetic)
+                    {
+                        if (control.isNoisy)
+                            flags += ", Synthetic";
+                        else
+                            flags += "Synthetic";
+                    }
+                    AddChild(item, flags, ref id);
+                }
 
                 if (control.parameters.Count > 0)
                 {

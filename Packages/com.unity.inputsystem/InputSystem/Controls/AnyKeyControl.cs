@@ -33,8 +33,7 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public override float ReadUnprocessedValueFrom(IntPtr statePtr)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            return CheckStateIsAtDefault(valuePtr) ? 0.0f : 1.0f;
+            return CheckStateIsAtDefault(statePtr) ? 0.0f : 1.0f;
         }
     }
 }

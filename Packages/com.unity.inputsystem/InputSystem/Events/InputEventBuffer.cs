@@ -59,7 +59,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 if (!m_Buffer.IsCreated || m_BufferEnd == kBufferSizeUnknown)
                     return 0;
 
-                return m_BufferEnd - m_Buffer.Length;
+                return m_Buffer.Length - m_BufferEnd;
             }
             set { throw new NotImplementedException(); }
         }
