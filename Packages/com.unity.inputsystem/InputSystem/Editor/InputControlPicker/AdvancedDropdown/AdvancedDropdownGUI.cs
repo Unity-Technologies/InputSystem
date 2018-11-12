@@ -12,14 +12,43 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private static class Styles
         {
-            public static GUIStyle itemStyle = "DD ItemStyle";
-            public static GUIStyle header = "DD HeaderStyle";
-            public static GUIStyle checkMark = "DD ItemCheckmark";
-            public static GUIStyle lineSeparator = "DefaultLineSeparator";
-            public static GUIStyle rightArrow = "ArrowNavigationRight";
-            public static GUIStyle leftArrow = "ArrowNavigationLeft";
-
             public static GUIStyle toolbarSearchField = "ToolbarSeachTextField";
+            
+            public static GUIStyle itemStyle = new GUIStyle("PR Label");
+            public static GUIStyle header = new GUIStyle("In BigTitle");
+            public static GUIStyle headerArrow = new GUIStyle();
+            public static GUIStyle checkMark = new GUIStyle("PR Label");
+            public static GUIStyle lineSeparator = new GUIStyle();
+            public static GUIContent arrowRightContent = new GUIContent("▸");
+            public static GUIContent arrowLeftContent = new GUIContent("◂");
+
+            static Styles()
+            {
+                itemStyle.alignment = TextAnchor.MiddleLeft;
+                itemStyle.padding = new RectOffset(0, 0, 0, 0);
+                itemStyle.margin = new RectOffset(0, 0, 0, 0);
+                itemStyle.fixedHeight += 1;
+
+                header.font = EditorStyles.boldLabel.font;
+                header.margin = new RectOffset(0, 0, 0, 0);
+                header.border = new RectOffset(0, 0, 3, 3);
+                header.padding = new RectOffset(6, 6, 6, 6);
+                header.contentOffset = Vector2.zero;
+
+                headerArrow.alignment = TextAnchor.MiddleCenter;
+                headerArrow.fontSize = 20;
+                headerArrow.normal.textColor = Color.gray;
+
+                lineSeparator.fixedHeight = 1;
+                lineSeparator.margin.bottom = 2;
+                lineSeparator.margin.top = 2;
+
+                checkMark.alignment = TextAnchor.MiddleCenter;
+                checkMark.padding = new RectOffset(0, 0, 0, 0);
+                checkMark.margin = new RectOffset(0, 0, 0, 0);
+                checkMark.fixedHeight += 1;
+                
+            }
         }
 
         //This should ideally match line height
@@ -77,13 +106,9 @@ namespace UnityEngine.Experimental.Input.Editor
             content.image = imageTemp;
             if (drawArrow)
             {
-                var yOffset = (lineStyle.fixedHeight - Styles.rightArrow.fixedHeight) / 2;
-                Rect arrowRect = new Rect(
-                    rect.xMax - Styles.rightArrow.fixedWidth - Styles.rightArrow.margin.right,
-                    rect.y + yOffset,
-                    Styles.rightArrow.fixedWidth,
-                    Styles.rightArrow.fixedHeight);
-                Styles.rightArrow.Draw(arrowRect, false, false, false, false);
+                var size = lineStyle.lineHeight;
+                Rect arrowRect = new Rect(rect.x + rect.width - size, rect.y, size, size);
+                lineStyle.Draw(arrowRect, Styles.arrowRightContent, false, false, false, false);
             }
             EditorGUI.EndDisabledGroup();
         }
@@ -111,14 +136,10 @@ namespace UnityEngine.Experimental.Input.Editor
             // Back button
             if (hasParent)
             {
-                var yOffset = (m_HeaderRect.height - Styles.leftArrow.fixedWidth) / 2;
-                var arrowRect = new Rect(
-                    m_HeaderRect.x + Styles.leftArrow.margin.left,
-                    m_HeaderRect.y + yOffset,
-                    Styles.leftArrow.fixedWidth,
-                    Styles.leftArrow.fixedHeight);
+                var arrowWidth = 13;
+                var arrowRect = new Rect(m_HeaderRect.x, m_HeaderRect.y, arrowWidth, m_HeaderRect.height);
                 if (Event.current.type == EventType.Repaint)
-                    Styles.leftArrow.Draw(arrowRect, false, false, false, false);
+                    Styles.headerArrow.Draw(arrowRect, Styles.arrowLeftContent, false, false, false, false);
                 if (Event.current.type == EventType.MouseDown && m_HeaderRect.Contains(Event.current.mousePosition))
                 {
                     backButtonPressed();
@@ -175,7 +196,7 @@ namespace UnityEngine.Experimental.Input.Editor
             float maxWidth = 0;
             float maxHeight = 0;
             bool includeArrow = false;
-            float arrowWidth = Styles.rightArrow.fixedWidth;
+            float arrowWidth = 0;
 
             foreach (var child in dataSource.mainTree.children)
             {
@@ -195,6 +216,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 else
                 {
                     maxHeight += lineStyle.CalcHeight(content, maxWidth);
+                }
+                if (arrowWidth == 0)
+                {
+                    lineStyle.CalcMinMaxWidth(Styles.arrowRightContent, out arrowWidth, out arrowWidth);
                 }
             }
             if (includeArrow)
