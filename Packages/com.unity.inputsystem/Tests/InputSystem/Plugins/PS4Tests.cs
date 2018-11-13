@@ -1,18 +1,15 @@
+#if UNITY_EDITOR || UNITY_PS4
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.TestTools.Utils;
-
+using UnityEngine.Experimental.Input.Plugins.PS4;
+using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
 
 public class PS4Tests : InputTestFixture
 {
-#if UNITY_EDITOR || UNITY_PS4
-
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockOnPS4()
@@ -303,6 +300,5 @@ public class PS4Tests : InputTestFixture
         Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.456f * 255)));
         Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.789f * 255)));
     }
-
-#endif
 }
+#endif // UNITY_EDITOR || UNITY_PS4

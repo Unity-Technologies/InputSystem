@@ -4,13 +4,14 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
+using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
 
 ////TODO: player ID
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -238,7 +239,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock
+namespace UnityEngine.Experimental.Input.Plugins.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]

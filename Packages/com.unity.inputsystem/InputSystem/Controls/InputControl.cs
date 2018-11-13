@@ -118,7 +118,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// For nested controls, the short display name will include the short display names of all parent controls,
         /// i.e. the display name will fully identify the control on the device. For example, the display
-        /// name for the left D-Pad button on a gamepad is "D-Pad Left" and not just "Left". Note that if a parent
+        /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
         /// control has no short name, its long name will be used instead.
         /// </remarks>
         /// <seealso cref="displayName"/>
@@ -301,7 +301,8 @@ namespace UnityEngine.Experimental.Input
         /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Cancelled"/>
         /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
         ///
-        /// Controls that have no meaningful magnitude will return -1 when calling this method.
+        /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
+        /// return value should be considered as an invalid value.
         /// </remarks>
         public float EvaluateMagnitude()
         {
