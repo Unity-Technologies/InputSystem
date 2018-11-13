@@ -12,11 +12,14 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         SerializedProperty m_PathProperty;
         Action<SerializedProperty> m_OnPickCallback;
+        string[] m_DeviceFilter;
 
         public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
             : base(state)
         {
+            m_Gui = new InputControlPickerGUI();
             minimumSize = new Vector2(350, 250);
+            maximumSize = new Vector2(0, 300);
             m_PathProperty = pathProperty;
             m_OnPickCallback = onPickCallback;
         }
@@ -31,8 +34,38 @@ namespace UnityEngine.Experimental.Input.Editor
             root.AddChild(devices);
             var products = BuildTreeForSpecificDevices();
             root.AddChild(products);
+            
+            if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
+            {
+                var newRoot = new AdvancedDropdownItem("");
+                FindDevice(newRoot, root, m_DeviceFilter);
+                if (newRoot.children.Count() == 1)
+                {
+                    return newRoot.children.ElementAt(0);
+                }
+                return newRoot;
+            }
 
             return root;
+        }
+        
+        void FindDevice(AdvancedDropdownItem newRoot, AdvancedDropdownItem root, string[] deviceFilter)
+        {
+            foreach (var child in root.children)
+            {
+                var deviceItem = child as DeviceTreeViewItem;
+                if (child is DeviceTreeViewItem)
+                {
+                    if (deviceFilter.Contains(deviceItem.controlPathWithDevice))
+                    {
+                        newRoot.AddChild(deviceItem);
+                    }
+                }
+                if (child.children.Any())
+                {
+                    FindDevice(newRoot, child, deviceFilter);
+                }
+            }
         }
 
         protected override void ItemSelected(AdvancedDropdownItem item)
@@ -97,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (layout.controls.Count == 0)
                 return;
 
-            var deviceItem = new AdvancedDropdownItem(layout.name);
+            var deviceItem = new DeviceTreeViewItem(layout);
 
             AddControlTreeItemsRecursive(layout, deviceItem, "", layout.name, null);
 
@@ -134,6 +167,11 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddControlTreeItemsRecursive(childLayout, parent, child.controlPath, deviceControlId, commonUsage);
                 }
             }
+        }
+
+        public void SetDeviceFilter(string[] deviceFilter)
+        {
+            m_DeviceFilter = deviceFilter;
         }
     }
 }

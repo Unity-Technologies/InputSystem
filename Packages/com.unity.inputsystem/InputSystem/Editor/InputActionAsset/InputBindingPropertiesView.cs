@@ -231,8 +231,19 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_InputControlPickerDropdown == null)
             {
                 m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState, pathProperty, onPickCallback);
-                m_InputControlPickerDropdown.m_Gui = new InputControlPickerGUI();
             }           
+            
+            if (m_Toolbar != null)
+            {
+                if (m_Toolbar.selectedDevice != null)
+                {
+                    m_InputControlPickerDropdown.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
+                }
+                else
+                {
+                    m_InputControlPickerDropdown.SetDeviceFilter(m_Toolbar.allDevices);
+                }
+            }
             m_InputControlPickerDropdown.Show(rect);
         }
 
