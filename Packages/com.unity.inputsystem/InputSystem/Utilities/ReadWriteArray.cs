@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     // Variation of ReadOnlyArray that has the slicing ability but
     // does provide write access. Used only internally.
-    internal struct ReadWriteArray<TValue> : IReadOnlyList<TValue>
+    public struct ReadWriteArray<TValue> : IReadOnlyList<TValue>
     {
         internal TValue[] m_Array;
         internal int m_StartIndex;

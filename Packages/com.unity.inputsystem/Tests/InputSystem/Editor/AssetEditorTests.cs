@@ -27,7 +27,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void CanFilteringByName()
+    public void FilteringByName()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -40,7 +40,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void CanFilteringByGroup()
+    public void FilteringByGroup()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -54,7 +54,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void CanFilterByGroupAndDevice()
+    public void FilteringByGroupAndDevice()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -71,7 +71,7 @@ public class AssetEditorTests
     }
 
     [Test]
-    public void CanFilterByGroupDeviceAndName()
+    public void FilteringByGroupDeviceAndName()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -90,7 +90,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator WhenFilteringWithGroupFilter_NewBindingIsVisible()
+    public IEnumerator NewBindingWithGroupFilter()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -107,7 +107,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator WhenBindingIsAdded_ItGetsSelected()
+    public IEnumerator NewBindingIsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -120,7 +120,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator WhenCompositeIsAdded_ItGetsSelected()
+    public IEnumerator NewCompositeIsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -138,7 +138,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator WhenActionMapIsAdded_ItGetsSelected()
+    public IEnumerator NewActionMapIsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 
@@ -151,7 +151,7 @@ public class AssetEditorTests
     }
 
     [UnityTest]
-    public IEnumerator WhenActionIsAdded_ItGetsSelected()
+    public IEnumerator NewActionIsSelected()
     {
         var assetWindow = GetTestAssetWindow();
 

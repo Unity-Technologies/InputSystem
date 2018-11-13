@@ -156,25 +156,10 @@ namespace UnityEngine.Experimental.Input
     {
         public Vector3Control acceleration { get; private set; }
 
-        public static Accelerometer current { get; private set; }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             acceleration = builder.GetControl<Vector3Control>("acceleration");
             base.FinishSetup(builder);
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
         }
     }
 
@@ -182,21 +167,6 @@ namespace UnityEngine.Experimental.Input
     public class Gyroscope : Sensor
     {
         public Vector3Control angularVelocity { get; private set; }
-
-        public static Gyroscope current { get; private set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -209,21 +179,6 @@ namespace UnityEngine.Experimental.Input
     public class Gravity : Sensor
     {
         public Vector3Control gravity { get; private set; }
-
-        public static Gravity current { get; private set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -239,21 +194,6 @@ namespace UnityEngine.Experimental.Input
     {
         public QuaternionControl attitude { get; private set; }
 
-        public static Attitude current { get; private set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             attitude = builder.GetControl<QuaternionControl>("attitude");
@@ -266,30 +206,10 @@ namespace UnityEngine.Experimental.Input
     {
         public Vector3Control acceleration { get; private set; }
 
-        public static LinearAcceleration current { get; private set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             acceleration = builder.GetControl<Vector3Control>("acceleration");
             base.FinishSetup(builder);
         }
-    }
-
-
-    public class GPS : Sensor
-    {
     }
 }

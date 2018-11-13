@@ -1,5 +1,11 @@
 using System;
+using System.Reflection;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 ////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
 ////        not just be about composing multiple bindings?
@@ -53,5 +59,49 @@ namespace UnityEngine.Experimental.Input
     internal static class InputBindingComposite
     {
         public static TypeTable s_Composites;
+
+        /// <summary>
+        /// Return the name of the control layout that is expected for the given part (e.g. "Up") on the given
+        /// composite (e.g. "Dpad").
+        /// </summary>
+        /// <param name="composite"></param>
+        /// <param name="part"></param>
+        /// <returns>The layout name (such as "Button") expected for the given part on the composite or null if
+        /// there is no composite with the given name or no part on the composite with the given name.</returns>
+        /// <remarks>
+        /// Expected control layouts can be set on composite parts by setting the <see cref="InputControlAttribute.layout"/>
+        /// property on them.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputBindingComposite.GetExpectedControlLayoutName("Dpad", "Up") // Returns "Button"
+        ///
+        /// // This is how Dpad communicates that:
+        /// [InputControl(layout = "Button")] public int up;
+        /// </code>
+        /// </example>
+        public static string GetExpectedControlLayoutName(string composite, string part)
+        {
+            if (string.IsNullOrEmpty(composite))
+                throw new ArgumentNullException("composite");
+            if (string.IsNullOrEmpty(part))
+                throw new ArgumentNullException("part");
+
+            var compositeType = s_Composites.LookupTypeRegistration(composite);
+            if (compositeType == null)
+                return null;
+
+            ////TODO: allow it being properties instead of just fields
+            var field = compositeType.GetField(part,
+                BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
+            if (field == null)
+                return null;
+
+            var attribute = field.GetCustomAttribute<InputControlAttribute>(false);
+            if (attribute == null)
+                return null;
+
+            return attribute.layout;
+        }
     }
 }

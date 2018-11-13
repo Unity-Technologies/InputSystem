@@ -73,5 +73,35 @@ namespace UnityEngine.Experimental.Input.Controls
         {
             stateBlock.WriteFloat(statePtr, value);
         }
+
+        public override bool HasValueChangeIn(IntPtr statePtr)
+        {
+            var currentValue = ReadValue();
+            var valueInState = ReadValueFrom(statePtr);
+            return !Mathf.Approximately(currentValue, valueInState);
+        }
+
+        public override float EvaluateMagnitude(IntPtr statePtr)
+        {
+            if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
+                return -1;
+
+            var value = ReadValueFrom(statePtr);
+            var min = m_MinValue.ToFloat();
+            var max = m_MaxValue.ToFloat();
+
+            value = Mathf.Clamp(value, min, max);
+
+            // If part of our range is in negative space, evaluate magnitude as two
+            // separate subspaces.
+            if (min < 0)
+            {
+                if (value < 0)
+                    return NormalizeProcessor.Normalize(Mathf.Abs(value), 0, Mathf.Abs(min), 0);
+                return NormalizeProcessor.Normalize(value, 0, max, 0);
+            }
+
+            return NormalizeProcessor.Normalize(value, min, max, 0);
+        }
     }
 }
