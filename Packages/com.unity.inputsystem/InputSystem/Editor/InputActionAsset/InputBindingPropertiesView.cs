@@ -113,10 +113,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
             if (showPathAndControlSchemeSection)
-            {
                 DrawPathPicker();
-                DrawUseInControlSchemes();
-            }
             EditorGUILayout.Space();
             DrawInteractionsPicker();
             EditorGUILayout.Space();
@@ -153,10 +150,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
+            EditorGUI.indentLevel++;
             if (m_GeneralFoldout)
             {
-                EditorGUI.indentLevel++;
-
                 var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
                 DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
                     s =>
@@ -165,8 +161,9 @@ namespace UnityEngine.Experimental.Input.Editor
                         OnBindingModified(s);
                     });
 
-                EditorGUI.indentLevel--;
+                DrawUseInControlSchemes();
             }
+            EditorGUI.indentLevel--;
         }
 
         protected virtual void DrawUseInControlSchemes()
@@ -175,7 +172,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUI.indentLevel++;
             EditorGUILayout.LabelField(s_UseInSchemesGui, EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical();
             foreach (var scheme in m_ControlSchemes)
@@ -196,7 +192,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
             EditorGUILayout.EndVertical();
-            EditorGUI.indentLevel--;
         }
 
         ////TODO: interactive picker; if more than one control makes it through the filters, present list of

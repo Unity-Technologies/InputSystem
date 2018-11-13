@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 29fa9622d98e245fa9f983b5e1897f37
+ScriptedImporter:
+  fileIDToRecycleName:
+    11400000: <root>
+    11400002: Map1/Action with Mouse and Keyboard Bindings
+    11400004: Map1/Action with mixed bindings
+    11400012: Map1/Action with gampad bindings
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: e2fdc6edf8744b38b702a2a5ee3541b2, type: 3}
+  generateWrapperCode: 0
+  wrapperCodePath: 
+  wrapperClassName: 
+  wrapperCodeNamespace: 
+  generateActionEvents: 0
+  actionGuids: []
+  actionMapGuids: []
