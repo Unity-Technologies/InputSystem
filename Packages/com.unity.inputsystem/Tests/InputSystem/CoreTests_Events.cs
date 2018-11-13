@@ -15,6 +15,7 @@ using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 #endif
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     // This is one of the most central tests. If this one breaks, it most often
@@ -639,7 +640,6 @@ partial class CoreTests
     {
         [InputControl(name = "button1", layout = "Button")]
         public int buttons;
-
         [InputControl(layout = "Axis")] public float axis2;
 
         public FourCC GetFormat()
@@ -751,6 +751,39 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
         Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanDetectWhetherControlIsPartOfEvent()
+    {
+        // We use a mouse here as it has several controls that are "parked" outside MouseState.
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            // For every control that isn't contained in a state event, GetStatePtrFromStateEvent() should
+            // return IntPtr.Zero.
+            if (eventPtr.IsA<StateEvent>())
+            {
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+            }
+            else if (eventPtr.IsA<DeltaStateEvent>())
+            {
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.leftButton.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+            }
+            else
+            {
+                Assert.Fail("Unexpected type of event");
+            }
+        };
+
+        InputSystem.QueueStateEvent(mouse, new MouseState());
+        InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(0.5f, 0.5f));
+        InputSystem.Update();
     }
 
     [Test]

@@ -22,11 +22,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             set
             {
                 s_API = value;
-                if (value != null && !s_OnUpdateHookedIn)
-                {
-                    InputSystem.onBeforeUpdate += type => UpdateControllers();
-                    s_OnUpdateHookedIn = true;
-                }
+                InstallHooks(s_API != null);
             }
         }
 
@@ -57,8 +53,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
         internal static SteamHandle<SteamController>[] s_ConnectedControllers;
         internal static SteamController[] s_InputDevices;
         internal static int s_InputDeviceCount;
-        internal static bool s_OnUpdateHookedIn;
-        internal static bool s_OnActionChangeHookedIn;
+        internal static bool s_HooksInstalled;
         internal static ISteamControllerAPI s_API;
 
         private const int STEAM_CONTROLLER_MAX_COUNT = 16;
@@ -71,15 +66,69 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             // We use this as a base layout.
             InputSystem.RegisterLayout<SteamController>();
 
-            if (api != null && !s_OnUpdateHookedIn)
+            if (api != null)
+                InstallHooks(true);
+        }
+
+        private static void InstallHooks(bool state)
+        {
+            Debug.Assert(api != null);
+            if (state && !s_HooksInstalled)
             {
-                InputSystem.onBeforeUpdate +=
-                    type => UpdateControllers();
-                s_OnUpdateHookedIn = true;
+                InputSystem.onBeforeUpdate += OnUpdate;
+                InputSystem.onActionChange += OnActionChange;
+            }
+            else if (!state && s_HooksInstalled)
+            {
+                InputSystem.onBeforeUpdate -= OnUpdate;
+                InputSystem.onActionChange -= OnActionChange;
             }
         }
 
-        private static void UpdateControllers()
+        private static void OnActionChange(object mapOrAction, InputActionChange change)
+        {
+            // We only care about action map activations. Steam has no support for enabling or disabling
+            // individual actions and also has no support disabling sets once enabled (can only switch
+            // to different set).
+            if (change != InputActionChange.ActionMapEnabled)
+                return;
+
+            // See if the map has any bindings to SteamControllers.
+            // NOTE: We only support a single SteamController on any action map here. The first SteamController
+            //       we find is the one we're doing all the work on.
+            var actionMap = (InputActionMap)mapOrAction;
+            foreach (var action in actionMap.actions)
+            {
+                foreach (var control in action.controls)
+                {
+                    var steamController = control.device as SteamController;
+                    if (steamController == null)
+                        continue;
+
+                    // Yes, there's active bindings to a SteamController on the map. Look through the Steam action
+                    // sets on the controller for a name match on the action map. If we have one, sync the enable/
+                    // disable status of the set.
+                    var actionMapName = actionMap.name;
+                    foreach (var set in steamController.steamActionSets)
+                    {
+                        if (string.Compare(set.name, actionMapName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                            continue;
+
+                        // Nothing to do if the Steam controller has auto-syncing disabled.
+                        if (!steamController.autoActivateSets)
+                            return;
+
+                        // Sync status.
+                        steamController.ActivateSteamActionSet(set.handle);
+
+                        // Done.
+                        return;
+                    }
+                }
+            }
+        }
+
+        private static void OnUpdate(InputUpdateType updateType)
         {
             if (api == null)
                 return;
@@ -101,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                     SteamController existingDevice = null;
                     for (var n = 0; n < s_InputDeviceCount; ++n)
                     {
-                        if (s_InputDevices[n].handle == handle)
+                        if (s_InputDevices[n].steamControllerHandle == handle)
                         {
                             existingDevice = s_InputDevices[n];
                             break;
@@ -113,6 +162,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                         continue;
                 }
 
+                ////FIXME: this should not create garbage
                 // No, so create a new device.
                 var controllerLayouts = InputSystem.ListLayoutsBasedOn("SteamController");
                 foreach (var layout in controllerLayouts)
@@ -136,10 +186,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                     }
 
                     // Resolve the controller's actions.
-                    steamDevice.InvokeResolveActions();
+                    steamDevice.InvokeResolveSteamActions();
 
                     // Assign it the Steam controller handle.
-                    steamDevice.handle = handle;
+                    steamDevice.steamControllerHandle = handle;
 
                     ArrayHelpers.AppendWithCapacity(ref s_InputDevices, ref s_InputDeviceCount, steamDevice);
                 }
@@ -149,7 +199,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             for (var i = 0; i < s_InputDeviceCount; ++i)
             {
                 var device = s_InputDevices[i];
-                var handle = device.handle;
+                var handle = device.steamControllerHandle;
 
                 // Check if the device still exists.
                 var stillExists = false;

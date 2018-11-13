@@ -27,7 +27,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
 
 ////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
-
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
@@ -35,8 +35,10 @@ namespace UnityEngine.Experimental.Input
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
-    public delegate string DeviceFindControlLayoutCallback(int deviceId, ref InputDeviceDescription description, string matchedLayout,
+    public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
+
+    public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
 
     /// <summary>
     /// Hub of the input system.
@@ -124,9 +126,14 @@ namespace UnityEngine.Experimental.Input
             add { m_DeviceChangeListeners.Append(value); }
             remove { m_DeviceChangeListeners.Remove(value); }
         }
+        public event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { m_DeviceCommandCallbacks.Append(value); }
+            remove { m_DeviceCommandCallbacks.Remove(value); }
+        }
 
         ////REVIEW: would be great to have a way to sort out precedence between two callbacks
-        public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
+        public event InputDeviceFindControlLayoutDelegate onFindControlLayoutForDevice
         {
             add { m_DeviceFindLayoutCallbacks.Append(value); }
             remove { m_DeviceFindLayoutCallbacks.Remove(value); }
@@ -382,7 +389,7 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             // Remove and re-add the matching devices.
-            var setup = new InputDeviceBuilder(m_Layouts);
+            var setup = new InputDeviceBuilder();
             for (var i = 0; i < devicesUsingLayout.Count; ++i)
             {
                 ////TODO: preserve state where possible
@@ -460,7 +467,7 @@ namespace UnityEngine.Experimental.Input
                     device.m_Description = deviceDescription;
 
                     if (builder == null)
-                        builder = new InputDeviceBuilder(m_Layouts);
+                        builder = new InputDeviceBuilder();
 
                     RecreateDevice(device, layoutName, builder);
 
@@ -559,6 +566,22 @@ namespace UnityEngine.Experimental.Input
             // Let listeners know.
             for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
+        }
+
+        public InputControlLayout TryLoadControlLayout(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+            if (!typeof(InputControl).IsAssignableFrom(type))
+                throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+
+            // Find the layout name that the given type was registered with.
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
+                throw new ArgumentException(
+                    string.Format("Type '{0}' has not been registered as a control layout", type.Name), "type");
+
+            return m_Layouts.TryLoadLayout(layoutName);
         }
 
         public InputControlLayout TryLoadControlLayout(InternedString name)
@@ -723,9 +746,6 @@ namespace UnityEngine.Experimental.Input
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
-
-            // Usage may affect current device so update.
-            device.MakeCurrent();
         }
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
@@ -763,7 +783,7 @@ namespace UnityEngine.Experimental.Input
 
             var internedLayoutName = new InternedString(layout);
 
-            var setup = new InputDeviceBuilder(m_Layouts);
+            var setup = new InputDeviceBuilder();
             setup.Setup(internedLayoutName, variants);
             var device = setup.Finish();
 
@@ -781,7 +801,7 @@ namespace UnityEngine.Experimental.Input
             InputDevice.DeviceFlags deviceFlags = 0,
             InternedString variants = default(InternedString))
         {
-            var setup = new InputDeviceBuilder(m_Layouts);
+            var setup = new InputDeviceBuilder();
             setup.Setup(new InternedString(layout), deviceDescription: deviceDescription, variants: variants);
             var device = setup.Finish();
 
@@ -864,9 +884,6 @@ namespace UnityEngine.Experimental.Input
 
             // Notify device.
             device.NotifyAdded();
-
-            // Make the device current.
-            device.MakeCurrent();
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -1262,10 +1279,10 @@ namespace UnityEngine.Experimental.Input
             m_PollingFrequency = 60;
 
             // Register layouts.
-            RegisterControlLayout("Button", typeof(ButtonControl)); // Controls.
+            RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
+            RegisterControlLayout("Button", typeof(ButtonControl));
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
             RegisterControlLayout("Key", typeof(KeyControl));
-            RegisterControlLayout("Axis", typeof(AxisControl));
             RegisterControlLayout("Analog", typeof(AxisControl));
             RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Integer", typeof(IntegerControl));
@@ -1299,14 +1316,15 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
-            processors.AddTypeRegistration("Deadzone", typeof(DeadzoneProcessor));
+            processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
+            processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
             processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
@@ -1411,7 +1429,8 @@ namespace UnityEngine.Experimental.Input
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
+        private InlinedArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
+        internal InlinedArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
         private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         private InlinedArray<EventListener> m_EventListeners;
         private InlinedArray<UpdateListener> m_BeforeUpdateListeners;
@@ -1950,7 +1969,6 @@ namespace UnityEngine.Experimental.Input
             while (remainingEventCount > 0)
             {
                 InputDevice device = null;
-                var doNotMakeDeviceCurrent = false;
 
                 // Bump firstEvent up to the next unhandled event (in before-render updates
                 // the event needs to be *both* unhandled *and* for a device with before
@@ -2019,7 +2037,6 @@ namespace UnityEngine.Experimental.Input
                             if (m_Diagnostics != null)
                                 m_Diagnostics.OnEventForDisabledDevice(new InputEventPtr(currentEventPtr), device);
                             #endif
-                            doNotMakeDeviceCurrent = true;
                             break;
                         }
 
@@ -2031,7 +2048,6 @@ namespace UnityEngine.Experimental.Input
                             if (m_Diagnostics != null)
                                 m_Diagnostics.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
                             #endif
-                            doNotMakeDeviceCurrent = true;
                             break;
                         }
 
@@ -2100,7 +2116,6 @@ namespace UnityEngine.Experimental.Input
                                 if (m_Diagnostics != null)
                                     m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
                                 #endif
-                                doNotMakeDeviceCurrent = true;
                                 break;
                             }
                         }
@@ -2134,15 +2149,6 @@ namespace UnityEngine.Experimental.Input
                                 sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
-
-                        // Use a filter to see if any significant changes are occuring on the device.
-                        // Significant changes are non-noisy control changes, and changes that create a value
-                        // change after processors are applied.  These are used to detect actual user interaction
-                        // with a device instead of simply sensor noise.
-                        var eventPtr = new InputEventPtr(currentEventPtr);
-                        var filter = device.userInteractionFilter;
-                        var hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
-                        doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
@@ -2226,7 +2232,7 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTimeInternal = hasSignificantControlChanges ? currentEventTimeInternal : device.m_LastUpdateTimeInternal;
+                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
 
                         // Notify listeners.
                         for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2278,7 +2284,6 @@ namespace UnityEngine.Experimental.Input
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device);
-                        doNotMakeDeviceCurrent = true;
 
                         // If it's a native device with a description, put it on the list of disconnected
                         // devices.
@@ -2305,14 +2310,6 @@ namespace UnityEngine.Experimental.Input
                     currentEventPtr = InputEvent.GetNextInMemory(currentEventPtr);
                     --remainingEventCount;
                 }
-
-                ////TODO: move this into the state event case; don't make device current for other types of events
-                ////TODO: we need to filter out noisy devices; PS4 controller, for example, just spams constant reports and thus will always make itself current
-                ////      (check for actual change and only make current if state changed?)
-                // Device received event so make it current except if we got a
-                // device removal event.
-                if (!doNotMakeDeviceCurrent)
-                    device.MakeCurrent();
             }
 
             m_Metrics.totalEventProcessingTime = Time.realtimeSinceStartup - processingStartTime;
@@ -2828,7 +2825,7 @@ namespace UnityEngine.Experimental.Input
                                 deviceDescription: m_AvailableDevices[i].description,
                                 deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                         }
-                        catch (Exception exception)
+                        catch (Exception)
                         {
                             // Just ignore. Simply means we still can't really turn the device into something useful.
                         }

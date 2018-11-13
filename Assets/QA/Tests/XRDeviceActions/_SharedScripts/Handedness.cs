@@ -1,25 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
-using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
+using UnityEngine.UI;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
 public class Handedness : MonoBehaviour
 {
     public Text statusText;
 
-    // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        string handedness = "";
+        var handedness = "";
 
-        if (XRController.leftHand != null)
+        var leftHand = InputSystem.GetDevice<XRController>(CommonUsages.LeftHand);
+        var rightHand = InputSystem.GetDevice<XRController>(CommonUsages.RightHand);
+
+        if (leftHand != null)
             handedness += "Left ";
-        if (XRController.rightHand != null)
+        if (rightHand != null)
             handedness += "Right";
-        if ((XRController.leftHand == null) && (XRController.rightHand == null))
+        if (leftHand == null && rightHand == null)
             handedness = "None";
 
         statusText.text = handedness;

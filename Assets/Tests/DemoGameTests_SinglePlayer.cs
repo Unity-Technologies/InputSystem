@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Plugins.Users;
 
 // Single-player mode tests for the demo game.
 
-public partial class DemoGameTests
+partial class DemoGameTests
 {
     [Test]
     [Category("Demo")]
@@ -12,6 +12,8 @@ public partial class DemoGameTests
     {
         Click("SinglePlayerButton");
 
+        Assert.That(game.isSinglePlayer, Is.True);
+        Assert.That(game.isMultiPlayer, Is.False);
         Assert.That(game.state, Is.EqualTo(DemoGame.State.InGame));
         Assert.That(game.players, Has.Count.EqualTo(1));
         Assert.That(game.players[0].score, Is.Zero);
@@ -23,24 +25,10 @@ public partial class DemoGameTests
     [Test]
     [Category("Demo")]
     [Ignore("TODO")]
-    public void TODO_Demo_SinglePlayer_CanBringUpInGameMenu()
+    public void TODO_Demo_SinglePlayer_CanEndGame()
     {
         Click("SinglePlayerButton");
-        Trigger("gameplay/escape");
-
-        Assert.That(game.players[0].ui.enabled, Is.True);
-        Assert.That(game.players[0].controls.gameplay.enabled, Is.False);
-        Assert.That(game.players[0].controls.menu.enabled, Is.True);
-        Assert.That(game.mainMenuCanvas.enabled, Is.False);
-    }
-
-    [Test]
-    [Category("Demo")]
-    [Ignore("TODO")]
-    public void TODO_Demo_SinglePlayer_CanReturnToMainMenu()
-    {
-        Click("SinglePlayerButton");
-        Trigger("gameplay/escape");
+        Trigger("gameplay/menu");
         Click("ExitButton");
 
         Assert.That(game.state, Is.EqualTo(DemoGame.State.InMainMenu));
@@ -51,14 +39,31 @@ public partial class DemoGameTests
     [Test]
     [Category("Demo")]
     [Ignore("TODO")]
-    public void TODO_Demo_SinglePlayer_CanReturnToMainMenu_AndStartNewGame()
+    public void TODO_Demo_SinglePlayer_CanEndGame_AndStartNewGame()
     {
         Click("SinglePlayerButton");
-        Trigger("gameplay/escape");
+        Trigger("gameplay/menu");
         Click("ExitButton");
         Click("SinglePlayerButton");
 
         Assert.Fail();
+    }
+
+    ////REVIEW: a number of these tests we can probably just share between single and multiplayer
+
+    [Test]
+    [Category("Demo")]
+    [Ignore("TODO")]
+    public void TODO_Demo_SinglePlayer_CanBringUpInGameMenu()
+    {
+        Click("SinglePlayerButton");
+        Trigger("gameplay/menu");
+
+        Assert.That(game.players[0].menuUI.activeSelf, Is.True);
+        Assert.That(game.players[0].inGameUI.activeSelf, Is.False);
+        Assert.That(game.players[0].controls.gameplay.enabled, Is.False);
+        Assert.That(game.players[0].controls.menu.enabled, Is.True);
+        Assert.That(game.mainMenuCanvas.enabled, Is.False);
     }
 
     [Test]

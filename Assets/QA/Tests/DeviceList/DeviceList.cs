@@ -9,7 +9,6 @@ public class DeviceList : MonoBehaviour
 {
     public Text deviceText;
 
-    // Use this for initialization
     void Start()
     {
         UpdateDeviceText();

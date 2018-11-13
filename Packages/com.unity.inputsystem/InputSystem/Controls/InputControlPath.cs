@@ -98,11 +98,6 @@ namespace UnityEngine.Experimental.Input
             return result;
         }
 
-        public static string TryGetImageName(string path)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// From the given control path, try to determine the device layout being used.
         /// </summary>
@@ -428,6 +423,53 @@ namespace UnityEngine.Experimental.Input
             }
 
             return null;
+        }
+
+        ////REVIEW: probably would be good to have a Matches(string,string) version
+
+        public static bool Matches(string expected, InputControl control)
+        {
+            if (string.IsNullOrEmpty(expected))
+                throw new ArgumentNullException("expected");
+            if (control == null)
+                throw new ArgumentNullException("control");
+
+            var parser = new PathParser(expected);
+            return MatchesRecursive(ref parser, control);
+        }
+
+        public static bool MatchesPrefix(string expected, InputControl control)
+        {
+            if (string.IsNullOrEmpty(expected))
+                throw new ArgumentNullException("expected");
+            if (control == null)
+                throw new ArgumentNullException("control");
+
+            ////REVIEW: this can probably be done more efficiently
+            for (var current = control; current != null; current = current.parent)
+            {
+                var parser = new PathParser(expected);
+                if (MatchesRecursive(ref parser, current) && parser.isAtEnd)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl)
+        {
+            // Recurse into parent before looking at the current control. This
+            // will advance the parser to where our control is in the path.
+            var parent = currentControl.parent;
+            if (parent != null && !MatchesRecursive(ref parser, parent))
+                return false;
+
+            // Fail if there's no more path left.
+            if (!parser.MoveToNextComponent())
+                return false;
+
+            // Match current path component against current control.
+            return parser.current.Matches(currentControl);
         }
 
         ////TODO: refactor this to use the new PathParser
@@ -822,7 +864,63 @@ namespace UnityEngine.Experimental.Input
                 }
                 return result;
             }
+
+            /// <summary>
+            /// Whether the given control matches the constraints of this path component.
+            /// </summary>
+            /// <param name="control">Control to match against the path spec.</param>
+            /// <returns></returns>
+            public bool Matches(InputControl control)
+            {
+                // Match layout.
+                if (!layout.isEmpty)
+                {
+                    // Check for direct match.
+                    var layoutMatches = Substring.Compare(layout, control.layout,
+                        StringComparison.InvariantCultureIgnoreCase) == 0;
+                    if (!layoutMatches)
+                    {
+                        // No direct match but base layout may match.
+                        var baseLayout = control.m_Layout;
+                        while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout) && !layoutMatches)
+                        {
+                            layoutMatches = Substring.Compare(layout, baseLayout.ToString(),
+                                StringComparison.InvariantCultureIgnoreCase) == 0;
+                        }
+                    }
+
+                    if (!layoutMatches)
+                        return false;
+                }
+
+                // Match usage.
+                if (!usage.isEmpty)
+                {
+                    var usages = control.usages;
+                    var haveUsageMatch = false;
+                    for (var i = 0; i < usages.Count; ++i)
+                        if (Substring.Compare(usages[i].ToString(), usage, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            haveUsageMatch = true;
+                            break;
+                        }
+
+                    if (!haveUsageMatch)
+                        return false;
+                }
+
+                // Match name.
+                if (!name.isEmpty && !isWildcard)
+                {
+                    if (Substring.Compare(control.name, name, StringComparison.InvariantCultureIgnoreCase) != 0)
+                        return false;
+                }
+
+                return true;
+            }
         }
+
+        ////TODO: expose PathParser
 
         // NOTE: Must not allocate!
         internal struct PathParser

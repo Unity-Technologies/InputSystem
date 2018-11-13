@@ -6,8 +6,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add ability to index by GamepadButton (or otherwise get a button control by enumeration)
-
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
 ////REVIEW: should we add a gyro as a standard feature of gamepads?
@@ -32,51 +30,53 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         /// <seealso cref="GamepadButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
-        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" })]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" })]
+        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad")]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" }, displayName = "A", shortDisplayName = "A")]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "X", shortDisplayName = "X")]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Y", shortDisplayName = "Y")]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "B", shortDisplayName = "B")]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
-        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick)]
-        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick)]
-        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)GamepadButton.LeftShoulder)]
-        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)GamepadButton.RightShoulder)]
+        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
+        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
+        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)GamepadButton.LeftShoulder, displayName = "Left Shoulder", shortDisplayName = "LB")]
+        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)GamepadButton.RightShoulder, displayName = "Right Shoulder", shortDisplayName = "RB")]
         ////REVIEW: seems like these two should get less ambiguous names as well
-        [InputControl(name = "start", layout = "Button", bit = (uint)GamepadButton.Start, usage = "Menu")]
-        [InputControl(name = "select", layout = "Button", bit = (uint)GamepadButton.Select)]
+        [InputControl(name = "start", layout = "Button", bit = (uint)GamepadButton.Start, usage = "Menu", displayName = "Start")]
+        [InputControl(name = "select", layout = "Button", bit = (uint)GamepadButton.Select, displayName = "Select")]
         [FieldOffset(0)]
         public uint buttons;
 
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
         public Vector2 rightStick;
+
+        ////REVIEW: should left and right trigger get deadzones?
 
         /// <summary>
         /// Position of the left trigger.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
-        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
+        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
         /// Position of the right trigger.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
-        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
+        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
         [FieldOffset(24)]
         public float rightTrigger;
 
@@ -167,6 +167,7 @@ namespace UnityEngine.Experimental.Input
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
 
+        ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
         {
             get
@@ -188,16 +189,10 @@ namespace UnityEngine.Experimental.Input
                     case GamepadButton.DpadLeft: return dpad.left;
                     case GamepadButton.DpadRight: return dpad.right;
                     default:
-                        throw new InvalidEnumArgumentException("button");
+                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
                 }
             }
         }
-
-        ////TODO: noise filtering
-        /// <summary>
-        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
-        /// </summary>
-        public static Gamepad current { get; internal set; }
 
         /// <summary>
         /// A list of gamepads currently connected to the system.
@@ -212,12 +207,6 @@ namespace UnityEngine.Experimental.Input
         public static ReadOnlyArray<Gamepad> all
         {
             get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -260,9 +249,6 @@ namespace UnityEngine.Experimental.Input
 
         protected override void OnRemoved()
         {
-            if (current == this)
-                current = null;
-
             // Remove from array.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
             Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));

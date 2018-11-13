@@ -30,8 +30,14 @@
                     "bindings": []
                 },
                 {
-                    "name": "escape",
+                    "name": "menu",
                     "id": "4ad24240-1211-418c-9678-760c0f5e2f0f",
+                    "expectedControlLayout": "Button",
+                    "bindings": []
+                },
+                {
+                    "name": "steamEnterMenu",
+                    "id": "86bb1c77-7b7d-493c-94be-213881dd4b5b",
                     "expectedControlLayout": "Button",
                     "bindings": []
                 }
@@ -184,7 +190,7 @@
                 {
                     "name": "",
                     "path": "<Keyboard>/space",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "KeyboardMouse",
                     "action": "jump",
@@ -196,7 +202,7 @@
                 {
                     "name": "",
                     "path": "<Gamepad>/buttonNorth",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "jump",
@@ -208,10 +214,34 @@
                 {
                     "name": "",
                     "path": "<Keyboard>/escape",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": "KeyboardMouse",
-                    "action": "escape",
+                    "action": "menu",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Gamepad>/{Menu}",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "menu",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<SteamDemoController>/steamEnterMenu",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Steam",
+                    "action": "steamEnterMenu",
                     "chainWithPrevious": false,
                     "isComposite": false,
                     "isPartOfComposite": false,
@@ -226,13 +256,19 @@
                 {
                     "name": "navigate",
                     "id": "21e4672f-7da8-41ac-8a80-59e98f44610f",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Vector2",
                     "bindings": []
                 },
                 {
                     "name": "click",
                     "id": "09cec56e-d919-461b-b769-b5f9040ab3d2",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Button",
+                    "bindings": []
+                },
+                {
+                    "name": "steamExitMenu",
+                    "id": "9493c6e9-a5fc-4534-8d0c-8730c350769d",
+                    "expectedControlLayout": "Button",
                     "bindings": []
                 }
             ],
@@ -241,54 +277,65 @@
     ],
     "controlSchemes": [
         {
-            "name" : "Keyboard&Mouse",
-            "bindingGroup" : "KeyboardMouse",
-            "devices" : [
+            "name": "Keyboard&Mouse",
+            "basedOn": "",
+            "bindingGroup": "KeyboardMouse",
+            "devices": [
                 {
-                    "devicePath" : "<Keyboard>",
-                    "isOptional" : false
+                    "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
                 },
                 {
-                    "devicePath" : "<Mouse>",
-                    "isOptional" : false
+                    "devicePath": "<Mouse>",
+                    "isOptional": false,
+                    "isOR": false
                 }
             ]
         },
         {
-            "name" : "Gamepad",
-            "bindingGroup" : "Gamepad",
-            "devices" : [
+            "name": "Gamepad",
+            "basedOn": "",
+            "bindingGroup": "Gamepad",
+            "devices": [
                 {
-                    "devicePath" : "<Gamepad>",
-                    "isOptional" : false
+                    "devicePath": "<Gamepad>",
+                    "isOptional": false,
+                    "isOR": false
                 }
             ]
         },
         {
-            "name" : "Steam",
-            "bindingGroup" : "Steam",
-            "devices" : [
+            "name": "Steam",
+            "basedOn": "",
+            "bindingGroup": "Steam",
+            "devices": [
                 {
-                    "devicePath" : "<SteamDemoController>",
-                    "isOptional" : false
+                    "devicePath": "<SteamDemoController>",
+                    "isOptional": false,
+                    "isOR": false
                 }
             ]
         },
         {
-            "name" : "VR",
-            "bindingGroup" : "VR",
-            "devices" : [
+            "name": "VR",
+            "basedOn": "",
+            "bindingGroup": "VR",
+            "devices": [
                 {
-                    "devicePath" : "<XRHMD>",
-                    "isOptional" : false
+                    "devicePath": "<XRHMD>",
+                    "isOptional": false,
+                    "isOR": false
                 },
                 {
-                    "devicePath" : "<XRController>{LeftHand}",
-                    "isOptional" : false
+                    "devicePath": "<XRController>{LeftHand}",
+                    "isOptional": false,
+                    "isOR": false
                 },
                 {
-                    "devicePath" : "<XRController>{RightHand}",
-                    "isOptional" : false
+                    "devicePath": "<XRController>{RightHand}",
+                    "isOptional": false,
+                    "isOR": false
                 }
             ]
         }

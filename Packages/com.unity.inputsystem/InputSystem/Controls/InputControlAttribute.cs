@@ -32,8 +32,11 @@ namespace UnityEngine.Experimental.Input.Layouts
         public uint sizeInBits;
         public int arraySize;
         public string displayName;
-        public string imageName;
+        public string shortDisplayName;
         public bool noisy;
+        public bool synthetic;
         public object defaultState;
+        public object minValue;
+        public object maxValue;
     }
 }

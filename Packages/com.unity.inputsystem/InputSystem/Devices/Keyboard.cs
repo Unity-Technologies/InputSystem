@@ -6,7 +6,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 
-////TODO: IME support
+////TODO: usages on modifiers so they can be identified regardless of platform conventions
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -23,11 +23,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         // Number of keys rounded up to nearest size of 4.
-        private const int kSizeInBytesUnrounded = ((int)Keyboard.KeyCount) / 8 + (((int)Keyboard.KeyCount) % 8 > 0 ? 1 : 0);
+        private const int kSizeInBytesUnrounded = Keyboard.KeyCount / 8 + (Keyboard.KeyCount % 8 > 0 ? 1 : 0);
         public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
         public const int kSizeInBits = kSizeInBytes * 8;
 
-        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits)]
+        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", layout = "Key", bit = (int)Key.Space)]
         [InputControl(name = "enter", layout = "Key", usage = "Accept", bit = (int)Key.Enter)]
@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
-        [InputControl(name = "imeSelected", layout = "Button", bit = (int)Key.imeSelected)]
+        [InputControl(name = "IMESelected", layout = "Button", bit = (int)Key.IMESelected, synthetic = true)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
@@ -307,7 +307,7 @@ namespace UnityEngine.Experimental.Input
         OEM5,
 
         // Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
-        imeSelected
+        IMESelected
     }
 
     /// <summary>
@@ -587,8 +587,6 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public ButtonControl imeSelected { get; private set; }
 
-        public static Keyboard current { get; internal set; }
-
         /// <summary>
         /// Look up a key control by its key code.
         /// </summary>
@@ -744,19 +742,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");
@@ -877,7 +862,7 @@ namespace UnityEngine.Experimental.Input
             oem4Key = builder.GetControl<KeyControl>("OEM4");
             oem5Key = builder.GetControl<KeyControl>("OEM5");
 
-            imeSelected = builder.GetControl<ButtonControl>("imeSelected");
+            imeSelected = builder.GetControl<ButtonControl>("IMESelected");
 
             ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
             ////        and it just seems somewhat dirty to jam the data into the control here

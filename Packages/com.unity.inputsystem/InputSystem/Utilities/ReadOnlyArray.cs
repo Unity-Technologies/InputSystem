@@ -78,6 +78,11 @@ namespace UnityEngine.Experimental.Input.Utilities
             return GetEnumerator();
         }
 
+        public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
+        {
+            return new ReadOnlyArray<TValue>(array);
+        }
+
         /// <summary>
         /// Number of elements in the array.
         /// </summary>
@@ -161,6 +166,15 @@ namespace UnityEngine.Experimental.Input.Utilities
         {
             for (var i = 0; i < array.m_Length; ++i)
                 if (array.m_Array[array.m_StartIndex + i].CompareTo(value) == 0)
+                    return true;
+            return false;
+        }
+
+        public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            for (var i = 0; i < array.m_Length; ++i)
+                if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
                     return true;
             return false;
         }

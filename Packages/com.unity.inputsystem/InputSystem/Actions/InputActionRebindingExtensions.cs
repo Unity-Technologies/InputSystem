@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 // The way target bindings for overrides are found:
 // - If specified, directly by index (e.g. "apply this override to the third binding in the map")
@@ -21,7 +25,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
-    /// actuated by a user.
+    /// actuated by the user.
     /// </remarks>
     public static class InputActionRebindingExtensions
     {
@@ -344,85 +348,840 @@ namespace UnityEngine.Experimental.Input
             return numMatchingControls;
         }
 
-        // Base implementation for user rebinds. Can be derived from to customize rebinding behavior.
-        //
-        // The best control to bind to may not be the very first control that matches selection by
-        // control type. For example, when the user wants to bind to a specific axis on the left stick
-        // on the gamepad, it's not enough to just grab the first axis that actuated. With the sticks
-        // being as noisy as they are, we want to filter for the control that dominates input. For that,
-        // it adds robustness to not just wait for input in the very first frame but rather listen for
-        // input for a while after the first relevant input and then decide which the dominate axis was.
-        // This way we can reliably filter out noise from other sticks, too.
-        public class RebindOperation : IDisposable
+        ////TODO: allow overwriting magnitude with custom values; maybe turn more into an overall "score" for a control
+
+        /// <summary>
+        /// An ongoing rebinding operation.
+        /// </summary>
+        /// <remarks>
+        /// This class acts as both a configuration interface for rebinds as well as a controller while
+        /// the rebind is ongoing. An instance can be reused arbitrary many times. Doing so can avoid allocating
+        /// additional GC memory (the class internally retains state that it can reuse for multiple rebinds).
+        ///
+        /// Note, however, that during rebinding it can be necessary to look at the <see cref="InputControlLayout"/>
+        /// information registered in the system which means that layouts may have to be loaded. These will be
+        /// cached for as long as the rebind operation is not disposed of.
+        ///
+        /// A rebind operation may take several frames to complete. ...
+        ///
+        /// Note that not all types of controls make sense to perform interactive rebinding on. For example,
+        /// </remarks>
+        /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
+        public class RebindingOperation : IDisposable
         {
-            private InputAction m_ActionToRebind;
-            private string m_GroupsToRebind;
+            public const float kDefaultMagnitudeThreshold = 0.2f;
 
-            private InputAction m_CancelAction;
-            private InputAction m_RebindAction;
-
-            private List<string> m_SuitableControlLayouts;
-
-            private int m_NumInputUpdatesToAggregate;
-            private int m_NumInputUpdatesReceived;
-
-            protected virtual void DetermineSuitableControlLayouts(List<string> result)
+            /// <summary>
+            /// The action that rebinding is being performed on.
+            /// </summary>
+            /// <seealso cref="WithAction"/>
+            public InputAction action
             {
+                get { return m_ActionToRebind; }
             }
 
-            public void Start(InputAction actionToRebind, string groupsToRebind = null)
+            /// <summary>
+            /// Optional mask to determine which bindings to apply overrides to.
+            /// </summary>
+            /// <remarks>
+            /// If this is not null, all bindings that match this mask will have overrides applied to them.
+            /// </remarks>
+            public InputBinding? bindingMask
             {
+                get { return m_BindingMask; }
             }
 
-            // Manually cancel a pending rebind.
+            ////REVIEW: exposing this as InputControlList is very misleading as users will not get an error when modifying the list;
+            ////        however, exposing through an interface will lead to boxing...
+            /// <summary>
+            /// Controls that had input and were deemed potential matches to rebind to.
+            /// </summary>
+            /// <remarks>
+            /// Controls in the list should be ordered by priority with the first element in the list being
+            /// considered the best match.
+            /// </remarks>
+            /// <seealso cref="AddCandidate"/>
+            /// <seealso cref="RemoveCandidate"/>
+            public InputControlList<InputControl> candidates
+            {
+                get { return m_Candidates; }
+            }
+
+            /// <summary>
+            /// The matching score for each control in <see cref="candidates"/>.
+            /// </summary>
+            /// <remarks>
+            /// </remarks>
+            public ReadWriteArray<float> scores
+            {
+                get { return new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count); }
+            }
+
+            public InputControl selectedControl
+            {
+                get
+                {
+                    if (m_Candidates.Count == 0)
+                        return null;
+
+                    return m_Candidates[0];
+                }
+            }
+
+            public bool started
+            {
+                get { return (m_Flags & Flags.Started) != 0; }
+            }
+
+            public bool completed
+            {
+                get { return (m_Flags & Flags.Completed) != 0; }
+            }
+
+            public bool cancelled
+            {
+                get { return (m_Flags & Flags.Cancelled) != 0; }
+            }
+
+            public RebindingOperation WithAction(InputAction action)
+            {
+                ThrowIfRebindInProgress();
+
+                if (action == null)
+                    throw new ArgumentNullException("action");
+                if (action.enabled)
+                    throw new InvalidOperationException(string.Format("Cannot rebind action '{0}' while it is enabled", action));
+
+                m_ActionToRebind = action;
+
+                // If the action has an associated expected layout, constrain ourselves by it.
+                // NOTE: We do *NOT* translate this to a control type and constrain by that as a whole chain
+                //       of derived layouts may share the same control type.
+                if (!string.IsNullOrEmpty(action.expectedControlLayout))
+                    WithExpectedControlLayout(action.expectedControlLayout);
+
+                return this;
+            }
+
+            public RebindingOperation WithCancelAction(InputAction action)
+            {
+                return this;
+            }
+
+            public RebindingOperation WithCancellingThrough(string binding)
+            {
+                m_CancelBinding = binding;
+                return this;
+            }
+
+            public RebindingOperation WithCancellingThrough(InputControl control)
+            {
+                return WithCancellingThrough(control.path);
+            }
+
+            public RebindingOperation WithExpectedControlLayout(string layoutName)
+            {
+                m_ExpectedLayout = new InternedString(layoutName);
+                return this;
+            }
+
+            public RebindingOperation WithExpectedControlType(Type type)
+            {
+                if (type != null && !typeof(InputControl).IsAssignableFrom(type))
+                    throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+                m_ControlType = type;
+                return this;
+            }
+
+            public RebindingOperation WithExpectedControlType<TControl>()
+                where TControl : InputControl
+            {
+                return WithExpectedControlType(typeof(TControl));
+            }
+
+            public RebindingOperation WithTargetBinding(int bindingIndex)
+            {
+                m_TargetBindingIndex = bindingIndex;
+                return this;
+            }
+
+            public RebindingOperation WithBindingMask(InputBinding? bindingMask)
+            {
+                m_BindingMask = bindingMask;
+                return this;
+            }
+
+            public RebindingOperation WithBindingGroup(string group)
+            {
+                return WithBindingMask(new InputBinding {groups = group});
+            }
+
+            /// <summary>
+            /// Disable the default behavior of automatically generalizing the path of a selected control.
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks>
+            /// At runtime, every <see cref="InputControl"/> has a unique path in the system (<see cref="InputControl.path"/>).
+            /// However, when performing rebinds, we are not generally interested in the specific runtime path of the
+            /// control -- which may depend on the number and types of devices present. In fact, most of the time we are not
+            /// even interested in what particular brand of device the user is rebinding to but rather want to just bind based
+            /// on the device's broad category.
+            ///
+            /// For example, if you user has a DualShock controller and performs an interactive rebind, we usually do not want
+            /// to generate override paths that reflect which out of how many ...
+            /// </remarks>
+            /// <seealso cref="InputBinding.overridePath"/>
+            public RebindingOperation WithoutGeneralizingPathOfSelectedControl()
+            {
+                m_Flags |= Flags.DontGeneralizePathOfSelectedControl;
+                return this;
+            }
+
+            public RebindingOperation WithRebindApplyingAsOverride()
+            {
+                return this;
+            }
+
+            public RebindingOperation WithRebindOverwritingCurrentPath()
+            {
+                return this;
+            }
+
+            public RebindingOperation WithRebindAddingNewBinding(string group = null)
+            {
+                m_Flags |= Flags.AddNewBinding;
+                m_BindingGroupForNewBinding = group;
+                return this;
+            }
+
+            public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
+            {
+                if (magnitude < 0)
+                    throw new ArgumentException(string.Format("Magnitude has to be positive but was {0}", magnitude),
+                        "magnitude");
+                m_MagnitudeThreshold = magnitude;
+                return this;
+            }
+
+            public RebindingOperation WithoutMagnitudeThreshold()
+            {
+                m_MagnitudeThreshold = -1;
+                return this;
+            }
+
+            public RebindingOperation WithoutIgnoringNoisyControls()
+            {
+                m_Flags |= Flags.DontIgnoreNoisyControls;
+                return this;
+            }
+
+            public RebindingOperation WithControlsHavingToMatchPath(string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+                for (var i = 0; i < m_IncludePathCount; ++i)
+                    if (string.Compare(m_IncludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return this;
+                ArrayHelpers.AppendWithCapacity(ref m_IncludePaths, ref m_IncludePathCount, path);
+                return this;
+            }
+
+            public RebindingOperation WithoutControlsHavingToMatchPath()
+            {
+                m_IncludePathCount = 0;
+                return this;
+            }
+
+            public RebindingOperation WithControlsExcluding(string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+                for (var i = 0; i < m_ExcludePathCount; ++i)
+                    if (string.Compare(m_ExcludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return this;
+                ArrayHelpers.AppendWithCapacity(ref m_ExcludePaths, ref m_ExcludePathCount, path);
+                return this;
+            }
+
+            public RebindingOperation OnComplete(Action<RebindingOperation> callback)
+            {
+                m_OnComplete = callback;
+                return this;
+            }
+
+            public RebindingOperation OnCancel(Action<RebindingOperation> callback)
+            {
+                m_OnCancel = callback;
+                return this;
+            }
+
+            public RebindingOperation OnPotentialMatch(Action<RebindingOperation> callback)
+            {
+                m_OnPotentialMatch = callback;
+                return this;
+            }
+
+            public RebindingOperation OnGeneratePath(Func<InputControl, string> callback)
+            {
+                m_OnGeneratePath = callback;
+                return this;
+            }
+
+            public RebindingOperation OnComputeScore(Func<InputControl, InputEventPtr, float> callback)
+            {
+                m_OnComputeScore = callback;
+                return this;
+            }
+
+            public RebindingOperation OnApplyBinding(Action<RebindingOperation, string> callback)
+            {
+                m_OnApplyBinding = callback;
+                return this;
+            }
+
+            public RebindingOperation OnMatchWaitForAnother(float seconds)
+            {
+                m_WaitSecondsAfterMatch = seconds;
+                return this;
+            }
+
+            public RebindingOperation Start()
+            {
+                // Ignore if already started.
+                if (started)
+                    return this;
+
+                // Make sure our configuration is sound.
+                if (m_ActionToRebind != null && m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
+                    throw new InvalidOperationException(
+                        string.Format(
+                            "Action '{0}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()",
+                            action));
+                if (m_ActionToRebind == null && m_OnApplyBinding == null)
+                    throw new InvalidOperationException(
+                        "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
+
+                if (m_WaitSecondsAfterMatch > 0)
+                {
+                    HookOnAfterUpdate();
+                    m_LastMatchTime = -1;
+                }
+
+                HookOnEvent();
+                m_Flags |= Flags.Started;
+                return this;
+            }
+
             public void Cancel()
             {
+                if (!started)
+                    return;
+
+                OnCancel();
             }
 
-            public virtual void Dispose()
+            /// <summary>
+            /// Manually complete the rebinding operation.
+            /// </summary>
+            public void Complete()
             {
-                GC.SuppressFinalize(this);
+                if (!started)
+                    return;
+
+                OnComplete();
+            }
+
+            public void AddCandidate(InputControl control, float score)
+            {
+                if (control == null)
+                    throw new ArgumentNullException("control");
+
+                // If it's already added, update score.
+                var index = m_Candidates.IndexOf(control);
+                if (index != -1)
+                {
+                    m_Scores[index] = score;
+                }
+                else
+                {
+                    // Otherwise, add it.
+                    var candidateCount = m_Candidates.Count;
+                    m_Candidates.Add(control);
+                    ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                }
+
+                SortCandidatesByScore();
+            }
+
+            public void RemoveCandidate(InputControl control)
+            {
+                if (control == null)
+                    throw new ArgumentNullException("control");
+
+                var index = m_Candidates.IndexOf(control);
+                if (index == -1)
+                    return;
+
+                var candidateCount = m_Candidates.Count;
+                m_Candidates.RemoveAt(index);
+                ArrayHelpers.EraseAtWithCapacity(ref m_Scores, ref candidateCount, index);
+            }
+
+            public void Dispose()
+            {
+                ////FIXME: these have to be made thread-safe
+                UnhookOnEvent();
+                UnhookOnAfterUpdate();
+                m_Candidates.Dispose();
+                m_LayoutCache.Clear();
+            }
+
+            ~RebindingOperation()
+            {
+                Dispose();
+            }
+
+            public void ResetConfiguration()
+            {
+                throw new NotImplementedException();
+            }
+
+            private void HookOnEvent()
+            {
+                if ((m_Flags & Flags.OnEventHooked) != 0)
+                    return;
+
+                if (m_OnEventDelegate == null)
+                    m_OnEventDelegate = OnEvent;
+
+                InputSystem.onEvent += m_OnEventDelegate;
+                m_Flags |= Flags.OnEventHooked;
+            }
+
+            private void UnhookOnEvent()
+            {
+                if ((m_Flags & Flags.OnEventHooked) == 0)
+                    return;
+
+                InputSystem.onEvent -= m_OnEventDelegate;
+                m_Flags &= ~Flags.OnEventHooked;
+            }
+
+            private void OnEvent(InputEventPtr eventPtr)
+            {
+                // Ignore if not a state event.
+                if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                    return;
+
+                // Fetch device.
+                var device = InputSystem.GetDeviceById(eventPtr.deviceId);
+                if (device == null)
+                    return;
+
+                // Go through controls and see if there's anything interesting in the event.
+                var controls = device.allControls;
+                var controlCount = controls.Count;
+                var haveChangedCandidates = false;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var control = controls[i];
+
+                    // Skip controls that have no state in the event.
+                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
+                    if (statePtr == IntPtr.Zero)
+                        continue;
+
+                    // If the control that cancels has been actuated, abort the operation now.
+                    if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
+                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeIn(statePtr))
+                    {
+                        OnCancel();
+                        break;
+                    }
+
+                    // Skip noisy controls.
+                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
+                        continue;
+
+                    // If controls have to match a certain path, check if this one does.
+                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
+                        continue;
+
+                    // If controls must not match certain path, make sure the control doesn't.
+                    if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
+                        continue;
+
+                    // If we're expecting controls of a certain type, skip if control isn't of
+                    // the right type.
+                    if (m_ControlType != null && !m_ControlType.IsInstanceOfType(control))
+                        continue;
+
+                    // If we're expecting controls to be based on a specific layout, skip if control
+                    // isn't based on that layout.
+                    if (!m_ExpectedLayout.IsEmpty() &&
+                        m_ExpectedLayout != control.m_Layout &&
+                        !InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
+                        continue;
+
+                    // Skip controls that are in their default state.
+                    // NOTE: This is the cheapest check with respect to looking at actual state. So
+                    //       do this first before looking further at the state.
+                    if (control.CheckStateIsAtDefault(statePtr))
+                        continue;
+
+                    // Skip controls that have no effective value change.
+                    // NOTE: This will run the full processor stack and is move involved.
+                    if (!control.HasValueChangeIn(statePtr))
+                        continue;
+
+                    // If we have a magnitude threshold, see if control passes it.
+                    var magnitude = -1f;
+                    if (m_MagnitudeThreshold >= 0f)
+                    {
+                        magnitude = control.EvaluateMagnitude(statePtr);
+                        if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
+                            continue; // No, so skip.
+                    }
+
+                    // Compute score.
+                    float score;
+                    if (m_OnComputeScore != null)
+                        score = m_OnComputeScore(control, eventPtr);
+                    else
+                    {
+                        score = magnitude;
+
+                        // We don't want synthetic controls to not be bindable at all but they should
+                        // generally cede priority to controls that aren't synthetic. So we bump all
+                        // scores of controls that aren't synthetic.
+                        if (!control.synthetic)
+                            score += 1f;
+                    }
+
+                    // Control is a candidate.
+                    // See if we already singled the control out as a potential candidate.
+                    var candidateIndex = m_Candidates.IndexOf(control);
+                    if (candidateIndex != -1)
+                    {
+                        // Yes, we did. So just check whether it became a better candidate than before.
+                        if (m_Scores[candidateIndex] < score)
+                        {
+                            haveChangedCandidates = true;
+                            m_Scores[candidateIndex] = score;
+
+                            if (m_WaitSecondsAfterMatch > 0)
+                                m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                        }
+                    }
+                    else
+                    {
+                        // No, so add it.
+                        var candidateCount = m_Candidates.Count;
+                        m_Candidates.Add(control);
+                        ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                        haveChangedCandidates = true;
+
+                        if (m_WaitSecondsAfterMatch > 0)
+                            m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                    }
+                }
+
+                if (haveChangedCandidates)
+                {
+                    // If we have a callback that wants to control matching, leave it to the callback to decide
+                    // whether the rebind is complete or not. Otherwise, just complete.
+                    if (m_OnPotentialMatch != null)
+                    {
+                        SortCandidatesByScore();
+                        m_OnPotentialMatch(this);
+                    }
+                    else if (m_WaitSecondsAfterMatch <= 0)
+                    {
+                        OnComplete();
+                    }
+                    else
+                    {
+                        SortCandidatesByScore();
+                    }
+                }
+            }
+
+            private void SortCandidatesByScore()
+            {
+                var candidateCount = m_Candidates.Count;
+                if (candidateCount <= 1)
+                    return;
+
+                // Simple insertion sort that sorts both m_Candidates and m_Scores at the same time.
+                // Note that we're sorting by *decreasing* score here, not by increasing score.
+                for (var i = 1; i < candidateCount; ++i)
+                {
+                    for (var j = i; j > 0 && m_Scores[j - 1] < m_Scores[j]; --j)
+                    {
+                        m_Scores.SwapElements(j, j - 1);
+                        m_Candidates.SwapElements(j, j - 1);
+                    }
+                }
+            }
+
+            private static bool HavePathMatch(InputControl control, string[] paths, int pathCount)
+            {
+                for (var i = 0; i < pathCount; ++i)
+                {
+                    if (InputControlPath.MatchesPrefix(paths[i], control))
+                        return true;
+                }
+
+                return false;
+            }
+
+            private void HookOnAfterUpdate()
+            {
+                if ((m_Flags & Flags.OnAfterUpdateHooked) != 0)
+                    return;
+
+                if (m_OnAfterUpdateDelegate == null)
+                    m_OnAfterUpdateDelegate = OnAfterUpdate;
+
+                InputSystem.onAfterUpdate += m_OnAfterUpdateDelegate;
+                m_Flags |= Flags.OnAfterUpdateHooked;
+            }
+
+            private void UnhookOnAfterUpdate()
+            {
+                if ((m_Flags & Flags.OnAfterUpdateHooked) == 0)
+                    return;
+
+                InputSystem.onAfterUpdate -= m_OnAfterUpdateDelegate;
+                m_Flags &= ~Flags.OnAfterUpdateHooked;
+            }
+
+            private void OnAfterUpdate(InputUpdateType updateType)
+            {
+                // Sanity check to make sure we're actually waiting for completion.
+                if (m_WaitSecondsAfterMatch <= 0)
+                    return;
+
+                // Can't complete if we have no match yet.
+                if (m_LastMatchTime < 0)
+                    return;
+
+                // Complete if timeout has expired.
+                if (InputRuntime.s_Instance.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
+                    Complete();
+            }
+
+            private void OnComplete()
+            {
+                SortCandidatesByScore();
+
+                if (m_Candidates.Count > 0)
+                {
+                    // Create a path from the selected control.
+                    var selectedControl = m_Candidates[0];
+                    var path = selectedControl.path;
+                    if (m_OnGeneratePath != null)
+                    {
+                        // We have a callback. Give it a shot to generate a path. If it doesn't,
+                        // fall back to our default logic.
+                        var newPath = m_OnGeneratePath(selectedControl);
+                        if (!string.IsNullOrEmpty(path))
+                            path = newPath;
+                        else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
+                            path = GeneratePathForControl(selectedControl);
+                    }
+                    else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
+                        path = GeneratePathForControl(selectedControl);
+
+                    // If we have a custom callback for applying the binding, let it handle
+                    // everything.
+                    if (m_OnApplyBinding != null)
+                        m_OnApplyBinding(this, path);
+                    else
+                    {
+                        Debug.Assert(m_ActionToRebind != null);
+
+                        // See if we should modify an existing binding or create a new one.
+                        if ((m_Flags & Flags.AddNewBinding) != 0)
+                        {
+                            // Create new binding.
+                            m_ActionToRebind.AddBinding(path, groups: m_BindingGroupForNewBinding);
+                        }
+                        else
+                        {
+                            // Apply binding override to existing binding.
+                            if (m_TargetBindingIndex >= 0)
+                            {
+                                if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
+                                    throw new Exception(string.Format(
+                                        "Target binding index {0} out of range for action '{1}' with {2} bindings",
+                                        m_TargetBindingIndex, m_ActionToRebind, m_ActionToRebind.bindings.Count));
+
+                                m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);
+                            }
+                            else if (m_BindingMask != null)
+                            {
+                                var bindingOverride = m_BindingMask.Value;
+                                bindingOverride.overridePath = path;
+                                m_ActionToRebind.ApplyBindingOverride(bindingOverride);
+                            }
+                            else
+                            {
+                                m_ActionToRebind.ApplyBindingOverride(path);
+                            }
+                        }
+                    }
+                }
+
+                // Complete.
+                m_Flags |= Flags.Completed;
+                if (m_OnComplete != null)
+                    m_OnComplete(this);
+
+                Reset();
+            }
+
+            private void OnCancel()
+            {
+                m_Flags |= Flags.Cancelled;
+
+                if (m_OnCancel != null)
+                    m_OnCancel(this);
+
+                Reset();
+            }
+
+            private void Reset()
+            {
+                m_Flags &= ~Flags.Started;
+                m_Candidates.Clear();
+                m_Candidates.Capacity = 0; // Release our unmanaged memory.
+
+                UnhookOnEvent();
+                UnhookOnAfterUpdate();
+            }
+
+            private void ThrowIfRebindInProgress()
+            {
+                if (started)
+                    throw new InvalidOperationException("Cannot reconfigure rebinding while operation is in progress");
+            }
+
+            /// <summary>
+            /// Based on the chosen control, generate an override path to rebind to.
+            /// </summary>
+            /// <param name="control"></param>
+            /// <returns></returns>
+            private string GeneratePathForControl(InputControl control)
+            {
+                var device = control.device;
+                Debug.Assert(device != control, "Control must not be a device!");
+
+                // Find the topmost child control on the device. A device layout can only
+                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
+                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
+                // To determine which device contributes the control has a whole, we have to be looking
+                // at the topmost child of the device.
+                var topmostChild = control;
+                while (topmostChild.parent != device)
+                    topmostChild = topmostChild.parent;
+
+                // Find the layout in the device's base layout chain that first mentions the given control.
+                // If we don't find it, we know it's first defined directly in the layout of the given device,
+                // i.e. it's not an inherited control.
+                var deviceLayoutName = device.m_Layout;
+                var baseLayoutName = deviceLayoutName;
+                while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
+                {
+                    var layout = m_LayoutCache.FindOrLoadLayout(baseLayoutName);
+
+                    var controlItem = layout.FindControl(topmostChild.m_Name);
+                    if (controlItem != null)
+                        deviceLayoutName = baseLayoutName;
+                }
+
+                // Create a path with the given device layout
+                if (m_PathBuilder == null)
+                    m_PathBuilder = new StringBuilder();
+                else
+                    m_PathBuilder.Length = 0;
+
+                m_PathBuilder.Append('<');
+                m_PathBuilder.Append(deviceLayoutName);
+                m_PathBuilder.Append('>');
+
+                // Add usages of device, if any.
+                var deviceUsages = device.usages;
+                for (var i = 0; i < deviceUsages.Count; ++i)
+                {
+                    m_PathBuilder.Append('{');
+                    m_PathBuilder.Append(deviceUsages[i]);
+                    m_PathBuilder.Append('}');
+                }
+
+                m_PathBuilder.Append('/');
+
+                var devicePath = device.path;
+                var controlPath = control.path;
+                m_PathBuilder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
+
+                return m_PathBuilder.ToString();
+            }
+
+            private InputAction m_ActionToRebind;
+            private InputAction m_CancelAction;
+            private InputBinding? m_BindingMask;
+            private Type m_ControlType;
+            private InternedString m_ExpectedLayout;
+            private int m_IncludePathCount;
+            private string[] m_IncludePaths;
+            private int m_ExcludePathCount;
+            private string[] m_ExcludePaths;
+            private int m_TargetBindingIndex = -1;
+            private string m_BindingGroupForNewBinding;
+            private string m_CancelBinding;
+            private float m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
+            private float[] m_Scores; // Scores for the controls in m_Candidates.
+            private double m_LastMatchTime; // Last input event time we discovered a better match.
+            private float m_WaitSecondsAfterMatch;
+            private InputControlList<InputControl> m_Candidates;
+            private Action<RebindingOperation> m_OnComplete;
+            private Action<RebindingOperation> m_OnCancel;
+            private Action<RebindingOperation> m_OnPotentialMatch;
+            private Func<InputControl, string> m_OnGeneratePath;
+            private Func<InputControl, InputEventPtr, float> m_OnComputeScore;
+            private Action<RebindingOperation, string> m_OnApplyBinding;
+            private Action<InputEventPtr> m_OnEventDelegate;
+            private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+            private InputControlLayout.Cache m_LayoutCache;
+            private StringBuilder m_PathBuilder;
+            private Flags m_Flags;
+
+            [Flags]
+            private enum Flags
+            {
+                Started = 1 << 0,
+                Completed = 1 << 1,
+                Cancelled = 1 << 2,
+                OnEventHooked = 1 << 3,
+                OnAfterUpdateHooked = 1 << 4,
+                OverwritePath = 1 << 5,
+                DontIgnoreNoisyControls = 1 << 6,
+                DontGeneralizePathOfSelectedControl = 1 << 7,
+                AddNewBinding = 1 << 8,
             }
         }
 
-        // Wait for the user to actuate a control on a device to rebind the
-        // given action to.
-        //
-        // Invokes the given callback when the rebinding happens. Also passes
-        // a bool that tells whether the rebind operation has successfully completed
-        // or whether the user aborted it.
-        //
-        // The optional cancel binding allows specifying which controls should be
-        // allowed to cancel the rebind.
-        //
-        // NOTE: Suitable controls to rebind to are determined from the given action.
-        //       The rebind will listen only for controls that match one of th control
-        //       layouts used in an y of the bindings of the action.
-        //
-        //       So, for example, if the given action has only bindings to buttons,
-        //       then only buttons will be considered. If it has bindings to both button
-        //       and touch controls, on the other hand, then both button and touch controls
-        //       will be listened for.
-        public static RebindOperation PerformUserRebind(InputAction action, InputAction cancel = null)
+        /// <summary>
+        /// Initiate an operation that interactively rebinds the given action based on received input.
+        /// </summary>
+        /// <param name="action">Action to perform rebinding on.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public static RebindingOperation PerformInteractiveRebinding(this InputAction action)
         {
-            if (action == null)
-                throw new ArgumentNullException("action");
-            if (action.bindings.Count == 0)
-                throw new ArgumentException(
-                    string.Format("For rebinding, action must have at least one existing binding (action: {0})",
-                        action), "action");
-
-            throw new NotImplementedException();
-        }
-
-        public static RebindOperation PerformUserRebind(InputAction action, InputControl cancel)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static RebindOperation PerformUserRebind(InputAction action, string cancel)
-        {
-            throw new NotImplementedException();
+            return new RebindingOperation().WithAction(action);
         }
     }
 }

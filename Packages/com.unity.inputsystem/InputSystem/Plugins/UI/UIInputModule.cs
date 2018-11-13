@@ -27,28 +27,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return result;
         }
 
-        private PointerEventData PreparePointerEventData(MouseModel mouseState)
-        {
-            var eventData = GetOrCreateCachedPointerEvent();
-            eventData.Reset();
-
-            eventData.pointerId = mouseState.pointerId;
-            eventData.position = mouseState.position;
-            eventData.delta = mouseState.deltaPosition;
-            eventData.scrollDelta = mouseState.scrollDelta;
-            eventData.pointerEnter = mouseState.internalData.pointerTarget;
-
-            eventData.hovered.Clear();
-            eventData.hovered.AddRange(mouseState.internalData.hoverTargets);
-
-            // This is unset in legacy systems and can safely assumed to stay true.
-            eventData.useDragThreshold = true;
-
-            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
-
-            return eventData;
-        }
-
         /// <summary>
         /// Takes an existing MouseModel and dispatches all relevant changes through the event system.
         /// It also updates the internal data of the MouseModel.
@@ -59,7 +37,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (!mouseState.changedThisFrame)
                 return;
 
-            var eventData = PreparePointerEventData(mouseState);
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.Reset();
+
+            mouseState.CopyTo(eventData);
+
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
 
             /// Left Mouse Button
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
@@ -70,11 +53,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             ProcessMouseMovement(eventData);
             ProcessMouseScroll(eventData);
 
-            var internalMouseData = mouseState.internalData;
-            internalMouseData.hoverTargets.ClearWithCapacity();
-            internalMouseData.hoverTargets.Append(eventData.hovered);
-            internalMouseData.pointerTarget = eventData.pointerEnter;
-            mouseState.internalData = internalMouseData;
+            mouseState.CopyFrom(eventData);
 
             ProcessMouseButtonDrag(eventData);
 
@@ -233,7 +212,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private void ProcessMouseButtonDrag(PointerEventData eventData)
+        private void ProcessMouseButtonDrag(PointerEventData eventData, float pixelDragThresholdMultiplier = 1.0f)
         {
             if (!eventData.IsPointerMoving() ||
                 Cursor.lockState == CursorLockMode.Locked ||
@@ -242,7 +221,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             if (!eventData.dragging)
             {
-                if ((eventData.pressPosition - eventData.position).sqrMagnitude >= (eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold))
+                if ((eventData.pressPosition - eventData.position).sqrMagnitude >= ((eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold) * pixelDragThresholdMultiplier))
                 {
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
                     eventData.dragging = true;
@@ -274,6 +253,57 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
+        internal void ProcessTouch(ref TouchModel touchState)
+        {
+            if (!touchState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.Reset();
+
+            touchState.CopyTo(eventData);
+
+            if (touchState.selectPhase == PointerPhase.Cancelled)
+            {
+                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Cancelled) ? new RaycastResult() : PerformRaycast(eventData);
+            }
+            else
+            {
+                eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+            }
+
+            eventData.button = PointerEventData.InputButton.Left;
+
+            ProcessMouseButton(touchState.selectDelta, eventData);
+            ProcessMouseMovement(eventData);
+            ProcessMouseButtonDrag(eventData);
+
+            touchState.CopyFrom(eventData);
+
+            touchState.OnFrameFinished();
+        }
+
+        internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
+        {
+            if (!deviceState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedTrackedPointerEvent();
+            eventData.Reset();
+            deviceState.CopyTo(eventData);
+
+            eventData.button = PointerEventData.InputButton.Left;
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+            ProcessMouseButton(deviceState.selectDelta, eventData);
+            ProcessMouseMovement(eventData);
+            ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
+
+            deviceState.CopyFrom(eventData);
+
+            deviceState.OnFrameFinished();
+        }
+
         /// <summary>
         /// Takes an existing JoystickModel and dispatches all relevant changes through the event system.
         /// It also updates the internal data of the JoystickModel.
@@ -298,7 +328,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var movement = joystickState.move;
             if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
             {
-                float time = Time.unscaledTime;
+                var time = Time.unscaledTime;
 
                 var moveVector = joystickState.move;
 
@@ -318,7 +348,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 if (moveDirection != MoveDirection.None)
                 {
-                    bool allow = true;
+                    var allow = true;
                     if (internalJoystickState.consecutiveMoveCount != 0)
                     {
                         if (internalJoystickState.consecutiveMoveCount > 1)
@@ -366,7 +396,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             joystickState.OnFrameFinished();
         }
 
-        protected PointerEventData GetOrCreateCachedPointerEvent()
+        private PointerEventData GetOrCreateCachedPointerEvent()
         {
             var result = m_CachedPointerEvent;
             if (result == null)
@@ -378,7 +408,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return result;
         }
 
-        protected AxisEventData GetOrCreateCachedAxisEvent()
+        private TrackedPointerEventData GetOrCreateCachedTrackedPointerEvent()
+        {
+            var result = m_CachedTrackedPointerEventData;
+            if (result == null)
+            {
+                result = new TrackedPointerEventData(eventSystem);
+                m_CachedTrackedPointerEventData = result;
+            }
+
+            return result;
+        }
+
+        private AxisEventData GetOrCreateCachedAxisEvent()
         {
             var result = m_CachedAxisEvent;
             if (result == null)
@@ -402,7 +444,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
         public float repeatRate = 0.1f;
 
+        [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
+        public float trackedDeviceDragThresholdMultiplier = 2.0f;
+
         private AxisEventData m_CachedAxisEvent;
         private PointerEventData m_CachedPointerEvent;
+        private TrackedPointerEventData m_CachedTrackedPointerEventData;
     }
 }

@@ -9,6 +9,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Experimental.Input.Editor;
 #endif
 
+////TODO: must allow running UnityTests which means we have to be able to get per-frame updates yet not receive input from native
+
 ////TODO: when running tests in players, make sure that remoting is turned off
 
 namespace UnityEngine.Experimental.Input
@@ -158,7 +160,7 @@ namespace UnityEngine.Experimental.Input
         /// Set(gamepad.leftButton, 1);
         /// </code>
         /// </example>
-        public void Set<TValue>(InputControl<TValue> control, TValue state)
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double timeOffset = 0)
             where TValue : struct
         {
             if (control == null)
@@ -170,6 +172,7 @@ namespace UnityEngine.Experimental.Input
             InputEventPtr eventPtr;
             using (StateEvent.From(control.device, out eventPtr))
             {
+                eventPtr.time += timeOffset;
                 control.WriteValueInto(eventPtr, state);
                 InputSystem.QueueEvent(eventPtr);
             }
@@ -215,15 +218,9 @@ namespace UnityEngine.Experimental.Input
                 if (button == null)
                     continue;
 
-                // We do, so flip its state and we're done.
-                var device = button.device;
-                InputEventPtr inputEvent;
-                using (StateEvent.From(device, out inputEvent))
-                {
-                    button.WriteValueInto(inputEvent, button.isPressed ? 0 : 1);
-                    InputSystem.QueueEvent(inputEvent);
-                    InputSystem.Update();
-                }
+                // Press and release button.
+                Set(button, 1);
+                Set(button, 0);
 
                 return;
             }
@@ -236,20 +233,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
 
                 // We do, so nudge its value a bit.
-                var device = axis.device;
-                InputEventPtr inputEvent;
-                using (StateEvent.From(device, out inputEvent))
-                {
-                    var currentValue = axis.ReadValue();
-                    var newValue = currentValue + 0.01f;
-
-                    if (axis.clamp && newValue > axis.clampMax)
-                        newValue = axis.clampMin;
-
-                    axis.WriteValueInto(inputEvent, newValue);
-                    InputSystem.QueueEvent(inputEvent);
-                    InputSystem.Update();
-                }
+                Set(axis, axis.ReadValue() + 0.01f);
 
                 return;
             }

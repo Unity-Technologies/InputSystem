@@ -12,7 +12,6 @@ public class IntegerControlActionStatus : MonoBehaviour
 
     public Text statusText;
 
-    // Use this for initialization
     void OnEnable()
     {
         IntegerAction.Enable();

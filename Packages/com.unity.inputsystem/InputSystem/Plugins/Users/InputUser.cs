@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
+////FIXME: with BindOnlyToAssignedInputDevices on, we can easily end up in situations where reconfiguring the devices
+////       and/or control schemes on a user will lead to bindings getting resolved multiple times
+
 ////TODO: kill InputDevice.userId
 
 ////REVIEW: should we reference the control scheme by name only instead of passing InputControlSchemes around?
@@ -217,12 +220,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             if (actions == null)
                 throw new ArgumentNullException("actions");
 
-            var index = FindUserIndex(user);
-            if (index == -1)
+            var userIndex = FindUserIndex(user);
+            if (userIndex == -1)
                 throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
 
-            s_AllUserData[index].actions = actions;
+            s_AllUserData[userIndex].actions = actions;
+            AssignDevicesToActionsIfNecessary(userIndex);
         }
+
+        ////TODO: keep copy of reference and if two users end up with the same reference, automatically all MakePrivateCopyOfActions
 
         public static void AssignInputActions<TUser>(this TUser user, InputActionAssetReference assetReference)
             where TUser : class, IInputUser
@@ -233,6 +239,54 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 throw new ArgumentNullException("assetReference");
 
             AssignInputActions(user, assetReference.asset);
+        }
+
+        /// <summary>
+        /// Make bindings specific to the devices assigned to the user.
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// By default, assigning devices (<see cref="InputUser.AssignInputDevice{TUser}(TUser,InputDevice)"/> to
+        /// a user will not restrict which devices the user's actions will bind to. This is desirable, for example,
+        /// to allow the user to be assigned on specific Gamepad in the system, yet also allow the user to switch
+        /// to another Gamepad seamlessly.
+        ///
+        /// By passing true for <paramref name="value"/>, the user's binding will
+        /// </remarks>
+        public static void BindOnlyToAssignedInputDevices<TUser>(this TUser user, bool value = true)
+            where TUser : class, IInputUser
+        {
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            var userIndex = FindUserIndex(user);
+            if (userIndex == -1)
+                throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
+
+            if (value)
+            {
+                // Do nothing if already enabled.
+                if ((s_AllUserData[userIndex].flags & UserFlags.BindOnlyToAssignedInputDevices) != 0)
+                    return;
+
+                s_AllUserData[userIndex].flags |= UserFlags.BindOnlyToAssignedInputDevices;
+
+                // If we already have actions assigned to the user, assign our set of devices (may be empty) to them.
+                AssignDevicesToActionsIfNecessary(userIndex);
+            }
+            else
+            {
+                // Do nothing if already disabled.
+                if ((s_AllUserData[userIndex].flags & UserFlags.BindOnlyToAssignedInputDevices) == 0)
+                    return;
+
+                s_AllUserData[userIndex].flags &= ~UserFlags.BindOnlyToAssignedInputDevices;
+
+                // Reset device list on actions, if we have any.
+                var actions = s_AllUserData[userIndex].actions;
+                if (actions != null)
+                    actions.devices = null;
+            }
         }
 
         /// <summary>
@@ -327,19 +381,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 s_AllUserData[index].deviceCount);
         }
 
-        /// <summary>
-        /// Get the list of devices that the user is missing to satisfy all requirements in the current
-        /// control scheme.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <typeparam name="TUser"></typeparam>
-        /// <returns></returns>
-        public static ReadOnlyArray<InputControlScheme.DeviceRequirement> GetMissingInputDevices<TUser>(this TUser user)
-            where TUser : class, IInputUser
-        {
-            throw new NotImplementedException();
-        }
-
         public static void AssignInputDevice<TUser>(this TUser user, InputDevice device)
             where TUser : class, IInputUser
         {
@@ -353,7 +394,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 throw new InvalidOperationException(string.Format("User '{0}' has not been added to the system", user));
 
             if (AssignDeviceInternal(userIndex, device))
+            {
+                AssignDevicesToActionsIfNecessary(userIndex);
                 Notify(user, InputUserChange.DevicesChanged);
+            }
         }
 
         public static void AssignInputDevices<TUser, TDevices>(this TUser user, TDevices devices)
@@ -376,7 +420,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             }
 
             if (wasAdded)
+            {
+                AssignDevicesToActionsIfNecessary(userIndex);
                 Notify(user, InputUserChange.DevicesChanged);
+            }
         }
 
         private static bool AssignDeviceInternal(int userIndex, InputDevice device)
@@ -415,6 +462,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             ++s_AllUserData[userIndex].deviceCount;
 
             return true;
+        }
+
+        private static void AssignDevicesToActionsIfNecessary(int userIndex)
+        {
+            // Ignore if not enabled.
+            if ((s_AllUserData[userIndex].flags & UserFlags.BindOnlyToAssignedInputDevices) == 0)
+                return;
+
+            // Ignore if not having actions.
+            var actions = s_AllUserData[userIndex].actions;
+            if (actions == null)
+                return;
+
+            actions.devices = s_AllUsers[userIndex].GetAssignedInputDevices();
         }
 
         public static void ClearAssignedInputDevices<TUser>(this TUser user)
@@ -483,17 +544,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
         public static void PauseHaptics(this IInputUser user)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         public static void ResumeHaptics(this IInputUser user)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         public static void ResetHaptics(this IInputUser user)
         {
-            throw new NotImplementedException();
+            ////TODO
         }
 
         /// <summary>
@@ -723,7 +784,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     using (var availableDevices = GetUnassignedInputDevices())
                     {
                         // If we're only supposed to add missing devices, we need to take the devices already
-                        // already assigned to the user into account when picking devices. Add them to the beginning
+                        // assigned to the user into account when picking devices. Add them to the beginning
                         // of the list so that they get matched first.
                         if (addMissingOnly)
                             availableDevices.AddSlice(s_AllUsers[m_UserIndex].GetAssignedInputDevices(), destinationIndex: 0);
@@ -748,11 +809,36 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 }
 
                 if (needToNotifyAboutChangedDevices)
+                {
+                    AssignDevicesToActionsIfNecessary(m_UserIndex);
                     Notify(s_AllUsers[m_UserIndex], InputUserChange.DevicesChanged);
+                }
 
                 return this;
             }
 
+            /// <summary>
+            /// Mask out (i.e. disable) every binding that doesn't belong to the assigned control scheme.
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks>
+            /// When using a specific control scheme, it can be desirable to either render any binding outside
+            /// the control scheme unusable or to leave all bindings enabled such that it is possible to
+            /// automatically detect when the user switches to a different control scheme.
+            ///
+            /// The first case, where we mask out any other binding, is supported by this method. When called,
+            /// the binding group of the current control scheme (<see cref="InputControlScheme.bindingGroup)"/>)
+            /// will be applied to the actions assigned to the user (<see
+            /// cref="InputUser.AssignInputActions{TUser}(TUser,IInputActionCollection)"/>).
+            ///
+            /// Note that for this method to work, actions have to be assigned to the user first.
+            ///
+            /// By default, bindings will not get masked and every binding will activate when actions
+            /// are enabled.
+            /// </remarks>
+            /// <seealso cref="InputUser.AssignInputActions{TUser}(TUser,IInputActionCollection)"/>
+            /// <seealso cref="IInputActionCollection.bindingMask"/>
+            /// <seealso cref="IInputActionCollection.SetBindingMask"/>
             public ControlSchemeSyntax AndMaskBindingsFromOtherControlSchemes()
             {
                 // Nothing to do if we don't have a control scheme.
@@ -761,11 +847,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
                 var actions = s_AllUserData[m_UserIndex].actions;
                 if (actions == null)
-                    throw new InvalidOperationException(string.Format("No actions have been assigned to user '{0}'; call AssignInputActions() first",
+                    throw new InvalidOperationException(string.Format(
+                        "No actions have been assigned to user '{0}'; call AssignInputActions() first",
                         s_AllUsers[m_UserIndex]));
 
                 var bindingGroup = s_AllUserData[m_UserIndex].controlScheme.Value.bindingGroup;
-                actions.SetBindingMask(new InputBinding {groups = bindingGroup});
+                actions.bindingMask = new InputBinding {groups = bindingGroup};
                 return this;
             }
 
@@ -778,6 +865,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             internal bool m_Failure;
         }
 
+        [Flags]
+        internal enum UserFlags
+        {
+            BindOnlyToAssignedInputDevices = 1 << 0,
+        }
+
         /// <summary>
         /// Data we store for each user.
         /// </summary>
@@ -786,6 +879,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             public ulong id;
             public string userName;
             public InputUserHandle? handle;
+            public UserFlags flags;
 
             public int deviceCount;
             public int deviceStartIndex;
@@ -808,13 +902,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         internal static void ResetGlobals()
         {
             s_AllUserCount = 0;
+            s_AllDeviceCount = 0;
             s_AllUsers = null;
             s_AllUserData = null;
-            s_AllDeviceCount = 0;
             s_AllDevices = null;
             s_OnChange = new InlinedArray<Action<IInputUser, InputUserChange>>();
             s_OnUnassignedDeviceUsed = new InlinedArray<Action<IInputUser, InputAction, InputControl>>();
             s_OnActionTriggered = null;
+            s_OnActionChangedHooked = false;
         }
 
         ////WIP
@@ -826,16 +921,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             set { throw new NotImplementedException(); }
         }
 
-        ////REVIEW: should this be some generic join hook? needs to be explored more; involve console team
-        /// <summary>
-        /// If true, on platforms that have built-in support for user management (e.g. Xbox and PS4),
-        /// automatically create users and assign them devices to reflect
-        /// </summary>
-        public static bool autoAddPlatformUsers
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
 
         */
     }

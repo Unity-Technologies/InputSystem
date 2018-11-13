@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -41,16 +42,14 @@ namespace UnityEngine.Experimental.Input.Layouts
     public class InputDeviceBuilder
     {
         // We use this constructor when we create devices in batches.
-        internal InputDeviceBuilder(InputControlLayout.Collection layouts)
+        internal InputDeviceBuilder()
         {
-            m_LayoutCache.layouts = layouts;
         }
 
         public InputDeviceBuilder(string layout, string variants = null,
                                   InputDeviceDescription deviceDescription = new InputDeviceDescription(),
                                   InputDevice existingDevice = null)
         {
-            m_LayoutCache.layouts = InputControlLayout.s_Layouts;
             Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 
@@ -197,6 +196,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         // overrides for the control at the given path.
         private Dictionary<string, InputControlLayout.ControlItem> m_ChildControlOverrides;
 
+        private StringBuilder m_StringBuilder;
+
         // Reset the setup in a way where it can be reused for another setup.
         // Should retain allocations that can be reused.
         private void Reset()
@@ -309,7 +310,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             }
 
             control.m_Name = name;
-            control.m_DisplayNameFromLayout = layout.m_DisplayName;
+            control.m_DisplayNameFromLayout = layout.m_DisplayName; // No short display names at layout roots.
             control.m_Layout = layout.name;
             control.m_Variants = variants;
             control.m_Parent = parent;
@@ -561,13 +562,25 @@ namespace UnityEngine.Experimental.Input.Layouts
             ++childIndex;
 
             // Set flags and misc things.
-            control.m_DisplayNameFromLayout = controlItem.displayName;
             control.noisy = controlItem.isNoisy;
+            control.synthetic = controlItem.isSynthetic;
+
+            // Remember the display names from the layout. We later do a proper pass once we have
+            // the full hierarchy to set final names.
+            control.m_DisplayNameFromLayout = controlItem.displayName;
+            control.m_ShortDisplayNameFromLayout = controlItem.shortDisplayName;
 
             // Set default value.
             control.m_DefaultValue = controlItem.defaultState;
             if (!control.m_DefaultValue.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
+
+            // Set min and max value. Don't just overwrite here as the control's constructor may
+            // have set a default value.
+            if (!controlItem.minValue.isEmpty)
+                control.m_MinValue = controlItem.minValue;
+            if (!controlItem.maxValue.isEmpty)
+                control.m_MaxValue = controlItem.maxValue;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
@@ -713,6 +726,10 @@ namespace UnityEngine.Experimental.Input.Layouts
                     child.m_DefaultValue = controlItem.defaultState;
                     m_Device.hasControlsWithDefaultState = true;
                 }
+                if (!controlItem.minValue.isEmpty)
+                    child.m_MinValue = controlItem.minValue;
+                if (!controlItem.maxValue.isEmpty)
+                    child.m_MaxValue = controlItem.maxValue;
 
                 ////TODO: other modifications
             }
@@ -774,6 +791,64 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             foreach (var child in root.children)
                 ShiftChildIndicesInHierarchyOneUp(child, startIndex);
+        }
+
+        // NOTE: We can only do this once we've initialized the names on the parent control. I.e. it has to be
+        //       done in the second pass we do over the control hierarchy.
+        private void SetDisplayName(InputControl control, string displayNameFromLayout, bool shortName)
+        {
+            // Display name may not be set in layout.
+            if (string.IsNullOrEmpty(displayNameFromLayout))
+            {
+                // For short names, we leave it unassigned if there's nothing in the layout.
+                if (shortName)
+                {
+                    control.m_ShortDisplayNameFromLayout = null;
+                    return;
+                }
+
+                ////REVIEW: automatically uppercase or prettify this?
+                // For long names, we default to the control's name.
+                displayNameFromLayout = control.name;
+            }
+
+            // If it's a nested control, synthesize a path that includes parents.
+            if (control.parent != null && control.parent != control.device)
+            {
+                if (m_StringBuilder == null)
+                    m_StringBuilder = new StringBuilder();
+                m_StringBuilder.Length = 0;
+                AddParentDisplayNameRecursive(control.parent, m_StringBuilder, shortName);
+                m_StringBuilder.Append(displayNameFromLayout);
+                displayNameFromLayout = m_StringBuilder.ToString();
+            }
+
+            // Assign.
+            if (shortName)
+                control.m_ShortDisplayNameFromLayout = displayNameFromLayout;
+            else
+                control.m_DisplayNameFromLayout = displayNameFromLayout;
+        }
+
+        private static void AddParentDisplayNameRecursive(InputControl control, StringBuilder stringBuilder,
+            bool shortName)
+        {
+            if (control.parent != null && control.parent != control.device)
+                AddParentDisplayNameRecursive(control.parent, stringBuilder, shortName);
+
+            if (shortName)
+            {
+                var text = control.shortDisplayName;
+                if (string.IsNullOrEmpty(text))
+                    text = control.displayName;
+
+                stringBuilder.Append(text);
+            }
+            else
+            {
+                stringBuilder.Append(control.displayName);
+            }
+            stringBuilder.Append(' ');
         }
 
         private static void AddProcessors(InputControl control, ref InputControlLayout.ControlItem controlItem, string layoutName)
@@ -897,7 +972,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                         string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
 
                 // Skip children that don't have fixed offsets.
-                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||
+                    child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
                     continue;
 
                 var endOffset =
@@ -919,7 +995,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var child in children)
             {
                 // Skip children with fixed offsets.
-                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset &&
+                    child.m_StateBlock.byteOffset != InputStateBlock.kAutomaticOffset)
                     continue;
 
                 // Skip children using state from other controls.
@@ -987,6 +1064,10 @@ namespace UnityEngine.Experimental.Input.Layouts
         private void FinalizeControlHierarchyRecursive(InputControl control, ref int childArrayIndex,
             ref int usageArrayIndex, ref int aliasArrayIndex)
         {
+            // Set display names.
+            SetDisplayName(control, control.m_DisplayNameFromLayout, false);
+            SetDisplayName(control, control.m_ShortDisplayNameFromLayout, true);
+
             // Finalize child, usage, and alias array references.
             // When we get here, all the array references are valid but we may have grown the arrays on
             // m_Device repeatedly so we want all controls to refer to those final arrays now so that the

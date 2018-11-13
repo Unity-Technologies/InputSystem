@@ -542,6 +542,54 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanRestrictBindingToAssignedInputDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        var map1 = new InputActionMap("map");
+        map1.AddAction("action").AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        var map2 = map1.Clone();
+
+        var user1 = new TestUser();
+        var user2 = new TestUser();
+
+        InputUser.Add(user1);
+        InputUser.Add(user2);
+
+        user1.AssignInputDevice(gamepad1);
+        user2.AssignInputDevice(gamepad2);
+
+        user1.AssignInputActions(map1);
+        user2.AssignInputActions(map2);
+
+        // Have bound to everything available globally.
+        Assert.That(map1["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth, gamepad2.buttonSouth, gamepad3.buttonSouth }));
+        Assert.That(map2["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth, gamepad2.buttonSouth, gamepad3.buttonSouth}));
+
+        user2.BindOnlyToAssignedInputDevices();
+
+        // Have bound only to currently assigned devices.
+        Assert.That(map1["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth, gamepad2.buttonSouth, gamepad3.buttonSouth}));
+        Assert.That(map2["action"].controls, Is.EquivalentTo(new[] {gamepad2.buttonSouth}));
+
+        user2.ClearAssignedInputDevices();
+        user2.AssignInputDevice(gamepad3);
+
+        // Have updated bindings to reflect change in assigned devices.
+        Assert.That(map1["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth, gamepad2.buttonSouth, gamepad3.buttonSouth}));
+        Assert.That(map2["action"].controls, Is.EquivalentTo(new[] {gamepad3.buttonSouth}));
+
+        user2.BindOnlyToAssignedInputDevices(false);
+
+        // Have gone back to binding to everything.
+        Assert.That(map1["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth, gamepad2.buttonSouth, gamepad3.buttonSouth }));
+        Assert.That(map2["action"].controls, Is.EquivalentTo(new[] {gamepad1.buttonSouth, gamepad2.buttonSouth, gamepad3.buttonSouth}));
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CanDetectWhenUnassignedDeviceIsUsed()
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
@@ -635,6 +683,14 @@ internal class UserTests : InputTestFixture
     [Category("Users")]
     [Ignore("TODO")]
     public void TODO_Users_CanGetAndSetCustomBindings()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Users")]
+    [Ignore("TODO")]
+    public void TODO_Users_CanPauseAndResumeHaptics()
     {
         Assert.Fail();
     }

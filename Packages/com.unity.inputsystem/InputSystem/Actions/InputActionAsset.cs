@@ -59,9 +59,43 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputControlScheme>(m_ControlSchemes); }
         }
 
+        /// <inheritdoc />
         public InputBinding? bindingMask
         {
             get { return m_BindingMask; }
+            set
+            {
+                if (m_BindingMask == value)
+                    return;
+
+                m_BindingMask = value;
+
+                ReResolveIfNecessary();
+            }
+        }
+
+        /// <inheritdoc />
+        public ReadOnlyArray<InputDevice>? devices
+        {
+            get { return m_Devices; }
+            set
+            {
+                if (value == null)
+                {
+                    if (m_DevicesArray != null)
+                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
+                    m_DevicesCount = 0;
+                    m_Devices = null;
+                }
+                else
+                {
+                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
+                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
+                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
+                }
+
+                ReResolveIfNecessary();
+            }
         }
 
         /// <summary>
@@ -352,39 +386,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Set the mask to apply when choosing which bindings to use and which to ignore.
-        /// </summary>
-        /// <param name="bindingMask">A binding that can be used as a mask.</param>
-        public void SetBindingMask(InputBinding bindingMask)
-        {
-            if (bindingMask == m_BindingMask)
-                return;
-
-            m_BindingMask = bindingMask;
-
-            // Re-resolve bindings, if necessary.
-            if (m_ActionMapState != null)
-            {
-                Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
-                // State is share between all action maps in the asset. Resolving bindings for the
-                // first map will resolve them for all maps.
-                m_ActionMaps[0].ResolveBindings();
-            }
-        }
-
-        public void SetBindingMask(string bindingGroups)
-        {
-            if (string.IsNullOrEmpty(bindingGroups))
-                throw new ArgumentNullException("bindingGroups");
-            SetBindingMask(new InputBinding {groups = bindingGroups});
-        }
-
-        public void ClearBindingMask()
-        {
-            SetBindingMask(new InputBinding());
-        }
-
-        /// <summary>
         /// Duplicate the asset.
         /// </summary>
         /// <returns>A new asset that contains a duplicate of all action maps and actions in the asset.</returns>
@@ -403,6 +404,18 @@ namespace UnityEngine.Experimental.Input
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public void Enable()
+        {
+            foreach (var map in actionMaps)
+                map.Enable();
+        }
+
+        public void Disable()
+        {
+            foreach (var map in actionMaps)
+                map.Disable();
         }
 
         public bool Contains(InputAction action)
@@ -437,6 +450,17 @@ namespace UnityEngine.Experimental.Input
             return GetEnumerator();
         }
 
+        private void ReResolveIfNecessary()
+        {
+            if (m_ActionMapState == null)
+                return;
+
+            Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
+            // State is share between all action maps in the asset. Resolving bindings for the
+            // first map will resolve them for all maps.
+            m_ActionMaps[0].ResolveBindings();
+        }
+
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
@@ -447,7 +471,11 @@ namespace UnityEngine.Experimental.Input
         /// Shared state for all action maps in the asset.
         /// </summary>
         [NonSerialized] internal InputActionMapState m_ActionMapState;
-        [NonSerialized] internal InputBinding m_BindingMask;
+        [NonSerialized] internal InputBinding? m_BindingMask;
+
+        [NonSerialized] internal ReadOnlyArray<InputDevice>? m_Devices;
+        [NonSerialized] internal int m_DevicesCount;
+        [NonSerialized] internal InputDevice[] m_DevicesArray;
 
         [Serializable]
         internal struct FileJson

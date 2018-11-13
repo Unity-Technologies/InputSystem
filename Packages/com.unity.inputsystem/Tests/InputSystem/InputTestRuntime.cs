@@ -90,12 +90,28 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
+        {
+            SetDeviceCommandCallback(device.id, callback);
+        }
+
         public void SetDeviceCommandCallback(int deviceId, DeviceCommandCallback callback)
         {
             lock (m_Lock)
             {
                 if (m_DeviceCommandCallbacks == null)
                     m_DeviceCommandCallbacks = new List<KeyValuePair<int, DeviceCommandCallback>>();
+                else
+                {
+                    for (var i = 0; i < m_DeviceCommandCallbacks.Count; ++i)
+                    {
+                        if (m_DeviceCommandCallbacks[i].Key == deviceId)
+                        {
+                            m_DeviceCommandCallbacks[i] = new KeyValuePair<int, DeviceCommandCallback>(deviceId, callback);
+                            return;
+                        }
+                    }
+                }
                 m_DeviceCommandCallbacks.Add(new KeyValuePair<int, DeviceCommandCallback>(deviceId, callback));
             }
         }

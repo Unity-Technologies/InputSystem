@@ -1,10 +1,11 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -15,6 +16,8 @@ using Random = UnityEngine.Random;
 /// </summary>
 public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
 {
+    public const float DelayBetweenBurstProjectiles = 0.1f;
+
     public float moveSpeed;
     public float rotateSpeed;
     public float burstSpeed;
@@ -33,27 +36,36 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     public DemoControls controls;
 
     /// <summary>
-    /// UI specific to the player.
+    /// UI input module specific to the player.
     /// </summary>
     /// <remarks>
-    /// We feed input from <see cref="controls"/> into this UI thus making the UI responsive
+    /// We feed input from <see cref="controls"/> into this module thus making the player's UI responsive
     /// to the player's devices only.
     /// </remarks>
-    public Canvas ui;
+    public UIActionInputModule uiActions;
 
     /// <summary>
     /// GameObject hierarchy inside <see cref="ui"/> that represents the menu UI.
     /// </summary>
+    [Tooltip("Root object the per-player menu UI.")]
     public GameObject menuUI;
 
     /// <summary>
     /// GameObject hierarchy inside <see cref="ui"/> that represents the in-game UI.
     /// </summary>
+    [Tooltip("Root object of the per-player in-game UI.")]
     public GameObject inGameUI;
 
-    public Text fireHintsUI;
-    public Text moveHintsUI;
-    public Text lookHintsUI;
+    /// <summary>
+    /// In-game UI that displays control hints.
+    /// </summary>
+    [Tooltip("In-game UI to display control hints.")]
+    public Text controlHintsUI;
+
+    /// <summary>
+    /// In-game UI to show while the player is charging the fire button.
+    /// </summary>
+    [Tooltip("In-game UI to show while the player is charging the fire button.")]
     public GameObject chargingUI;
 
     public Action<DemoPlayerController> onLeaveGame;
@@ -66,6 +78,9 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     private bool m_Charging;
     private Vector2 m_Rotation;
 
+    private int m_BurstProjectileCountRemaining;
+    private float m_LastBurstProjectileTime;
+
     private Rigidbody m_Rigidbody;
 
     public int score
@@ -73,9 +88,14 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         get { return m_Score; }
     }
 
+    public bool isInMenu
+    {
+        get { return menuUI.activeSelf; }
+    }
+
     public void Start()
     {
-        Debug.Assert(ui != null);
+        Debug.Assert(uiActions != null);
         Debug.Assert(projectilePrefab != null);
         Debug.Assert(controls != null);
 
@@ -89,13 +109,13 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// Once spawned, we are reusing player instances over and over. The setup we perform in here,
     /// however, is done only once.
     /// </remarks>
-    public void PerformOneTimeInitialization(int playerIndex)
+    public void PerformOneTimeInitialization(bool isFirstPlayer)
     {
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
         // the original actions.
-        if (playerIndex != 0)
-            controls.DuplicateAndSwitchAsset();
+        if (!isFirstPlayer)
+            controls.MakePrivateCopyOfActions();
 
         // Wire our callbacks into gameplay actions. We don't need to do the same
         // for menu actions as it's the UI using those and not us.
@@ -108,10 +128,8 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         //
         // NOTE: Our bindings will be effective on the devices assigned to the user which in turn
         //       means that the UI will react only to input from that same user.
-        var uiInput = ui.GetComponent<UIActionInputModule>();
-        Debug.Assert(uiInput != null);
-        uiInput.move = new InputActionProperty(controls.menu.navigate);
-        uiInput.leftClick = new InputActionProperty(controls.menu.click);
+        uiActions.move = new InputActionProperty(controls.menu.navigate);
+        uiActions.leftClick = new InputActionProperty(controls.menu.click);
     }
 
     /// <summary>
@@ -145,8 +163,7 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
             }
         }
 
-        // Start with the gameplay actions being active.
-        controls.gameplay.Enable();
+        StartGame();
     }
 
     /// <summary>
@@ -154,6 +171,41 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// </summary>
     public void StartMultiPlayerGame()
     {
+        // In multi-player, we always join players through specific devices. These should get
+        // assigned to the player right away.
+        Debug.Assert(this.GetAssignedInputDevices().Count > 0);
+
+        // In multi-player, we don't want players to be able to switch between devices
+        // so we restrict players to just their assigned devices when binding actions.
+        this.BindOnlyToAssignedInputDevices();
+
+        // Associate our InputUser with the actions we're using.
+        this.AssignInputActions(controls);
+
+        // Find which control scheme to use based on the device we have.
+        var controlScheme = SelectControlSchemeBasedOnDevice(this.GetAssignedInputDevices()[0]);
+
+        // Activate the control scheme and automatically assign whatever other devices we need
+        // which aren't already assigned to someone else.
+        // NOTE: We also make sure to disable any other control scheme so that the user cannot
+        //       switch between devices.
+        if (!this.AssignControlScheme(controlScheme)
+            .AndAssignMissingDevices()
+            .AndMaskBindingsFromOtherControlSchemes())
+        {
+            ////TODO: what to do here?
+        }
+
+        StartGame();
+    }
+
+    private void StartGame()
+    {
+        // Start with the gameplay actions being active.
+        controls.gameplay.Enable();
+
+        // And menu not being active.
+        menuUI.SetActive(false);
     }
 
     /// <summary>
@@ -231,9 +283,11 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
                 break;
 
             case InputActionPhase.Performed:
+                ////TODO: handle case where we're already running a burst fire
                 if (context.interaction is SlowTapInteraction)
                 {
-                    StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
+                    m_BurstProjectileCountRemaining = (int)(context.duration * burstSpeed);
+                    m_LastBurstProjectileTime = -1;
                 }
                 else
                 {
@@ -261,12 +315,49 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         }
     }
 
-    public void OnEscape(InputAction.CallbackContext context)
+    public void OnMenu(InputAction.CallbackContext context)
     {
+        if (isInMenu)
+        {
+            // Leave menu.
+
+            this.ResumeHaptics();
+
+            controls.gameplay.Enable();
+            controls.menu.Disable();///REVIEW: this should likely be left to the UI input module
+
+            menuUI.SetActive(false);
+        }
+        else
+        {
+            // Enter menu.
+
+            this.PauseHaptics();
+
+            controls.gameplay.Disable();
+            controls.menu.Enable();///REVIEW: this should likely be left to the UI input module
+
+            // We do want the menu toggle to remain active. Rather than moving the action to its
+            // own separate action map, we just go and enable that one single action from the
+            // gameplay actions.
+            // NOTE: This will cause gameplay.enabled to remain true.
+            // NOTE: This setup won't work on Steam where we can only have a single action set active
+            //       at any time. We ignore the gameplay/menu action on Steam and instead handle
+            //       menu toggling via the two separate actions gameplay/steamEnterMenu and menu/steamExitMenu
+            //       that we use only for Steam.
+            controls.gameplay.menu.Enable();
+
+            menuUI.SetActive(true);
+        }
+    }
+
+    public void OnSteamEnterMenu(InputAction.CallbackContext context)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Called when the user switches to a different control scheme.
+    /// Called when the set of devices assigned the player has changed.
     /// </summary>
     /// <remarks>
     /// Updates UI help texts with information based on the bindings in the currently
@@ -274,12 +365,10 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
     /// (e.g. gamepad hints instead of keyboard hints when the user is playing with a
     /// gamepad).
     /// </remarks>
-    public void OnControlSchemeChanged()
+    public void OnAssignedDevicesChanged()
     {
-    }
-
-    public void OnDevicesChanged()
-    {
+        var devices = this.GetAssignedInputDevices();
+        controlHintsUI.text = GetOrCreateUIHint(controls.gameplay.fire, "Tap {0} to fire, hold to charge", devices);
     }
 
     public void OnCollisionStay()
@@ -287,16 +376,21 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         m_IsGrounded = true;
     }
 
-    public void ShowMenu()
-    {
-        //pause haptics
-        //disable game controls / switch to menu actions
-    }
-
     public void Update()
     {
         Move(m_Move);
         Look(m_Look);
+
+        // Execute charged fire.
+        if (m_BurstProjectileCountRemaining > 0 &&
+            (m_LastBurstProjectileTime < 0 ||
+             Time.time - m_LastBurstProjectileTime >
+             DelayBetweenBurstProjectiles))
+        {
+            FireProjectile();
+            m_LastBurstProjectileTime = Time.time;
+            --m_BurstProjectileCountRemaining;
+        }
     }
 
     private void Move(Vector2 direction)
@@ -319,21 +413,6 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
         transform.rotation = localRotation;
     }
 
-    /// <summary>
-    /// Fire <paramref name="projectileCount"/> projectiles over time.
-    /// </summary>
-    /// <param name="projectileCount"></param>
-    /// <param name="delayBetweenProjectiles"></param>
-    /// <returns></returns>
-    private IEnumerator ExecuteChargedFire(int projectileCount, float delayBetweenProjectiles = 0.1f)
-    {
-        for (var i = 0; i < projectileCount; ++i)
-        {
-            FireProjectile();
-            yield return new WaitForSeconds(delayBetweenProjectiles);
-        }
-    }
-
     private void FireProjectile()
     {
         var transform = this.transform;
@@ -348,27 +427,69 @@ public class DemoPlayerController : MonoBehaviour, IInputUser, IGameplayActions
             new Color(Random.value, Random.value, Random.value, 1.0f);
     }
 
-    private void OnGotoMenu()
+    ////TODO: flush out cached UI hints when a device is removed (for good)
+
+    private struct CachedUIHint
     {
-        // Pause haptics effects while we are in the menu.
-        this.PauseHaptics();
-
-        // Switch from gameplay actions to menu actions.
-        //user.SetActions(controls.menu);
-
-        // Activate the UI.
-        ui.gameObject.SetActive(true);
+        public InputAction action;
+        public InputDevice device;
+        public string format;
+        public string text;
     }
 
-    private void OnResumeGame()
+    private static List<CachedUIHint> s_CachedUIHints;
+
+    public static void ClearUIHintsCache()
     {
-        // Deactivate the UI.
-        ui.gameObject.SetActive(false);
+        if (s_CachedUIHints != null)
+            s_CachedUIHints.Clear();
+    }
 
-        // Resume playback of haptics effects.
-        this.ResumeHaptics();
+    /// <summary>
+    /// Create a textual hint to show for the given action based on the devices we are currently using.
+    /// </summary>
+    /// <param name="action">Action to generate a hint for.</param>
+    /// <param name="format">Format string. Use {0} where the active control name should be inserted.</param>
+    /// <param name="devices">Set of currently assigned devices. The action will be searched for a bound control that sits
+    /// on one of the devices. If none is found, an empty string is returned.</param>
+    /// <returns>Text containing a hint for the given action or an empty string.</returns>
+    private static string GetOrCreateUIHint(InputAction action, string format, ReadOnlyArray<InputDevice> devices)
+    {
+        InputControl control = null;
+        InputDevice device = null;
 
-        // Switch back to gameplay controls.
-        //user.SetActions(controls.gameplay);
+        // Find the first control that is bound to any of the given devices.
+        var controls = action.controls;
+        foreach (var element in controls)
+            if (devices.ContainsReference(element.device))
+            {
+                control = element;
+                device = control.device;
+                break;
+            }
+
+        if (control == null)
+            return string.Empty;
+
+        // See if we have an existing hint.
+        if (s_CachedUIHints != null)
+        {
+            foreach (var hint in s_CachedUIHints)
+            {
+                if (hint.action == action && hint.device == device && hint.format == format)
+                    return hint.text;
+            }
+        }
+
+        // No, so create a new hint and cache it.
+        var controlName = control.shortDisplayName;
+        if (string.IsNullOrEmpty(controlName))
+            controlName = control.displayName;
+        var text = string.Format(format, controlName);
+        if (s_CachedUIHints == null)
+            s_CachedUIHints = new List<CachedUIHint>();
+        s_CachedUIHints.Add(new CachedUIHint {action = action, device = device, format = format, text = text});
+
+        return text;
     }
 }

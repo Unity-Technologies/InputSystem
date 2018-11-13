@@ -15,9 +15,11 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.TestTools;
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Serializable]
+
     struct PackageJson
     {
         public string version;
@@ -464,6 +466,8 @@ partial class CoreTests
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
         Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
+        Assert.That(code, Contains.Substring("public override void MakePrivateCopyOfActions()"));
+        Assert.That(code, Contains.Substring("public void SetAsset(InputActionAsset newAsset)"));
     }
 
     [Test]
@@ -667,7 +671,7 @@ partial class CoreTests
 
         public void OnGUI()
         {
-            mousePosition = Mouse.current.position.ReadValue();
+            mousePosition = InputSystem.GetDevice<Mouse>().position.ReadValue();
         }
     }
 

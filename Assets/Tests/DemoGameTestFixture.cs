@@ -27,6 +27,7 @@ public class DemoGameTestFixture
     public Mouse mouse { get; set; }
     public Keyboard keyboard { get; set; }
     public Touchscreen touchscreen { get; set; }
+    public Gamepad gamepad { get; set; }
     public DualShockGamepad ps4Gamepad { get; set; }
     public XInputController xboxGamepad { get; set; }
     public Joystick joystick { get; set; }
@@ -41,6 +42,14 @@ public class DemoGameTestFixture
     public DemoPlayerController player1
     {
         get { return game.players[0]; }
+    }
+
+    /// <summary>
+    /// Enumerate all fired projectiles that currently exist in the scene.
+    /// </summary>
+    public GameObject[] projectiles
+    {
+        get { return GameObject.FindGameObjectsWithTag("Projectile"); }
     }
 
     [UnitySetUp]
@@ -101,7 +110,7 @@ public class DemoGameTestFixture
                     mouse = (Mouse)InputSystem.AddDevice("Mouse");
                     pen = (Pen)InputSystem.AddDevice("Pen");
                     touchscreen = (Touchscreen)InputSystem.AddDevice("Touchscreen");
-                    ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
+                    gamepad = ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
                     xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
                     ////TODO: joystick
                     break;
@@ -110,7 +119,7 @@ public class DemoGameTestFixture
                 case RuntimePlatform.OSXEditor:
                     keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
                     mouse = (Mouse)InputSystem.AddDevice("Mouse");
-                    ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
+                    gamepad = ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
                     xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
                     ////TODO: joystick
                     break;
@@ -129,16 +138,28 @@ public class DemoGameTestFixture
                 switch (((string)value).ToLower())
                 {
                     case "gamepad":
-                        InputSystem.AddDevice<Gamepad>();
+                    {
+                        var device = InputSystem.AddDevice<Gamepad>();
+                        if (gamepad == null)
+                            gamepad = device;
                         break;
+                    }
 
                     case "keyboard":
-                        InputSystem.AddDevice<Keyboard>();
+                    {
+                        var device = InputSystem.AddDevice<Keyboard>();
+                        if (keyboard == null)
+                            keyboard = device;
                         break;
+                    }
 
                     case "mouse":
-                        InputSystem.AddDevice<Mouse>();
+                    {
+                        var device = InputSystem.AddDevice<Mouse>();
+                        if (mouse == null)
+                            mouse = device;
                         break;
+                    }
 
                     default:
                         throw new NotImplementedException();
@@ -184,6 +205,11 @@ public class DemoGameTestFixture
         // It looks like the test runner is stupidly reusing test fixture instances instead of
         // creating a new object for every run. So we really have to clean up well.
 
+        game.players.Each(UnityEngine.Object.DestroyImmediate);
+        UnityEngine.Object.DestroyImmediate(game.gameObject);
+
+        DemoPlayerController.ClearUIHintsCache();
+
         input.TearDown();
 
         game = null;
@@ -193,6 +219,7 @@ public class DemoGameTestFixture
         mouse = null;
         keyboard = null;
         touchscreen = null;
+        gamepad = null;
         ps4Gamepad = null;
         xboxGamepad = null;
         joystick = null;
@@ -224,7 +251,12 @@ public class DemoGameTestFixture
             throw new ArgumentException("action");
 
         // And trigger it.
-        input.Trigger(actionInstance);
+        Trigger(actionInstance);
+    }
+
+    public void Trigger(InputAction action)
+    {
+        input.Trigger(action);
     }
 
     /// <summary>
@@ -234,11 +266,11 @@ public class DemoGameTestFixture
     /// <remarks>
     /// Requires the current platform to have a keyboard.
     /// </remarks>
-    public void Press(Key key)
+    public void Press(Key key, double timeOffset = 0)
     {
         var keyboard = InputSystem.GetDevice<Keyboard>();
         Debug.Assert(keyboard != null);
-        input.Set(keyboard[key], 1);
+        input.Set(keyboard[key], 1, timeOffset);
     }
 
     /// <summary>
@@ -248,28 +280,65 @@ public class DemoGameTestFixture
     /// <remarks>
     /// Requires the current platform to have a keyboard.
     /// </remarks>
-    public void Release(Key key)
+    public void Release(Key key, double timeOffset = 0)
     {
         var keyboard = InputSystem.GetDevice<Keyboard>();
         Debug.Assert(keyboard != null);
-        input.Set(keyboard[key], 1);
+        input.Set(keyboard[key], 1, timeOffset);
     }
 
     /// <summary>
     /// Press a button on a device.
     /// </summary>
     /// <param name="button"></param>
-    public void Press(ButtonControl button)
+    public void Press(ButtonControl button, double timeOffset = 0)
     {
-        input.Set(button, 1);
+        input.Set(button, 1, timeOffset);
     }
 
     /// <summary>
     /// Release a button on a device.
     /// </summary>
     /// <param name="button"></param>
-    public void Release(ButtonControl button)
+    public void Release(ButtonControl button, double timeOffset = 0)
     {
-        input.Set(button, 0);
+        input.Set(button, 0, timeOffset);
+    }
+
+    public void Set<TValue>(InputControl<TValue> control, TValue value, double timeOffset = 0)
+        where TValue : struct
+    {
+        input.Set(control, value, timeOffset);
+    }
+
+    /// <summary>
+    /// Retrieve a GameObject by its name.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public GameObject GO(string name)
+    {
+        var obj = GameObject.Find(name);
+        if (obj == null)
+            throw new Exception(string.Format("Cannot find GameObject '{0}'", name));
+        return obj;
+    }
+
+    /// <summary>
+    /// Retrieve a component on a named GameObject.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <typeparam name="TObject"></typeparam>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public TComponent GO<TComponent>(string name)
+        where TComponent : Component
+    {
+        var obj = GO(name);
+        var component = obj.GetComponent<TComponent>();
+        if (component == null)
+            throw new Exception(string.Format("Cannot find component of type '{0}' on GameObject '{1}'",
+                typeof(TComponent).Name, name));
+        return component;
     }
 }

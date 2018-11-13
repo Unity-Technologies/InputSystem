@@ -9,7 +9,9 @@ ScriptedImporter:
     11400008: gameplay/jump
     11400010: menu/navigate
     11400012: menu/click
-    11400014: gameplay/escape
+    11400014: gameplay/steamEnterMenu
+    11400016: gameplay/menu
+    11400018: menu/steamExitMenu
   externalObjects: {}
   userData: 
   assetBundleName: 

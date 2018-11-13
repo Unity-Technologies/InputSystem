@@ -1,9 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.XR;
+using InputDevice = UnityEngine.Experimental.Input.InputDevice;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -29,9 +33,6 @@ public class DemoGame : MonoBehaviour
     public GameObject playerPrefab;
     public GameObject fishPrefab; // rename 'fish' to 'creature'
 
-    //whenever the controls on this action change, we need to update the join help text
-    public InputActionProperty joinAction;
-
     public Canvas mainMenuCanvas;
     public Camera mainMenuCamera;
 
@@ -48,9 +49,28 @@ public class DemoGame : MonoBehaviour
         get { return m_State; }
     }
 
+    /// <summary>
+    /// Whether we're currently in a single-player game.
+    /// </summary>
+    public bool isSinglePlayer
+    {
+        get { return m_SinglePlayer; }
+    }
+
+    /// <summary>
+    /// Whether we're currently in a multi-player game.
+    /// </summary>
+    public bool isMultiPlayer
+    {
+        get { return !m_SinglePlayer; }
+    }
+
+    /// <summary>
+    /// List of players currently in the game.
+    /// </summary>
     public ReadOnlyArray<DemoPlayerController> players
     {
-        get { return new ReadOnlyArray<DemoPlayerController>(m_Players); }
+        get { return new ReadOnlyArray<DemoPlayerController>(m_Players, 0, m_ActivePlayerCount); }
     }
 
     public DemoFishController fish
@@ -83,26 +103,6 @@ public class DemoGame : MonoBehaviour
     private static RuntimePlatform? s_Platform;
     private static bool? s_VRSupported;
 
-    //single player: all devices owned by player (but not assigned to), automatically switches schemes as player uses different devices
-    //multi player: devices assigned by players explicitly joining on them
-
-
-    //instead of cubes, create some funky shapes in zbrush
-    //have variety of projectiles and tint each one randomly
-    //ground animated by wave shader
-
-
-    //funky animal appears in random locations on the map, lingers a while and then disappears again
-    //players have to shoot food into animal's mouth to get points
-    //timeout on game, highest score after time is out wins
-    //highscore where winning player can enter name (covers text input + IME)
-
-
-    //what to show:
-    // - join and device assignment logic
-    // - auto-switching logic for single player
-    // - cross-device input where input response code isn't aware of type of device generating the input
-
     private bool m_SinglePlayer;
     private int m_ActivePlayerCount;
     private DemoPlayerController[] m_Players;
@@ -111,15 +111,18 @@ public class DemoGame : MonoBehaviour
 
     public void Awake()
     {
+        InputUser.onChange += OnUserChange;
+
         // In single player games we want to know when the player switches to a device
         // that isn't among the ones currently assigned to the player so that we can
         // detect when to switch to a different control scheme.
-        InputUser.onUnassignedDeviceUsed += OnUnassignedDeviceUsed;
+        InputUser.onUnassignedDeviceUsed += OnUnassignedInputDeviceUsed;
     }
 
     public void OnDestroy()
     {
-        InputUser.onUnassignedDeviceUsed -= OnUnassignedDeviceUsed;
+        InputUser.onChange -= OnUserChange;
+        InputUser.onUnassignedDeviceUsed -= OnUnassignedInputDeviceUsed;
     }
 
     /// <summary>
@@ -158,7 +161,8 @@ public class DemoGame : MonoBehaviour
         m_SinglePlayer = true;
 
         // Spawn a player at index #0.
-        var player = SpawnPlayer(0);
+        Debug.Assert(m_ActivePlayerCount == 0);
+        var player = SpawnPlayer();
 
         // Let player initialize controls for single-player.
         player.StartSinglePlayerGame();
@@ -180,10 +184,9 @@ public class DemoGame : MonoBehaviour
     {
         m_SinglePlayer = false;
 
-        //nuke joinAction and rather listen to event stream; any button press anywhere on a device that isn't
-        //assigned yet should be a join
-        // Start listening for joins.
-        joinAction.action.Enable();
+        // Listen for joins.
+        InputSystem.onEvent += OnInputEventInMultiPlayer;
+
         ////TODO: call OnJoin when performed
         ////TODO: react when bound controls change
 
@@ -212,62 +215,78 @@ public class DemoGame : MonoBehaviour
         m_State = State.InGame;
     }
 
+    private void EndGame()
+    {
+        m_ActivePlayerCount = 0;
+
+        if (isMultiPlayer)
+        {
+            InputSystem.onEvent -= OnInputEventInMultiPlayer;
+        }
+    }
+
+    ////REVIEW: this logic seems too low-level to be here; can we move this into the input system somehow?
     /// <summary>
-    /// Called when a player triggers the join action on a device.
+    /// In multi-player, we want players to be able to join on new devices simply by pressing
+    /// a button. This callback is invoked on every input event and we determine whether we have
+    /// a new join.
     /// </summary>
-    /// <param name="context"></param>
+    /// <param name="eventPtr">An input event.</param>
     /// <remarks>
     /// </remarks>
-    private void OnJoin(InputAction.CallbackContext context)
+    private void OnInputEventInMultiPlayer(InputEventPtr eventPtr)
     {
-        // Find first unused player index.
-        var playerIndex = 0;
-        if (m_Players != null)
-        {
-            for (var i = 0; i < m_Players.Length; ++i)
-                if (m_Players[i] == null || !m_Players[i].enabled)
-                {
-                    playerIndex = i;
-                    break;
-                }
-        }
+        // Ignore if not a state event.
+        if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+            return;
 
+        // Ignore if device is already assigned to a player.
+        var device = InputSystem.GetDeviceById(eventPtr.deviceId);
+        if (device == null)
+            return;
+        if (InputUser.FindUserForDevice(device) != null)
+            return;
+
+        ////REVIEW: what about devices that we can't actually bind to from any of our existing bindings?
+        ////        seems like we should detect that here and not initiate a join
+        ////        we could alternatively create an InputAction and put all the bindings we have on there and then do joins from that
+
+        // See if a button was pressed on the device.
+        var controls = device.allControls;
+        for (var i = 0; i < controls.Count; ++i)
+        {
+            var control = controls[i];
+
+            // Skip if not a button.
+            var button = control as ButtonControl;
+            if (button == null)
+                continue;
+
+            // If it changed from pressed to not pressed, we have a winner.
+            float valueInEvent;
+            if (button.ReadValue() < InputConfiguration.ButtonPressPoint &&
+                button.ReadValueFrom(eventPtr, out valueInEvent) &&
+                valueInEvent >= InputConfiguration.ButtonPressPoint)
+            {
+                OnJoin(device);
+                break;
+            }
+        }
+    }
+
+    private void OnJoin(InputDevice device)
+    {
         // Spawn player.
-        var player = SpawnPlayer(playerIndex);
+        var player = SpawnPlayer();
 
-        // Grab device that triggered the join action.
-        var device = context.control.device;
-
-        // Find control scheme involving the device.
-        // NOTE: This logic depends on being able to find device combinations automatically for control
-        //       schemes involving more than one device. In scenarios where players are free to choose
-        //       combinations of devices explicitly, this would have to be handled with a more complicated
-        //       device selection procedure (by, for example, having the player go through an additional
-        //       step of pressing buttons on additional devices).
-        var controlScheme = player.SelectControlSchemeBasedOnDevice(device);
-
-        // If the control scheme involves additional devices, find unused devices.
-        if (controlScheme.deviceRequirements.Count > 1)
-        {
-            throw new NotImplementedException();
-        }
-        else
-        {
-            // Single device only. Just assign to player.
-            player.AssignInputDevice(device);
-        }
-
-        // Enable just the bindings that are part of the control scheme.
-        // NOTE: This also means that the player's `controlScheme` will not change automatically
-        //       as no bindings are active outside the given control scheme.
-        //player.controls.Enable(controlScheme);
-
-        // Enable control scheme on player.
-        player.AssignControlScheme(controlScheme);
+        // Give the player the device that the join was initiated from and then
+        // let the player component do the initialization work from there.
+        player.AssignInputDevice(device);
+        player.StartMultiPlayerGame();
     }
 
     /// <summary>
-    /// Called when an action is triggered from a device that isn't assigned to any user.
+    /// Called when an action is triggered from an input device that isn't assigned to any user.
     /// </summary>
     /// <param name="user"></param>
     /// <param name="action"></param>
@@ -287,7 +306,7 @@ public class DemoGame : MonoBehaviour
     /// switch from one or the other. In that case, while we will stay on the Gamepad control scheme,
     /// we will still unassign the previously used gamepad from the player and assign the newly used one.
     /// </remarks>
-    private void OnUnassignedDeviceUsed(IInputUser user, InputAction action, InputControl control)
+    private void OnUnassignedInputDeviceUsed(IInputUser user, InputAction action, InputControl control)
     {
         // We only support control scheme switching in single player.
         if (!m_SinglePlayer)
@@ -307,10 +326,25 @@ public class DemoGame : MonoBehaviour
         // Give the device to the user and then switch control schemes.
         // If the control scheme requires additional devices, we select them automatically using
         // AndAssignMissingDevices().
-        user.ClearAssignedInputDevices();
-        user.AssignInputDevice(device);
-        user.AssignControlScheme(controlScheme)
+        player.ClearAssignedInputDevices();
+        player.AssignInputDevice(device);
+        player.AssignControlScheme(controlScheme)
             .AndAssignMissingDevices();
+    }
+
+    /// <summary>
+    /// Called when there's a change in the input user setup in the system.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="change"></param>
+    private void OnUserChange(IInputUser user, InputUserChange change)
+    {
+        var player = user as DemoPlayerController;
+        if (player == null)
+            return;
+
+        if (change == InputUserChange.DevicesChanged)
+            player.OnAssignedDevicesChanged();
     }
 
     /// <summary>
@@ -326,40 +360,40 @@ public class DemoGame : MonoBehaviour
     /// <summary>
     /// Create a new player GameObject.
     /// </summary>
-    /// <param name="playerIndex"></param>
     /// <returns></returns>
-    private DemoPlayerController SpawnPlayer(int playerIndex)
+    private DemoPlayerController SpawnPlayer()
     {
-        Debug.Assert(playerIndex >= 0);
-
-        // Create player, if need be.
-        DemoPlayerController playerComponent;
-        if (m_Players != null && playerIndex <= m_Players.Length && m_Players[playerIndex] != null)
+        // If we still have inactive player objects, use those and bring an inactive
+        // player back to life.
+        DemoPlayerController player = null;
+        if (m_Players != null && m_ActivePlayerCount < m_Players.Length && m_Players[m_ActivePlayerCount] != null)
         {
             // Reuse a player we've previously created. Just reactivate it and wipe its state.
-            playerComponent = m_Players[playerIndex];
-            playerComponent.gameObject.SetActive(true);
-            playerComponent.Reset();
+            player = m_Players[m_ActivePlayerCount];
+            player.gameObject.SetActive(true);
+            player.Reset();
         }
         else
         {
-            // Create a new player object.
+            // Otherwise create a new player.
             var playerObject = Instantiate(playerPrefab);
-            playerComponent = playerObject.GetComponent<DemoPlayerController>();
-            if (playerComponent == null)
+            player = playerObject.GetComponent<DemoPlayerController>();
+            if (player == null)
                 throw new Exception("Missing DemoPlayerController component on " + playerObject);
-            playerComponent.PerformOneTimeInitialization(playerIndex);
-            playerComponent.onLeaveGame = OnPlayerLeavesGame;
+            player.PerformOneTimeInitialization(m_ActivePlayerCount == 0);
+            player.onLeaveGame = OnPlayerLeavesGame;
 
             // Add to list.
-            Array.Resize(ref m_Players, playerIndex + 1);
-            m_Players[playerIndex] = playerComponent;
+            if (m_Players == null || m_Players.Length == m_ActivePlayerCount)
+                Array.Resize(ref m_Players, m_ActivePlayerCount + 10);
+            m_Players[m_ActivePlayerCount] = player;
         }
 
         // Register as input user with input system.
-        InputUser.Add(playerComponent);
+        InputUser.Add(player);
 
-        return playerComponent;
+        ++m_ActivePlayerCount;
+        return player;
     }
 
     private void UnspawnPlayer(int playerIndex)
