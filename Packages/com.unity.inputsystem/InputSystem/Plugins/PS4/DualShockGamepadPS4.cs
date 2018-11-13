@@ -301,7 +301,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4))]
     public class DualShockGamepadPS4 : DualShockGamepad
     {
-
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
@@ -459,7 +458,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                 }
             }
 #endif
-
         }
 
         public override void PauseHaptics()

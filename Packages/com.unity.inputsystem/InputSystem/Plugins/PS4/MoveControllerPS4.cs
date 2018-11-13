@@ -116,7 +116,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
             };
         }
     }
-
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.DualShock
@@ -284,8 +283,8 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                 m_DefaultColorId = (int)deviceDescriptor.defaultColorId;
                 m_PS4UserId = (int)deviceDescriptor.userId;
             }
-
         }
+
         public void PauseHaptics()
         {
             if (!m_Motor.HasValue && !m_LightSphereColor.HasValue)

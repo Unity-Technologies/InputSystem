@@ -216,7 +216,6 @@ public class PS4Tests : InputTestFixture
         Assert.That(gamepad.ps4UserId, Is.EqualTo(1234));
     }
 
-
     [Test]
     [Category("Devices")]
     public void Devices_SupportsMoveOnPS4()

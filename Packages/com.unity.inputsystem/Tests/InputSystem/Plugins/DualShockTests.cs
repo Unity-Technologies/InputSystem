@@ -179,5 +179,4 @@ internal class DualShockTests : InputTestFixture
     }
 
 #endif
-
 }

@@ -12,8 +12,8 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             #if UNITY_EDITOR || UNITY_PS4
             InputSystem.RegisterLayout<MoveControllerPS4>("PS4MoveController",
                 matches: new InputDeviceMatcher()
-                .WithInterface("PS4")
-                .WithDeviceClass("PS4MoveController"));
+                    .WithInterface("PS4")
+                    .WithDeviceClass("PS4MoveController"));
             #endif
         }
     }
