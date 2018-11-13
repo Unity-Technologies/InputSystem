@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree,
-                                          TreeViewState controlPickerTreeViewState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
+                                          AdvancedDropdownState controlPickerState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
         {
             m_ControlPickerState = controlPickerState;
             m_BindingProperty = bindingProperty;
@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (GUI.Button(editButtonRect, "˅"))
                 {
                     bindingTextRect.x += editButtonRect.width;
-                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerTreeViewState, onModified);
+                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerState, onModified);
                 }
             }
             else
@@ -250,7 +250,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     ////TODO: pass expectedControlLayout filter on to control picker
                     ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
-                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerTreeViewState, onModified);
+                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerState, onModified);
                 }
 
                 // Button to bind interactively.
@@ -329,7 +329,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, AdvancedDropdownState pickerState,
             Action<SerializedProperty> onPickCallback)
         {
             if (m_InputControlPickerDropdown == null)
