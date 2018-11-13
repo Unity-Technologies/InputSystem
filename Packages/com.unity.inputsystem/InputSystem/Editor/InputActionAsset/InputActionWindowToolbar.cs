@@ -217,10 +217,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 devices.AddRange(controlScheme.deviceRequirements.Select(a => a.controlPath).ToList());
             }
             m_DeviceIdList = devices.ToArray();
-            m_DeviceNamesList = devices.Select(a=>
-            {
-                return a.Substring(1, a.Length - 2);
-            }).ToArray();
+            m_DeviceNamesList = devices.Select(a => a.Substring(1, a.Length - 2)).ToArray();
         }
 
         private void AddControlScheme(object position)

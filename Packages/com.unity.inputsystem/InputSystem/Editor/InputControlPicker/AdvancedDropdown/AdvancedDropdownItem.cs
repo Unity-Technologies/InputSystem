@@ -53,7 +53,8 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected string m_SearchableName;
-        public virtual string searchableName {
+        public virtual string searchableName
+        {
             get
             {
                 return string.IsNullOrEmpty(m_SearchableName) ? name : m_SearchableName;

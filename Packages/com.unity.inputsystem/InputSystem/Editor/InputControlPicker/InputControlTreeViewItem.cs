@@ -1,4 +1,4 @@
-#if UNITY_EDITOR 
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected InputControlTreeViewItem(string name)
-            : base(name) { }
+            : base(name) {}
     }
 
     internal class UsageTreeViewItem : InputControlTreeViewItem
@@ -86,6 +86,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
-} 
+}
 
 #endif // UNITY_EDITOR

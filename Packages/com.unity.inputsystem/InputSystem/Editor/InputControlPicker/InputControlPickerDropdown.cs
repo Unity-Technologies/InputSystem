@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_PathProperty = pathProperty;
             m_OnPickCallback = onPickCallback;
         }
-        
+
         protected override AdvancedDropdownItem BuildRoot()
         {
             var root = new AdvancedDropdownItem("");
@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Editor
             root.AddChild(devices);
             var products = BuildTreeForSpecificDevices();
             root.AddChild(products);
-            
+
             if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
             {
                 var newRoot = new AdvancedDropdownItem("");
@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return root;
         }
-        
+
         void FindDevice(AdvancedDropdownItem newRoot, AdvancedDropdownItem root, string[] deviceFilter)
         {
             foreach (var child in root.children)

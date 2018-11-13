@@ -78,20 +78,20 @@ namespace UnityEngine.Experimental.Input.Editor
             set { m_ShowHeader = value; }
         }
         internal bool m_Searchable = true;
-        internal bool searchable 
+        internal bool searchable
         {
             get { return m_Searchable;}
             set { m_Searchable = value; }
         }
         internal bool m_closeOnSelection = true;
-        internal bool closeOnSelection 
+        internal bool closeOnSelection
         {
             get { return m_closeOnSelection;}
             set { m_closeOnSelection = value; }
         }
 
         protected virtual bool isSearchFieldDisabled { get; set; }
-        
+
         protected bool m_SetInitialSelectionPosition = true;
         protected virtual bool setInitialSelectionPosition
         {
@@ -149,7 +149,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y));
             m_ButtonRectScreenPos.x = screenPoint.x;
             m_ButtonRectScreenPos.y = screenPoint.y;
-            
+
             if (m_State == null)
                 m_State = new AdvancedDropdownState();
             if (m_DataSource == null)
@@ -162,7 +162,7 @@ namespace UnityEngine.Experimental.Input.Editor
             screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y));
             buttonRect.x = screenPoint.x;
             buttonRect.y = screenPoint.y;
-            
+
             Vector2 requiredDropdownSize;
             OnDirtyList();
             m_CurrentlyRenderedTree = hasSearch ? m_DataSource.searchTree : m_DataSource.mainTree;
@@ -201,7 +201,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_CurrentlyRenderedTree = child;
             }
         }
-        
+
         protected virtual Vector2 CalculateWindowSize(Rect buttonRect, out Vector2 requiredDropdownSize)
         {
             requiredDropdownSize = m_Gui.CalculateContentSize(m_DataSource);
@@ -249,7 +249,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 OnDirtyList();
             }
-            
+
             HandleKeyboard();
             if (searchable)
                 OnGUISearch();
@@ -450,7 +450,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     selectedRect = r;
 
                 // Skip input handling for the tree used for animation
-                if(item != m_CurrentlyRenderedTree)
+                if (item != m_CurrentlyRenderedTree)
                     continue;
 
                 // Select the element the mouse cursor is over.

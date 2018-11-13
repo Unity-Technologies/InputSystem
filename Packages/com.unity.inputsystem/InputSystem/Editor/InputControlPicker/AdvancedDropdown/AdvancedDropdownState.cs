@@ -15,6 +15,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 this.itemId = item.id;
             }
+
             public int itemId;
             public int selectedIndex = -1;
             public Vector2 scroll;
@@ -28,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_LastSelectedState != null && m_LastSelectedState.itemId == item.id)
                 return m_LastSelectedState;
-            for( int i = 0; i < states.Length; i++)
+            for (int i = 0; i < states.Length; i++)
             {
                 if (states[i].itemId == item.id)
                 {
@@ -58,7 +59,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (selectedIndex < item.children.Count())
                 SetSelectionOnItem(item, selectedIndex);
         }
-
 
         internal void MoveUpSelection(AdvancedDropdownItem item)
         {

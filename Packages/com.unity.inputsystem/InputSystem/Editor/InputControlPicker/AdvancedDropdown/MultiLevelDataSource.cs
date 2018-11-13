@@ -26,7 +26,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal MultiLevelDataSource()
         {
-
         }
 
         public MultiLevelDataSource(string[] displayOptions)
@@ -75,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     for (int k = 1; k <= j; k++)
                         groupPathId += "/" + paths[k];
 
-                    var group = parent.children.SingleOrDefault(c => ((MultiLevelItem) c).stringId == groupPathId);
+                    var group = parent.children.SingleOrDefault(c => ((MultiLevelItem)c).stringId == groupPathId);
                     if (group == null)
                     {
                         group = new MultiLevelItem(path, groupPathId);

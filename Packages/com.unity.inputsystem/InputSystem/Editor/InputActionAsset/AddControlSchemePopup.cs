@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var schema = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName);
             m_Devices = schema.deviceRequirements.Select(a => new DeviceEntryForList()
             {
-                name = a.controlPath.Substring(1, a.controlPath.Length - 2), 
+                name = a.controlPath.Substring(1, a.controlPath.Length - 2),
                 deviceRequirement = a
             }).ToList();
         }
@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_AddElement((item as AddDeviceDropdownItem).name, (item as AddDeviceDropdownItem).m_DeviceId);
             }
-            
+
             class AddDeviceDropdownItem : AdvancedDropdownItem
             {
                 public string m_DeviceId;
@@ -383,7 +383,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             public override string ToString()
             {
-                if(string.IsNullOrEmpty(commonUsage))
+                if (string.IsNullOrEmpty(commonUsage))
                     return name;
                 return string.Format("{0} {1}", name, commonUsage);
             }

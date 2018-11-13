@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static class Styles
         {
             public static GUIStyle toolbarSearchField = "ToolbarSeachTextField";
-            
+
             public static GUIStyle itemStyle = new GUIStyle("PR Label");
             public static GUIStyle header = new GUIStyle("In BigTitle");
             public static GUIStyle headerArrow = new GUIStyle();
@@ -47,7 +47,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 checkMark.padding = new RectOffset(0, 0, 0, 0);
                 checkMark.margin = new RectOffset(0, 0, 0, 0);
                 checkMark.fixedHeight += 1;
-                
             }
         }
 

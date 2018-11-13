@@ -101,7 +101,7 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.y += 1;
             rect.height -= 2;
 
-            if(selected)
+            if (selected)
                 Styles.textSelectedStyle.Draw(rect, displayName, false, false, selected, focused);
             else
                 Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
