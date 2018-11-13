@@ -240,6 +240,26 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
+    //Sync to PS4InputDeviceDefinition in sixaxis.cpp
+    [Serializable]
+    class PS4InputDeviceDescriptor
+    {
+        public uint slotId = 0;
+        public bool isAimController = false;
+        public uint defaultColorId = 0;
+        public uint userId = 0;
+
+        internal string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+
+        internal static PS4InputDeviceDescriptor FromJson(string json)
+        {
+            return JsonUtility.FromJson<PS4InputDeviceDescriptor>(json);
+        }
+    }
+
     ////TODO: Unify this with general touch support
     public class PS4TouchControl : InputControl<PS4Touch>
     {
@@ -289,6 +309,12 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             get { return new ReadOnlyArray<DualShockGamepadPS4>(s_Devices); }
         }
 
+        public static ReadOnlyArray<DualShockGamepadPS4> allAimDevices
+        {
+            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_AimDevices); }
+        }
+
+
         public Color lightBarColor
         {
             get
@@ -306,7 +332,10 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         {
             get
             {
-                UpdatePadSettingsIfNeeded();
+#if !UNITY_2019_1_OR_NEWER
+                UpdatePadSettingsIfNeeded();  // 2018.3 uses IOCTL to read this. not required in later versions
+#endif
+
                 return m_SlotId;
             }
         }
@@ -315,10 +344,21 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         {
             get
             {
-                UpdatePadSettingsIfNeeded();
+#if !UNITY_2019_1_OR_NEWER
+                UpdatePadSettingsIfNeeded(); // 2018.2 uses IOCTL to read this. not required in later versions
+#endif
                 return m_PS4UserId;
             }
         }
+
+        public bool IsAimController
+        {
+            get
+            {
+                return m_IsAimController;
+            }
+        }
+
 
         public static DualShockGamepadPS4 GetBySlotIndex(int slotIndex)
         {
@@ -337,24 +377,56 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         {
             base.OnAdded();
 
-            var index = slotIndex;
-            if (index >= 0 && index < s_Devices.Length)
-            {
-                Debug.Assert(s_Devices[index] == null, "PS4 gamepad with same slotIndex already added");
-                s_Devices[index] = this;
-            }
+            AddDeviceToList();
         }
 
         protected override void OnRemoved()
         {
             base.OnRemoved();
 
+            RemoveDeviceFromList();
+        }
+
+        private void AddDeviceToList()
+        {
+            DualShockGamepadPS4[] deviceList;
+
+            if (m_IsAimController == true)
+            {
+                deviceList = s_AimDevices;
+            }
+            else
+            {
+                deviceList = s_Devices;
+            }
+
+            var index = slotIndex;
+            if (index >= 0 && index < deviceList.Length)
+            {
+                Debug.Assert(deviceList[index] == null, "PS4 gamepad with same slotIndex already added");
+                deviceList[index] = this;
+            }
+        }
+
+        private void RemoveDeviceFromList()
+        {
             if (m_SlotId == -1)
                 return;
 
+            DualShockGamepadPS4[] deviceList;
+
+            if (m_IsAimController == true)
+            {
+                deviceList = s_AimDevices;
+            }
+            else
+            {
+                deviceList = s_Devices;
+            }
+
             var index = slotIndex;
-            if (index >= 0 && index < s_Devices.Length && s_Devices[index] == this)
-                s_Devices[index] = null;
+            if (index >= 0 && index < deviceList.Length && deviceList[index] == this)
+                deviceList[index] = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -367,6 +439,25 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             touchArray[1] = builder.GetControl<PS4TouchControl>(this, "touch1");
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
+
+#if UNITY_2019_1_OR_NEWER
+            var capabilities = description.capabilities;
+            var deviceDescriptor = PS4InputDeviceDescriptor.FromJson(capabilities);
+
+            if (deviceDescriptor != null)
+            {
+                m_SlotId = (int)deviceDescriptor.slotId;
+                m_DefaultColorId = (int)deviceDescriptor.defaultColorId;
+                m_PS4UserId = (int)deviceDescriptor.userId;
+
+                m_IsAimController = deviceDescriptor.isAimController;
+
+                if (!m_LightBarColor.HasValue)
+                {
+                    m_LightBarColor = PS4ColorIdToColor(m_DefaultColorId);
+                }
+            }
+#endif
         }
 
         public override void PauseHaptics()
@@ -462,8 +553,11 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         private int m_SlotId = -1;
         private int m_DefaultColorId = -1;
         private int m_PS4UserId = -1;
+        private bool m_IsAimController;
 
         private static DualShockGamepadPS4[] s_Devices = new DualShockGamepadPS4[4];
+        private static DualShockGamepadPS4[] s_AimDevices = new DualShockGamepadPS4[4];
+
 
         private void UpdatePadSettingsIfNeeded()
         {
