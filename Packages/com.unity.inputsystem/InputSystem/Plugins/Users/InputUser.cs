@@ -902,13 +902,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         internal static void ResetGlobals()
         {
             s_AllUserCount = 0;
+            s_AllDeviceCount = 0;
             s_AllUsers = null;
             s_AllUserData = null;
-            s_AllDeviceCount = 0;
             s_AllDevices = null;
             s_OnChange = new InlinedArray<Action<IInputUser, InputUserChange>>();
             s_OnUnassignedDeviceUsed = new InlinedArray<Action<IInputUser, InputAction, InputControl>>();
             s_OnActionTriggered = null;
+            s_OnActionChangedHooked = false;
         }
 
         ////WIP
@@ -920,16 +921,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             set { throw new NotImplementedException(); }
         }
 
-        ////REVIEW: should this be some generic join hook? needs to be explored more; involve console team
-        /// <summary>
-        /// If true, on platforms that have built-in support for user management (e.g. Xbox and PS4),
-        /// automatically create users and assign them devices to reflect
-        /// </summary>
-        public static bool autoAddPlatformUsers
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
 
         */
     }

@@ -32,9 +32,11 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 actionTreeBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
                 actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
+                actionTreeBackground.margin = new RectOffset(4, 4, 4, 4);
 
                 propertiesBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "propertiesBackground.png");
                 propertiesBackground.border = new RectOffset(3, 3, 3, 3);
+                propertiesBackground.margin = new RectOffset(4, 4, 4, 4);
 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
@@ -53,9 +55,9 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
-        private InputActionWindowToolbar m_InputActionWindowToolbar;
+        internal InputActionWindowToolbar m_InputActionWindowToolbar;
         [SerializeField]
-        private ActionInspectorContextMenu m_ContextMenu;
+        internal ActionInspectorContextMenu m_ContextMenu;
 
         private InputBindingPropertiesView m_BindingPropertyView;
         internal ActionMapsTree m_ActionMapsTree;
@@ -76,6 +78,8 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_DirtyTitle;
         [SerializeField]
         GUIContent m_Title;
+        Vector2 m_PropertiesScroll;
+        bool m_ForceQuit;
 
         private void OnEnable()
         {
@@ -99,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionAssetManager.SetReferences(SetTitle);
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
-            m_ContextMenu.SetReferences(this, m_ActionAssetManager);
+            m_ContextMenu.SetReferences(this, m_ActionAssetManager, m_InputActionWindowToolbar);
 
             InitializeTrees();
             OnActionMapSelection();
@@ -113,7 +117,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnDestroy()
         {
-            if (m_ActionAssetManager.dirty)
+            if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
                 var result = EditorUtility.DisplayDialogComplex("Unsaved changes", "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
                 switch (result)
@@ -141,7 +145,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionAssetManager.SetReferences(SetTitle);
             m_ActionAssetManager.InitializeObjectReferences();
             m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
-            m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager);
+            m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager, m_InputActionWindowToolbar);
             InitializeTrees();
 
             // Make sure first actions map selected and actions tree expanded
@@ -306,11 +310,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Draw columns.
             var columnsRect = EditorGUILayout.BeginHorizontal();
-            var columnOneRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
-            var columnTwoRect = GUILayoutUtility.GetRect(0, 0, 0, 0, Styles.actionTreeBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
-            DrawActionMapsColumn(columnOneRect);
-            DrawActionsColumn(columnTwoRect);
-            DrawPropertiesColumn();
+            var columnAreaWidth = position.width - Styles.actionTreeBackground.margin.left - Styles.actionTreeBackground.margin.left - Styles.propertiesBackground.margin.right;
+            DrawActionMapsColumn(columnAreaWidth * 0.22f);
+            DrawActionsColumn(columnAreaWidth * 0.38f);
+            DrawPropertiesColumn(columnAreaWidth * 0.40f);
             EditorGUILayout.EndHorizontal();
 
             // If we're currently interactively picking a binding, aside from disabling and dimming the normal UI, display a large text over
@@ -339,8 +342,13 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void DrawActionMapsColumn(Rect columnRect)
+        private void DrawActionMapsColumn(float width)
         {
+            EditorGUILayout.BeginVertical(Styles.actionTreeBackground, GUILayout.MinWidth(width), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+            var columnRect = GUILayoutUtility.GetLastRect();
+
             var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             columnRect.y += labelRect.height;
@@ -367,8 +375,13 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionMapsTree.OnGUI(columnRect);
         }
 
-        private void DrawActionsColumn(Rect columnRect)
+        private void DrawActionsColumn(float width)
         {
+            EditorGUILayout.BeginVertical(Styles.actionTreeBackground, GUILayout.MaxWidth(width), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+            var columnRect = GUILayoutUtility.GetLastRect();
+
             var labelRect = new Rect(columnRect);
             labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             columnRect.y += labelRect.height;
@@ -394,9 +407,10 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ActionsTree.OnGUI(columnRect);
         }
 
-        private void DrawPropertiesColumn()
+        private void DrawPropertiesColumn(float width)
         {
-            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width * (1 / 3f)));
+            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(width));
+
 
             var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2, GUILayout.ExpandWidth(true));
             rect.x -= 2;
@@ -409,12 +423,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (m_BindingPropertyView != null)
             {
+                m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
                 m_BindingPropertyView.OnGUI();
+                EditorGUILayout.EndScrollView();
             }
             else
             {
                 GUILayout.FlexibleSpace();
             }
+
 
             EditorGUILayout.EndVertical();
         }
@@ -572,6 +589,12 @@ namespace UnityEngine.Experimental.Input.Editor
         void SetTitle(bool dirty)
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
+        }
+
+        internal void CloseWithoutSaving()
+        {
+            m_ForceQuit = true;
+            Close();
         }
     }
 }

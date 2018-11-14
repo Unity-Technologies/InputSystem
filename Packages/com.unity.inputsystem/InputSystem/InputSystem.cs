@@ -9,10 +9,10 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Plugins.PS4;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using UnityEngine.Experimental.Input.Utilities;
-
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
@@ -51,7 +51,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.11")]
+[assembly: AssemblyVersion("0.0.12")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -1235,7 +1235,7 @@ namespace UnityEngine.Experimental.Input
         /// be fed right into the upcoming update.
         /// </remarks>
         /// <seealso cref="onAfterUpdate"/>
-        /// <seealso cref="Update"/>
+        /// <seealso cref="Update(InputUpdateType)"/>
         public static event Action<InputUpdateType> onBeforeUpdate
         {
             add { s_Manager.onBeforeUpdate += value; }
@@ -1246,7 +1246,7 @@ namespace UnityEngine.Experimental.Input
         /// Event that is fired after the input system has completed an update and processed all pending events.
         /// </summary>
         /// <seealso cref="onBeforeUpdate"/>
-        /// <seealso cref="Update"/>
+        /// <seealso cref="Update(InputUpdateType)"/>
         public static event Action<InputUpdateType> onAfterUpdate
         {
             add { s_Manager.onAfterUpdate += value; }
@@ -1648,6 +1648,10 @@ namespace UnityEngine.Experimental.Input
             DualShockSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_PS4
+            PS4Support.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             HIDSupport.Initialize();
             #endif
@@ -1746,6 +1750,7 @@ namespace UnityEngine.Experimental.Input
             [SerializeField] public RemoteInputPlayerConnection remoteConnection;
             [SerializeField] public InputManager.SerializedState managerState;
             [SerializeField] public InputRemoting.SerializedState remotingState;
+            ////REVIEW: preserve user state? (if even possible)
         }
 
         private static Stack<State> s_SavedStateStack;

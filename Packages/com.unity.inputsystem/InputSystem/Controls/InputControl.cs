@@ -85,7 +85,12 @@ namespace UnityEngine.Experimental.Input
         /// a display name there, the display name will default to <see cref="name"/>. However, specific
         /// controls may override this behavior. <see cref="KeyControl"/>, for example, will set the
         /// display name to the actual key name corresponding to the current keyboard layout.
+        ///
+        /// For nested controls, the display name will include the display names of all parent controls,
+        /// i.e. the display name will fully identify the control on the device. For example, the display
+        /// name for the left D-Pad button on a gamepad is "D-Pad Left" and not just "Left".
         /// </remarks>
+        /// <seealso cref="shortDisplayName"/>
         public string displayName
         {
             get
@@ -101,6 +106,34 @@ namespace UnityEngine.Experimental.Input
             // come from the control itself *if* the control wants to have a custom display name
             // not driven by its layout.
             protected set { m_DisplayName = value; }
+        }
+
+        /// <summary>
+        /// An alternate, abbreviated <see cref="displayName"/> (for example "LMB" instead of "Left Button").
+        /// </summary>
+        /// <remarks>
+        /// If the control has no abbreviated version, this will be null. Note that this behavior is different
+        /// from <see cref="displayName"/> which will fall back to <see cref="name"/> if not display name has
+        /// been assigned to the control.
+        ///
+        /// For nested controls, the short display name will include the short display names of all parent controls,
+        /// i.e. the display name will fully identify the control on the device. For example, the display
+        /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
+        /// control has no short name, its long name will be used instead.
+        /// </remarks>
+        /// <seealso cref="displayName"/>
+        public string shortDisplayName
+        {
+            get
+            {
+                RefreshConfigurationIfNeeded();
+                if (m_ShortDisplayName != null)
+                    return m_ShortDisplayName;
+                if (m_ShortDisplayNameFromLayout != null)
+                    return m_ShortDisplayNameFromLayout;
+                return null;
+            }
+            protected set { m_ShortDisplayName = value; }
         }
 
         /// <summary>
@@ -268,7 +301,8 @@ namespace UnityEngine.Experimental.Input
         /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Cancelled"/>
         /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
         ///
-        /// Controls that have no meaningful magnitude will return -1 when calling this method.
+        /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
+        /// return value should be considered as an invalid value.
         /// </remarks>
         public float EvaluateMagnitude()
         {
@@ -381,6 +415,8 @@ namespace UnityEngine.Experimental.Input
         internal string m_Path;
         internal string m_DisplayName; // Display name set by the control itself (may be null).
         internal string m_DisplayNameFromLayout; // Display name coming from layout (may be null).
+        internal string m_ShortDisplayName; // Short display name set by the control itself (may be null).
+        internal string m_ShortDisplayNameFromLayout; // Short display name coming from layout (may be null).
         internal InternedString m_Layout;
         internal InternedString m_Variants;
         internal InputDevice m_Device;

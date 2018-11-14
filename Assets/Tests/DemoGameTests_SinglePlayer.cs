@@ -59,7 +59,8 @@ partial class DemoGameTests
         Click("SinglePlayerButton");
         Trigger("gameplay/menu");
 
-        Assert.That(game.players[0].ui.enabled, Is.True);
+        Assert.That(game.players[0].menuUI.activeSelf, Is.True);
+        Assert.That(game.players[0].inGameUI.activeSelf, Is.False);
         Assert.That(game.players[0].controls.gameplay.enabled, Is.False);
         Assert.That(game.players[0].controls.menu.enabled, Is.True);
         Assert.That(game.mainMenuCanvas.enabled, Is.False);

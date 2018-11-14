@@ -807,6 +807,17 @@ partial class CoreTests
         var control = setup.GetControl("control");
 
         Assert.That(control.displayName, Is.EqualTo("control"));
+        Assert.That(control.shortDisplayName, Is.Null);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_DisplayNameForNestedControls_IncludesNameOfParentControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad.dpad.up.displayName, Is.EqualTo("D-Pad Up"));
+        Assert.That(gamepad.dpad.up.shortDisplayName, Is.EqualTo("D-Pad \u2191"));
     }
 
     [Test]

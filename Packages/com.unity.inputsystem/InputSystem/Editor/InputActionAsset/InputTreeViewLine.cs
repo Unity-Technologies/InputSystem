@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -15,6 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIStyle lineStyle = new GUIStyle("TV Line");
             public static GUIStyle textStyle = new GUIStyle("Label");
+            public static GUIStyle textSelectedStyle = new GUIStyle("Label");
             public static GUIStyle backgroundStyle = new GUIStyle("Label");
             public static GUIStyle border = new GUIStyle("Label");
             public static GUIStyle yellowRect = new GUIStyle("Label");
@@ -32,6 +34,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 border.border = new RectOffset(0, 0, 0, 1);
 
                 textStyle.alignment = TextAnchor.MiddleLeft;
+                textSelectedStyle.alignment = TextAnchor.MiddleLeft;
+                textSelectedStyle.normal.textColor = Color.white;
 
                 yellowRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
@@ -48,7 +52,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public bool renaming;
         private SerializedProperty m_ElementProperty;
         private int m_Index;
 
@@ -98,7 +101,9 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.y += 1;
             rect.height -= 2;
 
-            if (!renaming)
+            if (selected)
+                Styles.textSelectedStyle.Draw(rect, displayName, false, false, selected, focused);
+            else
                 Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
 
             DrawCustomRect(rowRect);
@@ -239,15 +244,15 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return true; }
         }
 
-        public void AddCompositeBinding(string compositeName)
+        public void AddCompositeBinding(string compositeName, string group)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType, group);
         }
 
-        public void AddBinding()
+        public void AddBinding(string group)
         {
-            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty, group);
         }
 
         public void AddBindingFromSavedProperties(Dictionary<string, string> values)

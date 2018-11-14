@@ -98,11 +98,6 @@ namespace UnityEngine.Experimental.Input
             return result;
         }
 
-        public static string TryGetImageName(string path)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// From the given control path, try to determine the device layout being used.
         /// </summary>

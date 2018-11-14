@@ -494,6 +494,10 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Layout: {0}", control.layout), ref id);
                 if (!control.variants.IsEmpty())
                     AddChild(item, string.Format("Variant: {0}", control.variants), ref id);
+                if (!string.IsNullOrEmpty(control.displayName))
+                    AddChild(item, string.Format("Display Name: {0}", control.displayName), ref id);
+                if (!string.IsNullOrEmpty(control.shortDisplayName))
+                    AddChild(item, string.Format("Short Display Name: {0}", control.shortDisplayName), ref id);
                 if (control.format != 0)
                     AddChild(item, string.Format("Format: {0}", control.format), ref id);
                 if (control.offset != InputStateBlock.kInvalidOffset)

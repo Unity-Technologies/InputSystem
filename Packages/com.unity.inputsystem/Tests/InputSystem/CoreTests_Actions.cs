@@ -2956,10 +2956,14 @@ partial class CoreTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow));
         InputSystem.Update();
 
+        Assert.That(value, Is.EqualTo(new Vector2(0, 1)).Using(Vector2EqualityComparer.Instance));
+
         // Down arrow + 'a'.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow, Key.A));
         InputSystem.Update();
+
+        Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]

@@ -36,9 +36,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace", displayName = "Position")]
 #else
-        [InputControl(layout = "Vector2", usage = "Point")]
+        [InputControl(layout = "Vector2", usage = "Point", displayName = "Position")]
 #endif
         public Vector2 position;
 

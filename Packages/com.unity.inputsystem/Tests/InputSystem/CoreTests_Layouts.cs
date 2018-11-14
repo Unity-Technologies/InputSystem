@@ -1300,7 +1300,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanSpecifyDisplayNameForControl()
+    public void Layouts_CanSpecifyLongAndShortDisplayNameForControl()
     {
         const string json = @"
             {
@@ -1310,7 +1310,8 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""displayName"" : ""Primary Stick""
+                        ""displayName"" : ""Primary Stick"",
+                        ""shortDisplayName"" : ""PS""
                     },
                     {
                         ""name"" : ""leftStick/x"",
@@ -1326,7 +1327,9 @@ partial class CoreTests
 
         Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
-        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Horizontal"));
+        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Primary Stick Horizontal"));
+        Assert.That(device.leftStick.shortDisplayName, Is.EqualTo("PS"));
+        Assert.That(device.leftStick.x.shortDisplayName, Is.Null);
     }
 
     class TestDeviceWithMinMaxValue : InputDevice
@@ -1724,23 +1727,6 @@ partial class CoreTests
     [Ignore("TODO")]
     public void TODO_Layouts_RemovingLayouts_RemovesAllLayoutsBasedOnIt()
     {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Layouts")]
-    [Ignore("TODO")]
-    public void TODO_Layouts_CanQueryResourceNameFromControl()
-    {
-        var json = @"
-            {
-                ""name"" : ""MyLayout"",
-                ""controls"" : [ { ""name"" : ""MyControl"",  } ]
-            }
-        ";
-
-        InputSystem.RegisterLayout(json);
-
         Assert.Fail();
     }
 

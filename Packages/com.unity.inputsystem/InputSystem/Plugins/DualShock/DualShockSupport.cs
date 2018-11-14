@@ -35,14 +35,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                     .WithCapability("vendorId", 0x054c)
                     .WithProduct("Wireless Controller"));
             #endif
-
-            #if UNITY_EDITOR || UNITY_PS4
-            InputSystem.RegisterLayout<PS4TouchControl>("PS4Touch");
-            InputSystem.RegisterLayout<DualShockGamepadPS4>("PS4DualShockGamepad",
-                matches: new InputDeviceMatcher()
-                    .WithInterface("PS4")
-                    .WithDeviceClass("PS4DualShockGamepad"));
-            #endif
         }
     }
 }
