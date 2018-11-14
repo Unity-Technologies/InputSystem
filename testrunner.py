@@ -10,6 +10,7 @@ kPIPDownloadName = "http://172.28.214.140/tools/unity-downloader/unity-downloade
 
 allPlatforms = ["Editor", "StandaloneLinux", "StandaloneLinux64", "StandaloneOSX", "StandaloneWindows", "StandaloneWindows64", "Android", "iOS"]
 allRuntimes = ["latest", "legacy"]
+allTestPlatforms = ["editmode", "playmode"]
 
 editorRevisions = {
     "2018.2": "5c716fc4faab59de610b4b74b9dad7c9f7ae60b0",
@@ -53,11 +54,13 @@ parser = argparse.ArgumentParser(description="Run the trace event profiler tests
 parser.add_argument('runtimePlatform', nargs='*', choices=allPlatforms)
 parser.add_argument('--version', choices=editorRevisions.keys())
 parser.add_argument('--runtime', choices=allRuntimes)
+parser.add_argument('--testPlatform', choices=allTestPlatforms)
 args = parser.parse_args(sys.argv[1:])
 
 runtimePlatforms = args.runtimePlatform
 unityVersion = args.version
 runtimeVersion = args.runtime
+testPlatform = args.testPlatform
 
 kRootRepoDirectory = os.path.dirname(os.path.realpath(__file__))
 kProjectPath = os.path.dirname(os.path.realpath(__file__))
@@ -92,12 +95,11 @@ for platform in runtimePlatforms:
     runOptions["testResults"] = os.path.join(kTestArtifactPath, "%s_TestResults.txt" % platform)
     runOptions["logFile"] = os.path.join(kTestArtifactPath, "%s_EditorLog.txt" % platform)
     runOptions["scripting-runtime-version"] = runtimeVersion
+    runOptions["testPlatform"] = testPlatform
 
     if(platform != "Editor"):
-        runOptions["testPlatform"] = platform
         runOptions["buildTarget"] = platform
     else:
-        runOptions["testPlatform"] = "playmode"
         runOptions["buildTarget"] = "Standalone"
 
     allArgs = [kEditorPath] + flags
