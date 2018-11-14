@@ -775,6 +775,9 @@ namespace UnityEngine.Experimental.Input
 
         public static unsafe void ResetDevice(InputDevice device)
         {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
             var resetCommand = RequestResetCommand.Create();
             device.ExecuteCommand<RequestResetCommand>(ref resetCommand);
         }
@@ -1216,22 +1219,25 @@ namespace UnityEngine.Experimental.Input
             set { s_Manager.updateMask = value; }
         }
 
+
+        private const InputUpdateType ms_runInBackgroundMask = (InputUpdateType)(1 << 31);
+
         /// <summary>
-        /// Tells the Input System to ignore focus, and continue to trigger events and actions regardless of current focus state
+        /// Tells the Input System to run even when the application is in the backgrond, and continue to trigger events and actions regardless of current focus state
         /// </summary>
         /// /// <remarks>
         /// Off by default, this does not work on all platforms and devices, only those that can recieve their own input data while not in focus.
         /// </remarks>
-        public static bool ignoreFocus
+        public static bool runInBackground
         {
-            get { return (s_Manager.updateMask & InputUpdateType.IgnoreFocus) != 0; }
+            get { return (s_Manager.updateMask & ms_runInBackgroundMask) != 0; }
             set
             {
                 InputUpdateType currentUpdateMask = s_Manager.updateMask;
                 if (value)
-                    currentUpdateMask |= currentUpdateMask & InputUpdateType.IgnoreFocus;
+                    currentUpdateMask |= ms_runInBackgroundMask;
                 else
-                    currentUpdateMask &= ~InputUpdateType.IgnoreFocus;
+                    currentUpdateMask &= ~ms_runInBackgroundMask;
 
                 s_Manager.updateMask = currentUpdateMask;
             }

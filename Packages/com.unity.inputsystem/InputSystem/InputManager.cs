@@ -1919,7 +1919,7 @@ namespace UnityEngine.Experimental.Input
 #if UNITY_EDITOR
             gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
                 (UnityEditor.EditorApplication.isPlaying && Application.isFocused) ||
-                ((updateMask & InputUpdateType.IgnoreFocus) != 0);
+                ((updateMask & (InputUpdateType)(1 << 31)) != 0);
 
             if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
             {
