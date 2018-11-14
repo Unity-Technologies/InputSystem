@@ -165,7 +165,7 @@ public class AssetEditorTests
 
     [UnityTest]
     [Ignore("For some reason it's impossible to focus the tree view from the test")]
-    public IEnumerator CanCopyAndPaste()
+    public IEnumerator TODO_CanCopyAndPaste()
     {
         EditorUtility.ClearProgressBar();
         var assetWindow = GetTestAssetWindow();

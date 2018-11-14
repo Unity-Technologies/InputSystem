@@ -1746,6 +1746,7 @@ namespace UnityEngine.Experimental.Input
             [SerializeField] public RemoteInputPlayerConnection remoteConnection;
             [SerializeField] public InputManager.SerializedState managerState;
             [SerializeField] public InputRemoting.SerializedState remotingState;
+            ////REVIEW: preserve user state? (if even possible)
         }
 
         private static Stack<State> s_SavedStateStack;

@@ -208,6 +208,8 @@ public class DemoGameTestFixture
         game.players.Each(UnityEngine.Object.DestroyImmediate);
         UnityEngine.Object.DestroyImmediate(game.gameObject);
 
+        DemoPlayerController.ClearUIHintsCache();
+
         input.TearDown();
 
         game = null;

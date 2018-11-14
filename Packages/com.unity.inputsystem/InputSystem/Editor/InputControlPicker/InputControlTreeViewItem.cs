@@ -1,12 +1,11 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class InputControlTreeViewItem : TreeViewItem
+    internal abstract class InputControlTreeViewItem : AdvancedDropdownItem
     {
         protected string m_ControlPath;
         protected string m_Device;
@@ -32,27 +31,8 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public virtual bool selectable
-        {
-            get { return false; }
-        }
-
-        public TreeViewItem GetSearchableItem()
-        {
-            if (m_SearchableElement == null)
-            {
-                m_SearchableElement = new InputControlTreeViewItem();
-                m_SearchableElement.m_ControlPath = m_ControlPath;
-                m_SearchableElement.m_Device = m_Device;
-                if (string.IsNullOrEmpty(m_Usage))
-                    m_SearchableElement.displayName = string.Format("{0} ({1})", m_ControlPath, m_Device);
-                else
-                    m_SearchableElement.displayName = string.Format("{0} ({1} {2})", m_ControlPath, m_Device, m_Usage);
-                m_SearchableElement.id = id;
-            }
-
-            return m_SearchableElement;
-        }
+        protected InputControlTreeViewItem(string name)
+            : base(name) {}
     }
 
     internal class UsageTreeViewItem : InputControlTreeViewItem
@@ -62,32 +42,25 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return string.Format("{0}/{1}", m_Device, m_ControlPath); }
         }
 
-        public UsageTreeViewItem(KeyValuePair<string, IEnumerable<string>> usage)
+        public UsageTreeViewItem(KeyValuePair<string, IEnumerable<string>> usage) : base(usage.Key)
         {
             m_Device = "*";
-            displayName = usage.Key;
             m_ControlPath = usage.Key;
-            depth = 1;
-            id = (controlPathWithDevice).GetHashCode();
-        }
-
-        public override bool selectable
-        {
-            get { return true; }
+            id = controlPathWithDevice.GetHashCode();
+            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
 
     internal class DeviceTreeViewItem : InputControlTreeViewItem
     {
-        public DeviceTreeViewItem(InputControlLayout layout, string commonUsage)
+        public DeviceTreeViewItem(InputControlLayout layout, string commonUsage) : base(layout.name)
         {
-            displayName = layout.name;
             m_Device = layout.name;
             m_Usage = commonUsage;
             if (commonUsage != null)
-                displayName += " (" + commonUsage + ")";
-            id = (displayName).GetHashCode();
-            depth = 1;
+                name += " (" + commonUsage + ")";
+            id = name.GetHashCode();
+            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
 
         public DeviceTreeViewItem(InputControlLayout layout)
@@ -98,24 +71,21 @@ namespace UnityEngine.Experimental.Input.Editor
 
     internal class ControlTreeViewItem : InputControlTreeViewItem
     {
-        public ControlTreeViewItem(InputControlLayout.ControlItem control, string prefix, string deviceId, string usage)
+        public ControlTreeViewItem(InputControlLayout.ControlItem control, string prefix, string deviceId, string usage)  : base("")
         {
             m_Device = deviceId;
             m_Usage = usage;
             if (!string.IsNullOrEmpty(prefix))
             {
                 m_ControlPath = prefix + "/";
-                displayName = prefix + "/";
+                name = prefix + "/";
             }
             m_ControlPath += control.name;
-            displayName += control.name;
+            name += control.name;
             id = controlPathWithDevice.GetHashCode();
-        }
-
-        public override bool selectable
-        {
-            get { return true; }
+            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
 }
+
 #endif // UNITY_EDITOR

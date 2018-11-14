@@ -77,7 +77,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_InputControlSchemeName = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName).name;
             var schema = m_AssetManager.m_AssetObjectForEditing.GetControlScheme(schemaName);
-            m_Devices = schema.deviceRequirements.Select(a => new DeviceEntryForList() { name = a.controlPath, deviceRequirement = a }).ToList();
+            m_Devices = schema.deviceRequirements.Select(a => new DeviceEntryForList()
+            {
+                name = a.controlPath.Substring(1, a.controlPath.Length - 2),
+                deviceRequirement = a
+            }).ToList();
         }
 
         public override Vector2 GetWindowSize()
@@ -101,17 +105,50 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void OnDeviceAdd(ReorderableList list)
         {
-            var menu = new GenericMenu();
-            var deviceList = GetDeviceOptions();
-            deviceList.Sort();
-            foreach (var device in deviceList)
-            {
-                menu.AddItem(new GUIContent(device.ToString()), false, AddElement, device.id);
-            }
-            menu.ShowAsContext();
+            var a = new AddDeviceDropdown(AddElement);
+            a.Show(new Rect(Event.current.mousePosition, Vector2.zero));
         }
 
-        List<DeviceEntryForList> GetDeviceOptions()
+        class AddDeviceDropdown : AdvancedDropdown
+        {
+            Action<string, string> m_AddElement;
+
+            public AddDeviceDropdown(Action<string, string> addElement)
+                : base(new AdvancedDropdownState())
+            {
+                m_AddElement = addElement;
+            }
+
+            protected override AdvancedDropdownItem BuildRoot()
+            {
+                var root = new AdvancedDropdownItem("");
+                var deviceList = GetDeviceOptions();
+                deviceList.Sort();
+                foreach (var device in deviceList)
+                {
+                    root.AddChild(new AddDeviceDropdownItem(device.ToString(), device.id));
+                }
+                return root;
+            }
+
+            protected override void ItemSelected(AdvancedDropdownItem item)
+            {
+                m_AddElement((item as AddDeviceDropdownItem).name, (item as AddDeviceDropdownItem).m_DeviceId);
+            }
+
+            class AddDeviceDropdownItem : AdvancedDropdownItem
+            {
+                public string m_DeviceId;
+
+                public AddDeviceDropdownItem(string name, string id)
+                    : base(name)
+                {
+                    m_DeviceId = id;
+                }
+            }
+        }
+
+        static List<DeviceEntryForList> GetDeviceOptions()
         {
             List<DeviceEntryForList> devices = new List<DeviceEntryForList>();
             BuildTreeForAbstractDevices(devices);
@@ -119,13 +156,13 @@ namespace UnityEngine.Experimental.Input.Editor
             return devices;
         }
 
-        void BuildTreeForAbstractDevices(List<DeviceEntryForList> deviceList)
+        static void BuildTreeForAbstractDevices(List<DeviceEntryForList> deviceList)
         {
             foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts)
                 AddDeviceTreeItem(deviceLayout, deviceList);
         }
 
-        void BuildTreeForSpecificDevices(List<DeviceEntryForList> deviceList)
+        static void BuildTreeForSpecificDevices(List<DeviceEntryForList> deviceList)
         {
             foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
             {
@@ -139,7 +176,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void AddDeviceTreeItem(InputControlLayout layout, List<DeviceEntryForList> deviceList)
+        static void AddDeviceTreeItem(InputControlLayout layout, List<DeviceEntryForList> deviceList)
         {
             var entry = new DeviceEntryForList();
             entry.name = layout.name;
@@ -153,13 +190,12 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void AddElement(object nameObject)
+        void AddElement(string name, string controlPath)
         {
-            var name = nameObject.ToString();
             if (!m_DevicesReorderableList.list.Cast<DeviceEntryForList>().Any(a => a.name == name))
             {
                 var device = new InputControlScheme.DeviceRequirement();
-                device.controlPath = name;
+                device.controlPath = controlPath;
                 m_Devices.Add(new DeviceEntryForList(){name = name, deviceRequirement = device});
                 m_DevicesReorderableList.index = m_DevicesReorderableList.list.Count - 1;
             }
@@ -330,7 +366,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public string name;
             public InputControlScheme.DeviceRequirement deviceRequirement;
             public InternedString commonUsage;
-            public object id
+            public string id
             {
                 get
                 {
@@ -347,13 +383,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             public override string ToString()
             {
-                return string.Format("{0} {1}", InputControlPath.ToHumanReadableString(name), commonUsage);
+                if (string.IsNullOrEmpty(commonUsage))
+                    return name;
+                return string.Format("{0} {1}", name, commonUsage);
             }
 
             public int CompareTo(object obj)
             {
                 var c = (DeviceEntryForList)obj;
-                return String.Compare(name, c.name);
+                return String.Compare(id, c.id);
             }
         }
 
