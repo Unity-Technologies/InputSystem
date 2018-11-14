@@ -1219,7 +1219,7 @@ namespace UnityEngine.Experimental.Input
             set { s_Manager.updateMask = value; }
         }
 
-
+#if UNITY_2018_3_OR_NEWER
         private const InputUpdateType ms_runInBackgroundMask = (InputUpdateType)(1 << 31);
 
         /// <summary>
@@ -1242,6 +1242,7 @@ namespace UnityEngine.Experimental.Input
                 s_Manager.updateMask = currentUpdateMask;
             }
         }
+#endif
 
         /// <summary>
         /// Event that is fired before the input system updates.
