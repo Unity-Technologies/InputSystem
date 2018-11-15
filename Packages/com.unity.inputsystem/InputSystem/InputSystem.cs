@@ -773,7 +773,7 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        public static bool SyncDevice(InputDevice device)
+        public static bool TrySyncDevice(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
@@ -783,7 +783,7 @@ namespace UnityEngine.Experimental.Input
             return result >= 0;
         }
         
-        public static bool ResetDevice(InputDevice device)
+        public static bool TryResetDevice(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
