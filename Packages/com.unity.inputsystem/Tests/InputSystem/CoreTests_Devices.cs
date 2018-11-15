@@ -3186,6 +3186,7 @@ partial class CoreTests
         Assert.Fail();
     }
 
+#if UNITY_2019_1_OR_NEWER
     [Test]
     [Category("Devices")]
     public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
@@ -3245,6 +3246,7 @@ partial class CoreTests
         Assert.That(gamepadDeviceReset, Is.True);
         Assert.That(pointerDeviceReset, Is.True);
     }
+#endif
 
     [Test]
     [Category("Devices")]

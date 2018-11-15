@@ -71,14 +71,6 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         ManualThreaded = Manual | 1 << 5,
 
-        /// <summary>
-        /// Turning this flag on allowed for updates to run even when Unity is running in the background.
-        /// </summary>
-        /// <remarks>
-        /// This doesn't guarantee that all devices will update properly while in the background, and so you will still only recieve updates for devices that support running in the background natively.
-        /// </remarks>
-        IgnoreFocus = 1 << 31,
-
         Default = Dynamic | Fixed | Editor,
     }
 
