@@ -775,6 +775,9 @@ namespace UnityEngine.Experimental.Input
 
         public static bool SyncDevice(InputDevice device)
         {
+            if (device == null)
+                throw new ArgumentNullException("device");
+            
             var syncCommand = RequestSyncCommand.Create();
             long result = device.ExecuteCommand(ref syncCommand);
             return result >= 0;
