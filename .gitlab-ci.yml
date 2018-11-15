@@ -17,7 +17,7 @@ warnings:windows:2019.1:
    - bokken-runner
   allow_failure: true
   script:
-    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=editmode
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=playmode --warningscheck
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf

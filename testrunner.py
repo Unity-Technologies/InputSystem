@@ -55,15 +55,20 @@ parser.add_argument('runtimePlatform', nargs='*', choices=allPlatforms)
 parser.add_argument('--version', choices=editorRevisions.keys())
 parser.add_argument('--runtime', choices=allRuntimes)
 parser.add_argument('--testPlatform', choices=allTestPlatforms)
+parser.add_argument('--warningscheck')
 args = parser.parse_args(sys.argv[1:])
 
 runtimePlatforms = args.runtimePlatform
 unityVersion = args.version
 runtimeVersion = args.runtime
 testPlatform = args.testPlatform
+warningsCheck = args.warningscheck
 
 kRootRepoDirectory = os.path.dirname(os.path.realpath(__file__))
 kProjectPath = os.path.dirname(os.path.realpath(__file__))
+if (warningsCheck):
+    kProjectPath = os.path.join(kProjectPath, "Automation\EditorTests")
+
 kTestArtifactPath = os.path.join(kRootRepoDirectory, "TestArtifacts")
 kInstallPath = os.path.join(kRootRepoDirectory, "UnityInstall")
 kEditorPath = os.path.join(kInstallPath, "Unity")
