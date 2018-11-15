@@ -101,10 +101,10 @@ for platform in runtimePlatforms:
     runOptions["scripting-runtime-version"] = runtimeVersion
     runOptions["testPlatform"] = testPlatform
 
-    if(platform != "Editor"):
-        runOptions["buildTarget"] = platform
-    else:
-        runOptions["buildTarget"] = "Standalone"
+  #if(platform != "Editor"):
+  #      runOptions["buildTarget"] = platform
+  #  else:
+  #  runOptions["buildTarget"] = "Standalone"
 
     allArgs = [kEditorPath] + flags
     for k in runOptions:
