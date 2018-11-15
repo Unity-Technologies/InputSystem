@@ -1,12 +1,32 @@
 stages:
+  - check-warnings
   - test-editmode-legacy
   - test-playmode-legacy
   - test-editmode-latest
   - test-playmode-latest
 
+warnings:windows:2019.1:
+  stage: check-warnings
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=editmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
 test:windows:2018-2-net20-editmode:
   stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - warnings:windows:2019.1
   artifacts:
     paths:
       - "TestArtifacts"
@@ -24,6 +44,8 @@ test:windows:2018-2-net20-editmode:
 test:windows:2018-3-net20-editmode:
   stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - warnings:windows:2019.1
   artifacts:
     paths:
       - "TestArtifacts"
@@ -41,6 +63,8 @@ test:windows:2018-3-net20-editmode:
 test:windows:2019-1-net20-editmode:
   stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - warnings:windows:2019.1
   artifacts:
     paths:
       - "TestArtifacts"
@@ -58,6 +82,8 @@ test:windows:2019-1-net20-editmode:
 
 test:osx:2018-2-net20-editmode:
   stage: test-editmode-legacy
+  dependencies:
+    - warnings:windows:2019.1
   artifacts:
     paths:
       - "TestArtifacts"
@@ -76,6 +102,8 @@ test:osx:2018-2-net20-editmode:
 
 test:osx:2018-3-net20-editmode:
   stage: test-editmode-legacy
+  dependencies:
+    - warnings:windows:2019.1
   artifacts:
     paths:
       - "TestArtifacts"
@@ -94,6 +122,8 @@ test:osx:2018-3-net20-editmode:
     
 test:osx:2019-1-net20-editmode:
   stage: test-editmode-legacy
+  dependencies:
+    - warnings:windows:2019.1
   artifacts:
     paths:
       - "TestArtifacts"
