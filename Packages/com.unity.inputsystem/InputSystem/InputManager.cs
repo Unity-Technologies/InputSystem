@@ -1883,7 +1883,8 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                InputSystem.ResetDevice(device);
+                if(!InputSystem.SyncDevice(device))            
+                    InputSystem.ResetDevice(device);
             }
         }
 

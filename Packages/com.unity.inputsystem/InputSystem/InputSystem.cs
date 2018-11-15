@@ -773,10 +773,18 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        public static unsafe void ResetDevice(InputDevice device)
+        public static bool SyncDevice(InputDevice device)
+        {
+            var syncCommand = RequestSyncCommand.Create();
+            long result = device.ExecuteCommand(ref syncCommand);
+            return result >= 0;
+        }
+        
+        public static bool ResetDevice(InputDevice device)
         {
             var resetCommand = RequestResetCommand.Create();
-            device.ExecuteCommand<RequestResetCommand>(ref resetCommand);
+            long result = device.ExecuteCommand(ref resetCommand);
+            return result >= 0;
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?

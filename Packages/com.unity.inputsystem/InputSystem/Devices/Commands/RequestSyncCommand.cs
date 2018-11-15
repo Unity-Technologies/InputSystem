@@ -5,15 +5,15 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
-    /// A command to tell the runtime to reset the device to it's default state.
+    /// A command to tell the runtime to sync the device to it's last known state.
     /// </summary>
     /// <remarks>
-    /// This triggers an event being sent from the device that represents an empty, or untouched device
+    /// This triggers an event from the underlying device that represents the whole, current state.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
-    public unsafe struct RequestResetCommand : IInputDeviceCommandInfo
+    public unsafe struct RequestSyncCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('R', 'S', 'E', 'T'); } }
+        public static FourCC Type { get { return new FourCC('S', 'Y', 'N', 'C'); } }
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
@@ -25,9 +25,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return Type;
         }
 
-        public static RequestResetCommand Create()
+        public static RequestSyncCommand Create()
         {
-            return new RequestResetCommand
+            return new RequestSyncCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize)
             };
