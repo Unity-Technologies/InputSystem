@@ -13,6 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
         SerializedProperty m_PathProperty;
         Action<SerializedProperty> m_OnPickCallback;
         string[] m_DeviceFilter;
+        string m_ExpectedControlLayoutFilter;
 
         public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
             : base(state)
@@ -172,6 +173,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public void SetDeviceFilter(string[] deviceFilter)
         {
             m_DeviceFilter = deviceFilter;
+        }
+
+        public void SetExpectedControlLayoutFilter(string expectedControlLayout)
+        {
+            m_ExpectedControlLayoutFilter = expectedControlLayout;
         }
     }
 }
