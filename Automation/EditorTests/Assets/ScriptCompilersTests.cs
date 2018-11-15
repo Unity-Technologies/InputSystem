@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Modules;
@@ -55,16 +54,10 @@ public class ScriptCompilersTests
 
         var apiCompatibilityLevel = PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup);
 
-        var scriptAssembly = new ScriptAssembly
-        {
-            Filename = AssetPath.GetFileName(outputAssemblyPath),
-            Flags = AssemblyFlags.None
-        };
-
-        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, scriptAssembly));
+        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, outputAssemblyPath));
 
         MonoIsland island = new MonoIsland(buildTarget, apiCompatibilityLevel, true, new[] {inputFilePath},
-            references.ToArray(), defines, outputAssemblyPath);
+                references.ToArray(), defines, outputAssemblyPath);
 
         return island;
     }
