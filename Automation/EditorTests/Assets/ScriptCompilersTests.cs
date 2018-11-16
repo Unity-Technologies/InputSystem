@@ -13,32 +13,30 @@ using UnityEditorInternal;
 using UnityEngine;
 using ieu = UnityEditorInternal.InternalEditorUtility;
 
-
-
 public class ScriptCompilersTests
-    {
+{ 
 
     [Test]
     public void MonoCSharpCompilerWarningTest()
     {
-        var messages = "";
-        Assert.IsEmpty(messages, "Compiler returned unexpected messages");
+        var messages = CompileCSharp();
+        Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
     }
 
-    static CompilerMessage[] CompileCSharp(string code)
+    static CompilerMessage[] CompileCSharp()
     {
         var supportedLanguage = (SupportedLanguage)Activator.CreateInstance(typeof(CSharpLanguage));
         var island = CreateMonoIsland(supportedLanguage);
 
         using (var compiler = new MonoCSharpCompiler(island, false))
         {
-            return Compile(compiler, island, code);
+            return Compile(compiler, island);
         }
     }
 
     static MonoIsland CreateMonoIsland(SupportedLanguage language)
     {
-        var inputFilePath = Path.GetTempFileName();
+        var inputFilePath = Path.Combine("../../Packages/com.unity.inputsystem/InputSystem");
         var outputAssemblyPath = Path.GetTempFileName();
 
         var options = EditorScriptCompilationOptions.BuildingForEditor;
@@ -56,18 +54,19 @@ public class ScriptCompilersTests
 
         references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, outputAssemblyPath));
 
-        MonoIsland island = new MonoIsland(buildTarget, apiCompatibilityLevel, true, new[] {inputFilePath},
+        var sources = new List<string>();
+        sources.AddRange(Directory.GetFiles(inputFilePath, "*.cs", SearchOption.AllDirectories));
+
+        MonoIsland island = new MonoIsland(buildTarget, apiCompatibilityLevel, true, sources.ToArray(),
                 references.ToArray(), defines, outputAssemblyPath);
 
         return island;
     }
 
-    static CompilerMessage[] Compile(ScriptCompilerBase compiler, MonoIsland island, string code)
+    static CompilerMessage[] Compile(ScriptCompilerBase compiler, MonoIsland island)
     {
-        var inputSourcePath = island._files[0];
-        var assemblyOutputPath = island._output;
 
-        File.WriteAllText(inputSourcePath, code);
+        var assemblyOutputPath = island._output;
 
         compiler.BeginCompiling();
         compiler.WaitForCompilationToFinish();
@@ -79,7 +78,6 @@ public class ScriptCompilersTests
         if (messages.Count(m => m.type == CompilerMessageType.Error) == 0)
             Assert.True(File.Exists(assemblyOutputPath), "Output assembly does not exist after successful compile");
 
-        File.Delete(inputSourcePath);
         File.Delete(assemblyOutputPath);
 
         return messages;
