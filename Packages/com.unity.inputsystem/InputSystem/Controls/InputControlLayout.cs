@@ -240,6 +240,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
                 IsSynthetic = 1 << 2,
+                IsFirstDefinedInThisLayout = 1 << 3,
             }
 
             /// <summary>
@@ -343,6 +344,18 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
+            public bool isFirstDefinedInThisLayout
+            {
+                get { return (flags & Flags.IsFirstDefinedInThisLayout) != 0; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.IsFirstDefinedInThisLayout;
+                    else
+                        flags &= ~Flags.IsFirstDefinedInThisLayout;
+                }
+            }
+
             public bool isArray
             {
                 get { return (arraySize != 0); }
@@ -371,6 +384,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 result.arraySize = !isArray ? other.arraySize : arraySize;
                 result.isNoisy = isNoisy || other.isNoisy;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
+                result.isFirstDefinedInThisLayout = false;
 
                 if (offset != InputStateBlock.kInvalidOffset)
                     result.offset = offset;
@@ -1058,6 +1072,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
+                isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
                 isSynthetic = isSynthetic,
                 arraySize = arraySize,
@@ -1398,14 +1413,32 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // and had to be merged so the rest we can just slurp into the list as is.
                 if (!layoutIsTargetingSpecificVariants)
                 {
+                    var indexStart = controls.Count;
                     controls.AddRange(baseControlTable.Values);
+
+                    // Mark the controls as being inherited.
+                    for (var i = indexStart; i < controls.Count; ++i)
+                    {
+                        var control = controls[i];
+                        control.isFirstDefinedInThisLayout = false;
+                        controls[i] = control;
+                    }
                 }
                 else
                 {
                     // Filter out controls coming from the base layout which are targeting variants
                     // that we're not interested in.
+                    var indexStart = controls.Count;
                     controls.AddRange(
                         baseControlTable.Values.Where(x => VariantsMatch(m_Variants, x.variants)));
+
+                    // Mark the controls as being inherited.
+                    for (var i = indexStart; i < controls.Count; ++i)
+                    {
+                        var control = controls[i];
+                        control.isFirstDefinedInThisLayout = false;
+                        controls[i] = control;
+                    }
                 }
 
                 m_Controls = controls.ToArray();
@@ -1687,6 +1720,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     isModifyingChildControlByPath = name.IndexOf('/') != -1,
                     isNoisy = noisy,
                     isSynthetic = synthetic,
+                    isFirstDefinedInThisLayout = true,
                     arraySize = arraySize,
                 };
 
