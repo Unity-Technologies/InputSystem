@@ -494,6 +494,10 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Layout: {0}", control.layout), ref id);
                 if (!control.variants.IsEmpty())
                     AddChild(item, string.Format("Variant: {0}", control.variants), ref id);
+                if (!string.IsNullOrEmpty(control.displayName))
+                    AddChild(item, string.Format("Display Name: {0}", control.displayName), ref id);
+                if (!string.IsNullOrEmpty(control.shortDisplayName))
+                    AddChild(item, string.Format("Short Display Name: {0}", control.shortDisplayName), ref id);
                 if (control.format != 0)
                     AddChild(item, string.Format("Format: {0}", control.format), ref id);
                 if (control.offset != InputStateBlock.kInvalidOffset)
@@ -508,11 +512,30 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
                 if (!control.defaultState.isEmpty)
                     AddChild(item, string.Format("Default State: {0}", control.defaultState.ToString()), ref id);
+                if (!control.minValue.isEmpty)
+                    AddChild(item, string.Format("Min Value: {0}", control.minValue.ToString()), ref id);
+                if (!control.maxValue.isEmpty)
+                    AddChild(item, string.Format("Max Value: {0}", control.maxValue.ToString()), ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages.Select(x => x.ToString()).ToArray()), ref id);
                 if (control.aliases.Count > 0)
                     AddChild(item, "Aliases: " + string.Join(", ", control.aliases.Select(x => x.ToString()).ToArray()), ref id);
+
+                if (control.isNoisy || control.isSynthetic)
+                {
+                    var flags = "Flags: ";
+                    if (control.isNoisy)
+                        flags += "Noisy";
+                    if (control.isSynthetic)
+                    {
+                        if (control.isNoisy)
+                            flags += ", Synthetic";
+                        else
+                            flags += "Synthetic";
+                    }
+                    AddChild(item, flags, ref id);
+                }
 
                 if (control.parameters.Count > 0)
                 {

@@ -98,6 +98,15 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return DragAndDropVisualMode.Move;
         }
+
+        public void SelectNewActionMapRow()
+        {
+            var newRow = rootItem.children.Last();
+            SetSelection(new List<int>() { newRow.id });
+            OnSelectionChanged();
+            EndRename();
+            BeginRename(newRow);
+        }
     }
 }
 #endif // UNITY_EDITOR

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
@@ -19,12 +17,11 @@ public class MouseOutputs : MonoBehaviour
     public Text scrollX;
     public Text scrollY;
 
-    // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        Mouse mouse = Mouse.current;
-
-        if (mouse == null) { return; }
+        var mouse = InputSystem.GetDevice<Mouse>();
+        if (mouse == null)
+            return;
 
         SetImageColor(rightMouseButtonIndicator, !(mouse.rightButton.ReadValue() == 0));
         SetImageColor(leftMouseButtonIndicator, !(mouse.leftButton.ReadValue() == 0));
@@ -40,7 +37,7 @@ public class MouseOutputs : MonoBehaviour
         scrollY.text = mouse.scroll.y.ReadValue().ToString();
     }
 
-    void SetImageColor(Image img, bool condition)
+    private static void SetImageColor(Image img, bool condition)
     {
         if (condition)
         {

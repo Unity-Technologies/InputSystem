@@ -23,10 +23,10 @@ public class InputUIPicker : MonoBehaviour
     private GameObject m_currentDisplay;
     private Keyboard m_currentKeyboard;
 
-    void Start()
+    public void Start()
     {
         SwitchToKeyMouse();
-        m_currentKeyboard = Keyboard.current;
+        m_currentKeyboard = InputSystem.GetDevice<Keyboard>();
         //m_switchToKeyboardMouseAction.performed += _ => SwitchToInputMethod(0);
         //m_switchToXboxAction.performed += _ => SwitchToInputMethod(1);
         //m_switchToGamepadDiagramAction.performed += _ => SwitchToInputMethod(2);

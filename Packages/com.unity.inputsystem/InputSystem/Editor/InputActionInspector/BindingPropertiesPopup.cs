@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetProperty(ActionTreeViewItem treeViewLine)
         {
-            m_BindingPropertyView = treeViewLine.GetPropertiesView(OnChange, new TreeViewState(), null);
+            m_BindingPropertyView = new InputBindingPropertiesView(treeViewLine.elementProperty, OnChange, new TreeViewState(), null);
         }
 
         void OnGUI()

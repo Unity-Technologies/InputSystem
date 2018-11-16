@@ -11,69 +11,13 @@ public class UIActionInputModuleEnabler : MonoBehaviour
     {
         UIActionInputModule inputModule = GetComponent<UIActionInputModule>();
         if (inputModule != null)
-        {
-            var pointAction = inputModule.point.action;
-            if (pointAction != null && !pointAction.enabled)
-                pointAction.Enable();
-
-            var leftClickAction = inputModule.leftClick.action;
-            if (leftClickAction != null && !leftClickAction.enabled)
-                leftClickAction.Enable();
-
-            var rightClickAction = inputModule.rightClick.action;
-            if (rightClickAction != null && !rightClickAction.enabled)
-                rightClickAction.Enable();
-
-            var middleClickAction = inputModule.middleClick.action;
-            if (middleClickAction != null && !middleClickAction.enabled)
-                middleClickAction.Enable();
-
-            var moveAction = inputModule.move.action;
-            if (moveAction != null && !moveAction.enabled)
-                moveAction.Enable();
-
-            var submitAction = inputModule.submit.action;
-            if (submitAction != null && !submitAction.enabled)
-                submitAction.Enable();
-
-            var cancelAction = inputModule.cancel.action;
-            if (cancelAction != null && !cancelAction.enabled)
-                cancelAction.Enable();
-        }
+            inputModule.EnableAllActions();
     }
 
     void OnDisable()
     {
         UIActionInputModule inputModule = GetComponent<UIActionInputModule>();
         if (inputModule != null)
-        {
-            var pointAction = inputModule.point.action;
-            if (pointAction != null && pointAction.enabled)
-                pointAction.Disable();
-
-            var leftClickAction = inputModule.leftClick.action;
-            if (leftClickAction != null && leftClickAction.enabled)
-                leftClickAction.Disable();
-
-            var rightClickAction = inputModule.rightClick.action;
-            if (rightClickAction != null && rightClickAction.enabled)
-                rightClickAction.Disable();
-
-            var middleClickAction = inputModule.middleClick.action;
-            if (middleClickAction != null && middleClickAction.enabled)
-                middleClickAction.Disable();
-
-            var moveAction = inputModule.move.action;
-            if (moveAction != null && moveAction.enabled)
-                moveAction.Disable();
-
-            var submitAction = inputModule.submit.action;
-            if (submitAction != null && submitAction.enabled)
-                submitAction.Disable();
-
-            var cancelAction = inputModule.cancel.action;
-            if (cancelAction != null && cancelAction.enabled)
-                cancelAction.Disable();
-        }
+            inputModule.DisableAllActions();
     }
 }

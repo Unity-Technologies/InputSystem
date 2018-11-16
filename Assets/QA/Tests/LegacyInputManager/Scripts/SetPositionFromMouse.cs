@@ -9,7 +9,6 @@ public class SetPositionFromMouse : MonoBehaviour
         m_RectTransform = GetComponent<RectTransform>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         m_RectTransform.position = Input.mousePosition; //new Vector3(Input.mousePosition.x / (float)Screen.width,

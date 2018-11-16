@@ -16,13 +16,12 @@ public class ButtonStateHex : MonoBehaviour
         m_OutputText = GetComponent<Text>();
     }
 
-    // Update is called once per frame
-    //
-    void Update()
+    public void Update()
     {
-        if (Keyboard.current != null)
+        var keyboard = InputSystem.GetDevice<Keyboard>();
+        if (keyboard != null)
         {
-            m_OutputText.text = "0x" + GetStringForKBButtonState(Keyboard.current);
+            m_OutputText.text = "0x" + GetStringForKBButtonState(keyboard);
         }
     }
 

@@ -12,7 +12,6 @@ public class Vector3ControlActionStatus : MonoBehaviour
 
     public Text statusText;
 
-    // Use this for initialization
     void OnEnable()
     {
         vector3Action.Enable();
