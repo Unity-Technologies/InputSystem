@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public static QueryUserIdCommand Create()
         {
-            return new QueryUserIdCommand()
+            return new QueryUserIdCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
             };

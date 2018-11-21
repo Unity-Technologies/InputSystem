@@ -240,6 +240,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
                 IsSynthetic = 1 << 2,
+                IsFirstDefinedInThisLayout = 1 << 3,
             }
 
             /// <summary>
@@ -268,7 +269,12 @@ namespace UnityEngine.Experimental.Input.Layouts
             /// <seealso cref="InputControl.displayName"/>
             public string displayName;
 
-            public string resourceName;
+            /// <summary>
+            /// Optional abbreviated display name of the control.
+            /// </summary>
+            /// <seealso cref="InputControl.shortDisplayName"/>
+            public string shortDisplayName;
+
             public ReadOnlyArray<InternedString> usages;
             public ReadOnlyArray<InternedString> aliases;
             public ReadOnlyArray<ParameterValue> parameters;
@@ -338,6 +344,18 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
+            public bool isFirstDefinedInThisLayout
+            {
+                get { return (flags & Flags.IsFirstDefinedInThisLayout) != 0; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.IsFirstDefinedInThisLayout;
+                    else
+                        flags &= ~Flags.IsFirstDefinedInThisLayout;
+                }
+            }
+
             public bool isArray
             {
                 get { return (arraySize != 0); }
@@ -358,12 +376,15 @@ namespace UnityEngine.Experimental.Input.Layouts
                 Debug.Assert(!name.IsEmpty());
                 result.isModifyingChildControlByPath = isModifyingChildControlByPath;
 
+                result.displayName = string.IsNullOrEmpty(displayName) ? other.displayName : displayName;
+                result.shortDisplayName = string.IsNullOrEmpty(shortDisplayName) ? other.shortDisplayName : shortDisplayName;
                 result.layout = layout.IsEmpty() ? other.layout : layout;
                 result.variants = variants.IsEmpty() ? other.variants : variants;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
                 result.arraySize = !isArray ? other.arraySize : arraySize;
                 result.isNoisy = isNoisy || other.isNoisy;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
+                result.isFirstDefinedInThisLayout = false;
 
                 if (offset != InputStateBlock.kInvalidOffset)
                     result.offset = offset;
@@ -409,11 +430,6 @@ namespace UnityEngine.Experimental.Input.Layouts
                     result.displayName = displayName;
                 else
                     result.displayName = other.displayName;
-
-                if (!string.IsNullOrEmpty(resourceName))
-                    result.resourceName = resourceName;
-                else
-                    result.resourceName = other.resourceName;
 
                 if (!defaultState.isEmpty)
                     result.defaultState = defaultState;
@@ -807,7 +823,6 @@ namespace UnityEngine.Experimental.Input.Layouts
         private InternedString[] m_CommonUsages;
         internal ControlItem[] m_Controls;
         internal string m_DisplayName;
-        internal string m_ResourceName;
 
         private InputControlLayout(string name, Type type)
         {
@@ -930,6 +945,10 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             var isModifyingChildControlByPath = name.IndexOf('/') != -1;
 
+            // Determine display name.
+            var displayName = attribute != null ? attribute.displayName : null;
+            var shortDisplayName = attribute != null ? attribute.shortDisplayName : null;
+
             // Determine layout.
             var layout = attribute != null ? attribute.layout : null;
             if (string.IsNullOrEmpty(layout) && !isModifyingChildControlByPath &&
@@ -1039,6 +1058,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             return new ControlItem
             {
                 name = new InternedString(name),
+                displayName = displayName,
+                shortDisplayName = shortDisplayName,
                 layout = new InternedString(layout),
                 variants = new InternedString(variants),
                 useStateFrom = useStateFrom,
@@ -1051,6 +1072,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
+                isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
                 isSynthetic = isSynthetic,
                 arraySize = arraySize,
@@ -1134,7 +1156,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 index = closeParenIndex + 1;
             }
 
-            if (index < textLength && text[index] == ',')
+            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.kSeparator))
                 ++index;
 
             return new NameAndParameters {name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters)};
@@ -1277,8 +1299,6 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             if (string.IsNullOrEmpty(m_DisplayName))
                 m_DisplayName = other.m_DisplayName;
-            if (string.IsNullOrEmpty(m_ResourceName))
-                m_ResourceName = other.m_ResourceName;
 
             // Combine common usages.
             m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
@@ -1393,14 +1413,32 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // and had to be merged so the rest we can just slurp into the list as is.
                 if (!layoutIsTargetingSpecificVariants)
                 {
+                    var indexStart = controls.Count;
                     controls.AddRange(baseControlTable.Values);
+
+                    // Mark the controls as being inherited.
+                    for (var i = indexStart; i < controls.Count; ++i)
+                    {
+                        var control = controls[i];
+                        control.isFirstDefinedInThisLayout = false;
+                        controls[i] = control;
+                    }
                 }
                 else
                 {
                     // Filter out controls coming from the base layout which are targeting variants
                     // that we're not interested in.
+                    var indexStart = controls.Count;
                     controls.AddRange(
                         baseControlTable.Values.Where(x => VariantsMatch(m_Variants, x.variants)));
+
+                    // Mark the controls as being inherited.
+                    for (var i = indexStart; i < controls.Count; ++i)
+                    {
+                        var control = controls[i];
+                        control.isFirstDefinedInThisLayout = false;
+                        controls[i] = control;
+                    }
                 }
 
                 m_Controls = controls.ToArray();
@@ -1519,7 +1557,6 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string[] commonUsages;
             public string displayName;
-            public string resourceName;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
             public string variant;
             public InputDeviceMatcher.MatcherJson device;
@@ -1557,7 +1594,6 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Create layout.
                 var layout = new InputControlLayout(name, type);
                 layout.m_DisplayName = displayName;
-                layout.m_ResourceName = resourceName;
                 layout.m_Variants = new InternedString(variant);
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1611,7 +1647,6 @@ namespace UnityEngine.Experimental.Input.Layouts
                     type = layout.type.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
-                    resourceName = layout.m_ResourceName,
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
@@ -1648,7 +1683,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string parameters;
             public string processors;
             public string displayName;
-            public string resourceName;
+            public string shortDisplayName;
             public bool noisy;
             public bool synthetic;
 
@@ -1677,7 +1712,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     layout = new InternedString(this.layout),
                     variants = new InternedString(variants),
                     displayName = displayName,
-                    resourceName = resourceName,
+                    shortDisplayName = shortDisplayName,
                     offset = offset,
                     useStateFrom = useStateFrom,
                     bit = bit,
@@ -1685,6 +1720,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     isModifyingChildControlByPath = name.IndexOf('/') != -1,
                     isNoisy = noisy,
                     isSynthetic = synthetic,
+                    isFirstDefinedInThisLayout = true,
                     arraySize = arraySize,
                 };
 
@@ -1744,7 +1780,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                         layout = item.layout,
                         variants = item.variants,
                         displayName = item.displayName,
-                        resourceName = item.resourceName,
+                        shortDisplayName = item.shortDisplayName,
                         bit = item.bit,
                         offset = item.offset,
                         sizeInBits = item.sizeInBits,

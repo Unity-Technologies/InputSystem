@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.UI;
 
+////FIXME: will not work properly when there are multiple keyboards
+
 public class IMETest : MonoBehaviour
 {
     public bool enableIME;
@@ -22,12 +24,11 @@ public class IMETest : MonoBehaviour
     public InputField cursorYInput;
     public Button cursorPositionButton;
 
-    // Use this for initialization
-    void OnEnable()
+    public void OnEnable()
     {
         if (!m_AddedTextListeners)
         {
-            Keyboard keyboard = Keyboard.current;
+            var keyboard = InputSystem.GetDevice<Keyboard>();
             if (keyboard != null)
             {
                 keyboard.onTextInput += OnTextEvent;
@@ -42,21 +43,21 @@ public class IMETest : MonoBehaviour
             enabledIMEVisual.isOn = enableIME;
     }
 
-    void OnDisable()
+    public void OnDisable()
     {
-        if (m_AddedTextListeners)
+        if (!m_AddedTextListeners)
+            return;
+
+        var keyboard = InputSystem.GetDevice<Keyboard>();
+        if (keyboard != null)
         {
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard != null)
-            {
-                keyboard.onTextInput -= OnTextEvent;
-                keyboard.onIMECompositionChange -= OnIMECompositionChange;
-            }
-            m_AddedTextListeners = false;
+            keyboard.onTextInput -= OnTextEvent;
+            keyboard.onIMECompositionChange -= OnIMECompositionChange;
         }
+        m_AddedTextListeners = false;
     }
 
-    void OnTextEvent(char character)
+    private void OnTextEvent(char character)
     {
         outputString += character;
 
@@ -64,49 +65,48 @@ public class IMETest : MonoBehaviour
             outputStringText.text = outputString;
     }
 
-    void OnIMECompositionChange(IMECompositionString compositionString)
+    private void OnIMECompositionChange(IMECompositionString compositionString)
     {
         this.compositionString = "";
-        foreach (char c in compositionString)
+        foreach (var c in compositionString)
             this.compositionString += c;
 
         if (compositionStringText != null)
             compositionStringText.text = this.compositionString;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard != null)
+        var keyboard = InputSystem.GetDevice<Keyboard>();
+        if (keyboard == null)
+            return;
+
+        if (!m_AddedTextListeners)
         {
-            if (!m_AddedTextListeners)
-            {
-                keyboard.onTextInput += OnTextEvent;
-                keyboard.onIMECompositionChange += OnIMECompositionChange;
-                m_AddedTextListeners = true;
-            }
-
-            keyboard.imeEnabled = enableIME;
-            keyboard.imeCursorPosition = cursorPosition;
-
-            activeIME = keyboard.imeSelected.isPressed;
-
-            if (activeIMEVisual != null)
-                activeIMEVisual.isOn = activeIME;
+            keyboard.onTextInput += OnTextEvent;
+            keyboard.onIMECompositionChange += OnIMECompositionChange;
+            m_AddedTextListeners = true;
         }
+
+        keyboard.imeEnabled = enableIME;
+        keyboard.imeCursorPosition = cursorPosition;
+
+        activeIME = keyboard.imeSelected.isPressed;
+
+        if (activeIMEVisual != null)
+            activeIMEVisual.isOn = activeIME;
     }
 
     public void OnCursorTextEntered()
     {
-        if (cursorXInput != null && cursorYInput != null && cursorPositionButton != null)
-        {
-            float x, y;
-            bool validInput = float.TryParse(cursorXInput.text, out x);
-            validInput &= float.TryParse(cursorYInput.text, out y);
+        if (cursorXInput == null || cursorYInput == null || cursorPositionButton == null)
+            return;
 
-            cursorPositionButton.interactable = validInput;
-        }
+        float x, y;
+        var validInput = float.TryParse(cursorXInput.text, out x);
+        validInput &= float.TryParse(cursorYInput.text, out y);
+
+        cursorPositionButton.interactable = validInput;
     }
 
     public void OnClearOutputString()
@@ -124,17 +124,17 @@ public class IMETest : MonoBehaviour
 
     public void OnSubmitCursorPosition()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (cursorXInput != null && cursorYInput != null && keyboard != null)
-        {
-            float x, y;
-            bool validInput = float.TryParse(cursorXInput.text, out x);
-            validInput &= float.TryParse(cursorYInput.text, out y);
+        var keyboard = InputSystem.GetDevice<Keyboard>();
+        if (cursorXInput == null || cursorYInput == null || keyboard == null)
+            return;
 
-            if (validInput)
-            {
-                keyboard.imeCursorPosition = cursorPosition = new Vector2(x, y);
-            }
+        float x, y;
+        var validInput = float.TryParse(cursorXInput.text, out x);
+        validInput &= float.TryParse(cursorYInput.text, out y);
+
+        if (validInput)
+        {
+            keyboard.imeCursorPosition = cursorPosition = new Vector2(x, y);
         }
     }
 }

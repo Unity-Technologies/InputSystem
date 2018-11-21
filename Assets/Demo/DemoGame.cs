@@ -49,16 +49,25 @@ public class DemoGame : MonoBehaviour
         get { return m_State; }
     }
 
+    /// <summary>
+    /// Whether we're currently in a single-player game.
+    /// </summary>
     public bool isSinglePlayer
     {
         get { return m_SinglePlayer; }
     }
 
+    /// <summary>
+    /// Whether we're currently in a multi-player game.
+    /// </summary>
     public bool isMultiPlayer
     {
         get { return !m_SinglePlayer; }
     }
 
+    /// <summary>
+    /// List of players currently in the game.
+    /// </summary>
     public ReadOnlyArray<DemoPlayerController> players
     {
         get { return new ReadOnlyArray<DemoPlayerController>(m_Players, 0, m_ActivePlayerCount); }
@@ -94,26 +103,6 @@ public class DemoGame : MonoBehaviour
     private static RuntimePlatform? s_Platform;
     private static bool? s_VRSupported;
 
-    //single player: all devices owned by player (but not assigned to), automatically switches schemes as player uses different devices
-    //multi player: devices assigned by players explicitly joining on them
-
-
-    //instead of cubes, create some funky shapes in zbrush
-    //have variety of projectiles and tint each one randomly
-    //ground animated by wave shader
-
-
-    //funky animal appears in random locations on the map, lingers a while and then disappears again
-    //players have to shoot food into animal's mouth to get points
-    //timeout on game, highest score after time is out wins
-    //highscore where winning player can enter name (covers text input + IME)
-
-
-    //what to show:
-    // - join and device assignment logic
-    // - auto-switching logic for single player
-    // - cross-device input where input response code isn't aware of type of device generating the input
-
     private bool m_SinglePlayer;
     private int m_ActivePlayerCount;
     private DemoPlayerController[] m_Players;
@@ -122,6 +111,8 @@ public class DemoGame : MonoBehaviour
 
     public void Awake()
     {
+        InputUser.onChange += OnUserChange;
+
         // In single player games we want to know when the player switches to a device
         // that isn't among the ones currently assigned to the player so that we can
         // detect when to switch to a different control scheme.
@@ -130,6 +121,7 @@ public class DemoGame : MonoBehaviour
 
     public void OnDestroy()
     {
+        InputUser.onChange -= OnUserChange;
         InputUser.onUnassignedDeviceUsed -= OnUnassignedInputDeviceUsed;
     }
 
@@ -338,6 +330,21 @@ public class DemoGame : MonoBehaviour
         player.AssignInputDevice(device);
         player.AssignControlScheme(controlScheme)
             .AndAssignMissingDevices();
+    }
+
+    /// <summary>
+    /// Called when there's a change in the input user setup in the system.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="change"></param>
+    private void OnUserChange(IInputUser user, InputUserChange change)
+    {
+        var player = user as DemoPlayerController;
+        if (player == null)
+            return;
+
+        if (change == InputUserChange.DevicesChanged)
+            player.OnAssignedDevicesChanged();
     }
 
     /// <summary>

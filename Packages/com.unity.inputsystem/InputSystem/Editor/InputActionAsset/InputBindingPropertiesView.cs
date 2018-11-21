@@ -50,7 +50,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
         private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
         private static readonly GUIContent s_UseInSchemesGui = EditorGUIUtility.TrTextContent("Use in control scheme");
-        private static readonly GUIContent s_WaitingForInputContent = EditorGUIUtility.TrTextContent("Waiting for input...");
 
         private bool m_ManualPathEditMode;
         private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
@@ -60,6 +59,16 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
 
         public bool showPathAndControlSchemeSection { get; set; }
+
+        public bool isInteractivelyPicking
+        {
+            get { return m_RebindingOperation != null && m_RebindingOperation.started; }
+        }
+
+        public string expectedControlLayout
+        {
+            get { return m_ExpectedControlLayout; }
+        }
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree,
                                           TreeViewState controlPickerTreeViewState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
@@ -91,6 +100,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ReloadTree();
         }
 
+        public void CancelInteractivePicking()
+        {
+            if (m_RebindingOperation != null)
+                m_RebindingOperation.Cancel();
+        }
+
         public void OnGUI()
         {
             if (m_BindingProperty == null)
@@ -98,10 +113,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
             if (showPathAndControlSchemeSection)
-            {
                 DrawPathPicker();
-                DrawUseInControlSchemes();
-            }
             EditorGUILayout.Space();
             DrawInteractionsPicker();
             EditorGUILayout.Space();
@@ -138,10 +150,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
+            EditorGUI.indentLevel++;
             if (m_GeneralFoldout)
             {
-                EditorGUI.indentLevel++;
-
                 var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
                 DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
                     s =>
@@ -150,8 +161,9 @@ namespace UnityEngine.Experimental.Input.Editor
                         OnBindingModified(s);
                     });
 
-                EditorGUI.indentLevel--;
+                DrawUseInControlSchemes();
             }
+            EditorGUI.indentLevel--;
         }
 
         protected virtual void DrawUseInControlSchemes()
@@ -160,7 +172,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUI.indentLevel++;
             EditorGUILayout.LabelField(s_UseInSchemesGui, EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical();
             foreach (var scheme in m_ControlSchemes)
@@ -181,7 +192,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
             EditorGUILayout.EndVertical();
-            EditorGUI.indentLevel--;
         }
 
         ////TODO: interactive picker; if more than one control makes it through the filters, present list of
@@ -225,6 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     pathProperty.serializedObject.ApplyModifiedProperties();
                     onModified(pathProperty);
                 }
+                DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
                 if (GUI.Button(editButtonRect, "˅"))
                 {
                     bindingTextRect.x += editButtonRect.width;
@@ -237,83 +248,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
                 {
                     ////TODO: pass expectedControlLayout filter on to control picker
+                    ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
                     ShowInputControlPicker(bindingTextRect, pathProperty, pickerTreeViewState, onModified);
                 }
 
-                ////FIXME: need to suppress triggering shortcuts in the editor while doing rebinds
-                ////FIXME: need to prevent binding to left click when cancelling
                 // Button to bind interactively.
-                var toggleRebind = GUI.Toggle(interactivePickButtonRect,
-                    m_RebindingOperation != null && m_RebindingOperation.started, "0", EditorStyles.miniButton);
-                if (toggleRebind && (m_RebindingOperation == null || !m_RebindingOperation.started))
-                {
-                    // Start rebind.
-
-                    var window = EditorWindow.focusedWindow;
-                    window.ShowNotification(s_WaitingForInputContent);
-
-                    if (m_RebindingOperation == null)
-                        m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
-
-                    ////TODO: if we have multiple candidates that we can't trivially decide between, let user choose
-
-                    m_RebindingOperation
-                        .WithExpectedControlLayout(m_ExpectedControlLayout)
-                        // Require minimum actuation of 0.15f. This is after deadzoning has been applied.
-                        .WithMagnitudeHavingToBeGreaterThan(0.15f)
-                        ////REVIEW: the delay makes it more robust but doesn't feel good
-                        // Give us a buffer of 0.25 seconds to see if a better match comes along.
-                        .OnMatchWaitForAnother(0.25f)
-                        ////REVIEW: should we exclude only the system's active pointing device?
-                        // With the mouse operating the UI, its cursor control is too fickle a thing to
-                        // bind to. Ignore mouse position and delta.
-                        // NOTE: We go for all types of pointers here, not just mice.
-                        .WithControlsExcluding("<Pointer>/position")
-                        .WithControlsExcluding("<Pointer>/delta")
-                        .OnCancel(
-                            operation =>
-                            {
-                                window.RemoveNotification();
-                                window.Repaint();
-                            })
-                        .OnComplete(
-                            operation =>
-                            {
-                                window.RemoveNotification();
-                                window.Repaint();
-                            })
-                        .OnApplyBinding(
-                            (operation, newPath) =>
-                            {
-                                pathProperty.stringValue = newPath;
-                                pathProperty.serializedObject.ApplyModifiedProperties();
-                                onModified(pathProperty);
-                            });
-
-                    // For all control schemes that the binding is part of, constrain what we pick
-                    // by the device paths we have in the control scheme.
-                    var bindingIsPartOfControlScheme = false;
-                    foreach (var controlScheme in m_ControlSchemes)
-                    {
-                        if (m_BindingGroups.Contains(controlScheme.bindingGroup))
-                        {
-                            foreach (var deviceRequirement in controlScheme.deviceRequirements)
-                                m_RebindingOperation.WithControlsHavingToMatchPath(deviceRequirement.controlPath);
-                            bindingIsPartOfControlScheme = true;
-                        }
-                    }
-                    if (!bindingIsPartOfControlScheme)
-                    {
-                        // Not part of a control scheme. Remove all path constraints.
-                        m_RebindingOperation.WithoutControlsHavingToMatchPath();
-                    }
-
-                    m_RebindingOperation.Start();
-                }
-                else if (!toggleRebind && m_RebindingOperation != null && m_RebindingOperation.started)
-                {
-                    m_RebindingOperation.Cancel();
-                }
+                DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
 
                 // Button that switches binding into text edit mode.
                 if (GUI.Button(editButtonRect, "...", EditorStyles.miniButton))
@@ -323,6 +263,69 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawInteractivePickButton(Rect rect, SerializedProperty pathProperty, Action<SerializedProperty> onModified)
+        {
+            ////FIXME: need to suppress triggering shortcuts in the editor while doing rebinds
+            ////TODO: need to have good way to cancel binding
+
+            var toggleRebind = GUI.Toggle(rect,
+                m_RebindingOperation != null && m_RebindingOperation.started, "0", EditorStyles.miniButton);
+            if (toggleRebind && (m_RebindingOperation == null || !m_RebindingOperation.started))
+            {
+                // Start rebind.
+
+                if (m_RebindingOperation == null)
+                    m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
+
+                ////TODO: if we have multiple candidates that we can't trivially decide between, let user choose
+
+                m_RebindingOperation
+                    .WithExpectedControlLayout(m_ExpectedControlLayout)
+                    // Require minimum actuation of 0.15f. This is after deadzoning has been applied.
+                    .WithMagnitudeHavingToBeGreaterThan(0.15f)
+                    ////REVIEW: the delay makes it more robust but doesn't feel good
+                    // Give us a buffer of 0.25 seconds to see if a better match comes along.
+                    .OnMatchWaitForAnother(0.25f)
+                    ////REVIEW: should we exclude only the system's active pointing device?
+                    // With the mouse operating the UI, its cursor control is too fickle a thing to
+                    // bind to. Ignore mouse position and delta.
+                    // NOTE: We go for all types of pointers here, not just mice.
+                    .WithControlsExcluding("<Pointer>/position")
+                    .WithControlsExcluding("<Pointer>/delta")
+                    .OnApplyBinding(
+                        (operation, newPath) =>
+                        {
+                            pathProperty.stringValue = newPath;
+                            pathProperty.serializedObject.ApplyModifiedProperties();
+                            onModified(pathProperty);
+                        });
+
+                // For all control schemes that the binding is part of, constrain what we pick
+                // by the device paths we have in the control scheme.
+                var bindingIsPartOfControlScheme = false;
+                foreach (var controlScheme in m_ControlSchemes)
+                {
+                    if (m_BindingGroups.Contains(controlScheme.bindingGroup))
+                    {
+                        foreach (var deviceRequirement in controlScheme.deviceRequirements)
+                            m_RebindingOperation.WithControlsHavingToMatchPath(deviceRequirement.controlPath);
+                        bindingIsPartOfControlScheme = true;
+                    }
+                }
+                if (!bindingIsPartOfControlScheme)
+                {
+                    // Not part of a control scheme. Remove all path constraints.
+                    m_RebindingOperation.WithoutControlsHavingToMatchPath();
+                }
+
+                m_RebindingOperation.Start();
+            }
+            else if (!toggleRebind && m_RebindingOperation != null && m_RebindingOperation.started)
+            {
+                m_RebindingOperation.Cancel();
+            }
         }
 
         private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,

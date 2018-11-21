@@ -2884,10 +2884,86 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_WhenPartOfCompositeResolvesToMultipleControls_WhatHappensXXX()
+    public void Actions_CanCreateCompositesWithBindingsResolvingToMultipleControls()
     {
-        Assert.Fail();
+        var keyboard1 = InputSystem.AddDevice<Keyboard>();
+        var keyboard2 = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "/<Keyboard>/RightArrow") // These bindings will pick up both keyboards.
+            .With("Negative", "/<Keyboard>/LeftArrow");
+        action.Enable();
+
+        float? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<float>(); };
+
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard1.rightArrowKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard2.rightArrowKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard1.leftArrowKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard2.leftArrowKey));
+
+        InputSystem.QueueStateEvent(keyboard1, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value.HasValue);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(keyboard2, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(value.HasValue);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(keyboard2, new KeyboardState(Key.LeftArrow));
+        InputSystem.Update();
+
+        Assert.That(value.HasValue);
+        Assert.That(value, Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateCompositesWithMultipleBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up directional controls that work both with WASD and arrows.
+        // NOTE: This sets up a single Dpad composite that works with either of the keys meaning
+        //       the WASD and arrow block can be mixed. An alternative setup would be to set up
+        //       to separate Dpad composites, one for WASD and one for the arrow block. In that setup,
+        //       the two will not mix but rather produce two independent 2D vectors. Which one gets
+        //       to drive the associated action is whichver had the last input event.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "/<Keyboard>/w")
+            .With("Up", "/<Keyboard>/upArrow")
+            .With("Down", "/<Keyboard>/s")
+            .With("Down", "/<Keyboard>/downArrow")
+            .With("Left", "/<Keyboard>/a")
+            .With("Left", "/<Keyboard>/leftArrow")
+            .With("Right", "/<Keyboard>/d")
+            .With("Right", "/<Keyboard>/rightArrow");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        // Up arrow.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow));
+        InputSystem.Update();
+
+        Assert.That(value, Is.EqualTo(new Vector2(0, 1)).Using(Vector2EqualityComparer.Instance));
+
+        // Down arrow + 'a'.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow, Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
@@ -4098,7 +4174,7 @@ partial class CoreTests
             // Must have OnApplyBinding() callback when not having an action as otherwise
             // RebindOperation doesn't know where to put the binding.
             Assert.That(() => rebind.Start(),
-                Throws.InvalidOperationException.With.Message.ContainsSubstring("OnApplyBinding"));
+                Throws.InvalidOperationException.With.Message.Contains("OnApplyBinding"));
 
             var receivedOnApplyBindingCall = false;
             rebind.OnApplyBinding(
@@ -4555,9 +4631,9 @@ partial class CoreTests
     {
         var map1 = new InputActionMap("map1");
         var map2 = new InputActionMap("map2");
-        var action1 = map1.AddAction("action1", "<Gamepad>/leftStick");
-        var action2 = map1.AddAction("action2", "<Gamepad>/rightStick");
-        var action3 = map2.AddAction("action3", "<Keyboard>/space");
+        map1.AddAction("action1", "<Gamepad>/leftStick");
+        map1.AddAction("action2", "<Gamepad>/rightStick");
+        map2.AddAction("action3", "<Keyboard>/space");
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);

@@ -746,9 +746,6 @@ namespace UnityEngine.Experimental.Input
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
-
-            // Usage may affect current device so update.
-            device.MakeCurrent();
         }
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
@@ -887,9 +884,6 @@ namespace UnityEngine.Experimental.Input
 
             // Notify device.
             device.NotifyAdded();
-
-            // Make the device current.
-            device.MakeCurrent();
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -1975,7 +1969,6 @@ namespace UnityEngine.Experimental.Input
             while (remainingEventCount > 0)
             {
                 InputDevice device = null;
-                var doNotMakeDeviceCurrent = false;
 
                 // Bump firstEvent up to the next unhandled event (in before-render updates
                 // the event needs to be *both* unhandled *and* for a device with before
@@ -2044,7 +2037,6 @@ namespace UnityEngine.Experimental.Input
                             if (m_Diagnostics != null)
                                 m_Diagnostics.OnEventForDisabledDevice(new InputEventPtr(currentEventPtr), device);
                             #endif
-                            doNotMakeDeviceCurrent = true;
                             break;
                         }
 
@@ -2056,7 +2048,6 @@ namespace UnityEngine.Experimental.Input
                             if (m_Diagnostics != null)
                                 m_Diagnostics.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
                             #endif
-                            doNotMakeDeviceCurrent = true;
                             break;
                         }
 
@@ -2125,7 +2116,6 @@ namespace UnityEngine.Experimental.Input
                                 if (m_Diagnostics != null)
                                     m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
                                 #endif
-                                doNotMakeDeviceCurrent = true;
                                 break;
                             }
                         }
@@ -2159,15 +2149,6 @@ namespace UnityEngine.Experimental.Input
                                 sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
-
-                        // Use a filter to see if any significant changes are occuring on the device.
-                        // Significant changes are non-noisy control changes, and changes that create a value
-                        // change after processors are applied.  These are used to detect actual user interaction
-                        // with a device instead of simply sensor noise.
-                        var eventPtr = new InputEventPtr(currentEventPtr);
-                        var filter = device.userInteractionFilter;
-                        var hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
-                        doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
@@ -2251,7 +2232,7 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTimeInternal = hasSignificantControlChanges ? currentEventTimeInternal : device.m_LastUpdateTimeInternal;
+                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
 
                         // Notify listeners.
                         for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2303,7 +2284,6 @@ namespace UnityEngine.Experimental.Input
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device);
-                        doNotMakeDeviceCurrent = true;
 
                         // If it's a native device with a description, put it on the list of disconnected
                         // devices.
@@ -2330,14 +2310,6 @@ namespace UnityEngine.Experimental.Input
                     currentEventPtr = InputEvent.GetNextInMemory(currentEventPtr);
                     --remainingEventCount;
                 }
-
-                ////TODO: move this into the state event case; don't make device current for other types of events
-                ////TODO: we need to filter out noisy devices; PS4 controller, for example, just spams constant reports and thus will always make itself current
-                ////      (check for actual change and only make current if state changed?)
-                // Device received event so make it current except if we got a
-                // device removal event.
-                if (!doNotMakeDeviceCurrent)
-                    device.MakeCurrent();
             }
 
             m_Metrics.totalEventProcessingTime = Time.realtimeSinceStartup - processingStartTime;

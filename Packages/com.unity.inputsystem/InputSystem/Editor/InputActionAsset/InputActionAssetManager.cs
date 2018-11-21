@@ -59,7 +59,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 CreateWorkingCopyAsset();
             }
-            m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
+            else
+            {
+                m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
+            }
         }
 
         internal void CreateWorkingCopyAsset()

@@ -15,20 +15,22 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Property("Device", "Mouse")]
     [Property("Device", "Gamepad")]
     [Property("Device", "Gamepad")]
-    [Ignore("TODO")]
-    public void TODO_Demo_ShowsUIHintsAccordingToCurrentControlScheme()
+    public void Demo_ShowsUIHintsAccordingToCurrentControlScheme()
     {
         Click("SinglePlayerButton");
 
         Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.GamepadScheme));
-        Assert.That(GO<Text>("ControlsHint").text, Is.EqualTo("Tap A button to fire, hold to charge."));
+        Assert.That(GO<Text>("ControlsHint").text, Is.EqualTo("Tap A to fire, hold to charge"));
 
         Press(mouse.leftButton);
 
-        ////REVIEW: should we display a different hint while charging?
+        ////REVIEW: should we display a different hint while charging? maybe just display "Charging..." instead of
+        ////        having a dedicated charging UI?
 
         Assert.That(player1.GetControlScheme(), Is.EqualTo(player1.controls.KeyboardMouseScheme));
-        Assert.That(GO<Text>("ControlsHint").text, Is.EqualTo("Tap LMB to fire, hold to charge."));
+        Assert.That(GO<Text>("ControlsHint").text, Is.EqualTo("Tap LMB to fire, hold to charge"));
+
+        ////TODO: switch back and make sure we're not allocating GC memory
     }
 
     [Test]
@@ -92,7 +94,7 @@ public partial class DemoGameTests : DemoGameTestFixture
     [Category("Demo")]
     [Property("Device", "Gamepad")]
     [Ignore("TODO")]
-    public void TODO_Demo_FiringShot_RumblesDevice()
+    public unsafe void TODO_Demo_FiringShot_RumblesDevice()
     {
         float? highFreqMotor = null;
         float? lowFreqMotor = null;

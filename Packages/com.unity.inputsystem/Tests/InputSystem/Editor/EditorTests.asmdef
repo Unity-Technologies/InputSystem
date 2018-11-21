@@ -1,0 +1,14 @@
+{
+    "name": "Unity.InputSystem.Tests.Editor",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

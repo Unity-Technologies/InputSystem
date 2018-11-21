@@ -14,6 +14,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </remarks>
     public class StickControl : Vector2Control
     {
+        ////REVIEW: should X and Y have "Horizontal" and "Vertical" as long display names and "X" and "Y" as short names?
         // Set min&max on XY axes.
         [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis")]
         [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis")]
@@ -26,16 +27,16 @@ namespace UnityEngine.Experimental.Input.Controls
         /// <summary>
         /// A synthetic button representing the upper half of the stick's Y axis.
         /// </summary>
-        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true)]
+        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true, displayName = "Up", shortDisplayName = "\u2191")]
         public ButtonControl up { get; private set; }
 
-        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=-1,clampMax=0,invert", synthetic = true)]
+        [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down", shortDisplayName = "\u2193")]
         public ButtonControl down { get; private set; }
 
-        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=-1,clampMax=0,invert", synthetic = true)]
+        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left", shortDisplayName = "\u2190")]
         public ButtonControl left { get; private set; }
 
-        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true)]
+        [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true, displayName = "Right", shortDisplayName = "\u2192")]
         public ButtonControl right { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

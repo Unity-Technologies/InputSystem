@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -15,6 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIStyle lineStyle = new GUIStyle("TV Line");
             public static GUIStyle textStyle = new GUIStyle("Label");
+            public static GUIStyle textSelectedStyle = new GUIStyle("Label");
             public static GUIStyle backgroundStyle = new GUIStyle("Label");
             public static GUIStyle border = new GUIStyle("Label");
             public static GUIStyle yellowRect = new GUIStyle("Label");
@@ -32,6 +34,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 border.border = new RectOffset(0, 0, 0, 1);
 
                 textStyle.alignment = TextAnchor.MiddleLeft;
+                textSelectedStyle.alignment = TextAnchor.MiddleLeft;
+                textSelectedStyle.normal.textColor = Color.white;
 
                 yellowRect.normal.background =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
@@ -48,7 +52,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public bool renaming;
         private SerializedProperty m_ElementProperty;
         private int m_Index;
 
@@ -65,6 +68,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public int index
         {
             get { return m_Index; }
+        }
+
+        public virtual string expectedControlLayout
+        {
+            get { return string.Empty; }
         }
 
         protected abstract GUIStyle colorTagStyle
@@ -93,7 +101,9 @@ namespace UnityEngine.Experimental.Input.Editor
             rect.y += 1;
             rect.height -= 2;
 
-            if (!renaming)
+            if (selected)
+                Styles.textSelectedStyle.Draw(rect, displayName, false, false, selected, focused);
+            else
                 Styles.textStyle.Draw(rect, displayName, false, false, selected, focused);
 
             DrawCustomRect(rowRect);
@@ -193,18 +203,23 @@ namespace UnityEngine.Experimental.Input.Editor
     internal class ActionTreeItem : ActionTreeViewItem
     {
         private SerializedProperty m_ActionMapProperty;
+        private string m_ExpectedControlLayout;
 
         public int bindingsStartIndex { get; private set; }
         public int bindingsCount { get; private set; }
         public string actionName { get; private set; }
-        public string expectedControlLayout { get; private set; }
+
+        public override string expectedControlLayout
+        {
+            get { return m_ExpectedControlLayout; }
+        }
 
         public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty actionProperty, int index)
             : base(actionProperty, index)
         {
             m_ActionMapProperty = actionMapProperty;
             actionName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-            expectedControlLayout = elementProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
+            m_ExpectedControlLayout = elementProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
             if (m_ActionMapProperty != null)
             {
                 bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
@@ -229,15 +244,15 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return true; }
         }
 
-        public void AddCompositeBinding(string compositeName)
+        public void AddCompositeBinding(string compositeName, string group)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
+            InputActionSerializationHelpers.AddCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType, group);
         }
 
-        public void AddBinding()
+        public void AddBinding(string group)
         {
-            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AddBinding(elementProperty, m_ActionMapProperty, group);
         }
 
         public void AddBindingFromSavedProperties(Dictionary<string, string> values)
@@ -302,7 +317,8 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(actionMapName, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("m_Path").stringValue;
-            displayName = elementProperty.FindPropertyRelative("m_Name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
+            var name = elementProperty.FindPropertyRelative("m_Name").stringValue;
+            displayName = name + ": " + InputControlPath.ToHumanReadableString(path);
         }
 
         protected override GUIStyle colorTagStyle
@@ -314,6 +330,26 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return false; }
         }
+
+        public override string expectedControlLayout
+        {
+            get
+            {
+                if (m_ExpectedControlLayout == null)
+                {
+                    var partName = elementProperty.FindPropertyRelative("m_Name").stringValue;
+                    var compositeName = ((CompositeGroupTreeItem)parent).elementProperty.FindPropertyRelative("m_Name")
+                        .stringValue;
+
+                    var layoutName = InputBindingComposite.GetExpectedControlLayoutName(compositeName, partName);
+                    m_ExpectedControlLayout = layoutName ?? "";
+                }
+
+                return m_ExpectedControlLayout;
+            }
+        }
+
+        private string m_ExpectedControlLayout;
     }
 
     internal class BindingTreeItem : ActionTreeViewItem
@@ -351,6 +387,21 @@ namespace UnityEngine.Experimental.Input.Editor
         public override bool isDraggable
         {
             get { return true; }
+        }
+
+        public override string expectedControlLayout
+        {
+            get
+            {
+                // Find the action we're under and return its expected control layout.
+                for (var item = parent; item != null; item = item.parent)
+                {
+                    var actionItem = item as ActionTreeItem;
+                    if (actionItem != null)
+                        return actionItem.expectedControlLayout;
+                }
+                return string.Empty;
+            }
         }
 
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)

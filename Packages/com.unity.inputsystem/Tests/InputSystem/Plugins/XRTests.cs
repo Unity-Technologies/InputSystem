@@ -42,48 +42,6 @@ internal class XRTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CreatingGenericDevice_MakesItTheCurrentHMD()
-    {
-        Assert.That(XRHMD.current, Is.Null);
-
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
-        runtime.ReportNewInputDevice(deviceDescription);
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-        Assert.That(XRHMD.current, Is.SameAs(InputSystem.devices[0]));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_LeftAndRightDevices_AreAvailableViaXRControllerLeftAndRightHandProperties()
-    {
-        Assert.That(XRController.leftHand, Is.Null);
-        Assert.That(XRController.rightHand, Is.Null);
-        runtime.ReportNewInputDevice(CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded).ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-        var leftHandedDevice = InputSystem.devices[0];
-
-        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
-        Assert.That(XRController.rightHand, Is.Null);
-
-        runtime.ReportNewInputDevice(CreateSimpleDeviceDescriptionByRole(DeviceRole.RightHanded).ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
-        var rightHandedDevice = InputSystem.devices[1];
-
-        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
-        Assert.That(XRController.rightHand, Is.EqualTo(rightHandedDevice));
-    }
-
-    [Test]
-    [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);

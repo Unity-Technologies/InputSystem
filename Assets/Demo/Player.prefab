@@ -328,6 +328,8 @@ MonoBehaviour:
   moveDeadzone: 0.6
   repeatDelay: 0.5
   repeatRate: 0.1
+  trackedDeviceDragThresholdMultiplier: 2
+  m_SendEventsWhenInBackground: 0
   m_PointAction:
     m_UseReference: 0
     m_Action:
@@ -392,6 +394,8 @@ MonoBehaviour:
       m_Id: 
       m_SingletonActionBindings: []
     m_Reference: {fileID: 0}
+  m_Touches: []
+  m_TrackedDevices: []
 --- !u!114 &114113743397152476
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -662,12 +666,10 @@ MonoBehaviour:
     type: 2}
   controls:
     m_Asset: {fileID: 11400000, guid: e0f46a37bbc4f4bf8ad42ad37bb6d56a, type: 3}
-  ui: {fileID: 223924828555847734}
+  uiActions: {fileID: 114100797824358962}
   menuUI: {fileID: 1592809613891828}
   inGameUI: {fileID: 1714024106017884}
-  fireHintsUI: {fileID: 0}
-  moveHintsUI: {fileID: 0}
-  lookHintsUI: {fileID: 0}
+  controlHintsUI: {fileID: 114282366507092218}
   chargingUI: {fileID: 0}
 --- !u!114 &114936776529988524
 MonoBehaviour:

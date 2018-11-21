@@ -13,7 +13,6 @@ public class TouchForInputSystem : MonoBehaviour
 
     private InputAction m_touchAction;
 
-    // Use this for initialization
     void Start()
     {
         m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
