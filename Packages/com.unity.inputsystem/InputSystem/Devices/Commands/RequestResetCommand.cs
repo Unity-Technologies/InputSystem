@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// This triggers an event being sent from the device that represents an empty, or untouched device
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
-    public unsafe struct RequestResetCommand : IInputDeviceCommandInfo
+    internal unsafe struct RequestResetCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('R', 'S', 'E', 'T'); } }
 
