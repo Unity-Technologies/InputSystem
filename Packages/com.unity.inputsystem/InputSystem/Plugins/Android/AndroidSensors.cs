@@ -80,7 +80,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Accelerometer")]
         [InputControl(name = "magneticField", layout = "Vector3", variants = "MagneticField")]
-        [InputControl(name = "angularVelocity", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Gyroscope")]
+        // Note: Using CompensateDirection instead of AndroidCompensateDirection, because we don't need to normalize velocity
+        [InputControl(name = "angularVelocity", layout = "Vector3", processors = "CompensateDirection", variants = "Gyroscope")]
         [InputControl(name = "lightLevel", layout = "Axis", variants = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Axis", variants = "Pressure")]
         [InputControl(name = "distance", layout = "Axis", variants = "Proximity")]
