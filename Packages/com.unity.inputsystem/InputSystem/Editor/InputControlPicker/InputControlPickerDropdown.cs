@@ -30,11 +30,14 @@ namespace UnityEngine.Experimental.Input.Editor
             var root = new AdvancedDropdownItem("");
 
             var usages = BuildTreeForUsages();
-            root.AddChild(usages);
+            if(usages.children.Any())
+                root.AddChild(usages);
             var devices = BuildTreeForAbstractDevices();
-            root.AddChild(devices);
+            if(devices.children.Any())
+                root.AddChild(devices);
             var products = BuildTreeForSpecificDevices();
-            root.AddChild(products);
+            if(products.children.Any())
+                root.AddChild(products);
 
             if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
             {
@@ -81,7 +84,10 @@ namespace UnityEngine.Experimental.Input.Editor
             foreach (var usage in EditorInputControlLayoutCache.allUsages)
             {
                 var child = new UsageTreeViewItem(usage);
-                usageRoot.AddChild(child);
+                if (string.IsNullOrEmpty(m_ExpectedControlLayoutFilter) || usage.Value.Any(a=>a==m_ExpectedControlLayoutFilter))
+                {
+                    usageRoot.AddChild(child);
+                }
             }
 
             return usageRoot;
@@ -116,10 +122,12 @@ namespace UnityEngine.Experimental.Input.Editor
                         name = rootLayoutName,
                         id = rootLayoutName.GetHashCode(),
                     };
-                    mainGroup.AddChild(rootLayoutGroup);
                 }
 
                 AddDeviceTreeItem(layout, rootLayoutGroup);
+                
+                if (rootLayoutGroup.children.Any() && !mainGroup.children.Contains(rootLayoutGroup))
+                    mainGroup.AddChild(rootLayoutGroup);
             }
             return mainGroup;
         }
@@ -135,13 +143,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             AddControlTreeItemsRecursive(layout, deviceItem, "", layout.name, null);
 
-            parent.AddChild(deviceItem);
+            if (deviceItem.children.Any())
+                parent.AddChild(deviceItem);
 
             foreach (var commonUsage in layout.commonUsages)
             {
                 var commonUsageGroup = new DeviceTreeViewItem(layout, commonUsage);
-                parent.AddChild(commonUsageGroup);
                 AddControlTreeItemsRecursive(layout, commonUsageGroup, "", layout.name, commonUsage);
+                if(commonUsageGroup.children.Any())
+                    parent.AddChild(commonUsageGroup);
             }
         }
 
@@ -159,8 +169,11 @@ namespace UnityEngine.Experimental.Input.Editor
                     continue;
                 }
 
-                var child = new ControlTreeViewItem(control , prefix, deviceControlId, commonUsage);
-                parent.AddChild(child);
+                var child = new ControlTreeViewItem(control, prefix, deviceControlId, commonUsage);
+                if (string.IsNullOrEmpty(m_ExpectedControlLayoutFilter) || control.layout == m_ExpectedControlLayoutFilter)
+                {
+                    parent.AddChild(child);
+                }
 
                 var childLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
                 if (childLayout != null)

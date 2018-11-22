@@ -56,7 +56,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private string[] BuildControlTypeList()
         {
             List<string> types = new List<string>();
-            types.Add("None");
             types.Add("Any");
             foreach (var layoutName in InputSystem.s_Manager.m_Layouts.layoutTypes.Keys)
             {
