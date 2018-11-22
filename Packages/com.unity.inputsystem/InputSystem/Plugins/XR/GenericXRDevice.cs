@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
 
         /// <summary>
-        /// Pauses haptics so that motorspeed on the device will be 0, regardless of the current intensity level.
+        /// Pauses haptics so that motor speed on the device will be 0, regardless of the current intensity level.
         /// </summary>
         public void PauseHaptics()
         {
