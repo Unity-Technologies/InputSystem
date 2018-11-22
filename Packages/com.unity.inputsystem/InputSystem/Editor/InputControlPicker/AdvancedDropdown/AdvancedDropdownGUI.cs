@@ -55,6 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal Rect m_SearchRect;
         internal Rect m_HeaderRect;
+        private bool m_FocusSet;
 
         internal virtual float searchHeight
         {
@@ -79,6 +80,11 @@ namespace UnityEngine.Experimental.Input.Editor
         internal AdvancedDropdownState state { get; set; }
 
         SearchField m_SearchField = new SearchField();
+
+        public void Init()
+        {
+            m_FocusSet = false;
+        }
 
         internal virtual void DrawItem(AdvancedDropdownItem item, string name, Texture2D icon, bool enabled, bool drawArrow, bool selected, bool hasSearch)
         {
@@ -149,8 +155,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal void DrawSearchField(bool isSearchFieldDisabled, string searchString, Action<string> searchChanged)
         {
-            if (!isSearchFieldDisabled)
+            if (!isSearchFieldDisabled && !m_FocusSet)
             {
+                m_FocusSet = true;
                 m_SearchField.SetFocus();
                 GUIUtility.keyboardControl = m_SearchField.searchFieldControlID;
             }

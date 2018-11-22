@@ -157,6 +157,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_Gui == null)
                 m_Gui = new AdvancedDropdownGUI();
             m_Gui.state = m_State;
+            m_Gui.Init();
 
             // Has to be done before calling Show / ShowWithMode
             screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y));
