@@ -25,8 +25,15 @@ import android.widget.TextView;
 import android.util.*;
 import com.unity3d.player.*;
 
+import java.text.MessageFormat;
+
 public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher
 {
+    interface IScreenKeyboardCallbacks
+    {
+        void OnTextChanged(String text);
+    }
+
 
     private static final class id
     {
@@ -34,17 +41,18 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         private static final int txtInput    = 0x3f050001;
     }
     private Context mContext = null;
+    private IScreenKeyboardCallbacks m_Callbacks;
     private static int hintColor = 0x61000000;
     private static int backgroundColor = 0xFFFFFFFF;
     // Kitkat specific flags
     private static int LayoutParams_FLAG_TRANSLUCENT_NAVIGATION = 0x08000000;
     private static int LayoutParams_FLAG_TRANSLUCENT_STATUS = 0x04000000;
 
-    public AndroidScreenKeyboard ()
+    public AndroidScreenKeyboard (IScreenKeyboardCallbacks callbacks)
     {
         super (UnityPlayer.currentActivity);
         mContext = UnityPlayer.currentActivity;
-
+        m_Callbacks = callbacks;
         /*
         Context context, UnityPlayer player,
                             String initialText, int type, boolean correction,
@@ -100,63 +108,6 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         });
     }
 
-    /*
-
-    public SoftInputDialog (Context context, UnityPlayer player,
-                            String initialText, int type, boolean correction,
-                            boolean multiline, boolean secure,
-                            boolean alert, String placeholder, int characterLimit)
-    {
-        super (context);
-        mContext = context;
-        mUnityPlayer = player;
-
-        getWindow().setGravity(Gravity.BOTTOM);
-        getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-        // Set transparent background
-        // Because in Lollipop otherwise we get black frame around the dialog
-        getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-
-        setContentView (createSoftInputView ());
-        getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        // Don't dim the view behind the dialog
-        getWindow().clearFlags (WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        // Workaround for the input field shown behind the keyboard when translucent enabled
-        if (KITKAT_SUPPORT)
-        {
-            getWindow().clearFlags(LayoutParams_FLAG_TRANSLUCENT_NAVIGATION);
-            getWindow().clearFlags(LayoutParams_FLAG_TRANSLUCENT_STATUS);
-        }S
-
-        EditText txtInput = (EditText) findViewById (id.txtInput);
-        Button okButton = (Button) findViewById (id.okButton);
-        setupTextInput (txtInput, initialText, type, correction, multiline,
-                        secure, alert, placeholder, characterLimit);
-
-        // set up click events
-        okButton.setOnClickListener (this);
-
-        // development build is shown on top of locked screen, but for some android versions need to
-        // additionaly set FLAG_SHOW_WHEN_LOCKED for input dialog to see input keyboard.
-        // FLAG_SHOW_WHEN_LOCKED is deprecated in API 27
-        if (UNITY_DEVELOPMENT_PLAYER)
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-
-        txtInput.setOnFocusChangeListener (new View.OnFocusChangeListener ()
-        {
-            @Override
-            public void onFocusChange (View v, boolean hasFocus)
-            {
-                if (hasFocus)
-                {
-                    int vis = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE;
-                    getWindow ().setSoftInputMode (vis);
-                }
-            }
-        });
-    }
-*/
     private void setupTextInput (EditText txtInput, String initialText,
                                  int type, boolean correction,
                                  boolean multiline, boolean secure,
@@ -180,18 +131,19 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void afterTextChanged (Editable s)
     {
-        Log.v("Test", "afterTextChanged");
+        Log.v("Unity", "afterTextChanged");
        // mUnityPlayer.reportSoftInputStr (s.toString (), kbCommand.dontHide, false);
+        m_Callbacks.OnTextChanged(s.toString());
     }
 
     public void beforeTextChanged (CharSequence s, int start, int count, int after)
     {
-        Log.v("Test", "afterTextChanged");
+        Log.v("Unity", "beforeTextChanged");
     }
 
     public void onTextChanged (CharSequence s, int start, int before, int count)
     {
-        Log.v("Test", "afterTextChanged");
+        Log.v("Unity", MessageFormat.format("onTextChanged {0}, {1}, {2}", start, before, count));
     }
 
     private int convertInputType (int type, boolean correction,
