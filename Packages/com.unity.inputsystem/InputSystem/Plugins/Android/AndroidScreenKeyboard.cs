@@ -20,8 +20,8 @@ namespace UnityEngine.Experimental.Input
                     m_Parent.m_TextInputListeners[i](text[0]);
             }
         }
-        
-        public override void Show()
+
+        public override void Show(ScreenKeyboardShowParams showParams)
         {
             var obj = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard", new ScreenKeyboardCallbacks(this));
             obj.Call("Show");
@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input
 
         public override void Hide()
         {
-          //  throw new NotImplementedException();
+            //  throw new NotImplementedException();
         }
     }
 }
