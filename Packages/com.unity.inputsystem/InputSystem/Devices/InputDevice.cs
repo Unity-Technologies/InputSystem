@@ -49,20 +49,6 @@ namespace UnityEngine.Experimental.Input
             get { return m_Description; }
         }
 
-        ////TODO: kill this and leave this entirely to user management
-        /// <summary>
-        /// The user currently associated with the input device or null if no user is.
-        /// </summary>
-        public string userId
-        {
-            get
-            {
-                RefreshConfigurationIfNeeded();
-                return m_UserId;
-            }
-            protected set { m_UserId = value; }
-        }
-
         ////REVIEW: this might be useful even at the control level
         /// <summary>
         /// Whether the device is currently enabled (i.e. sends and receives events).
@@ -348,14 +334,6 @@ namespace UnityEngine.Experimental.Input
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
         }
 
-        protected void RefreshUserId()
-        {
-            m_UserId = null;
-            var command = QueryUserIdCommand.Create();
-            if (ExecuteCommand(ref command) > 0)
-                m_UserId = command.ReadId();
-        }
-
         [Flags]
         internal enum DeviceFlags
         {
@@ -371,7 +349,6 @@ namespace UnityEngine.Experimental.Input
 
         internal DeviceFlags m_DeviceFlags;
         internal int m_Id;
-        internal string m_UserId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 

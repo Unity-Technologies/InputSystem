@@ -1711,6 +1711,14 @@ namespace UnityEngine.Experimental.Input
         {
             #if UNITY_EDITOR
 
+            // Some devices keep globals. Get rid of them by pretending the devices
+            // are removed.
+            if (s_Manager != null)
+            {
+                foreach (var device in s_Manager.devices)
+                    device.NotifyRemoved();
+            }
+
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance);
 
@@ -1792,6 +1800,7 @@ namespace UnityEngine.Experimental.Input
                 s_SavedStateStack = new Stack<State>();
 
             ////FIXME: does not preserve global state in InputActionMapState
+            ////TODO: preserve InputUser state
 
             s_SavedStateStack.Push(new State
             {
@@ -1825,6 +1834,11 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.Restore(state.managerState.updateState);
 
             s_Manager.InstallGlobals();
+
+            // Get devices that keep global lists (like Gamepad) to re-initialize them
+            // by pretending the devices have been added.
+            foreach (var device in devices)
+                device.NotifyAdded();
         }
 
 #endif

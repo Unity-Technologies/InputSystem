@@ -19,11 +19,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     /// </remarks>
     public class XInputController : Gamepad
     {
-        public ButtonControl aButton { get; private set; }
-        public ButtonControl bButton { get; private set; }
-        public ButtonControl xButton { get; private set; }
-        public ButtonControl yButton { get; private set; }
-
         public ButtonControl menu { get; private set; }
         public ButtonControl view { get; private set; }
 
@@ -48,11 +43,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-
-            aButton = buttonSouth;
-            bButton = buttonEast;
-            xButton = buttonWest;
-            yButton = buttonNorth;
 
             menu = startButton;
             view = selectButton;
