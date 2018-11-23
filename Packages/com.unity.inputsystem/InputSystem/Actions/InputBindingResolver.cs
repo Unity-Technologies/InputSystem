@@ -68,16 +68,16 @@ namespace UnityEngine.Experimental.Input
 
         private List<InputControlLayout.NameAndParameters> m_Parameters;
 
-        public void ContinueWithDataFrom(InputActionMapState state)
+        /// <summary>
+        /// Steal the already allocated arrays from the given state.
+        /// </summary>
+        /// <param name="state">Action map state that was previously created.</param>
+        /// <remarks>
+        /// This is useful to avoid allocating new arrays from scratch when re-resolving bindings.
+        /// </remarks>
+        public void StartWithArraysFrom(InputActionMapState state)
         {
-            totalMapCount = state.totalMapCount;
-            totalActionCount = state.totalActionCount;
-            totalBindingCount = state.totalBindingCount;
-            totalInteractionCount = state.totalInteractionCount;
-            totalProcessorCount = state.totalProcessorCount;
-            totalCompositeCount = state.totalCompositeCount;
-            totalControlCount = state.totalControlCount;
-            totalDeviceCount = state.totalDeviceCount;
+            Debug.Assert(state != null);
 
             maps = state.maps;
             mapIndices = state.mapIndices;
@@ -89,6 +89,41 @@ namespace UnityEngine.Experimental.Input
             composites = state.composites;
             controls = state.controls;
             controlIndexToBindingIndex = state.controlIndexToBindingIndex;
+
+            // Clear the arrays so that we don't leave references around.
+            if (maps != null)
+                Array.Clear(maps, 0, state.totalMapCount);
+            if (mapIndices != null)
+                Array.Clear(mapIndices, 0, state.totalMapCount);
+            if (actionStates != null)
+                Array.Clear(actionStates, 0, state.totalActionCount);
+            if (bindingStates != null)
+                Array.Clear(bindingStates, 0, state.totalBindingCount);
+            if (interactionStates != null)
+                Array.Clear(interactionStates, 0, state.totalInteractionCount);
+            if (interactions != null)
+                Array.Clear(interactions, 0, state.totalInteractionCount);
+            if (processors != null)
+                Array.Clear(processors, 0, state.totalProcessorCount);
+            if (composites != null)
+                Array.Clear(composites, 0, state.totalCompositeCount);
+            if (controls != null)
+                Array.Clear(controls, 0, state.totalControlCount);
+            if (controlIndexToBindingIndex != null)
+                Array.Clear(controlIndexToBindingIndex, 0, state.totalControlCount);
+
+            // Null out the arrays on the state so that there is no strange bugs with
+            // the state reading from arrays that no longer belong to it.
+            state.maps = null;
+            state.mapIndices = null;
+            state.triggerStates = null;
+            state.bindingStates = null;
+            state.interactionStates = null;
+            state.interactions = null;
+            state.processors = null;
+            state.composites = null;
+            state.controls = null;
+            state.controlIndexToBindingIndex = null;
         }
 
         /// <summary>
@@ -245,6 +280,8 @@ namespace UnityEngine.Experimental.Input
                         for (var i = 0; i < list.Count; ++i)
                         {
                             var device = list[i];
+                            if (!device.added)
+                                continue; // Skip devices that have been removed.
                             numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
                         }
                     }

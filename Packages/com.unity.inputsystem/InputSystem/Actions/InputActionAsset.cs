@@ -94,6 +94,7 @@ namespace UnityEngine.Experimental.Input
                     m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
                 }
 
+                ////TODO: determine if this has *actually* changed things before firing off a re-resolve
                 ReResolveIfNecessary();
             }
         }
