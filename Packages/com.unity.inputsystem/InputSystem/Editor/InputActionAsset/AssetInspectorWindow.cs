@@ -61,7 +61,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private InputBindingPropertiesView m_BindingPropertyView;
         private InputActionPropertiesView m_ActionPropertyView;
-        
+
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
         internal CopyPasteUtility m_CopyPasteUtility;

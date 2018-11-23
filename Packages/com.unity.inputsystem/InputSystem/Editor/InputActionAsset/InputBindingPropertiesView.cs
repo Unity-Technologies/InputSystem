@@ -346,7 +346,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 else
                 {
                     m_InputControlPickerDropdown.SetDeviceFilter(m_Toolbar.allDevices);
-                }   
+                }
                 if (m_ExpectedControlLayout != null)
                 {
                     m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);

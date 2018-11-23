@@ -30,13 +30,13 @@ namespace UnityEngine.Experimental.Input.Editor
             var root = new AdvancedDropdownItem("");
 
             var usages = BuildTreeForUsages();
-            if(usages.children.Any())
+            if (usages.children.Any())
                 root.AddChild(usages);
             var devices = BuildTreeForAbstractDevices();
-            if(devices.children.Any())
+            if (devices.children.Any())
                 root.AddChild(devices);
             var products = BuildTreeForSpecificDevices();
-            if(products.children.Any())
+            if (products.children.Any())
                 root.AddChild(products);
 
             if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
@@ -124,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 AddDeviceTreeItem(layout, rootLayoutGroup);
-                
+
                 if (rootLayoutGroup.children.Any() && !mainGroup.children.Contains(rootLayoutGroup))
                     mainGroup.AddChild(rootLayoutGroup);
             }
@@ -149,7 +149,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var commonUsageGroup = new DeviceTreeViewItem(layout, commonUsage);
                 AddControlTreeItemsRecursive(layout, commonUsageGroup, "", layout.name, commonUsage);
-                if(commonUsageGroup.children.Any())
+                if (commonUsageGroup.children.Any())
                     parent.AddChild(commonUsageGroup);
             }
         }
@@ -181,7 +181,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddControlTreeItemsRecursive(childLayout, parent, child.controlPath, deviceControlId, commonUsage);
                 }
             }
-            
+
             // Add optional layouts for devices
             var optionalLayouts = EditorInputControlLayoutCache.GetOptionalControlsForLayout(layout.name);
             if (optionalLayouts.Any() && layout.isDeviceLayout)
@@ -189,10 +189,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 var optionalGroup = new AdvancedDropdownItem("Optional");
                 foreach (var optionalLayout in optionalLayouts)
                 {
-                    if(LayoutMatchesExpectedControlLayoutFilter(optionalLayout.layout))
+                    if (LayoutMatchesExpectedControlLayoutFilter(optionalLayout.layout))
                         optionalGroup.AddChild(new OptionalControlTreeViewItem(optionalLayout, deviceControlId, commonUsage));
                 }
-                if(optionalGroup.children.Any())
+                if (optionalGroup.children.Any())
                     parent.AddChild(optionalGroup);
             }
         }

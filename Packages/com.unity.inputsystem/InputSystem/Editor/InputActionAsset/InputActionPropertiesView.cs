@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
             }
         }
-        
+
         private SerializedProperty m_ActionProperty;
         private SerializedProperty m_ExpectedControlLayoutProperty;
 
@@ -47,7 +47,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ReloadTree = reloadTree;
 
             m_ControlTypeList = BuildControlTypeList();
-            
+
             m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlLayoutProperty.stringValue);
             if (m_SelectedControlType == -1)
                 m_SelectedControlType = 0;
@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_SelectedControlType = EditorGUILayout.Popup("Type", m_SelectedControlType, m_ControlTypeList);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    if(m_SelectedControlType == 0)
+                    if (m_SelectedControlType == 0)
                         m_ExpectedControlLayoutProperty.stringValue = "";
                     else
                         m_ExpectedControlLayoutProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
