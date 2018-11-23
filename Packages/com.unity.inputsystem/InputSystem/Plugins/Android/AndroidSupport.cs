@@ -172,6 +172,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     .WithCapability("sensorType", AndroidSensorType.StepCounter));
 
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
+
+            InputSystem.RegisterLayout<AndroidScreenKeyboard>();
         }
 
         internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description,
