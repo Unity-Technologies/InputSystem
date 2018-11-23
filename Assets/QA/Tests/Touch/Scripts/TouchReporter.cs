@@ -1,5 +1,4 @@
 using UnityEngine;
-
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 
@@ -13,9 +12,9 @@ public class TouchReporter : MonoBehaviour
 
     void Update()
     {
-        Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
+        var touchscreen = InputSystem.GetDevice<Touchscreen>();
 
-        if ((touchscreen != null) && (touchIndex < touchscreen.activeTouches.Count))
+        if (touchscreen != null && touchIndex < touchscreen.activeTouches.Count)
         {
             coordinateText.text =
                 touchscreen.activeTouches[touchIndex].ReadValue().position.x.ToString("0000") + ", " +

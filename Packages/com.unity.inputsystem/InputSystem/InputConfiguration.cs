@@ -12,13 +12,22 @@ namespace UnityEngine.Experimental.Input
     public static class InputConfiguration
     {
         /// <summary>
-        /// Default value used when nothing is set explicitly on <see cref="DeadzoneProcessor.min"/>.
+        /// Default value used when nothing is set explicitly on <see cref="StickDeadzoneProcessor.min"/>
+        /// or <see cref="AxisDeadzoneProcessor.min"/>.
         /// </summary>
+        /// <seealso cref="StickDeadzoneProcessor"/>
+        /// <seealso cref="AxisDeadzoneProcessor"/>
         public static float DeadzoneMin = 0.125f;
 
-        // Default value used when nothing is set explicitly on DeadzoneProcessor.max.
+        /// <summary>
+        /// Default value used when nothing is set explicitly on <see cref="StickDeadzoneProcessor.max"/>
+        /// or <see cref="AxisDeadzoneProcessor.max"/>.
+        /// </summary>
+        /// <seealso cref="StickDeadzoneProcessor"/>
+        /// <seealso cref="AxisDeadzoneProcessor"/>
         public static float DeadzoneMax = 0.925f;
 
+        ////REVIEW: should this simply be deadzone min?
         // If a button is stored as anything but a bit, this is the threshold the value
         // of the button has to cross in order for the button to be considered pressed.
         public static float ButtonPressPoint = 0.15f;

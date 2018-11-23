@@ -86,7 +86,7 @@ namespace UnityEngine.Experimental.Input
         ////        as the other low-frequency changes
         StateChanged,
 
-        ////TODO: nuke this along with the entire Current machinery
-        CurrentChanged
+        ////TODO: fire this when we purge disconnected devices
+        Destroyed,
     }
 }

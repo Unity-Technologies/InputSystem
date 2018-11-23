@@ -81,6 +81,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("using UnityEngine;\n");
             builder.Append("using UnityEngine.Experimental.Input;\n");
             builder.Append("using UnityEngine.Experimental.Input.Controls;\n");
+            builder.Append("using UnityEngine.Experimental.Input.Layouts;\n");
             builder.Append("using UnityEngine.Experimental.Input.Utilities;\n");
             builder.Append("using UnityEngine.Experimental.Input.Plugins.Steam;\n");
             builder.Append("#if UNITY_EDITOR\n");
@@ -216,16 +217,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             }
             builder.Append("    }\n");
 
-            // ResolveActions method.
+            // ResolveSteamActions method.
             builder.Append('\n');
-            builder.Append("    protected override void ResolveActions(ISteamControllerAPI api)\n");
+            builder.Append("    protected override void ResolveSteamActions(ISteamControllerAPI api)\n");
             builder.Append("    {\n");
             foreach (var setEntry in actions)
             {
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
 
                 // Set handle.
-                builder.Append(string.Format("        {0}Handle = api.GetActionSetHandle(\"{1}\");\n",
+                builder.Append(string.Format("        {0}SetHandle = api.GetActionSetHandle(\"{1}\");\n",
                     CSharpCodeHelpers.MakeIdentifier(setEntry.Key),
                     setEntry.Key));
 
@@ -265,7 +266,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
 
                 // Set handle.
-                builder.Append(string.Format("    public SteamHandle<InputActionMap> {0}Handle {{ get; private set; }}\n",
+                builder.Append(string.Format("    public SteamHandle<InputActionMap> {0}SetHandle {{ get; private set; }}\n",
                     CSharpCodeHelpers.MakeIdentifier(setEntry.Key)));
 
                 // StickPadGyros.
@@ -293,11 +294,65 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 }
             }
 
+            // steamActionSets property.
+            builder.Append('\n');
+            builder.Append("    private SteamActionSetInfo[] m_ActionSets;\n");
+            builder.Append("    public override ReadOnlyArray<SteamActionSetInfo> steamActionSets\n");
+            builder.Append("    {\n");
+            builder.Append("        get\n");
+            builder.Append("        {\n");
+            builder.Append("            if (m_ActionSets == null)\n");
+            builder.Append("                m_ActionSets = new[]\n");
+            builder.Append("                {\n");
+            foreach (var setEntry in actions)
+            {
+                builder.Append(string.Format(
+                    "                    new SteamActionSetInfo {{ name = \"{0}\", handle = {1}SetHandle }},\n",
+                    setEntry.Key,
+                    CSharpCodeHelpers.MakeIdentifier(setEntry.Key)));
+            }
+            builder.Append("                };\n");
+            builder.Append("            return new ReadOnlyArray<SteamActionSetInfo>(m_ActionSets);\n");
+            builder.Append("        }\n");
+            builder.Append("    }\n");
+
             // Update method.
             builder.Append('\n');
-            builder.Append("    protected override void Update(ISteamControllerAPI api)\n");
+            builder.Append("    protected override unsafe void Update(ISteamControllerAPI api)\n");
             builder.Append("    {\n");
-            builder.Append("        ////TODO\n");
+            builder.Append(string.Format("        {0} state;\n", stateStructName));
+            var currentButtonBit = 0;
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // StickPadGyros.
+                var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
+                foreach (var entry in stickPadGyros)
+                {
+                    builder.Append(string.Format("        state.{0} = api.GetAnalogActionData(steamControllerHandle, {0}Handle).position;\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                foreach (var entry in buttons)
+                {
+                    builder.Append(string.Format("        if (api.GetDigitalActionData(steamControllerHandle, {0}Handle).pressed)\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append(string.Format("            state.buttons[{0}] |= {1};\n", currentButtonBit / 8, currentButtonBit % 8));
+                    ++currentButtonBit;
+                }
+
+                // AnalogTriggers.
+                var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
+                foreach (var entry in analogTriggers)
+                {
+                    builder.Append(string.Format("        state.{0} = api.GetAnalogActionData(steamControllerHandle, {0}Handle).position.x;\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+            }
+            builder.Append("        InputSystem.QueueStateEvent(this, state);\n");
             builder.Append("    }\n");
 
             builder.Append("}\n");
@@ -317,6 +372,31 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append(string.Format("        return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
             builder.Append("    }\n");
             builder.Append("\n");
+            var totalButtonCount = 0;
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                var buttonCount = buttons.Count;
+                if (buttonCount > 0)
+                {
+                    foreach (var entry in buttons)
+                    {
+                        builder.Append(string.Format(
+                            "    [InputControl(name = \"{0}\", layout = \"Button\", bit = {1})]\n", entry.Key, totalButtonCount));
+                        ++totalButtonCount;
+                    }
+                }
+            }
+            if (totalButtonCount > 0)
+            {
+                var byteCount = (totalButtonCount + 7) / 8;
+                builder.Append("    public fixed byte buttons[");
+                builder.Append(byteCount.ToString());
+                builder.Append("];\n");
+            }
             foreach (var setEntry in actions)
             {
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
@@ -330,25 +410,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
 
                     builder.Append(string.Format("    [InputControl(name = \"{0}\", layout = \"{1}\")]\n", entry.Key, isStick ? "Stick" : "Vector2"));
                     builder.Append(string.Format("    public Vector2 {0};\n", CSharpCodeHelpers.MakeIdentifier(entry.Key)));
-                }
-
-                // Buttons.
-                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
-                var buttonCount = buttons.Count;
-                if (buttonCount > 0)
-                {
-                    var bit = 0;
-                    foreach (var entry in buttons)
-                    {
-                        builder.Append(string.Format(
-                            "    [InputControl(name = \"{0}\", layout = \"Button\", bit = {1})]\n", entry.Key, bit));
-                        ++bit;
-                    }
-
-                    var byteCount = (buttonCount + 7) / 8;
-                    builder.Append("    public fixed byte buttons[");
-                    builder.Append(byteCount.ToString());
-                    builder.Append("];\n");
                 }
 
                 // AnalogTriggers.

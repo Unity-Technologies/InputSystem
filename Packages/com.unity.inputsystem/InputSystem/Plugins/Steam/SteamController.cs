@@ -1,8 +1,13 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using System;
+using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
+using UnityEngine.Experimental.Input.Utilities;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Plugins.Steam.Editor;
 #endif
+
+////TODO: support action set layers
 
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
@@ -19,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     ///
     /// Note that as the Steam controller API supports PS4 and Xbox controllers as well,
     /// the actual hardware device behind a SteamController instance may not be a
-    /// Steam Controller. The <see cref="controllerType"/> property can be used what kind
+    /// Steam Controller. The <see cref="steamControllerType"/> property can be used what kind
     /// of controller the Steam runtime is talking to internally.
     ///
     /// This class is abstract. Specific Steam controller interfaces can either be implemented
@@ -35,9 +40,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// Devices based on SteamController can be used in one of two ways.
     ///
     /// The first method is by manually managing active action sets on a controller. This is done by
-    /// calling the various APIs (such as <see cref="ActivateActionSet"/>) that correspond
+    /// calling the various APIs (such as <see cref="ActivateSteamActionSet"/>) that correspond
     /// to the methods in the <see cref="ISteamControllerAPI">Steam controller API</see>. The
-    /// controller handle is implicit in this case and corresponds to the <see cref="handle"/>
+    /// controller handle is implicit in this case and corresponds to the <see cref="steamControllerHandle"/>
     /// of the controller the methods are called on.
     ///
     /// The second method is by using
@@ -59,12 +64,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
         /// <summary>
         /// Handle in the <see cref="ISteamControllerAPI">Steam API</see> for the controller.
         /// </summary>
-        public SteamHandle<SteamController> handle { get; internal set; }
+        public SteamHandle<SteamController> steamControllerHandle { get; internal set; }
 
-        public SteamControllerType controllerType
+        public SteamControllerType steamControllerType
         {
             get { throw new NotImplementedException(); }
         }
+
+        /// <summary>
+        /// The list of Steam action sets supported by this controller.
+        /// </summary>
+        /// <remarks>
+        /// Steam action sets are implicitly supplied to the Steam runtime rather than explicitly configured
+        /// by the application. ...
+        /// </remarks>
+        public abstract ReadOnlyArray<SteamActionSetInfo> steamActionSets { get; }
 
         /// <summary>
         /// Determine whether the controller automatically activates and deactivates action set
@@ -76,48 +90,59 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
         ///
         /// When on, if an <see cref="InputActionMap">action map</see> has bindings to a SteamController
         /// and is enabled or disabled, the SteamController will automatically enable or disable
-        /// the correspondingly named Steam action set as an action set layer.
+        /// the correspondingly named Steam action set.
         /// </remarks>
         public bool autoActivateSets { get; set; }
 
-        public void ActivateActionSet(SteamHandle<InputActionMap> actionSet)
+        public SteamController()
         {
-            SteamSupport.GetAPIAndRequireItToBeSet().ActivateActionSet(handle, actionSet);
+            autoActivateSets = true;
         }
 
-        public SteamHandle<InputActionMap> GetCurrentActionSet()
+        public void ActivateSteamActionSet(SteamHandle<InputActionMap> actionSet)
         {
-            return SteamSupport.GetAPIAndRequireItToBeSet().GetCurrentActionSet(handle);
+            SteamSupport.GetAPIAndRequireItToBeSet().ActivateActionSet(steamControllerHandle, actionSet);
         }
 
-        public void ActivateActionSetLayer(SteamHandle<InputActionMap> actionSet)
+        public SteamHandle<InputActionMap> GetCurrentSteamActionSet()
         {
-            throw new NotImplementedException();
+            return SteamSupport.GetAPIAndRequireItToBeSet().GetCurrentActionSet(steamControllerHandle);
         }
 
-        public void DeactivateActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateAllActionSetLayers()
+        public void ActivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
         {
             throw new NotImplementedException();
         }
 
-        protected abstract void ResolveActions(ISteamControllerAPI api);
+        public void DeactivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeactivateAllSteamActionSetLayers()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected abstract void ResolveSteamActions(ISteamControllerAPI api);
 
         protected abstract void Update(ISteamControllerAPI api);
 
         // These methods avoid having an 'internal' modifier that every override needs to carry along.
-        internal void InvokeResolveActions()
+        internal void InvokeResolveSteamActions()
         {
-            ResolveActions(SteamSupport.GetAPIAndRequireItToBeSet());
+            ResolveSteamActions(SteamSupport.GetAPIAndRequireItToBeSet());
         }
 
         internal void InvokeUpdate()
         {
             Update(SteamSupport.GetAPIAndRequireItToBeSet());
+        }
+
+        public struct SteamActionSetInfo
+        {
+            public string name { get; set; }
+            public SteamHandle<InputActionMap> handle { get; set; }
         }
     }
 }

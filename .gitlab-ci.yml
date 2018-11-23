@@ -1,8 +1,11 @@
 stages:
-  - test
+  - test-editmode-legacy
+  - test-playmode-legacy
+  - test-editmode-latest
+  - test-playmode-latest
 
-test:windows:2018-2:
-  stage: test
+test:windows:2018-2-net20-editmode:
+  stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
     paths:
@@ -11,14 +14,15 @@ test:windows:2018-2:
     when: always
   tags:
    - bokken-runner
+  allow_failure: true
   script:
-    - python.exe -u testrunner.py Editor --version=2018.2
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=legacy --testPlatform=editmode
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
-test:windows:2018-3:
-  stage: test
+test:windows:2018-3-net20-editmode:
+  stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
     paths:
@@ -27,14 +31,15 @@ test:windows:2018-3:
     when: always
   tags:
    - bokken-runner
+  allow_failure: true
   script:
-    - python.exe -u testrunner.py Editor --version=2018.3
+    - python.exe -u testrunner.py Editor --version=2018.3 --runtime=legacy --testPlatform=editmode
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
-test:windows:2019-1:
-  stage: test
+test:windows:2019-1-net20-editmode:
+  stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
   artifacts:
     paths:
@@ -43,15 +48,16 @@ test:windows:2019-1:
     when: always
   tags:
    - bokken-runner
+  allow_failure: true
   script:
     - echo "Running Playmode Tests"
-    - python.exe -u testrunner.py Editor --version=2019.1
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=legacy --testPlatform=editmode
   before_script:
     - mkdir C:\ProgramData\Unity
     - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
 
-test:osx:2018-2:
-  stage: test
+test:osx:2018-2-net20-editmode:
+  stage: test-editmode-legacy
   artifacts:
     paths:
       - "TestArtifacts"
@@ -62,13 +68,14 @@ test:osx:2018-2:
     - darwin
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
   script:
-    - python testrunner.py Editor --version=2018.2
+    - python testrunner.py Editor --version=2018.2 --runtime=legacy --testPlatform=editmode
   after_script:
     - /opt/post_build_script.sh
 
-test:osx:2018-3:
-  stage: test
+test:osx:2018-3-net20-editmode:
+  stage: test-editmode-legacy
   artifacts:
     paths:
       - "TestArtifacts"
@@ -79,13 +86,14 @@ test:osx:2018-3:
     - darwin
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
   script:
-    - python testrunner.py Editor --version=2018.3
+    - python testrunner.py Editor --version=2018.3 --runtime=legacy --testPlatform=editmode
   after_script:
     - /opt/post_build_script.sh
     
-test:osx:2019-1:
-  stage: test
+test:osx:2019-1-net20-editmode:
+  stage: test-editmode-legacy
   artifacts:
     paths:
       - "TestArtifacts"
@@ -96,8 +104,364 @@ test:osx:2019-1:
     - darwin
   before_script:
     - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
   script:
-    - python testrunner.py Editor --version=2019.1
+    - python testrunner.py Editor --version=2019.1 --runtime=legacy --testPlatform=editmode
   after_script:
     - /opt/post_build_script.sh
 
+test:windows:2018-2-net20-playmode:
+  stage: test-playmode-legacy
+  image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - test:windows:2018-2-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=legacy --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2018-3-net20-playmode:
+  stage: test-playmode-legacy
+  image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - test:windows:2018-3-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.3 --runtime=legacy --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2019-1-net20-playmode:
+  stage: test-playmode-legacy
+  image: 'build-pipeline/addressables_win:stable'
+  dependencies:
+    - test:windows:2019-1-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - echo "Running Playmode Tests"
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=legacy --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:osx:2018-2-net20-playmode:
+  stage: test-playmode-legacy
+  dependencies:
+    - test:osx:2018-2-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2018.2 --runtime=legacy --testPlatform=playmode
+  after_script:
+    - /opt/post_build_script.sh
+
+test:osx:2018-3-net20-playmode:
+  stage: test-playmode-legacy
+  dependencies:
+    - test:osx:2018-3-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2018.3 --runtime=legacy --testPlatform=playmode
+  after_script:
+    - /opt/post_build_script.sh
+    
+test:osx:2019-1-net20-playmode:
+  stage: test-playmode-legacy
+  dependencies:
+    - test:osx:2019-1-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2019.1 --runtime=legacy --testPlatform=playmode
+  after_script:
+    - /opt/post_build_script.sh
+
+test:windows:2018-2-net4x-editmode:
+  stage: test-editmode-latest
+  dependencies:
+    - test:windows:2018-2-net20-editmode
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=latest --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2018-3-net4x-editmode:
+  stage: test-editmode-latest
+  dependencies:
+    - test:windows:2018-3-net20-editmode
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.3 --runtime=latest --testPlatform=editmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2019-1-net4x-editmode:
+  stage: test-editmode-latest
+  dependencies:
+    - test:windows:2019-1-net20-editmode
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - echo "Running Playmode Tests"
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=editmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:osx:2018-2-net4x-editmode:
+  stage: test-editmode-latest
+  dependencies:
+    - test:osx:2018-2-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2018.2 --runtime=latest --testPlatform=editmode
+  after_script:
+    - /opt/post_build_script.sh
+
+test:osx:2018-3-net4x-editmode:
+  stage: test-editmode-latest
+  dependencies:
+    - test:osx:2018-3-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2018.3 --runtime=latest --testPlatform=editmode
+  after_script:
+    - /opt/post_build_script.sh
+    
+test:osx:2019-1-net4x-editmode:
+  stage: test-editmode-latest
+  dependencies:
+    - test:osx:2019-1-net20-editmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=editmode
+  after_script:
+    - /opt/post_build_script.sh
+
+test:windows:2018-2-net4x-playmode:
+  stage: test-playmode-latest
+  dependencies:
+    - test:windows:2018-2-net20-playmode
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.2 --runtime=latest --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2018-3-net4x-playmode:
+  stage: test-playmode-latest
+  dependencies:
+    - test:windows:2018-3-net20-playmode
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - python.exe -u testrunner.py Editor --version=2018.3 --runtime=latest --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:windows:2019-1-net4x-playmode:
+  stage: test-playmode-latest
+  dependencies:
+    - test:windows:2019-1-net20-playmode
+  image: 'build-pipeline/addressables_win:stable'
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+   - bokken-runner
+  allow_failure: true
+  script:
+    - echo "Running Playmode Tests"
+    - python.exe -u testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=playmode
+  before_script:
+    - mkdir C:\ProgramData\Unity
+    - wget -P C:\ProgramData\Unity\ http://172.28.214.140/upload/licence/Unity_lic.ulf
+
+test:osx:2018-2-net4x-playmode:
+  stage: test-playmode-latest
+  dependencies:
+    - test:osx:2018-2-net20-playmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2018.2 --runtime=latest --testPlatform=playmode
+  after_script:
+    - /opt/post_build_script.sh
+
+test:osx:2018-3-net4x-playmode:
+  stage: test-playmode-latest
+  dependencies:
+    - test:osx:2018-3-net20-playmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2018.3 --runtime=latest --testPlatform=playmode
+  after_script:
+    - /opt/post_build_script.sh
+    
+test:osx:2019-1-net4x-playmode:
+  stage: test-playmode-latest
+  dependencies:
+    - test:osx:2019-1-net20-playmode
+  artifacts:
+    paths:
+      - "TestArtifacts"
+    expire_in: 1 week
+    when: always
+  tags:
+    - buildfarm
+    - darwin
+  before_script:
+    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
+  allow_failure: true
+  script:
+    - python testrunner.py Editor --version=2019.1 --runtime=latest --testPlatform=playmode
+  after_script:
+    - /opt/post_build_script.sh
+
+    

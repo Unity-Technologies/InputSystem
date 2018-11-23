@@ -151,12 +151,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
-                    .WithProduct(@"^(Vive[\.]?((Pro)|( MV)))"));
+                    .WithProduct(@"^((Vive)|(VIVE))"));
+
             InputSystem.RegisterLayout<ViveWand>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
-                    .WithProduct(@"^(OpenVR Controller\(Vive[\.]? Controller)"));
+                    .WithProduct(@"^(OpenVR Controller\((Vive)|(VIVE))"));
             InputSystem.RegisterLayout<ViveLighthouse>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)

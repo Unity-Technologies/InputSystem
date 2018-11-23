@@ -12,7 +12,6 @@ public class QuaternionControlActionStatus : MonoBehaviour
 
     public Text statusText;
 
-    // Use this for initialization
     void OnEnable()
     {
         quaternionAction.Enable();

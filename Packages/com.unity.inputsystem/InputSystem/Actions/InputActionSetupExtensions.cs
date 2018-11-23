@@ -1,5 +1,4 @@
 using System;
-using System.Net.NetworkInformation;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: support for removing bindings

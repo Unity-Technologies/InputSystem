@@ -15,6 +15,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         AssetInspectorWindow m_AssetInspectorWindow;
         InputActionAssetManager m_ActionAssetManager;
+        InputActionWindowToolbar m_Toolbar;
 
         ActionsTree m_ActionsTree
         {
@@ -26,15 +27,16 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_AssetInspectorWindow.m_ActionMapsTree; }
         }
 
-        public ActionInspectorContextMenu(AssetInspectorWindow window, InputActionAssetManager assetManager)
+        public ActionInspectorContextMenu(AssetInspectorWindow window, InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
         {
-            SetReferences(window, assetManager);
+            SetReferences(window, assetManager, toolbar);
         }
 
-        public void SetReferences(AssetInspectorWindow window, InputActionAssetManager assetManager)
+        public void SetReferences(AssetInspectorWindow window, InputActionAssetManager assetManager, InputActionWindowToolbar toolbar)
         {
             m_AssetInspectorWindow = window;
             m_ActionAssetManager = assetManager;
+            m_Toolbar = toolbar;
         }
 
         public void OnActionMapContextClick(SerializedProperty property)
@@ -54,13 +56,6 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        public void ShowAddActionMapMenu()
-        {
-            var menu = new GenericMenu();
-            AddActionMapOptionsToMenu(menu, false);
-            menu.ShowAsContext();
-        }
-
         public void ShowAddActionsMenu(TreeViewItem treeViewItem)
         {
             var menu = new GenericMenu();
@@ -73,18 +68,12 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
         }
 
-        private void AddActionsOptionsToMenu(GenericMenu menu, TreeViewItem treeViewItem, bool isContextMenu)
+        private void AddActionsOptionsToMenu(GenericMenu menu, TreeViewItem action, bool isContextMenu)
         {
-            var hasSelection = m_ActionMapsTree.HasSelection();
-            var canAddBinding = false;
-            var action = m_ActionsTree.GetSelectedAction();
-            if (action != null && hasSelection)
-            {
-                canAddBinding = true;
-            }
+            bool canAddBinding = action != null;
             if (canAddBinding)
             {
-                menu.AddItem(isContextMenu ? m_AddBindingContextGUI : m_AddBindingGUI, false, OnAddBinding, treeViewItem);
+                menu.AddItem(isContextMenu ? m_AddBindingContextGUI : m_AddBindingGUI, false, OnAddBinding, action);
             }
             else if (!isContextMenu)
             {
@@ -96,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
                 {
-                    menu.AddItem(new GUIContent(compositeString.text + " " + composite), false, OnAddCompositeBinding, new object[] {treeViewItem, composite});
+                    menu.AddItem(new GUIContent(compositeString.text + " " + composite), false, OnAddCompositeBinding, new object[] {action, composite});
                 }
             }
             else if (!isContextMenu)
@@ -105,23 +94,25 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void OnAddCompositeBinding(object objs)
+        internal void OnAddCompositeBinding(object objs)
         {
             var actionLine = ((object[])objs)[0] as ActionTreeItem;
             var compositeName = ((object[])objs)[1] as string;
             if (actionLine == null)
                 return;
-            actionLine.AddCompositeBinding((string)compositeName);
+            actionLine.AddCompositeBinding(compositeName, m_Toolbar.selectedControlSchemeBindingGroup);
             m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
-        private void OnAddBinding(object actionLineObj)
+        internal void OnAddBinding(object actionLineObj)
         {
             var actionLine = actionLineObj as ActionTreeItem;
             if (actionLine == null)
                 return;
-            actionLine.AddBinding();
+            actionLine.AddBinding(m_Toolbar.selectedControlSchemeBindingGroup);
             m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
         public void OnAddAction()
@@ -131,12 +122,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             actionMapLine.AddAction();
             m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.m_ActionsTree.SelectNewActionRow();
         }
 
         public void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
             m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.m_ActionMapsTree.SelectNewActionMapRow();
         }
 
         private ActionTreeItem GetSelectedActionLine()

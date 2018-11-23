@@ -11,7 +11,7 @@ public class SimpleController_UsingState : MonoBehaviour
 
     public void Update()
     {
-        var gamepad = Gamepad.current;
+        var gamepad = InputSystem.GetDevice<Gamepad>();
         if (gamepad == null)
             return;
 

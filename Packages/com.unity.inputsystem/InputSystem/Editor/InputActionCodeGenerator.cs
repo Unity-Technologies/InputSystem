@@ -6,6 +6,8 @@ using System.Text;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 
+////TODO: unify the generated events so that performed, cancelled, and started all go into a single event
+
 ////TODO: look up actions and maps by ID rather than by name
 
 ////TODO: only generate @something if @ is really needed

@@ -662,6 +662,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        ////TODO: re-use allocations such that only grow the arrays and hit zero GC allocs when we already have enough memory
         internal void ClearPerActionCachedBindingData()
         {
             m_BindingsForEachAction = null;

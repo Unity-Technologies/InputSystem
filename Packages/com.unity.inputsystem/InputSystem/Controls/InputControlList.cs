@@ -265,9 +265,19 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        public int IndexOf(TControl item)
+        public int IndexOf(TControl control)
         {
-            throw new NotImplementedException();
+            if (m_Count == 0)
+                return -1;
+
+            var index = ToIndex(control);
+            var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
+
+            for (var i = 0; i < m_Count; ++i)
+                if (indices[i] == index)
+                    return i;
+
+            return -1;
         }
 
         public void Insert(int index, TControl item)
@@ -282,17 +292,17 @@ namespace UnityEngine.Experimental.Input
 
         public bool Contains(TControl control)
         {
-            if (m_Count == 0)
-                return false;
+            return IndexOf(control) != -1;
+        }
 
-            var index = ToIndex(control);
-            var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
+        public void SwapElements(int index1, int index2)
+        {
+            if (index1 < 0 || index1 >= m_Count)
+                throw new ArgumentOutOfRangeException("index1");
+            if (index2 < 0 || index2 >= m_Count)
+                throw new ArgumentOutOfRangeException("index2");
 
-            for (var i = 0; i < m_Count; ++i)
-                if (indices[i] == index)
-                    return true;
-
-            return false;
+            m_Indices.SwapElements(index1, index2);
         }
 
         public TControl[] ToArray()

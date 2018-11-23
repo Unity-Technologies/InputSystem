@@ -139,7 +139,7 @@ namespace UnityEngine.Experimental.Input
         {
             fixed(char* ptr = buffer)
             {
-                return new string(ptr);
+                return new string(ptr, 0, size);
             }
         }
 

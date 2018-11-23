@@ -1,5 +1,5 @@
 using System;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Composites
 {
@@ -14,8 +14,8 @@ namespace UnityEngine.Experimental.Input.Composites
     public class AxisComposite : IInputBindingComposite<float>
     {
         // Controls.
-        public ButtonControl negative;
-        public ButtonControl positive;
+        [InputControl(layout = "Button")] public int negative;
+        [InputControl(layout = "Button")] public int positive;
 
         // Parameters.
         ////TODO: add parameters to control ramp up&down
@@ -44,8 +44,11 @@ namespace UnityEngine.Experimental.Input.Composites
             if (bufferSize < sizeof(float))
                 throw new ArgumentException("bufferSize < sizeof(float)", "bufferSize");
 
-            var negativeIsPressed = negative.isPressed;
-            var positiveIsPressed = positive.isPressed;
+            var negativeValue = context.ReadValue<float>(negative);
+            var positiveValue = context.ReadValue<float>(positive);
+
+            var negativeIsPressed = negativeValue > 0;
+            var positiveIsPressed = positiveValue > 0;
 
             float result;
             if (negativeIsPressed == positiveIsPressed)

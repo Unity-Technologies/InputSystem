@@ -119,6 +119,7 @@ namespace UnityEngine.Experimental.Input
             ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
             var currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
             var currentCompositeIndex = InputActionMapState.kInvalidIndex;
+            var currentCompositePartIndex = 0;
             var bindingMaskOnThisMap = map.m_BindingMask;
             var actionsInThisMap = map.m_Actions;
             var devicesForThisMap = map.devices;
@@ -195,6 +196,7 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     ////TODO: allow specifying parameters for composite on its path (same way as parameters work for interactions)
+                    ////      (Example: "Axis(min=-1,max=1)" creates an axis that goes from -1..1 instead of the default 0..1)
                     // If it's the start of a composite chain, create the composite.
                     if (unresolvedBinding.isComposite)
                     {
@@ -214,6 +216,7 @@ namespace UnityEngine.Experimental.Input
                             interactionCount = numInteractions,
                             interactionStartIndex = firstInteractionIndex,
                             mapIndex = totalMapCount,
+                            isComposite = true,
                         };
 
                         // The composite binding entry itself does not resolve to any controls.
@@ -227,6 +230,7 @@ namespace UnityEngine.Experimental.Input
                     if (!unresolvedBinding.isPartOfComposite &&
                         currentCompositeBindingIndex != InputActionMapState.kInvalidIndex)
                     {
+                        currentCompositePartIndex = 0;
                         currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
                         currentCompositeIndex = InputActionMapState.kInvalidIndex;
                     }
@@ -255,6 +259,23 @@ namespace UnityEngine.Experimental.Input
                         resolvedControls.Clear();
                     }
 
+                    // If the binding is part of a composite, pass the resolved controls
+                    // on to the composite.
+                    if (unresolvedBinding.isPartOfComposite &&
+                        currentCompositeBindingIndex != InputActionMapState.kInvalidIndex && numControls > 0)
+                    {
+                        // Make sure the binding is named. The name determines what in the composite
+                        // to bind to.
+                        if (string.IsNullOrEmpty(unresolvedBinding.name))
+                            throw new Exception(string.Format(
+                                "Binding with path '{0}' that is part of composite '{1}' is missing a name",
+                                path, composites[currentCompositeIndex]));
+
+                        // Install the controls on the binding.
+                        BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
+                            ref currentCompositePartIndex);
+                    }
+
                     // Add entry for resolved binding.
                     bindingStates[bindingIndex] = new InputActionMapState.BindingState
                     {
@@ -265,33 +286,11 @@ namespace UnityEngine.Experimental.Input
                         processorStartIndex = firstProcessorIndex,
                         processorCount = numProcessors,
                         isPartOfComposite = unresolvedBinding.isPartOfComposite,
+                        partIndex = currentCompositePartIndex,
                         actionIndex = actionIndexInMap,
                         compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                         mapIndex = totalMapCount,
                     };
-
-                    // If the binding is part of a composite, pass the resolve controls
-                    // on to the composite.
-                    if (unresolvedBinding.isPartOfComposite &&
-                        currentCompositeBindingIndex != InputActionMapState.kInvalidIndex && numControls != 0)
-                    {
-                        ////REVIEW: what should we do when a single binding in a composite resolves to multiple controls?
-                        ////        if the composite has more than one bindable control, it's not readily apparent how we would group them
-                        if (numControls > 1)
-                            throw new NotImplementedException(
-                                "Handling case where single binding in composite resolves to multiple controls");
-
-                        // Make sure the binding is named. The name determines what in the composite
-                        // to bind to.
-                        if (string.IsNullOrEmpty(unresolvedBinding.name))
-                            throw new Exception(string.Format(
-                                "Binding that is part of composite '{0}' is missing a name",
-                                composites[currentCompositeIndex]));
-
-                        // Install the control on the binding.
-                        BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
-                            controls[firstControlIndex]);
-                    }
                 }
             }
             finally
@@ -434,11 +433,11 @@ namespace UnityEngine.Experimental.Input
             return instance;
         }
 
-        ////REVIEW: replace this with a method on the composite that receives the value?
-        private static void BindControlInComposite(object composite, string name, InputControl control)
+        private static void BindControlInComposite(object composite, string name, ref int currentCompositePartIndex)
         {
             var type = composite.GetType();
 
+            ////TODO: allow this to be a property instead
             // Look up field.
             var field = type.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -446,13 +445,29 @@ namespace UnityEngine.Experimental.Input
                 throw new Exception(string.Format("Cannot find public field '{0}' in binding composite '{1}' of type '{2}'",
                     name, composite, type));
 
-            // Typecheck.
-            if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
-                throw new Exception(string.Format(
-                    "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
-                    type));
+            ////REVIEW: look for [InputControl] and perform checks based on it?
+            ////REVIEW: should we wrap part numbers in a struct instead of using int?
 
-            field.SetValue(composite, control);
+            // Typecheck.
+            var fieldType = field.FieldType;
+            if (fieldType != typeof(int))
+                throw new Exception(string.Format(
+                    "Field '{0}' in binding composite '{1}' must be of type 'int' but is of type '{2}' instead", name, composite,
+                    type.Name));
+
+            // See if we've already assigned a part index.
+            int partIndex;
+            var fieldValue = (int)field.GetValue(composite);
+            if (fieldValue == 0)
+            {
+                partIndex = ++currentCompositePartIndex;
+            }
+            else
+            {
+                partIndex = fieldValue;
+            }
+
+            field.SetValue(composite, partIndex);
         }
     }
 }

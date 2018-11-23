@@ -1007,7 +1007,12 @@ namespace UnityEngine.Experimental.Input
                 var compositeObject = (IInputBindingComposite)composites[compositeIndex];
                 Debug.Assert(compositeObject != null);
 
-                var context = new InputBindingCompositeContext();
+                var context = new InputBindingCompositeContext
+                {
+                    m_State = this,
+                    m_BindingIndex = compositeBindingIndex
+                };
+
                 compositeObject.ReadValue(ref context, buffer, bufferSize);
             }
             else
@@ -1029,7 +1034,7 @@ namespace UnityEngine.Experimental.Input
             */
         }
 
-        internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex)
+        internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex, bool ignoreComposites = false)
             where TValue : struct
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
@@ -1042,7 +1047,7 @@ namespace UnityEngine.Experimental.Input
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
-            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
@@ -1057,7 +1062,12 @@ namespace UnityEngine.Experimental.Input
                         compositeIndex.GetType().Name,
                         TypeHelpers.GetNiceTypeName(compositeObject.GetType().GetGenericArguments()[0])));
 
-                var context = new InputBindingCompositeContext();
+                var context = new InputBindingCompositeContext
+                {
+                    m_State = this,
+                    m_BindingIndex = compositeBindingIndex
+                };
+
                 value = compositeOfType.ReadValue(ref context);
             }
             else
@@ -1085,6 +1095,41 @@ namespace UnityEngine.Experimental.Input
             }
 
             return value;
+        }
+
+        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber)
+            where TValue : struct, IComparable<TValue>
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+
+            var result = default(TValue);
+            var firstChildBindingIndex = bindingIndex + 1;
+            var isFirstValue = true;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var controlIndex = controlStartIndex + i;
+                    var value = ReadValue<TValue>(index, controlIndex, ignoreComposites: true);
+
+                    if (isFirstValue)
+                    {
+                        result = value;
+                        isFirstValue = false;
+                    }
+                    else if (value.CompareTo(result) > 0)
+                    {
+                        result = value;
+                    }
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -1162,7 +1207,7 @@ namespace UnityEngine.Experimental.Input
             [FieldOffset(2)] private byte m_ProcessorCount;
             [FieldOffset(3)] private byte m_MapIndex;
             [FieldOffset(4)] private byte m_Flags;
-            // One unused byte.
+            [FieldOffset(5)] private byte m_PartIndex;
             [FieldOffset(6)] private ushort m_ActionIndex;
             [FieldOffset(8)] private ushort m_CompositeOrCompositeBindingIndex;
             [FieldOffset(10)] private ushort m_ProcessorStartIndex;
@@ -1175,7 +1220,8 @@ namespace UnityEngine.Experimental.Input
             {
                 ChainsWithNext = 1 << 0,
                 EndOfChain = 1 << 1,
-                PartOfComposite = 1 << 2,
+                Composite = 1 << 2,
+                PartOfComposite = 1 << 3,
             }
 
             /// <summary>
@@ -1392,7 +1438,18 @@ namespace UnityEngine.Experimental.Input
                 get { return chainsWithNext || isEndOfChain; }
             }
 
-            ////TODO: remove
+            public bool isComposite
+            {
+                get { return (flags & Flags.Composite) == Flags.Composite; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.Composite;
+                    else
+                        flags &= ~Flags.Composite;
+                }
+            }
+
             public bool isPartOfComposite
             {
                 get { return (flags & Flags.PartOfComposite) == Flags.PartOfComposite; }
@@ -1402,6 +1459,19 @@ namespace UnityEngine.Experimental.Input
                         flags |= Flags.PartOfComposite;
                     else
                         flags &= ~Flags.PartOfComposite;
+                }
+            }
+
+            public int partIndex
+            {
+                get { return m_PartIndex; }
+                set
+                {
+                    if (partIndex < 0)
+                        throw new ArgumentOutOfRangeException("value", "Part index must not be negative");
+                    if (partIndex > byte.MaxValue)
+                        throw new InvalidOperationException("Part count must not exceed byte.MaxValue=" + byte.MaxValue);
+                    m_PartIndex = (byte)value;
                 }
             }
         }
