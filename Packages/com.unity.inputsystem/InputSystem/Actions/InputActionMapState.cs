@@ -257,8 +257,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Put action into waiting state.
-            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            triggerStates[actionStartIndex + actionIndex].phase = InputActionPhase.Waiting;
+            triggerStates[actionIndex].phase = InputActionPhase.Waiting;
 
             NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
         }
@@ -321,8 +320,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Put action into disabled state.
-            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            triggerStates[actionStartIndex + actionIndex].phase = InputActionPhase.Disabled;
+            triggerStates[actionIndex].phase = InputActionPhase.Disabled;
 
             NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
         }
