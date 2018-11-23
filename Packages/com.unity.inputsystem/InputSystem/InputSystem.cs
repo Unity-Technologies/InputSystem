@@ -517,7 +517,7 @@ namespace UnityEngine.Experimental.Input
         ///                 Debug.Log("Device removed: " + device);
         ///                 break;
         ///             case InputDeviceChange.ConfigurationChanged:
-        ///                 Debug.Log("Device coniguration changed: " + device);
+        ///                 Debug.Log("Device configuration changed: " + device);
         ///                 break;
         ///         }
         ///     };
@@ -529,6 +529,20 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        /// <summary>
+        /// Event that is signalled when a <see cref="InputDeviceCommand"/> is sent to
+        /// an <see cref="InputDevice"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to intercept commands and optionally handle them without them reaching
+        /// the <see cref="IInputRuntime"/>.
+        ///
+        /// The first delegate in the list that returns a result other than <c>null</c> is considered
+        /// to have handled the command. If a command is handled by a delegate in the list, it will
+        /// not be sent on to the runtime.
+        /// </remarks>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
+        /// <seealso cref="IInputRuntime.DeviceCommand"/>
         public static event InputDeviceCommandDelegate onDeviceCommand
         {
             add { s_Manager.onDeviceCommand += value; }
@@ -911,10 +925,10 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.FindControls("&lt;Gamepad&gt;/*stick");
         ///
         /// // Same but filter stick by type rather than by name.
-        /// InputSystem.FindControls<StickControl>("&lt;Gamepad&gt;/*");
+        /// InputSystem.FindControls&lt;StickControl&gt;("&lt;Gamepad&gt;/*");
         /// </code>
         /// </example>
-        /// <seealso cref="FindControls{TControl}"/>
+        /// <seealso cref="FindControls{TControl}(string)"/>
         /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
         public static InputControlList<InputControl> FindControls(string path)
         {
@@ -1662,6 +1676,10 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
             Plugins.iOS.iOSSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_WEBGL
+            Plugins.WebGL.WebGLSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_SWITCH
