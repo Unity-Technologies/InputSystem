@@ -181,6 +181,20 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddControlTreeItemsRecursive(childLayout, parent, child.controlPath, deviceControlId, commonUsage);
                 }
             }
+            
+            // Add optional layouts for devices
+            var optionalLayouts = EditorInputControlLayoutCache.GetOptionalControlsForLayout(layout.name);
+            if (optionalLayouts.Any() && layout.isDeviceLayout)
+            {
+                var optionalGroup = new AdvancedDropdownItem("Optional");
+                foreach (var optionalLayout in optionalLayouts)
+                {
+                    if(LayoutMatchesExpectedControlLayoutFilter(optionalLayout.layout))
+                        optionalGroup.AddChild(new OptionalControlTreeViewItem(optionalLayout, deviceControlId, commonUsage));
+                }
+                if(optionalGroup.children.Any())
+                    parent.AddChild(optionalGroup);
+            }
         }
 
         bool LayoutMatchesExpectedControlLayoutFilter(string layout)
