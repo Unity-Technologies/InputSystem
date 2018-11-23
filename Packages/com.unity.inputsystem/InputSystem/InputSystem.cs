@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -25,6 +24,8 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
+
 ////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
 ////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
 ////       simply start losing input but it won't grow infinitely
@@ -45,13 +46,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native allocations when exiting
-
-[assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
-
-// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
-// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
-//       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.12")]
 
 namespace UnityEngine.Experimental.Input
 {
