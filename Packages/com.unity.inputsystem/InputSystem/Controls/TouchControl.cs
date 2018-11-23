@@ -51,15 +51,15 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override unsafe TouchState ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe TouchState ReadUnprocessedValueFrom(void* statePtr)
         {
-            var valuePtr = (TouchState*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (TouchState*)(byte*)statePtr + (int)m_StateBlock.byteOffset;
             return *valuePtr;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, TouchState value)
+        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, TouchState value)
         {
-            var valuePtr = (TouchState*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (TouchState*)(byte*)statePtr + (int)m_StateBlock.byteOffset;
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<TouchState>());
         }
     }

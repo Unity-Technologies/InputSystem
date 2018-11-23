@@ -173,7 +173,7 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected bool ResetDelta(IntPtr statePtr, InputControl<float> control)
+        protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
             var value = control.ReadValueFrom(statePtr);
             if (Mathf.Approximately(0f, value))
@@ -182,27 +182,27 @@ namespace UnityEngine.Experimental.Input
             return true;
         }
 
-        protected void AccumulateDelta(IntPtr oldStatePtr, IntPtr newStatePtr, InputControl<float> control)
+        protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
             var oldDelta = control.ReadValueFrom(oldStatePtr);
             var newDelta = control.ReadValueFrom(newStatePtr);
             control.WriteValueInto(newStatePtr, oldDelta + newDelta);
         }
 
-        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
             return deltaXChanged || deltaYChanged;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
-        bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }

@@ -12,6 +12,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
+////      (this can be used, for example, to translate all the various gamepad formats into one single common gamepad format)
+
 ////TODO: allow layouts to set default device names
 
 ////TODO: allow creating generic controls as parents just to group child controls

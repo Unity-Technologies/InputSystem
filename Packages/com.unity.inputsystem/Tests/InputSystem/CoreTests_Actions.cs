@@ -554,7 +554,7 @@ partial class CoreTests
 
         action.Enable();
 
-        using (var queue = new InputActionQueue())
+        using (var queue = new InputActionTrace())
         {
             action.performed += queue.RecordAction;
 

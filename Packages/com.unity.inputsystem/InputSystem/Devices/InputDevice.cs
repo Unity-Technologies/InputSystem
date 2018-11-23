@@ -246,20 +246,6 @@ namespace UnityEngine.Experimental.Input
             get { return (int)m_StateBlock.alignedSizeInBytes; }
         }
 
-        public InputNoiseFilter userInteractionFilter
-        {
-            get
-            {
-                return m_UserInteractionFilter;
-            }
-            set
-            {
-                m_UserInteractionFilter.Reset(this);
-                m_UserInteractionFilter = value;
-                m_UserInteractionFilter.Apply(this);
-            }
-        }
-
         /// <summary>
         /// Return the current state of the device as byte array.
         /// </summary>
@@ -272,7 +258,7 @@ namespace UnityEngine.Experimental.Input
             var array = new byte[numBytes];
             fixed(byte* arrayPtr = array)
             {
-                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
+                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr, numBytes);
             }
 
             return array;
@@ -283,7 +269,7 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        public override unsafe void WriteValueFromObjectInto(void* buffer, long bufferSize, object value)
         {
             throw new NotImplementedException();
         }
@@ -293,7 +279,7 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        public override bool HasValueChangeIn(IntPtr statePtr)
+        public override unsafe bool HasValueChangeIn(void* statePtr)
         {
             throw new NotImplementedException();
         }
@@ -417,8 +403,6 @@ namespace UnityEngine.Experimental.Input
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
-
-        internal InputNoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

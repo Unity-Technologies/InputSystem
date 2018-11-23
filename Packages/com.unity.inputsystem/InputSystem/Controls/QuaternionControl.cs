@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
@@ -34,13 +33,13 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Quaternion ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe Quaternion ReadUnprocessedValueFrom(void* statePtr)
         {
             return new Quaternion(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr),
                 w.ReadUnprocessedValueFrom(statePtr));
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Quaternion value)
+        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, Quaternion value)
         {
             x.WriteValueInto(statePtr, value.x);
             y.WriteValueInto(statePtr, value.y);

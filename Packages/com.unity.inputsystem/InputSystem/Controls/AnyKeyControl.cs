@@ -23,15 +23,7 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        public override bool HasSignificantChange(InputEventPtr eventPtr)
-        {
-            float value;
-            if (ReadValueFrom(eventPtr, out value))
-                return Mathf.Abs(value - ReadDefaultValue()) > float.Epsilon;
-            return false;
-        }
-
-        public override float ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe float ReadUnprocessedValueFrom(void* statePtr)
         {
             return CheckStateIsAtDefault(statePtr) ? 0.0f : 1.0f;
         }

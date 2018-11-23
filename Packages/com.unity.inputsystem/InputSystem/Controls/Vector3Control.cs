@@ -29,19 +29,19 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector3 ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe Vector3 ReadUnprocessedValueFrom(void* statePtr)
         {
             return new Vector3(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr));
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector3 value)
+        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, Vector3 value)
         {
             x.WriteValueInto(statePtr, value.x);
             y.WriteValueInto(statePtr, value.y);
             z.WriteValueInto(statePtr, value.z);
         }
 
-        public override float EvaluateMagnitude(IntPtr statePtr)
+        public override unsafe float EvaluateMagnitude(void* statePtr)
         {
             ////REVIEW: this can go beyond 1; that okay?
             return ReadValueFrom(statePtr).magnitude;

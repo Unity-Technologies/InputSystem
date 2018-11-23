@@ -497,14 +497,14 @@ partial class CoreTests
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
-                StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[0])->state, UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
             Assert.That(events[1].deviceId, Is.EqualTo(device.id));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
-                StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[1])->state, UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
     }
 
@@ -755,7 +755,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanDetectWhetherControlIsPartOfEvent()
+    public unsafe void Events_CanDetectWhetherControlIsPartOfEvent()
     {
         // We use a mouse here as it has several controls that are "parked" outside MouseState.
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -767,13 +767,13 @@ partial class CoreTests
             // return IntPtr.Zero.
             if (eventPtr.IsA<StateEvent>())
             {
-                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
-                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr) != null);
+                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr) == null);
             }
             else if (eventPtr.IsA<DeltaStateEvent>())
             {
-                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
-                Assert.That(mouse.leftButton.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr) != null);
+                Assert.That(mouse.leftButton.GetStatePtrFromStateEvent(eventPtr) == null);
             }
             else
             {
