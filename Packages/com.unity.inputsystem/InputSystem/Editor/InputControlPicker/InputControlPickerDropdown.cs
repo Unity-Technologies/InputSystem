@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
         SerializedProperty m_PathProperty;
         Action<SerializedProperty> m_OnPickCallback;
         string[] m_DeviceFilter;
-        string m_ExpectedControlLayoutFilter;
+        Type m_ExpectedControlLayoutFilterType;
 
         public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
             : base(state)
@@ -84,12 +84,11 @@ namespace UnityEngine.Experimental.Input.Editor
             foreach (var usage in EditorInputControlLayoutCache.allUsages)
             {
                 var child = new UsageTreeViewItem(usage);
-                if (string.IsNullOrEmpty(m_ExpectedControlLayoutFilter) || usage.Value.Any(a=>a==m_ExpectedControlLayoutFilter))
+                if (usage.Value.Any(LayoutMatchesExpectedControlLayoutFilter))
                 {
                     usageRoot.AddChild(child);
                 }
             }
-
             return usageRoot;
         }
 
@@ -170,7 +169,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 var child = new ControlTreeViewItem(control, prefix, deviceControlId, commonUsage);
-                if (string.IsNullOrEmpty(m_ExpectedControlLayoutFilter) || control.layout == m_ExpectedControlLayoutFilter)
+
+                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
                 {
                     parent.AddChild(child);
                 }
@@ -183,6 +183,16 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        bool LayoutMatchesExpectedControlLayoutFilter(string layout)
+        {
+            if (m_ExpectedControlLayoutFilterType == null)
+            {
+                return true;
+            }
+            var layoutType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(layout));
+            return m_ExpectedControlLayoutFilterType.IsAssignableFrom(layoutType);
+        }
+
         public void SetDeviceFilter(string[] deviceFilter)
         {
             m_DeviceFilter = deviceFilter;
@@ -190,7 +200,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SetExpectedControlLayoutFilter(string expectedControlLayout)
         {
-            m_ExpectedControlLayoutFilter = expectedControlLayout;
+            m_ExpectedControlLayoutFilterType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout));
         }
     }
 }

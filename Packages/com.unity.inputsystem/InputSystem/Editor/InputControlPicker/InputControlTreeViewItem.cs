@@ -34,6 +34,17 @@ namespace UnityEngine.Experimental.Input.Editor
         protected InputControlTreeViewItem(string name)
             : base(name) {}
     }
+    
+    internal class OptionalControlTreeViewItem : InputControlTreeViewItem
+    {
+        public OptionalControlTreeViewItem(EditorInputControlLayoutCache.OptionalControl optionalLayout, string deviceControlId, string commonUsage)
+            : base(optionalLayout.name)
+        {
+            m_ControlPath = optionalLayout.name;
+            m_Device = deviceControlId;
+            m_Usage = commonUsage;
+        }
+    }
 
     internal class UsageTreeViewItem : InputControlTreeViewItem
     {
