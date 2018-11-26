@@ -22,10 +22,10 @@ public class ScriptCompilersTests
     {
         var messages = CompileCSharp();
 
-        //foreach(var message in messages)
-        //{
-        //    Debug.Log(message.message);
-        // }
+        foreach(var message in messages)
+        {
+            Debug.Log(message.message);
+        }
 
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
@@ -62,7 +62,6 @@ public class ScriptCompilersTests
 
         var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
 
-        // FIX THIS to unity downloader path
         references.Add("D:\\Program Files\\Unity 2018.3.0b3\\Editor\\Data\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll"); 
 
         foreach (var asm in unityAssemblies)
