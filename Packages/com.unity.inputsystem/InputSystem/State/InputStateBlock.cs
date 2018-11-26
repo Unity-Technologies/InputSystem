@@ -227,15 +227,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else if (format == kTypeBit)
             {
-                if (sizeInBits != 31)
+                if (sizeInBits == 1)
+                {
+                    value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1.0f : 0.0f;
+                }
+                else if (sizeInBits != 31)
                 {
                     float maxValue = (float)(1 << (int)sizeInBits);
                     float rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(new IntPtr(valuePtr), bitOffset, sizeInBits));
                     value = Mathf.Clamp(rawValue / maxValue, 0.0f, 1.0f);
-                }
-                else if (sizeInBits == 1)
-                {
-                    value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1.0f : 0.0f;
                 }
                 else
                 {
