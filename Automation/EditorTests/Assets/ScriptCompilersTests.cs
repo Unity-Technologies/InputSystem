@@ -11,16 +11,24 @@ using UnityEditor.Scripting.ScriptCompilation;
 using UnityEditor.TestTools;
 using UnityEditorInternal;
 using UnityEngine;
+
 using ieu = UnityEditorInternal.InternalEditorUtility;
 
 public class ScriptCompilersTests
 { 
 
     [Test]
-    public void MonoCSharpCompilerWarningTest()
+    public void DoesInputSystemSourceCodeCompileWithoutWarningsAndErrors()
     {
         var messages = CompileCSharp();
+
+        //foreach(var message in messages)
+        //{
+        //    Debug.Log(message.message);
+        // }
+
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
+        Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
     }
 
     static CompilerMessage[] CompileCSharp()
@@ -33,6 +41,8 @@ public class ScriptCompilersTests
             return Compile(compiler, island);
         }
     }
+
+
 
     static MonoIsland CreateMonoIsland(SupportedLanguage language)
     {
@@ -49,6 +59,16 @@ public class ScriptCompilersTests
         references.Add(ieu.GetEngineCoreModuleAssemblyPath());
         references.Add(ieu.GetEditorAssemblyPath());
         references.AddRange(ModuleUtils.GetAdditionalReferencesForUserScripts());
+
+        var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
+
+        // FIX THIS to unity downloader path
+        references.Add("D:\\Program Files\\Unity 2018.3.0b3\\Editor\\Data\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll"); 
+
+        foreach (var asm in unityAssemblies)
+        {
+            references.Add(asm.Path);
+        }
 
         var apiCompatibilityLevel = PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup);
 
