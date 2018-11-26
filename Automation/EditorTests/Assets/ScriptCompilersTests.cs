@@ -62,7 +62,7 @@ public class ScriptCompilersTests
 
         var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
 
-        references.Add("D:\\Program Files\\Unity 2018.3.0b3\\Editor\\Data\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll"); 
+        references.Add("..\\UnityInstall\\Unity.app\\Contents\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll"); 
 
         foreach (var asm in unityAssemblies)
         {
