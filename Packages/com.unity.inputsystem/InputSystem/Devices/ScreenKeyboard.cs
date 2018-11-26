@@ -12,9 +12,8 @@ namespace UnityEngine.Experimental.Input
         PhonePad = 5,
         NamePhonePad = 6,
         EmailAddress = 7,
-        NintendoNetworkAccount = 8,
-        Social = 9,
-        Search = 10
+        Social = 8,
+        Search = 9
     }
 
 
@@ -22,10 +21,14 @@ namespace UnityEngine.Experimental.Input
     {
         public ScreenKeyboardType type;
         public string initialText;
+        public string placeholderText;
         public bool autocorrection;
         public bool multiline;
         public bool secure;
+
+        ////TODO: this one is iPhone specific?
         public bool alert;
+
 
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callback
 
@@ -37,6 +40,7 @@ namespace UnityEngine.Experimental.Input
             multiline = false;
             secure = false;
             alert = false;
+            placeholderText = string.Empty;
         }
     }
 

@@ -34,65 +34,80 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         void OnTextChanged(String text);
     }
 
+    private enum ScreenKeyboardType
+    {
+        Default(0),
+        ASCIICapable(1),
+        NumbersAndPunctuation(2),
+        URL(3),
+        NumberPad(4),
+        PhonePad(5),
+        NamePhonePad(6),
+        EmailAddress(7),
+        Social(8),
+        Search(9);
+
+        private final int value;
+
+        ScreenKeyboardType(int value) { this.value = value; }
+    }
+
 
     private static final class id
     {
         private static final int okButton    = 0x3f050002;
         private static final int txtInput    = 0x3f050001;
     }
-    private Context mContext = null;
-    private IScreenKeyboardCallbacks m_Callbacks;
-    private static int hintColor = 0x61000000;
-    private static int backgroundColor = 0xFFFFFFFF;
-    // Kitkat specific flags
-    private static int LayoutParams_FLAG_TRANSLUCENT_NAVIGATION = 0x08000000;
-    private static int LayoutParams_FLAG_TRANSLUCENT_STATUS = 0x04000000;
 
-    public AndroidScreenKeyboard (IScreenKeyboardCallbacks callbacks)
+    private Context m_Context = null;
+    private IScreenKeyboardCallbacks m_Callbacks;
+
+    public AndroidScreenKeyboard (
+        IScreenKeyboardCallbacks callbacks,
+        int keyboardType,
+        String initialText,
+        String placeholderText,
+        boolean correction,
+        boolean multiline,
+        boolean secure,
+        boolean alert)
     {
         super (UnityPlayer.currentActivity);
-        mContext = UnityPlayer.currentActivity;
+        m_Context = UnityPlayer.currentActivity;
         m_Callbacks = callbacks;
-        /*
-        Context context, UnityPlayer player,
-                            String initialText, int type, boolean correction,
-                            boolean multiline, boolean secure,
-                            boolean alert, String placeholder, int characterLimit)
-*/
 
-
-        getWindow().setGravity(Gravity.BOTTOM);
-        getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        Window window = getWindow();
+        window.setGravity(Gravity.BOTTOM);
+        window.requestFeature(Window.FEATURE_NO_TITLE);
         // Set transparent background
         // Because in Lollipop otherwise we get black frame around the dialog
-        getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        // Don't dim the view behind the dialog
+        window.clearFlags (WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
         setContentView (createSoftInputView ());
-        getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        // Don't dim the view behind the dialog
-        getWindow().clearFlags (WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        // Workaround for the input field shown behind the keyboard when translucent enabled
-        /*
-        if (KITKAT_SUPPORT)
-        {
-            getWindow().clearFlags(LayoutParams_FLAG_TRANSLUCENT_NAVIGATION);
-            getWindow().clearFlags(LayoutParams_FLAG_TRANSLUCENT_STATUS);
-        }*/
 
         EditText txtInput = (EditText) findViewById (id.txtInput);
-        Button okButton = (Button) findViewById (id.okButton);
-        //setupTextInput (txtInput, initialText, type, correction, multiline,  secure, alert, placeholder, characterLimit);
+        txtInput.setImeOptions (EditorInfo.IME_ACTION_DONE);
+        txtInput.setText (initialText);
+        txtInput.setHint (placeholderText);
+        txtInput.setHintTextColor (0x61000000);
+        txtInput.setInputType (convertInputType (ScreenKeyboardType.values()[keyboardType], correction, multiline, secure));
+        txtInput.setImeOptions(EditorInfo.IME_FLAG_NO_FULLSCREEN);
 
-        setupTextInput(txtInput, "Test", 0, false, false, false, false, "", 10);
+       // if ( characterLimit > 0 )
+        //    txtInput.setFilters (new InputFilter[] { new InputFilter.LengthFilter(characterLimit) });
+
+        txtInput.addTextChangedListener (this);
+        txtInput.setSelection(txtInput.getText().length());
+        txtInput.setClickable (true);
+
+        Button okButton = (Button) findViewById (id.okButton);
+
         // set up click events
         okButton.setOnClickListener (this);
-
-        // development build is shown on top of locked screen, but for some android versions need to
-        // additionaly set FLAG_SHOW_WHEN_LOCKED for input dialog to see input keyboard.
-        // FLAG_SHOW_WHEN_LOCKED is deprecated in API 27
-        //if (UNITY_DEVELOPMENT_PLAYER)
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
         txtInput.setOnFocusChangeListener (new View.OnFocusChangeListener ()
         {
@@ -106,27 +121,6 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                 }
             }
         });
-    }
-
-    private void setupTextInput (EditText txtInput, String initialText,
-                                 int type, boolean correction,
-                                 boolean multiline, boolean secure,
-                                 boolean alert, String placeholder, int characterLimit)
-    {
-        txtInput.setImeOptions (EditorInfo.IME_ACTION_DONE);
-        txtInput.setText (initialText);
-        txtInput.setHint (placeholder);
-        txtInput.setHintTextColor (hintColor);
-        txtInput.setInputType (convertInputType (type, correction, multiline, secure));
-        txtInput.setImeOptions(EditorInfo.IME_FLAG_NO_FULLSCREEN);
-
-        if ( characterLimit > 0 )
-            txtInput.setFilters (new InputFilter[] { new InputFilter.LengthFilter(characterLimit) });
-
-        txtInput.addTextChangedListener (this);
-        txtInput.setSelection(txtInput.getText().length());
-
-        txtInput.setClickable (true);
     }
 
     public void afterTextChanged (Editable s)
@@ -146,94 +140,42 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         Log.v("Unity", MessageFormat.format("onTextChanged {0}, {1}, {2}", start, before, count));
     }
 
-    private int convertInputType (int type, boolean correction,
-                                  boolean multiline, boolean secure)
+    private int convertInputType (ScreenKeyboardType keyboardType, boolean correction, boolean multiline, boolean secure)
     {
         int baseType = (correction ? EditorInfo.TYPE_TEXT_FLAG_AUTO_CORRECT : EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS)
                        | (multiline ? EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE : 0)
                        | (secure ? EditorInfo.TYPE_TEXT_VARIATION_PASSWORD : 0);
 
-        // Max value should stay in sync with enum UnityEngine.TouchScreenKeyboardType size from TouchScreenKeyboardType.cs
-        if (type < 0 || type > 10)
-            return baseType;
-
-        int flagsByType[] = {
-            // Default = 0, Default keyboard layout.
-            EditorInfo.TYPE_CLASS_TEXT,
-
-            // ASCIICapable = 1, Keyboard displays standard ASCII characters.
-            EditorInfo.TYPE_CLASS_TEXT
-            | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES,
-
-            // NumbersAndPunctuation = 2, Keyboard with numbers and punctuation.
-            EditorInfo.TYPE_CLASS_NUMBER
-            | EditorInfo.TYPE_NUMBER_FLAG_DECIMAL
-            | EditorInfo.TYPE_NUMBER_FLAG_SIGNED,
-
-            // URL = 3, Keyboard optimized for URL entry, features ".", "/", and
-            // ".com".
-            EditorInfo.TYPE_CLASS_TEXT
-            | EditorInfo.TYPE_TEXT_VARIATION_URI,
-
-            // NumberPad = 4, Numeric keypad designed for PIN entry, features the
-            // numbers 0 through 9.
-            EditorInfo.TYPE_CLASS_NUMBER,
-
-            // PhonePad = 5, Keypad designed for entering telephone numbers,
-            // features the numbers 0 through 9 and the "*" and "#" characters
-            EditorInfo.TYPE_CLASS_PHONE,
-
-            // NamePhonePad = 6, Keypad designed for entering a person's name or
-            // phone number.
-            EditorInfo.TYPE_CLASS_TEXT
-            | EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS
-            | EditorInfo.TYPE_TEXT_VARIATION_PERSON_NAME,
-
-            // EmailAddress = 7, Keyboard optimized for specifying email addresses,
-            // features the "@", "." and space characters.
-            EditorInfo.TYPE_CLASS_TEXT
-            | EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-
-            // NintendoNetworkAccount = 8, Default keyboard in case Wii U specific NintendoNetworkAccount type is selected.
-            EditorInfo.TYPE_CLASS_TEXT,
-
-            // Social = 9, Keyboard optimized for text entry in social media applications such as Twitter,
-            // features the "@", "." and space characters and capitalises the first letter of a sentence.
-            EditorInfo.TYPE_CLASS_TEXT
-            | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES
-            | EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-
-            // Search = 10, Keyboard optimized for search terms,
-            // features ".", "/" and space characters.
-            EditorInfo.TYPE_CLASS_TEXT
-            | EditorInfo.TYPE_TEXT_VARIATION_URI
-        };
-
-        // Discard TYPE_CLASS_TEXT bits if TYPE_CLASS_NUMBER bit is set
-        if ((flagsByType[type] & EditorInfo.TYPE_CLASS_NUMBER) != 0)
-            return flagsByType[type];
-
-        return baseType | flagsByType[type];
+        switch (keyboardType)
+        {
+            case Default:
+            default:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT;
+            case ASCIICapable:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES;
+            case NumbersAndPunctuation:
+                return EditorInfo.TYPE_CLASS_NUMBER | EditorInfo.TYPE_NUMBER_FLAG_DECIMAL | EditorInfo.TYPE_NUMBER_FLAG_SIGNED;
+            case URL:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_URI;
+            case NumberPad:
+                return EditorInfo.TYPE_CLASS_NUMBER;
+            case PhonePad:
+                return baseType | EditorInfo.TYPE_CLASS_PHONE;
+            case NamePhonePad:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS | EditorInfo.TYPE_TEXT_VARIATION_PERSON_NAME;
+            case EmailAddress:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+            case Social:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES | EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+            case Search:
+                return baseType | EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_URI;
+        }
     }
-
-    /*
-    private void reportStrAndHide (String str, boolean canceled)
-    {
-        //Fix for 953849. It looks like this method doesn't works correctly on some Sony and Samsung devices with non-Android soft keyboard
-        //Selection.removeSelection(((EditText) findViewById (id.txtInput)).getEditableText());
-        ((EditText) findViewById (id.txtInput)).setSelection(0, 0);
-        mUnityPlayer.reportSoftInputStr (str, UnityPlayer.kbCommand.hide, canceled);
-    }
-    */
 
     @Override public void onClick (View v)
     {
+        dismiss();
         //reportStrAndHide (getSoftInputStr (), false);
-    }
-
-    public void Show()
-    {
-        show ();int s = 5;
     }
 
     /*
@@ -246,13 +188,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     {
         final int matchParent = ViewGroup.LayoutParams.MATCH_PARENT;
         final int wrapContent = ViewGroup.LayoutParams.WRAP_CONTENT;
-        RelativeLayout rl = new RelativeLayout (mContext);
+        RelativeLayout rl = new RelativeLayout (m_Context);
         rl.setLayoutParams (new ViewGroup.LayoutParams (matchParent, matchParent));
-        rl.setBackgroundColor(backgroundColor);
+        rl.setBackgroundColor(0xFFFFFFFF);
         RelativeLayout.LayoutParams lp = null;
 
         {   // create text input field
-            EditText et = new EditText (mContext)
+            EditText et = new EditText (m_Context)
             {
                 public boolean onKeyPreIme(int keyCode, KeyEvent event)
                 {
@@ -274,7 +216,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                     // for some reason this code can NOT be in the OnFocusChangeListener; go figure..
                     if (hasWindowFocus)
                     {
-                        InputMethodManager imm = (InputMethodManager)mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        InputMethodManager imm = (InputMethodManager)m_Context.getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.showSoftInput(this, 0);
                     }
                 }
@@ -295,8 +237,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         }
 
         {   // create ok button
-            Button b = new Button (mContext);
-            b.setText (mContext.getResources ().getIdentifier ("ok", "string", "android"));
+            Button b = new Button (m_Context);
+            b.setText (m_Context.getResources ().getIdentifier ("ok", "string", "android"));
             lp = new RelativeLayout.LayoutParams (wrapContent, wrapContent);
             lp.addRule (RelativeLayout.CENTER_VERTICAL);
             lp.addRule (RelativeLayout.ALIGN_PARENT_RIGHT);
