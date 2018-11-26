@@ -800,17 +800,17 @@ partial class CoreTests
             base.FinishSetup(builder);
         }
 
-        public bool OnCarryStateForward(IntPtr statePtr)
+        public unsafe bool OnCarryStateForward(void* statePtr)
         {
             button.WriteValueInto(statePtr, 1);
             return true;
         }
 
-        public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        public unsafe void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 
-        public bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
+        public unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             return false;
@@ -885,22 +885,22 @@ partial class CoreTests
     [InputControlLayout(stateType = typeof(TestDeviceFullState))]
     private class TestDeviceDecidingWhereToIntegrateState : InputDevice, IInputStateCallbackReceiver
     {
-        public bool OnCarryStateForward(IntPtr statePtr)
+        public unsafe bool OnCarryStateForward(void* statePtr)
         {
             return false;
         }
 
-        public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        public unsafe void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 
-        public unsafe bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
+        public unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             Assert.That(stateFormat, Is.EqualTo(new FourCC("PART")));
             Assert.That(stateSize, Is.EqualTo(UnsafeUtility.SizeOf<TestDevicePartialState>()));
 
-            var values = (float*)currentStatePtr.ToPointer();
+            var values = (float*)currentStatePtr;
             for (var i = 0; i < 5; ++i)
                 if (Mathf.Approximately(values[i], 0))
                 {
@@ -1250,7 +1250,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanBeDisabledAndReEnabled()
+    public unsafe void Devices_CanBeDisabledAndReEnabled()
     {
         var device = InputSystem.AddDevice<Mouse>();
 
@@ -1498,42 +1498,6 @@ partial class CoreTests
         });
 
         Assert.That(device.displayName, Is.EqualTo("Product Name"));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanAssociateUserIdWithDevice()
-    {
-        var device = InputSystem.AddDevice<Gamepad>();
-        string userId = null;
-
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(device.id,
-                (id, commandPtr) =>
-                {
-                    if (commandPtr->type == QueryUserIdCommand.Type)
-                    {
-                        var queryUserIdPtr = (QueryUserIdCommand*)commandPtr;
-                        StringHelpers.WriteStringToBuffer(userId, new IntPtr(queryUserIdPtr->idBuffer),
-                            QueryUserIdCommand.kMaxIdLength);
-                        return 1;
-                    }
-
-                    return InputDeviceCommand.kGenericFailure;
-                });
-        }
-
-        Assert.That(device.userId, Is.Null);
-
-        InputSystem.QueueConfigChangeEvent(device);
-        InputSystem.Update();
-        Assert.That(device.userId, Is.Null);
-
-        userId = "testId";
-        InputSystem.QueueConfigChangeEvent(device);
-        InputSystem.Update();
-        Assert.That(device.userId, Is.EqualTo(userId));
     }
 
     [Test]

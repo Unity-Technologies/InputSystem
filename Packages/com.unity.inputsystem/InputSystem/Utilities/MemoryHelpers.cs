@@ -24,24 +24,24 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 return bitOffset + sizeInBits > ((ulong)(memoryOffset - byteOffset)) * 8;
             }
-            return memorySizeInBytes * 8 > ((ulong)(byteOffset - memoryOffset)) * 8 + bitOffset;
+            return memorySizeInBytes * 8 > (ulong)(byteOffset - memoryOffset) * 8 + bitOffset;
         }
 
-        public static void WriteSingleBit(IntPtr ptr, uint bitOffset, bool value)
+        public static void WriteSingleBit(void* ptr, uint bitOffset, bool value)
         {
             if (bitOffset < 8)
             {
                 if (value)
                     *((byte*)ptr) |= (byte)(1 << (int)bitOffset);
                 else
-                    *((byte*)ptr) &= (byte)~(1 << (int)bitOffset);
+                    *(byte*)ptr &= (byte)~(1 << (int)bitOffset);
             }
             else if (bitOffset < 32)
             {
                 if (value)
-                    *((int*)ptr) |= 1 << (int)bitOffset;
+                    *(int*)ptr |= 1 << (int)bitOffset;
                 else
-                    *((int*)ptr) &= ~(1 << (int)bitOffset);
+                    *(int*)ptr &= ~(1 << (int)bitOffset);
             }
             else
             {
@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
-        public static bool ReadSingleBit(IntPtr ptr, uint bitOffset)
+        public static bool ReadSingleBit(void* ptr, uint bitOffset)
         {
             ////TODO: currently this is not actually enforced...
             // The layout code makes sure that bitfields are either 8bit or multiples
@@ -97,11 +97,14 @@ namespace UnityEngine.Experimental.Input.Utilities
         /// <param name="ptr2">Pointer to start of second memory region.</param>
         /// <param name="bitOffset">Offset in bits from each of the pointers to the start of the memory region to compare.</param>
         /// <param name="bitCount">Number of bits to compare in the memory region.</param>
+        /// <param name="mask">If not null, ignore any bits set in the mask. This allows comparing two memory regions while
+        /// ignoring specific bits.</param>
         /// <returns>True if the two memory regions are identical, false otherwise.</returns>
-        public static bool MemCmpBitRegion(void* ptr1, void* ptr2, uint bitOffset, uint bitCount)
+        public static bool MemCmpBitRegion(void* ptr1, void* ptr2, uint bitOffset, uint bitCount, void* mask = null)
         {
             var bytePtr1 = (byte*)ptr1;
             var bytePtr2 = (byte*)ptr2;
+            var maskPtr = (byte*)mask;
 
             // If we're offset by more than a byte, adjust our pointers.
             if (bitOffset > 8)
@@ -117,14 +120,20 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 // If the total length of the memory region is less than a byte, we need
                 // to mask out parts of the bits we're reading.
-                var mask = 0xFF;
+                var byteMask = 0xFF;
                 if (bitCount + bitOffset < 8)
                 {
-                    mask = 0xFF >> (int)(8 - (bitCount + bitOffset));
+                    byteMask = 0xFF >> (int)(8 - (bitCount + bitOffset));
                 }
 
-                var byte1 = (*bytePtr1 >> (int)bitOffset) & mask;
-                var byte2 = (*bytePtr2 >> (int)bitOffset) & mask;
+                if (maskPtr != null)
+                {
+                    byteMask &= maskPtr[0] >> (int)bitOffset;
+                    ++maskPtr;
+                }
+
+                var byte1 = (*bytePtr1 >> (int)bitOffset) & byteMask;
+                var byte2 = (*bytePtr2 >> (int)bitOffset) & byteMask;
 
                 if (byte1 != byte2)
                     return false;
@@ -145,8 +154,25 @@ namespace UnityEngine.Experimental.Input.Utilities
             var byteCount = bitCount / 8;
             if (byteCount >= 1)
             {
-                if (UnsafeUtility.MemCmp(bytePtr1, bytePtr2, byteCount) != 0)
-                    return false;
+                if (maskPtr != null)
+                {
+                    ////REVIEW: could go int by int here for as long as we can
+                    // Have to go byte-by-byte in order to apply the masking.
+                    for (var i = 0; i < byteCount; ++i)
+                    {
+                        var byte1 = bytePtr1[i];
+                        var byte2 = bytePtr2[i];
+                        var byteMask = maskPtr[i];
+
+                        if ((byte1 & byteMask) != (byte2 & byteMask))
+                            return false;
+                    }
+                }
+                else
+                {
+                    if (UnsafeUtility.MemCmp(bytePtr1, bytePtr2, byteCount) != 0)
+                        return false;
+                }
             }
 
             // Compare unaligned suffix, if any.
@@ -157,10 +183,16 @@ namespace UnityEngine.Experimental.Input.Utilities
                 bytePtr2 += byteCount;
 
                 // We want the lowest remaining bits.
-                var mask = 0xFF >> (int)(8 - remainingBitCount);
+                var byteMask = 0xFF >> (int)(8 - remainingBitCount);
 
-                var byte1 = *bytePtr1 & mask;
-                var byte2 = *bytePtr2 & mask;
+                if (maskPtr != null)
+                {
+                    maskPtr += byteCount;
+                    byteMask &= *maskPtr;
+                }
+
+                var byte1 = *bytePtr1 & byteMask;
+                var byte2 = *bytePtr2 & byteMask;
 
                 if (byte1 != byte2)
                     return false;
@@ -169,9 +201,9 @@ namespace UnityEngine.Experimental.Input.Utilities
             return true;
         }
 
-        public static int ReadIntFromMultipleBits(IntPtr ptr, uint bitOffset, uint bitCount)
+        public static int ReadIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount)
         {
-            if (ptr == IntPtr.Zero)
+            if (ptr == null)
                 throw new ArgumentNullException("ptr");
             if (bitCount >= sizeof(int) * 8)
                 throw new ArgumentException("Trying to read more than 32 bits as int", "bitCount");
@@ -206,9 +238,9 @@ namespace UnityEngine.Experimental.Input.Utilities
             throw new NotImplementedException("Reading int straddling int boundary");
         }
 
-        public static void WriteIntFromMultipleBits(IntPtr ptr, uint bitOffset, uint bitCount, int value)
+        public static void WriteIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
         {
-            if (ptr == IntPtr.Zero)
+            if (ptr == null)
                 throw new ArgumentNullException("ptr");
             if (bitCount >= sizeof(int) * 8)
                 throw new ArgumentException("Trying to write more than 32 bits as int", "bitCount");
@@ -219,7 +251,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var byteValue = (byte)value;
                 byteValue >>= (int)bitOffset;
                 var mask = 0xFF >> (8 - (int)bitCount);
-                *((byte*)ptr) |= (byte)(byteValue & mask);
+                *(byte*)ptr |= (byte)(byteValue & mask);
                 return;
             }
 
@@ -229,7 +261,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var shortValue = (ushort)value;
                 shortValue >>= (int)bitOffset;
                 var mask = 0xFFFF >> (16 - (int)bitCount);
-                *((ushort*)ptr) |= (ushort)(shortValue & mask);
+                *(ushort*)ptr |= (ushort)(shortValue & mask);
                 return;
             }
 
@@ -239,26 +271,26 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var intValue = (uint)value;
                 intValue >>= (int)bitOffset;
                 var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
-                *((uint*)ptr) |= intValue & mask;
+                *(uint*)ptr |= intValue & mask;
                 return;
             }
 
             throw new NotImplementedException("Writing int straddling int boundary");
         }
 
-        public static void SetBitsInBuffer(IntPtr filterBuffer, InputControl control, bool value)
+        public static void SetBitsInBuffer(void* buffer, InputControl control, bool value)
         {
-            SetBitsInBuffer(filterBuffer, control.stateBlock.byteOffset, control.stateBlock.sizeInBits, value);
+            SetBitsInBuffer(buffer, control.stateBlock.byteOffset, control.stateBlock.sizeInBits, value);
         }
 
-        public static void SetBitsInBuffer(IntPtr filterBuffer, uint byteOffset, uint sizeInBits, bool value)
+        public static void SetBitsInBuffer(void* buffer, uint byteOffset, uint sizeInBits, bool value)
         {
-            if (filterBuffer == IntPtr.Zero)
-                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "filterBuffer");
+            if (buffer == null)
+                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "buffer");
 
             var sizeRemaining = sizeInBits;
 
-            var filterIter = (uint*)((filterBuffer.ToInt64() + (Int64)byteOffset));
+            var filterIter = (uint*)((byte*)buffer + byteOffset);
             while (sizeRemaining >= 32)
             {
                 *filterIter = value ? 0xFFFFFFFF : 0;
@@ -277,14 +309,15 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
-        public static bool HasAnyNonZeroBitsAfterMaskingWithBuffer(IntPtr eventBuffer, IntPtr maskPtr, uint offsetBytes, uint sizeInBits)
+        public static bool HasAnyNonZeroBitsAfterMaskingWithBuffer(void* buffer, void* maskPtr, uint offsetBytes, uint sizeInBits)
         {
-            if (eventBuffer == IntPtr.Zero || maskPtr == IntPtr.Zero)
+            ////REVIEW: this should be exceptions
+            if (buffer == null || maskPtr == null)
                 return false;
 
             var sizeRemaining = sizeInBits;
-            var eventIter = (uint*)eventBuffer.ToPointer();
-            var maskIter = (uint*)(new IntPtr(maskPtr.ToInt64() + (Int64)offsetBytes).ToPointer());
+            var eventIter = (uint*)buffer;
+            var maskIter = (uint*)(byte*)maskPtr + offsetBytes;
 
             while (sizeRemaining >= 32)
             {
@@ -297,13 +330,13 @@ namespace UnityEngine.Experimental.Input.Utilities
                 sizeRemaining -= 32;
             }
 
-            //Find the remaining bytes to check
-            // Mask it in the state iterator and noise
+            // Find the remaining bytes to check.
+            // Mask it in the state iterator and noise.
             var remainingState = *eventIter;
             var remainingMask = *maskIter;
 
-            var mask = ((1 >> (int)sizeRemaining) - 1);
-            if ((remainingState & (remainingMask & mask)) != 0)
+            var mask = (1 >> (int)sizeRemaining) - 1;
+            if ((remainingState & remainingMask & mask) != 0)
                 return true;
 
             return false;

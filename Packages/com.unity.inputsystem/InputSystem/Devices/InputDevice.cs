@@ -49,20 +49,6 @@ namespace UnityEngine.Experimental.Input
             get { return m_Description; }
         }
 
-        ////TODO: kill this and leave this entirely to user management
-        /// <summary>
-        /// The user currently associated with the input device or null if no user is.
-        /// </summary>
-        public string userId
-        {
-            get
-            {
-                RefreshConfigurationIfNeeded();
-                return m_UserId;
-            }
-            protected set { m_UserId = value; }
-        }
-
         ////REVIEW: this might be useful even at the control level
         /// <summary>
         /// Whether the device is currently enabled (i.e. sends and receives events).
@@ -246,20 +232,6 @@ namespace UnityEngine.Experimental.Input
             get { return (int)m_StateBlock.alignedSizeInBytes; }
         }
 
-        public InputNoiseFilter userInteractionFilter
-        {
-            get
-            {
-                return m_UserInteractionFilter;
-            }
-            set
-            {
-                m_UserInteractionFilter.Reset(this);
-                m_UserInteractionFilter = value;
-                m_UserInteractionFilter.Apply(this);
-            }
-        }
-
         /// <summary>
         /// Return the current state of the device as byte array.
         /// </summary>
@@ -272,7 +244,7 @@ namespace UnityEngine.Experimental.Input
             var array = new byte[numBytes];
             fixed(byte* arrayPtr = array)
             {
-                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
+                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr, numBytes);
             }
 
             return array;
@@ -283,7 +255,7 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        public override unsafe void WriteValueFromObjectInto(void* buffer, long bufferSize, object value)
         {
             throw new NotImplementedException();
         }
@@ -293,7 +265,7 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        public override bool HasValueChangeIn(IntPtr statePtr)
+        public override unsafe bool HasValueChangeIn(void* statePtr)
         {
             throw new NotImplementedException();
         }
@@ -362,14 +334,6 @@ namespace UnityEngine.Experimental.Input
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
         }
 
-        protected void RefreshUserId()
-        {
-            m_UserId = null;
-            var command = QueryUserIdCommand.Create();
-            if (ExecuteCommand(ref command) > 0)
-                m_UserId = command.ReadId();
-        }
-
         [Flags]
         internal enum DeviceFlags
         {
@@ -385,7 +349,6 @@ namespace UnityEngine.Experimental.Input
 
         internal DeviceFlags m_DeviceFlags;
         internal int m_Id;
-        internal string m_UserId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
@@ -417,8 +380,6 @@ namespace UnityEngine.Experimental.Input
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
-
-        internal InputNoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

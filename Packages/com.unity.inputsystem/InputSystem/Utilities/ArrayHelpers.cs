@@ -124,14 +124,14 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value)
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex = 0)
             where TValue : class
         {
             if (array == null)
                 return -1;
 
             var length = array.Length;
-            for (var i = 0; i < length; ++i)
+            for (var i = startIndex; i < length; ++i)
                 if (ReferenceEquals(array[i], value))
                     return i;
 

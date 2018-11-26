@@ -344,7 +344,7 @@ partial class CoreTests
             // means we don't need to adjust the pointer here.
             Debug.Assert(gamepad.stateBlock.byteOffset == 0);
 
-            gamepad.leftStick.WriteValueFromObjectInto(new IntPtr(tempBufferPtr), tempBufferSize, new Vector2(0.1234f, 0.5678f));
+            gamepad.leftStick.WriteValueFromObjectInto(tempBufferPtr, tempBufferSize, new Vector2(0.1234f, 0.5678f));
 
             var leftStickXPtr = (float*)(tempBufferPtr + gamepad.leftStick.x.stateBlock.byteOffset);
             var leftStickYPtr = (float*)(tempBufferPtr + gamepad.leftStick.y.stateBlock.byteOffset);

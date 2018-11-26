@@ -92,10 +92,6 @@ public class DemoGameTestFixture
         }
         DemoGame.platform = platform;
 
-        // Give us a fresh scene.
-        yield return SceneManager.LoadSceneAsync("Assets/Demo/Demo.unity", LoadSceneMode.Single);
-        game = GameObject.Find("DemoGame").GetComponent<DemoGame>();
-
         // If there's a "Platform" property on the test or no specific "Device" property, add the default
         // set of devices for the current platform.
         if (testProperties.ContainsKey("Platform") || !testProperties.ContainsKey("Device"))
@@ -122,6 +118,14 @@ public class DemoGameTestFixture
                     gamepad = ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadHID");
                     xboxGamepad = (XInputController)InputSystem.AddDevice("XInputController");
                     ////TODO: joystick
+                    break;
+
+                case RuntimePlatform.PS4:
+                    ps4Gamepad = (DualShockGamepad)InputSystem.AddDevice("DualShockGamepadPS4");
+                    break;
+
+                case RuntimePlatform.XboxOne:
+                    xboxGamepad = (XInputController)InputSystem.AddDevice("XboxOneGamepad");
                     break;
 
                 ////TODO: other platforms
@@ -197,6 +201,13 @@ public class DemoGameTestFixture
             ////TODO: create steam test fixture
             steamController = InputSystem.AddDevice("SteamDemoController");
         }
+
+        // Give us a fresh scene.
+        yield return SceneManager.LoadSceneAsync("Assets/Demo/Demo.unity", LoadSceneMode.Single);
+        game = GameObject.Find("DemoGame").GetComponent<DemoGame>();
+
+        ////FIXME: for some reason the Start() function doesn't get called during tests.... WTF?
+        game.Start();
     }
 
     [TearDown]

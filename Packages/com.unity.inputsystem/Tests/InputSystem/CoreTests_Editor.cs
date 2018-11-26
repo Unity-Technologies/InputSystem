@@ -13,6 +13,7 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
 #pragma warning disable CS0649
@@ -143,36 +144,6 @@ partial class CoreTests
 
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
-    {
-        InputNoiseFilter filter = new InputNoiseFilter
-        {
-            elements = new InputNoiseFilter.FilterElement[]
-            {
-                new InputNoiseFilter.FilterElement
-                {
-                    controlIndex = 0,
-                    type = InputNoiseFilter.ElementType.EntireControl
-                }
-            }
-        };
-
-        var device = InputSystem.AddDevice<Gamepad>();
-        device.userInteractionFilter = filter;
-
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
-
-        var newDevice = InputSystem.devices.First(x => x is Gamepad);
-
-        Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
-        Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
-        Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
-        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(InputNoiseFilter.ElementType.EntireControl));
     }
 
     [Test]
@@ -514,6 +485,28 @@ partial class CoreTests
         Assert.That(code, Contains.Substring("public InputAction @_1thing"));
     }
 
+    // Can take any given registered layout and generate a cross-platform C# struct for it
+    // that collects all the control values from both proper and optional controls (based on
+    // all derived layouts).
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_CanGenerateStateStructForLayout()
+    {
+        Assert.Fail();
+    }
+
+    // Can take any given registered layout and generate a piece of code that takes as input
+    // memory in the state format of the layout and generates as output state in the cross-platform
+    // C# struct format.
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_CanGenerateStateStructConversionCodeForLayout()
+    {
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_CanRenameAction()
@@ -663,6 +656,61 @@ partial class CoreTests
         Assert.That(matchers, Has.Count.EqualTo(2));
         Assert.That(matchers[0], Is.EqualTo(new InputDeviceMatcher().WithProduct("A")));
         Assert.That(matchers[1], Is.EqualTo(new InputDeviceMatcher().WithProduct("B")));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanListOptionalControlsForLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""Base"",
+                ""controls"" : [
+                    { ""name"" : ""controlFromBase"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        const string firstDerived = @"
+            {
+                ""name"" : ""FirstDerived"",
+                ""extend"" : ""Base"",
+                ""controls"" : [
+                    { ""name"" : ""controlFromFirstDerived"", ""layout"" : ""Axis"" }
+                ]
+            }
+        ";
+        const string secondDerived = @"
+            {
+                ""name"" : ""SecondDerived"",
+                ""extend"" : ""FirstDerived"",
+                ""controls"" : [
+                    { ""name"" : ""controlFromSecondDerived"", ""layout"" : ""Vector2"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(firstDerived);
+        InputSystem.RegisterLayout(secondDerived);
+
+        var optionalControlsForBase =
+            EditorInputControlLayoutCache.GetOptionalControlsForLayout("Base").ToList();
+        var optionalControlsForFirstDerived =
+            EditorInputControlLayoutCache.GetOptionalControlsForLayout("FirstDerived").ToList();
+        var optionalControlsForSecondDerived =
+            EditorInputControlLayoutCache.GetOptionalControlsForLayout("SecondDerived").ToList();
+
+        Assert.That(optionalControlsForBase, Has.Count.EqualTo(2));
+        Assert.That(optionalControlsForBase[0].name, Is.EqualTo(new InternedString("controlFromFirstDerived")));
+        Assert.That(optionalControlsForBase[0].layout, Is.EqualTo(new InternedString("Axis")));
+        Assert.That(optionalControlsForBase[1].name, Is.EqualTo(new InternedString("controlFromSecondDerived")));
+        Assert.That(optionalControlsForBase[1].layout, Is.EqualTo(new InternedString("Vector2")));
+
+        Assert.That(optionalControlsForFirstDerived, Has.Count.EqualTo(1));
+        Assert.That(optionalControlsForFirstDerived[0].name, Is.EqualTo(new InternedString("controlFromSecondDerived")));
+        Assert.That(optionalControlsForFirstDerived[0].layout, Is.EqualTo(new InternedString("Vector2")));
+
+        Assert.That(optionalControlsForSecondDerived, Is.Empty);
     }
 
     private class TestEditorWindow : EditorWindow

@@ -31,13 +31,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int)); }
         }
 
-        public IntPtr state
+        public void* state
         {
             get
             {
                 fixed(byte* data = stateData)
                 {
-                    return new IntPtr(data);
+                    return data;
                 }
             }
         }
@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             var stateFormat = device.m_StateBlock.format;
             var stateSize = device.m_StateBlock.alignedSizeInBytes;
             var stateOffset = device.m_StateBlock.byteOffset;
-            var statePtr = (byte*)device.currentStatePtr.ToPointer() + (int)stateOffset;
+            var statePtr = (byte*)device.currentStatePtr + (int)stateOffset;
             var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
             stateEventPtr->stateFormat = stateFormat;
-            UnsafeUtility.MemCpy(stateEventPtr->state.ToPointer(), statePtr, stateSize);
+            UnsafeUtility.MemCpy(stateEventPtr->state, statePtr, stateSize);
 
             eventPtr = stateEventPtr->ToEventPtr();
             return buffer;

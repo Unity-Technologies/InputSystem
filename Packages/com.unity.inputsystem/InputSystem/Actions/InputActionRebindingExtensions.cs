@@ -767,7 +767,7 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.OnEventHooked;
             }
 
-            private void OnEvent(InputEventPtr eventPtr)
+            private unsafe void OnEvent(InputEventPtr eventPtr)
             {
                 // Ignore if not a state event.
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
@@ -787,8 +787,8 @@ namespace UnityEngine.Experimental.Input
                     var control = controls[i];
 
                     // Skip controls that have no state in the event.
-                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
-                    if (statePtr == IntPtr.Zero)
+                    var statePtr = (void*)control.GetStatePtrFromStateEvent(eventPtr);
+                    if (statePtr == null)
                         continue;
 
                     // If the control that cancels has been actuated, abort the operation now.

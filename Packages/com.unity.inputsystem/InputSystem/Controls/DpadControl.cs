@@ -66,15 +66,7 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override bool HasSignificantChange(InputEventPtr eventPtr)
-        {
-            Vector2 value;
-            if (ReadValueFrom(eventPtr, out value))
-                return Vector2.SqrMagnitude(value - ReadDefaultValue()) > float.Epsilon;
-            return false;
-        }
-
-        public override Vector2 ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe Vector2 ReadUnprocessedValueFrom(void* statePtr)
         {
             var upIsPressed = up.ReadValueFrom(statePtr) >= up.pressPointOrDefault;
             var downIsPressed = down.ReadValueFrom(statePtr) >= down.pressPointOrDefault;
@@ -84,7 +76,7 @@ namespace UnityEngine.Experimental.Input.Controls
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector2 value)
+        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, Vector2 value)
         {
             throw new NotImplementedException();
         }

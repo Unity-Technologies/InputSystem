@@ -18,12 +18,12 @@ public class SimpleController_UsingActionQueue : MonoBehaviour
 
     private Vector2 m_Rotation;
 
-    private InputActionQueue m_ActionQueue;
+    private InputActionTrace m_ActionTrace;
 
     public void Awake()
     {
-        m_ActionQueue = new InputActionQueue();
-        controls.gameplay.Get().actionTriggered += m_ActionQueue.RecordAction;
+        m_ActionTrace = new InputActionTrace();
+        controls.gameplay.Get().actionTriggered += m_ActionTrace.RecordAction;
     }
 
     public void OnEnable()
@@ -44,7 +44,7 @@ public class SimpleController_UsingActionQueue : MonoBehaviour
 
     public void Update()
     {
-        foreach (var eventPtr in m_ActionQueue)
+        foreach (var eventPtr in m_ActionTrace)
         {
             var phase = eventPtr.phase;
             var action = eventPtr.action;
@@ -85,7 +85,7 @@ public class SimpleController_UsingActionQueue : MonoBehaviour
                 m_Move = eventPtr.ReadValue<Vector2>();
             }
         }
-        m_ActionQueue.Clear();
+        m_ActionTrace.Clear();
 
         Move(m_Move);
         Look(m_Look);
