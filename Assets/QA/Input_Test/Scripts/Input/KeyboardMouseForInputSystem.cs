@@ -21,6 +21,8 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
 
     private const int MOUSE_MOVE_DEADZONE = 0;
 
+    private Action<char> m_RecordAction;
+
     public void Start()
     {
         m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>");
@@ -37,7 +39,15 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         if (m_keyboardAction != null) m_keyboardAction.Enable();
         if (m_mouseAction != null)    m_mouseAction.Enable();
 
-        InputSystem.GetDevice<Keyboard>().onTextInput += new Action<char>(RecordKey);
+        if(m_RecordAction == null)
+        {
+            Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
+            if (keyboard != null)
+            {
+                m_RecordAction = new Action<char>(RecordKey);
+                keyboard.onTextInput += m_RecordAction;
+            }           
+        }       
     }
 
     private void OnDisable()
@@ -45,11 +55,29 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         m_keyboardAction.Disable();
         m_mouseAction.Disable();
 
-        InputSystem.GetDevice<Keyboard>().onTextInput -= new Action<char>(RecordKey);
+        if(m_RecordAction != null)
+        {
+            Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
+            if (keyboard != null)
+            {
+                keyboard.onTextInput -= m_RecordAction;
+                m_RecordAction = null;
+            }
+        }  
     }
 
     public void Update()
     {
+        if (m_RecordAction == null)
+        {
+            Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
+            if (keyboard != null)
+            {
+                m_RecordAction = new Action<char>(RecordKey);
+                keyboard.onTextInput += m_RecordAction;
+            }
+        }
+
         // Show mouse actions
         var mouse = InputSystem.GetDevice<Mouse>();
         if (mouse == null)

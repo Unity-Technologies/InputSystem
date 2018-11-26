@@ -55,19 +55,26 @@ public class InputUIPicker : MonoBehaviour
     // !!!!!TEMPORARY: Before composite input is implemented
     void Update()
     {
-        if (m_currentKeyboard.leftCtrlKey.isPressed || m_currentKeyboard.rightCtrlKey.isPressed)
+        if(m_currentKeyboard == null)
+            m_currentKeyboard = InputSystem.GetDevice<Keyboard>();
+
+        if (m_currentKeyboard != null)
         {
-            if (m_currentKeyboard.digit1Key.isPressed)
-                SwitchToInputMethod(0);
-            else if (m_currentKeyboard.digit2Key.isPressed)
-                SwitchToInputMethod(1);
-            else if (m_currentKeyboard.digit3Key.isPressed)
-                SwitchToInputMethod(2);
-            else if (m_currentKeyboard.digit4Key.isPressed)
-                SwitchToInputMethod(3);
-            else if (m_currentKeyboard.digit5Key.isPressed)
-                SwitchToInputMethod(4);
+            if (m_currentKeyboard.leftCtrlKey.isPressed || m_currentKeyboard.rightCtrlKey.isPressed)
+            {
+                if (m_currentKeyboard.digit1Key.isPressed)
+                    SwitchToInputMethod(0);
+                else if (m_currentKeyboard.digit2Key.isPressed)
+                    SwitchToInputMethod(1);
+                else if (m_currentKeyboard.digit3Key.isPressed)
+                    SwitchToInputMethod(2);
+                else if (m_currentKeyboard.digit4Key.isPressed)
+                    SwitchToInputMethod(3);
+                else if (m_currentKeyboard.digit5Key.isPressed)
+                    SwitchToInputMethod(4);
+            }
         }
+        
     }
 
     public void SwitchToInputMethod(Dropdown picker)
