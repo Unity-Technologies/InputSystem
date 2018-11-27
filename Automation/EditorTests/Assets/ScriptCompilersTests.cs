@@ -16,17 +16,10 @@ using ieu = UnityEditorInternal.InternalEditorUtility;
 
 public class ScriptCompilersTests
 { 
-
     [Test]
     public void DoesInputSystemSourceCodeCompileWithoutWarningsAndErrors()
     {
         var messages = CompileCSharp();
-
-        foreach(var message in messages)
-        {
-            Debug.Log(message.message);
-        }
-
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
     }
@@ -41,8 +34,6 @@ public class ScriptCompilersTests
             return Compile(compiler, island);
         }
     }
-
-
 
     static MonoIsland CreateMonoIsland(SupportedLanguage language)
     {
@@ -62,7 +53,11 @@ public class ScriptCompilersTests
 
         var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
 
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         references.Add("..\\..\\UnityInstall\\Unity.app\\Contents\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll"); 
+#elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        references.Add("..\\..\\UnityInstall\\Editor\\Data\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll");
+#endif 
 
         foreach (var asm in unityAssemblies)
         {
