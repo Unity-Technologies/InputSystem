@@ -159,7 +159,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_FocusSet = true;
                 m_SearchField.SetFocus();
-                GUIUtility.keyboardControl = m_SearchField.searchFieldControlID;
             }
 
             using (new EditorGUI.DisabledScope(isSearchFieldDisabled))

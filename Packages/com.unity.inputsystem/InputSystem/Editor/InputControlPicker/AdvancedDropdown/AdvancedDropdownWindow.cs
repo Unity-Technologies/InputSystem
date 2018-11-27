@@ -134,6 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // for the searchfield in its AdvancedDropdownGUI so here we ensure to clean up. This fixes the issue that
             // EditorGUI.IsEditingTextField() was returning true after e.g the Add Component Menu closes
             EditorGUIUtility.editingTextField = false;
+            GUIUtility.keyboardControl = 0;            
         }
 
         public static T CreateAndInit<T>(Rect rect, AdvancedDropdownState state) where T : AdvancedDropdownWindow

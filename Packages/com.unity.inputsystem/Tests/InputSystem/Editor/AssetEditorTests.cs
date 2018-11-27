@@ -185,4 +185,18 @@ public class AssetEditorTests
         e.commandName = "Paste";
         assetWindow.SendEvent(e);
     }
+
+    [UnityTest]
+    public IEnumerator PickerWillNotThrowError_WhenEscIsPressed()
+    {
+        var picker = new InputControlPickerDropdown(new AdvancedDropdownState(), null, a => { });
+        picker.Show(Rect.zero);
+
+        yield return null;
+        
+        Event e = new Event();
+        e.keyCode = KeyCode.Escape;
+        e.type = EventType.KeyDown;
+        picker.m_WindowInstance.SendEvent(e);
+    }
 }
