@@ -6,7 +6,7 @@ using UnityEngine;
 namespace UnityEngine.Experimental.Input.Editor
 {
     [Serializable]
-    public class AdvancedDropdownState
+    internal class AdvancedDropdownState
     {
         [Serializable]
         private class AdvancedDropdownItemState

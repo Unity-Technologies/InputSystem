@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    public abstract class AdvancedDropdown
+    internal abstract class AdvancedDropdown
     {
         private Vector2 m_MinimumSize;
         protected Vector2 minimumSize

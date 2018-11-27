@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Editor.Lists;
 using UnityEngine.Experimental.Input.Utilities;
 

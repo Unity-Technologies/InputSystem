@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    public class AdvancedDropdownItem : IComparable
+    internal class AdvancedDropdownItem : IComparable
     {
         string m_Name;
         Texture2D m_Icon;

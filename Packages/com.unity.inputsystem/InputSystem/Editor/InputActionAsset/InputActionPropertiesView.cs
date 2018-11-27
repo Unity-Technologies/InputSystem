@@ -1,12 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using NUnit.Framework;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.Editor.Lists;
-using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
