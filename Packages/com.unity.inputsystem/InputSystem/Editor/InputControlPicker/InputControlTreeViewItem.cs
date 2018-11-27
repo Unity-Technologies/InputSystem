@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public override string controlPathWithDevice
         {
-            get { return string.Format("{0}/{1}", m_Device, m_ControlPath); }
+            get { return string.Format("{0}/{{{1}}}", m_Device, m_ControlPath); }
         }
 
         public UsageTreeViewItem(KeyValuePair<string, IEnumerable<string>> usage) : base(usage.Key)
