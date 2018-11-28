@@ -3246,6 +3246,7 @@ partial class CoreTests
         Assert.That(gamepadDeviceReset, Is.True);
         Assert.That(pointerDeviceReset, Is.True);
     }
+
 #endif
 
     [Test]

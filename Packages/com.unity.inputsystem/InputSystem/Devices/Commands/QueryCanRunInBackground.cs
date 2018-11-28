@@ -4,8 +4,12 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    /// <summary>
+    /// Queries to see if this device is able to continue to send updates and state changes when the application is not if focus.
+    /// </summary>
+    /// <seealso cref="InputDevice.canRunInBackground"/>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(bool))]
-    internal unsafe struct QueryCanRunInBackground : IInputDeviceCommandInfo
+    public unsafe struct QueryCanRunInBackground : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('Q', 'R', 'I', 'B'); } }
 

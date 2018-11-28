@@ -112,11 +112,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (value == null)
+#if UNITY_2019_1_OR_NEWER
                     Application.focusChanged -= OnFocusChanged;
                 else if (m_FocusChangedMethod == null)
                     Application.focusChanged += OnFocusChanged;
-
-                m_FocusChangedMethod = value;
+#endif
+                    m_FocusChangedMethod = value;
             }
         }
 
@@ -186,22 +187,22 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
             const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #else
+#else
             Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif
+#endif
         }
 
         public void SendAnalyticsEvent(string name, object data)
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorAnalytics.SendEventWithLimit(name, data);
-            #else
+#else
             Analytics.Analytics.SendEvent(name, data);
-            #endif
+#endif
         }
 
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
+#endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

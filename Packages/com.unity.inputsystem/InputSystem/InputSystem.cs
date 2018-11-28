@@ -1231,26 +1231,26 @@ namespace UnityEngine.Experimental.Input
         }
 
 #if UNITY_2018_3_OR_NEWER
-        private const InputUpdateType ms_runInBackgroundMask = (InputUpdateType)(1 << 31);
+        private const InputUpdateType s_runInBackgroundMask = (InputUpdateType)(1 << 31);
 
         /// <summary>
         /// Tells the Input System to run even when the application is in the backgrond, and continue to trigger events and actions regardless of current focus state
         /// </summary>
-        /// /// <remarks>
+        /// <remarks>
         /// Off by default, this does not work on all platforms and devices, only those that can recieve their own input data while not in focus.
         /// </remarks>
         public static bool runInBackground
         {
-            get { return (s_Manager.updateMask & ms_runInBackgroundMask) != 0; }
+            get { return (s_Manager.updateMask & s_runInBackgroundMask) != 0; }
             set
             {
                 if (runInBackground != value)
                 {
                     InputUpdateType currentUpdateMask = s_Manager.updateMask;
                     if (value)
-                        currentUpdateMask |= ms_runInBackgroundMask;
+                        currentUpdateMask |= s_runInBackgroundMask;
                     else
-                        currentUpdateMask &= ~ms_runInBackgroundMask;
+                        currentUpdateMask &= ~s_runInBackgroundMask;
 
                     s_Manager.updateMask = currentUpdateMask;
                 }
@@ -1648,8 +1648,8 @@ namespace UnityEngine.Experimental.Input
                 newUpdateMask |= InputUpdateType.BeforeRender;
 
 #if UNITY_2018_3_OR_NEWER
-            if ((updateMask & ms_runInBackgroundMask) == ms_runInBackgroundMask)
-                newUpdateMask |= ms_runInBackgroundMask;
+            if ((updateMask & s_runInBackgroundMask) == s_runInBackgroundMask)
+                newUpdateMask |= s_runInBackgroundMask;
 #endif //#if UNITY_2018_3_OR_NEWER
 
             updateMask = newUpdateMask;

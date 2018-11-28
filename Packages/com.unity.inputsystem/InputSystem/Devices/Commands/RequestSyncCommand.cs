@@ -10,8 +10,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <remarks>
     /// This triggers an event from the underlying device that represents the whole, current state.
     /// </remarks>
+    /// <seealso cref="RequestResetCommand"/>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
-    internal unsafe struct RequestSyncCommand : IInputDeviceCommandInfo
+    public unsafe struct RequestSyncCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('S', 'Y', 'N', 'C'); } }
 
