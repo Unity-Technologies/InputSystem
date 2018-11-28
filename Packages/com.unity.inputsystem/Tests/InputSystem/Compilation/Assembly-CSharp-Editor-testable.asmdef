@@ -1,10 +1,10 @@
 {
     "name": "Assembly-CSharp-Editor-testable",
     "references": [],
-    "optionalUnityReferences": [],
+    "optionalUnityReferences": [ "TestAssemblies" ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

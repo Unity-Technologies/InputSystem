@@ -16,12 +16,22 @@ using ieu = UnityEditorInternal.InternalEditorUtility;
 
 public class ScriptCompilersTests
 { 
+#if UNITY_2018_3_OR_NEWER && (UNITY_EDITOR_OSX || UNITY_EDITOR_WIN)
+
     [Test]
-    public void DoesInputSystemSourceCodeCompileWithoutWarningsAndErrors()
+    public void InputSystemSourceCodeCompilesWithoutWarnings()
     {
         var messages = CompileCSharp();
-        Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
+        Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
+    }
+
+    [Test]
+    public void InputSystemSourceCodeCompilesWithoutErrors()
+    {
+        var messages = CompileCSharp();
+        Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
+        Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
     }
 
     static CompilerMessage[] CompileCSharp()
@@ -37,7 +47,7 @@ public class ScriptCompilersTests
 
     static MonoIsland CreateMonoIsland(SupportedLanguage language)
     {
-        var inputFilePath = Path.Combine("../../Packages/com.unity.inputsystem/InputSystem");
+        var inputFilePath = "Packages/com.unity.inputsystem/InputSystem";
         var outputAssemblyPath = Path.GetTempFileName();
 
         var options = EditorScriptCompilationOptions.BuildingForEditor;
@@ -50,15 +60,12 @@ public class ScriptCompilersTests
         references.Add(ieu.GetEngineCoreModuleAssemblyPath());
         references.Add(ieu.GetEditorAssemblyPath());
         references.AddRange(ModuleUtils.GetAdditionalReferencesForUserScripts());
-
-        var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
-
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-        references.Add("..\\..\\UnityInstall\\Unity.app\\Contents\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll"); 
-#elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        references.Add("..\\..\\UnityInstall\\Editor\\Data\\UnityExtensions\\Unity\\GUISystem\\UnityEngine.UI.dll");
+#if UNITY_EDITOR_OSX
+        references.Add(Path.Combine(EditorApplication.applicationContentsPath, "UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll"));
+#elif UNITY_EDITOR_WIN
+        references.Add(Path.Combine(Path.GetDirectoryName(EditorApplication.applicationPath), "Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll"));
 #endif 
-
+        var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
         foreach (var asm in unityAssemblies)
         {
             references.Add(asm.Path);
@@ -66,7 +73,13 @@ public class ScriptCompilersTests
 
         var apiCompatibilityLevel = PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup);
 
-        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, outputAssemblyPath));
+        var scriptAssembly = new ScriptAssembly
+        {
+            Filename = AssetPath.GetFileName(outputAssemblyPath),
+            Flags = AssemblyFlags.None
+        };
+
+        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, scriptAssembly));
 
         var sources = new List<string>();
         sources.AddRange(Directory.GetFiles(inputFilePath, "*.cs", SearchOption.AllDirectories));
@@ -96,4 +109,5 @@ public class ScriptCompilersTests
 
         return messages;
     }
+#endif
 }
