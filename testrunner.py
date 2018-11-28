@@ -65,8 +65,6 @@ testPlatform = args.testPlatform
 
 kRootRepoDirectory = os.path.dirname(os.path.realpath(__file__))
 kProjectPath = os.path.dirname(os.path.realpath(__file__))
-if (args.warningscheck):
-    kProjectPath = os.path.join(kProjectPath, "Automation\EditorTests")
 
 kTestArtifactPath = os.path.join(kRootRepoDirectory, "TestArtifacts")
 kInstallPath = os.path.join(kRootRepoDirectory, "UnityInstall")

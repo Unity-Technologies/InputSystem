@@ -1,33 +1,12 @@
 stages:
-  - check-warnings
   - test-editmode-legacy
   - test-playmode-legacy
   - test-editmode-latest
   - test-playmode-latest
 
-warnings:2018.3:
-  stage: check-warnings
-  artifacts:
-    paths:
-      - "TestArtifacts"
-    expire_in: 1 week
-    when: always
-  tags:
-    - buildfarm
-    - darwin
-  before_script:
-    - curl -o /Library/Application\ Support/Unity/Unity_lic.ulf http://172.28.214.140/upload/licence/Unity_lic.ulf
-  allow_failure: true
-  script:
-    - python testrunner.py Editor --version=2018.3 --runtime=latest --testPlatform=playmode --warningscheck
-  after_script:
-    - /opt/post_build_script.sh
-
 test:windows:2018-2-net20-editmode:
   stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
-  dependencies:
-    - warnings:2018.3
   artifacts:
     paths:
       - "TestArtifacts"
@@ -45,8 +24,6 @@ test:windows:2018-2-net20-editmode:
 test:windows:2018-3-net20-editmode:
   stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
-  dependencies:
-    - warnings:2018.3
   artifacts:
     paths:
       - "TestArtifacts"
@@ -64,8 +41,6 @@ test:windows:2018-3-net20-editmode:
 test:windows:2019-1-net20-editmode:
   stage: test-editmode-legacy
   image: 'build-pipeline/addressables_win:stable'
-  dependencies:
-    - warnings:2018.3
   artifacts:
     paths:
       - "TestArtifacts"
@@ -83,8 +58,6 @@ test:windows:2019-1-net20-editmode:
 
 test:osx:2018-2-net20-editmode:
   stage: test-editmode-legacy
-  dependencies:
-    - warnings:2018.3
   artifacts:
     paths:
       - "TestArtifacts"
@@ -103,8 +76,6 @@ test:osx:2018-2-net20-editmode:
 
 test:osx:2018-3-net20-editmode:
   stage: test-editmode-legacy
-  dependencies:
-    - warnings:2018.3
   artifacts:
     paths:
       - "TestArtifacts"
@@ -123,8 +94,6 @@ test:osx:2018-3-net20-editmode:
     
 test:osx:2019-1-net20-editmode:
   stage: test-editmode-legacy
-  dependencies:
-    - warnings:2018.3
   artifacts:
     paths:
       - "TestArtifacts"
