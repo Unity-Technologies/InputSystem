@@ -141,7 +141,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             {
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
                 extendsLayout = parentLayout,
-                updateBeforeRender = true
+                updateBeforeRender = true,
             };
 
             var inherittedLayout = InputSystem.TryLoadLayout(parentLayout);

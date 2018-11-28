@@ -113,13 +113,17 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 return null;
 
             // Determine base layout.
+            Type baseType = null;
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                /*
                 ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
                 if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
+                {
                     baseLayout = "Joystick";
+                    baseType = typeof(Joystick);
+                }
+                /*
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
                     baseLayout = "Gamepad";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Mouse)
@@ -155,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
-            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor};
+            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, parentLayout = baseLayout, deviceType = baseType ?? typeof(HID)};
             InputSystem.RegisterLayoutBuilder(() => layout.Build(),
                 layoutName, baseLayout, deviceMatcher);
 
@@ -319,12 +323,15 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         private class HIDLayoutBuilder
         {
             public HIDDeviceDescriptor hidDescriptor;
+            public string parentLayout;
+            public Type deviceType;
 
             public InputControlLayout Build()
             {
                 var builder = new InputControlLayout.Builder
                 {
-                    type = typeof(HID),
+                    type = deviceType,
+                    extendsLayout = parentLayout,
                     stateFormat = new FourCC('H', 'I', 'D'),
                 };
 
