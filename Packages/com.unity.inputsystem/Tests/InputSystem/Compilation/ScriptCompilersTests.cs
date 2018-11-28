@@ -23,14 +23,12 @@ public class ScriptCompilersTests
     {
         var messages = CompileCSharp();
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
-        Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
     }
 
     [Test]
     public void InputSystemSourceCodeCompilesWithoutErrors()
     {
         var messages = CompileCSharp();
-        Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
         Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
     }
 
