@@ -124,11 +124,13 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
+#if UNITY_2019_1_OR_NEWER
                 var command = QueryCanRunInBackground.Create();
                 if (ExecuteCommand(ref command) >= 0)
                 {
                     return command.canRunInBackground;
                 }
+#endif
                 return false;
             }
         }
