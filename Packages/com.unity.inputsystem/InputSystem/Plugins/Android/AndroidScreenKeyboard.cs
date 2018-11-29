@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     public class AndroidScreenKeyboard : ScreenKeyboard
     {
@@ -24,11 +24,15 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private AndroidJavaObject m_KeyboardObject;
+        // Allow only one instance of java keyboard, because only one can be shown at the time
+        private static AndroidJavaObject m_KeyboardObject;
 
         public override void Show(ScreenKeyboardShowParams showParams)
         {
-            m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard",
+            if (m_KeyboardObject == null)
+                m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard");
+
+            m_KeyboardObject.Call("show", 
                 new ScreenKeyboardCallbacks(this),
                 (int)showParams.type,
                 showParams.initialText,
@@ -37,15 +41,22 @@ namespace UnityEngine.Experimental.Input
                 showParams.multiline,
                 showParams.secure,
                 showParams.alert);
-            m_KeyboardObject.Call("show");
         }
 
         public override void Hide()
         {
             if (m_KeyboardObject != null)
-            {
                 m_KeyboardObject.Call("dismiss");
-                m_KeyboardObject = null;
+        }
+
+        public override bool visible
+        {
+            get
+            {
+            // TODO CHECK
+                if (m_KeyboardObject != null)
+                    return m_KeyboardObject.Call<bool>("isVisible");
+                return false;
             }
         }
     }
