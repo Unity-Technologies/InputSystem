@@ -5,6 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 
+#if UNITY_ANDROID
+using UnityEngine.Experimental.Input.Plugins.Android;
+#elif UNITY_WSA
+using UnityEngine.Experimental.Input.Plugins.WSA;
+#endif
 
 public class ScreenKeyboardTest : MonoBehaviour
 {
@@ -19,8 +24,9 @@ public class ScreenKeyboardTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        m_ScreenKeyboard = InputSystem.AddDevice<AndroidScreenKeyboard>();
+        m_ScreenKeyboard = ScreenKeyboard.GetInstance();
         m_KeyboardTypeDropDown.ClearOptions();
+    
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
         {
