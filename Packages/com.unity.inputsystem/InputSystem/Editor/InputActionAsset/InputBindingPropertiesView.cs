@@ -35,12 +35,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_GroupsProperty;
 
         private SerializedProperty m_BindingProperty;
+        private SerializedProperty m_PathProperty;
+
 
         private Action m_ReloadTree;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
-        private AdvancedDropdownState m_ControlPickerState;
-        private InputControlPickerDropdown m_InputControlPickerDropdown;
+        private InputControlPickerState m_ControlPickerState;
+        private InputControlPickerPopup m_InputControlPickerPopup;
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
         private bool m_ProcessorsFoldout = true;
@@ -48,7 +50,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent s_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
         private static readonly GUIContent s_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
         private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
-        private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
         private static readonly GUIContent s_UseInSchemesGui = EditorGUIUtility.TrTextContent("Use in control scheme");
 
         private bool m_ManualPathEditMode;
@@ -71,10 +72,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree,
-                                          AdvancedDropdownState controlPickerState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
+                                          InputControlPickerState controlPickerState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
         {
             m_ControlPickerState = controlPickerState;
             m_BindingProperty = bindingProperty;
+            m_PathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
             m_ReloadTree = reloadTree;
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("m_Processors");
@@ -87,6 +89,15 @@ namespace UnityEngine.Experimental.Input.Editor
             m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
             showPathAndControlSchemeSection = true;
+
+            m_InputControlPickerPopup = new InputControlPickerPopup(m_PathProperty,
+                m_ControlPickerState,
+                s =>
+                {
+                    m_ManualPathEditMode = false;
+                    m_ReloadTree();
+                },
+                DrawInteractivePickButton);
         }
 
         private void ApplyModifiers()
@@ -153,14 +164,23 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.indentLevel++;
             if (m_GeneralFoldout)
             {
-                var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
-                DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
-                    s =>
+                if (m_Toolbar != null)
+                {
+                    if (m_Toolbar.selectedDevice != null)
                     {
-                        m_ManualPathEditMode = false;
-                        OnBindingModified(s);
-                    });
+                        m_InputControlPickerPopup.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
+                    }
+                    else
+                    {
+                        m_InputControlPickerPopup.SetDeviceFilter(m_Toolbar.allDevices);
+                    }
+                    if (m_ExpectedControlLayout != null)
+                    {
+                        m_InputControlPickerPopup.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);
+                    }
+                }
 
+                m_InputControlPickerPopup.DrawBindingGUI(ref m_ManualPathEditMode);
                 DrawUseInControlSchemes();
             }
             EditorGUI.indentLevel--;
@@ -194,76 +214,76 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
         }
 
-        ////TODO: interactive picker; if more than one control makes it through the filters, present list of
-        ////      candidates for user to choose from
-
-        ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
-        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, AdvancedDropdownState pickerState, Action<SerializedProperty> onModified)
-        {
-            EditorGUILayout.BeginHorizontal();
-
-            var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
-            var labelRect = lineRect;
-            labelRect.width = 60;
-            EditorGUI.LabelField(labelRect, s_BindingGui);
-            lineRect.x += 65;
-            lineRect.width -= 65;
-
-            var bindingTextRect = lineRect;
-            var editButtonRect = lineRect;
-            var interactivePickButtonRect = lineRect;
-
-            bindingTextRect.width -= 42;
-            editButtonRect.x += bindingTextRect.width + 21;
-            editButtonRect.width = 21;
-            editButtonRect.height = 15;
-            interactivePickButtonRect.x += bindingTextRect.width;
-            interactivePickButtonRect.width = 21;
-            interactivePickButtonRect.height = 15;
-
-            var path = pathProperty.stringValue;
-            ////TODO: this should be cached; generates needless GC churn
-            var displayName = InputControlPath.ToHumanReadableString(path);
-
-            if (manualPathEditMode || (!string.IsNullOrEmpty(path) && string.IsNullOrEmpty(displayName)))
-            {
-                EditorGUI.BeginChangeCheck();
-                path = EditorGUI.DelayedTextField(bindingTextRect, path);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    pathProperty.stringValue = path;
-                    pathProperty.serializedObject.ApplyModifiedProperties();
-                    onModified(pathProperty);
-                }
-                DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
-                if (GUI.Button(editButtonRect, "˅"))
-                {
-                    bindingTextRect.x += editButtonRect.width;
-                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerState, onModified);
-                }
-            }
-            else
-            {
-                // Dropdown that shows binding text and allows opening control picker.
-                if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
-                {
-                    ////TODO: pass expectedControlLayout filter on to control picker
-                    ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
-                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerState, onModified);
-                }
-
-                // Button to bind interactively.
-                DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
-
-                // Button that switches binding into text edit mode.
-                if (GUI.Button(editButtonRect, "...", EditorStyles.miniButton))
-                {
-                    manualPathEditMode = true;
-                }
-            }
-
-            EditorGUILayout.EndHorizontal();
-        }
+//        ////TODO: interactive picker; if more than one control makes it through the filters, present list of
+//        ////      candidates for user to choose from
+//
+//        ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
+//        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, AdvancedDropdownState pickerState, Action<SerializedProperty> onModified)
+//        {
+//            EditorGUILayout.BeginHorizontal();
+//
+//            var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
+//            var labelRect = lineRect;
+//            labelRect.width = 60;
+//            EditorGUI.LabelField(labelRect, s_BindingGui);
+//            lineRect.x += 65;
+//            lineRect.width -= 65;
+//
+//            var bindingTextRect = lineRect;
+//            var editButtonRect = lineRect;
+//            var interactivePickButtonRect = lineRect;
+//
+//            bindingTextRect.width -= 42;
+//            editButtonRect.x += bindingTextRect.width + 21;
+//            editButtonRect.width = 21;
+//            editButtonRect.height = 15;
+//            interactivePickButtonRect.x += bindingTextRect.width;
+//            interactivePickButtonRect.width = 21;
+//            interactivePickButtonRect.height = 15;
+//
+//            var path = pathProperty.stringValue;
+//            ////TODO: this should be cached; generates needless GC churn
+//            var displayName = InputControlPath.ToHumanReadableString(path);
+//
+//            if (manualPathEditMode || (!string.IsNullOrEmpty(path) && string.IsNullOrEmpty(displayName)))
+//            {
+//                EditorGUI.BeginChangeCheck();
+//                path = EditorGUI.DelayedTextField(bindingTextRect, path);
+//                if (EditorGUI.EndChangeCheck())
+//                {
+//                    pathProperty.stringValue = path;
+//                    pathProperty.serializedObject.ApplyModifiedProperties();
+//                    onModified(pathProperty);
+//                }
+//                DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
+//                if (GUI.Button(editButtonRect, "˅"))
+//                {
+//                    bindingTextRect.x += editButtonRect.width;
+//                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerState, onModified);
+//                }
+//            }
+//            else
+//            {
+//                // Dropdown that shows binding text and allows opening control picker.
+//                if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
+//                {
+//                    ////TODO: pass expectedControlLayout filter on to control picker
+//                    ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
+//                    ShowInputControlPicker(bindingTextRect, pathProperty, pickerState, onModified);
+//                }
+//
+//                // Button to bind interactively.
+//                DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
+//
+//                // Button that switches binding into text edit mode.
+//                if (GUI.Button(editButtonRect, "...", EditorStyles.miniButton))
+//                {
+//                    manualPathEditMode = true;
+//                }
+//            }
+//
+//            EditorGUILayout.EndHorizontal();
+//        }
 
         private void DrawInteractivePickButton(Rect rect, SerializedProperty pathProperty, Action<SerializedProperty> onModified)
         {
@@ -328,43 +348,38 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, AdvancedDropdownState pickerState,
-            Action<SerializedProperty> onPickCallback)
-        {
-            if (m_InputControlPickerDropdown == null)
-            {
-                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState, pathProperty, onPickCallback);
-            }
-
-            if (m_Toolbar != null)
-            {
-                if (m_Toolbar.selectedDevice != null)
-                {
-                    m_InputControlPickerDropdown.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
-                }
-                else
-                {
-                    m_InputControlPickerDropdown.SetDeviceFilter(m_Toolbar.allDevices);
-                }
-                if (m_ExpectedControlLayout != null)
-                {
-                    m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);
-                }
-            }
-            m_InputControlPickerDropdown.Show(rect);
-        }
+//
+//        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, AdvancedDropdownState pickerState,
+//            Action<SerializedProperty> onPickCallback)
+//        {
+//            if (m_InputControlPickerDropdown == null)
+//            {
+//                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState, pathProperty, onPickCallback);
+//            }
+//
+//            if (m_Toolbar != null)
+//            {
+//                if (m_Toolbar.selectedDevice != null)
+//                {
+//                    m_InputControlPickerDropdown.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
+//                }
+//                else
+//                {
+//                    m_InputControlPickerDropdown.SetDeviceFilter(m_Toolbar.allDevices);
+//                }
+//                if (m_ExpectedControlLayout != null)
+//                {
+//                    m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);
+//                }
+//            }
+//            m_InputControlPickerDropdown.Show(rect);
+//        }
 
         private static bool DrawFoldout(GUIContent content, bool folded)
         {
             var bgRect = GUILayoutUtility.GetRect(s_ProcessorsContent, Styles.foldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
             return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
-        }
-
-        ////FIXME: seems to nuke the property view on the right side every time a path is selected
-        private void OnBindingModified(SerializedProperty obj)
-        {
-            m_ReloadTree();
         }
     }
 }

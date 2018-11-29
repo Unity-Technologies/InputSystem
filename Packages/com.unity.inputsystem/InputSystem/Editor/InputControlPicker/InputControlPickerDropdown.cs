@@ -10,10 +10,10 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     internal class InputControlPickerDropdown : AdvancedDropdown
     {
-        SerializedProperty m_PathProperty;
-        Action<SerializedProperty> m_OnPickCallback;
-        string[] m_DeviceFilter;
-        Type m_ExpectedControlLayoutFilterType;
+        private SerializedProperty m_PathProperty;
+        private Action<SerializedProperty> m_OnPickCallback;
+        private string[] m_DeviceFilter;
+        private Type m_ExpectedControlLayoutFilterType;
 
         public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
             : base(state)
@@ -23,6 +23,16 @@ namespace UnityEngine.Experimental.Input.Editor
             maximumSize = new Vector2(0, 300);
             m_PathProperty = pathProperty;
             m_OnPickCallback = onPickCallback;
+        }
+
+        public void SetDeviceFilter(string[] deviceFilter)
+        {
+            m_DeviceFilter = deviceFilter;
+        }
+
+        public void SetExpectedControlLayoutFilter(Type expectedControlLayoutType)
+        {
+            m_ExpectedControlLayoutFilterType = expectedControlLayoutType;
         }
 
         protected override AdvancedDropdownItem BuildRoot()
@@ -53,7 +63,13 @@ namespace UnityEngine.Experimental.Input.Editor
             return root;
         }
 
-        void FindDevice(AdvancedDropdownItem newRoot, AdvancedDropdownItem root, string[] deviceFilter)
+        protected override void ItemSelected(AdvancedDropdownItem item)
+        {
+            m_PathProperty.stringValue = ((InputControlTreeViewItem)item).controlPathWithDevice;
+            m_OnPickCallback(m_PathProperty);
+        }
+
+        private void FindDevice(AdvancedDropdownItem newRoot, AdvancedDropdownItem root, string[] deviceFilter)
         {
             foreach (var child in root.children)
             {
@@ -70,12 +86,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     FindDevice(newRoot, child, deviceFilter);
                 }
             }
-        }
-
-        protected override void ItemSelected(AdvancedDropdownItem item)
-        {
-            m_PathProperty.stringValue = ((InputControlTreeViewItem)item).controlPathWithDevice;
-            m_OnPickCallback(m_PathProperty);
         }
 
         private AdvancedDropdownItem BuildTreeForUsages()
@@ -197,7 +207,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        bool LayoutMatchesExpectedControlLayoutFilter(string layout)
+        private bool LayoutMatchesExpectedControlLayoutFilter(string layout)
         {
             if (m_ExpectedControlLayoutFilterType == null)
             {
@@ -205,16 +215,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             var layoutType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(layout));
             return m_ExpectedControlLayoutFilterType.IsAssignableFrom(layoutType);
-        }
-
-        public void SetDeviceFilter(string[] deviceFilter)
-        {
-            m_DeviceFilter = deviceFilter;
-        }
-
-        public void SetExpectedControlLayoutFilter(string expectedControlLayout)
-        {
-            m_ExpectedControlLayoutFilterType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout));
         }
     }
 }

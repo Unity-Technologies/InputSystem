@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetProperty(ActionTreeViewItem treeViewLine)
         {
-            m_BindingPropertyView = new InputBindingPropertiesView(treeViewLine.elementProperty, OnChange, new AdvancedDropdownState(), null);
+            m_BindingPropertyView = new InputBindingPropertiesView(treeViewLine.elementProperty, OnChange, new InputControlPickerState(), null);
         }
 
         void OnGUI()
