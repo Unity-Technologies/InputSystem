@@ -19,6 +19,8 @@ public class ScreenKeyboardTest : MonoBehaviour
     public Toggle m_KeyboardSecure;
     public Toggle m_KeyboardAlert;
     public InputField m_InputField;
+    public InputField m_OccludingAreaField;
+    public Toggle m_Visible;
 
     ScreenKeyboard m_ScreenKeyboard;
     // Start is called before the first frame update
@@ -38,6 +40,8 @@ public class ScreenKeyboardTest : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
+        m_Visible.isOn = m_ScreenKeyboard.visible;
     }
 
     public void Show()
