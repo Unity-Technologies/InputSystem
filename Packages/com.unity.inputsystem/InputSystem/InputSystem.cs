@@ -1621,6 +1621,10 @@ namespace UnityEngine.Experimental.Input
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             Plugins.Steam.SteamSupport.Initialize();
             #endif
+
+            #if UNITY_EDITOR || UNITY_WSA
+            Plugins.WSA.WSASupport.Initialize();
+            #endif
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
