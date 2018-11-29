@@ -6,7 +6,7 @@ import argparse
 
 print(sys.version)
 
-kPIPDownloadName = "http://172.28.214.140/tools/unity-downloader/unity-downloader-cli-0.1.tar.gz"
+
 
 allPlatforms = ["Editor", "StandaloneLinux", "StandaloneLinux64", "StandaloneOSX", "StandaloneWindows", "StandaloneWindows64", "Android", "iOS"]
 allRuntimes = ["latest", "legacy"]
@@ -81,7 +81,7 @@ print("kProjectPath = %s" % kProjectPath)
 if not os.path.isdir(kTestArtifactPath):
     os.makedirs(kTestArtifactPath)
 
-RunProcess(["pip", "install", kPIPDownloadName])
+RunProcess(["pip", "install", "unity-downloader-cli", "--extra-index-url", "https://artifactory.eu-cph-1.unityops.net/api/pypi/common-python/simple"])
 
 componentsArgs = GetDownloadComponentsArgs(runtimePlatforms)
 revision = editorRevisions[unityVersion]
