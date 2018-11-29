@@ -48,6 +48,23 @@ namespace UnityEngine.Experimental.Input
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
     public abstract class ScreenKeyboard : Keyboard
     {
+        private static ScreenKeyboard m_ScreenKeyboard;
+
+        public static ScreenKeyboard GetInstance()
+        {
+            if (m_ScreenKeyboard != null)
+                return m_ScreenKeyboard;
+#if UNITY_ANDROID
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.Android.AndroidScreenKeyboard>();
+#elif UNITY_WSA
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.WSA.WSAScreenKeyboard>();
+#else
+            throw new NotImplementedException("ScreenKeyboard is not implemented for this platform."); 
+#endif
+            return m_ScreenKeyboard;
+
+        }
+
         public abstract void Show(ScreenKeyboardShowParams showParams);
 
         public void Show()
@@ -56,5 +73,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public abstract void Hide();
+
+        public abstract bool visible { get; }
     }
 }
