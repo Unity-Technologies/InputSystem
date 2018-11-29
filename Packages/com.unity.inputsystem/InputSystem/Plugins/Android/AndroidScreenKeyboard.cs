@@ -59,5 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 return false;
             }
         }
+
+        public override string inputFieldText { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }

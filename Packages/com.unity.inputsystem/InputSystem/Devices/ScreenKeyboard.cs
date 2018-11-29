@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -14,6 +15,14 @@ namespace UnityEngine.Experimental.Input
         EmailAddress = 7,
         Social = 8,
         Search = 9
+    }
+
+    public enum ScreenKeyboardStatus
+    {
+        Visible,
+        Done,
+        Canceled,
+        LostFocus
     }
 
 
@@ -50,6 +59,9 @@ namespace UnityEngine.Experimental.Input
     {
         private static ScreenKeyboard m_ScreenKeyboard;
 
+        internal ScreenKeyboardStatus m_Status;
+        internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
+
         public static ScreenKeyboard GetInstance()
         {
             if (m_ScreenKeyboard != null)
@@ -65,6 +77,25 @@ namespace UnityEngine.Experimental.Input
 
         }
 
+        protected ScreenKeyboard()
+        {
+            m_Status = ScreenKeyboardStatus.Done;
+        }
+
+        protected void ChangeStatus(ScreenKeyboardStatus newStatus)
+        {
+            m_Status = newStatus;
+            foreach (var statusListener in m_StatusChangedListeners)
+                statusListener(newStatus);
+        }
+
+        public event Action<ScreenKeyboardStatus> statusChanged
+        {
+            add { m_StatusChangedListeners.Append(value); }
+            remove { m_StatusChangedListeners.Remove(value); }
+        }
+
+
         public abstract void Show(ScreenKeyboardShowParams showParams);
 
         public void Show()
@@ -75,5 +106,18 @@ namespace UnityEngine.Experimental.Input
         public abstract void Hide();
 
         public abstract bool visible { get; }
+
+        public abstract string inputFieldText { set; get; }
+
+        /// <summary>
+        /// Returns portion of the screen which is covered by the keyboard.
+        /// </summary>
+        public virtual Rect occludingArea
+        {
+            get
+            {
+                return Rect.zero;
+            }
+        }
     }
 }
