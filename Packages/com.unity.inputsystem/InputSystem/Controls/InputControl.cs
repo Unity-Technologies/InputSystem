@@ -316,7 +316,19 @@ namespace UnityEngine.Experimental.Input
 
         private string DebuggerDisplay()
         {
-            return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
+            // If the device hasn't been added, don't try to read the control's value.
+            if (!device.added)
+                return ToString();
+
+            // ReadValueAsObject might throw. Revert to just ToString() in that case.
+            try
+            {
+                return string.Format("{0}:{1}={2}", layout, path, this.ReadValueAsObject());
+            }
+            catch (Exception)
+            {
+                return ToString();
+            }
         }
 
         /// <summary>
