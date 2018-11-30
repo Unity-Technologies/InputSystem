@@ -23,8 +23,15 @@ public class ScreenKeyboardTest : MonoBehaviour
     public InputField m_KeyboardStatus;
     public InputField m_KeyboardInputField;
 
+    public InputField m_OldOccludingAreaField;
+    public InputField m_OldKeyboardStatus;
+    public InputField m_OldKeyboardInputField;
+
     ScreenKeyboard m_ScreenKeyboard;
     // Start is called before the first frame update
+
+    TouchScreenKeyboard m_OldScreenKeyboard;
+
     void Start()
     {
         m_ScreenKeyboard = ScreenKeyboard.GetInstance();
@@ -44,6 +51,13 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
         m_KeyboardStatus.text = m_ScreenKeyboard.status.ToString();
         m_KeyboardInputField.text = m_ScreenKeyboard.inputFieldText;
+
+        if (m_OldScreenKeyboard != null)
+        {
+            m_OldOccludingAreaField.text = TouchScreenKeyboard.area.ToString();
+            m_OldKeyboardStatus.text = m_OldScreenKeyboard.status.ToString();
+            m_OldKeyboardInputField.text = m_OldScreenKeyboard.text;
+        }
     }
 
     private ScreenKeyboardType ToScreenKeyboardType(string value)
@@ -74,7 +88,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     public void ShowOldKeyboard()
     {
-        TouchScreenKeyboard.Open(m_InputField.text,
+        m_OldScreenKeyboard = TouchScreenKeyboard.Open(m_InputField.text,
             ToTouchScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text),
             m_KeyboardAutocorrection.isOn,
             m_KeyboardMultiline.isOn,

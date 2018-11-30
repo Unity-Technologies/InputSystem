@@ -21,8 +21,7 @@ namespace UnityEngine.Experimental.Input
     {
         Visible,
         Done,
-        Canceled,
-        LostFocus
+        Canceled
     }
 
 

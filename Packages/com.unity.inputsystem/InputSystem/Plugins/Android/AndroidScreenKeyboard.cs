@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         public override void Hide()
         {
             if (m_KeyboardObject != null)
-                m_KeyboardObject.Call("dismissAndChangeStatus");
+                m_KeyboardObject.Call("dismiss");
         }
 
         public override string inputFieldText

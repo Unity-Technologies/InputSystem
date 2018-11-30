@@ -3,6 +3,8 @@ package com.unity.inputsystem;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface.*;
+import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,6 +20,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.view.View.MeasureSpec;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -27,8 +30,7 @@ import com.unity3d.player.*;
 
 import java.text.MessageFormat;
 
-// TODO: OnStatusChanged is not called, when keyboard looses focus
-public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher
+public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher, OnDismissListener
 {
     interface IScreenKeyboardCallbacks
     {
@@ -40,8 +42,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     {
         Visible(0),
         Done(1),
-        Canceled(2),
-        LostFocus(3);
+        Canceled(2);
 
         private final int value;
 
@@ -140,13 +141,10 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             }
         });
 
+        setOnDismissListener(this);
+
         show();
         m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
-    }
-
-    public void dismissAndChangeStatus()
-    {
-        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
     }
 
     public void afterTextChanged (Editable s)
@@ -200,8 +198,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     @Override public void onClick (View v)
     {
-        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
         dismiss();
+    }
+
+    @Override public void onDismiss(DialogInterface dialog)
+    {
+        Log.v("Unity", "onDismiss");
+        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
     }
 
 
