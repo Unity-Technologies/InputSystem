@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 
@@ -19,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Composites
     /// and right horizontal button are pressed, the resulting horizontal movement value will
     /// be zero.
     /// </remarks>
-    public class DpadComposite : IInputBindingComposite<Vector2>
+    public class DpadComposite : InputBindingComposite<Vector2>
     {
         [InputControl(layout = "Button")] public int up;
         [InputControl(layout = "Button")] public int down;
@@ -32,29 +31,8 @@ namespace UnityEngine.Experimental.Input.Composites
         /// </summary>
         public bool normalize = true;
 
-        public Type valueType
+        public override Vector2 ReadValue(ref InputBindingCompositeContext context)
         {
-            get { return typeof(Vector2); }
-        }
-
-        public unsafe int valueSizeInBytes
-        {
-            get { return sizeof(Vector2); }
-        }
-        public unsafe Vector2 ReadValue(ref InputBindingCompositeContext context)
-        {
-            Vector2 result;
-            ReadValue(ref context, &result, sizeof(Vector2));
-            return result;
-        }
-
-        public unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize)
-        {
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
-            if (bufferSize < sizeof(Vector2))
-                throw new ArgumentException("bufferSize < sizeof(Vector2)", "bufferSize");
-
             var upValue = context.ReadValue<float>(up);
             var downValue = context.ReadValue<float>(down);
             var leftValue = context.ReadValue<float>(left);
@@ -65,10 +43,7 @@ namespace UnityEngine.Experimental.Input.Composites
             var leftIsPressed = leftValue > 0;
             var rightIsPressed = rightValue > 0;
 
-            var result =
-                DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
-
-            *(Vector2*)buffer = result;
+            return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
         }
     }
 }
