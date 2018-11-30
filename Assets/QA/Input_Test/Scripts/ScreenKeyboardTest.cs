@@ -20,7 +20,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     public Toggle m_KeyboardAlert;
     public InputField m_InputField;
     public InputField m_OccludingAreaField;
-    public Toggle m_Visible;
+    public InputField m_KeyboardStatus;
     public InputField m_KeyboardInputField;
 
     ScreenKeyboard m_ScreenKeyboard;
@@ -42,7 +42,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     void Update()
     {
         m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
-        m_Visible.isOn = m_ScreenKeyboard.visible;
+        m_KeyboardStatus.text = m_ScreenKeyboard.status.ToString();
         m_KeyboardInputField.text = m_ScreenKeyboard.inputFieldText;
     }
 
