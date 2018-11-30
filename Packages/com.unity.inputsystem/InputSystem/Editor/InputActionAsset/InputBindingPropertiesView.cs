@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action onChange,
-                                          AdvacedDropdownState controlPickerTreeViewState, InputActionWindowToolbar toolbar,
+                                          AdvancedDropdownState controlPickerState, InputActionWindowToolbar toolbar,
                                           string expectedControlLayout = null)
         {
             m_ControlPickerState = controlPickerState;
