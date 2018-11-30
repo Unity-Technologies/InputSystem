@@ -262,9 +262,33 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        /// <summary>
+        /// Fetch a control from the control's hierarchy by name.
+        /// </summary>
+        /// <remarks>
+        /// Note that path matching is case-insensitive.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// gamepad["leftStick"] // Returns Gamepad.leftStick
+        /// gamepad["leftStick/x"] // Returns Gamepad.leftStick.x
+        /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, i.e. Gamepad.aButton
+        /// </code>
+        /// </example>
+        /// <exception cref="IndexOutOfRangeException"><paramref name="path"/> cannot be found.</exception>
+        /// <seealso cref="InputControlPath"/>
+        /// <seealso cref="path"/>
+        /// <seealso cref="TryGetChildControl"/>
         public InputControl this[string path]
         {
-            get { return InputControlPath.TryFindChild(this, path); }
+            get
+            {
+                var control = InputControlPath.TryFindChild(this, path);
+                if (control == null)
+                    throw new IndexOutOfRangeException(
+                        string.Format("Cannot find control '{0}' as child of '{1}'", path, this));
+                return control;
+            }
         }
 
         /// <summary>
@@ -449,7 +473,13 @@ namespace UnityEngine.Experimental.Input
                 m_StateBlock.bitOffset, m_StateBlock.sizeInBits, mask);
         }
 
-        public abstract unsafe bool HasValueChangeIn(void* statePtr);
+        public InputControl TryGetChildControl(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException("path");
+
+            return InputControlPath.TryFindChild(this, path);
+        }
 
         // Constructor for devices which are assigned names once plugged
         // into the system.
