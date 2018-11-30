@@ -15,13 +15,13 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
-        public override unsafe PointerPhase ReadUnprocessedValueFrom(void* statePtr)
+        public override unsafe PointerPhase ReadUnprocessedValueFromState(void* statePtr)
         {
             var intValue = stateBlock.ReadInt(statePtr);
             return (PointerPhase)intValue;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, PointerPhase value)
+        public override unsafe void WriteValueIntoState(PointerPhase value, void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             *(PointerPhase*)valuePtr = value;

@@ -168,10 +168,10 @@ partial class CoreTests
         {
             float xVal;
             float yVal;
-            Assert.IsTrue(mouse.delta.x.ReadValueFrom(eventPtr, out xVal));
+            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out xVal));
             Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
 
-            Assert.IsTrue(mouse.delta.y.ReadValueFrom(eventPtr, out yVal));
+            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out yVal));
             Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
@@ -849,12 +849,12 @@ partial class CoreTests
             using (var buffer = new InputEventBuffer())
             {
                 // Write two events into buffer.
-                gamepad.leftStick.WriteValueInto(eventPtr, Vector2.one);
+                gamepad.leftStick.WriteValueIntoEvent(Vector2.one, eventPtr);
                 eventPtr.id = 111;
                 eventPtr.time = 123;
                 eventPtr.handled = false;
                 buffer.AppendEvent(eventPtr);
-                gamepad.leftStick.WriteValueInto(eventPtr, Vector2.zero);
+                gamepad.leftStick.WriteValueIntoEvent(Vector2.zero, eventPtr);
                 eventPtr.id = 222;
                 eventPtr.time = 234;
                 eventPtr.handled = true;
@@ -874,8 +874,8 @@ partial class CoreTests
                 Assert.That(events[1].handled, Is.True);
                 Assert.That(events[0].deviceId, Is.EqualTo(gamepad.id));
                 Assert.That(events[1].deviceId, Is.EqualTo(gamepad.id));
-                Assert.That(gamepad.leftStick.ReadUnprocessedValueFrom(events[0]), Is.EqualTo(Vector2.one));
-                Assert.That(gamepad.leftStick.ReadUnprocessedValueFrom(events[1]), Is.EqualTo(Vector2.zero));
+                Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[0]), Is.EqualTo(Vector2.one));
+                Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[1]), Is.EqualTo(Vector2.zero));
             }
         }
     }

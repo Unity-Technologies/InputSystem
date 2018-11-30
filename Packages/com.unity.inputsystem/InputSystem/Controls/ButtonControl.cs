@@ -42,14 +42,14 @@ namespace UnityEngine.Experimental.Input.Controls
             get { return IsValueConsideredPressed(ReadValue()); }
         }
 
-        public bool wasJustPressed
+        public bool wasPressedThisFrame
         {
-            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadPreviousValue()); }
+            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
         }
 
-        public bool wasJustReleased
+        public bool wasReleasedThisFrame
         {
-            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadPreviousValue()); }
+            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
         }
     }
 }

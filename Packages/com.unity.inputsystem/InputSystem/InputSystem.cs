@@ -24,6 +24,8 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
+
 ////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
 
 ////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
@@ -697,10 +699,10 @@ namespace UnityEngine.Experimental.Input
                 if (deviceOfType == null)
                     continue;
 
-                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
                     result = deviceOfType;
-                    lastUpdateTime = result.lastUpdateTime;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
 
@@ -720,10 +722,10 @@ namespace UnityEngine.Experimental.Input
                 if (!deviceOfType.usages.Contains(usage))
                     continue;
 
-                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
                     result = deviceOfType;
-                    lastUpdateTime = result.lastUpdateTime;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
 

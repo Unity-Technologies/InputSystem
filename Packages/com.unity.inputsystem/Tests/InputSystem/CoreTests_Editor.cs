@@ -219,7 +219,7 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
 
     [Test]
