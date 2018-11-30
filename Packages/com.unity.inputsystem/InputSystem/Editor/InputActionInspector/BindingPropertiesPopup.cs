@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -21,7 +20,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetProperty(ActionTreeViewItem treeViewLine)
         {
-            m_BindingPropertyView = new InputBindingPropertiesView(treeViewLine.elementProperty, OnChange, new TreeViewState(), null);
+            m_BindingPropertyView = new InputBindingPropertiesView(treeViewLine.elementProperty, OnChange, new AdvancedDropdownState(), null);
         }
 
         void OnGUI()
