@@ -713,6 +713,24 @@ partial class CoreTests
         Assert.That(optionalControlsForSecondDerived, Is.Empty);
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanIconsForLayouts()
+    {
+        const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Button.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Axis"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Axis.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Key"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Button.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("DualShockGamepad"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Gamepad.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Pen"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Pen.png")));
+    }
+
     private class TestEditorWindow : EditorWindow
     {
         public Vector2 mousePosition;

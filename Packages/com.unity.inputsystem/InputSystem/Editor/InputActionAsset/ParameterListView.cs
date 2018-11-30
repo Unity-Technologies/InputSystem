@@ -9,6 +9,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: can we collects tooltips from the fields we're looking at?
+
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
     /// <summary>
@@ -176,8 +178,6 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 var label = ObjectNames.NicifyVariableName(parameter.value.name);
 
                 EditorGUI.BeginChangeCheck();
-
-                ////TODO: need to detect when value is at default
 
                 string result = null;
                 if (parameter.isEnum)

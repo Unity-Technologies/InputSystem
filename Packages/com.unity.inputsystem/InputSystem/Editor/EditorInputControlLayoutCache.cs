@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.Switch;
@@ -127,6 +129,48 @@ namespace UnityEngine.Experimental.Input.Editor
             return list;
         }
 
+        ////TODO: support different resolutions
+        public static Texture2D GetIconForLayout(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentNullException("layoutName");
+
+            Refresh();
+
+            // See if we already have it in the cache.
+            Texture2D icon;
+            var internedName = new InternedString(layoutName);
+            if (s_Icons.TryGetValue(internedName, out icon))
+                return icon;
+
+            // No, so see if we have an icon on disk for exactly the layout
+            // we're looking at (i.e. with the same name).
+            var path = Path.Combine(kIconPath, layoutName + ".png");
+            icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (icon != null)
+                return icon;
+
+            // No, not that either so start walking up the inheritance chain
+            // until we either bump against the ceiling or find an icon.
+            var layout = TryGetLayout(layoutName);
+            if (layout != null)
+            {
+                foreach (var baseLayoutName in layout.baseLayouts)
+                {
+                    ////FIXME: remove this; looks like HIDs lose their base layout info on domain reloads
+                    if (string.IsNullOrEmpty(baseLayoutName))
+                        continue;
+
+                    icon = GetIconForLayout(baseLayoutName);
+                    if (icon != null)
+                        return icon;
+                }
+            }
+
+            // No icon for anything in this layout's chain.
+            return null;
+        }
+
         internal static void Clear()
         {
             s_LayoutRegistrationVersion = 0;
@@ -137,6 +181,7 @@ namespace UnityEngine.Experimental.Input.Editor
             s_DeviceLayouts.Clear();
             s_ProductLayouts.Clear();
             s_DeviceMatchers.Clear();
+            s_Icons.Clear();
         }
 
         // If our layout data is outdated, rescan all the layouts in the system.
@@ -213,6 +258,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     listener();
         }
 
+        ////REVIEW: is this affected by how the package is installed?
+        private const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+
         private static int s_LayoutRegistrationVersion;
         private static InputControlLayout.Cache s_Cache;
         private static List<Action> s_RefreshListeners;
@@ -224,6 +272,8 @@ namespace UnityEngine.Experimental.Input.Editor
             new Dictionary<InternedString, List<OptionalControl>>();
         private static Dictionary<InternedString, InlinedArray<InputDeviceMatcher>> s_DeviceMatchers =
             new Dictionary<InternedString, InlinedArray<InputDeviceMatcher>>();
+        private static Dictionary<InternedString, Texture2D> s_Icons =
+            new Dictionary<InternedString, Texture2D>();
 
         // We keep a map of all unique usages we find in layouts and also
         // retain a list of the layouts they are used with.
