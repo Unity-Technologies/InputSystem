@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
-    /// Device command to instruct the underlying to pair a user to the targeted device.
+    /// Device command to instruct the underlying platform to pair a user account to the targeted device.
     /// </summary>
     /// <remarks>
     ///

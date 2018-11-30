@@ -93,6 +93,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
         public bool swapDpadAndLeftStick { get; set; }
 
+        public float vibrationStrength { get; set; }
+
         public virtual void Apply(IInputActionCollection actions)
         {
             //set overrideProcessors and redirectPaths on respective bindings

@@ -231,7 +231,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// match their bindings.
         /// </summary>
         /// <remarks>
-        /// This default is false.
+        /// This defaults to false.
         ///
         /// Enabling this behavior is useful for implementing automatic control scheme switching that does not
         /// rely on <see cref="onUnpairedDeviceUsed"/>. Instead of listening for unpaired device activity (which

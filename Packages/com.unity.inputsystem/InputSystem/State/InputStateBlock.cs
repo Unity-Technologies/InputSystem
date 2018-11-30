@@ -12,6 +12,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow bitOffset to be non-zero for byte-aligned control as long as result is byte-aligned
 
+////REVIEW: kAutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
+////        controls for which a more elegant and robust mechanism can surely be devised
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
