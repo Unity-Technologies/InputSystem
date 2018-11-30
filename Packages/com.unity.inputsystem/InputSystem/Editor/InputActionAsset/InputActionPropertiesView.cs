@@ -50,8 +50,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private string[] BuildControlTypeList()
         {
-            List<string> types = new List<string>();
-            types.Add("Any");
+            var types = new List<string>();
             foreach (var layoutName in InputSystem.s_Manager.m_Layouts.layoutTypes.Keys)
             {
                 if (typeof(InputControl).IsAssignableFrom(InputSystem.s_Manager.m_Layouts.layoutTypes[layoutName]) &&
@@ -60,6 +59,10 @@ namespace UnityEngine.Experimental.Input.Editor
                     types.Add(layoutName);
                 }
             }
+            // Sort alphabetically.
+            types.Sort((a, b) => string.Compare(a, b, StringComparison.OrdinalIgnoreCase));
+            // Make sure "Any" is always topmost entry.
+            types.Insert(0, "Any");
             return types.ToArray();
         }
 
