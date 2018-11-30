@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['inputreportsize',['inputReportSize',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#aa51a5616d44ec331efdfdf06b592fb29',1,'UnityEngine::Experimental::Input::Plugins::HID::HID::HIDDeviceDescriptor']]],
-  ['interfacename',['interfaceName',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#a7db3e62c176ef76b2d018a93b2e8799f',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]]
+  ['featurereportsize',['featureReportSize',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#aa8ee2b4d3889c7ad54cbeb962fe4e0ba',1,'UnityEngine::Experimental::Input::Plugins::HID::HID::HIDDeviceDescriptor']]],
+  ['format',['format',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputStateBlock.html#ae6025eb961ab8d6939561ac01143e0e0',1,'UnityEngine::Experimental::Input::LowLevel::InputStateBlock']]]
 ];

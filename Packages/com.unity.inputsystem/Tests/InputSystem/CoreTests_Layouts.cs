@@ -6,10 +6,16 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 
+#if UNITY_EDITOR
+using UnityEngine.Experimental.Input.Editor;
+#endif
+
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Test]
@@ -18,7 +24,7 @@ partial class CoreTests
     {
         var setup = new InputDeviceBuilder("Gamepad");
 
-        // The default ButtonControl layout has no constrols inside of it.
+        // The default ButtonControl layout has no controls inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
         Assert.That(setup.GetControl("start").children, Is.Empty);
     }
@@ -59,8 +65,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(deviceJson);
-        InputSystem.RegisterControlLayout(controlJson);
+        InputSystem.RegisterLayout(deviceJson);
+        InputSystem.RegisterLayout(controlJson);
 
         var setup = new InputDeviceBuilder("MyDevice");
 
@@ -123,8 +129,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(baseLayout);
-        InputSystem.RegisterControlLayout(derivedLayout);
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
@@ -153,7 +159,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var setup = new InputDeviceBuilder("MyDevice");
         var device = (Gamepad)setup.Finish();
@@ -221,7 +227,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var layout = InputSystem.TryLoadLayout("MyDevice");
 
@@ -243,7 +249,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanSetDefaultStateOfControlOnAttribute()
     {
-        InputSystem.RegisterControlLayout<TestDeviceWithDefaultState>();
+        InputSystem.RegisterLayout<TestDeviceWithDefaultState>();
 
         var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultState");
 
@@ -293,8 +299,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(baseLayout);
-        InputSystem.RegisterControlLayout(derivedLayout);
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
@@ -323,7 +329,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
@@ -343,21 +349,21 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.1,max=0.9)""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         // NOTE: Unfortunately, this currently relies on an internal method (TryGetProcessor).
 
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>(), Is.Not.Null);
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>(), Is.Not.Null);
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
     }
 
     private unsafe struct StateStructWithArrayOfControls
@@ -375,7 +381,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanAddArrayOfControls_InStateStruct()
     {
-        InputSystem.RegisterControlLayout<TestDeviceWithArrayOfControls>();
+        InputSystem.RegisterLayout<TestDeviceWithArrayOfControls>();
 
         var device = new InputDeviceBuilder("TestDeviceWithArrayOfControls").Finish();
 
@@ -409,7 +415,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = new InputDeviceBuilder("MyDevice").Finish();
 
         Assert.That(device.allControls, Has.Count.EqualTo(5));
@@ -437,7 +443,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = (Gamepad) new InputDeviceBuilder("MyDevice").Finish();
 
         Assert.That(device.leftStick.x.clamp, Is.True);
@@ -460,8 +466,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(typeof(DeviceWithCommonUsages), "BaseDevice");
-        InputSystem.RegisterControlLayout(derivedJson);
+        InputSystem.RegisterLayout(typeof(DeviceWithCommonUsages), "BaseDevice");
+        InputSystem.RegisterLayout(derivedJson);
 
         var layout = InputSystem.TryLoadLayout("DerivedDevice");
 
@@ -485,9 +491,9 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
-        var layout = InputSystem.TryFindMatchingControlLayout(new InputDeviceDescription
+        var layout = InputSystem.TryFindMatchingLayout(new InputDeviceDescription
         {
             product = "MyThingy"
         });
@@ -497,15 +503,161 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanFindAllLayoutsBasedOnGivenLayout()
+    {
+        const string rootLayout = @"
+            {
+                ""name"" : ""RootDevice""
+            }
+        ";
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseDevice"",
+                ""extend"" : ""RootDevice""
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedDevice"",
+                ""extend"" : ""BaseDevice""
+            }
+        ";
+
+        InputSystem.RegisterLayout(rootLayout);
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
+
+        var layouts = InputSystem.ListLayoutsBasedOn("RootDevice");
+
+        Assert.That(layouts.Count, Is.EqualTo(2));
+        Assert.That(layouts, Has.Exactly(1).EqualTo("BaseDevice"));
+        Assert.That(layouts, Has.Exactly(1).EqualTo("DerivedDevice"));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanOverrideLayoutMatchesForDiscoveredDevices()
     {
-        InputSystem.onFindControlLayoutForDevice +=
+        InputSystem.onFindLayoutForDevice +=
             (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
                 "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
         Assert.That(device, Is.TypeOf<Keyboard>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanAlterDeviceDescriptionsForDiscoveredDevices()
+    {
+        // Add a callback returning a layout name both before and after the callback that
+        // alters the device description. This way we can make sure that no matter which order
+        // the callbacks are processed in, the system should call our callback in the middle
+        // and not stop at one of the callbacks returning a layout name.
+        InputSystem.onFindLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+                "Keyboard";
+
+        InputSystem.onFindLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+        {
+            description.product = "Test";
+            return null;
+        };
+
+        InputSystem.onFindLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+                "Keyboard";
+
+        var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad", product = "Original"});
+
+        Assert.That(device.description.product, Is.EqualTo("Test"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanRegisterMultipleMatchersForSingleLayout()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        InputSystem.RegisterLayoutMatcher("TestLayout",
+            new InputDeviceMatcher()
+                .WithManufacturer("Manufacturer")
+                .WithProduct("ProductA"));
+        InputSystem.RegisterLayoutMatcher("TestLayout",
+            new InputDeviceMatcher()
+                .WithManufacturer("Manufacturer")
+                .WithProduct("ProductB"));
+
+        var device1 = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                manufacturer = "Manufacturer",
+                product = "ProductA"
+            });
+        var device2 = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                manufacturer = "Manufacturer",
+                product = "ProductB"
+            });
+
+        Assert.That(device1, Is.TypeOf<Gamepad>());
+        Assert.That(device2, Is.TypeOf<Gamepad>());
+        Assert.That(device1.layout, Is.EqualTo("TestLayout"));
+        Assert.That(device2.layout, Is.EqualTo("TestLayout"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    [Ignore("TODO")]
+    public void TODO_Layouts_RegisteringMatcherForLayout_OverridesExistingMatchers()
+    {
+        const string jsonA = @"
+            {
+                ""name"" : ""LayoutA"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+        const string jsonB = @"
+            {
+                ""name"" : ""LayoutB"",
+                ""extend"" : ""Mouse""
+            }
+        ";
+
+        InputSystem.RegisterLayout(jsonA);
+        InputSystem.RegisterLayout(jsonB);
+
+        InputSystem.RegisterLayoutMatcher("LayoutA",
+            new InputDeviceMatcher()
+                .WithProduct("ProductA"));
+        InputSystem.RegisterLayoutMatcher("LayoutB",
+            new InputDeviceMatcher()
+                .WithProduct("ProductA"));
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                product = "ProductA"
+            });
+
+        Assert.That(device.layout, Is.EqualTo("LayoutB"));
+        Assert.That(device, Is.TypeOf<Mouse>());
+
+        // Make sure it's gone from the layout cache.
+        #if UNITY_EDITOR
+        var matchers = EditorInputControlLayoutCache.GetDeviceMatchers("LayoutA");
+        Assert.That(matchers, Is.Empty);
+        #endif
     }
 
     // At some point we may actually want to allow this. Could lead to some interesting capabilities.
@@ -523,7 +675,7 @@ partial class CoreTests
             }
         ";
 
-        Assert.That(() => InputSystem.RegisterControlLayout(json),
+        Assert.That(() => InputSystem.RegisterLayout(json),
             Throws.Exception.TypeOf<NotSupportedException>());
     }
 
@@ -542,7 +694,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayoutOverride(json);
+        InputSystem.RegisterLayoutOverride(json);
 
         var device = InputSystem.AddDevice<Mouse>();
 
@@ -564,7 +716,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayoutOverride(json);
+        InputSystem.RegisterLayoutOverride(json);
 
         var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -589,9 +741,32 @@ partial class CoreTests
         ";
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.RegisterControlLayoutOverride(json);
+        InputSystem.RegisterLayoutOverride(json);
 
         Assert.That(gamepad.leftStick["extraControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanOverrideCommonUsagesOnExistingLayout()
+    {
+        // Change all Gamepads to have the common usages "A", "B", and "C".
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Gamepad"",
+                ""commonUsages"" : [ ""A"", ""B"", ""C"" ]
+            }
+        ";
+
+        InputSystem.RegisterLayoutOverride(json);
+
+        var layout = InputSystem.TryLoadLayout("Gamepad");
+
+        Assert.That(layout.commonUsages.Count, Is.EqualTo(3));
+        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("A")));
+        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("B")));
+        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("C")));
     }
 
     [Test]
@@ -609,9 +784,20 @@ partial class CoreTests
                 ]
             }
         ";
-        InputSystem.RegisterControlLayoutOverride(json);
+        InputSystem.RegisterLayoutOverride(json);
 
         Assert.That(mouse["extraControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    ////REVIEW: should this just be an open-ended tagging ability?
+    // We want to have the ability to filter layouts based on platform so that the user
+    // can narrow focus on just what's interesting to the current project.
+    [Test]
+    [Category("Layouts")]
+    [Ignore("TODO")]
+    public void TODO_Layouts_CanSpecifyPlatformsThatLayoutAppliesTo()
+    {
+        Assert.Fail();
     }
 
     // If a layout only specifies an interface in its descriptor, it is considered
@@ -619,6 +805,7 @@ partial class CoreTests
     // by product.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanHaveLayoutFallbackForInterface()
     {
         const string fallbackJson = @"
@@ -639,8 +826,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(fallbackJson);
-        InputSystem.RegisterControlLayout(productJson);
+        InputSystem.RegisterLayout(fallbackJson);
+        InputSystem.RegisterLayout(productJson);
 
         Assert.Fail();
     }
@@ -648,6 +835,7 @@ partial class CoreTests
     ////REVIEW: if this behavior is guaranteed, we also have to make sure we preserve it across domain reloads
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_WhenTwoLayoutsConflict_LastOneRegisteredWins()
     {
         const string firstLayout = @"
@@ -667,10 +855,10 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(firstLayout);
-        InputSystem.RegisterControlLayout(secondLayout);
+        InputSystem.RegisterLayout(firstLayout);
+        InputSystem.RegisterLayout(secondLayout);
 
-        var layout = InputSystem.TryFindMatchingControlLayout(new InputDeviceDescription {product = "MyProduct"});
+        var layout = InputSystem.TryFindMatchingLayout(new InputDeviceDescription {product = "MyProduct"});
 
         Assert.That(layout, Is.EqualTo("SecondLayout"));
     }
@@ -698,7 +886,7 @@ partial class CoreTests
 
         // We do minimal processing when adding a layout so verification
         // only happens when we actually try to instantiate the layout.
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
             Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
@@ -735,12 +923,12 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(derivedDeviceJson);
-        InputSystem.RegisterControlLayout(baseDeviceJson);
+        InputSystem.RegisterLayout(derivedDeviceJson);
+        InputSystem.RegisterLayout(baseDeviceJson);
 
         var device = InputSystem.AddDevice("MyDerived");
 
-        InputSystem.RegisterControlLayout(newBaseDeviceJson);
+        InputSystem.RegisterLayout(newBaseDeviceJson);
 
         Assert.That(device.children, Has.Count.EqualTo(1));
         Assert.That(device.children,
@@ -759,9 +947,9 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(initialJson);
+        InputSystem.RegisterLayout(initialJson);
 
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
+        runtime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
         InputSystem.Update();
 
         var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
@@ -776,7 +964,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(newJson);
+        InputSystem.RegisterLayout(newJson);
         Assert.That(InputSystem.devices, Has.Exactly(1).With.Property("layout").EqualTo("MyDevice"));
 
         var newDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
@@ -796,7 +984,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Replace "Button" layout.
-        InputSystem.RegisterControlLayout<MyButtonControl>("Button");
+        InputSystem.RegisterLayout<MyButtonControl>("Button");
 
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
@@ -826,7 +1014,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(oldLayout);
+        InputSystem.RegisterLayout(oldLayout);
 
         InputSystem.AddDevice<Mouse>(); // Noise.
 
@@ -840,13 +1028,14 @@ partial class CoreTests
 
         Assert.That(device.layout, Is.EqualTo("OldLayout"));
 
-        InputSystem.RegisterControlLayout(newLayout);
+        InputSystem.RegisterLayout(newLayout);
 
         Assert.That(device.layout, Is.EqualTo("NewLayout"));
     }
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RegisteringLayoutBuilder_MarksResultingLayoutAsGenerated()
     {
         Assert.Fail();
@@ -860,61 +1049,11 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_RegisteringLayoutType_UsesBaseTypeAsBaseLayout()
     {
-        InputSystem.RegisterControlLayout<TestLayoutType>();
+        InputSystem.RegisterLayout<TestLayoutType>();
 
         var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
         Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_RegisteringLayoutType_WithMatcher_PutsMatcherInLayoutWhenLoaded()
-    {
-        InputSystem.RegisterControlLayout<TestLayoutType>(
-            matches: new InputDeviceMatcher()
-                .WithInterface("TestInterface")
-                .WithManufacturer("TestManufacturer")
-                .WithProduct("TestProduct"));
-
-        var layout = InputSystem.TryLoadLayout("TestLayoutType");
-
-        Assert.That(layout.deviceMatcher.empty, Is.False);
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_RegisteringLayoutBuilder_WithMatcher_PutsMatcherInLayoutWhenLoaded()
-    {
-        var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
-
-        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "TestLayout",
-            matches: new InputDeviceMatcher()
-                .WithInterface("TestInterface")
-                .WithProduct("TestProduct")
-                .WithManufacturer("TestManufacturer"));
-
-        var layout = InputSystem.TryLoadLayout("TestLayout");
-
-        Assert.That(layout.deviceMatcher.empty, Is.False);
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
-        Assert.That(layout.deviceMatcher.patterns,
-            Has.Exactly(1)
-                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     // We consider layouts built by layout builders as being auto-generated. We want them to
@@ -927,7 +1066,7 @@ partial class CoreTests
     {
         var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
 
-        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "GeneratedLayout",
+        InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), name: "GeneratedLayout",
             matches: new InputDeviceMatcher()
                 .WithInterface("TestInterface")
                 .WithProduct("TestProduct")
@@ -944,7 +1083,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         // This should pick ManualLayout and not GeneratedLayout.
         var device = InputSystem.AddDevice(new InputDeviceDescription
@@ -965,9 +1104,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public byte byteAxis;
         [InputControl(layout = "Axis")] public short shortAxis;
-
         [InputControl(layout = "Axis")] public int intAxis;
-
         // No float as that is the default format for Axis anyway.
         [InputControl(layout = "Axis")] public double doubleAxis;
 
@@ -986,7 +1123,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_FormatOfControlWithPrimitiveTypeInStateStructInferredFromType()
     {
-        InputSystem.RegisterControlLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
+        InputSystem.RegisterLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
         var setup = new InputDeviceBuilder("Test");
 
         Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
@@ -1014,7 +1151,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_FormatOfControlWithFixedArrayType_IsNotInferredFromType()
     {
-        InputSystem.RegisterControlLayout<DeviceWithStateStructWithFixedArray>();
+        InputSystem.RegisterLayout<DeviceWithStateStructWithFixedArray>();
 
         Assert.That(() => new InputDeviceBuilder("DeviceWithStateStructWithFixedArray"),
             Throws.Exception.With.Message.Contain("Layout has not been set"));
@@ -1040,7 +1177,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var setup = new InputDeviceBuilder("MyDevice");
         var testControl = setup.GetControl<AxisControl>("test");
@@ -1067,7 +1204,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = (Gamepad) new InputDeviceBuilder("TestLayout").Finish();
 
         ////TODO: this ignores layouting; ATM there's a conflict between the automatic layout used by the added button
@@ -1082,6 +1219,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
     {
         const string baseJson = @"
@@ -1106,8 +1244,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(baseJson);
-        InputSystem.RegisterControlLayout(derivedJson);
+        InputSystem.RegisterLayout(baseJson);
+        InputSystem.RegisterLayout(derivedJson);
 
         var setup = new InputDeviceBuilder("Derived");
         var stick = setup.GetControl<StickControl>("stick");
@@ -1131,7 +1269,7 @@ partial class CoreTests
             ]
         }";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var setup = new InputDeviceBuilder("MyGamepad");
         var gamepad = (Gamepad)setup.Finish();
@@ -1153,7 +1291,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = InputSystem.AddDevice("MyDevice");
 
@@ -1162,7 +1300,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanSpecifyDisplayNameForControl()
+    public void Layouts_CanSpecifyLongAndShortDisplayNameForControl()
     {
         const string json = @"
             {
@@ -1172,7 +1310,8 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""displayName"" : ""Primary Stick""
+                        ""displayName"" : ""Primary Stick"",
+                        ""shortDisplayName"" : ""PS""
                     },
                     {
                         ""name"" : ""leftStick/x"",
@@ -1182,13 +1321,93 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = (Gamepad) new InputDeviceBuilder("MyLayout").Finish();
 
         Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
-        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Horizontal"));
+        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Primary Stick Horizontal"));
+        Assert.That(device.leftStick.shortDisplayName, Is.EqualTo("PS"));
+        Assert.That(device.leftStick.x.shortDisplayName, Is.Null);
+    }
+
+    class TestDeviceWithMinMaxValue : InputDevice
+    {
+        [InputControl(minValue = 0.1234f, maxValue = 0.5432f)]
+        public AxisControl control { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyMinAndMaxValuesForControlInOnAttribute()
+    {
+        InputSystem.RegisterLayout<TestDeviceWithMinMaxValue>();
+
+        var layout = InputSystem.TryLoadLayout("TestDeviceWithMinMaxValue");
+
+        Assert.That(layout["control"].minValue.isEmpty, Is.False);
+        Assert.That(layout["control"].maxValue.isEmpty, Is.False);
+        Assert.That(layout["control"].minValue.ToFloat(), Is.EqualTo(0.1234f));
+        Assert.That(layout["control"].maxValue.ToFloat(), Is.EqualTo(0.5432f));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyMinAndMaxValuesForControlInJson()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control"",
+                        ""layout"" : ""Axis"",
+                        ""minValue"" : ""-123"",
+                        ""maxValue"" : ""123""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var layout = InputSystem.TryLoadLayout("TestLayout");
+
+        Assert.That(layout["control"].minValue.isEmpty, Is.False);
+        Assert.That(layout["control"].maxValue.isEmpty, Is.False);
+        Assert.That(layout["control"].minValue.ToInt(), Is.EqualTo(-123));
+        Assert.That(layout["control"].maxValue.ToInt(), Is.EqualTo(123));
+    }
+
+    class BaseClassWithControl : InputDevice
+    {
+        public AxisControl controlFromBase { get; set; }
+    }
+
+    class DerivedClassModifyingControlFromBaseClass : BaseClassWithControl
+    {
+        // One kink is that InputControlAttribute can only go on fields and properties
+        // so we have to put it on some unrelated control.
+        [InputControl(name = "controlFromBase", format = "SHRT")]
+        public ButtonControl controlFromDerived { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanModifyControlDefinedInBaseClass()
+    {
+        InputSystem.RegisterLayout<BaseClassWithControl>();
+        InputSystem.RegisterLayout<DerivedClassModifyingControlFromBaseClass>();
+
+        var baseLayout = InputSystem.TryLoadLayout<BaseClassWithControl>();
+        var derivedLayout = InputSystem.TryLoadLayout<DerivedClassModifyingControlFromBaseClass>();
+
+        Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
+        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
+
+        // This is probably somewhat counterintuitive but if there's InputControlAttributes on a property or field,
+        // there won't be a control generated automatically from the field or property.
+        Assert.That(() => derivedLayout["controlFromDerived"], Throws.TypeOf<KeyNotFoundException>());
     }
 
     [Test]
@@ -1208,11 +1427,126 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = InputSystem.AddDevice("MyLayout");
 
         Assert.That(device["button"].noisy, Is.True);
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanMarkControlAsSynthetic()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button"",
+                        ""synthetic"" : true
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("MyLayout");
+
+        Assert.That(device["button"].synthetic, Is.True);
+    }
+
+    class DeviceWithAutoOffsetControl : InputDevice
+    {
+        [InputControl(offset = 4, sizeInBits = 32)]
+        public ButtonControl button1;
+
+        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        public ButtonControl button2 { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceControlsAutomatically()
+    {
+        var device = InputSystem.AddDevice<DeviceWithAutoOffsetControl>();
+
+        Assert.That(device["button2"].stateBlock.byteOffset, Is.EqualTo(8));
+    }
+
+    private class BaseDeviceFixedFixedOffsetControl : InputDevice
+    {
+        [InputControl(offset = 4, format = "FLT")]
+        public ButtonControl control;
+
+        [InputControl(offset = 8)]
+        public AxisControl otherControl;
+    }
+
+    private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
+    {
+        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        public new ButtonControl control;
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceControlsAutomatically_EvenIfControlIsInheritedWithFixedOffset()
+    {
+        InputSystem.RegisterLayout<BaseDeviceFixedFixedOffsetControl>();
+        InputSystem.RegisterLayout<DerivedDeviceWithAutomaticOffsetControl>();
+
+        var device = InputSystem.AddDevice<DerivedDeviceWithAutomaticOffsetControl>();
+
+        // Should have gotten placed *after* `otherControl`.
+        Assert.That(device.stateBlock.alignedSizeInBytes, Is.EqualTo(16));
+        Assert.That(device["control"].stateBlock.format, Is.EqualTo(new FourCC("FLT")));
+        Assert.That(device["control"].stateBlock.byteOffset, Is.EqualTo(12));
+        Assert.That(device["control"].stateBlock.sizeInBits, Is.EqualTo(32));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceBitfieldControlsAutomatically()
+    {
+        const string layout = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"" },
+                    { ""name"" : ""fixed"", ""layout"" : ""Axis"", ""offset"" : 4 },
+                    { ""name"" : ""third"", ""layout"" : ""Button"" },
+                    { ""name"" : ""fourth"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout);
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["fixed"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["fixed"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(device["fixed"].stateBlock.sizeInBits, Is.EqualTo(32));
+
+        // Automatically placed controls are slotted in after the last fixed offset control.
+
+        Assert.That(device["first"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["first"].stateBlock.bitOffset, Is.Zero);
+        Assert.That(device["first"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["second"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["second"].stateBlock.bitOffset, Is.EqualTo(1));
+        Assert.That(device["second"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["third"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["third"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["third"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["fourth"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["fourth"].stateBlock.bitOffset, Is.EqualTo(3));
+        Assert.That(device["fourth"].stateBlock.sizeInBits, Is.EqualTo(1));
     }
 
     [Test]
@@ -1294,7 +1628,7 @@ partial class CoreTests
     {
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
 
-        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), "MyLayout");
+        InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "MyLayout");
 
         var result = InputSystem.TryLoadLayout("MyLayout");
 
@@ -1370,7 +1704,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var jsonLayout = InputSystem.TryLoadLayout("MyLayout");
 
@@ -1396,15 +1730,15 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = InputSystem.AddDevice("MyLayout");
 
-        Assert.That(InputSystem.ListControlLayouts(), Has.Exactly(1).EqualTo("MyLayout"));
+        Assert.That(InputSystem.ListLayouts(), Has.Exactly(1).EqualTo("MyLayout"));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(device));
 
-        InputSystem.RemoveControlLayout("MyLayout");
+        InputSystem.RemoveLayout("MyLayout");
 
-        Assert.That(InputSystem.ListControlLayouts(), Has.None.EqualTo("MyLayout"));
+        Assert.That(InputSystem.ListLayouts(), Has.None.EqualTo("MyLayout"));
         Assert.That(InputSystem.devices, Has.None.SameAs(device));
         Assert.That(InputSystem.devices, Has.None.With.Property("layout").EqualTo("MyLayout"));
     }
@@ -1416,7 +1750,7 @@ partial class CoreTests
         InputControlLayoutChange? receivedChange = null;
         string receivedLayout = null;
 
-        InputSystem.onControlLayoutChange +=
+        InputSystem.onLayoutChange +=
             (layout, change) =>
         {
             receivedChange = change;
@@ -1431,7 +1765,7 @@ partial class CoreTests
         ";
 
         // Add layout.
-        InputSystem.RegisterControlLayout(jsonV1);
+        InputSystem.RegisterLayout(jsonV1);
 
         Assert.That(receivedChange, Is.EqualTo(InputControlLayoutChange.Added));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
@@ -1447,7 +1781,7 @@ partial class CoreTests
         receivedLayout = null;
 
         // Change layout.
-        InputSystem.RegisterControlLayout(jsonV2);
+        InputSystem.RegisterLayout(jsonV2);
 
         Assert.That(receivedChange, Is.EqualTo(InputControlLayoutChange.Replaced));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
@@ -1455,8 +1789,8 @@ partial class CoreTests
         receivedChange = null;
         receivedLayout = null;
 
-        // RemoveControlLayout.
-        InputSystem.RemoveControlLayout("MyLayout");
+        // RemoveLayout.
+        InputSystem.RemoveLayout("MyLayout");
 
         Assert.That(receivedChange, Is.EqualTo(InputControlLayoutChange.Removed));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
@@ -1464,24 +1798,9 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RemovingLayouts_RemovesAllLayoutsBasedOnIt()
     {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void TODO_Layouts_CanQueryResourceNameFromControl()
-    {
-        var json = @"
-            {
-                ""name"" : ""MyLayout"",
-                ""controls"" : [ { ""name"" : ""MyControl"",  } ]
-            }
-        ";
-
-        InputSystem.RegisterControlLayout(json);
-
         Assert.Fail();
     }
 
@@ -1518,8 +1837,8 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanSetUpMultipleLayoutsFromSingleState_UsingVariants()
     {
-        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
-        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantB>();
+        InputSystem.RegisterLayout<DeviceWithLayoutVariantA>();
+        InputSystem.RegisterLayout<DeviceWithLayoutVariantB>();
 
         var deviceA = InputSystem.AddDevice<DeviceWithLayoutVariantA>();
         var deviceB = InputSystem.AddDevice<DeviceWithLayoutVariantB>();
@@ -1561,9 +1880,9 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
-        InputSystem.RegisterControlLayout(jsonBase);
-        InputSystem.RegisterControlLayout(jsonDerived);
+        InputSystem.RegisterLayout<DeviceWithLayoutVariantA>();
+        InputSystem.RegisterLayout(jsonBase);
+        InputSystem.RegisterLayout(jsonDerived);
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
@@ -1608,17 +1927,17 @@ partial class CoreTests
                     { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
                     { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
                     { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" },
-                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A;B"" },
+                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A,B"" },
                     { ""name"" : ""ButtonNoVariant"", ""layout"" : ""Button"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
-        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
+        var device = InputSystem.AddDevice("TestLayout", variants: "A,B");
 
-        Assert.That(device.variants, Is.EqualTo("A;B"));
+        Assert.That(device.variants, Is.EqualTo("A,B"));
         Assert.That(device.allControls, Has.Count.EqualTo(4));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonB"));
@@ -1629,6 +1948,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CurrentPlatformIsImplicitLayoutVariant()
     {
         var json = @"
@@ -1640,7 +1960,7 @@ partial class CoreTests
             }
         ".Replace("__PLATFORM__", Application.platform.ToString());
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = InputSystem.AddDevice("TestLayout");
 
@@ -1670,7 +1990,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = (Gamepad) new InputDeviceBuilder("MyDevice").Finish();
 
         Assert.That(device.leftStick.stateBlock.byteOffset, Is.EqualTo(6));
@@ -1695,6 +2015,7 @@ partial class CoreTests
     ////      isn't.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanMoveProcessorFromBaseLayoutInProcessorStack()
     {
         // The base gamepad layout is adding deadzone processors to sticks. However, a
@@ -1708,24 +2029,25 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick/x"",
-                        ""processors"" : ""invert,deadzone""
+                        ""processors"" : ""invert,stickDeadzone""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var setup = new InputDeviceBuilder("MyDevice");
         var leftStickX = setup.GetControl<AxisControl>("leftStick/x");
 
         Assert.That(leftStickX.processors, Has.Length.EqualTo(2));
         Assert.That(leftStickX.processors[0], Is.TypeOf<InvertProcessor>());
-        Assert.That(leftStickX.processors[1], Is.TypeOf<DeadzoneProcessor>());
+        Assert.That(leftStickX.processors[1], Is.TypeOf<StickDeadzoneProcessor>());
     }
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layout_CustomizedStateLayoutWillNotUseFormatCodeFromBaseLayout()
     {
         //make sure that if you customize a gamepad layout, you don't end up with the "GPAD" format on the device
@@ -1740,6 +2062,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
+
         public FourCC GetFormat()
         {
             return new FourCC("BASE");
@@ -1766,6 +2089,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)

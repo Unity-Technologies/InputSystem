@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <remarks>
     /// This is a variable-sized event.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 5)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 5)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x53544154; // 'STAT'
@@ -31,13 +31,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int)); }
         }
 
-        public IntPtr state
+        public void* state
         {
             get
             {
                 fixed(byte* data = stateData)
                 {
-                    return new IntPtr((void*)data);
+                    return data;
                 }
             }
         }
@@ -77,6 +77,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         /// <param name="device">Device to grab the state from. Must be a device that has been added to the system.</param>
         /// <param name="eventPtr">Receives a pointer to the newly created state event.</param>
+        /// <param name="allocator">Which native allocator to allocate memory for the event from. By default, the buffer is
+        /// allocated as temporary memory (<see cref="Allocator.Temp"/>. Note that this means the buffer will not be valid
+        /// past the current frame. Use <see cref="Allocator.Persistent"/> if the buffer for the state event is meant to
+        /// persist for longer.</param>
         /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
         /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
@@ -91,7 +95,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             var stateFormat = device.m_StateBlock.format;
             var stateSize = device.m_StateBlock.alignedSizeInBytes;
             var stateOffset = device.m_StateBlock.byteOffset;
-            var statePtr = (byte*)device.currentStatePtr.ToPointer() + (int)stateOffset;
+            var statePtr = (byte*)device.currentStatePtr + (int)stateOffset;
             var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
@@ -99,7 +103,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
             stateEventPtr->stateFormat = stateFormat;
-            UnsafeUtility.MemCpy(stateEventPtr->state.ToPointer(), statePtr, stateSize);
+            UnsafeUtility.MemCpy(stateEventPtr->state, statePtr, stateSize);
 
             eventPtr = stateEventPtr->ToEventPtr();
             return buffer;

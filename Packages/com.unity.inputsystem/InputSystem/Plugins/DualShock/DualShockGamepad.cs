@@ -1,36 +1,57 @@
 using UnityEngine.Experimental.Input.Controls;
-
-////TODO: set displayNames of the controls according to PlayStation controller standards
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: speaker, touchpad
 
 namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>
-    /// A PS4 DualShock controller.
+    /// A Sony DualShock controller.
     /// </summary>
-    public abstract class DualShockGamepad : Gamepad, IDualShockHaptics
+    [InputControlLayout] // Unset state type inherited from base.
+    public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
         public ButtonControl touchpadButton { get; private set; }
+
+        [InputControl(name = "start", displayName = "Options")]
         public ButtonControl optionsButton { get; private set; }
 
+        [InputControl(name = "select", displayName = "Share")]
+        public ButtonControl shareButton { get; private set; }
+
+        [InputControl(name = "buttonWest", displayName = "Square", shortDisplayName = "\u25A1")]
         public ButtonControl squareButton { get; private set; }
+
+        [InputControl(name = "buttonNorth", displayName = "Triangle", shortDisplayName = "\u25B3")]
         public ButtonControl triangleButton { get; private set; }
+
+        [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "\u25CB")]
         public ButtonControl circleButton { get; private set; }
+
+        [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "\u274C")]
         public ButtonControl crossButton { get; private set; }
+
+        [InputControl(name = "leftShoulder", shortDisplayName = "L1")]
+        public ButtonControl L1 { get; private set; }
+
+        [InputControl(name = "rightShoulder", shortDisplayName = "R1")]
+        public ButtonControl R1 { get; private set; }
+
+        [InputControl(name = "leftTrigger", shortDisplayName = "L2")]
+        public ButtonControl L2 { get; private set; }
+
+        [InputControl(name = "rightTrigger", shortDisplayName = "R2")]
+        public ButtonControl R2 { get; private set; }
+
+        [InputControl(name = "leftStickPress", shortDisplayName = "L3")]
+        public ButtonControl L3 { get; private set; }
+
+        [InputControl(name = "rightStickPress", shortDisplayName = "R3")]
+        public ButtonControl R3 { get; private set; }
 
         public Vector3Control acceleration { get; private set; }
         public QuaternionControl orientation { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
-
-        public new static DualShockGamepad current { get; private set; }
-
-        public ButtonControl L3 { get; private set; }
-        public ButtonControl R3 { get; private set; }
-        public ButtonControl L2 { get; private set; }
-        public ButtonControl R2 { get; private set; }
-        public ButtonControl L1 { get; private set; }
-        public ButtonControl R1 { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -38,6 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 
             touchpadButton = builder.GetControl<ButtonControl>(this, "touchpadButton");
             optionsButton = startButton;
+            shareButton = selectButton;
 
             acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
             orientation = builder.GetControl<QuaternionControl>(this, "orientation");
@@ -56,12 +78,8 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             R3 = rightStickButton;
         }
 
-        public override void MakeCurrent()
+        public virtual void SetLightBarColor(Color color)
         {
-            base.MakeCurrent();
-            current = this;
         }
-
-        public abstract void SetLightBarColor(Color color);
     }
 }

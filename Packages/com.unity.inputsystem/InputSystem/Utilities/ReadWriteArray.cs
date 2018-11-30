@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     // Variation of ReadOnlyArray that has the slicing ability but
     // does provide write access. Used only internally.
-    internal struct ReadWriteArray<TValue> : IReadOnlyList<TValue>
+    public struct ReadWriteArray<TValue> : IReadOnlyList<TValue>
     {
         internal TValue[] m_Array;
         internal int m_StartIndex;

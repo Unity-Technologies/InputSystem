@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Controls
@@ -12,7 +13,9 @@ namespace UnityEngine.Experimental.Input.Controls
     /// <example>
     /// An example is <see cref="Pointer.position"/>.
     /// <code>
-    /// Debug.Log(string.Format("Mouse position x={0} y={1}", Mouse.current.position.x.value, Mouse.current.position.y.value));
+    /// Debug.Log(string.Format("Mouse position x={0} y={1}",
+    ///     InputSystem.GetDevice&lt;Mouse&gt;().position.x.value,
+    ///     Inputsystem.GetDevice&lt;Mouse&gt;().position.y.value));
     /// </code>
     /// </example>
     public class Vector2Control : InputControl<Vector2>
@@ -20,13 +23,13 @@ namespace UnityEngine.Experimental.Input.Controls
         /// <summary>
         /// Horizontal position of the control.
         /// </summary>
-        [InputControl(offset = 0)]
+        [InputControl(offset = 0, displayName = "X")]
         public AxisControl x { get; private set; }
 
         /// <summary>
         /// Vertical position of the control.
         /// </summary>
-        [InputControl(offset = 4)]
+        [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; private set; }
 
         public Vector2Control()
@@ -41,15 +44,21 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector2 ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector2(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr));
+            return new Vector2(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr));
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, Vector2 value)
+        public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            x.WriteValueInto(statePtr, value.x);
-            y.WriteValueInto(statePtr, value.y);
+            x.WriteValueIntoState(value.x, statePtr);
+            y.WriteValueIntoState(value.y, statePtr);
+        }
+
+        public override unsafe float EvaluateMagnitude(void* statePtr)
+        {
+            ////REVIEW: this can go beyond 1; that okay?
+            return ReadValueFromState(statePtr).magnitude;
         }
     }
 }

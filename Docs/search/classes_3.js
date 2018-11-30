@@ -6,6 +6,7 @@ var searchData=
   ['deviceremoveevent',['DeviceRemoveEvent',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['disabledevicecommand',['DisableDeviceCommand',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['discretebuttoncontrol',['DiscreteButtonControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
+  ['dpadcomposite',['DpadComposite',['../classUnityEngine_1_1Experimental_1_1Input_1_1Composites_1_1DpadComposite.html',1,'UnityEngine::Experimental::Input::Composites']]],
   ['dpadcontrol',['DpadControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DpadControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
   ['dualmotorrumble',['DualMotorRumble',['../structUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1DualMotorRumble.html',1,'UnityEngine::Experimental::Input::Haptics']]],
   ['dualshockgamepad',['DualShockGamepad',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockGamepad.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock']]],

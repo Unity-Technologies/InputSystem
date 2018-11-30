@@ -4,6 +4,8 @@ using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -15,12 +17,10 @@ namespace UnityEngine.Experimental.Input
     ///
     /// The test runtime replaces the services usually supplied by <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
     /// </remarks>
-    /// <seealso cref="InputTestFixture.testRuntime"/>
+    /// <seealso cref="InputTestFixture.runtime"/>
     public class InputTestRuntime : IInputRuntime, IDisposable
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
-
-        public const double kTimeIncrementPerUpdate = 0.1;
 
         ~InputTestRuntime()
         {
@@ -39,9 +39,6 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
-                // Advance time on every update. We choose an arbitrary amount here.
-                currentTime += kTimeIncrementPerUpdate;
-
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)
@@ -69,6 +66,7 @@ namespace UnityEngine.Experimental.Input
         {
             var eventPtr = (InputEvent*)ptr;
             var eventSize = eventPtr->sizeInBytes;
+            var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
 
             lock (m_Lock)
             {
@@ -76,20 +74,25 @@ namespace UnityEngine.Experimental.Input
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
-                if ((m_EventWritePosition + eventSize) > m_EventBuffer.Length)
+                if ((m_EventWritePosition + alignedEventSize) > m_EventBuffer.Length)
                 {
-                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)eventSize, 1024);
+                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)alignedEventSize, 1024);
                     var newBuffer = new NativeArray<byte>(newBufferSize, Allocator.Persistent);
-                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventBuffer.Length);
+                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventWritePosition);
                     m_EventBuffer.Dispose();
                     m_EventBuffer = newBuffer;
                 }
 
                 // Copy event.
                 UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
-                m_EventWritePosition += (int)eventSize;
+                m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
+        }
+
+        public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
+        {
+            SetDeviceCommandCallback(device.id, callback);
         }
 
         public void SetDeviceCommandCallback(int deviceId, DeviceCommandCallback callback)
@@ -98,6 +101,17 @@ namespace UnityEngine.Experimental.Input
             {
                 if (m_DeviceCommandCallbacks == null)
                     m_DeviceCommandCallbacks = new List<KeyValuePair<int, DeviceCommandCallback>>();
+                else
+                {
+                    for (var i = 0; i < m_DeviceCommandCallbacks.Count; ++i)
+                    {
+                        if (m_DeviceCommandCallbacks[i].Key == deviceId)
+                        {
+                            m_DeviceCommandCallbacks[i] = new KeyValuePair<int, DeviceCommandCallback>(deviceId, callback);
+                            return;
+                        }
+                    }
+                }
                 m_DeviceCommandCallbacks.Add(new KeyValuePair<int, DeviceCommandCallback>(deviceId, callback));
             }
         }
@@ -129,17 +143,34 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
+                if (commandPtr->type == QueryPairedUserAccountCommand.Type)
+                {
+                    foreach (var pairing in userAccountPairings)
+                    {
+                        if (pairing.deviceId != deviceId)
+                            continue;
+
+                        var queryPairedUser = (QueryPairedUserAccountCommand*)commandPtr;
+                        queryPairedUser->handle = pairing.userHandle;
+                        queryPairedUser->name = pairing.userName;
+                        queryPairedUser->id = pairing.userId;
+                        return (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
+                    }
+                }
+
+                var result = InputDeviceCommand.kGenericFailure;
                 if (m_DeviceCommandCallbacks != null)
                     foreach (var entry in m_DeviceCommandCallbacks)
                     {
                         if (entry.Key == deviceId)
                         {
-                            return entry.Value(deviceId, commandPtr);
+                            result = entry.Value(deviceId, commandPtr);
+                            if (result >= 0)
+                                return result;
                         }
                     }
+                return result;
             }
-
-            return -1;
         }
 
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
@@ -153,6 +184,79 @@ namespace UnityEngine.Experimental.Input
                 m_NewDeviceDiscoveries.Add(new KeyValuePair<int, string>(deviceId, deviceDescriptor));
                 return deviceId;
             }
+        }
+
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId,
+            ulong userHandle = 0, string userName = null, string userId = null)
+        {
+            deviceId = ReportNewInputDevice(description.ToJson(), deviceId);
+
+            // If we have user information, automatically set up
+            if (userHandle != 0)
+                AssociateInputDeviceWithUser(deviceId, userHandle, userName, userId);
+
+            return deviceId;
+        }
+
+        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.kInvalidDeviceId,
+            ulong userHandle = 0, string userName = null, string userId = null)
+            where TDevice : InputDevice
+        {
+            return ReportNewInputDevice(
+                new InputDeviceDescription {deviceClass = typeof(TDevice).Name, interfaceName = "Test"}, deviceId,
+                userHandle, userName, userId);
+        }
+
+        public void AssociateInputDeviceWithUser(int deviceId, ulong userHandle, string userName = null, string userId = null)
+        {
+            var existingIndex = -1;
+            for (var i = 0; i < userAccountPairings.Count; ++i)
+                if (userAccountPairings[i].deviceId == deviceId)
+                {
+                    existingIndex = i;
+                    break;
+                }
+
+            if (userHandle == 0)
+            {
+                if (existingIndex != -1)
+                    userAccountPairings.RemoveAt(existingIndex);
+            }
+            else if (existingIndex != -1)
+            {
+                userAccountPairings[existingIndex] =
+                    new PairedUser
+                {
+                    deviceId = deviceId,
+                    userHandle = userHandle,
+                    userName = userName,
+                    userId = userId,
+                };
+            }
+            else
+            {
+                userAccountPairings.Add(
+                    new PairedUser
+                    {
+                        deviceId = deviceId,
+                        userHandle = userHandle,
+                        userName = userName,
+                        userId = userId,
+                    });
+            }
+        }
+
+        public void AssociateInputDeviceWithUser(InputDevice device, ulong userHandle, string userName = null, string userId = null)
+        {
+            AssociateInputDeviceWithUser(device.id, userHandle, userName, userId);
+        }
+
+        public struct PairedUser
+        {
+            public int deviceId;
+            public ulong userHandle;
+            public string userName;
+            public string userId;
         }
 
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
@@ -189,10 +293,30 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public List<PairedUser> userAccountPairings
+        {
+            get
+            {
+                if (m_UserPairings == null)
+                    m_UserPairings = new List<PairedUser>();
+                return m_UserPairings;
+            }
+        }
+
         public void Dispose()
         {
             m_EventBuffer.Dispose();
             GC.SuppressFinalize(this);
+        }
+
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            set
+            {
+                m_CurrentTimeOffsetToRealtimeSinceStartup = value;
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
+            }
         }
 
         private int m_NextDeviceId = 1;
@@ -200,11 +324,13 @@ namespace UnityEngine.Experimental.Input
         private int m_EventCount;
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
+        private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+        private double m_CurrentTimeOffsetToRealtimeSinceStartup;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

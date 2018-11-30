@@ -8,8 +8,10 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.LowLevel;
 
-class XRTests : InputTestFixture
+internal class XRTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
@@ -23,7 +25,7 @@ class XRTests : InputTestFixture
     public void Devices_XRDeviceRoleDeterminesTypeOfDevice(DeviceRole role, string baseLayoutName, Type expectedType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -40,54 +42,10 @@ class XRTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CreatingGenericDevice_MakesItTheCurrentHMD()
-    {
-        Assert.That(XRHMD.current, Is.Null);
-
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-        var device = InputSystem.devices[0];
-        Assert.That(XRHMD.current, Is.EqualTo(device));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_LeftAndRightDevices_AreAvailableViaXRControllerLeftAndRightHandProperties()
-    {
-        Assert.That(XRController.leftHand, Is.Null);
-        Assert.That(XRController.rightHand, Is.Null);
-
-        testRuntime.ReportNewInputDevice(CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded).ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-        var leftHandedDevice = InputSystem.devices[0];
-
-        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
-        Assert.That(XRController.rightHand, Is.Null);
-
-        testRuntime.ReportNewInputDevice(CreateSimpleDeviceDescriptionByRole(DeviceRole.RightHanded).ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
-        var rightHandedDevice = InputSystem.devices[1];
-
-        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
-        Assert.That(XRController.rightHand, Is.EqualTo(rightHandedDevice));
-    }
-
-    [Test]
-    [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -98,7 +56,7 @@ class XRTests : InputTestFixture
         Assert.That(XRController.rightHand, Is.Null);
         Assert.That(XRController.leftHand, Is.EqualTo(controller));
 
-        InputSystem.SetUsage(controller, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(controller, CommonUsages.RightHand);
 
         Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
         Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
@@ -111,7 +69,7 @@ class XRTests : InputTestFixture
     public void Layouts_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -129,7 +87,7 @@ class XRTests : InputTestFixture
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
         deviceDescription.manufacturer = null;
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -144,7 +102,7 @@ class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRGeneratedLayoutNames_OnlyContainAllowedCharacters()
     {
-        testRuntime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
+        runtime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
 
         InputSystem.Update();
 
@@ -158,7 +116,7 @@ class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutFeatures_OnlyContainAllowedCharacters()
     {
-        testRuntime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
+        runtime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
 
         InputSystem.Update();
 
@@ -179,7 +137,7 @@ class XRTests : InputTestFixture
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
         deviceDescription.capabilities = null;
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -188,7 +146,7 @@ class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Is.Empty);
 
         deviceDescription.capabilities = "Not a JSON String";
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -201,29 +159,23 @@ class XRTests : InputTestFixture
     [Category("Devices")]
     [TestCase("Windows Mixed Reality HMD", "Microsoft", typeof(WMRHMD))]
     [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
-    [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
     [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
-    [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
     [TestCase("Oculus HMD", "Samsung", typeof(GearVRHMD))]
     [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
-    [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
     [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
-    [TestCase("Daydream Controller", null, typeof(DaydreamController))]
     [TestCase("Daydream Controller", null, typeof(DaydreamController))]
     [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
-    [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
-    [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
     [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
         deviceDescription.product = name;
         deviceDescription.manufacturer = manufacturer;
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -236,7 +188,7 @@ class XRTests : InputTestFixture
     [Category("State")]
     public void State_AllFeatureTypes_ReadTheSameAsTheirStateValue()
     {
-        testRuntime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
+        runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
 
         InputSystem.Update();
 
@@ -260,7 +212,7 @@ class XRTests : InputTestFixture
         Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(Vector2.zero));
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(Vector3.zero));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(Quaternion.identity));
-        Assert.That(device["Custom"], Is.Null);
+        Assert.That(device.TryGetChildControl("Custom"), Is.Null);
         Assert.That(((ButtonControl)device["Last"]).isPressed, Is.False);
 
         InputSystem.QueueStateEvent(device, new TestXRDeviceState
@@ -281,7 +233,7 @@ class XRTests : InputTestFixture
         Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(new Vector2(0.1f, 0.2f)));
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(new Vector3(0.3f, 0.4f, 0.5f)));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(new Quaternion(0.6f, 0.7f, 0.8f, 0.9f)));
-        Assert.That(device["Custom"], Is.Null);
+        Assert.That(device.TryGetChildControl("Custom"), Is.Null);
         Assert.That(((ButtonControl)device["Last"]).isPressed, Is.True);
     }
 
@@ -289,7 +241,7 @@ class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_AllFeatureTypes_AreRepresentedInTheGeneratedLayout()
     {
-        testRuntime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
+        runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
 
         InputSystem.Update();
 
@@ -354,7 +306,7 @@ class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_ButtonsArePackedByTheByte_WhileLargerStructuresAreFourByteAligned()
     {
-        testRuntime.ReportNewInputDevice(ButtonPackedXRDeviceState.CreateDeviceDescription().ToJson());
+        runtime.ReportNewInputDevice(ButtonPackedXRDeviceState.CreateDeviceDescription().ToJson());
 
         InputSystem.Update();
 
@@ -395,7 +347,111 @@ class XRTests : InputTestFixture
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 
-    private InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
+    [InputControlLayout]
+    public class TestHMD : InputDevice
+    {
+        public QuaternionControl quaternion { get; set; }
+        public Vector3Control vector3 { get; set; }
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+            quaternion = builder.GetControl<QuaternionControl>("quaternion");
+            vector3 = builder.GetControl<Vector3Control>("vector3");
+        }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_CanUpdateGameObjectTransformThroughTrackedPoseDriver()
+    {
+        var testpos = new Vector3(1.0f, 2.0f, 3.0f);
+        var testrot = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd1 = go.AddComponent<TrackedPoseDriver>();
+        var tpd = tpd1;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        InputEventPtr stateEvent;
+        using (StateEvent.From(device, out stateEvent))
+        {
+            var positionAction = new InputAction();
+            positionAction.AddBinding("<TestHMD>/vector3");
+
+            var rotationAction = new InputAction();
+            rotationAction.AddBinding("<TestHMD>/quaternion");
+
+            tpd.positionAction = positionAction;
+            tpd.rotationAction = rotationAction;
+
+            // before render only
+            var go1 = tpd.gameObject;
+            go1.transform.position = Vector3.zero;
+            go1.transform.rotation = new Quaternion(0, 0, 0, 0);
+            tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+
+            device.quaternion.WriteValueIntoEvent(testrot, stateEvent);
+            device.vector3.WriteValueIntoEvent(testpos, stateEvent);
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
+            Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
+
+            var go2 = tpd.gameObject;
+            go2.transform.position = Vector3.zero;
+            go2.transform.rotation = new Quaternion(0, 0, 0, 0);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.BeforeRender);
+            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
+            Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
+
+            // update only
+            var go3 = tpd.gameObject;
+            go3.transform.position = Vector3.zero;
+            go3.transform.rotation = new Quaternion(0, 0, 0, 0);
+            tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
+            Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
+
+            GameObject go4 = tpd.gameObject;
+            go4.transform.position = Vector3.zero;
+            go4.transform.rotation = new Quaternion(0, 0, 0, 0);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.BeforeRender);
+            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
+            Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
+
+
+            // check the rot/pos case also Update AND Render.
+            tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
+            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
+            var go5 = tpd.gameObject;
+            go5.transform.position = Vector3.zero;
+            go5.transform.rotation = new Quaternion(0, 0, 0, 0);
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
+            Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
+
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+            var go6 = tpd.gameObject;
+            go6.transform.position = Vector3.zero;
+            go6.transform.rotation = new Quaternion(0, 0, 0, 0);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.BeforeRender);
+            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
+            Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
+        }
+    }
+
+    private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
     {
         return new InputDeviceDescription
         {
@@ -417,7 +473,7 @@ class XRTests : InputTestFixture
         };
     }
 
-    private InputDeviceDescription CreateMangledNameDeviceDescription()
+    private static InputDeviceDescription CreateMangledNameDeviceDescription()
     {
         return new InputDeviceDescription
         {

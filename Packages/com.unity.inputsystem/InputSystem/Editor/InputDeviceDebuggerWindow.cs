@@ -7,6 +7,10 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add commands to event trace (also clickable)
+
+////TODO: add diff-to-previous-event ability to event window
+
 ////FIXME: doesn't survive domain reload correctly
 
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
@@ -82,7 +86,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Find device again if we've gone through a domain reload.
             if (m_Device == null)
             {
-                m_Device = InputSystem.TryGetDeviceById(m_DeviceId);
+                m_Device = InputSystem.GetDeviceById(m_DeviceId);
 
                 if (m_Device == null)
                 {

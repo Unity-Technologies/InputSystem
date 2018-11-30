@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: add ability to add to existing arrays rather than creating per-device arrays
 
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the layout cache around instead of throwing
@@ -12,7 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
@@ -25,7 +28,7 @@ namespace UnityEngine.Experimental.Input
     /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
-    /// <c>new</c>'d directlty.
+    /// <c>new</c>'d directly.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
@@ -39,18 +42,20 @@ namespace UnityEngine.Experimental.Input
     public class InputDeviceBuilder
     {
         // We use this constructor when we create devices in batches.
-        internal InputDeviceBuilder(InputControlLayout.Collection layouts)
+        internal InputDeviceBuilder()
         {
-            m_LayoutCache.layouts = layouts;
         }
 
-        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variants = null)
+        public InputDeviceBuilder(string layout, string variants = null,
+                                  InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+                                  InputDevice existingDevice = null)
         {
-            m_LayoutCache.layouts = InputControlLayout.s_Layouts;
-            Setup(new InternedString(layout), existingDevice, new InternedString(variants));
+            Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 
-        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variants)
+        internal void Setup(InternedString layout, InternedString variants,
+            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+            InputDevice existingDevice = null)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
@@ -59,17 +64,8 @@ namespace UnityEngine.Experimental.Input
 
             InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
-            m_Device.CallFinishSetupRecursive(this);
-        }
 
-        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variants)
-        {
-            InstantiateLayout(layout, variants, new InternedString(), null, null);
-            FinalizeControlHierarchy();
-
-            if (!deviceDescription.empty)
-                m_Device.m_Description = deviceDescription;
-
+            m_Device.m_Description = deviceDescription;
             m_Device.CallFinishSetupRecursive(this);
         }
 
@@ -108,7 +104,7 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        // Look up a direct or indirect chid control expected to be of a specific type.
+        // Look up a direct or indirect child control expected to be of a specific type.
         // Throws if actual type is not compatible.
         public TControl TryGetControl<TControl>(InputControl parent, string path)
             where TControl : InputControl
@@ -199,6 +195,8 @@ namespace UnityEngine.Experimental.Input
         // overrides for the control at the given path.
         private Dictionary<string, InputControlLayout.ControlItem> m_ChildControlOverrides;
 
+        private StringBuilder m_StringBuilder;
+
         // Reset the setup in a way where it can be reused for another setup.
         // Should retain allocations that can be reused.
         private void Reset()
@@ -258,6 +256,7 @@ namespace UnityEngine.Experimental.Input
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
+                m_Device.m_StateBlock.bitOffset = 0;
                 m_Device.m_StateBlock.format = layout.stateFormat;
 
                 // If we have an existing device, we'll start the various control arrays
@@ -311,7 +310,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             control.m_Name = name;
-            control.m_DisplayNameFromLayout = layout.m_DisplayName;
+            control.m_DisplayNameFromLayout = layout.m_DisplayName; // No short display names at layout roots.
             control.m_Layout = layout.name;
             control.m_Variants = variants;
             control.m_Parent = parent;
@@ -408,7 +407,7 @@ namespace UnityEngine.Experimental.Input
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, InputControlLayout.kListSeparator))
+                        variants, InputControlLayout.kSeparator))
                     continue;
 
                 if (controlLayouts[i].isArray)
@@ -437,7 +436,7 @@ namespace UnityEngine.Experimental.Input
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants, variants,
-                        InputControlLayout.kListSeparator))
+                        InputControlLayout.kSeparator))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -501,7 +500,6 @@ namespace UnityEngine.Experimental.Input
             var name = nameOverride ?? controlItem.name;
             var nameLowerCase = name.ToLower();
             var nameInterned = new InternedString(name);
-            string path = null;
 
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
@@ -512,7 +510,7 @@ namespace UnityEngine.Experimental.Input
             InputControlLayout.ControlItem? controlOverride = null;
             if (m_ChildControlOverrides != null)
             {
-                path = string.Format("{0}/{1}", parent.path, name);
+                var path = string.Format("{0}/{1}", parent.path, name);
                 var pathLowerCase = path.ToLower();
 
                 InputControlLayout.ControlItem match;
@@ -558,25 +556,40 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Add to array.
+            // NOTE: AddChildControls and InstantiateLayout take care of growing the array and making
+            //       room for the immediate children of each control.
             m_Device.m_ChildrenForEachControl[childIndex] = control;
             ++childIndex;
 
             // Set flags and misc things.
-            control.m_DisplayNameFromLayout = controlItem.displayName;
             control.noisy = controlItem.isNoisy;
+            control.synthetic = controlItem.isSynthetic;
+            if (control.noisy)
+                m_Device.noisy = true;
+
+            // Remember the display names from the layout. We later do a proper pass once we have
+            // the full hierarchy to set final names.
+            control.m_DisplayNameFromLayout = controlItem.displayName;
+            control.m_ShortDisplayNameFromLayout = controlItem.shortDisplayName;
 
             // Set default value.
             control.m_DefaultValue = controlItem.defaultState;
             if (!control.m_DefaultValue.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
 
+            // Set min and max value. Don't just overwrite here as the control's constructor may
+            // have set a default value.
+            if (!controlItem.minValue.isEmpty)
+                control.m_MinValue = controlItem.minValue;
+            if (!controlItem.maxValue.isEmpty)
+                control.m_MaxValue = controlItem.maxValue;
+
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
             if (!usesStateFromOtherControl)
             {
                 control.m_StateBlock.byteOffset = controlItem.offset;
-                if (controlItem.bit != InputStateBlock.kInvalidOffset)
-                    control.m_StateBlock.bitOffset = controlItem.bit;
+                control.m_StateBlock.bitOffset = controlItem.bit;
                 if (controlItem.sizeInBits != 0)
                     control.m_StateBlock.sizeInBits = controlItem.sizeInBits;
                 if (controlItem.format != 0)
@@ -714,6 +727,10 @@ namespace UnityEngine.Experimental.Input
                     child.m_DefaultValue = controlItem.defaultState;
                     m_Device.hasControlsWithDefaultState = true;
                 }
+                if (!controlItem.minValue.isEmpty)
+                    child.m_MinValue = controlItem.minValue;
+                if (!controlItem.maxValue.isEmpty)
+                    child.m_MaxValue = controlItem.maxValue;
 
                 ////TODO: other modifications
             }
@@ -777,6 +794,64 @@ namespace UnityEngine.Experimental.Input
                 ShiftChildIndicesInHierarchyOneUp(child, startIndex);
         }
 
+        // NOTE: We can only do this once we've initialized the names on the parent control. I.e. it has to be
+        //       done in the second pass we do over the control hierarchy.
+        private void SetDisplayName(InputControl control, string displayNameFromLayout, bool shortName)
+        {
+            // Display name may not be set in layout.
+            if (string.IsNullOrEmpty(displayNameFromLayout))
+            {
+                // For short names, we leave it unassigned if there's nothing in the layout.
+                if (shortName)
+                {
+                    control.m_ShortDisplayNameFromLayout = null;
+                    return;
+                }
+
+                ////REVIEW: automatically uppercase or prettify this?
+                // For long names, we default to the control's name.
+                displayNameFromLayout = control.name;
+            }
+
+            // If it's a nested control, synthesize a path that includes parents.
+            if (control.parent != null && control.parent != control.device)
+            {
+                if (m_StringBuilder == null)
+                    m_StringBuilder = new StringBuilder();
+                m_StringBuilder.Length = 0;
+                AddParentDisplayNameRecursive(control.parent, m_StringBuilder, shortName);
+                m_StringBuilder.Append(displayNameFromLayout);
+                displayNameFromLayout = m_StringBuilder.ToString();
+            }
+
+            // Assign.
+            if (shortName)
+                control.m_ShortDisplayNameFromLayout = displayNameFromLayout;
+            else
+                control.m_DisplayNameFromLayout = displayNameFromLayout;
+        }
+
+        private static void AddParentDisplayNameRecursive(InputControl control, StringBuilder stringBuilder,
+            bool shortName)
+        {
+            if (control.parent != null && control.parent != control.device)
+                AddParentDisplayNameRecursive(control.parent, stringBuilder, shortName);
+
+            if (shortName)
+            {
+                var text = control.shortDisplayName;
+                if (string.IsNullOrEmpty(text))
+                    text = control.displayName;
+
+                stringBuilder.Append(text);
+            }
+            else
+            {
+                stringBuilder.Append(control.displayName);
+            }
+            stringBuilder.Append(' ');
+        }
+
         private static void AddProcessors(InputControl control, ref InputControlLayout.ControlItem controlItem, string layoutName)
         {
             var processorCount = controlItem.processors.Count;
@@ -822,13 +897,13 @@ namespace UnityEngine.Experimental.Input
                     switch (parameter.type)
                     {
                         case InputControlLayout.ParameterType.Boolean:
-                            value = *((bool*)parameter.value);
+                            value = *(bool*)parameter.value;
                             break;
                         case InputControlLayout.ParameterType.Integer:
-                            value = *((int*)parameter.value);
+                            value = *(int*)parameter.value;
                             break;
                         case InputControlLayout.ParameterType.Float:
-                            value = *((float*)parameter.value);
+                            value = *(float*)parameter.value;
                             break;
                     }
                 }
@@ -893,14 +968,20 @@ namespace UnityEngine.Experimental.Input
 
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
-                if (childSizeInBits == 0)
+                if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.kInvalidOffset)
                     throw new Exception(
                         string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
 
                 // Skip children that don't have fixed offsets.
-                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||
+                    child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
                     continue;
 
+                // At this point, if the child has no valid bit offset, put it at #0 now.
+                if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.bitOffset = 0;
+
+                // See if the control bumps our fixed layout size.
                 var endOffset =
                     MemoryHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + childSizeInBits);
                 if (endOffset > firstUnfixedByteOffset)
@@ -920,7 +1001,8 @@ namespace UnityEngine.Experimental.Input
             foreach (var child in children)
             {
                 // Skip children with fixed offsets.
-                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset &&
+                    child.m_StateBlock.byteOffset != InputStateBlock.kAutomaticOffset)
                     continue;
 
                 // Skip children using state from other controls.
@@ -936,10 +1018,18 @@ namespace UnityEngine.Experimental.Input
                         firstBitAddressingChild = child;
 
                     // Keep a running count of the size of the bitfield.
-                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset ||
+                        child.m_StateBlock.bitOffset == InputStateBlock.kAutomaticOffset)
+                    {
+                        // Put child at current bit offset.
+                        child.m_StateBlock.bitOffset = bitfieldSizeInBits;
+
                         bitfieldSizeInBits += child.m_StateBlock.sizeInBits;
+                    }
                     else
                     {
+                        // Child already has bit offset. Keep it but make sure we're accounting for it
+                        // in the bitfield size.
                         var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
                         if (lastBit > bitfieldSizeInBits)
                             bitfieldSizeInBits = lastBit;
@@ -953,8 +1043,12 @@ namespace UnityEngine.Experimental.Input
                         runningByteOffset = MemoryHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
                         firstBitAddressingChild = null;
                     }
+
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                        child.m_StateBlock.bitOffset = 0;
                 }
 
+                ////FIXME: seems like this should take bitOffset into account
                 child.m_StateBlock.byteOffset = runningByteOffset;
 
                 if (!isBitAddressingChild)
@@ -988,6 +1082,10 @@ namespace UnityEngine.Experimental.Input
         private void FinalizeControlHierarchyRecursive(InputControl control, ref int childArrayIndex,
             ref int usageArrayIndex, ref int aliasArrayIndex)
         {
+            // Set display names.
+            SetDisplayName(control, control.m_DisplayNameFromLayout, false);
+            SetDisplayName(control, control.m_ShortDisplayNameFromLayout, true);
+
             // Finalize child, usage, and alias array references.
             // When we get here, all the array references are valid but we may have grown the arrays on
             // m_Device repeatedly so we want all controls to refer to those final arrays now so that the

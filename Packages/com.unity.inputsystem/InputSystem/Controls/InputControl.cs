@@ -4,9 +4,9 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
-////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
-////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
+////REVIEW: as soon as we gain the ability to have blittable type constraints, InputControl<TValue> should be constrained such
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
@@ -15,16 +15,17 @@ using Unity.Collections.LowLevel.Unsafe;
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
 ////        the InputDevice reference itself.
 
+////REVIEW: how do we do stuff like smoothing over time?
+
+////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
+////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A typed and named value in a hierarchy of controls.
     /// </summary>
     /// <remarks>
-    /// Controls do not actually store values. Instead, every control receives an InputStateBlock
-    /// which, after the control's device has been added to the system, is used to read out values
-    /// from the device's backing store.
-    ///
     /// Controls can have children which in turn may have children. At the root of the child
     /// hierarchy is always an InputDevice (which themselves are InputControls).
     ///
@@ -39,6 +40,15 @@ namespace UnityEngine.Experimental.Input
     /// A usage indicates how a control is meant to be used. For example, a button can be assigned
     /// the "PrimaryAction" usage to indicate it is the primary action button the device. Within a
     /// device, usages have to be unique. See CommonUsages for a list of standardized usages.
+    ///
+    /// Controls do not actually store values. Instead, every control receives an InputStateBlock
+    /// which, after the control's device has been added to the system, is used to read out values
+    /// from the device's backing store. This backing store is referred to as "state" in the API
+    /// as opposed to "values" which represent the data resulting from reading state. The format that
+    /// each control stores state in is specific to the control. It can vary not only between controls
+    /// of different types but also between controls of the same type. An <see cref="AxisControl"/>,
+    /// for example, can be stored as a float or as a byte or in a number of other formats. <see cref="stateBlock"/>
+    /// identifies both where the control stores its state as well as the format it stores it in.
     /// </remarks>
     /// <seealso cref="InputDevice"/>
     /// \todo Add ability to get and to set configuration on a control (probably just key/value pairs)
@@ -80,7 +90,12 @@ namespace UnityEngine.Experimental.Input
         /// a display name there, the display name will default to <see cref="name"/>. However, specific
         /// controls may override this behavior. <see cref="KeyControl"/>, for example, will set the
         /// display name to the actual key name corresponding to the current keyboard layout.
+        ///
+        /// For nested controls, the display name will include the display names of all parent controls,
+        /// i.e. the display name will fully identify the control on the device. For example, the display
+        /// name for the left D-Pad button on a gamepad is "D-Pad Left" and not just "Left".
         /// </remarks>
+        /// <seealso cref="shortDisplayName"/>
         public string displayName
         {
             get
@@ -96,6 +111,34 @@ namespace UnityEngine.Experimental.Input
             // come from the control itself *if* the control wants to have a custom display name
             // not driven by its layout.
             protected set { m_DisplayName = value; }
+        }
+
+        /// <summary>
+        /// An alternate, abbreviated <see cref="displayName"/> (for example "LMB" instead of "Left Button").
+        /// </summary>
+        /// <remarks>
+        /// If the control has no abbreviated version, this will be null. Note that this behavior is different
+        /// from <see cref="displayName"/> which will fall back to <see cref="name"/> if not display name has
+        /// been assigned to the control.
+        ///
+        /// For nested controls, the short display name will include the short display names of all parent controls,
+        /// i.e. the display name will fully identify the control on the device. For example, the display
+        /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
+        /// control has no short name, its long name will be used instead.
+        /// </remarks>
+        /// <seealso cref="displayName"/>
+        public string shortDisplayName
+        {
+            get
+            {
+                RefreshConfigurationIfNeeded();
+                if (m_ShortDisplayName != null)
+                    return m_ShortDisplayName;
+                if (m_ShortDisplayNameFromLayout != null)
+                    return m_ShortDisplayNameFromLayout;
+                return null;
+            }
+            protected set { m_ShortDisplayName = value; }
         }
 
         /// <summary>
@@ -129,7 +172,6 @@ namespace UnityEngine.Experimental.Input
         {
             get { return m_Layout; }
         }
-
 
         /// <summary>
         /// Semicolon-separated list of variants of the control layout or "default".
@@ -196,9 +238,24 @@ namespace UnityEngine.Experimental.Input
             get { return m_StateBlock; }
         }
 
+        /// <summary>
+        /// Whether the control is considered noisy.
+        /// </summary>
+        /// <remarks>
+        /// A control is considered "noisy" if it produces different values without necessarily requiring user
+        /// interaction. Sensors are a good example.
+        ///
+        /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
+        /// control has been built from.
+        ///
+        /// Note that for devices (<see cref="InputDevice"/>) this property is true if any control on the device
+        /// is marked as noisy.
+        /// </remarks>
+        /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
+        /// <seealso cref="InputControlAttribute.noisy"/>
         public bool noisy
         {
-            get { return (m_ControlFlags & ControlFlags.IsNoisy) == ControlFlags.IsNoisy; }
+            get { return (m_ControlFlags & ControlFlags.IsNoisy) != 0; }
             internal set
             {
                 if (value)
@@ -208,16 +265,78 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        /// <summary>
+        /// Whether the control is considered synthetic.
+        /// </summary>
+        /// <remarks>
+        /// A control is considered "synthetic" if it does not correspond to an actual, physical control on the
+        /// device. An example for this is <see cref="Keyboard.anyKey"/> or the up/down/left/right buttons added
+        /// by <see cref="StickControl"/>.
+        ///
+        /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
+        /// control has been built from.
+        /// </remarks>
+        /// <seealso cref="InputControlLayout.ControlItem.isSynthetic"/>
+        /// <seealso cref="InputControlAttribute.synthetic"/>
+        public bool synthetic
+        {
+            get { return (m_ControlFlags & ControlFlags.IsSynthetic) != 0; }
+            internal set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsSynthetic;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsSynthetic;
+            }
+        }
+
+        /// <summary>
+        /// Fetch a control from the control's hierarchy by name.
+        /// </summary>
+        /// <remarks>
+        /// Note that path matching is case-insensitive.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// gamepad["leftStick"] // Returns Gamepad.leftStick
+        /// gamepad["leftStick/x"] // Returns Gamepad.leftStick.x
+        /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, i.e. Gamepad.aButton
+        /// </code>
+        /// </example>
+        /// <exception cref="IndexOutOfRangeException"><paramref name="path"/> cannot be found.</exception>
+        /// <seealso cref="InputControlPath"/>
+        /// <seealso cref="path"/>
+        /// <seealso cref="TryGetChildControl"/>
         public InputControl this[string path]
         {
-            get { return InputControlPath.TryFindChild(this, path); }
+            get
+            {
+                var control = InputControlPath.TryFindChild(this, path);
+                if (control == null)
+                    throw new IndexOutOfRangeException(
+                        string.Format("Cannot find control '{0}' as child of '{1}'", path, this));
+                return control;
+            }
         }
 
         /// <summary>
         /// Returns the underlying value type of this control.
         /// </summary>
+        /// <remarks>
+        /// This is the type of values that are returned when reading the current value of a control
+        /// or when reading a value of a control from an event.
+        /// </remarks>
+        /// <seealso cref="valueSizeInBytes"/>
+        /// <seealso cref="ReadValueIntoBuffer"/>
         public abstract Type valueType { get; }
 
+        /// <summary>
+        /// Size in bytes of values that the control returns.
+        /// </summary>
+        /// <seealso cref="valueType"/>
+        public abstract int valueSizeInBytes { get; }
+
+        /// <inheritdoc />
         public override string ToString()
         {
             return string.Format("{0}:{1}", layout, path);
@@ -225,27 +344,187 @@ namespace UnityEngine.Experimental.Input
 
         private string DebuggerDisplay()
         {
-            return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
+            // If the device hasn't been added, don't try to read the control's value.
+            if (!device.added)
+                return ToString();
+
+            // ReadValueAsObject might throw. Revert to just ToString() in that case.
+            try
+            {
+                return string.Format("{0}:{1}={2}", layout, path, this.ReadValueAsObject());
+            }
+            catch (Exception)
+            {
+                return ToString();
+            }
         }
 
-        ////TODO: setting value (will it also go through the processor stack?)
-
-        // Current value as boxed object.
-        // NOTE: Calling this will allocate.
-        public abstract object ReadValueAsObject();
-
-        public abstract object ReadDefaultValueAsObject();
-
-        public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
-
-        public void WriteValueFromObjectInto(InputEventPtr eventPtr, object value)
+        /// <summary>
+        /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
+        /// is actuated.
+        /// </summary>
+        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
+        /// <remarks>
+        /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
+        /// an enumeration of values (such as <see cref="PointerPhaseControl"/>), there is no meaningful
+        /// linear ordering of values (one could derive a linear ordering through the actual enum values but
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Cancelled"/>
+        /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
+        ///
+        /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
+        /// return value should be considered an invalid value.
+        /// </remarks>
+        /// <seealso cref="EvaluateMagnitude(void*)"/>
+        public unsafe float EvaluateMagnitude()
         {
-            var statePtr = GetStatePtrFromStateEvent(eventPtr);
-            if (statePtr == IntPtr.Zero)
-                return;
+            return EvaluateMagnitude(currentStatePtr);
+        }
 
-            var bufferSize = m_StateBlock.byteOffset + eventPtr.sizeInBytes;
-            WriteValueFromObjectInto(statePtr, bufferSize, value);
+        /// <summary>
+        /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
+        /// is actuated in the given state.
+        /// </summary>
+        /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>.</param>
+        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
+        /// <seealso cref="EvaluateMagnitude()"/>
+        /// <seealso cref="stateBlock"/>
+        public virtual unsafe float EvaluateMagnitude(void* statePtr)
+        {
+            return -1;
+        }
+
+        /// <summary>
+        /// Read the control's final, processed value from the given state and return the value as an object.
+        /// </summary>
+        /// <param name="statePtr"></param>
+        /// <returns>The control's value as stored in <paramref name="statePtr"/>.</returns>
+        /// <remarks>
+        /// This method allocates GC memory and should not be used during normal gameplay operation.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="statePtr"/> is null.</exception>
+        /// <seealso cref="ReadValueFromStateIntoBuffer"/>
+        public abstract unsafe object ReadValueFromStateAsObject(void* statePtr);
+
+        /// <summary>
+        /// Read the control's final, processed value from the given state and store it in the given buffer.
+        /// </summary>
+        /// <param name="statePtr">State to read the value for the control from.</param>
+        /// <param name="bufferPtr">Buffer to store the value in.</param>
+        /// <param name="bufferSize">Size of <paramref name="bufferPtr"/> in bytes. Must be at least <see cref="valueSizeInBytes"/>.
+        /// If it is smaller, <see cref="ArgumentException"/> will be thrown.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="statePtr"/> is null, or <paramref name="bufferPtr"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is smaller than <see cref="valueSizeInBytes"/>.</exception>
+        /// <seealso cref="ReadValueFromStateAsObject"/>
+        /// <seealso cref="WriteValueFromBufferIntoState"/>
+        public abstract unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize);
+
+        /// <summary>
+        /// Read a value from the given memory and store it as state.
+        /// </summary>
+        /// <param name="bufferPtr">Memory containing value.</param>
+        /// <param name="bufferSize">Size of <paramref name="bufferPtr"/> in bytes. Must be at least <see cref="valueSizeInBytes"/>.</param>
+        /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>. Will receive the state
+        /// as converted from the given value.</param>
+        /// <remarks>
+        /// Writing values will NOT apply processors to the given value. This can mean that when reading a value
+        /// from a control after it has been written to its state, the resulting value differs from what was
+        /// written.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">The control does not support writing. This is the case, for
+        /// example, that compute values (such as the magnitude of a vector).</exception>
+        /// <seealso cref="ReadValueFromStateIntoBuffer"/>
+        /// <seealso cref="WriteValueFromObjectIntoState"/>
+        public virtual unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
+        {
+            throw new NotSupportedException(
+                string.Format("Control '{0}' does not support writing", this));
+        }
+
+        /// <summary>
+        /// Read a value object and store it as state in the given memory.
+        /// </summary>
+        /// <param name="value">Value for the control.</param>
+        /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>. Will receive
+        /// the state state as converted from the given value.</param>
+        /// <remarks>
+        /// Writing values will NOT apply processors to the given value. This can mean that when reading a value
+        /// from a control after it has been written to its state, the resulting value differs from what was
+        /// written.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">The control does not support writing. This is the case, for
+        /// example, that compute values (such as the magnitude of a vector).</exception>
+        /// <seealso cref="WriteValueFromBufferIntoState"/>
+        public virtual unsafe void WriteValueFromObjectIntoState(object value, void* statePtr)
+        {
+            throw new NotSupportedException(
+                string.Format("Control '{0}' does not support writing", this));
+        }
+
+        /// <summary>
+        /// Compare the value of the control as read from <paramref name="firstStatePtr"/> to that read from
+        /// <paramref name="secondStatePtr"/> and return true if they are equal.
+        /// </summary>
+        /// <param name="firstStatePtr">Memory containing the control's <see cref="stateBlock"/>.</param>
+        /// <param name="secondStatePtr">Memory containing the control's <see cref="stateBlock"/></param>
+        /// <returns>True if the value of the control is equal in both <paramref name="firstStatePtr"/> and
+        /// <paramref name="secondStatePtr"/>.</returns>
+        /// <remarks>
+        /// Unlike <see cref="CompareState"/>, this method will have to do more than just compare the memory
+        /// for the control in the two state buffers. It will have to read out state for the control and run
+        /// the full processing machinery for the control to turn the state into a final, processed value.
+        /// CompareValue is thus more costly than <see cref="CompareState"/>.
+        ///
+        /// This method will apply epsilons (<see cref="Mathf.Epsilon"/>) when comparing floats.
+        /// </remarks>
+        /// <seealso cref="CompareState"/>
+        public abstract unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr);
+
+        /// <summary>
+        /// Compare the control's stored state in <paramref name="firstStatePtr"/> to <paramref name="secondStatePtr"/>.
+        /// </summary>
+        /// <param name="firstStatePtr">Memory containing the control's <see cref="stateBlock"/>.</param>
+        /// <param name="secondStatePtr">Memory containing the control's <see cref="stateBlock"/></param>
+        /// <param name="maskPtr">Optional mask. If supplied, it will be used to mask the comparison between
+        /// <paramref name="firstStatePtr"/> and <paramref name="secondStatePtr"/> such that any bit not set in the
+        /// mask will be ignored even if different between the two states. This can be used, for example, to ignore
+        /// noise in the state (<see cref="noiseMaskPtr"/>).</param>
+        /// <returns>True if the state is equivalent in both memory buffers.</returns>
+        /// <remarks>
+        /// Unlike <see cref="CompareValue"/>, this method only compares raw memory state. If used on a stick, for example,
+        /// it may mean that this method returns false for two stick values that would compare equal using <see cref="CompareValue"/>
+        /// (e.g. if both stick values fall below the deadzone).
+        /// </remarks>
+        /// <seealso cref="CompareValue"/>
+        public unsafe bool CompareState(void* firstStatePtr, void* secondStatePtr, void* maskPtr = null)
+        {
+            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
+            ////        e.g. from HID input reports; or should we just leave that to maskPtr?
+
+            var firstPtr = (byte*)firstStatePtr + (int)m_StateBlock.byteOffset;
+            var secondPtr = (byte*)secondStatePtr + (int)m_StateBlock.byteOffset;
+            var mask = maskPtr != null ? (byte*)maskPtr + (int)m_StateBlock.byteOffset : null;
+
+            if (m_StateBlock.sizeInBits == 1)
+            {
+                // If we have a mask and the bit is set in the mask, the control is to be ignored
+                // and thus we consider it at default value.
+                if (mask != null && MemoryHelpers.ReadSingleBit(mask, m_StateBlock.bitOffset))
+                    return true;
+
+                return MemoryHelpers.ReadSingleBit(secondPtr, m_StateBlock.bitOffset) ==
+                    MemoryHelpers.ReadSingleBit(firstPtr, m_StateBlock.bitOffset);
+            }
+
+            return MemoryHelpers.MemCmpBitRegion(firstPtr, secondPtr,
+                m_StateBlock.bitOffset, m_StateBlock.sizeInBits, mask);
+        }
+
+        public InputControl TryGetChildControl(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException("path");
+
+            return InputControlPath.TryFindChild(this, path);
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -254,7 +533,6 @@ namespace UnityEngine.Experimental.Input
         {
             // Set defaults for state block setup. Subclasses may override.
             m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
-            m_StateBlock.bitOffset = 0;
         }
 
         ////REVIEW: replace InputDeviceBuilder here with an interface?
@@ -280,19 +558,23 @@ namespace UnityEngine.Experimental.Input
 
         protected internal InputStateBlock m_StateBlock;
 
-        protected internal IntPtr currentStatePtr
+        ////REVIEW: shouldn't these sit on the device?
+        protected internal unsafe void* currentStatePtr
         {
             get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
         }
-
-        protected internal IntPtr previousStatePtr
+        protected internal unsafe void* previousFrameStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
         }
-
-        protected internal IntPtr defaultStatePtr
+        protected internal unsafe void* defaultStatePtr
         {
             get { return InputStateBuffers.s_DefaultStateBuffer; }
+        }
+
+        protected internal unsafe void* noiseMaskPtr
+        {
+            get { return InputStateBuffers.s_NoiseMaskBuffer; }
         }
 
         /// <summary>
@@ -319,6 +601,8 @@ namespace UnityEngine.Experimental.Input
         internal string m_Path;
         internal string m_DisplayName; // Display name set by the control itself (may be null).
         internal string m_DisplayNameFromLayout; // Display name coming from layout (may be null).
+        internal string m_ShortDisplayName; // Short display name set by the control itself (may be null).
+        internal string m_ShortDisplayNameFromLayout; // Short display name coming from layout (may be null).
         internal InternedString m_Layout;
         internal InternedString m_Variants;
         internal InputDevice m_Device;
@@ -330,13 +614,18 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal ControlFlags m_ControlFlags;
+
+        ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValueOrArray m_DefaultValue;
+        internal PrimitiveValue m_MinValue;
+        internal PrimitiveValue m_MaxValue;
 
         [Flags]
         internal enum ControlFlags
         {
             ConfigUpToDate = 1 << 0,
             IsNoisy = 1 << 1,
+            IsSynthetic = 1 << 2,
         }
 
         internal bool isConfigUpToDate
@@ -381,63 +670,6 @@ namespace UnityEngine.Experimental.Input
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
-        ////TODO: pass state ptr *NOT* value ptr (it's confusing)
-        // NOTE: The given argument should point directly to the value *not* to the
-        //       base state to which the state block offset has to be added.
-        internal unsafe bool CheckStateIsAtDefault(IntPtr valuePtr = new IntPtr())
-        {
-            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
-            ////        e.g. from HID input reports
-
-            var defaultPtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
-            if (valuePtr == IntPtr.Zero)
-                valuePtr = new IntPtr(currentStatePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-
-            if (m_StateBlock.sizeInBits == 1)
-            {
-                return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ==
-                    MemoryHelpers.ReadSingleBit(defaultPtr, m_StateBlock.bitOffset);
-            }
-
-            return MemoryHelpers.MemCmpBitRegion(defaultPtr.ToPointer(), valuePtr.ToPointer(),
-                m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
-        }
-
-        internal unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
-        {
-            if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
-
-            ////TODO: support delta events
-            if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
-
-            var stateEvent = StateEvent.From(eventPtr);
-
-            // Make sure we have a state event compatible with our device. The event doesn't
-            // have to be specifically for our device (we don't require device IDs to match) but
-            // the formats have to match and the size must be within range of what we're trying
-            // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
-                throw new InvalidOperationException(
-                    string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
-
-            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
-            // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                return IntPtr.Zero;
-
-            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
-        }
-
         internal int ResolveDeviceIndex()
         {
             var deviceIndex = m_Device.m_DeviceIndex;
@@ -463,144 +695,167 @@ namespace UnityEngine.Experimental.Input
     /// that the control has to store data in the given value format. A control that captures float
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
+        where TValue : struct
     {
         public override Type valueType
         {
-            get
+            get { return typeof(TValue); }
+        }
+
+        public override int valueSizeInBytes
+        {
+            get { return UnsafeUtility.SizeOf<TValue>(); }
+        }
+
+        /// <summary>
+        /// Get the control's current value as read from <see cref="InputControl.currentStatePtr"/>
+        /// </summary>
+        /// <returns>The control's current value.</returns>
+        /// <remarks>
+        /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
+        /// </remarks>
+        public TValue ReadValue()
+        {
+            unsafe
             {
-                return typeof(TValue);
+                return ReadValueFromState(currentStatePtr);
             }
         }
 
-        public TValue ReadValue()
+        ////REVIEW: is 'frame' really the best wording here?
+        /// <summary>
+        /// Get the control's value from the previous frame (<see cref="InputControl.previousFrameStatePtr"/>).
+        /// </summary>
+        /// <returns>The control's value in the previous frame.</returns>
+        public TValue ReadValueFromPreviousFrame()
         {
-            return ReadValueFrom(currentStatePtr);
+            unsafe
+            {
+                return ReadValueFromState(previousFrameStatePtr);
+            }
         }
 
-        ////REVIEW: rename this to something like ReadValueFromPreviousFrame()?
-        public TValue ReadPreviousValue()
-        {
-            return ReadValueFrom(previousStatePtr);
-        }
-
+        /// <summary>
+        /// Get the control's default value.
+        /// </summary>
+        /// <returns>The control's default value.</returns>
+        /// <remarks>
+        /// This is not necessarily equivalent to <c>default(TValue)</c>. A control's default value is determined
+        /// by reading its value from the default state (<see cref="InputControl.defaultStatePtr"/>) which in turn
+        /// is determined from settings in the control's registered layout (<see cref="InputControlLayout.ControlItem.defaultState"/>).
+        /// </remarks>
         public TValue ReadDefaultValue()
         {
-            return ReadValueFrom(defaultStatePtr);
+            unsafe
+            {
+                return ReadValueFromState(defaultStatePtr);
+            }
         }
 
-        public override object ReadValueAsObject()
+        public unsafe TValue ReadValueFromState(void* statePtr)
         {
-            return ReadValue();
+            if (statePtr == null)
+                throw new ArgumentNullException("statePtr");
+            return ProcessValue(ReadUnprocessedValueFromState(statePtr));
         }
 
-        public override object ReadDefaultValueAsObject()
+        public TValue ReadUnprocessedValue()
         {
-            return ReadDefaultValue();
+            unsafe
+            {
+                return ReadUnprocessedValueFromState(currentStatePtr);
+            }
         }
 
-        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        public abstract unsafe TValue ReadUnprocessedValueFromState(void* statePtr);
+
+        /// <inheritdoc />
+        public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {
-            if (buffer == IntPtr.Zero)
-                throw new ArgumentNullException("buffer");
+            return ReadValueFromState(statePtr);
+        }
+
+        /// <inheritdoc />
+        public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
+        {
+            if (statePtr == null)
+                throw new ArgumentNullException("statePtr");
+            if (bufferPtr == null)
+                throw new ArgumentNullException("bufferPtr");
+
+            var numBytes = UnsafeUtility.SizeOf<TValue>();
+            if (bufferSize < numBytes)
+                throw new ArgumentException(
+                    string.Format("bufferSize={0} < sizeof(TValue)={1}", bufferSize, numBytes), "bufferSize");
+
+            var value = ReadValueFromState(statePtr);
+            var valuePtr = UnsafeUtility.AddressOf(ref value);
+
+            UnsafeUtility.MemCpy(bufferPtr, valuePtr, numBytes);
+        }
+
+        public override unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
+        {
+            if (bufferPtr == null)
+                throw new ArgumentNullException("bufferPtr");
+            if (statePtr == null)
+                throw new ArgumentNullException("statePtr");
+
+            var numBytes = UnsafeUtility.SizeOf<TValue>();
+            if (bufferSize < numBytes)
+                throw new ArgumentException(
+                    string.Format("bufferSize={0} < sizeof(TValue)={1}", bufferSize, numBytes), "bufferSize");
+
+            // C# won't let us use a pointer to a generically defined type. Work
+            // around this by using UnsafeUtility.
+            var value = default(TValue);
+            var valuePtr = UnsafeUtility.AddressOf(ref value);
+            UnsafeUtility.MemCpy(valuePtr, bufferPtr, numBytes);
+
+            WriteValueIntoState(value, statePtr);
+        }
+
+        /// <inheritdoc />
+        public override unsafe void WriteValueFromObjectIntoState(object value, void* statePtr)
+        {
+            if (statePtr == null)
+                throw new ArgumentNullException("statePtr");
             if (value == null)
                 throw new ArgumentNullException("value");
-            if (bufferSize < (m_StateBlock.byteOffset + m_StateBlock.alignedSizeInBytes))
-                throw new ArgumentException(
-                    string.Format("Buffer size {0} is too small for control at offset {1} with length {2}", bufferSize,
-                        m_StateBlock.byteOffset, m_StateBlock.alignedSizeInBytes), "bufferSize");
 
             // If value is not of expected type, try to convert.
             if (!(value is TValue))
                 value = Convert.ChangeType(value, typeof(TValue));
 
-            WriteRawValueInto(buffer, (TValue)value);
+            var valueOfType = (TValue)value;
+            WriteValueIntoState(valueOfType, statePtr);
         }
 
-        // Read a control value directly from a state event.
-        //
-        // NOTE: Using this method not only ensures that format conversion is automatically taken care of
-        //       but also profits from the fact that remapping is already established in a control hierarchy
-        //       and reading from the right offsets is taken care of.
-        public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        public virtual unsafe void WriteValueIntoState(TValue value, void* statePtr)
         {
-            var statePtr = GetStatePtrFromStateEvent(inputEvent);
-            if (statePtr == IntPtr.Zero)
-                return ReadDefaultValue();
+            ////REVIEW: should we be able to even tell from layouts which controls support writing and which don't?
 
-            var value = ReadRawValueFrom(statePtr);
-            if (process)
-                value = Process(value);
-
-            return value;
+            throw new NotSupportedException(
+                string.Format("Control '{0}' does not support writing", this));
         }
 
-        public TValue ReadValueFrom(IntPtr statePtr)
+        public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
-            return Process(ReadRawValueFrom(statePtr));
+            ////REVIEW: should we first compare state here? if there's no change in state, there can be no change in value and we can skip the rest
+
+            var firstValue = ReadValueFromState(firstStatePtr);
+            var secondValue = ReadValueFromState(secondStatePtr);
+
+            var firstValuePtr = UnsafeUtility.AddressOf(ref firstValue);
+            var secondValuePtr = UnsafeUtility.AddressOf(ref secondValue);
+
+            // NOTE: We're comparing raw memory of processed values here (which are guaranteed to be structs or
+            //       primitives), not state. Means we don't have to take bits into account here.
+
+            return UnsafeUtility.MemCmp(firstValuePtr, secondValuePtr, UnsafeUtility.SizeOf<TValue>()) != 0;
         }
 
-        public TValue ReadRawValue()
-        {
-            return ReadRawValueFrom(currentStatePtr);
-        }
-
-        public abstract TValue ReadRawValueFrom(IntPtr statePtr);
-
-        protected virtual void WriteRawValueInto(IntPtr statePtr, TValue value)
-        {
-            ////TODO: indicate propertly that this control does not support writing
-            throw new NotSupportedException();
-        }
-
-        public void WriteValueInto(InputEventPtr eventPtr)
-        {
-            ////REVIEW: have an option to write unprocessed values?
-            WriteValueInto(eventPtr, ReadValue());
-        }
-
-        public void WriteValueInto(InputEventPtr eventPtr, TValue value)
-        {
-            var statePtr = GetStatePtrFromStateEvent(eventPtr);
-            if (statePtr == IntPtr.Zero)
-                return;
-
-            WriteValueInto(statePtr, value);
-        }
-
-        public void WriteValueInto(IntPtr statePtr)
-        {
-            WriteValueInto(statePtr, ReadValue());
-        }
-
-        public void WriteValueInto(IntPtr statePtr, TValue value)
-        {
-            WriteRawValueInto(statePtr, value);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="value"></param>
-        /// <typeparam name="TState"></typeparam>
-        /// <exception cref="ArgumentException">Control's value does not fit within the memory of <paramref name="state"/>.</exception>
-        public unsafe void WriteValueInto<TState>(ref TState state, TValue value)
-            where TState : struct, IInputStateTypeInfo
-        {
-            // Make sure the control's state actually fits within the given state.
-            var sizeOfState = UnsafeUtility.SizeOf<TState>();
-            if (stateOffsetRelativeToDeviceRoot + m_StateBlock.alignedSizeInBytes >= sizeOfState)
-                throw new ArgumentException(
-                    string.Format("Control {0} with offset {1} and size of {2} bits is out of bounds for state of type {3} with size {4}",
-                        path, stateOffsetRelativeToDeviceRoot, m_StateBlock.sizeInBits, typeof(TState).Name, sizeOfState), "state");
-
-            // Write value.
-            var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
-            var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
-            WriteValueInto(new IntPtr(adjustedStatePtr), value);
-        }
-
-        public TValue Process(TValue value)
+        public TValue ProcessValue(TValue value)
         {
             if (m_ProcessorStack.length > 0)
             {

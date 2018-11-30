@@ -1,13 +1,16 @@
-using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
 ////REVIEW: should we add a gyro as a standard feature of gamepads?
+
+////REVIEW: is the Lefty layout variant actually useful?
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -27,100 +30,64 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Button bit mask.
         /// </summary>
-        /// <seealso cref="Button"/>
+        /// <seealso cref="GamepadButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
-        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)Button.North, aliases = new[] { "y", "triangle" })]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
+        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad")]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "A", shortDisplayName = "A")]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "X", shortDisplayName = "X")]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Y", shortDisplayName = "Y")]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "B", shortDisplayName = "B")]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
-        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)Button.LeftStick)]
-        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)Button.RightStick)]
-        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)Button.LeftShoulder)]
-        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)Button.RightShoulder)]
+        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
+        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
+        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)GamepadButton.LeftShoulder, displayName = "Left Shoulder", shortDisplayName = "LB")]
+        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)GamepadButton.RightShoulder, displayName = "Right Shoulder", shortDisplayName = "RB")]
         ////REVIEW: seems like these two should get less ambiguous names as well
-        [InputControl(name = "start", layout = "Button", bit = (uint)Button.Start, usage = "Menu")]
-        [InputControl(name = "select", layout = "Button", bit = (uint)Button.Select)]
+        [InputControl(name = "start", layout = "Button", bit = (uint)GamepadButton.Start, usage = "Menu", displayName = "Start")]
+        [InputControl(name = "select", layout = "Button", bit = (uint)GamepadButton.Select, displayName = "Select")]
         [FieldOffset(0)]
         public uint buttons;
 
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
+        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
         public Vector2 rightStick;
+
+        ////REVIEW: should left and right trigger get deadzones?
 
         /// <summary>
         /// Position of the left trigger.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
-        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
+        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
         /// Position of the right trigger.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
-        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
+        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
         [FieldOffset(24)]
         public float rightTrigger;
-
-        public enum Button
-        {
-            // Dpad buttons. Important to be first in the bitfield as we'll
-            // point the DpadControl to it.
-            // IMPORTANT: Order has to match what is expected by DpadControl.
-            DpadUp,
-            DpadDown,
-            DpadLeft,
-            DpadRight,
-
-            // Face buttons. We go with a north/south/east/west naming as that
-            // clearly disambiguates where we expect the respective button to be.
-            North,
-            East,
-            South,
-            West,
-
-            LeftStick,
-            RightStick,
-            LeftShoulder,
-            RightShoulder,
-
-            Start,
-            Select,
-
-            // Aliases Xbox style.
-            X = West,
-            Y = North,
-            A = South,
-            B = East,
-
-            // Aliases PS4 style.
-            Cross = South,
-            Square = West,
-            Triangle = North,
-            Circle = East,
-        }
 
         public FourCC GetFormat()
         {
             return kFormat;
         }
 
-        public GamepadState WithButton(Button button, bool value = true)
+        public GamepadState WithButton(GamepadButton button, bool value = true)
         {
             var bit = (uint)1 << (int)button;
             if (value)
@@ -129,6 +96,44 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 buttons &= ~bit;
             return this;
         }
+    }
+
+    public enum GamepadButton
+    {
+        // Dpad buttons. Important to be first in the bitfield as we'll
+        // point the DpadControl to it.
+        // IMPORTANT: Order has to match what is expected by DpadControl.
+        DpadUp,
+        DpadDown,
+        DpadLeft,
+        DpadRight,
+
+        // Face buttons. We go with a north/south/east/west naming as that
+        // clearly disambiguates where we expect the respective button to be.
+        North,
+        East,
+        South,
+        West,
+
+        LeftStick,
+        RightStick,
+        LeftShoulder,
+        RightShoulder,
+
+        Start,
+        Select,
+
+        // Aliases Xbox style.
+        X = West,
+        Y = North,
+        A = South,
+        B = East,
+
+        // Aliases PS4 style.
+        Cross = South,
+        Square = West,
+        Triangle = North,
+        Circle = East,
     }
 }
 
@@ -141,7 +146,7 @@ namespace UnityEngine.Experimental.Input
     [InputControlLayout(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
-        ////REVEIEW: add PS4 and Xbox style alternate accessors?
+        ////REVIEW: add PS4 and Xbox style alternate accessors?
         public ButtonControl buttonWest { get; private set; }
         public ButtonControl buttonNorth { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
@@ -164,13 +169,64 @@ namespace UnityEngine.Experimental.Input
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
 
-        ////TODO: we need to split gamepad input and output state such that events can send state without including output
-
-        ////TODO: noise filtering
         /// <summary>
-        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
+        /// Same as <see cref="buttonSouth"/>.
         /// </summary>
-        public static Gamepad current { get; internal set; }
+        public ButtonControl aButton
+        {
+            get { return buttonSouth; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonEast"/>.
+        /// </summary>
+        public ButtonControl bButton
+        {
+            get { return buttonEast; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonWest"/>
+        /// </summary>
+        public ButtonControl xButton
+        {
+            get { return buttonWest; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonNorth"/>.
+        /// </summary>
+        public ButtonControl yButton
+        {
+            get { return buttonNorth; }
+        }
+
+        ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
+        public ButtonControl this[GamepadButton button]
+        {
+            get
+            {
+                switch (button)
+                {
+                    case GamepadButton.North: return buttonNorth;
+                    case GamepadButton.South: return buttonSouth;
+                    case GamepadButton.East: return buttonEast;
+                    case GamepadButton.West: return buttonWest;
+                    case GamepadButton.Start: return startButton;
+                    case GamepadButton.Select: return selectButton;
+                    case GamepadButton.LeftShoulder: return leftShoulder;
+                    case GamepadButton.RightShoulder: return rightShoulder;
+                    case GamepadButton.LeftStick: return leftStickButton;
+                    case GamepadButton.RightStick: return rightStickButton;
+                    case GamepadButton.DpadUp: return dpad.up;
+                    case GamepadButton.DpadDown: return dpad.down;
+                    case GamepadButton.DpadLeft: return dpad.left;
+                    case GamepadButton.DpadRight: return dpad.right;
+                    default:
+                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
+                }
+            }
+        }
 
         /// <summary>
         /// A list of gamepads currently connected to the system.
@@ -185,12 +241,6 @@ namespace UnityEngine.Experimental.Input
         public static ReadOnlyArray<Gamepad> all
         {
             get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -220,12 +270,6 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected override void RefreshConfiguration()
-        {
-            base.RefreshConfiguration();
-            RefreshUserId();
-        }
-
         protected override void OnAdded()
         {
             ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
@@ -233,9 +277,6 @@ namespace UnityEngine.Experimental.Input
 
         protected override void OnRemoved()
         {
-            if (current == this)
-                current = null;
-
             // Remove from array.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
             Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));

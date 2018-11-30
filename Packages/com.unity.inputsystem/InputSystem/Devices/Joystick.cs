@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -65,8 +66,6 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<AxisControl>(m_Axes); }
         }
 
-        public static Joystick current { get; internal set; }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             var buttons = new List<ButtonControl>();
@@ -89,19 +88,6 @@ namespace UnityEngine.Experimental.Input
             hat = builder.TryGetControl<DpadControl>("{Hatswitch}");
 
             base.FinishSetup(builder);
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
         }
 
         ////TODO: move this into InputControl

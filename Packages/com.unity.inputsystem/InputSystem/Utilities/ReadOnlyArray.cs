@@ -2,16 +2,25 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////REVIEW: switch to something that doesn't require the backing store to be an actual array?
+////  (maybe switch m_Array to an InlinedArray and extend InlinedArray to allow having three configs:
+////  1. firstValue only, 2. firstValue + additionalValues, 3. everything in additionalValues)
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
     /// Read-only access to an array or to a slice of an array.
     /// </summary>
-    /// <typeparam name="TValue">Value type.</typeparam>
+    /// <typeparam name="TValue">Type of values stored in the array.</typeparam>
+    /// <remarks>
+    /// The purpose of this struct is to allow exposing internal arrays directly such that no
+    /// boxing and no going through interfaces is required but at the same time not allowing
+    /// the internal arrays to be modified.
+    /// </remarks>
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
         internal TValue[] m_Array;
@@ -59,6 +68,18 @@ namespace UnityEngine.Experimental.Input.Utilities
             return result;
         }
 
+        public int IndexOf(Predicate<TValue> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException("predicate");
+
+            for (var i = 0; i < m_Length; ++i)
+                if (predicate(m_Array[m_StartIndex + i]))
+                    return i;
+
+            return -1;
+        }
+
         public IEnumerator<TValue> GetEnumerator()
         {
             return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);
@@ -67,6 +88,11 @@ namespace UnityEngine.Experimental.Input.Utilities
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
+        {
+            return new ReadOnlyArray<TValue>(array);
         }
 
         /// <summary>
@@ -152,6 +178,15 @@ namespace UnityEngine.Experimental.Input.Utilities
         {
             for (var i = 0; i < array.m_Length; ++i)
                 if (array.m_Array[array.m_StartIndex + i].CompareTo(value) == 0)
+                    return true;
+            return false;
+        }
+
+        public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            for (var i = 0; i < array.m_Length; ++i)
+                if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
                     return true;
             return false;
         }

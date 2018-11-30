@@ -2,6 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -138,9 +139,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
         public int colorLeftSub;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
-        public int colorRightSub;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
         public int colorRightMain;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
+        public int colorRightSub;
 
         public FourCC GetTypeStatic()
         {

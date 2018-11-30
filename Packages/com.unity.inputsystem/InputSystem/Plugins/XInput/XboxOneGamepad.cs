@@ -1,6 +1,7 @@
 #if UNITY_EDITOR || UNITY_XBOXONE
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -268,14 +269,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
                 m_GamepadId = command.gamepadId;
                 m_XboxOneUserId = command.userId;
             }
-        }
-
-        public new static XboxOneGamepad current { get; set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
         }
 
         public override void PauseHaptics()

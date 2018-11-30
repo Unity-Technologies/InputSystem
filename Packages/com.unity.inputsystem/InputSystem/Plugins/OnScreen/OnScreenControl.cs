@@ -147,6 +147,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         }
 
         protected void SendValueToControl<TValue>(TValue value)
+            where TValue : struct
         {
             if (m_Control == null)
                 return;
@@ -160,8 +161,8 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                     controlPath, m_Control.GetType().Name, typeof(TValue).Name));
             }
 
-            m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;
-            control.WriteValueInto(m_InputEventPtr, value);
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
+            control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 

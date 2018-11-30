@@ -4,8 +4,9 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
-////TODO: IME support
+////TODO: usages on modifiers so they can be identified regardless of platform conventions
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -22,11 +23,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         // Number of keys rounded up to nearest size of 4.
-        private const int kSizeInBytesUnrounded = ((int)Keyboard.KeyCount) / 8 + (((int)Keyboard.KeyCount) % 8 > 0 ? 1 : 0);
+        private const int kSizeInBytesUnrounded = Keyboard.KeyCount / 8 + (Keyboard.KeyCount % 8 > 0 ? 1 : 0);
         public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
         public const int kSizeInBits = kSizeInBytes * 8;
 
-        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits)]
+        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", layout = "Key", bit = (int)Key.Space)]
         [InputControl(name = "enter", layout = "Key", usage = "Accept", bit = (int)Key.Enter)]
@@ -137,6 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
+        [InputControl(name = "IMESelected", layout = "Button", bit = (int)Key.IMESelected, synthetic = true)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
@@ -146,7 +148,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
                 for (var i = 0; i < pressedKeys.Length; ++i)
                 {
-                    MemoryHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
+                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)pressedKeys[i], true);
                 }
             }
         }
@@ -303,6 +305,9 @@ namespace UnityEngine.Experimental.Input
         OEM3,
         OEM4,
         OEM5,
+
+        // Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
+        IMESelected
     }
 
     /// <summary>
@@ -319,7 +324,7 @@ namespace UnityEngine.Experimental.Input
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState))]
-    public class Keyboard : InputDevice
+    public class Keyboard : InputDevice, ITextInputReceiver
     {
         public const int KeyCount = (int)Key.OEM5;
 
@@ -330,6 +335,61 @@ namespace UnityEngine.Experimental.Input
         {
             add { m_TextInputListeners.Append(value); }
             remove { m_TextInputListeners.Remove(value); }
+        }
+
+        /// <summary>
+        /// An event that is fired to get IME composition strings.  Fired once for every change, sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
+        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// </remarks>
+        public event Action<IMECompositionString> onIMECompositionChange
+        {
+            add { m_ImeCompositionListeners.Append(value); }
+            remove { m_ImeCompositionListeners.Remove(value); }
+        }
+
+        /// <summary>
+        /// Activates/deactivates IME composition while typing.  This decides whether or not to use the OS supplied IME system.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        /// Setting this to On, will enable the OS-level IME system when the user presses keystrokes.
+        ///
+        /// See <see cref="Keyboard.imeCursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
+        /// </remarks>
+        public bool imeEnabled
+        {
+            set
+            {
+                EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
+                ExecuteCommand(ref command);
+            }
+        }
+
+        /// <summary>
+        /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
+        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// </remarks>
+        public Vector2 imeCursorPosition
+        {
+            set
+            {
+                SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
+                ExecuteCommand(ref command);
+            }
         }
 
         /// <summary>
@@ -353,6 +413,7 @@ namespace UnityEngine.Experimental.Input
             }
             protected set { m_KeyboardLayoutName = value; }
         }
+
 
         /// <summary>
         /// A synthetic button control that is considered pressed if any key on the keyboard is pressed.
@@ -514,7 +575,17 @@ namespace UnityEngine.Experimental.Input
         public KeyControl oem4Key { get; private set; }
         public KeyControl oem5Key { get; private set; }
 
-        public static Keyboard current { get; internal set; }
+        /// <summary>
+        /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Some languages use complex input methods which involve opening windows to insert characters.
+        /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
+        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// </remarks>
+        public ButtonControl imeSelected { get; private set; }
 
         /// <summary>
         /// Look up a key control by its key code.
@@ -671,19 +742,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");
@@ -804,6 +862,8 @@ namespace UnityEngine.Experimental.Input
             oem4Key = builder.GetControl<KeyControl>("OEM4");
             oem5Key = builder.GetControl<KeyControl>("OEM5");
 
+            imeSelected = builder.GetControl<ButtonControl>("IMESelected");
+
             ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
             ////        and it just seems somewhat dirty to jam the data into the control here
 
@@ -822,13 +882,24 @@ namespace UnityEngine.Experimental.Input
                 keyboardLayout = command.ReadLayoutName();
         }
 
-        public override void OnTextInput(char character)
+        public void OnTextInput(char character)
         {
             for (var i = 0; i < m_TextInputListeners.length; ++i)
                 m_TextInputListeners[i](character);
         }
 
+        public void OnIMECompositionChanged(IMECompositionString compositionString)
+        {
+            if (m_ImeCompositionListeners.length > 0)
+            {
+                for (var i = 0; i < m_ImeCompositionListeners.length; ++i)
+                    m_ImeCompositionListeners[i](compositionString);
+            }
+        }
+
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
+
+        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 }

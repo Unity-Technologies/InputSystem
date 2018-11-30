@@ -1,10 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
 
 public class TouchscreenTouchVisualizer : MonoBehaviour
 {
@@ -17,8 +13,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
     private List<GameObject> m_Touches;
     private Camera m_MainCamera;
 
-    // Use this for initialization
-    void Start()
+    public void Start()
     {
         m_Touches = new List<GameObject>();
 
@@ -28,11 +23,10 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
         m_MainCamera = Camera.main;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
-        Vector3 averagePosition = Vector2.zero;
+        var touchscreen = InputSystem.GetDevice<Touchscreen>();
+        var averagePosition = Vector3.zero;
 
         if (touchscreen == null)
         {
@@ -46,15 +40,13 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             DeleteExtraTouches(touchscreen.activeTouches.Count);
             return;
         }
-        else
-        {
-            m_AveragePositionMarker.SetActive(true);
-        }
+
+        m_AveragePositionMarker.SetActive(true);
 
         // Set touch indicator position values, creating them if necessary
         // Also start accumulating average position
         //
-        for (int i = 0; i < touchscreen.activeTouches.Count; i++)
+        for (var i = 0; i < touchscreen.activeTouches.Count; i++)
         {
             // Create new indicator if necessary
             if (i >= m_Touches.Count)
@@ -80,15 +72,15 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
         DeleteExtraTouches(touchscreen.activeTouches.Count);
     }
 
-    void DeleteExtraTouches(int numActiveTouches)
+    private void DeleteExtraTouches(int numActiveTouches)
     {
-        if (numActiveTouches < m_Touches.Count)
+        if (numActiveTouches >= m_Touches.Count)
+            return;
+
+        for (var i = 0; i < m_Touches.Count; i++)
         {
-            for (int i = 0; i < m_Touches.Count; i++)
-            {
-                Destroy(m_Touches[i]);
-                m_Touches.RemoveAt(i);
-            }
+            Destroy(m_Touches[i]);
+            m_Touches.RemoveAt(i);
         }
     }
 }

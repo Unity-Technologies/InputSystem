@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Interactions
 
             var value = floatControl.ReadValue();
             ////FIXME: we want the previously stored value here, not the value from the previous frame
-            var previous = floatControl.ReadPreviousValue();
+            var previous = floatControl.ReadValueFromPreviousFrame();
             var threshold = pressPointOrDefault;
 
             if (context.isWaiting)

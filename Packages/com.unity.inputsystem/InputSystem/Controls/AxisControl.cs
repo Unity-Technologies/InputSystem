@@ -54,16 +54,46 @@ namespace UnityEngine.Experimental.Input.Controls
         // the state format of the control and performs conversions.
         // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
         //       or bitfield type.
-        public override float ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var value = stateBlock.ReadFloat(statePtr);
             ////REVIEW: this isn't very raw
             return Preprocess(value);
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, float value)
+        public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
             stateBlock.WriteFloat(statePtr, value);
+        }
+
+        public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
+        {
+            var currentValue = ReadValueFromState(firstStatePtr);
+            var valueInState = ReadValueFromState(secondStatePtr);
+            return !Mathf.Approximately(currentValue, valueInState);
+        }
+
+        public override unsafe float EvaluateMagnitude(void* statePtr)
+        {
+            if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
+                return -1;
+
+            var value = ReadValueFromState(statePtr);
+            var min = m_MinValue.ToFloat();
+            var max = m_MaxValue.ToFloat();
+
+            value = Mathf.Clamp(value, min, max);
+
+            // If part of our range is in negative space, evaluate magnitude as two
+            // separate subspaces.
+            if (min < 0)
+            {
+                if (value < 0)
+                    return NormalizeProcessor.Normalize(Mathf.Abs(value), 0, Mathf.Abs(min), 0);
+                return NormalizeProcessor.Normalize(value, 0, max, 0);
+            }
+
+            return NormalizeProcessor.Normalize(value, min, max, 0);
         }
     }
 }

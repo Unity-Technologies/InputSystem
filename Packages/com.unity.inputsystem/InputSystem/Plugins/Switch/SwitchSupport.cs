@@ -1,4 +1,6 @@
 #if UNITY_EDITOR || UNITY_SWITCH
+using UnityEngine.Experimental.Input.Layouts;
+
 namespace UnityEngine.Experimental.Input.Plugins.Switch
 {
     /// <summary>
@@ -8,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     {
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<NPad>(
+            InputSystem.RegisterLayout<NPad>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("Switch")
                     .WithManufacturer("Nintendo")

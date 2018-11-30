@@ -1,5 +1,7 @@
 ////TODO: add support for Windows.Gaming.Input.Gamepad (including the trigger motors)
 
+using UnityEngine.Experimental.Input.Layouts;
+
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
     /// <summary>
@@ -10,10 +12,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         public static void Initialize()
         {
             // Base layout for Xbox-style gamepad.
-            InputSystem.RegisterControlLayout<XInputController>();
+            InputSystem.RegisterLayout<XInputController>();
 
 #if UNITY_EDITOR || UNITY_XBOXONE
-            InputSystem.RegisterControlLayout<XboxOneGamepad>(
+            InputSystem.RegisterLayout<XboxOneGamepad>(
                 matches: new InputDeviceMatcher()
                     .WithDeviceClass("XboxOneGamepad")
                     .WithInterface("Xbox"));
@@ -23,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             // XInput controllers on Windows.
             // State layout is XINPUT_GAMEPAD.
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx
-            InputSystem.RegisterControlLayout(@"{
+            InputSystem.RegisterLayout(@"{
 ""name"" : ""XInputControllerWindows"",
 ""extend"" : ""XInputController"",
 ""format"" : ""XINP"",
@@ -46,14 +48,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     { ""name"" : ""buttonNorth"", ""offset"" : 0, ""bit"" : 15 },
     { ""name"" : ""leftTrigger"", ""offset"" : 2, ""format"" : ""BYTE"" },
     { ""name"" : ""rightTrigger"", ""offset"" : 3, ""format"" : ""BYTE"" },
-    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"", ""processors"" : ""deadzone(min=0.150,max=0.925)"" },
+    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"", ""processors"" : ""stickDeadzone(min=0.150,max=0.925)"" },
     { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""leftStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"", ""processors"" : ""deadzone(min=0.150,max=0.925)"" },
+    { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"", ""processors"" : ""stickDeadzone(min=0.150,max=0.925)"" },
     { ""name"" : ""rightStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""rightStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""rightStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
@@ -86,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             ////TODO: come up with a way that allows us to snip that data out of the state we store and the
             ////      state we compare
             ////TODO: rumble and LED output
-            InputSystem.RegisterControlLayout(@"{
+            InputSystem.RegisterLayout(@"{
 ""name"" : ""XInputControllerOSX"",
 ""extend"" : ""XInputController"",
 ""format"" : ""HID"",

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -143,24 +144,6 @@ namespace UnityEngine.Experimental.Input
         public bool isTouching
         {
             get { throw new NotImplementedException(); }
-        }
-
-        /// <summary>
-        /// The pen that was active or connected last or <c>null</c> if there is no pen.
-        /// </summary>
-        public new static Pen current { get; internal set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

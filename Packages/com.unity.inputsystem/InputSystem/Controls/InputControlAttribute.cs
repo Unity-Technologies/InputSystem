@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.Experimental.Input.LowLevel;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Mark a data member in a state struct as being an input control.
@@ -32,8 +32,11 @@ namespace UnityEngine.Experimental.Input
         public uint sizeInBits;
         public int arraySize;
         public string displayName;
-        public string imageName;
+        public string shortDisplayName;
         public bool noisy;
+        public bool synthetic;
         public object defaultState;
+        public object minValue;
+        public object maxValue;
     }
 }

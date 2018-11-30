@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -26,41 +27,36 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(8)]
         public Vector2 delta;
 
+        ////REVIEW: have half-axis buttons on the scroll axes? (up, down, left, right)
         [InputControl]
-        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal")]
-        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical")]
+        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
+        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)Button.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        [InputControl(name = "rightButton", layout = "Button", bit = (int)Button.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
-        [InputControl(name = "middleButton", layout = "Button", bit = (int)Button.Middle)]
+        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
+        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
+        [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
-        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "pointerId", layout = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
+        ////FIXME: InputDeviceBuilder will get fooled and set up an incorrect state layout if we don't force this to VEC2; InputControlLayout will
+        ////       "infer" USHT as the format which will then end up with a layout where two 4 byte float controls are "packed" into a 16bit sized parent;
+        ////       in other words, setting VEC2 here manually should *not* be necessary
+        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kAutomaticOffset)] // Will stay at 0.
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kAutomaticOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
         [InputControl(layout = "Digital")]
         [FieldOffset(26)]
         public ushort displayIndex;
 
-        public enum Button
-        {
-            Left,
-            Right,
-            Middle,
-            Forward,
-            Back
-        }
-
         ////REVIEW: move this and the same methods in other states to extension methods?
-        public MouseState WithButton(Button button, bool state = true)
+        public MouseState WithButton(MouseButton button, bool state = true)
         {
             var bit = 1 << (int)button;
             if (state)
@@ -74,6 +70,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             return kFormat;
         }
+    }
+
+    public enum MouseButton
+    {
+        Left,
+        Right,
+        Middle,
+        Forward,
+        Back
     }
 }
 
@@ -111,12 +116,6 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public ButtonControl rightButton { get; private set; }
 
-        /// <summary>
-        /// The mouse that was added or updated last or null if there is no mouse
-        /// connected to the system.
-        /// </summary>
-        public new static Mouse current { get; internal set; }
-
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>
         /// Move the operating system's mouse cursor.
@@ -132,19 +131,6 @@ namespace UnityEngine.Experimental.Input
             ExecuteCommand(ref command);
         }
 
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             scroll = builder.GetControl<Vector2Control>(this, "scroll");
@@ -154,7 +140,7 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
@@ -163,7 +149,7 @@ namespace UnityEngine.Experimental.Input
             return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);

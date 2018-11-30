@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+////REVIEW: what about ignoring 'firstValue' entirely in case length > 1 and putting everything into an array in that case
+
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
@@ -81,6 +83,14 @@ namespace UnityEngine.Experimental.Input.Utilities
             length = 0;
             firstValue = default(TValue);
             additionalValues = null;
+        }
+
+        public void ClearWithCapacity()
+        {
+            length = 0;
+            firstValue = default(TValue);
+            for (var i = 0; i < length - 1; ++i)
+                additionalValues[i] = default(TValue);
         }
 
         public InlinedArray<TValue> Clone()
@@ -165,7 +175,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public void AppendWithCapacity(TValue value)
+        public int AppendWithCapacity(TValue value, int capacityIncrement = 10)
         {
             if (length == 0)
             {
@@ -174,9 +184,18 @@ namespace UnityEngine.Experimental.Input.Utilities
             else
             {
                 var numAdditionalValues = length - 1;
-                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value);
+                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value, capacityIncrement: capacityIncrement);
             }
+
+            var index = length;
             ++length;
+            return index;
+        }
+
+        public void Append(IEnumerable<TValue> values)
+        {
+            foreach (var value in values)
+                Append(value);
         }
 
         public void Remove(TValue value)
@@ -194,7 +213,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 {
                     if (EqualityComparer<TValue>.Default.Equals(additionalValues[i], value))
                     {
-                        RemoveAt(i);
+                        RemoveAt(i + 1);
                         break;
                     }
                 }
@@ -234,7 +253,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     // Remove only entry in array.
                     additionalValues = null;
                 }
-                else if (index == numAdditionalValues - 1)
+                else if (index == length - 1)
                 {
                     // Remove entry at end.
                     Array.Resize(ref additionalValues, numAdditionalValues - 1);
@@ -244,17 +263,16 @@ namespace UnityEngine.Experimental.Input.Utilities
                     // Remove entry at beginning or in middle by pasting together
                     // into a new array.
                     var newAdditionalProcessors = new TValue[numAdditionalValues - 1];
-                    if (index > 0)
+                    if (index >= 2)
                     {
-                        // Copy element before entry.
-                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index);
+                        // Copy elements before entry.
+                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index - 1);
                     }
-                    if (index != numAdditionalValues - 1)
-                    {
-                        // Copy elements after entry.
-                        Array.Copy(additionalValues, index + 1, newAdditionalProcessors, index,
-                            numAdditionalValues - index - 1);
-                    }
+
+                    // Copy elements after entry. We already know that we're not removing
+                    // the last entry so there have to be entries.
+                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalProcessors, index - 1,
+                        length - index - 1);
                 }
             }
 
@@ -289,7 +307,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             --length;
         }
 
-        public bool RemoveAtByMovingTailWithCapacity(TValue value)
+        public bool RemoveByMovingTailWithCapacity(TValue value)
         {
             var index = IndexOf(value);
             if (index == -1)
@@ -297,6 +315,28 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             RemoveAtByMovingTailWithCapacity(index);
             return true;
+        }
+
+        public bool Contains(TValue value, IEqualityComparer<TValue> comparer)
+        {
+            for (var n = 0; n < length; ++n)
+                if (comparer.Equals(this[n], value))
+                    return true;
+            return false;
+        }
+
+        public void Merge(InlinedArray<TValue> other)
+        {
+            var comparer = EqualityComparer<TValue>.Default;
+            for (var i = 0; i < other.length; ++i)
+            {
+                var value = other[i];
+                if (Contains(value, comparer))
+                    continue;
+
+                ////FIXME: this is ugly as it repeatedly copies
+                Append(value);
+            }
         }
 
         public IEnumerator<TValue> GetEnumerator()

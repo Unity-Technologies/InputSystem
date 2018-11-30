@@ -1,6 +1,6 @@
-using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -10,24 +10,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout]
     public class XRHMD : InputDevice
     {
-        /// <summary>
-        /// A quick accessor to grab the currently used HMD, regardless of type.
-        /// </summary>
-        /// <remarks>If no HMD is connected, this can be null.</remarks>
-        public static XRHMD current { get; private set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
     }
 
     /// <summary>
@@ -40,13 +22,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         /// A quick accessor for the currently active left handed device.
         /// </summary>
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'LeftHand' device usage.</remarks>
-        public static XRController leftHand { get; private set; }
+        public static XRController leftHand
+        {
+            get { return InputSystem.GetDevice<XRController>(CommonUsages.LeftHand); }
+        }
 
         //// <summary>
         /// A quick accessor for the currently active right handed device.  This is also tracked via usages on the device.
         /// </summary>
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'RightHand' device usage.</remarks>
-        public static XRController rightHand { get; private set; }
+        public static XRController rightHand
+        {
+            get { return InputSystem.GetDevice<XRController>(CommonUsages.RightHand); }
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -59,45 +47,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             {
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
                 {
-                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 }
                 else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                 {
-                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
                 }
             }
-        }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-
-            if (usages.Contains(CommonUsages.LeftHand))
-            {
-                leftHand = this;
-            }
-            else if (leftHand == this)
-            {
-                leftHand = null;
-            }
-
-            if (usages.Contains(CommonUsages.RightHand))
-            {
-                rightHand = this;
-            }
-            else if (rightHand == this)
-            {
-                rightHand = null;
-            }
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (leftHand == this)
-                leftHand = null;
-            else if (rightHand == this)
-                rightHand = null;
         }
     }
 
@@ -106,12 +62,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     /// </summary>
     public class XRControllerWithRumble : XRController, IHaptics
     {
-        SimpleXRRumble m_Rumble;
+        SimpleRumble m_Rumble;
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-            m_Rumble = new SimpleXRRumble(this);
+            m_Rumble = new SimpleRumble(this);
         }
 
         /// <summary>
@@ -136,7 +92,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
 
         /// <summary>
-        /// Pauses haptics so that motorspeed on the device will be 0, regardless of the current intensity level.
+        /// Pauses haptics so that motor speed on the device will be 0, regardless of the current intensity level.
         /// </summary>
         public void PauseHaptics()
         {

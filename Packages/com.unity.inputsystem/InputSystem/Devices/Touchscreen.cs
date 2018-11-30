@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
@@ -46,18 +47,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl][FieldOffset(24)] public Vector2 radius;
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
-        [InputControl(name = "touchType", layout = "TouchType", format = "SBYT")][FieldOffset(35)] public sbyte touchTypeId;
+        [InputControl(name = "indirectTouch", layout = "Button", bit = (int)TouchFlags.IndirectTouch)][FieldOffset(35)] public sbyte flags;
 
         public PointerPhase phase
         {
             get { return (PointerPhase)phaseId; }
             set { phaseId = (ushort)value; }
-        }
-
-        public TouchType type
-        {
-            get { return (TouchType)touchTypeId; }
-            set { touchTypeId = (sbyte)value; }
         }
 
         public FourCC GetFormat()
@@ -150,11 +145,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    public enum TouchType
+    [Flags]
+    public enum TouchFlags
     {
-        Direct,
-        Indirect,
-        Stylus
+        IndirectTouch
     }
 
     ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?
@@ -206,7 +200,7 @@ namespace UnityEngine.Experimental.Input
                             hadActivityThisFrame = device.wasUpdatedThisFrame;
                         if (hadActivityThisFrame.Value)
                         {
-                            var previousPhase = phaseControl.ReadPreviousValue();
+                            var previousPhase = phaseControl.ReadValueFromPreviousFrame();
                             if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Cancelled)
                                 isActive = true;
                         }
@@ -231,25 +225,6 @@ namespace UnityEngine.Experimental.Input
         /// which touches (if any) are currently in progress.
         /// </remarks>
         public ReadOnlyArray<TouchControl> allTouchControls { get; private set; }
-
-        /// <summary>
-        /// The touchscreen that was added or updated last or null if there is no
-        /// touchscreen connected to the system.
-        /// </summary>
-        public new static Touchscreen current { get; internal set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -296,7 +271,7 @@ namespace UnityEngine.Experimental.Input
         //       sending state to any other device. The code here only presents an alternate path for sending
         //       state to a Touchscreen and have it perform touch allocation internally.
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
@@ -306,7 +281,7 @@ namespace UnityEngine.Experimental.Input
 
             // Reset all touches that have ended last frame to being unused.
             // Also mark any ongoing touches as stationary.
-            var touchStatePtr = (TouchState*)((byte*)statePtr.ToPointer() + stateBlock.byteOffset);
+            var touchStatePtr = (TouchState*)((byte*)statePtr + stateBlock.byteOffset);
             for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
             {
                 var phase = touchStatePtr->phase;
@@ -336,7 +311,7 @@ namespace UnityEngine.Experimental.Input
             return haveChangedState;
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             if (stateFormat != TouchState.kFormat)
@@ -349,7 +324,7 @@ namespace UnityEngine.Experimental.Input
             // unlike other devices, is hardwired to a single memory layout only.
 
             var newTouchState = (TouchState*)statePtr;
-            var currentTouchState = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
+            var currentTouchState = (TouchState*)((byte*)currentStatePtr + stateBlock.byteOffset);
 
             // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
             // previously.
@@ -396,7 +371,7 @@ namespace UnityEngine.Experimental.Input
             return false;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 

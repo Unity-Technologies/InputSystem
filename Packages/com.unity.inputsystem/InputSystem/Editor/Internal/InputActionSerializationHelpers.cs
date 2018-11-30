@@ -1,7 +1,13 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine.Experimental.Input.Layouts;
+
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -17,13 +23,30 @@ namespace UnityEngine.Experimental.Input.Editor
             var bindingCountForAction = 0;
             for (var i = 0; i < bindingCount; ++i)
             {
-                var bindingActionName = bindingArrayProperty.GetArrayElementAtIndex(i).FindPropertyRelative("action")
+                var bindingActionName = bindingArrayProperty.GetArrayElementAtIndex(i).FindPropertyRelative("m_Action")
                     .stringValue;
                 if (string.Compare(actionName, bindingActionName, StringComparison.InvariantCultureIgnoreCase) == 0)
                     ++bindingCountForAction;
             }
 
             return bindingCountForAction;
+        }
+
+        public static int GetBindingsStartIndex(SerializedProperty bindingArrayProperty, string actionName)
+        {
+            Debug.Assert(bindingArrayProperty != null);
+            Debug.Assert(bindingArrayProperty.isArray);
+
+            var bindingCount = bindingArrayProperty.arraySize;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingActionName = bindingArrayProperty.GetArrayElementAtIndex(i).FindPropertyRelative("m_Action")
+                    .stringValue;
+                if (string.Compare(actionName, bindingActionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return i;
+            }
+
+            return -1;
         }
 
         public static SerializedProperty GetBinding(SerializedProperty bindingArrayProperty, string actionName, int index)
@@ -36,7 +59,7 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < bindingCount; ++i)
             {
                 var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(i);
-                var bindingActionName = bindingProperty.FindPropertyRelative("action").stringValue;
+                var bindingActionName = bindingProperty.FindPropertyRelative("m_Action").stringValue;
                 if (string.Compare(actionName, bindingActionName, StringComparison.InvariantCultureIgnoreCase) != 0)
                     continue;
 
@@ -55,37 +78,32 @@ namespace UnityEngine.Experimental.Input.Editor
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             var mapCount = mapArrayProperty.arraySize;
             var index = mapCount;
-            var name = FindUniqueName(mapArrayProperty, "default");
+            var name = FindUniqueName(mapArrayProperty, "New action map");
 
             mapArrayProperty.InsertArrayElementAtIndex(index);
             var mapProperty = mapArrayProperty.GetArrayElementAtIndex(index);
 
             mapProperty.FindPropertyRelative("m_Name").stringValue = name;
+            mapProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
             mapProperty.FindPropertyRelative("m_Actions").ClearArray();
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
         }
 
-        public static void AddActionMapFromObject(SerializedObject asset, InputActionMap map)
+        public static SerializedProperty AddActionMapFromSavedProperties(SerializedObject asset, Dictionary<string, string> parameters)
         {
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             var mapCount = mapArrayProperty.arraySize;
             var index = mapCount;
-            var name = FindUniqueName(mapArrayProperty, map.name);
+            var name = FindUniqueName(mapArrayProperty, parameters["m_Name"]);
 
             mapArrayProperty.InsertArrayElementAtIndex(index);
             var mapProperty = mapArrayProperty.GetArrayElementAtIndex(index);
             mapProperty.FindPropertyRelative("m_Actions").ClearArray();
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
             mapProperty.FindPropertyRelative("m_Name").stringValue = name;
+            mapProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
 
-            for (var i = 0; i < map.actions.Count; i++)
-            {
-                var newActionProperty = AddActionFromObject(map.actions[i], mapProperty);
-                for (var j = 0; j < map.actions[i].bindings.Count; j++)
-                {
-                    AppendBindingFromObject(map.actions[i].bindings[j], newActionProperty, mapProperty);
-                }
-            }
+            return mapProperty;
         }
 
         public static void DeleteActionMap(SerializedObject asset, int index)
@@ -101,15 +119,18 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionsCount = actionsArrayProperty.arraySize;
             var actionIndex = actionsCount;
 
-            var actionName = FindUniqueName(actionsArrayProperty, "action");
+            var actionName = FindUniqueName(actionsArrayProperty, "New action");
 
             actionsArrayProperty.InsertArrayElementAtIndex(actionIndex);
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
+            actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue = string.Empty;
+
             return actionProperty;
         }
 
-        public static SerializedProperty AddActionFromObject(InputAction action, SerializedProperty actionMap)
+        public static SerializedProperty AddActionFromSavedProperties(Dictionary<string, string> parameters, SerializedProperty actionMap)
         {
             var actionsArrayProperty = actionMap.FindPropertyRelative("m_Actions");
             var actionsCount = actionsArrayProperty.arraySize;
@@ -118,14 +139,26 @@ namespace UnityEngine.Experimental.Input.Editor
             actionsArrayProperty.InsertArrayElementAtIndex(actionIndex);
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
 
-            var actionName = FindUniqueName(actionsArrayProperty, action.name);
+            var actionName = FindUniqueName(actionsArrayProperty, parameters["m_Name"]);
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
             return actionProperty;
         }
 
-        public static void MoveBinding(SerializedProperty actionMap, int srcIndex, int dstIndex)
+        public static void MoveBinding(SerializedProperty actionMapProperty, int srcIndex, int dstIndex)
         {
-            var actionsArrayProperty = actionMap.FindPropertyRelative("m_Bindings");
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
+            actionsArrayProperty.MoveArrayElement(srcIndex, dstIndex);
+        }
+
+        public static void MoveActionMap(SerializedObject serializedObject, int srcIndex, int dstIndex)
+        {
+            var actionMapsProperty = serializedObject.FindProperty("m_ActionMaps");
+            actionMapsProperty.MoveArrayElement(srcIndex, dstIndex);
+        }
+
+        public static void MoveAction(SerializedProperty actionMapProperty, int srcIndex, int dstIndex)
+        {
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             actionsArrayProperty.MoveArrayElement(srcIndex, dstIndex);
         }
 
@@ -135,8 +168,8 @@ namespace UnityEngine.Experimental.Input.Editor
             actionsArrayProperty.DeleteArrayElementAtIndex(actionIndex);
         }
 
-        // Equivalent to InputAction.AppendBinding().
-        public static SerializedProperty AppendBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        // Equivalent to InputAction.AddBinding().
+        public static SerializedProperty AddBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null, string group = "")
         {
             var bindingsArrayProperty = actionMapProperty != null
                 ? actionMapProperty.FindPropertyRelative("m_Bindings")
@@ -149,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < bindingsCount; ++i)
             {
                 var bindingProperty = bindingsArrayProperty.GetArrayElementAtIndex(i);
-                var bindingActionName = bindingProperty.FindPropertyRelative("action").stringValue;
+                var bindingActionName = bindingProperty.FindPropertyRelative("m_Action").stringValue;
                 if (string.Compare(actionName, bindingActionName, StringComparison.InvariantCultureIgnoreCase) == 0)
                     indexOfLastBindingForAction = i;
             }
@@ -159,25 +192,25 @@ namespace UnityEngine.Experimental.Input.Editor
             bindingsArrayProperty.InsertArrayElementAtIndex(bindingIndex);
 
             var newActionProperty = bindingsArrayProperty.GetArrayElementAtIndex(bindingIndex);
-            newActionProperty.FindPropertyRelative("path").stringValue = string.Empty;
-            newActionProperty.FindPropertyRelative("groups").stringValue = string.Empty;
-            newActionProperty.FindPropertyRelative("interactions").stringValue = string.Empty;
-            newActionProperty.FindPropertyRelative("flags").intValue = 0;
-            newActionProperty.FindPropertyRelative("action").stringValue = actionName;
+            newActionProperty.FindPropertyRelative("m_Path").stringValue = string.Empty;
+            newActionProperty.FindPropertyRelative("m_Groups").stringValue = group;
+            newActionProperty.FindPropertyRelative("m_Interactions").stringValue = string.Empty;
+            newActionProperty.FindPropertyRelative("m_Flags").intValue = 0;
+            newActionProperty.FindPropertyRelative("m_Action").stringValue = actionName;
 
             return newActionProperty;
 
             ////FIXME: this likely leaves m_Bindings in the map for singleton actions unsync'd in some cases
         }
 
-        public static void AppendBindingFromObject(InputBinding binding, SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        public static void AddBindingFromSavedProperties(Dictionary<string, string> values, SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
         {
-            var newBindingProperty = AppendBinding(actionProperty, actionMapProperty);
-            newBindingProperty.FindPropertyRelative("path").stringValue = binding.path;
-            newBindingProperty.FindPropertyRelative("name").stringValue = binding.name;
-            newBindingProperty.FindPropertyRelative("groups").stringValue = binding.groups;
-            newBindingProperty.FindPropertyRelative("interactions").stringValue = binding.interactions;
-            newBindingProperty.FindPropertyRelative("flags").intValue = (int)binding.flags;
+            var newBindingProperty = AddBinding(actionProperty, actionMapProperty);
+            newBindingProperty.FindPropertyRelative("m_Path").stringValue = values["path"];
+            newBindingProperty.FindPropertyRelative("m_Name").stringValue = values["name"];
+            newBindingProperty.FindPropertyRelative("m_Groups").stringValue = values["groups"];
+            newBindingProperty.FindPropertyRelative("m_Interactions").stringValue = values["interactions"];
+            newBindingProperty.FindPropertyRelative("m_Flags").intValue = int.Parse(values["flags"]);
         }
 
         public static void RemoveBinding(SerializedProperty actionProperty, int bindingIndex, SerializedProperty actionMapProperty = null)
@@ -193,7 +226,7 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < bindingsCount; ++i)
             {
                 var bindingProperty = bindingsArrayProperty.GetArrayElementAtIndex(i);
-                var bindingActionName = bindingProperty.FindPropertyRelative("action").stringValue;
+                var bindingActionName = bindingProperty.FindPropertyRelative("m_Action").stringValue;
                 if (string.Compare(actionName, bindingActionName, StringComparison.InvariantCultureIgnoreCase) != 0)
                     continue;
 
@@ -211,7 +244,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 "bindingIndex");
         }
 
-        private static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
+        public static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
         {
             var result = baseName;
             var lowerCase = baseName.ToLower();
@@ -245,49 +278,63 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
         {
+            // Make sure name is unique.
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
+            var uniqueName = FindUniqueName(actionsArrayProperty, newName);
+
+            // Update all bindings that refer to the action.
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");
+            var oldName = nameProperty.stringValue;
             var bindingsProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             for (var i = 0; i < bindingsProperty.arraySize; i++)
             {
                 var element = bindingsProperty.GetArrayElementAtIndex(i);
-                var actionNameProperty = element.FindPropertyRelative("action");
-                if (actionNameProperty.stringValue == nameProperty.stringValue)
+                var actionNameProperty = element.FindPropertyRelative("m_Action");
+                if (actionNameProperty.stringValue == oldName)
                 {
-                    actionNameProperty.stringValue = newName;
+                    actionNameProperty.stringValue = uniqueName;
                 }
             }
-            nameProperty.stringValue = newName;
+
+            // Update name.
+            nameProperty.stringValue = uniqueName;
         }
 
         public static void RenameActionMap(SerializedProperty actionMapProperty, string newName)
         {
+            // Make sure name is unique in InputActionAsset.
+            var assetObject = actionMapProperty.serializedObject;
+            var mapsArrayProperty = assetObject.FindProperty("m_ActionMaps");
+            var uniqueName = FindUniqueName(mapsArrayProperty, newName);
+
+            // Assign to map.
             var nameProperty = actionMapProperty.FindPropertyRelative("m_Name");
-            nameProperty.stringValue = newName;
+            nameProperty.stringValue = uniqueName;
         }
 
         public static void RenameComposite(SerializedProperty compositeGroupProperty, string newName)
         {
-            var nameProperty = compositeGroupProperty.FindPropertyRelative("name");
+            var nameProperty = compositeGroupProperty.FindPropertyRelative("m_Name");
             nameProperty.stringValue = newName;
         }
 
-        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type)
+        public static void AddCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type, string group = "")
         {
-            var newProperty = AppendBinding(actionProperty, actionMapProperty);
-            newProperty.FindPropertyRelative("name").stringValue = compositeName;
-            newProperty.FindPropertyRelative("path").stringValue = compositeName;
-            newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.Composite;
+            var newProperty = AddBinding(actionProperty, actionMapProperty);
+            newProperty.FindPropertyRelative("m_Name").stringValue = compositeName;
+            newProperty.FindPropertyRelative("m_Path").stringValue = compositeName;
+            newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.Composite;
 
             var fields = type.GetFields(BindingFlags.GetField | BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in fields)
             {
-                // Skip fields that aren't InputControls.
-                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
+                // Skip fields that aren't marked with [InputControl] attribute.
+                if (field.GetCustomAttribute<InputControlAttribute>(false) == null)
                     continue;
 
-                newProperty = AppendBinding(actionProperty, actionMapProperty);
-                newProperty.FindPropertyRelative("name").stringValue = field.Name;
-                newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.PartOfComposite;
+                newProperty = AddBinding(actionProperty, actionMapProperty, group);
+                newProperty.FindPropertyRelative("m_Name").stringValue = field.Name;
+                newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.PartOfComposite;
             }
         }
     }

@@ -7,6 +7,19 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class StringHelpers
     {
+        public static string GetPlural(this string str)
+        {
+            switch (str)
+            {
+                case "Mouse": return "Mice";
+                case "mouse": return "mice";
+                case "Axis": return "Axes";
+                case "axis": return "axis";
+            }
+
+            return str + 's';
+        }
+
         public static int CountOccurrences(this string str, char ch)
         {
             if (str == null)
@@ -27,6 +40,40 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return count;
+        }
+
+        public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
+        {
+            if (string.IsNullOrEmpty(str))
+                yield break;
+
+            var length = str.Length;
+            var position = 0;
+
+            while (position < length)
+            {
+                // Skip separator.
+                var ch = str[position];
+                if (predicate(ch))
+                {
+                    ++position;
+                    continue;
+                }
+
+                // Skip to next separator.
+                var startPosition = position;
+                ++position;
+                while (position < length)
+                {
+                    ch = str[position];
+                    if (predicate(ch))
+                        break;
+                    ++position;
+                }
+                var endPosition = position;
+
+                yield return str.Substring(startPosition, endPosition - startPosition);
+            }
         }
 
         public static string Join<TValue>(IEnumerable<TValue> values, string separator)
@@ -187,13 +234,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         ////TODO: this should use UTF-8 and not UTF-16
 
-        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize)
+        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters)
         {
             uint offset = 0;
-            return WriteStringToBuffer(text, buffer, bufferSize, ref offset);
+            return WriteStringToBuffer(text, buffer, bufferSizeInCharacters, ref offset);
         }
 
-        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize, ref uint offset)
+        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
                 throw new ArgumentNullException("buffer");
@@ -203,7 +250,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 throw new ArgumentException(string.Format("String exceeds max size of {0} characters", ushort.MaxValue), "text");
 
             var endOffset = offset + sizeof(char) * length + sizeof(int);
-            if (endOffset > bufferSize)
+            if (endOffset > bufferSizeInCharacters)
                 return false;
 
             var ptr = ((byte*)buffer) + offset;

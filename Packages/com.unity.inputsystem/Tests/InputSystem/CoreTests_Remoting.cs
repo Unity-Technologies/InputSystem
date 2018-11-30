@@ -8,7 +8,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -60,7 +60,7 @@ partial class CoreTests
     {
         using (var remote = new FakeRemote())
         {
-            InputSystem.RegisterControlLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
+            InputSystem.RegisterLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
             InputSystem.AddDevice("MyGamepad");
 
             var layouts = new List<string>();
@@ -98,7 +98,7 @@ partial class CoreTests
             var remoteGamepad = (Gamepad)remote.manager.devices[0];
             Assert.That(remoteGamepad.usages, Has.Count.Zero);
 
-            InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
+            InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
 
             Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
         }
@@ -157,6 +157,7 @@ partial class CoreTests
     // from remotes should stay local.
     [Test]
     [Category("Remote")]
+    [Ignore("TODO")]
     public void TODO_Remote_WithMultipleRemotesConnected_DoesNotDuplicateDataFromOneRemoteToOtherRemotes()
     {
         Assert.Fail();

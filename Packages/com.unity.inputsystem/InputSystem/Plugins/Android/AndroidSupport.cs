@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System.Linq;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 
@@ -15,16 +16,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<AndroidGamepad>(
+            InputSystem.RegisterLayout<AndroidGamepad>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidGameController"));
-            InputSystem.RegisterControlLayout<AndroidJoystick>(
+            InputSystem.RegisterLayout<AndroidJoystick>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidGameController"));
 
-            ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindControlLayoutForDevice for now
+            ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindLayoutForDevice for now
 
             const string kDpadHatSettings = @"
         { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
@@ -33,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
         { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
 ";
-            InputSystem.RegisterControlLayout(@"
+            InputSystem.RegisterLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
     ""extend"" : ""AndroidGamepad"",
@@ -42,7 +43,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     ]
 }
             ");
-            InputSystem.RegisterControlLayout(@"
+            InputSystem.RegisterLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadButtons"",
     ""extend"" : ""AndroidGamepad"",
@@ -57,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             ");
 
             ////TODO: why do I have to set layout here for leftTrigger, shouldn't it come from child control ?
-            InputSystem.RegisterControlLayout(string.Format(@"
+            InputSystem.RegisterLayout(string.Format(@"
 {{
     ""name"" : ""AndroidGamepadXboxController"",
     ""extend"" : ""AndroidGamepad"",
@@ -77,14 +78,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 , AndroidGameControllerState.kVariantGamepad));
 
 
-            InputSystem.RegisterControlLayout(string.Format(@"
+            InputSystem.RegisterLayout(string.Format(@"
 {{
     ""name"" : ""AndroidGamepadDualShock"",
     ""extend"" : ""AndroidGamepad"",
     ""controls"" : [
         {0},
-        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {3}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{1}"" }},
+        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
+        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {3}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
         {{ ""name"" : ""leftShoulder"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {4}, ""variant"" : ""{1}"" }},
         {{ ""name"" : ""rightShoulder"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {5}, ""variant"" : ""{1}"" }},
         {{ ""name"" : ""buttonSouth"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {6}, ""variant"" : ""{1}"" }},
@@ -106,73 +107,74 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
 
             InputSystem.RegisterControlProcessor<AndroidCompensateDirectionProcessor>();
+            InputSystem.RegisterControlProcessor<AndroidCompensateRotationProcessor>();
 
             // Add sensors
-            InputSystem.RegisterControlLayout<AndroidAccelerometer>(
+            InputSystem.RegisterLayout<AndroidAccelerometer>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Accelerometer));
-            InputSystem.RegisterControlLayout<AndroidMagneticField>(
+            InputSystem.RegisterLayout<AndroidMagneticField>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.MagneticField));
-            InputSystem.RegisterControlLayout<AndroidGyroscope>(
+            InputSystem.RegisterLayout<AndroidGyroscope>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Gyroscope));
-            InputSystem.RegisterControlLayout<AndroidLight>(
+            InputSystem.RegisterLayout<AndroidLight>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Light));
-            InputSystem.RegisterControlLayout<AndroidPressure>(
+            InputSystem.RegisterLayout<AndroidPressure>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Pressure));
-            InputSystem.RegisterControlLayout<AndroidProximity>(
+            InputSystem.RegisterLayout<AndroidProximity>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Proximity));
-            InputSystem.RegisterControlLayout<AndroidGravity>(
+            InputSystem.RegisterLayout<AndroidGravity>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Gravity));
-            InputSystem.RegisterControlLayout<AndroidLinearAcceleration>(
+            InputSystem.RegisterLayout<AndroidLinearAcceleration>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.LinearAcceleration));
-            InputSystem.RegisterControlLayout<AndroidRotationVector>(
+            InputSystem.RegisterLayout<AndroidRotationVector>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.RotationVector));
-            InputSystem.RegisterControlLayout<AndroidRelativeHumidity>(
+            InputSystem.RegisterLayout<AndroidRelativeHumidity>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.RelativeHumidity));
-            InputSystem.RegisterControlLayout<AndroidAmbientTemperature>(
+            InputSystem.RegisterLayout<AndroidAmbientTemperature>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.AmbientTemperature));
-            InputSystem.RegisterControlLayout<AndroidStepCounter>(
+            InputSystem.RegisterLayout<AndroidStepCounter>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.StepCounter));
 
-            InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
+            InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }
 
-        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description,
+        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description,
             string matchedTemplate, IInputRuntime runtime)
         {
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))

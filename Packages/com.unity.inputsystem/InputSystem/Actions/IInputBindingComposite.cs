@@ -1,8 +1,23 @@
+using System;
+using System.Reflection;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: rename to "IInputCompoundBinding"
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
+
+////REVIEW: composites probably need a reset method, too (like interactions), so that they can be stateful
+
+////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
+////        not just be about composing multiple bindings?
+
+////REVIEW: why not just name this IInputBinding and have AxisBinding, DpadBinding, etc?
 
 ////REVIEW: should composites be able to nest?
+
+////REVIEW: when we get blittable type constraints, we can probably do away with the pointer-based ReadValue version
 
 namespace UnityEngine.Experimental.Input
 {
@@ -31,13 +46,96 @@ namespace UnityEngine.Experimental.Input
     /// }
     /// </code>
     /// </example>
-    public interface IInputBindingComposite<TValue>
+    public interface IInputBindingComposite<TValue> : IInputBindingComposite
+        where TValue : struct
     {
         TValue ReadValue(ref InputBindingCompositeContext context);
+    }
+
+    public interface IInputBindingComposite
+    {
+        Type valueType { get; }
+        int valueSizeInBytes { get; }
+        unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize);
+    }
+
+    public abstract class InputBindingComposite<TValue> : IInputBindingComposite<TValue>
+        where TValue : struct
+    {
+        public Type valueType
+        {
+            get { return typeof(TValue); }
+        }
+
+        public int valueSizeInBytes
+        {
+            get { return UnsafeUtility.SizeOf<TValue>(); }
+        }
+
+        public abstract TValue ReadValue(ref InputBindingCompositeContext context);
+
+        public unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            var valueSize = valueSizeInBytes;
+            if (bufferSize < valueSize)
+                throw new ArgumentException("bufferSize < valueSizeInBytes", "bufferSize");
+
+            var value = ReadValue(ref context);
+            var valuePtr = UnsafeUtility.AddressOf(ref value);
+
+            UnsafeUtility.MemCpy(buffer, valuePtr, valueSize);
+        }
     }
 
     internal static class InputBindingComposite
     {
         public static TypeTable s_Composites;
+
+        /// <summary>
+        /// Return the name of the control layout that is expected for the given part (e.g. "Up") on the given
+        /// composite (e.g. "Dpad").
+        /// </summary>
+        /// <param name="composite"></param>
+        /// <param name="part"></param>
+        /// <returns>The layout name (such as "Button") expected for the given part on the composite or null if
+        /// there is no composite with the given name or no part on the composite with the given name.</returns>
+        /// <remarks>
+        /// Expected control layouts can be set on composite parts by setting the <see cref="InputControlAttribute.layout"/>
+        /// property on them.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputBindingComposite.GetExpectedControlLayoutName("Dpad", "Up") // Returns "Button"
+        ///
+        /// // This is how Dpad communicates that:
+        /// [InputControl(layout = "Button")] public int up;
+        /// </code>
+        /// </example>
+        public static string GetExpectedControlLayoutName(string composite, string part)
+        {
+            if (string.IsNullOrEmpty(composite))
+                throw new ArgumentNullException("composite");
+            if (string.IsNullOrEmpty(part))
+                throw new ArgumentNullException("part");
+
+            var compositeType = s_Composites.LookupTypeRegistration(composite);
+            if (compositeType == null)
+                return null;
+
+            ////TODO: allow it being properties instead of just fields
+            var field = compositeType.GetField(part,
+                BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
+            if (field == null)
+                return null;
+
+            var attribute = field.GetCustomAttribute<InputControlAttribute>(false);
+            if (attribute == null)
+                return null;
+
+            return attribute.layout;
+        }
     }
 }
