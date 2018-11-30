@@ -33,7 +33,6 @@ namespace UnityEngine.Experimental.Input
         public int totalActionCount;
         public int totalBindingCount;
         public int totalControlCount;
-        public int totalDeviceCount;
         public int totalInteractionCount;
         public int totalProcessorCount;
         public int totalCompositeCount;
@@ -146,8 +145,7 @@ namespace UnityEngine.Experimental.Input
             // Allocate binding states.
             var bindingsInThisMap = map.m_Bindings;
             var bindingCountInThisMap = bindingsInThisMap != null ? bindingsInThisMap.Length : 0;
-            totalBindingCount += bindingCountInThisMap;
-            ArrayHelpers.GrowBy(ref bindingStates, totalBindingCount);
+            ArrayHelpers.GrowWithCapacity(ref bindingStates, ref totalBindingCount, bindingCountInThisMap);
 
             ////TODO: make sure composite objects get all the bindings they need
             ////TODO: handle case where we have bindings resolving to the same control
@@ -166,6 +164,9 @@ namespace UnityEngine.Experimental.Input
                 {
                     var unresolvedBinding = bindingsInThisMap[n];
                     var bindingIndex = bindingStartIndex + n;
+                    var isComposite = unresolvedBinding.isComposite;
+
+                    ////TODO: if it's a composite, check if any of the children matches our binding masks (if any) and skip composite if none do
 
                     // Set binding state to defaults.
                     bindingStates[bindingIndex].mapIndex = totalMapCount;
@@ -178,11 +179,11 @@ namespace UnityEngine.Experimental.Input
                         continue;
 
                     // Skip binding if it doesn't match with our binding mask (might be empty).
-                    if (bindingMask != null && !bindingMask.Value.Matches(ref unresolvedBinding))
+                    if (!isComposite && bindingMask != null && !bindingMask.Value.Matches(ref unresolvedBinding))
                         continue;
 
                     // Skip binding if it doesn't match the binding mask on the map (might be empty).
-                    if (bindingMaskOnThisMap != null && !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding))
+                    if (!isComposite && bindingMaskOnThisMap != null && !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding))
                         continue;
 
                     // Try to find action.
@@ -201,7 +202,7 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Skip binding if it doesn't match the binding mask on the action (might be empty).
-                    if (actionIndexInMap != InputActionMapState.kInvalidIndex)
+                    if (!isComposite && actionIndexInMap != InputActionMapState.kInvalidIndex)
                     {
                         var action = actionsInThisMap[actionIndexInMap];
                         if (action.m_BindingMask != null && !action.m_BindingMask.Value.Matches(ref unresolvedBinding))
@@ -230,13 +231,9 @@ namespace UnityEngine.Experimental.Input
                             numInteractions = totalInteractionCount - firstInteractionIndex;
                     }
 
-                    ////TODO: allow specifying parameters for composite on its path (same way as parameters work for interactions)
-                    ////      (Example: "Axis(min=-1,max=1)" creates an axis that goes from -1..1 instead of the default 0..1)
                     // If it's the start of a composite chain, create the composite.
                     if (unresolvedBinding.isComposite)
                     {
-                        ////REVIEW: what to do about interactions on composites?
-
                         // Instantiate. For composites, the path is the name of the composite.
                         var composite = InstantiateBindingComposite(unresolvedBinding.path);
                         currentCompositeIndex =
@@ -337,7 +334,9 @@ namespace UnityEngine.Experimental.Input
 
             // Set up control to binding index mapping.
             var controlCountInThisMap = totalControlCount - controlStartIndex;
-            ArrayHelpers.GrowBy(ref controlIndexToBindingIndex, controlCountInThisMap);
+            var controlIndexToBindingIndexCount = controlStartIndex;
+            ArrayHelpers.GrowWithCapacity(ref controlIndexToBindingIndex, ref controlIndexToBindingIndexCount,
+                controlCountInThisMap);
             for (var i = 0; i < bindingCountInThisMap; ++i)
             {
                 var numControls = bindingStates[bindingStartIndex + i].controlCount;

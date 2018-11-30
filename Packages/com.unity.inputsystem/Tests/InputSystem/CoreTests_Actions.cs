@@ -2504,6 +2504,35 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnAction_WhenEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction
+        {
+            bindingMask = new InputBinding {groups = "a"}
+        };
+
+        action.AddBinding("<Gamepad>/buttonSouth").WithGroup("a");
+        action.AddBinding("<Gamepad>/buttonNorth").WithGroup("b");
+
+        action.Enable();
+
+        action.bindingMask = new InputBinding {groups = "b"};
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(action.lastTriggerControl, Is.Null);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
+        InputSystem.Update();
+
+        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.buttonNorth));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanMaskOutBindingsByBindingGroup_OnActionMap()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

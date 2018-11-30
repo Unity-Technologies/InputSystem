@@ -123,7 +123,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75f).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25f).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25f).Within(0.00001));
     }
 
     [Test]
@@ -140,7 +140,7 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.Zero);
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero);
     }
 
     [Test]
@@ -157,7 +157,7 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Fixed); // Unchanged.
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.75).Within(0.000001));
     }
 
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
@@ -362,28 +362,28 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         // Input update with no changes should make both properties go back to false.
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.True);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
     }
 
     // The way we keep state does not allow observing the state change on the final
@@ -403,8 +403,8 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
     }
 
     [Test]

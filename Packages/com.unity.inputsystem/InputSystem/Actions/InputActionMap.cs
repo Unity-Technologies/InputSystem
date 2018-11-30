@@ -8,6 +8,10 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: given we have the global ActionTriggered callback, do we really need the per-map callback?
 
+////TODO: remove constraint of not being able to modify bindings while enabled from both actions and maps
+////      (because of the sharing of state between multiple maps in an asset, we'd have to extend that constraint
+////      to all maps in an asset in order to uphold it properly)
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -752,7 +756,13 @@ namespace UnityEngine.Experimental.Input
                 //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
                 //       here.
                 if (m_State != null)
+                {
+                    // If any of the maps have actions currently enabled, remove their state monitors first.
+                    for (var i = 0; i < actionMapCount; ++i)
+                        actionMaps[i].DisableControlsOfEnabledActions();
+
                     resolver.StartWithArraysFrom(m_State);
+                }
 
                 // If there's a binding mask set on the asset, apply it.
                 resolver.bindingMask = m_Asset.m_BindingMask;
@@ -775,15 +785,21 @@ namespace UnityEngine.Experimental.Input
                     m_State.ClaimDataFrom(resolver);
                 }
 
-                ////TODO: determine whether we really need to wipe those; keep them if nothing has changed
-                // Wipe caches.
+                // Wipe caches and re-enable controls, if necessary.
                 for (var i = 0; i < actionMapCount; ++i)
-                    actionMaps[i].ClearPerActionCachedBindingData();
+                {
+                    var map = actionMaps[i];
+                    ////TODO: determine whether we really need to wipe those; keep them if nothing has changed
+                    map.ClearPerActionCachedBindingData();
+                    map.EnableControlsOfEnabledActions();
+                }
             }
             else
             {
                 // Standalone action map (possibly a hidden one created for a singleton action).
                 // We get our own private state.
+
+                DisableControlsOfEnabledActions();
 
                 // Resolve all source paths.
                 var resolver = new InputBindingResolver();
@@ -801,6 +817,57 @@ namespace UnityEngine.Experimental.Input
                 {
                     m_State.ClaimDataFrom(resolver);
                     ClearPerActionCachedBindingData();
+                    EnableControlsOfEnabledActions();
+                }
+            }
+        }
+
+        private void EnableControlsOfEnabledActions()
+        {
+            var actionCount = m_Actions.Length;
+            if (m_EnabledActionsCount == actionCount)
+            {
+                m_State.EnableControls(this);
+
+                // Reset trigger states on all actions.
+                for (var n = 0; n < actionCount; ++n)
+                    m_State.ResetTriggerState(m_Actions[n]);
+            }
+            else if (m_EnabledActionsCount > 0)
+            {
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var action = m_Actions[n];
+                    if (action.m_NeedsReEnabling)
+                    {
+                        m_State.EnableControls(action);
+                        m_State.ResetTriggerState(action);
+                        action.m_NeedsReEnabling = false;
+                    }
+                }
+            }
+        }
+
+        private void DisableControlsOfEnabledActions()
+        {
+            // NOTE: We do not need to reset trigger states here as we will lose all of them
+            //       when we resolve bindings.
+
+            var actionCount = m_Actions.Length;
+            if (m_EnabledActionsCount == actionCount)
+            {
+                m_State.DisableControls(this);
+            }
+            else if (m_EnabledActionsCount > 0)
+            {
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var action = m_Actions[n];
+                    if (action.enabled)
+                    {
+                        action.m_NeedsReEnabling = true;
+                        m_State.DisableControls(action);
+                    }
                 }
             }
         }

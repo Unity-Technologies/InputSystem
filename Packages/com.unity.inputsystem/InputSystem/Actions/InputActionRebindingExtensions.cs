@@ -793,7 +793,7 @@ namespace UnityEngine.Experimental.Input
 
                     // If the control that cancels has been actuated, abort the operation now.
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
-                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeIn(statePtr))
+                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeInState(statePtr))
                     {
                         OnCancel();
                         break;
@@ -831,7 +831,7 @@ namespace UnityEngine.Experimental.Input
 
                     // Skip controls that have no effective value change.
                     // NOTE: This will run the full processor stack and is move involved.
-                    if (!control.HasValueChangeIn(statePtr))
+                    if (!control.HasValueChangeInState(statePtr))
                         continue;
 
                     // If we have a magnitude threshold, see if control passes it.
