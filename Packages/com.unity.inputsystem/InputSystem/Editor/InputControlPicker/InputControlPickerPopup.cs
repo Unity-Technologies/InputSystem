@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Input.Editor
     public class InputControlPickerPopup
     {
         private string[] m_DeviceFilter;
-        private Type m_ExpectedControlLayoutFilterType;
+        private string m_ExpectedControlLayoutFilter;
 
         private InputControlPickerDropdown m_InputControlPickerDropdown;
         private SerializedProperty m_PathProperty;
@@ -36,7 +36,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SetExpectedControlLayoutFilter(string expectedControlLayout)
         {
-            m_ExpectedControlLayoutFilterType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout));
+            m_ExpectedControlLayoutFilter = expectedControlLayout;
         }
 
         public void DrawBindingGUI(ref bool manualPathEditMode)
@@ -118,9 +118,9 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_DeviceFilter != null)
             {
                 m_InputControlPickerDropdown.SetDeviceFilter(m_DeviceFilter);
-                if (m_ExpectedControlLayoutFilterType != null)
+                if (!string.IsNullOrEmpty(m_ExpectedControlLayoutFilter))
                 {
-                    m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayoutFilterType);
+                    m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayoutFilter);
                 }
             }
 
