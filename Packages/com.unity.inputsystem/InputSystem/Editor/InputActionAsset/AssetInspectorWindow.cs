@@ -415,6 +415,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
             {
                 m_ContextMenu.OnAddAction();
+                m_ContextMenu.OnAddBinding(m_ActionsTree.GetSelectedAction());
+                m_ActionsTree.SelectNewActionRow();
             }
 
             // Draw border rect
