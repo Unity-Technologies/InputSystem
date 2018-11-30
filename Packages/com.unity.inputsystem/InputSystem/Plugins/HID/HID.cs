@@ -336,6 +336,46 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 };
 
                 ////TODO: for joysticks, set up stick from X and Y
+                var xElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.X);
+                var yElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.Y);
+                //Since HIDElementDescriptor is a struct and not nullable, the easiest way to verify we found an element is to double check it's usage is what we were looking for.
+                if((xElement.usage == (int)GenericDesktop.X) && (yElement.usage == (int)GenericDesktop.Y))
+                {
+                    int bitOffset, byteOffset, sizeInBits;
+                    if(xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
+                    {
+                        bitOffset = xElement.reportOffsetInBits % 8;
+                        byteOffset = xElement.reportOffsetInBits / 8;
+                        sizeInBits = yElement.reportOffsetInBits - xElement.reportOffsetInBits + yElement.reportSizeInBits;
+                    }
+                    else
+                    {
+                        bitOffset = yElement.reportOffsetInBits % 8;
+                        byteOffset = yElement.reportOffsetInBits / 8;
+                        sizeInBits = xElement.reportOffsetInBits - yElement.reportOffsetInBits + xElement.reportSizeInBits;
+                    }
+
+                    var stickName = "Stick";
+                    var control = builder.AddControl(stickName)
+                                        .WithLayout("Stick")
+                                        .WithBitOffset((uint)bitOffset)
+                                        .WithByteOffset((uint)byteOffset)
+                                        .WithSizeInBits((uint)sizeInBits)
+                                        .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
+
+                    builder.AddControl(stickName + "/x")
+                            .WithFormat(InputStateBlock.kTypeSBit)
+                            .WithLayout("Axis")
+                            .WithBitOffset(0)
+                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/y")
+                            .WithFormat(InputStateBlock.kTypeSBit)
+                            .WithLayout("Axis")
+                            .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                }
+               
 
                 // Process HID descriptor.
                 foreach (var element in hidDescriptor.elements)
@@ -573,6 +613,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         {
                             case (int)GenericDesktop.X:
                             case (int)GenericDesktop.Y:
+                                return null; //This needs to be done as a special case
+
                             case (int)GenericDesktop.Z:
                             case (int)GenericDesktop.Rx:
                             case (int)GenericDesktop.Ry:
@@ -632,10 +674,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             internal InternedString[] DetermineUsages()
             {
-                if (usagePage == UsagePage.Button && usage == 0)
-                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
                 if (usagePage == UsagePage.Button && usage == 1)
+                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
+                if (usagePage == UsagePage.Button && usage == 2)
                     return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.Rz)
+                    return new[] { CommonUsages.Twist };
                 ////TODO: assign hatswitch usage to first and only to first hatswitch element
                 return null;
             }
