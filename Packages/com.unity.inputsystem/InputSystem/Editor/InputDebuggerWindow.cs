@@ -329,6 +329,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddDevices(devicesItem, devices, ref id);
                 }
 
+                ////TDO: unsupported and disconnected devices should also be shown for remotes
+
                 if (m_UnsupportedDevices == null)
                     m_UnsupportedDevices = new List<InputDeviceDescription>();
                 m_UnsupportedDevices.Clear();

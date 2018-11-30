@@ -391,8 +391,8 @@ internal class XRTests : InputTestFixture
             tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
 
-            device.quaternion.WriteValueInto(stateEvent, testrot);
-            device.vector3.WriteValueInto(stateEvent, testpos);
+            device.quaternion.WriteValueIntoEvent(testrot, stateEvent);
+            device.vector3.WriteValueIntoEvent(testpos, stateEvent);
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);

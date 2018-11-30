@@ -369,7 +369,7 @@ internal class AndroidTests : InputTestFixture
         InputEventPtr stateEventPtr;
         using (StateEvent.From(device, out stateEventPtr))
         {
-            control.WriteValueInto(stateEventPtr, 0.123f);
+            control.WriteValueIntoEvent(0.123f, stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -390,7 +390,7 @@ internal class AndroidTests : InputTestFixture
         InputEventPtr stateEventPtr;
         using (StateEvent.From(device, out stateEventPtr))
         {
-            control.WriteValueInto(stateEventPtr, 5);
+            control.WriteValueIntoEvent(5, stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -420,9 +420,9 @@ internal class AndroidTests : InputTestFixture
             var value = new Vector3(0.1f, 0.2f, 0.3f);
             ////FIXME: Seems like written value doesn't through processor, for ex, AndroidCompensateDirectionProcessor, thus we need to manually apply preprocessing
             if (isAffectedByGravity)
-                control.WriteValueInto(stateEventPtr, value / kMultiplier);
+                control.WriteValueIntoEvent(value / kMultiplier, stateEventPtr);
             else
-                control.WriteValueInto(stateEventPtr, value);
+                control.WriteValueIntoEvent(value, stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -452,7 +452,7 @@ internal class AndroidTests : InputTestFixture
             var q = Quaternion.Euler(rotation);
 
             // The 4th value is ignored and is calculated from other three
-            control.WriteValueInto(stateEventPtr, new Quaternion(q.x, q.y, q.z, 1234567.0f));
+            control.WriteValueIntoEvent(new Quaternion(q.x, q.y, q.z, 1234567.0f), stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);

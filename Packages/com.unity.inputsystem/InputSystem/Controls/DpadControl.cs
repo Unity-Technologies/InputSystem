@@ -66,17 +66,17 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override unsafe Vector2 ReadUnprocessedValueFrom(void* statePtr)
+        public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            var upIsPressed = up.ReadValueFrom(statePtr) >= up.pressPointOrDefault;
-            var downIsPressed = down.ReadValueFrom(statePtr) >= down.pressPointOrDefault;
-            var leftIsPressed = left.ReadValueFrom(statePtr) >= left.pressPointOrDefault;
-            var rightIsPressed = right.ReadValueFrom(statePtr) >= right.pressPointOrDefault;
+            var upIsPressed = up.ReadValueFromState(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFromState(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFromState(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFromState(statePtr) >= right.pressPointOrDefault;
 
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, Vector2 value)
+        public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
             throw new NotImplementedException();
         }

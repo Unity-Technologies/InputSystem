@@ -44,21 +44,21 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override unsafe Vector2 ReadUnprocessedValueFrom(void* statePtr)
+        public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector2(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr));
+            return new Vector2(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr));
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, Vector2 value)
+        public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            x.WriteValueInto(statePtr, value.x);
-            y.WriteValueInto(statePtr, value.y);
+            x.WriteValueIntoState(value.x, statePtr);
+            y.WriteValueIntoState(value.y, statePtr);
         }
 
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
             ////REVIEW: this can go beyond 1; that okay?
-            return ReadValueFrom(statePtr).magnitude;
+            return ReadValueFromState(statePtr).magnitude;
         }
     }
 }

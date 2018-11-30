@@ -40,7 +40,7 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public int nullValue;
 
-        public override unsafe float ReadUnprocessedValueFrom(void* statePtr)
+        public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             var intValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Controls
             return Preprocess(value);
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(void* statePtr, float value)
+        public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
             throw new NotImplementedException();
         }

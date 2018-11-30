@@ -1,9 +1,10 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////REVIEW: is the sensitivity stuff actually good to put directly on a device or should it be confined to actions?
 
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
@@ -175,18 +176,20 @@ namespace UnityEngine.Experimental.Input
 
         protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
-            var value = control.ReadValueFrom(statePtr);
+            ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
+            var value = control.ReadValueFromState(statePtr);
             if (Mathf.Approximately(0f, value))
                 return false;
-            control.WriteValueInto(statePtr, 0f);
+            control.WriteValueIntoState(0f, statePtr);
             return true;
         }
 
         protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
-            var oldDelta = control.ReadValueFrom(oldStatePtr);
-            var newDelta = control.ReadValueFrom(newStatePtr);
-            control.WriteValueInto(newStatePtr, oldDelta + newDelta);
+            ////FIXME: if there's processors on the delta, this is junk
+            var oldDelta = control.ReadValueFromState(oldStatePtr);
+            var newDelta = control.ReadValueFromState(newStatePtr);
+            control.WriteValueIntoState(oldDelta + newDelta, newStatePtr);
         }
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)

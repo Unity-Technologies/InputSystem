@@ -236,7 +236,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (stateBuffer != null)
             {
-                ////TODO: switch to ReadValueFrom
+                ////TODO: switch to ReadValueFromState
                 var text = ReadRawValueAsString(control, stateBuffer);
                 if (text != null)
                     value = new GUIContent(text);
