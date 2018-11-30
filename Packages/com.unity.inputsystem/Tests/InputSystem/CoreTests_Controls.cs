@@ -366,7 +366,7 @@ partial class CoreTests
         {
             ++receivedCalls;
             float value;
-            Assert.IsTrue(gamepad.leftTrigger.ReadValueFrom(eventPtr, out value));
+            Assert.IsTrue(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value));
             Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
         };
 
@@ -406,7 +406,7 @@ partial class CoreTests
         {
             Assert.That(value, Is.Null);
             float eventValue;
-            ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr, out eventValue);
+            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out eventValue);
             value = eventValue;
         };
 
@@ -428,10 +428,31 @@ partial class CoreTests
             eventPtr =>
         {
             ++receivedCalls;
-            gamepad.leftTrigger.WriteValueInto(eventPtr, 0.1234f);
+            gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.1234).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanWriteValueIntoDeltaStateEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCalls = 0;
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            ++receivedCalls;
+            gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
+        };
+
+        InputSystem.QueueDeltaStateEvent(gamepad.leftTrigger, 0.8765f);
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
@@ -446,7 +467,7 @@ partial class CoreTests
         var state = new GamepadState();
         var value = new Vector2(0.5f, 0.5f);
 
-        gamepad.leftStick.WriteValueInto(ref state, value);
+        gamepad.leftStick.WriteValueIntoState(value, ref state);
 
         Assert.That(state.leftStick, Is.EqualTo(value));
     }

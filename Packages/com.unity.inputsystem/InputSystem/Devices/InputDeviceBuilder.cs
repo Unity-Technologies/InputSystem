@@ -406,7 +406,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, InputControlLayout.kListSeparator))
+                        variants, InputControlLayout.kSeparator))
                     continue;
 
                 if (controlLayouts[i].isArray)
@@ -435,7 +435,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants, variants,
-                        InputControlLayout.kListSeparator))
+                        InputControlLayout.kSeparator))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -563,6 +563,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             // Set flags and misc things.
             control.noisy = controlItem.isNoisy;
             control.synthetic = controlItem.isSynthetic;
+            if (control.noisy)
+                m_Device.noisy = true;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
@@ -895,13 +897,13 @@ namespace UnityEngine.Experimental.Input.Layouts
                     switch (parameter.type)
                     {
                         case InputControlLayout.ParameterType.Boolean:
-                            value = *((bool*)parameter.value);
+                            value = *(bool*)parameter.value;
                             break;
                         case InputControlLayout.ParameterType.Integer:
-                            value = *((int*)parameter.value);
+                            value = *(int*)parameter.value;
                             break;
                         case InputControlLayout.ParameterType.Float:
-                            value = *((float*)parameter.value);
+                            value = *(float*)parameter.value;
                             break;
                     }
                 }
