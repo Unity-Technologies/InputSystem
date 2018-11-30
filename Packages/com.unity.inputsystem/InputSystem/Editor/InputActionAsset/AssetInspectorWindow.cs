@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private TreeViewState m_ActionsTreeState;
         [SerializeField]
-        private InputControlPickerState m_PickerTreeViewState;
+        private AdvancedDropdownState m_PickerTreeViewState;
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
@@ -190,7 +190,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
-                m_PickerTreeViewState = new InputControlPickerState();
+                m_PickerTreeViewState = new AdvancedDropdownState();
         }
 
         private void OnUndoRedoCallback()
@@ -258,9 +258,10 @@ namespace UnityEngine.Experimental.Input.Editor
                             m_InputActionWindowToolbar,
                             item.expectedControlLayout);
 
-                    // For composite groups, don't show the binding path and control scheme section.
+                    // For composite groups, don't show the binding path and control scheme section,
+                    // but show composite parameters instead.
                     if (item is CompositeGroupTreeItem)
-                        m_BindingPropertyView.showPathAndControlSchemeSection = false;
+                        m_BindingPropertyView.isCompositeBinding = true;
                 }
                 if (item is ActionTreeItem)
                 {
@@ -280,6 +281,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        ////FIXME: this is stupid; don't trigger a full reload of the entire tree on every modification
         internal void Apply()
         {
             m_ActionAssetManager.SetAssetDirty();

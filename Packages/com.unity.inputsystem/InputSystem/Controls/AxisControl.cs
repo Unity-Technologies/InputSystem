@@ -50,43 +50,35 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeFloat;
         }
 
-        public override bool HasSignificantChange(InputEventPtr eventPtr)
-        {
-            float value;
-            if (ReadValueFrom(eventPtr, out value))
-                return Mathf.Abs(value - ReadDefaultValue()) > float.Epsilon;
-            return false;
-        }
-
         // Read a floating-point value from the given state. Automatically checks
         // the state format of the control and performs conversions.
         // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
         //       or bitfield type.
-        public override float ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var value = stateBlock.ReadFloat(statePtr);
             ////REVIEW: this isn't very raw
             return Preprocess(value);
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, float value)
+        public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
             stateBlock.WriteFloat(statePtr, value);
         }
 
-        public override bool HasValueChangeIn(IntPtr statePtr)
+        public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
-            var currentValue = ReadValue();
-            var valueInState = ReadValueFrom(statePtr);
+            var currentValue = ReadValueFromState(firstStatePtr);
+            var valueInState = ReadValueFromState(secondStatePtr);
             return !Mathf.Approximately(currentValue, valueInState);
         }
 
-        public override float EvaluateMagnitude(IntPtr statePtr)
+        public override unsafe float EvaluateMagnitude(void* statePtr)
         {
             if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
                 return -1;
 
-            var value = ReadValueFrom(statePtr);
+            var value = ReadValueFromState(statePtr);
             var min = m_MinValue.ToFloat();
             var max = m_MaxValue.ToFloat();
 

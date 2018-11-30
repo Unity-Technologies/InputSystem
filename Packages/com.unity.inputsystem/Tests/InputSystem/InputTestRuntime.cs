@@ -143,17 +143,34 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
+                if (commandPtr->type == QueryPairedUserAccountCommand.Type)
+                {
+                    foreach (var pairing in userAccountPairings)
+                    {
+                        if (pairing.deviceId != deviceId)
+                            continue;
+
+                        var queryPairedUser = (QueryPairedUserAccountCommand*)commandPtr;
+                        queryPairedUser->handle = pairing.userHandle;
+                        queryPairedUser->name = pairing.userName;
+                        queryPairedUser->id = pairing.userId;
+                        return (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
+                    }
+                }
+
+                var result = InputDeviceCommand.kGenericFailure;
                 if (m_DeviceCommandCallbacks != null)
                     foreach (var entry in m_DeviceCommandCallbacks)
                     {
                         if (entry.Key == deviceId)
                         {
-                            return entry.Value(deviceId, commandPtr);
+                            result = entry.Value(deviceId, commandPtr);
+                            if (result >= 0)
+                                return result;
                         }
                     }
+                return result;
             }
-
-            return -1;
         }
 
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
@@ -169,9 +186,77 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId)
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId,
+            ulong userHandle = 0, string userName = null, string userId = null)
         {
-            return ReportNewInputDevice(description.ToJson(), deviceId);
+            deviceId = ReportNewInputDevice(description.ToJson(), deviceId);
+
+            // If we have user information, automatically set up
+            if (userHandle != 0)
+                AssociateInputDeviceWithUser(deviceId, userHandle, userName, userId);
+
+            return deviceId;
+        }
+
+        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.kInvalidDeviceId,
+            ulong userHandle = 0, string userName = null, string userId = null)
+            where TDevice : InputDevice
+        {
+            return ReportNewInputDevice(
+                new InputDeviceDescription {deviceClass = typeof(TDevice).Name, interfaceName = "Test"}, deviceId,
+                userHandle, userName, userId);
+        }
+
+        public void AssociateInputDeviceWithUser(int deviceId, ulong userHandle, string userName = null, string userId = null)
+        {
+            var existingIndex = -1;
+            for (var i = 0; i < userAccountPairings.Count; ++i)
+                if (userAccountPairings[i].deviceId == deviceId)
+                {
+                    existingIndex = i;
+                    break;
+                }
+
+            if (userHandle == 0)
+            {
+                if (existingIndex != -1)
+                    userAccountPairings.RemoveAt(existingIndex);
+            }
+            else if (existingIndex != -1)
+            {
+                userAccountPairings[existingIndex] =
+                    new PairedUser
+                {
+                    deviceId = deviceId,
+                    userHandle = userHandle,
+                    userName = userName,
+                    userId = userId,
+                };
+            }
+            else
+            {
+                userAccountPairings.Add(
+                    new PairedUser
+                    {
+                        deviceId = deviceId,
+                        userHandle = userHandle,
+                        userName = userName,
+                        userId = userId,
+                    });
+            }
+        }
+
+        public void AssociateInputDeviceWithUser(InputDevice device, ulong userHandle, string userName = null, string userId = null)
+        {
+            AssociateInputDeviceWithUser(device.id, userHandle, userName, userId);
+        }
+
+        public struct PairedUser
+        {
+            public int deviceId;
+            public ulong userHandle;
+            public string userName;
+            public string userId;
         }
 
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
@@ -208,6 +293,16 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public List<PairedUser> userAccountPairings
+        {
+            get
+            {
+                if (m_UserPairings == null)
+                    m_UserPairings = new List<PairedUser>();
+                return m_UserPairings;
+            }
+        }
+
         public void Dispose()
         {
             m_EventBuffer.Dispose();
@@ -229,6 +324,7 @@ namespace UnityEngine.Experimental.Input
         private int m_EventCount;
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
+        private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();

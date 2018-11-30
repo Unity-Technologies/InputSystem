@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -25,6 +24,10 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
+
+////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
+
 ////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
 ////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
 ////       simply start losing input but it won't grow infinitely
@@ -45,13 +48,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native allocations when exiting
-
-[assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
-
-// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
-// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
-//       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.12")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -517,7 +513,7 @@ namespace UnityEngine.Experimental.Input
         ///                 Debug.Log("Device removed: " + device);
         ///                 break;
         ///             case InputDeviceChange.ConfigurationChanged:
-        ///                 Debug.Log("Device coniguration changed: " + device);
+        ///                 Debug.Log("Device configuration changed: " + device);
         ///                 break;
         ///         }
         ///     };
@@ -529,6 +525,20 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        /// <summary>
+        /// Event that is signalled when a <see cref="InputDeviceCommand"/> is sent to
+        /// an <see cref="InputDevice"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to intercept commands and optionally handle them without them reaching
+        /// the <see cref="IInputRuntime"/>.
+        ///
+        /// The first delegate in the list that returns a result other than <c>null</c> is considered
+        /// to have handled the command. If a command is handled by a delegate in the list, it will
+        /// not be sent on to the runtime.
+        /// </remarks>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
+        /// <seealso cref="IInputRuntime.DeviceCommand"/>
         public static event InputDeviceCommandDelegate onDeviceCommand
         {
             add { s_Manager.onDeviceCommand += value; }
@@ -689,10 +699,10 @@ namespace UnityEngine.Experimental.Input
                 if (deviceOfType == null)
                     continue;
 
-                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
                     result = deviceOfType;
-                    lastUpdateTime = result.lastUpdateTime;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
 
@@ -712,10 +722,10 @@ namespace UnityEngine.Experimental.Input
                 if (!deviceOfType.usages.Contains(usage))
                     continue;
 
-                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
                     result = deviceOfType;
-                    lastUpdateTime = result.lastUpdateTime;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
 
@@ -911,10 +921,10 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.FindControls("&lt;Gamepad&gt;/*stick");
         ///
         /// // Same but filter stick by type rather than by name.
-        /// InputSystem.FindControls<StickControl>("&lt;Gamepad&gt;/*");
+        /// InputSystem.FindControls&lt;StickControl&gt;("&lt;Gamepad&gt;/*");
         /// </code>
         /// </example>
-        /// <seealso cref="FindControls{TControl}"/>
+        /// <seealso cref="FindControls{TControl}(string)"/>
         /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
         public static InputControlList<InputControl> FindControls(string path)
         {
@@ -1664,6 +1674,10 @@ namespace UnityEngine.Experimental.Input
             Plugins.iOS.iOSSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_WEBGL
+            Plugins.WebGL.WebGLSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_SWITCH
             Plugins.Switch.SwitchSupport.Initialize();
             #endif
@@ -1692,6 +1706,14 @@ namespace UnityEngine.Experimental.Input
         internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
             #if UNITY_EDITOR
+
+            // Some devices keep globals. Get rid of them by pretending the devices
+            // are removed.
+            if (s_Manager != null)
+            {
+                foreach (var device in s_Manager.devices)
+                    device.NotifyRemoved();
+            }
 
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance);
@@ -1774,6 +1796,7 @@ namespace UnityEngine.Experimental.Input
                 s_SavedStateStack = new Stack<State>();
 
             ////FIXME: does not preserve global state in InputActionMapState
+            ////TODO: preserve InputUser state
 
             s_SavedStateStack.Push(new State
             {
@@ -1807,6 +1830,11 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.Restore(state.managerState.updateState);
 
             s_Manager.InstallGlobals();
+
+            // Get devices that keep global lists (like Gamepad) to re-initialize them
+            // by pretending the devices have been added.
+            foreach (var device in devices)
+                device.NotifyAdded();
         }
 
 #endif

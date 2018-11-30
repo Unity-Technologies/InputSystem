@@ -68,6 +68,18 @@ namespace UnityEngine.Experimental.Input.Utilities
             return result;
         }
 
+        public int IndexOf(Predicate<TValue> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException("predicate");
+
+            for (var i = 0; i < m_Length; ++i)
+                if (predicate(m_Array[m_StartIndex + i]))
+                    return i;
+
+            return -1;
+        }
+
         public IEnumerator<TValue> GetEnumerator()
         {
             return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);

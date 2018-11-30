@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: support for removing bindings
@@ -535,6 +536,30 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
+            public ControlSchemeSyntax WithRequiredDevice<TDevice>()
+                where TDevice : InputDevice
+            {
+                return WithRequiredDevice(DeviceTypeToControlPath<TDevice>());
+            }
+
+            public ControlSchemeSyntax WithOptionalDevice<TDevice>()
+                where TDevice : InputDevice
+            {
+                return WithOptionalDevice(DeviceTypeToControlPath<TDevice>());
+            }
+
+            public ControlSchemeSyntax OrWithRequiredDevice<TDevice>()
+                where TDevice : InputDevice
+            {
+                return WithRequiredDevice(DeviceTypeToControlPath<TDevice>());
+            }
+
+            public ControlSchemeSyntax OrWithOptionalDevice<TDevice>()
+                where TDevice : InputDevice
+            {
+                return WithOptionalDevice(DeviceTypeToControlPath<TDevice>());
+            }
+
             public ControlSchemeSyntax WithRequiredDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.None);
@@ -559,6 +584,15 @@ namespace UnityEngine.Experimental.Input
                     InputControlScheme.DeviceRequirement.Flags.Optional |
                     InputControlScheme.DeviceRequirement.Flags.Or);
                 return this;
+            }
+
+            private string DeviceTypeToControlPath<TDevice>()
+                where TDevice : InputDevice
+            {
+                var layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice)).ToString();
+                if (string.IsNullOrEmpty(layoutName))
+                    layoutName = typeof(TDevice).Name;
+                return string.Format("<{0}>", layoutName);
             }
 
             public InputControlScheme Done()

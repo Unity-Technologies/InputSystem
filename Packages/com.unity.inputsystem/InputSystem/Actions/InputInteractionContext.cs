@@ -48,14 +48,17 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if ((m_Flags & Flags.ControlHasDefaultValueInitialized) != Flags.ControlHasDefaultValueInitialized)
+                unsafe
                 {
-                    var triggerControl = control;
-                    if (triggerControl.CheckStateIsAtDefault())
-                        m_Flags |= Flags.ControlHasDefaultValue;
-                    m_Flags |= Flags.ControlHasDefaultValueInitialized;
+                    if ((m_Flags & Flags.ControlHasDefaultValueInitialized) != Flags.ControlHasDefaultValueInitialized)
+                    {
+                        var triggerControl = control;
+                        if (triggerControl.CheckStateIsAtDefault())
+                            m_Flags |= Flags.ControlHasDefaultValue;
+                        m_Flags |= Flags.ControlHasDefaultValueInitialized;
+                    }
+                    return (m_Flags & Flags.ControlHasDefaultValue) == Flags.ControlHasDefaultValue;
                 }
-                return (m_Flags & Flags.ControlHasDefaultValue) == Flags.ControlHasDefaultValue;
             }
         }
 

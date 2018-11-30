@@ -9,9 +9,11 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: when an action is triggered and when a device changes state, make them bold in the list for a brief moment
+
 ////TODO: add warning if input backends are not enabled
 
-////TODO: show input users
+////TODO: show input users and their actions and devices
 
 ////TODO: append " (Disabled) to disabled devices and grey them out
 
@@ -326,6 +328,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     // Put them all directly underneath the "Devices" node.
                     AddDevices(devicesItem, devices, ref id);
                 }
+
+                ////TDO: unsupported and disconnected devices should also be shown for remotes
 
                 if (m_UnsupportedDevices == null)
                     m_UnsupportedDevices = new List<InputDeviceDescription>();

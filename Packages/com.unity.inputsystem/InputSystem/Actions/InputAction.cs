@@ -453,6 +453,23 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
+        /// Whether the action needs individual re-enabling after we've resolved bindings.
+        /// </summary>
+        /// <remarks>
+        /// When we resolve bindings (<see cref="InputActionMap.ResolveBindings"/>), we lose all execution
+        /// state. This includes the trigger state (<see cref="InputActionMapState.TriggerState"/>) for
+        /// actions which in turn loses the data for <see cref="enabled"/>.
+        ///
+        /// So, once we've resolved bindings, we do not know anymore which actions were enabled before.
+        /// We temporarily store this state in here.
+        ///
+        /// Note that we only need to do so when we come across an action map that has some but not all
+        /// of its actions enabled. If all actions were enabled before (<see cref="InputActionMap.m_EnabledActionsCount"/>),
+        /// then we can simply go and enable all actions in bulk after.
+        /// </remarks>
+        [NonSerialized] internal bool m_NeedsReEnabling;
+
+        /// <summary>
         /// Whether the action is a loose action created in code (e.g. as a property on a component).
         /// </summary>
         /// <remarks>

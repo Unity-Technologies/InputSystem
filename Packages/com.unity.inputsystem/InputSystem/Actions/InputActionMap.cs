@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add public InputActionManager that supports various device allocation strategies (one stack
-////      per device, multiple devices per stack, etc.); should also resolve the problem of having
-////      two bindings stack on top of each other and making the one on top suppress the one below
+////TODO: perform re-resolving lazily on next enable rather than right away
 
 ////REVIEW: given we have the global ActionTriggered callback, do we really need the per-map callback?
+
+////TODO: remove constraint of not being able to modify bindings while enabled from both actions and maps
+////      (because of the sharing of state between multiple maps in an asset, we'd have to extend that constraint
+////      to all maps in an asset in order to uphold it properly)
 
 namespace UnityEngine.Experimental.Input
 {
@@ -106,7 +108,7 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputAction>(m_Actions); }
         }
 
-        //what about explicitly grouping bindings into named sets?
+        ////REVIEW: what about explicitly grouping bindings into named sets?
 
         /// <summary>
         /// List of bindings contained in the map.
@@ -121,6 +123,16 @@ namespace UnityEngine.Experimental.Input
         public ReadOnlyArray<InputBinding> bindings
         {
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
+        }
+
+        public ReadOnlyArray<InputControlScheme> controlSchemes
+        {
+            get
+            {
+                if (m_Asset == null)
+                    return new ReadOnlyArray<InputControlScheme>();
+                return m_Asset.controlSchemes;
+            }
         }
 
         /// <inheritdoc />
@@ -166,6 +178,7 @@ namespace UnityEngine.Experimental.Input
                     m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
                 }
 
+                ////TODO: determine if this has *actually* changed things before firing off a re-resolve
                 if (m_State != null)
                     ResolveBindings();
             }
@@ -359,6 +372,15 @@ namespace UnityEngine.Experimental.Input
                 return false;
 
             return action.actionMap == this;
+        }
+
+        public override string ToString()
+        {
+            if (m_Asset != null)
+                return string.Format("{0}:{1}", m_Asset, m_Name);
+            if (!string.IsNullOrEmpty(m_Name))
+                return m_Name;
+            return "<Unnamed Action Map>";
         }
 
         /// <summary>
@@ -720,7 +742,7 @@ namespace UnityEngine.Experimental.Input
         {
             // If we're part of an asset, we share state and thus binding resolution with
             // all maps in the asset.
-            if (m_Asset)
+            if (m_Asset != null)
             {
                 var actionMaps = m_Asset.m_ActionMaps;
                 Debug.Assert(actionMaps != null); // Should have at least us in the array.
@@ -728,6 +750,19 @@ namespace UnityEngine.Experimental.Input
 
                 // Start resolving.
                 var resolver = new InputBindingResolver();
+
+                // If we already have a state, re-use the arrays we have already allocated.
+                // NOTE: We will install the arrays on the very same InputActionMapState instance below. In the
+                //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
+                //       here.
+                if (m_State != null)
+                {
+                    // If any of the maps have actions currently enabled, remove their state monitors first.
+                    for (var i = 0; i < actionMapCount; ++i)
+                        actionMaps[i].DisableControlsOfEnabledActions();
+
+                    resolver.StartWithArraysFrom(m_State);
+                }
 
                 // If there's a binding mask set on the asset, apply it.
                 resolver.bindingMask = m_Asset.m_BindingMask;
@@ -750,17 +785,26 @@ namespace UnityEngine.Experimental.Input
                     m_State.ClaimDataFrom(resolver);
                 }
 
-                // Wipe caches.
+                // Wipe caches and re-enable controls, if necessary.
                 for (var i = 0; i < actionMapCount; ++i)
-                    actionMaps[i].ClearPerActionCachedBindingData();
+                {
+                    var map = actionMaps[i];
+                    ////TODO: determine whether we really need to wipe those; keep them if nothing has changed
+                    map.ClearPerActionCachedBindingData();
+                    map.EnableControlsOfEnabledActions();
+                }
             }
             else
             {
                 // Standalone action map (possibly a hidden one created for a singleton action).
                 // We get our own private state.
 
+                DisableControlsOfEnabledActions();
+
                 // Resolve all source paths.
                 var resolver = new InputBindingResolver();
+                if (m_State != null)
+                    resolver.StartWithArraysFrom(m_State);
                 resolver.AddActionMap(this);
 
                 // Transfer final arrays into state.
@@ -773,6 +817,57 @@ namespace UnityEngine.Experimental.Input
                 {
                     m_State.ClaimDataFrom(resolver);
                     ClearPerActionCachedBindingData();
+                    EnableControlsOfEnabledActions();
+                }
+            }
+        }
+
+        private void EnableControlsOfEnabledActions()
+        {
+            var actionCount = m_Actions.Length;
+            if (m_EnabledActionsCount == actionCount)
+            {
+                m_State.EnableControls(this);
+
+                // Reset trigger states on all actions.
+                for (var n = 0; n < actionCount; ++n)
+                    m_State.ResetTriggerState(m_Actions[n]);
+            }
+            else if (m_EnabledActionsCount > 0)
+            {
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var action = m_Actions[n];
+                    if (action.m_NeedsReEnabling)
+                    {
+                        m_State.EnableControls(action);
+                        m_State.ResetTriggerState(action);
+                        action.m_NeedsReEnabling = false;
+                    }
+                }
+            }
+        }
+
+        private void DisableControlsOfEnabledActions()
+        {
+            // NOTE: We do not need to reset trigger states here as we will lose all of them
+            //       when we resolve bindings.
+
+            var actionCount = m_Actions.Length;
+            if (m_EnabledActionsCount == actionCount)
+            {
+                m_State.DisableControls(this);
+            }
+            else if (m_EnabledActionsCount > 0)
+            {
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var action = m_Actions[n];
+                    if (action.enabled)
+                    {
+                        action.m_NeedsReEnabling = true;
+                        m_State.DisableControls(action);
+                    }
                 }
             }
         }

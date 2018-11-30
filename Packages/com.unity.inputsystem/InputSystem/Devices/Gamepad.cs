@@ -10,6 +10,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: should we add a gyro as a standard feature of gamepads?
 
+////REVIEW: is the Lefty layout variant actually useful?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
@@ -31,7 +33,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <seealso cref="GamepadButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" }, displayName = "A", shortDisplayName = "A")]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "A", shortDisplayName = "A")]
         [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "X", shortDisplayName = "X")]
         [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Y", shortDisplayName = "Y")]
         [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "B", shortDisplayName = "B")]
@@ -167,6 +169,38 @@ namespace UnityEngine.Experimental.Input
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
 
+        /// <summary>
+        /// Same as <see cref="buttonSouth"/>.
+        /// </summary>
+        public ButtonControl aButton
+        {
+            get { return buttonSouth; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonEast"/>.
+        /// </summary>
+        public ButtonControl bButton
+        {
+            get { return buttonEast; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonWest"/>
+        /// </summary>
+        public ButtonControl xButton
+        {
+            get { return buttonWest; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonNorth"/>.
+        /// </summary>
+        public ButtonControl yButton
+        {
+            get { return buttonNorth; }
+        }
+
         ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
         {
@@ -234,12 +268,6 @@ namespace UnityEngine.Experimental.Input
             rightTrigger = builder.GetControl<ButtonControl>(this, "rightTrigger");
 
             base.FinishSetup(builder);
-        }
-
-        protected override void RefreshConfiguration()
-        {
-            base.RefreshConfiguration();
-            RefreshUserId();
         }
 
         protected override void OnAdded()

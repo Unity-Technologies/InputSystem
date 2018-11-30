@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -236,13 +234,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         ////TODO: this should use UTF-8 and not UTF-16
 
-        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize)
+        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters)
         {
             uint offset = 0;
-            return WriteStringToBuffer(text, buffer, bufferSize, ref offset);
+            return WriteStringToBuffer(text, buffer, bufferSizeInCharacters, ref offset);
         }
 
-        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize, ref uint offset)
+        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
                 throw new ArgumentNullException("buffer");
@@ -252,7 +250,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 throw new ArgumentException(string.Format("String exceeds max size of {0} characters", ushort.MaxValue), "text");
 
             var endOffset = offset + sizeof(char) * length + sizeof(int);
-            if (endOffset > bufferSize)
+            if (endOffset > bufferSizeInCharacters)
                 return false;
 
             var ptr = ((byte*)buffer) + offset;

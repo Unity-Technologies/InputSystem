@@ -12,6 +12,11 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
+
+////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
+////      (this can be used, for example, to translate all the various gamepad formats into one single common gamepad format)
+
 ////TODO: allow layouts to set default device names
 
 ////TODO: allow creating generic controls as parents just to group child controls
@@ -75,8 +80,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </summary>
         public const string kNone = "None";
 
-        public const char kListSeparator = ';';
-        public const string kListSeparatorString = ";";
+        public const char kSeparator = ',';
+        public const string kSeparatorString = ",";
 
         private static InternedString s_DefaultVariant = new InternedString("Default");
         public static InternedString DefaultVariant
@@ -90,14 +95,14 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             Boolean,
             Integer,
-            Float
+            Float,
         }
 
         // Both controls and processors can have public fields that can be set
         // directly from layouts. The values are usually specified in strings
         // (like "clampMin=-1") but we parse them ahead of time into instances
         // of this structure that tell us where to store the value in the control.
-        public unsafe struct ParameterValue
+        public unsafe struct ParameterValue : IEquatable<ParameterValue>
         {
             public const int kMaxValueSize = 4;
 
@@ -119,6 +124,72 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
+            public ParameterValue(string name, bool value)
+                : this()
+            {
+                this.name = name;
+                SetValue(value);
+            }
+
+            public ParameterValue(string name, int value)
+                : this()
+            {
+                this.name = name;
+                SetValue(value);
+            }
+
+            public ParameterValue(string name, float value)
+                : this()
+            {
+                this.name = name;
+                SetValue(value);
+            }
+
+            public bool GetBoolValue()
+            {
+                if (type != ParameterType.Boolean)
+                    throw new InvalidOperationException("Not a bool value");
+                fixed(byte* ptr = value)
+                return *(bool*)ptr;
+            }
+
+            public int GetIntValue()
+            {
+                if (type != ParameterType.Integer)
+                    throw new InvalidOperationException("Not an integer value");
+                fixed(byte* ptr = value)
+                return *(int*)ptr;
+            }
+
+            public float GetFloatValue()
+            {
+                if (type != ParameterType.Float)
+                    throw new InvalidOperationException("Not a float value");
+                fixed(byte* ptr = value)
+                return *(float*)ptr;
+            }
+
+            public void SetValue(bool value)
+            {
+                type = ParameterType.Boolean;
+                fixed(byte* ptr = this.value)
+                * (bool*)ptr = value;
+            }
+
+            public void SetValue(int value)
+            {
+                type = ParameterType.Integer;
+                fixed(byte* ptr = this.value)
+                * (int*)ptr = value;
+            }
+
+            public void SetValue(float value)
+            {
+                type = ParameterType.Float;
+                fixed(byte* ptr = this.value)
+                * (float*)ptr = value;
+            }
+
             public void SetValue(string value)
             {
                 fixed(byte* ptr = this.value)
@@ -129,21 +200,21 @@ namespace UnityEngine.Experimental.Input.Layouts
                             bool result;
                             if (bool.TryParse(value, out result))
                             {
-                                (*(bool*)ptr) = result;
+                                *(bool*)ptr = result;
                             }
                             break;
                         case ParameterType.Integer:
                             int intResult;
                             if (int.TryParse(value, out intResult))
                             {
-                                (*(int*)ptr) = intResult;
+                                *(int*)ptr = intResult;
                             }
                             break;
                         case ParameterType.Float:
                             float floatResult;
                             if (float.TryParse(value, out floatResult))
                             {
-                                (*(float*)ptr) = floatResult;
+                                *(float*)ptr = floatResult;
                             }
                             break;
                     }
@@ -157,15 +228,15 @@ namespace UnityEngine.Experimental.Input.Layouts
                     switch (type)
                     {
                         case ParameterType.Boolean:
-                            if (*((bool*)ptr))
+                            if (*(bool*)ptr)
                                 return "true";
                             return "false";
                         case ParameterType.Integer:
-                            var intValue = *((int*)ptr);
-                            return "" + intValue;
+                            var intValue = *(int*)ptr;
+                            return intValue.ToString();
                         case ParameterType.Float:
-                            var floatValue = *((float*)ptr);
-                            return "" + floatValue;
+                            var floatValue = *(float*)ptr;
+                            return floatValue.ToString();
                     }
                 }
 
@@ -179,15 +250,15 @@ namespace UnityEngine.Experimental.Input.Layouts
                     switch (type)
                     {
                         case ParameterType.Boolean:
-                            if (*((bool*)ptr))
+                            if (*(bool*)ptr)
                                 return name;
                             return string.Format("{0}=false", name);
                         case ParameterType.Integer:
-                            var intValue = *((int*)ptr);
+                            var intValue = *(int*)ptr;
                             return string.Format("{0}={1}", name, intValue);
                         case ParameterType.Float:
                             ////FIXME: this needs to be invariant culture
-                            var floatValue = *((float*)ptr);
+                            var floatValue = *(float*)ptr;
                             return string.Format("{0}={1}", name, floatValue);
                     }
                 }
@@ -195,23 +266,45 @@ namespace UnityEngine.Experimental.Input.Layouts
                 return string.Empty;
             }
 
-            public bool IsDefaultValue()
+            public bool Equals(ParameterValue other)
             {
-                fixed(byte* ptr = value)
+                fixed(byte* valuePtr = value)
                 {
-                    switch (type)
+                    return string.Equals(name, other.name, StringComparison.InvariantCultureIgnoreCase)
+                        && type == other.type
+                        && *(int*)valuePtr == *(int*)other.value;
+                }
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj))
+                    return false;
+                return obj is ParameterValue && Equals((ParameterValue)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    fixed(byte* valuePtr = value)
                     {
-                        case ParameterType.Boolean:
-                            return *((bool*)ptr) == default(bool);
-                        case ParameterType.Integer:
-                            var intValue = *((int*)ptr);
-                            return intValue == default(int);
-                        case ParameterType.Float:
-                            var floatValue = *((float*)ptr);
-                            return floatValue == default(float);
+                        var hashCode = (name != null ? name.GetHashCode() : 0);
+                        hashCode = (hashCode * 397) ^ (int)type;
+                        hashCode = (hashCode * 397) ^ *(int*)valuePtr;
+                        return hashCode;
                     }
                 }
-                return false;
+            }
+
+            public static bool operator==(ParameterValue left, ParameterValue right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator!=(ParameterValue left, ParameterValue right)
+            {
+                return !left.Equals(right);
             }
         }
 
@@ -224,7 +317,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 if (parameters.Count == 0)
                     return name;
-                var parameterString = string.Join(",", parameters.Select(x => x.ToString()).ToArray());
+                var parameterString = string.Join(kSeparatorString, parameters.Select(x => x.ToString()).ToArray());
                 return string.Format("{0}({1})", name, parameterString);
             }
         }
@@ -1110,6 +1203,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             return true;
         }
 
+        ////TODO: switch these methods all to Substring
+
         internal static NameAndParameters ParseNameAndParameters(string text)
         {
             var index = 0;
@@ -1129,7 +1224,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             while (index < textLength)
             {
                 var nextChar = text[index];
-                if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
+                if (nextChar == '(' || nextChar == kSeparator || char.IsWhiteSpace(nextChar))
                     break;
                 ++index;
             }
@@ -1168,7 +1263,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (string.IsNullOrEmpty(parameterString))
                 return null;
 
-            var parameterCount = parameterString.CountOccurrences(',') + 1;
+            var parameterCount = parameterString.CountOccurrences(kSeparator) + 1;
             var parameters = new ParameterValue[parameterCount];
 
             var index = 0;
@@ -1195,7 +1290,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             while (index < parameterStringLength)
             {
                 var nextChar = parameterString[index];
-                if (nextChar == '=' || nextChar == ',' || char.IsWhiteSpace(nextChar))
+                if (nextChar == '=' || nextChar == kSeparator || char.IsWhiteSpace(nextChar))
                     break;
                 ++index;
             }
@@ -1209,7 +1304,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 // No value given so take "=true" as implied.
                 parameter.type = ParameterType.Boolean;
-                *((bool*)parameter.value) = true;
+                *(bool*)parameter.value = true;
             }
             else
             {
@@ -1222,33 +1317,35 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Parse value.
                 var valueStart = index;
                 while (index < parameterStringLength &&
-                       !(parameterString[index] == ',' || char.IsWhiteSpace(parameterString[index])))
+                       !(parameterString[index] == kSeparator || char.IsWhiteSpace(parameterString[index])))
                     ++index;
+
+                ////TODO: use Substring struct here so that we don't allocate lots of useless strings
 
                 var value = parameterString.Substring(valueStart, index - valueStart);
                 if (string.Compare(value, "true", StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     parameter.type = ParameterType.Boolean;
-                    *((bool*)parameter.value) = true;
+                    *(bool*)parameter.value = true;
                 }
                 else if (string.Compare(value, "false", StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     parameter.type = ParameterType.Boolean;
-                    *((bool*)parameter.value) = false;
+                    *(bool*)parameter.value = false;
                 }
                 else if (value.IndexOf('.') != -1)
                 {
                     parameter.type = ParameterType.Float;
-                    *((float*)parameter.value) = float.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
+                    *(float*)parameter.value = float.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
                 else
                 {
                     parameter.type = ParameterType.Integer;
-                    *((int*)parameter.value) = int.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
+                    *(int*)parameter.value = int.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
             }
 
-            if (index < parameterStringLength && parameterString[index] == ',')
+            if (index < parameterStringLength && parameterString[index] == kSeparator)
                 ++index;
 
             return parameter;
@@ -1458,9 +1555,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                 if (!itemVariants.IsEmpty() && itemVariants != DefaultVariant)
                 {
                     // If there's multiple variants on the control, we add it to the table multiple times.
-                    if (itemVariants.ToString().IndexOf(kListSeparator) != -1)
+                    if (itemVariants.ToString().IndexOf(kSeparator) != -1)
                     {
-                        var itemVariantArray = itemVariants.ToLower().Split(kListSeparator);
+                        var itemVariantArray = itemVariants.ToLower().Split(kSeparator);
                         foreach (var name in itemVariantArray)
                         {
                             if (variants != null)
@@ -1491,7 +1588,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             ////REVIEW: does this make sense?
             // Default variant works with any other expected variant.
             if (actual != null &&
-                StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(DefaultVariant, actual, kListSeparator))
+                StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(DefaultVariant, actual, kSeparator))
                 return true;
 
             // If we don't expect a specific variant, we accept any variant.
@@ -1504,7 +1601,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 return true;
 
             // Match if the two variant sets intersect on at least one element.
-            return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, kListSeparator);
+            return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, kSeparator);
         }
 
         private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,

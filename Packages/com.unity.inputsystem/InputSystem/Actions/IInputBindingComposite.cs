@@ -1,11 +1,14 @@
 using System;
 using System.Reflection;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 #if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////REVIEW: composites probably need a reset method, too (like interactions), so that they can be stateful
 
 ////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
 ////        not just be about composing multiple bindings?
@@ -54,6 +57,37 @@ namespace UnityEngine.Experimental.Input
         Type valueType { get; }
         int valueSizeInBytes { get; }
         unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize);
+    }
+
+    public abstract class InputBindingComposite<TValue> : IInputBindingComposite<TValue>
+        where TValue : struct
+    {
+        public Type valueType
+        {
+            get { return typeof(TValue); }
+        }
+
+        public int valueSizeInBytes
+        {
+            get { return UnsafeUtility.SizeOf<TValue>(); }
+        }
+
+        public abstract TValue ReadValue(ref InputBindingCompositeContext context);
+
+        public unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            var valueSize = valueSizeInBytes;
+            if (bufferSize < valueSize)
+                throw new ArgumentException("bufferSize < valueSizeInBytes", "bufferSize");
+
+            var value = ReadValue(ref context);
+            var valuePtr = UnsafeUtility.AddressOf(ref value);
+
+            UnsafeUtility.MemCpy(buffer, valuePtr, valueSize);
+        }
     }
 
     internal static class InputBindingComposite
