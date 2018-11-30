@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -58,6 +59,8 @@ namespace UnityEngine.Experimental.Input.Editor
         internal InputActionWindowToolbar m_InputActionWindowToolbar;
         [SerializeField]
         internal ActionInspectorContextMenu m_ContextMenu;
+        [SerializeField]
+        List<string> m_SelectedActionMaps = new List<string>();
 
         private InputBindingPropertiesView m_BindingPropertyView;
         private InputActionPropertiesView m_ActionPropertyView;
@@ -210,6 +213,15 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionMapsTree.GetSelectedRow() != null)
                 m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
             m_ActionsTree.Reload();
+            if (m_ActionMapsTree.GetSelectedRow() != null)
+            {
+                var row = m_ActionMapsTree.GetSelectedRow();
+                if (!m_SelectedActionMaps.Contains(row.displayName))
+                {
+                    m_ActionsTree.SetExpandedRecursive(m_ActionsTree.GetRootElement().id, true);
+                    m_SelectedActionMaps.Add(row.displayName);
+                }
+            }
         }
 
         private void OnActionSelection()
