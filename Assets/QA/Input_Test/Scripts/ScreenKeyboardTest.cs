@@ -44,6 +44,11 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_Visible.isOn = m_ScreenKeyboard.visible;
     }
 
+    private ScreenKeyboardType ToScreenKeyboardType(string value)
+    {
+        return (ScreenKeyboardType)Enum.Parse(typeof(ScreenKeyboardType), value);
+    }
+
     public void Show()
     {
         ScreenKeyboardShowParams showParams = new ScreenKeyboardShowParams()
@@ -52,10 +57,28 @@ public class ScreenKeyboardTest : MonoBehaviour
             autocorrection = m_KeyboardAutocorrection.isOn,
             multiline = m_KeyboardMultiline.isOn,
             secure = m_KeyboardSecure.isOn,
-            alert = m_KeyboardAlert.isOn
+            alert = m_KeyboardAlert.isOn,
+            type = ToScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text)
+
         };
 
         m_ScreenKeyboard.Show(showParams);
+    }
+
+    private TouchScreenKeyboardType ToTouchScreenKeyboardType(string value)
+    {
+        return (TouchScreenKeyboardType)Enum.Parse(typeof(TouchScreenKeyboardType), value);
+    }
+
+    public void ShowOldKeyboard()
+    {
+        TouchScreenKeyboard.Open(m_InputField.text,
+            ToTouchScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text),
+            m_KeyboardAutocorrection.isOn,
+            m_KeyboardMultiline.isOn,
+            m_KeyboardSecure.isOn,
+            m_KeyboardAlert.isOn,
+            "No placeholder");
     }
 
     public void Hide()
