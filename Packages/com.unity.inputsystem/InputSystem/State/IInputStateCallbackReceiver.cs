@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// This is an expensive interface that incurs costly extra processing. Only put this on
     /// a device if it is really needed.
     /// </remarks>
-    public interface IInputStateCallbackReceiver
+    public unsafe interface IInputStateCallbackReceiver
     {
         ////REVIEW: replace bool result value with enum?
         /// <summary>
@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// carried forward.</param>
         /// <returns>True if you have modified the state in <paramref name="statePtr"/>, false if you
         /// have left it as is.</returns>
-        bool OnCarryStateForward(IntPtr statePtr);
+        bool OnCarryStateForward(void* statePtr);
 
         /// <summary>
         /// Called when a new state is received for the device but before it is copied over the
@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// no difference anymore to the old state, state change monitors will not fire and actions will
         /// not get triggered.
         /// </remarks>
-        void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr);
+        void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr);
 
         ////TODO: pass pointer to current state
         /// <summary>
@@ -66,6 +66,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// This method permits a device to integrate state into its own that is not sent as full-device snapshots
         /// or deltas with specific offsets.
         /// </remarks>
-        bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt);
+        bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt);
     }
 }

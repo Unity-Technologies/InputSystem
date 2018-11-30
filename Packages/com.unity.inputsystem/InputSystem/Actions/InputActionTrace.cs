@@ -5,14 +5,13 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: make it possible to persist this same way that it should be possible to persist InputEventTrace
+
 ////TODO: make this one thread-safe
 
 ////TODO: invalidate data when associated actions re-resolve
 
 ////TODO: add random access capability
-
-////REVIEW: rename back to InputActionEventQueue? if we have InputActionMap, InputActionStack, and InputActionQueue, it's
-////        rather confusing that in the end, they contain very different action-related things
 
 namespace UnityEngine.Experimental.Input
 {
@@ -24,7 +23,7 @@ namespace UnityEngine.Experimental.Input
     /// of <see cref="InputAction">input actions</see>. Instead of executing response code right away whenever
     /// an action triggers, an <see cref="RecordAction">event is recorded</see> which can then be queried on demand.
     /// </remarks>
-    public class InputActionQueue : IEnumerable<InputActionQueue.ActionEventPtr>, IDisposable
+    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -192,17 +191,17 @@ namespace UnityEngine.Experimental.Input
 
         internal unsafe struct Enumerator : IEnumerator<ActionEventPtr>
         {
-            private InputActionQueue m_Queue;
+            private InputActionTrace m_Trace;
             private ActionEvent* m_Buffer;
             private ActionEvent* m_CurrentEvent;
             private int m_CurrentIndex;
             private int m_EventCount;
 
-            public Enumerator(InputActionQueue queue)
+            public Enumerator(InputActionTrace trace)
             {
-                m_Queue = queue;
-                m_Buffer = (ActionEvent*)queue.m_EventBuffer.bufferPtr.ToPointer();
-                m_EventCount = queue.m_EventBuffer.eventCount;
+                m_Trace = trace;
+                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.ToPointer();
+                m_EventCount = trace.m_EventBuffer.eventCount;
                 m_CurrentEvent = null;
                 m_CurrentIndex = 0;
             }
@@ -242,7 +241,7 @@ namespace UnityEngine.Experimental.Input
             {
                 get
                 {
-                    var state = m_Queue.m_ActionMapStates[m_CurrentEvent->stateIndex];
+                    var state = m_Trace.m_ActionMapStates[m_CurrentEvent->stateIndex];
                     return new ActionEventPtr(state, m_CurrentEvent);
                 }
             }

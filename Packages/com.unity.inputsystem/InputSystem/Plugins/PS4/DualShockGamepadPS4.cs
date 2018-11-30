@@ -285,15 +285,17 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
             base.FinishSetup(builder);
         }
 
-        public override unsafe PS4Touch ReadUnprocessedValueFrom(IntPtr statePtr)
+        ////FIXME: this suffers from the same problems that TouchControl has in that state layout is hardcoded
+
+        public override unsafe PS4Touch ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (PS4Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (PS4Touch*)(byte*)statePtr + (int)m_StateBlock.byteOffset;
             return *valuePtr;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, PS4Touch value)
+        public override unsafe void WriteValueIntoState(PS4Touch value, void* statePtr)
         {
-            var valuePtr = (PS4Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (PS4Touch*)(byte*)statePtr + (int)m_StateBlock.byteOffset;
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<PS4Touch>());
         }
     }
@@ -352,7 +354,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
             }
         }
 
-        public bool IsAimController
+        public bool isAimController
         {
             get
             {

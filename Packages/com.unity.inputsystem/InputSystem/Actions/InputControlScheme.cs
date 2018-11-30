@@ -299,14 +299,14 @@ namespace UnityEngine.Experimental.Input
 
         public bool Equals(InputControlScheme other)
         {
-            if (!(string.Equals(m_Name, other.m_Name) &&
-                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName) &&
-                  string.Equals(m_BindingGroup, other.m_BindingGroup)))
+            if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
+                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName, StringComparison.InvariantCultureIgnoreCase) &&
+                  string.Equals(m_BindingGroup, other.m_BindingGroup, StringComparison.InvariantCultureIgnoreCase)))
                 return false;
 
             // Compare device requirements.
             if (m_DeviceRequirements == null || m_DeviceRequirements.Length == 0)
-                return (other.m_DeviceRequirements == null || other.m_DeviceRequirements.Length == 0);
+                return other.m_DeviceRequirements == null || other.m_DeviceRequirements.Length == 0;
             if (other.m_DeviceRequirements == null || m_DeviceRequirements.Length != other.m_DeviceRequirements.Length)
                 return false;
 
@@ -578,6 +578,11 @@ namespace UnityEngine.Experimental.Input
                 public DeviceRequirement requirement
                 {
                     get { return m_Requirements[m_RequirementIndex]; }
+                }
+
+                public bool isOptional
+                {
+                    get { return requirement.isOptional; }
                 }
 
                 internal int m_RequirementIndex;

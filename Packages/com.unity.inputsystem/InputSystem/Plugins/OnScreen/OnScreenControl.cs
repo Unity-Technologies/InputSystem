@@ -162,7 +162,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             }
 
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
-            control.WriteValueInto(m_InputEventPtr, value);
+            control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 

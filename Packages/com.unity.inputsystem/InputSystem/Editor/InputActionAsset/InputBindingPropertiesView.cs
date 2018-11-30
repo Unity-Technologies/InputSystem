@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Editor.Lists;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -26,17 +27,17 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        private InteractionsReorderableReorderableList m_InteractionsList;
+        private ProcessorsReorderableReorderableList m_ProcessorsList;
+        private ParameterListView m_CompositeParameters;
+
         private SerializedProperty m_InteractionsProperty;
-        private InteractionsReorderableReorderableList m_InteractionsReorderableReorderableList;
-
-        private ProcessorsReorderableReorderableList m_ProcessorsReorderableReorderableListView;
         private SerializedProperty m_ProcessorsProperty;
-
         private SerializedProperty m_GroupsProperty;
-
         private SerializedProperty m_BindingProperty;
+        private SerializedProperty m_PathProperty;
 
-        private Action m_ReloadTree;
+        private Action m_OnChange;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
         private AdvancedDropdownState m_ControlPickerState;
@@ -58,7 +59,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private string m_ExpectedControlLayout;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
 
-        public bool showPathAndControlSchemeSection { get; set; }
+        public bool isCompositeBinding { get; set; }
 
         public bool isInteractivelyPicking
         {
@@ -70,34 +71,24 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_ExpectedControlLayout; }
         }
 
-        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree,
-                                          AdvancedDropdownState controlPickerState, InputActionWindowToolbar toolbar, string expectedControlLayout = null)
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action onChange,
+                                          AdvacedDropdownState controlPickerTreeViewState, InputActionWindowToolbar toolbar,
+                                          string expectedControlLayout = null)
         {
             m_ControlPickerState = controlPickerState;
             m_BindingProperty = bindingProperty;
-            m_ReloadTree = reloadTree;
+            m_OnChange = onChange;
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("m_Processors");
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
-            m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(m_InteractionsProperty, ApplyModifiers);
-            m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, ApplyModifiers);
+            m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
+            m_InteractionsList = new InteractionsReorderableReorderableList(m_InteractionsProperty, OnInteractionsModified);
+            m_ProcessorsList = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, OnProcessorsModified);
             m_Toolbar = toolbar;
             if (m_Toolbar != null)
                 m_ControlSchemes = toolbar.controlSchemes;
             m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
-            showPathAndControlSchemeSection = true;
-        }
-
-        private void ApplyModifiers()
-        {
-            m_InteractionsProperty.stringValue = m_InteractionsReorderableReorderableList.ToSerializableString();
-            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
-            m_ProcessorsProperty.stringValue = m_ProcessorsReorderableReorderableListView.ToSerializableString();
-            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
-            m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
-            m_GroupsProperty.serializedObject.ApplyModifiedProperties();
-            m_ReloadTree();
         }
 
         public void CancelInteractivePicking()
@@ -112,7 +103,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             EditorGUILayout.BeginVertical();
-            if (showPathAndControlSchemeSection)
+            if (isCompositeBinding)
+                DrawCompositeParameters();
+            else
                 DrawPathPicker();
             EditorGUILayout.Space();
             DrawInteractionsPicker();
@@ -122,43 +115,42 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
         }
 
-        protected virtual void DrawProcessorsPicker()
+        private void DrawProcessorsPicker()
         {
             m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
 
             if (m_ProcessorsFoldout)
             {
                 EditorGUI.indentLevel++;
-                m_ProcessorsReorderableReorderableListView.OnGUI();
+                m_ProcessorsList.OnGUI();
                 EditorGUI.indentLevel--;
             }
         }
 
-        protected virtual void DrawInteractionsPicker()
+        private void DrawInteractionsPicker()
         {
             m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
 
             if (m_InteractionsFoldout)
             {
                 EditorGUI.indentLevel++;
-                m_InteractionsReorderableReorderableList.OnGUI();
+                m_InteractionsList.OnGUI();
                 EditorGUI.indentLevel--;
             }
         }
 
-        protected virtual void DrawPathPicker()
+        private void DrawPathPicker()
         {
             m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
             EditorGUI.indentLevel++;
             if (m_GeneralFoldout)
             {
-                var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
-                DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
+                DrawBindingGUI(m_PathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
                     s =>
                     {
                         m_ManualPathEditMode = false;
-                        OnBindingModified(s);
+                        OnBindingModified();
                     });
 
                 DrawUseInControlSchemes();
@@ -166,9 +158,24 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.indentLevel--;
         }
 
-        protected virtual void DrawUseInControlSchemes()
+        private void DrawCompositeParameters()
         {
-            if (m_Toolbar == null)
+            m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
+
+            EditorGUI.indentLevel++;
+            if (m_GeneralFoldout)
+            {
+                if (m_CompositeParameters == null)
+                    InitializeCompositeParameters();
+
+                m_CompositeParameters.OnGUI();
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawUseInControlSchemes()
+        {
+            if (m_Toolbar == null || m_Toolbar.controlSchemes.Count == 0)
                 return;
             EditorGUILayout.Space();
             EditorGUILayout.Space();
@@ -188,7 +195,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     {
                         m_BindingGroups.Remove(scheme.bindingGroup);
                     }
-                    ApplyModifiers();
+                    OnBindingGroupsModified();
                 }
             }
             EditorGUILayout.EndVertical();
@@ -361,10 +368,65 @@ namespace UnityEngine.Experimental.Input.Editor
             return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
         }
 
-        ////FIXME: seems to nuke the property view on the right side every time a path is selected
-        private void OnBindingModified(SerializedProperty obj)
+        private void InitializeCompositeParameters()
         {
-            m_ReloadTree();
+            m_CompositeParameters = new ParameterListView
+            {
+                onChange = OnCompositeParametersModified
+            };
+
+            var path = m_PathProperty.stringValue;
+            var nameAndParameters = InputControlLayout.ParseNameAndParameters(path);
+
+            var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParameters.name);
+            if (compositeType != null)
+                m_CompositeParameters.Initialize(compositeType, nameAndParameters.parameters);
+        }
+
+        private void OnCompositeParametersModified()
+        {
+            Debug.Assert(m_CompositeParameters != null);
+
+            var path = m_PathProperty.stringValue;
+            var nameAndParameters = InputControlLayout.ParseNameAndParameters(path);
+            nameAndParameters.parameters = m_CompositeParameters.GetParameters();
+
+            m_PathProperty.stringValue = nameAndParameters.ToString();
+
+            OnBindingModified();
+        }
+
+        ////FIXME: m_OnChange triggers a needless reload of the entire tree on every reload for now good reason
+
+        private void OnProcessorsModified()
+        {
+            m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
+            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
+            if (m_OnChange != null)
+                m_OnChange();
+        }
+
+        private void OnInteractionsModified()
+        {
+            m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
+            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
+            if (m_OnChange != null)
+                m_OnChange();
+        }
+
+        private void OnBindingGroupsModified()
+        {
+            m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
+            m_GroupsProperty.serializedObject.ApplyModifiedProperties();
+            if (m_OnChange != null)
+                m_OnChange();
+        }
+
+        private void OnBindingModified()
+        {
+            m_BindingProperty.serializedObject.ApplyModifiedProperties();
+            if (m_OnChange != null)
+                m_OnChange();
         }
     }
 }

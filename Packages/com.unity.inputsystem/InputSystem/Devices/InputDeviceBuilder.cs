@@ -66,7 +66,6 @@ namespace UnityEngine.Experimental.Input.Layouts
             FinalizeControlHierarchy();
 
             m_Device.m_Description = deviceDescription;
-            m_Device.m_UserInteractionFilter = InputNoiseFilter.CreateDefaultNoiseFilter(m_Device);
             m_Device.CallFinishSetupRecursive(this);
         }
 
@@ -257,6 +256,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
+                m_Device.m_StateBlock.bitOffset = 0;
                 m_Device.m_StateBlock.format = layout.stateFormat;
 
                 // If we have an existing device, we'll start the various control arrays
@@ -407,7 +407,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, InputControlLayout.kListSeparator))
+                        variants, InputControlLayout.kSeparator))
                     continue;
 
                 if (controlLayouts[i].isArray)
@@ -436,7 +436,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants, variants,
-                        InputControlLayout.kListSeparator))
+                        InputControlLayout.kSeparator))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -564,6 +564,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             // Set flags and misc things.
             control.noisy = controlItem.isNoisy;
             control.synthetic = controlItem.isSynthetic;
+            if (control.noisy)
+                m_Device.noisy = true;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
@@ -587,8 +589,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (!usesStateFromOtherControl)
             {
                 control.m_StateBlock.byteOffset = controlItem.offset;
-                if (controlItem.bit != InputStateBlock.kInvalidOffset)
-                    control.m_StateBlock.bitOffset = controlItem.bit;
+                control.m_StateBlock.bitOffset = controlItem.bit;
                 if (controlItem.sizeInBits != 0)
                     control.m_StateBlock.sizeInBits = controlItem.sizeInBits;
                 if (controlItem.format != 0)
@@ -896,13 +897,13 @@ namespace UnityEngine.Experimental.Input.Layouts
                     switch (parameter.type)
                     {
                         case InputControlLayout.ParameterType.Boolean:
-                            value = *((bool*)parameter.value);
+                            value = *(bool*)parameter.value;
                             break;
                         case InputControlLayout.ParameterType.Integer:
-                            value = *((int*)parameter.value);
+                            value = *(int*)parameter.value;
                             break;
                         case InputControlLayout.ParameterType.Float:
-                            value = *((float*)parameter.value);
+                            value = *(float*)parameter.value;
                             break;
                     }
                 }
@@ -967,7 +968,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
-                if (childSizeInBits == 0)
+                if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.kInvalidOffset)
                     throw new Exception(
                         string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
 
@@ -976,6 +977,11 @@ namespace UnityEngine.Experimental.Input.Layouts
                     child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
                     continue;
 
+                // At this point, if the child has no valid bit offset, put it at #0 now.
+                if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.bitOffset = 0;
+
+                // See if the control bumps our fixed layout size.
                 var endOffset =
                     MemoryHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + childSizeInBits);
                 if (endOffset > firstUnfixedByteOffset)
@@ -1012,10 +1018,18 @@ namespace UnityEngine.Experimental.Input.Layouts
                         firstBitAddressingChild = child;
 
                     // Keep a running count of the size of the bitfield.
-                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset ||
+                        child.m_StateBlock.bitOffset == InputStateBlock.kAutomaticOffset)
+                    {
+                        // Put child at current bit offset.
+                        child.m_StateBlock.bitOffset = bitfieldSizeInBits;
+
                         bitfieldSizeInBits += child.m_StateBlock.sizeInBits;
+                    }
                     else
                     {
+                        // Child already has bit offset. Keep it but make sure we're accounting for it
+                        // in the bitfield size.
                         var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
                         if (lastBit > bitfieldSizeInBits)
                             bitfieldSizeInBits = lastBit;
@@ -1029,8 +1043,12 @@ namespace UnityEngine.Experimental.Input.Layouts
                         runningByteOffset = MemoryHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
                         firstBitAddressingChild = null;
                     }
+
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                        child.m_StateBlock.bitOffset = 0;
                 }
 
+                ////FIXME: seems like this should take bitOffset into account
                 child.m_StateBlock.byteOffset = runningByteOffset;
 
                 if (!isBitAddressingChild)

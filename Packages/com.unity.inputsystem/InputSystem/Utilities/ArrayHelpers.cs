@@ -124,14 +124,14 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value)
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex = 0)
             where TValue : class
         {
             if (array == null)
                 return -1;
 
             var length = array.Length;
-            for (var i = 0; i < length; ++i)
+            for (var i = startIndex; i < length; ++i)
                 if (ReferenceEquals(array[i], value))
                     return i;
 
@@ -357,6 +357,21 @@ namespace UnityEngine.Experimental.Input.Utilities
             array = newArray;
 
             return length;
+        }
+
+        public static int GrowWithCapacity<TValue>(ref TValue[] array, ref int count, int growBy, int capacityIncrement = 10)
+        {
+            var length = array != null ? array.Length : 0;
+            if (length < count + growBy)
+            {
+                if (capacityIncrement < growBy)
+                    capacityIncrement = growBy;
+                GrowBy(ref array, capacityIncrement);
+            }
+
+            var offset = count;
+            count += growBy;
+            return offset;
         }
 
         public static int GrowWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int growBy,

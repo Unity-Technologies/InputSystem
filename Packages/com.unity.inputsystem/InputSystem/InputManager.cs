@@ -38,6 +38,7 @@ namespace UnityEngine.Experimental.Input
     public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
 
+    ////TODO: pass IInputRuntime to this as well
     public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
 
     /// <summary>
@@ -849,6 +850,7 @@ namespace UnityEngine.Experimental.Input
             // Update state buffers.
             ReallocateStateBuffers();
             InitializeDefaultState(device);
+            InitializeNoiseMask(device);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_DevicesCount, m_Metrics.maxNumDevices);
@@ -878,9 +880,6 @@ namespace UnityEngine.Experimental.Input
             // aren't already.
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
-
-            var interactionFilter = device.userInteractionFilter;
-            interactionFilter.Apply(device);
 
             // Notify device.
             device.NotifyAdded();
@@ -1289,14 +1288,11 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("PointerPhase", typeof(PointerPhaseControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
-            RegisterControlLayout("Magnitude2", typeof(Magnitude2Control));
-            RegisterControlLayout("Magnitude3", typeof(Magnitude3Control));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
             RegisterControlLayout("Touch", typeof(TouchControl));
-            RegisterControlLayout("Color", typeof(ColorControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
@@ -1389,9 +1385,12 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.dynamicUpdateCount = 0;
             InputUpdate.fixedUpdateCount = 0;
 
-            InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
-            InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
-            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseBitmaskBuffer;
+            unsafe
+            {
+                InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
+                InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
+                InputStateBuffers.s_NoiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
+            }
         }
 
         [Serializable]
@@ -1622,7 +1621,7 @@ namespace UnityEngine.Experimental.Input
         // (Re)allocates state buffers and assigns each device that's been added
         // a segment of the buffer. Preserves the current state of devices.
         // NOTE: Installs the buffers globally.
-        private void ReallocateStateBuffers(int[] oldDeviceIndices = null)
+        private unsafe void ReallocateStateBuffers(int[] oldDeviceIndices = null)
         {
             var oldBuffers = m_StateBuffers;
 
@@ -1639,7 +1638,7 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
-            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseBitmaskBuffer;
+            InputStateBuffers.s_NoiseMaskBuffer = newBuffers.noiseMaskBuffer;
 
             ////TODO: need to update state change monitors
         }
@@ -1657,7 +1656,7 @@ namespace UnityEngine.Experimental.Input
         /// migrated by <see cref="InputStateBuffers"/> like other device state and removed when the device
         /// is removed from the system.
         /// </remarks>
-        private void InitializeDefaultState(InputDevice device)
+        private unsafe void InitializeDefaultState(InputDevice device)
         {
             // Nothing to do if device has a default state of all zeroes.
             if (!device.hasControlsWithDefaultState)
@@ -1699,7 +1698,48 @@ namespace UnityEngine.Experimental.Input
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
-#endif
+            #endif
+        }
+
+        private unsafe void InitializeNoiseMask(InputDevice device)
+        {
+            Debug.Assert(device != null);
+            Debug.Assert(device.added);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
+
+            var controls = device.allControls;
+            var controlCount = controls.Count;
+
+            // Assume that everything in the device is noise. This way we also catch memory regions
+            // that are not actually covered by a control and implicitly mark them as noise (e.g. the
+            // report ID in HID input reports).
+
+            ////FIXME: this needs to properly take leaf vs non-leaf controls into account
+
+            // Go through controls and for each one that isn't noisy, enable the control's
+            // bits in the mask.
+            var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
+            for (var n = 0; n < controlCount; ++n)
+            {
+                var control = controls[n];
+                if (control.noisy)
+                    continue;
+
+                if (control.m_DefaultValue.isArray)
+                    throw new NotImplementedException("default value arrays");
+
+                var stateBlock = control.m_StateBlock;
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
+                Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
+                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
+
+                MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
+                    (int)stateBlock.sizeInBits, true);
+            }
         }
 
         private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -1838,7 +1878,7 @@ namespace UnityEngine.Experimental.Input
                         var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
 
                         // Copy to temporary buffer.
-                        var statePtr = (byte*)frontBuffer.ToPointer() + deviceStateOffset;
+                        var statePtr = (byte*)frontBuffer + deviceStateOffset;
                         var tempStatePtr = tempBufferPtr + deviceStateOffset;
                         UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
 
@@ -1859,8 +1899,7 @@ namespace UnityEngine.Experimental.Input
                                 m_DeviceChangeListeners[n](device, InputDeviceChange.StateChanged);
 
                             // Process action state change monitors.
-                            if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
-                                deviceStateSize, 0))
+                            if (ProcessStateChangeMonitors(i, statePtr, tempStatePtr, deviceStateSize, 0))
                             {
                                 FireStateChangeNotifications(i, currentTimeExternal, null);
                             }
@@ -2060,7 +2099,7 @@ namespace UnityEngine.Experimental.Input
                         var offsetInDeviceStateToCopyTo = 0u;
                         uint sizeOfStateToCopy;
                         uint receivedStateSize;
-                        IntPtr ptrToReceivedState;
+                        byte* ptrToReceivedState;
                         FourCC receivedStateFormat;
                         var needToCopyFromBackBuffer = false;
 
@@ -2070,7 +2109,7 @@ namespace UnityEngine.Experimental.Input
                             var stateEventPtr = (StateEvent*)currentEventPtr;
                             receivedStateFormat = stateEventPtr->stateFormat;
                             receivedStateSize = stateEventPtr->stateSizeInBytes;
-                            ptrToReceivedState = stateEventPtr->state;
+                            ptrToReceivedState = (byte*)stateEventPtr->state;
 
                             // Ignore extra state at end of event.
                             sizeOfStateToCopy = receivedStateSize;
@@ -2082,7 +2121,7 @@ namespace UnityEngine.Experimental.Input
                             var deltaEventPtr = (DeltaStateEvent*)currentEventPtr;
                             receivedStateFormat = deltaEventPtr->stateFormat;
                             receivedStateSize = deltaEventPtr->deltaStateSizeInBytes;
-                            ptrToReceivedState = deltaEventPtr->deltaState;
+                            ptrToReceivedState = (byte*)deltaEventPtr->deltaState;
                             offsetInDeviceStateToCopyTo = deltaEventPtr->stateOffset;
 
                             // Ignore extra state at end of event.
@@ -2129,7 +2168,7 @@ namespace UnityEngine.Experimental.Input
 
                             ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
                             var currentState = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
-                            var newState = new IntPtr((byte*)ptrToReceivedState.ToPointer() - stateBlockOfDevice.byteOffset);  // Account for device offset in buffers.
+                            var newState = ptrToReceivedState - stateBlockOfDevice.byteOffset;  // Account for device offset in buffers.
 
                             stateCallbacks.OnBeforeWriteNewState(currentState, newState);
                         }
@@ -2145,7 +2184,7 @@ namespace UnityEngine.Experimental.Input
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ProcessStateChangeMonitors(deviceIndex, ptrToReceivedState,
-                                new IntPtr(deviceBuffer.ToInt64() + stateBlockOfDevice.byteOffset),
+                                (byte*)deviceBuffer + stateBlockOfDevice.byteOffset,
                                 sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
@@ -2170,20 +2209,20 @@ namespace UnityEngine.Experimental.Input
                         if (!gameIsPlayingAndHasFocus)
                         {
                             var frontBuffer = m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
-                            Debug.Assert(frontBuffer != IntPtr.Zero);
+                            Debug.Assert(frontBuffer != null);
 
                             if (needToCopyFromBackBuffer)
                             {
                                 var backBuffer = m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex);
-                                Debug.Assert(backBuffer != IntPtr.Zero);
+                                Debug.Assert(backBuffer != null);
 
                                 UnsafeUtility.MemCpy(
-                                    (void*)(frontBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
-                                    (void*)(backBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                    (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
+                                    (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
                                     stateBlockSizeOfDevice);
                             }
 
-                            UnsafeUtility.MemCpy((void*)(frontBuffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
+                            UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
                         }
                         else
 #endif
@@ -2197,38 +2236,38 @@ namespace UnityEngine.Experimental.Input
                             if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
                             {
                                 var frontBuffer = m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
-                                Debug.Assert(frontBuffer != IntPtr.Zero);
+                                Debug.Assert(frontBuffer != null);
 
                                 if (needToCopyFromBackBuffer)
                                 {
                                     var backBuffer = m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex);
-                                    Debug.Assert(backBuffer != IntPtr.Zero);
+                                    Debug.Assert(backBuffer != null);
 
                                     UnsafeUtility.MemCpy(
-                                        (void*)(frontBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
-                                        (void*)(backBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                        (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
+                                        (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
                                         stateBlockSizeOfDevice);
                                 }
 
-                                UnsafeUtility.MemCpy((void*)(frontBuffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
+                                UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
                                 var frontBuffer = m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
-                                Debug.Assert(frontBuffer != IntPtr.Zero);
+                                Debug.Assert(frontBuffer != null);
 
                                 if (needToCopyFromBackBuffer)
                                 {
                                     var backBuffer = m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex);
-                                    Debug.Assert(backBuffer != IntPtr.Zero);
+                                    Debug.Assert(backBuffer != null);
 
                                     UnsafeUtility.MemCpy(
-                                        (void*)(frontBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
-                                        (void*)(backBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                        (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
+                                        (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
                                         stateBlockSizeOfDevice);
                                 }
 
-                                UnsafeUtility.MemCpy((void*)(frontBuffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
+                                UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
                             }
                         }
 
@@ -2333,7 +2372,7 @@ namespace UnityEngine.Experimental.Input
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
         //       'newStateOffset' must give the offset into the full state and 'newStateSize' must
         //       give the size of memory slice to be updated.
-        private unsafe bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, uint newStateSize, uint newStateOffset)
+        private unsafe bool ProcessStateChangeMonitors(int deviceIndex, void* newState, void* oldState, uint newStateSize, uint newStateOffset)
         {
             if (m_StateChangeMonitors == null)
                 return false;
@@ -2355,8 +2394,8 @@ namespace UnityEngine.Experimental.Input
             // them repeatedly.
             if (newStateOffset != 0)
             {
-                newState = new IntPtr(newState.ToInt64() - newStateOffset);
-                oldState = new IntPtr(oldState.ToInt64() + newStateOffset);
+                newState = (byte*)newState - newStateOffset;
+                oldState = (byte*)oldState + newStateOffset;
             }
 
             for (var i = 0; i < numMonitors; ++i)
@@ -2384,15 +2423,15 @@ namespace UnityEngine.Experimental.Input
                     if (sizeInBits > 1)
                     {
                         // Multi-bit value.
-                        if (MemoryHelpers.MemCmpBitRegion((byte*)newState.ToPointer() + offset,
-                            (byte*)oldState.ToPointer() + offset, bitOffset, sizeInBits))
+                        if (MemoryHelpers.MemCmpBitRegion((byte*)newState + offset,
+                            (byte*)oldState + offset, bitOffset, sizeInBits))
                             continue;
                     }
                     else
                     {
                         // Single-bit value.
-                        if (MemoryHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
-                            MemoryHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
+                        if (MemoryHelpers.ReadSingleBit((byte*)newState + offset, bitOffset) ==
+                            MemoryHelpers.ReadSingleBit((byte*)oldState + offset, bitOffset))
                             continue;
                     }
                 }
@@ -2404,7 +2443,7 @@ namespace UnityEngine.Experimental.Input
                     if (offset - newStateOffset + sizeInBytes > newStateSize)
                         continue;
 
-                    if (UnsafeUtility.MemCmp((byte*)newState.ToPointer() + offset, (byte*)oldState.ToPointer() + offset, sizeInBytes) == 0)
+                    if (UnsafeUtility.MemCmp((byte*)newState + offset, (byte*)oldState + offset, sizeInBytes) == 0)
                         continue;
                 }
 
@@ -2575,12 +2614,6 @@ namespace UnityEngine.Experimental.Input
             return flipped;
         }
 
-        internal struct NoiseFilterElementState
-        {
-            public int index;
-            public InputNoiseFilter.ElementType type;
-        }
-
         // Domain reload survival logic. Also used for pushing and popping input system
         // state for testing.
 
@@ -2601,7 +2634,6 @@ namespace UnityEngine.Experimental.Input
             public string layout;
             public string variants;
             public string[] usages;
-            public NoiseFilterElementState[] noisyElements;
             public int deviceId;
             public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
@@ -2613,18 +2645,6 @@ namespace UnityEngine.Experimental.Input
                 var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
                 device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
                 device.UpdateUsageArraysOnControls();
-            }
-
-            public void RestoreUserInteractionFilter(InputDevice device)
-            {
-                if (noisyElements == null || noisyElements.Length == 0)
-                    return;
-
-                var newUserInteractionFilter = new InputNoiseFilter();
-                ArrayHelpers.Append(ref newUserInteractionFilter.elements,
-                    noisyElements.Select(filterElement => new InputNoiseFilter.FilterElement
-                        {controlIndex = filterElement.index, type = filterElement.type}));
-                device.userInteractionFilter = newUserInteractionFilter;
             }
         }
 
@@ -2668,10 +2688,6 @@ namespace UnityEngine.Experimental.Input
                 if (device.usages.Count > 0)
                     usages = device.usages.Select(x => x.ToString()).ToArray();
 
-                NoiseFilterElementState[] elements = null;
-                if (!device.m_UserInteractionFilter.IsEmpty())
-                    elements = device.m_UserInteractionFilter.elements.Select(filterElement => new NoiseFilterElementState { index = filterElement.controlIndex, type = filterElement.type }).ToArray();
-
                 var deviceState = new DeviceState
                 {
                     name = device.name,
@@ -2679,7 +2695,6 @@ namespace UnityEngine.Experimental.Input
                     variants = device.variants,
                     deviceId = device.id,
                     usages = usages,
-                    noisyElements = elements,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
                 };
@@ -2801,7 +2816,6 @@ namespace UnityEngine.Experimental.Input
 
                     // Usages and the user interaction filter can be set on an API level so manually restore them.
                     deviceState.RestoreUsagesOnDevice(device);
-                    deviceState.RestoreUserInteractionFilter(device);
                 }
 
                 // See if we can make sense of an available device now that we couldn't make sense of

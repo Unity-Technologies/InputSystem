@@ -26,13 +26,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8); }
         }
 
-        public IntPtr deltaState
+        public void* deltaState
         {
             get
             {
                 fixed(byte* data = stateData)
                 {
-                    return new IntPtr((void*)data);
+                    return data;
                 }
             }
         }

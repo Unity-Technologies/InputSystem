@@ -87,8 +87,6 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public int totalControlCount;
 
-        public int totalDeviceCount;
-
         public int totalInteractionCount;
 
         public int totalProcessorCount;
@@ -149,7 +147,6 @@ namespace UnityEngine.Experimental.Input
             totalProcessorCount = resolver.totalProcessorCount;
             totalCompositeCount = resolver.totalCompositeCount;
             totalControlCount = resolver.totalControlCount;
-            totalDeviceCount = resolver.totalDeviceCount;
 
             maps = resolver.maps;
             mapIndices = resolver.mapIndices;
@@ -183,6 +180,45 @@ namespace UnityEngine.Experimental.Input
             RemoveMapFromGlobalList();
         }
 
+        public void ResetTriggerState(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionMap != null);
+            Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex);
+            Debug.Assert(maps.Contains(action.m_ActionMap));
+            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount);
+
+            // Reset interactions, if necessary. Do this on all instead of the one
+            // that triggered to make sure we get a full reset.
+            var actionIndex = action.m_ActionIndex;
+            if (triggerStates[actionIndex].phase != InputActionPhase.Waiting)
+            {
+                var bindingIndex = triggerStates[actionIndex].bindingIndex;
+                if (bindingIndex != kInvalidIndex)
+                {
+                    var interactionCount = bindingStates[bindingIndex].interactionCount;
+                    var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
+                    for (var i = 0; i < interactionCount; ++i)
+                    {
+                        interactions[i].Reset();
+                        interactionStates[i] = new InteractionState();
+                    }
+                }
+            }
+
+            // Wipe state.
+            triggerStates[actionIndex] = new TriggerState
+            {
+                phase = InputActionPhase.Waiting,
+                controlIndex = kInvalidIndex,
+                bindingIndex = 0,
+                interactionIndex = kInvalidIndex,
+                mapIndex = action.m_ActionMap.m_MapIndexInState,
+                startTime = 0,
+                time = 0
+            };
+        }
+
         ////TODO: switch to ref returns once we're on C#7
         public TriggerState FetchTriggerState(InputAction action)
         {
@@ -208,16 +244,11 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(map.m_Actions != null);
             Debug.Assert(maps.Contains(map));
 
-            var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
-
-            // Install state monitors for all controls.
-            var controlCount = mapIndices[mapIndex].controlCount;
-            var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
-            if (controlCount > 0)
-                EnableControls(mapIndex, controlStartIndex, controlCount);
+            EnableControls(map);
 
             // Put all actions into waiting state.
+            var mapIndex = map.m_MapIndexInState;
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
             var actionCount = mapIndices[mapIndex].actionCount;
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
@@ -226,7 +257,39 @@ namespace UnityEngine.Experimental.Input
             NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
         }
 
+        public void EnableControls(InputActionMap map)
+        {
+            Debug.Assert(map != null);
+            Debug.Assert(map.m_Actions != null);
+            Debug.Assert(maps.Contains(map));
+
+            var mapIndex = map.m_MapIndexInState;
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+
+            // Install state monitors for all controls.
+            var controlCount = mapIndices[mapIndex].controlCount;
+            var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
+            if (controlCount > 0)
+                EnableControls(mapIndex, controlStartIndex, controlCount);
+        }
+
         public void EnableSingleAction(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionMap != null);
+            Debug.Assert(maps.Contains(action.m_ActionMap));
+
+            EnableControls(action);
+
+            // Put action into waiting state.
+            var actionIndex = action.m_ActionIndex;
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
+            triggerStates[actionIndex].phase = InputActionPhase.Waiting;
+
+            NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
+        }
+
+        public void EnableControls(InputAction action)
         {
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap != null);
@@ -255,18 +318,31 @@ namespace UnityEngine.Experimental.Input
 
                 EnableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex, controlCount);
             }
-
-            // Put action into waiting state.
-            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            triggerStates[actionStartIndex + actionIndex].phase = InputActionPhase.Waiting;
-
-            NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
         }
 
         ////TODO: need to cancel actions if they are in started state
         ////TODO: reset all interaction states
 
         public void DisableAllActions(InputActionMap map)
+        {
+            Debug.Assert(map != null);
+            Debug.Assert(map.m_Actions != null);
+            Debug.Assert(maps.Contains(map));
+
+            DisableControls(map);
+
+            // Mark all actions as disabled.
+            var mapIndex = map.m_MapIndexInState;
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            var actionCount = mapIndices[mapIndex].actionCount;
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            for (var i = 0; i < actionCount; ++i)
+                triggerStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
+
+            NotifyListenersOfActionChange(InputActionChange.ActionMapDisabled, map);
+        }
+
+        public void DisableControls(InputActionMap map)
         {
             Debug.Assert(map != null);
             Debug.Assert(map.m_Actions != null);
@@ -280,17 +356,25 @@ namespace UnityEngine.Experimental.Input
             var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
             if (controlCount > 0)
                 DisableControls(mapIndex, controlStartIndex, controlCount);
-
-            // Mark all actions as disabled.
-            var actionCount = mapIndices[mapIndex].actionCount;
-            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            for (var i = 0; i < actionCount; ++i)
-                triggerStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
-
-            NotifyListenersOfActionChange(InputActionChange.ActionMapDisabled, map);
         }
 
         public void DisableSingleAction(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionMap != null);
+            Debug.Assert(maps.Contains(action.m_ActionMap));
+
+            DisableControls(action);
+
+            // Put action into disabled state.
+            var actionIndex = action.m_ActionIndex;
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
+            triggerStates[actionIndex].phase = InputActionPhase.Disabled;
+
+            NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
+        }
+
+        public void DisableControls(InputAction action)
         {
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap != null);
@@ -319,12 +403,6 @@ namespace UnityEngine.Experimental.Input
 
                 DisableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex, controlCount);
             }
-
-            // Put action into disabled state.
-            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            triggerStates[actionStartIndex + actionIndex].phase = InputActionPhase.Disabled;
-
-            NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
         }
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
@@ -1019,7 +1097,7 @@ namespace UnityEngine.Experimental.Input
             {
                 var control = controls[controlIndex];
                 Debug.Assert(control != null);
-                control.WriteValueInto(buffer, bufferSize);
+                control.ReadValueIntoBuffer(buffer, bufferSize);
             }
 
             /*
@@ -1050,6 +1128,7 @@ namespace UnityEngine.Experimental.Input
             if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount);
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
                 var compositeObject = composites[compositeIndex];
                 Debug.Assert(compositeObject != null);
