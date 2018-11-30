@@ -27,11 +27,25 @@ import com.unity3d.player.*;
 
 import java.text.MessageFormat;
 
+// TODO: OnStatusChanged is not called, when keyboard looses focus
 public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher
 {
     interface IScreenKeyboardCallbacks
     {
         void OnTextChanged(String text);
+        void OnStatusChanged(int status);
+    }
+
+    private enum ScreenKeyboardStatus
+    {
+        Visible(0),
+        Done(1),
+        Canceled(2),
+        LostFocus(3);
+
+        private final int value;
+
+        ScreenKeyboardStatus(int value) { this.value = value; }
     }
 
     private enum ScreenKeyboardType
@@ -127,6 +141,12 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         });
 
         show();
+        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
+    }
+
+    public void dismissAndChangeStatus()
+    {
+        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
     }
 
     public void afterTextChanged (Editable s)
@@ -180,8 +200,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     @Override public void onClick (View v)
     {
+        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
         dismiss();
-        //reportStrAndHide (getSoftInputStr (), false);
     }
 
 
@@ -202,8 +222,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                     // intercept BACK to make sure the dialog is close, and SEARCH to make sure it's ignored.
                     if (keyCode == KeyEvent.KEYCODE_BACK)
                     {
-                        // TODO
-                        //reportStrAndHide (getSoftInputStr (), true);
+                        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Canceled.value);
                         return true;
                     }
                     if (keyCode == KeyEvent.KEYCODE_SEARCH)
@@ -259,8 +278,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             public boolean onEditorAction (TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE)
                 {
-                    // TODO
-                    //reportStrAndHide (getSoftInputStr (), false);
+                    m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
                 }
 
                 return false; // We never consume the action we get
@@ -269,11 +287,6 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         view.setPadding(16, 16, 16, 16);
 
         return view;
-    }
-
-    public boolean isVisible()
-    {
-        return isShowing();
     }
 
     public String getText ()

@@ -105,10 +105,13 @@ namespace UnityEngine.Experimental.Input
 
         public abstract void Hide();
 
-        /// <summary>
-        /// Is screen keyboard visible on screen.
-        /// </summary>
-        public abstract bool visible { get; }
+        public ScreenKeyboardStatus status
+        {
+            get
+            {
+                return m_Status;
+            }
+        }
 
         /// <summary>
         /// Modifies text in screen keyboard's input field.

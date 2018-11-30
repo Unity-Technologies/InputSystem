@@ -22,6 +22,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     m_Parent.m_TextInputListeners[i](text[0]);
                 }
             }
+
+            void OnStatusChanged(int status)
+            {
+                m_Parent.ChangeStatus((ScreenKeyboardStatus)status);
+            }
         }
 
         // Allow only one instance of java keyboard, because only one can be shown at the time
@@ -46,18 +51,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         public override void Hide()
         {
             if (m_KeyboardObject != null)
-                m_KeyboardObject.Call("dismiss");
-        }
-
-        public override bool visible
-        {
-            get
-            {
-            // TODO CHECK
-                if (m_KeyboardObject != null)
-                    return m_KeyboardObject.Call<bool>("isVisible");
-                return false;
-            }
+                m_KeyboardObject.Call("dismissAndChangeStatus");
         }
 
         public override string inputFieldText

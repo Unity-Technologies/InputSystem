@@ -78,14 +78,6 @@ namespace UnityEngine.Experimental.Input.Plugins.WSA
             ChangeStatus(ScreenKeyboardStatus.Done);
         }
 
-        public override bool visible
-        {
-            get
-            {
-                return m_Status == ScreenKeyboardStatus.Visible;
-            }
-        }
-
         public override string inputFieldText
         {
             get
