@@ -405,7 +405,6 @@ internal class AndroidTests : InputTestFixture
     [TestCase("AndroidAccelerometer", "acceleration", true, true)]
     [TestCase("AndroidMagneticField", "magneticField", false, false)]
     [TestCase("AndroidGyroscope", "angularVelocity", false, true)]
-
     public void Devices_SupportSensorsWithVector3Control(string layoutName, string controlName, bool isAffectedByGravity, bool isAffectedByOrientation)
     {
         const float kSensorStandardGravity = 9.80665f;

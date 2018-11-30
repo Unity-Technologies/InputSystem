@@ -291,7 +291,7 @@ partial class CoreTests
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
-        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("New action"));
         Assert.That(asset.actionMaps[0].actions[2].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
