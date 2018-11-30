@@ -60,6 +60,29 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             }
         }
 
-        public override string inputFieldText { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public override string inputFieldText
+        {
+            get
+            {
+                if (m_KeyboardObject != null)
+                    return m_KeyboardObject.Call<string>("getText");
+                return string.Empty;
+            }
+            set
+            {
+                if (m_KeyboardObject != null)
+                    m_KeyboardObject.Call("setText", value);
+            }
+        }
+
+        public override Rect occludingArea
+        {
+            get
+            {
+                //if (m_KeyboardObject != null)
+                //    return m_KeyboardObject.Call<string>("getText");
+                return Rect.zero;
+            }
+        }
     }
 }

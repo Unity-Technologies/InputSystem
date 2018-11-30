@@ -62,19 +62,10 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     private Context m_Context = null;
     private IScreenKeyboardCallbacks m_Callbacks;
 
-    public AndroidScreenKeyboard (
-        IScreenKeyboardCallbacks callbacks,
-        int keyboardType,
-        String initialText,
-        String placeholderText,
-        boolean correction,
-        boolean multiline,
-        boolean secure,
-        boolean alert)
+    public AndroidScreenKeyboard ()
     {
         super (UnityPlayer.currentActivity);
         m_Context = UnityPlayer.currentActivity;
-        m_Callbacks = callbacks;
 
         Window window = getWindow();
         window.setGravity(Gravity.BOTTOM);
@@ -86,6 +77,19 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         // Don't dim the view behind the dialog
         window.clearFlags (WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+    }
+
+    public void show(
+            IScreenKeyboardCallbacks callbacks,
+            int keyboardType,
+            String initialText,
+            String placeholderText,
+            boolean correction,
+            boolean multiline,
+            boolean secure,
+            boolean alert)
+    {
+        m_Callbacks = callbacks;
 
         setContentView (createSoftInputView ());
 
@@ -97,7 +101,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         txtInput.setInputType (convertInputType (ScreenKeyboardType.values()[keyboardType], correction, multiline, secure));
         txtInput.setImeOptions(EditorInfo.IME_FLAG_NO_FULLSCREEN);
 
-       // if ( characterLimit > 0 )
+        // if ( characterLimit > 0 )
         //    txtInput.setFilters (new InputFilter[] { new InputFilter.LengthFilter(characterLimit) });
 
         txtInput.addTextChangedListener (this);
@@ -121,6 +125,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                 }
             }
         });
+
+        show();
     }
 
     public void afterTextChanged (Editable s)
@@ -178,12 +184,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         //reportStrAndHide (getSoftInputStr (), false);
     }
 
-    /*
-    public void onBackPressed ()
-    {
-        reportStrAndHide (getSoftInputStr (), true);
-    }
-    */
+
     protected View createSoftInputView ()
     {
         final int matchParent = ViewGroup.LayoutParams.MATCH_PARENT;
@@ -269,8 +270,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
         return view;
     }
-    /*
-    private String getSoftInputStr ()
+
+    public boolean isVisible()
+    {
+        return isShowing();
+    }
+
+    public String getText ()
     {
         EditText txtInput = (EditText) findViewById (id.txtInput);
 
@@ -280,7 +286,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         return txtInput.getText ().toString ().trim ();
     }
 
-    public void setSoftInputStr (String text)
+    public void setText (String text)
     {
         EditText txtInput = (EditText) findViewById (id.txtInput);
         if (txtInput != null)
@@ -290,6 +296,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         }
     }
 
+    /*
     public void setCharacterLimit(int characterLimit)
     {
         EditText txtInput = (EditText) findViewById(id.txtInput);
