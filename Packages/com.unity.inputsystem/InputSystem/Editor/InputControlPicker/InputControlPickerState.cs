@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -16,3 +17,4 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 }
+#endif

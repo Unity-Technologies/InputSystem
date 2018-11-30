@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
     public abstract class OnScreenControlEditor : UnityEditor.Editor
     {
         [SerializeField] private bool m_ManualPathEditMode;
-        [SerializeField] private AdvancedDropdownState m_ControlPickerState;
+        [SerializeField] private InputControlPickerState m_ControlPickerState;
 
         private SerializedProperty m_ControlPathProperty;
         private InputBindingPropertiesView m_PropertyView;
@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
         {
             m_ControlPathProperty = serializedObject.FindProperty("m_ControlPath");
             if (m_ControlPickerState == null)
-                m_ControlPickerState = new AdvancedDropdownState();
+                m_ControlPickerState = new InputControlPickerState();
             m_PropertyView = new InputBindingPropertiesView(m_ControlPathProperty, null, m_ControlPickerState, null);
         }
 
@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen.Editor
             EditorGUILayout.Space();
             ////TODO: line up "Binding" so it conforms to width of property names used in other inspectors
             m_PropertyView.DrawBindingGUI(m_ControlPathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
-                s => { m_ManualPathEditMode = false; });
+                () => { m_ManualPathEditMode = false; });
             EditorGUILayout.Space();
         }
     }

@@ -189,7 +189,7 @@ public class AssetEditorTests
     [UnityTest]
     public IEnumerator PickerWillNotThrowError_WhenEscIsPressed()
     {
-        var picker = new InputControlPickerDropdown(new AdvancedDropdownState(), null, a => {});
+        var picker = new InputControlPickerDropdown(new AdvancedDropdownState(), null, () => {});
         picker.Show(Rect.zero);
 
         yield return null;

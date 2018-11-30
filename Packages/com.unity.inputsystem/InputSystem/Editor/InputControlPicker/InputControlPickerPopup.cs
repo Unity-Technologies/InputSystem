@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -12,13 +11,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private InputControlPickerDropdown m_InputControlPickerDropdown;
         private SerializedProperty m_PathProperty;
-        private Action<SerializedProperty> m_OnModified;
+        private Action m_OnModified;
         private InputControlPickerState m_PickerState;
-        private Action<Rect, SerializedProperty, Action<SerializedProperty>> m_DrawInteractivePickButton;
+        private Action<Rect, SerializedProperty, Action> m_DrawInteractivePickButton;
 
         private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
 
-        public InputControlPickerPopup(SerializedProperty pathProperty, InputControlPickerState pickerState, Action<SerializedProperty> onModified, Action<Rect, SerializedProperty, Action<SerializedProperty>> drawInteractivePickButton)
+        public InputControlPickerPopup(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified, Action<Rect, SerializedProperty, Action> drawInteractivePickButton)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException("pathProperty");
@@ -74,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     m_PathProperty.stringValue = path;
                     m_PathProperty.serializedObject.ApplyModifiedProperties();
-                    m_OnModified(m_PathProperty);
+                    m_OnModified();
                 }
                 if (m_DrawInteractivePickButton != null)
                     m_DrawInteractivePickButton(interactivePickButtonRect, m_PathProperty, m_OnModified);

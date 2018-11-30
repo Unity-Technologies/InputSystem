@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private TreeViewState m_ActionsTreeState;
         [SerializeField]
-        private AdvancedDropdownState m_PickerTreeViewState;
+        private InputControlPickerState m_PickerTreeViewState;
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
@@ -190,7 +190,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
-                m_PickerTreeViewState = new AdvancedDropdownState();
+                m_PickerTreeViewState = new InputControlPickerState();
         }
 
         private void OnUndoRedoCallback()

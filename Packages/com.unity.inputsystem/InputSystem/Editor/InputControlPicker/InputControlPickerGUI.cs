@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 namespace UnityEngine.Experimental.Input.Editor
 {
     class InputControlPickerGUI : AdvancedDropdownGUI
@@ -12,3 +13,4 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 }
+#endif
