@@ -166,7 +166,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         internal static void* s_DefaultStateBuffer;
-        internal static void* s_NoiseBitmaskBuffer;
+        internal static void* s_NoiseMaskBuffer;
         internal static DoubleBuffers s_CurrentBuffers;
 
         public static void* GetFrontBufferForDevice(int deviceIndex)
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             totalSize += mappingTableSizePerBuffer;
 #endif
 
-            // Plus 2 more buffers (1 for defaults state, and one for noise filters).
+            // Plus 2 more buffers (1 for default states, and one for noise filters).
             totalSize += sizePerBuffer * 2;
 
             // Allocate.
@@ -293,8 +293,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             defaultStateBuffer = null;
 
-            if (s_NoiseBitmaskBuffer == noiseMaskBuffer)
-                s_NoiseBitmaskBuffer = null;
+            if (s_NoiseMaskBuffer == noiseMaskBuffer)
+                s_NoiseMaskBuffer = null;
 
             noiseMaskBuffer = null;
 
@@ -406,8 +406,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
                     continue;
 
-                ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
-
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
                 var oldStatePtr = (byte*)oldBuffer + (int)device.m_StateBlock.byteOffset;
                 var newStatePtr = (byte*)newBuffer + (int)newStateBlockOffsets[i];
@@ -425,19 +423,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 return 0;
 
             var result = new uint[deviceCount];
-            var currentOffset = 0u;
             var sizeInBytes = 0u;
 
             for (var i = 0; i < deviceCount; ++i)
             {
-                var size = devices[i].m_StateBlock.alignedSizeInBytes;
-                size = NumberHelpers.AlignToMultiple(size, 4);
-                ////REVIEW: what should we do about this case? silently accept it and just give the device the current offset?
-                if (size == 0)
+                var sizeOfDevice = devices[i].m_StateBlock.alignedSizeInBytes;
+                sizeOfDevice = NumberHelpers.AlignToMultiple(sizeOfDevice, 4);
+                if (sizeOfDevice == 0) // Shouldn't happen as we don't allow empty layouts but make sure we catch this if something slips through.
                     throw new Exception(string.Format("Device '{0}' has a zero-size state buffer", devices[i]));
-                sizeInBytes += size;
-                result[i] = currentOffset;
-                currentOffset += (uint)size;
+                result[i] = sizeInBytes;
+                sizeInBytes += sizeOfDevice;
             }
 
             offsets = result;

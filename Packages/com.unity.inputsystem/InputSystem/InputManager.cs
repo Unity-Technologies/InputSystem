@@ -1389,7 +1389,7 @@ namespace UnityEngine.Experimental.Input
             {
                 InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
                 InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
-                InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseMaskBuffer;
+                InputStateBuffers.s_NoiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
             }
         }
 
@@ -1638,7 +1638,7 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
-            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseMaskBuffer;
+            InputStateBuffers.s_NoiseMaskBuffer = newBuffers.noiseMaskBuffer;
 
             ////TODO: need to update state change monitors
         }
@@ -1703,15 +1703,22 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe void InitializeNoiseMask(InputDevice device)
         {
+            Debug.Assert(device != null);
+            Debug.Assert(device.added);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
+
+            var controls = device.allControls;
+            var controlCount = controls.Count;
+
             // Assume that everything in the device is noise. This way we also catch memory regions
             // that are not actually covered by a control and implicitly mark them as noise (e.g. the
             // report ID in HID input reports).
 
             ////FIXME: this needs to properly take leaf vs non-leaf controls into account
 
-            // Go through controls and for each one that isn't noisy, clear its mask.
-            var controls = device.allControls;
-            var controlCount = controls.Count;
+            // Go through controls and for each one that isn't noisy, enable the control's
+            // bits in the mask.
             var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
             for (var n = 0; n < controlCount; ++n)
             {
@@ -1723,7 +1730,15 @@ namespace UnityEngine.Experimental.Input
                     throw new NotImplementedException("default value arrays");
 
                 var stateBlock = control.m_StateBlock;
-                MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, stateBlock.byteOffset, stateBlock.sizeInBits, false);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
+                Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
+                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
+
+                MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
+                    (int)stateBlock.sizeInBits, true);
             }
         }
 

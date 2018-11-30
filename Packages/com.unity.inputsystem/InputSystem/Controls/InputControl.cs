@@ -238,6 +238,21 @@ namespace UnityEngine.Experimental.Input
             get { return m_StateBlock; }
         }
 
+        /// <summary>
+        /// Whether the control is considered noisy.
+        /// </summary>
+        /// <remarks>
+        /// A control is considered "noisy" if it produces different values without necessarily requiring user
+        /// interaction. Sensors are a good example.
+        ///
+        /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
+        /// control has been built from.
+        ///
+        /// Note that for devices (<see cref="InputDevice"/>) this property is true if any control on the device
+        /// is marked as noisy.
+        /// </remarks>
+        /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
+        /// <seealso cref="InputControlAttribute.noisy"/>
         public bool noisy
         {
             get { return (m_ControlFlags & ControlFlags.IsNoisy) != 0; }
@@ -250,6 +265,19 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        /// <summary>
+        /// Whether the control is considered synthetic.
+        /// </summary>
+        /// <remarks>
+        /// A control is considered "synthetic" if it does not correspond to an actual, physical control on the
+        /// device. An example for this is <see cref="Keyboard.anyKey"/> or the up/down/left/right buttons added
+        /// by <see cref="StickControl"/>.
+        ///
+        /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
+        /// control has been built from.
+        /// </remarks>
+        /// <seealso cref="InputControlLayout.ControlItem.isSynthetic"/>
+        /// <seealso cref="InputControlAttribute.synthetic"/>
         public bool synthetic
         {
             get { return (m_ControlFlags & ControlFlags.IsSynthetic) != 0; }
@@ -335,25 +363,31 @@ namespace UnityEngine.Experimental.Input
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
         /// is actuated.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
         /// <remarks>
-        /// Magnitudes do not make sense for all types of controls. For example, a control that represents
+        /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
         /// an enumeration of values (such as <see cref="PointerPhaseControl"/>), there is no meaningful
         /// linear ordering of values (one could derive a linear ordering through the actual enum values but
         /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Cancelled"/>
         /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
         ///
         /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
-        /// return value should be considered as an invalid value.
+        /// return value should be considered an invalid value.
         /// </remarks>
-        public float EvaluateMagnitude()
+        /// <seealso cref="EvaluateMagnitude(void*)"/>
+        public unsafe float EvaluateMagnitude()
         {
-            unsafe
-            {
-                return EvaluateMagnitude(currentStatePtr);
-            }
+            return EvaluateMagnitude(currentStatePtr);
         }
 
+        /// <summary>
+        /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
+        /// is actuated in the given state.
+        /// </summary>
+        /// <param name="statePtr">State containing the control's <see cref="stateBlock"/>.</param>
+        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
+        /// <seealso cref="EvaluateMagnitude()"/>
+        /// <seealso cref="stateBlock"/>
         public virtual unsafe float EvaluateMagnitude(void* statePtr)
         {
             return -1;
@@ -499,7 +533,6 @@ namespace UnityEngine.Experimental.Input
         {
             // Set defaults for state block setup. Subclasses may override.
             m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
-            m_StateBlock.bitOffset = 0;
         }
 
         ////REVIEW: replace InputDeviceBuilder here with an interface?
@@ -530,13 +563,18 @@ namespace UnityEngine.Experimental.Input
         {
             get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
         }
-        protected internal unsafe void* previousStatePtr
+        protected internal unsafe void* previousFrameStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
         }
         protected internal unsafe void* defaultStatePtr
         {
             get { return InputStateBuffers.s_DefaultStateBuffer; }
+        }
+
+        protected internal unsafe void* noiseMaskPtr
+        {
+            get { return InputStateBuffers.s_NoiseMaskBuffer; }
         }
 
         /// <summary>

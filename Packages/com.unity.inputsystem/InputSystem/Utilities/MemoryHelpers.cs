@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.Utilities
     {
         public static uint ComputeFollowingByteOffset(uint byteOffset, uint sizeInBits)
         {
-            return (uint)(byteOffset + sizeInBits / 8 + ((sizeInBits % 8) > 0 ? 1 : 0));
+            return (uint)(byteOffset + sizeInBits / 8 + (sizeInBits % 8 > 0 ? 1 : 0));
         }
 
         public static bool MemoryOverlapsBitRegion(uint byteOffset, uint bitOffset, uint sizeInBits, uint memoryOffset,
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (bitOffset < 8)
             {
                 if (value)
-                    *((byte*)ptr) |= (byte)(1 << (int)bitOffset);
+                    *(byte*)ptr |= (byte)(1 << (int)bitOffset);
                 else
                     *(byte*)ptr &= (byte)~(1 << (int)bitOffset);
             }
@@ -67,11 +67,11 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             if (bitOffset < 8)
             {
-                bits = *((byte*)ptr);
+                bits = *(byte*)ptr;
             }
             else if (bitOffset < 32)
             {
-                bits = *((int*)ptr);
+                bits = *(int*)ptr;
             }
             else
             {
@@ -107,11 +107,13 @@ namespace UnityEngine.Experimental.Input.Utilities
             var maskPtr = (byte*)mask;
 
             // If we're offset by more than a byte, adjust our pointers.
-            if (bitOffset > 8)
+            if (bitOffset >= 8)
             {
                 var skipBytes = bitOffset / 8;
                 bytePtr1 += skipBytes;
                 bytePtr2 += skipBytes;
+                if (maskPtr != null)
+                    maskPtr += skipBytes;
                 bitOffset %= 8;
             }
 
@@ -120,27 +122,26 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 // If the total length of the memory region is less than a byte, we need
                 // to mask out parts of the bits we're reading.
-                var byteMask = 0xFF;
+                var byteMask = 0xFF << (int)bitOffset;
                 if (bitCount + bitOffset < 8)
                 {
-                    byteMask = 0xFF >> (int)(8 - (bitCount + bitOffset));
+                    byteMask &= 0xFF >> (int)(8 - (bitCount + bitOffset));
                 }
 
                 if (maskPtr != null)
                 {
-                    byteMask &= maskPtr[0] >> (int)bitOffset;
+                    byteMask &= *maskPtr;
                     ++maskPtr;
                 }
 
-                var byte1 = (*bytePtr1 >> (int)bitOffset) & byteMask;
-                var byte2 = (*bytePtr2 >> (int)bitOffset) & byteMask;
+                var byte1 = *bytePtr1 & byteMask;
+                var byte2 = *bytePtr2 & byteMask;
 
                 if (byte1 != byte2)
                     return false;
 
                 ++bytePtr1;
                 ++bytePtr2;
-                bitOffset = 0;
 
                 // If the total length of the memory region is equal or less than a byte,
                 // we're done.
@@ -278,68 +279,65 @@ namespace UnityEngine.Experimental.Input.Utilities
             throw new NotImplementedException("Writing int straddling int boundary");
         }
 
-        public static void SetBitsInBuffer(void* buffer, InputControl control, bool value)
-        {
-            SetBitsInBuffer(buffer, control.stateBlock.byteOffset, control.stateBlock.sizeInBits, value);
-        }
-
-        public static void SetBitsInBuffer(void* buffer, uint byteOffset, uint sizeInBits, bool value)
+        public static void SetBitsInBuffer(void* buffer, int byteOffset, int bitOffset, int sizeInBits, bool value)
         {
             if (buffer == null)
                 throw new ArgumentException("A buffer must be provided to apply the bitmask on", "buffer");
+            if (sizeInBits < 0)
+                throw new ArgumentException("Negative sizeInBits", "sizeInBits");
+            if (bitOffset < 0)
+                throw new ArgumentException("Negative bitOffset", "bitOffset");
+            if (byteOffset < 0)
+                throw new ArgumentException("Negative byteOffset", "byteOffset");
 
-            var sizeRemaining = sizeInBits;
-
-            var filterIter = (uint*)((byte*)buffer + byteOffset);
-            while (sizeRemaining >= 32)
+            // If we're offset by more than a byte, adjust our pointers.
+            if (bitOffset >= 8)
             {
-                *filterIter = value ? 0xFFFFFFFF : 0;
-                filterIter++;
-                sizeRemaining -= 32;
+                var skipBytes = bitOffset / 8;
+                byteOffset += skipBytes;
+                bitOffset %= 8;
             }
 
-            var mask = (uint)((1 << (int)sizeRemaining) - 1);
-            if (value)
+            var bytePos = (byte*)buffer + byteOffset;
+            var sizeRemainingInBits = sizeInBits;
+
+            // Handle first byte separately if unaligned to byte boundary.
+            if (bitOffset != 0)
             {
-                *filterIter |= mask;
-            }
-            else
-            {
-                *filterIter &= ~mask;
-            }
-        }
+                var mask = 0xFF << bitOffset;
+                if (sizeRemainingInBits + bitOffset < 8)
+                {
+                    mask &= 0xFF >> (8 - (sizeRemainingInBits + bitOffset));
+                }
 
-        public static bool HasAnyNonZeroBitsAfterMaskingWithBuffer(void* buffer, void* maskPtr, uint offsetBytes, uint sizeInBits)
-        {
-            ////REVIEW: this should be exceptions
-            if (buffer == null || maskPtr == null)
-                return false;
-
-            var sizeRemaining = sizeInBits;
-            var eventIter = (uint*)buffer;
-            var maskIter = (uint*)(byte*)maskPtr + offsetBytes;
-
-            while (sizeRemaining >= 32)
-            {
-                if ((*eventIter & *maskIter) != 0)
-                    return true;
-
-                eventIter++;
-                maskIter++;
-
-                sizeRemaining -= 32;
+                if (value)
+                    *bytePos |= (byte)mask;
+                else
+                    *bytePos &= (byte)~mask;
+                ++bytePos;
+                sizeRemainingInBits -= 8 - bitOffset;
             }
 
-            // Find the remaining bytes to check.
-            // Mask it in the state iterator and noise.
-            var remainingState = *eventIter;
-            var remainingMask = *maskIter;
+            // Handle full bytes in-between.
+            while (sizeRemainingInBits >= 8)
+            {
+                *bytePos = value ? (byte)0xFF : (byte)0;
+                ++bytePos;
+                sizeRemainingInBits -= 8;
+            }
 
-            var mask = (1 >> (int)sizeRemaining) - 1;
-            if ((remainingState & remainingMask & mask) != 0)
-                return true;
+            // Handle unaligned trailing byte, if present.
+            if (sizeRemainingInBits > 0)
+            {
+                var mask = (byte)(0xFF >> 8 - sizeRemainingInBits);
+                if (value)
+                    *bytePos |= mask;
+                else
+                    *bytePos &= (byte)~mask;
+            }
 
-            return false;
+            Debug.Assert(bytePos <= (byte*)buffer +
+                ComputeFollowingByteOffset((uint)byteOffset, (uint)bitOffset + (uint)sizeInBits));
         }
 
         public static void Swap<TValue>(ref TValue a, ref TValue b)

@@ -200,7 +200,7 @@ namespace UnityEngine.Experimental.Input
                             hadActivityThisFrame = device.wasUpdatedThisFrame;
                         if (hadActivityThisFrame.Value)
                         {
-                            var previousPhase = phaseControl.ReadPreviousValue();
+                            var previousPhase = phaseControl.ReadValueFromPreviousFrame();
                             if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Cancelled)
                                 isActive = true;
                         }

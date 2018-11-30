@@ -359,6 +359,21 @@ namespace UnityEngine.Experimental.Input.Utilities
             return length;
         }
 
+        public static int GrowWithCapacity<TValue>(ref TValue[] array, ref int count, int growBy, int capacityIncrement = 10)
+        {
+            var length = array != null ? array.Length : 0;
+            if (length < count + growBy)
+            {
+                if (capacityIncrement < growBy)
+                    capacityIncrement = growBy;
+                GrowBy(ref array, capacityIncrement);
+            }
+
+            var offset = count;
+            count += growBy;
+            return offset;
+        }
+
         public static int GrowWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int growBy,
             int capacityIncrement = 10, Allocator allocator = Allocator.Persistent)
             where TValue : struct

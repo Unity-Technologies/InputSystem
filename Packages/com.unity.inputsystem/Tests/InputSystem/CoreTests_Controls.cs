@@ -331,7 +331,64 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public unsafe void Controls_CanWriteValueAsObjectIntoMemoryBuffer()
+    public void Controls_CanCheckWhetherControlIsAtDefaultValue()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad.CheckStateIsAtDefault(), Is.True);
+        Assert.That(gamepad.leftStick.CheckStateIsAtDefault(), Is.True);
+
+        InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.1234f, 0.2345f));
+        InputSystem.Update();
+
+        Assert.That(gamepad.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gamepad.leftStick.CheckStateIsAtDefault(), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCheckWhetherControlIsAtDefaultValue_IgnoringNoise()
+    {
+        const string layout = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""notNoisy"", ""layout"" : ""Button"" },
+                    { ""name"" : ""noisy"", ""layout"" : ""Button"", ""noisy"" : true }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        InputEventPtr eventPtr;
+        using (StateEvent.From(device, out eventPtr))
+        {
+            Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
+
+            var s1 = device["noisy"].stateBlock;
+            var s2 = device["notNoisy"].stateBlock;
+
+            // Actuate noisy control.
+            device["noisy"].WriteValueIntoEvent(1f, eventPtr);
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
+
+            // Actuate non-noisy control, too.
+            device["notNoisy"].WriteValueIntoEvent(1f, eventPtr);
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public unsafe void Controls_CanWriteValueFromObjectIntoState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -344,7 +401,35 @@ partial class CoreTests
             // means we don't need to adjust the pointer here.
             Debug.Assert(gamepad.stateBlock.byteOffset == 0);
 
-            gamepad.leftStick.WriteValueFromObjectInto(tempBufferPtr, tempBufferSize, new Vector2(0.1234f, 0.5678f));
+            gamepad.leftStick.WriteValueFromObjectIntoState(new Vector2(0.1234f, 0.5678f), tempBufferPtr);
+
+            var leftStickXPtr = (float*)(tempBufferPtr + gamepad.leftStick.x.stateBlock.byteOffset);
+            var leftStickYPtr = (float*)(tempBufferPtr + gamepad.leftStick.y.stateBlock.byteOffset);
+
+            Assert.That(*leftStickXPtr, Is.EqualTo(0.1234).Within(0.00001));
+            Assert.That(*leftStickYPtr, Is.EqualTo(0.5678).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public unsafe void Controls_CanWriteValueFromBufferIntoState()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var tempBufferSize = (int)gamepad.stateBlock.alignedSizeInBytes;
+        using (var tempBuffer = new NativeArray<byte>(tempBufferSize, Allocator.Temp))
+        {
+            var tempBufferPtr = (byte*)NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(tempBuffer);
+
+            // The device is the first in the system so is guaranteed to start of offset 0 which
+            // means we don't need to adjust the pointer here.
+            Debug.Assert(gamepad.stateBlock.byteOffset == 0);
+
+            var vector = new Vector2(0.1234f, 0.5678f);
+            var vectorPtr = UnsafeUtility.AddressOf(ref vector);
+
+            gamepad.leftStick.WriteValueFromBufferIntoState(vectorPtr, UnsafeUtility.SizeOf<Vector2>(), tempBufferPtr);
 
             var leftStickXPtr = (float*)(tempBufferPtr + gamepad.leftStick.x.stateBlock.byteOffset);
             var leftStickYPtr = (float*)(tempBufferPtr + gamepad.leftStick.y.stateBlock.byteOffset);
