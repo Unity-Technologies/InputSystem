@@ -373,10 +373,12 @@ namespace UnityEngine.Experimental.Input
                 for (var i = 0; i < actionCountInThisMap; ++i)
                     actions[i].m_ActionIndex = totalActionCount + i;
 
-                ArrayHelpers.GrowBy(ref actionStates, actionCountInThisMap);
-                totalActionCount += actionCountInThisMap;
+                ArrayHelpers.GrowWithCapacity(ref actionStates, ref totalActionCount, actionCountInThisMap);
                 for (var i = 0; i < actionCountInThisMap; ++i)
-                    actionStates[i].mapIndex = mapIndex;
+                {
+                    actionStates[actionStartIndex + i].mapIndex = mapIndex;
+                    actionStates[actionStartIndex + i].controlIndex = InputActionMapState.kInvalidIndex;
+                }
             }
         }
 
