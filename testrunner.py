@@ -55,6 +55,7 @@ parser.add_argument('runtimePlatform', nargs='*', choices=allPlatforms)
 parser.add_argument('--version', choices=editorRevisions.keys())
 parser.add_argument('--runtime', choices=allRuntimes)
 parser.add_argument('--testPlatform', choices=allTestPlatforms)
+parser.add_argument("--warningscheck", action="store_true")
 args = parser.parse_args(sys.argv[1:])
 
 runtimePlatforms = args.runtimePlatform
@@ -64,6 +65,7 @@ testPlatform = args.testPlatform
 
 kRootRepoDirectory = os.path.dirname(os.path.realpath(__file__))
 kProjectPath = os.path.dirname(os.path.realpath(__file__))
+
 kTestArtifactPath = os.path.join(kRootRepoDirectory, "TestArtifacts")
 kInstallPath = os.path.join(kRootRepoDirectory, "UnityInstall")
 kEditorPath = os.path.join(kInstallPath, "Unity")
@@ -97,10 +99,10 @@ for platform in runtimePlatforms:
     runOptions["scripting-runtime-version"] = runtimeVersion
     runOptions["testPlatform"] = testPlatform
 
-    if(platform != "Editor"):
-        runOptions["buildTarget"] = platform
-    else:
-        runOptions["buildTarget"] = "Standalone"
+  #if(platform != "Editor"):
+  #      runOptions["buildTarget"] = platform
+  #  else:
+  #  runOptions["buildTarget"] = "Standalone"
 
     allArgs = [kEditorPath] + flags
     for k in runOptions:
