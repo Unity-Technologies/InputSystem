@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -51,13 +52,15 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private TreeViewState m_ActionsTreeState;
         [SerializeField]
-        private AdvancedDropdownState m_PickerTreeViewState;
+        private InputControlPickerState m_PickerTreeViewState;
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
         internal InputActionWindowToolbar m_InputActionWindowToolbar;
         [SerializeField]
         internal ActionInspectorContextMenu m_ContextMenu;
+        [SerializeField]
+        List<string> m_SelectedActionMaps = new List<string>();
 
         private InputBindingPropertiesView m_BindingPropertyView;
         private InputActionPropertiesView m_ActionPropertyView;
@@ -190,7 +193,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
-                m_PickerTreeViewState = new AdvancedDropdownState();
+                m_PickerTreeViewState = new InputControlPickerState();
         }
 
         private void OnUndoRedoCallback()
@@ -210,6 +213,15 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionMapsTree.GetSelectedRow() != null)
                 m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
             m_ActionsTree.Reload();
+            if (m_ActionMapsTree.GetSelectedRow() != null)
+            {
+                var row = m_ActionMapsTree.GetSelectedRow();
+                if (!m_SelectedActionMaps.Contains(row.displayName))
+                {
+                    m_ActionsTree.SetExpandedRecursive(m_ActionsTree.GetRootElement().id, true);
+                    m_SelectedActionMaps.Add(row.displayName);
+                }
+            }
         }
 
         private void OnActionSelection()
@@ -415,6 +427,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
             {
                 m_ContextMenu.OnAddAction();
+                m_ContextMenu.OnAddBinding(m_ActionsTree.GetSelectedAction());
+                m_ActionsTree.SelectNewActionRow();
             }
 
             // Draw border rect
