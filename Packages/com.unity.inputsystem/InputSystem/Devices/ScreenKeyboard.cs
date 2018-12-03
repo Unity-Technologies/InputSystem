@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
@@ -25,7 +26,8 @@ namespace UnityEngine.Experimental.Input
     }
 
 
-    public class ScreenKeyboardShowParams
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ScreenKeyboardShowParams
     {
         public ScreenKeyboardType type;
         public string initialText;
@@ -38,18 +40,7 @@ namespace UnityEngine.Experimental.Input
         public bool alert;
 
 
-        ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callback
-
-        public ScreenKeyboardShowParams()
-        {
-            type = ScreenKeyboardType.Default;
-            initialText = string.Empty;
-            autocorrection = false;
-            multiline = false;
-            secure = false;
-            alert = false;
-            placeholderText = string.Empty;
-        }
+        ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
 
@@ -69,6 +60,8 @@ namespace UnityEngine.Experimental.Input
             m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.Android.AndroidScreenKeyboard>();
 #elif UNITY_WSA
             m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.WSA.WSAScreenKeyboard>();
+#elif UNITY_IOS || UNITY_TVOS
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.iOS.iOSScreenKeyboard>();
 #else
             throw new NotImplementedException("ScreenKeyboard is not implemented for this platform."); 
 #endif

@@ -11,6 +11,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS
                 matches: new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("iOSGameController"));
+            InputSystem.RegisterLayout<iOSScreenKeyboard>();
         }
     }
 }
