@@ -1836,6 +1836,20 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_PointerSensitivity_DoesNothingIfDeviceDimensionsAreUnknown()
+    {
+        // Add pointer that does not respond to QueryDimensionsComment.
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        InputSystem.QueueDeltaStateEvent(pointer.delta, new Vector2(59.0f, 38.0f));
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(59.0).Within(0.000001));
+        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(38.0f).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Pointer", typeof(Pointer))]

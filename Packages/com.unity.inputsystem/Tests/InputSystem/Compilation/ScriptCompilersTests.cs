@@ -15,7 +15,7 @@ using UnityEngine;
 using ieu = UnityEditorInternal.InternalEditorUtility;
 
 public class ScriptCompilersTests
-{ 
+{
 #if UNITY_2018_3_OR_NEWER && (UNITY_EDITOR_OSX || UNITY_EDITOR_WIN)
 
     [Test]
@@ -62,7 +62,7 @@ public class ScriptCompilersTests
         references.Add(Path.Combine(EditorApplication.applicationContentsPath, "UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll"));
 #elif UNITY_EDITOR_WIN
         references.Add(Path.Combine(Path.GetDirectoryName(EditorApplication.applicationPath), "Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll"));
-#endif 
+#endif
         var unityAssemblies = InternalEditorUtility.GetUnityAssemblies(true, buildTargetGroup, buildTarget);
         foreach (var asm in unityAssemblies)
         {
@@ -83,14 +83,13 @@ public class ScriptCompilersTests
         sources.AddRange(Directory.GetFiles(inputFilePath, "*.cs", SearchOption.AllDirectories));
 
         MonoIsland island = new MonoIsland(buildTarget, apiCompatibilityLevel, true, sources.ToArray(),
-                references.ToArray(), defines, outputAssemblyPath);
+            references.ToArray(), defines, outputAssemblyPath);
 
         return island;
     }
 
     static CompilerMessage[] Compile(ScriptCompilerBase compiler, MonoIsland island)
     {
-
         var assemblyOutputPath = island._output;
 
         compiler.BeginCompiling();
@@ -107,5 +106,6 @@ public class ScriptCompilersTests
 
         return messages;
     }
+
 #endif
 }
