@@ -19,6 +19,8 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
     private InputAction m_keyboardAction;
     private InputAction m_mouseAction;
 
+    private Action<char> m_RecordKeyAction;
+
     private const int MOUSE_MOVE_DEADZONE = 0;
 
     public void Start()
@@ -27,6 +29,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         m_keyboardAction.Enable();
 
+        m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>");
         m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>");
         m_mouseAction.performed += callbackContext => MouseKeyPress();
         m_mouseAction.Enable();
@@ -37,7 +40,15 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         if (m_keyboardAction != null) m_keyboardAction.Enable();
         if (m_mouseAction != null)    m_mouseAction.Enable();
 
-        InputSystem.GetDevice<Keyboard>().onTextInput += new Action<char>(RecordKey);
+        if (m_RecordKeyAction == null)
+        {
+            Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
+            if (keyboard != null)
+            {
+                m_RecordKeyAction = new Action<char>(RecordKey);
+                keyboard.onTextInput += m_RecordKeyAction;
+            }
+        }
     }
 
     private void OnDisable()
@@ -45,11 +56,30 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         m_keyboardAction.Disable();
         m_mouseAction.Disable();
 
+        if (m_RecordKeyAction != null)
+        {
+            Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
+            if (keyboard != null)
+            {
+                keyboard.onTextInput -= m_RecordKeyAction;
+                m_RecordKeyAction = null;
+            }
+        }
         InputSystem.GetDevice<Keyboard>().onTextInput -= new Action<char>(RecordKey);
     }
 
     public void Update()
     {
+        if (m_RecordKeyAction == null)
+        {
+            Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
+            if (keyboard != null)
+            {
+                m_RecordKeyAction = new Action<char>(RecordKey);
+                keyboard.onTextInput += m_RecordKeyAction;
+            }
+        }
+
         // Show mouse actions
         var mouse = InputSystem.GetDevice<Mouse>();
         if (mouse == null)

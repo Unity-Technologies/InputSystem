@@ -3170,6 +3170,69 @@ partial class CoreTests
         Assert.Fail();
     }
 
+#if UNITY_2019_1_OR_NEWER
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var keyboardDeviceReset = false;
+        runtime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(keyboardDeviceReset, Is.False);
+                    keyboardDeviceReset = true;
+
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepadDeviceReset = false;
+        runtime.SetDeviceCommandCallback(gamepad.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(gamepadDeviceReset, Is.False);
+                    gamepadDeviceReset = true;
+
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        var pointer = InputSystem.AddDevice<Pointer>();
+        var pointerDeviceReset = false;
+        runtime.SetDeviceCommandCallback(pointer.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(pointerDeviceReset, Is.False);
+                    pointerDeviceReset = true;
+
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        runtime.InvokeFocusChanged(true);
+
+        Assert.That(keyboardDeviceReset, Is.True);
+        Assert.That(gamepadDeviceReset, Is.True);
+        Assert.That(pointerDeviceReset, Is.True);
+    }
+
+#endif
+
     [Test]
     [Category("Devices")]
     public void Devices_IMECompositionEventsGoThroughKeyboard()

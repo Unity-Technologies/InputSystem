@@ -1251,6 +1251,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
+                m_Runtime.onFocusChanged = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
                     InputRuntime.s_Instance = null;
@@ -1346,11 +1347,13 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onUpdate = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
+                m_Runtime.onFocusChanged = null;
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
+            m_Runtime.onFocusChanged = OnFocusChanged;
             m_Runtime.updateMask = updateMask;
             m_Runtime.pollingFrequency = pollingFrequency;
 
@@ -1913,6 +1916,17 @@ namespace UnityEngine.Experimental.Input
                 m_BeforeUpdateListeners[i](updateType);
         }
 
+        private void OnFocusChanged(bool focus)
+        {
+            var deviceCount = m_DevicesCount;
+            for (var i = 0; i < deviceCount; ++i)
+            {
+                var device = m_Devices[i];
+                if (!InputSystem.TrySyncDevice(device))
+                    InputSystem.TryResetDevice(device);
+            }
+        }
+
         ////REVIEW: do we want to filter out state events that result in no state change?
 
         // NOTE: Update types do *NOT* say what the events we receive are for. The update type only indicates
@@ -1944,7 +1958,8 @@ namespace UnityEngine.Experimental.Input
             var buffersToUseForUpdate = updateType;
 #if UNITY_EDITOR
             gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
+                (UnityEditor.EditorApplication.isPlaying && Application.isFocused) ||
+                ((updateMask & (InputUpdateType)(1 << 31)) != 0);
 
             if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
             {
