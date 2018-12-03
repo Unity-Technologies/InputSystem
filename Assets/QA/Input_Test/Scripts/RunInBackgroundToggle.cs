@@ -1,7 +1,7 @@
-using System;
 using UnityEngine;
-using UnityEngine.UI;
+#if UNITY_2018_3_OR_NEWER
 using UnityEngine.Experimental.Input;
+#endif
 
 public class RunInBackgroundToggle : MonoBehaviour
 {
@@ -10,6 +10,8 @@ public class RunInBackgroundToggle : MonoBehaviour
 
     private void Start()
     {
+#if UNITY_2018_3_OR_NEWER
         InputSystem.runInBackground = m_ShouldRunInBackground;
+#endif
     }
 }
