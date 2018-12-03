@@ -4402,6 +4402,27 @@ partial class CoreTests
             Has.All.Matches((InputManager.StateChangeMonitorsForDevice x) => x.count == 0));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_SensitivityProcessorDoesNotCorruptValues() 
+    {
+        var pointer = InputSystem.AddDevice<Pointer>();
+        var action = new InputAction();
+        action.AddBinding("/<Pointer>/delta");
+
+        Vector2? look = null;
+        action.performed +=
+            ctx => { look = ctx.ReadValue<Vector2>(); };
+
+        action.Enable();
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(59.0f, 38.0f) });
+        InputSystem.Update();
+        Assert.That(look.HasValue, Is.True);
+        Assert.That(look.Value.x, Is.EqualTo(59.0).Within(0.000001));
+        Assert.That(look.Value.y, Is.EqualTo(38.0f).Within(0.000001));
+    }
+
     // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.
     [Test]
     [Category("Actions")]
