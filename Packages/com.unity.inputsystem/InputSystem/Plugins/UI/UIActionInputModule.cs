@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
+////TODO: add ability to query which device was last used with any of the actions
+
 ////TODO: come up with an action response system that doesn't require hooking and unhooking all those delegates
 
-//touch vs mouse will need refinement in both the action and the device stuff
+////TODO: touch vs mouse will need refinement in both the action and the device stuff
 
 namespace UnityEngine.Experimental.Input.Plugins.UI
 {

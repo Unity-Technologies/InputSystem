@@ -18,6 +18,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
 
+////REVIEW: move this to .LowLevel? this one is pretty peculiar to use and doesn't really work like what you'd expect given C#'s List<>
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -303,6 +305,20 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentOutOfRangeException("index2");
 
             m_Indices.SwapElements(index1, index2);
+        }
+
+        public void Sort<TCompare>(int startIndex, int count, TCompare comparer)
+            where TCompare : IComparer<TControl>
+        {
+            if (startIndex < 0 || startIndex >= Count)
+                throw new ArgumentOutOfRangeException("startIndex");
+            if (startIndex + count >= Count)
+                throw new ArgumentOutOfRangeException("count");
+
+            // Simple insertion sort.
+            for (var i = 1; i < count; ++i)
+                for (var j = i; j > 0 && comparer.Compare(this[j - 1], this[j]) < 0; --j)
+                    SwapElements(j, j - 1);
         }
 
         public TControl[] ToArray()

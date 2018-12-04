@@ -2,21 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: "properties" seems wrong; these seems to revert to "parameters" specifically
-
-////TODO: nuke "ReorderableReorderable"
-
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
-    class InteractionsReorderableReorderableList : PropertiesReorderableList
+    ////TODO: rename to InteractionsListView
+    internal class InteractionsReorderableReorderableList : PropertiesReorderableList
     {
-        public InteractionsReorderableReorderableList(SerializedProperty property, Action applyAction) : base(property, applyAction)
+        public InteractionsReorderableReorderableList(SerializedProperty property, Action applyAction)
+            : base(property, applyAction)
         {
         }
 
@@ -24,26 +21,13 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             return InputSystem.s_Manager.interactions;
         }
-
-        protected override void AddElement(object data)
-        {
-            if (m_ListView.list.Count == 1 && (string)m_ListView.list[0] == "")
-            {
-                m_ListView.list.Clear();
-            }
-            m_ListView.list.Add((string)data);
-            m_Apply();
-        }
-
-        protected override string GetSeparator()
-        {
-            return ",";
-        }
     }
 
-    class ProcessorsReorderableReorderableList : PropertiesReorderableList
+    ////TODO: rename to ProcessorsListView
+    internal class ProcessorsReorderableReorderableList : PropertiesReorderableList
     {
-        public ProcessorsReorderableReorderableList(SerializedProperty property, Action applyAction) : base(property, applyAction)
+        public ProcessorsReorderableReorderableList(SerializedProperty property, Action applyAction)
+            : base(property, applyAction)
         {
         }
 
@@ -51,124 +35,95 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             return InputSystem.s_Manager.processors;
         }
-
-        protected override void AddElement(object data)
-        {
-            if (m_ListView.list.Count == 1 && (string)m_ListView.list[0] == "")
-            {
-                m_ListView.list.Clear();
-            }
-
-            m_ListView.list.Add((string)data);
-            m_Apply();
-        }
-
-        protected override string GetSeparator()
-        {
-            return InputBinding.kSeparatorString;
-        }
     }
 
-    abstract class PropertiesReorderableList
+    internal abstract class PropertiesReorderableList
     {
-        protected ReorderableList m_ListView;
-        SerializedProperty m_Property;
-        TypeTable m_ListOptions;
-        string m_SelectedRow;
-
-        InputControlLayout.NameAndParameters[] m_NamesAndParams;
-        InputControlLayout.ParameterValue[] m_SelectedParameterList;
-        protected Action m_Apply;
-
-        public PropertiesReorderableList(SerializedProperty property, Action applyAction)
+        protected PropertiesReorderableList(SerializedProperty property, Action applyAction)
         {
             m_Property = property;
             m_Apply = applyAction;
+            m_ListItems = new List<string>();
             m_ListOptions = GetOptions();
-            m_ListView = new ReorderableList(new List<string>(), typeof(string));
+            m_EditableParametersForSelectedItem = new ParameterListView {onChange = OnParametersChanged};
+            m_ParametersForEachListItem = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue)
+                ?? new InputControlLayout.NameAndParameters[0];
 
-            m_NamesAndParams = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue);
-            if (m_NamesAndParams == null)
-            {
-                m_NamesAndParams = new InputControlLayout.NameAndParameters[0];
-            }
-            foreach (var nameAndParams in m_NamesAndParams)
-            {
-                m_ListView.list.Add(nameAndParams.name);
-            }
+            foreach (var nameAndParams in m_ParametersForEachListItem)
+                m_ListItems.Add(nameAndParams.name);
 
-            m_ListView.headerHeight = 3;
-            m_ListView.onAddDropdownCallback =
-                (rect, list) =>
+            m_ListView = new ReorderableList(m_ListItems, typeof(string))
             {
-                var menu = new GenericMenu();
-                for (var i = 0; i < m_ListOptions.names.Count(); ++i)
-                    menu.AddItem(new GUIContent(m_ListOptions.names.ElementAt(i)), false, AddElement, m_ListOptions.names.ElementAt(i));
-                menu.ShowAsContext();
+                headerHeight = 3,
+                onAddDropdownCallback = (rect, list) =>
+                {
+                    var menu = new GenericMenu();
+                    foreach (var name in m_ListOptions.names)
+                        menu.AddItem(new GUIContent(name), false, OnAddElement, name);
+                    menu.ShowAsContext();
+                },
+                onRemoveCallback = list =>
+                {
+                    var index = list.index;
+                    list.list.RemoveAt(index);
+                    ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, index);
+                    m_Apply();
+                    list.index = -1;
+                },
+                onReorderCallbackWithDetails = (list, oldIndex, newIndex) =>
+                {
+                    MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex],
+                        ref m_ParametersForEachListItem[newIndex]);
+                    m_Apply();
+                },
+                onSelectCallback = OnSelection
             };
-            m_ListView.onRemoveCallback =
-                (list) =>
-            {
-                list.list.RemoveAt(list.index);
-                m_Apply();
-                list.index = -1;
-            };
-            m_ListView.onReorderCallback = list => { m_Apply(); };
-            m_ListView.onSelectCallback = OnSelection;
         }
 
         protected abstract TypeTable GetOptions();
-        protected abstract void AddElement(object data);
-        protected abstract string GetSeparator();
 
-        void OnSelection(ReorderableList list)
+        private void OnAddElement(object data)
         {
-            if (list.index < 0)
-            {
-                m_SelectedRow = null;
-                return;
-            }
-            m_SelectedRow = (string)list.list[list.index];
-            m_NamesAndParams = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue);
-            m_SelectedParameterList = GetFieldsFromClass();
+            var name = (string)data;
+
+            if (m_ListItems.Count == 1 && m_ListItems[0] == "")
+                m_ListItems.Clear();
+
+            m_ListItems.Add(name);
+            ArrayHelpers.Append(ref m_ParametersForEachListItem,
+                new InputControlLayout.NameAndParameters {name = name});
+            m_Apply();
         }
 
-        InputControlLayout.ParameterValue[] GetFieldsFromClass()
+        private void OnParametersChanged()
         {
-            var resultParameters = new List<InputControlLayout.ParameterValue>();
-            var serializedParameters = new List<InputControlLayout.ParameterValue>();
+            var selected = m_ListView.index;
+            if (selected < 0)
+                return;
 
-            int idx = Array.FindIndex(m_NamesAndParams, a => a.name == m_SelectedRow);
-            if (idx >= 0)
+            m_ParametersForEachListItem[selected] = new InputControlLayout.NameAndParameters
             {
-                serializedParameters.AddRange(m_NamesAndParams[idx].parameters);
+                name = m_ListItems[selected],
+                parameters = m_EditableParametersForSelectedItem.GetParameters(),
+            };
+
+            m_Apply();
+        }
+
+        private void OnSelection(ReorderableList list)
+        {
+            var index = list.index;
+            if (index < 0)
+            {
+                m_EditableParametersForSelectedItem.Clear();
+                return;
             }
 
-            var rowType =  m_ListOptions.LookupTypeRegistration(m_SelectedRow);
-            var fields = rowType.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var field in fields)
-            {
-                idx = serializedParameters.FindIndex(a => a.name == field.Name);
-                if (idx >= 0)
-                {
-                    resultParameters.Add(serializedParameters[idx]);
-                }
-                else
-                {
-                    var paramValue = new InputControlLayout.ParameterValue();
-                    paramValue.name = field.Name;
+            var typeName = m_ListItems[index];
+            var rowType =  m_ListOptions.LookupTypeRegistration(typeName);
+            Debug.Assert(rowType != null);
 
-                    if (field.FieldType == typeof(bool))
-                        paramValue.type = InputControlLayout.ParameterType.Boolean;
-                    else if (field.FieldType == typeof(int))
-                        paramValue.type = InputControlLayout.ParameterType.Integer;
-                    else if (field.FieldType == typeof(float))
-                        paramValue.type = InputControlLayout.ParameterType.Float;
-
-                    resultParameters.Add(paramValue);
-                }
-            }
-            return resultParameters.ToArray();
+            m_EditableParametersForSelectedItem.Initialize(rowType, m_ParametersForEachListItem[index].parameters);
         }
 
         public void OnGUI()
@@ -179,65 +134,34 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             var listRect = GUILayoutUtility.GetRect(200, m_ListView.GetHeight());
             listRect = EditorGUI.IndentedRect(listRect);
             m_ListView.DoList(listRect);
-
-            if (m_ListView.index >= 0)
-            {
-                for (var i = 0; i < m_SelectedParameterList.Length; i++)
-                {
-                    var parameterValue = m_SelectedParameterList[i];
-                    EditorGUI.BeginChangeCheck();
-
-                    ////TODO: need to detect when value is at default
-
-                    string result = null;
-                    if (parameterValue.type == InputControlLayout.ParameterType.Integer)
-                    {
-                        var intValue = int.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.IntField(ObjectNames.NicifyVariableName(parameterValue.name), intValue).ToString();
-                    }
-                    else if (parameterValue.type == InputControlLayout.ParameterType.Float)
-                    {
-                        var floatValue = float.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.FloatField(ObjectNames.NicifyVariableName(parameterValue.name), floatValue).ToString();
-                    }
-                    else if (parameterValue.type == InputControlLayout.ParameterType.Boolean)
-                    {
-                        var boolValue = bool.Parse(parameterValue.GetValueAsString());
-                        result = EditorGUILayout.Toggle(ObjectNames.NicifyVariableName(parameterValue.name), boolValue).ToString();
-                    }
-
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        m_SelectedParameterList[i].SetValue(result);
-                        m_Apply();
-                    }
-                }
-            }
+            m_EditableParametersForSelectedItem.OnGUI();
         }
 
         public string ToSerializableString()
         {
-            var resultList = new List<string>();
-            foreach (string listElement in m_ListView.list)
+            return string.Join(InputControlLayout.kSeparatorString,
+                m_ParametersForEachListItem.Select(x => x.ToString()).ToArray());
+        }
+
+        private List<string> m_ListItems;
+        private ReorderableList m_ListView;
+        private SerializedProperty m_Property;
+        private TypeTable m_ListOptions;
+
+        private InputControlLayout.NameAndParameters[] m_ParametersForEachListItem;
+        private ParameterListView m_EditableParametersForSelectedItem;
+        private Action m_Apply;
+
+        private struct EditableParameterValue
+        {
+            public InputControlLayout.ParameterValue value;
+            public int[] enumValues;
+            public string[] enumNames;
+
+            public bool isEnum
             {
-                var idx = Array.FindIndex(m_NamesAndParams, a => a.name == listElement);
-                if (idx >= 0)
-                {
-                    var param = m_NamesAndParams[idx];
-                    var fieldWithValuesList = param.parameters.Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
-                    if (m_SelectedRow == m_NamesAndParams[idx].name)
-                    {
-                        fieldWithValuesList = m_SelectedParameterList.Where(a => !a.IsDefaultValue()).Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
-                    }
-                    var fieldWithValues = string.Join(",", fieldWithValuesList.ToArray());
-                    resultList.Add(string.Format("{0}({1})", param.name, fieldWithValues));
-                }
-                else
-                {
-                    resultList.Add(listElement + "()");
-                }
+                get { return enumValues != null; }
             }
-            return string.Join(GetSeparator(), resultList.ToArray());
         }
     }
 }

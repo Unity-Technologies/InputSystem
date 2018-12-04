@@ -369,7 +369,7 @@ internal class AndroidTests : InputTestFixture
         InputEventPtr stateEventPtr;
         using (StateEvent.From(device, out stateEventPtr))
         {
-            control.WriteValueInto(stateEventPtr, 0.123f);
+            control.WriteValueIntoEvent(0.123f, stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -390,7 +390,7 @@ internal class AndroidTests : InputTestFixture
         InputEventPtr stateEventPtr;
         using (StateEvent.From(device, out stateEventPtr))
         {
-            control.WriteValueInto(stateEventPtr, 5);
+            control.WriteValueIntoEvent(5, stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -402,26 +402,37 @@ internal class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    [TestCase("AndroidAccelerometer", "acceleration")]
-    [TestCase("AndroidMagneticField", "magneticField")]
-    public void Devices_SupportSensorsWithVector3Control(string layoutName, string controlName)
+    [TestCase("AndroidAccelerometer", "acceleration", true, true)]
+    [TestCase("AndroidMagneticField", "magneticField", false, false)]
+    [TestCase("AndroidGyroscope", "angularVelocity", false, true)]
+    public void Devices_SupportSensorsWithVector3Control(string layoutName, string controlName, bool isAffectedByGravity, bool isAffectedByOrientation)
     {
+        const float kSensorStandardGravity = 9.80665f;
+        const float kMultiplier = -1.0f / kSensorStandardGravity;
+
         var device = InputSystem.AddDevice(layoutName);
         var control = (Vector3Control)device[controlName];
 
         InputEventPtr stateEventPtr;
         using (StateEvent.From(device, out stateEventPtr))
         {
-            ////FIXME: Seems like written value doesn't through processor, for ex, AndroidCompensateDirectionProcessor
-            control.WriteValueInto(stateEventPtr, new Vector3(0.1f, 0.2f, 0.3f));
+            var value = new Vector3(0.1f, 0.2f, 0.3f);
+            ////FIXME: Seems like written value doesn't through processor, for ex, AndroidCompensateDirectionProcessor, thus we need to manually apply preprocessing
+            if (isAffectedByGravity)
+                control.WriteValueIntoEvent(value / kMultiplier, stateEventPtr);
+            else
+                control.WriteValueIntoEvent(value, stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.Update();
 
-            Assert.That(control.x.ReadValue(), Is.EqualTo(0.1f).Within(0.000001));
-            Assert.That(control.y.ReadValue(), Is.EqualTo(0.2f).Within(0.000001));
-            Assert.That(control.z.ReadValue(), Is.EqualTo(0.3f).Within(0.000001));
+            runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
+            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            Assert.That(control.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
+
+            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            Assert.That(control.ReadValue(), Is.EqualTo(isAffectedByOrientation ? new Vector3(-value.y, value.x, value.z) : value).Using(Vector3EqualityComparer.Instance));
         }
     }
 
@@ -440,7 +451,7 @@ internal class AndroidTests : InputTestFixture
             var q = Quaternion.Euler(rotation);
 
             // The 4th value is ignored and is calculated from other three
-            control.WriteValueInto(stateEventPtr, new Quaternion(q.x, q.y, q.z, 1234567.0f));
+            control.WriteValueIntoEvent(new Quaternion(q.x, q.y, q.z, 1234567.0f), stateEventPtr);
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);

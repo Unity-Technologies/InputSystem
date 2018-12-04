@@ -392,9 +392,9 @@ internal class UITests : InputTestFixture
         using (StateEvent.From(trackedDevice, out stateEvent))
         {
             // Reset to Defaults
-            trackedDevice.position.WriteValueInto(stateEvent, Vector3.zero);
-            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, -90.0f, 0.0f));
-            trackedDevice.select.WriteValueInto(stateEvent, (byte)0);
+            trackedDevice.position.WriteValueIntoEvent(Vector3.zero, stateEvent);
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
 
@@ -402,7 +402,7 @@ internal class UITests : InputTestFixture
             rightChildReceiver.Reset();
 
             // Move over left child.
-            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, -30.0f, 0.0f));
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
             eventSystem.InvokeUpdate();
@@ -413,9 +413,9 @@ internal class UITests : InputTestFixture
             Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
             // Check basic down/up
-            trackedDevice.select.WriteValueInto(stateEvent, byte.MaxValue);
+            trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            trackedDevice.select.WriteValueInto(stateEvent, (byte)0);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
             eventSystem.InvokeUpdate();
@@ -429,7 +429,7 @@ internal class UITests : InputTestFixture
             Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
             // Check down and drag
-            trackedDevice.select.WriteValueInto(stateEvent, byte.MaxValue);
+            trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
             eventSystem.InvokeUpdate();
@@ -441,7 +441,7 @@ internal class UITests : InputTestFixture
             Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
             // Move to new location on left child
-            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, -10.0f, 0.0f));
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -10.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
             eventSystem.InvokeUpdate();
@@ -453,7 +453,7 @@ internal class UITests : InputTestFixture
             Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
             // Move children
-            trackedDevice.orientation.WriteValueInto(stateEvent, Quaternion.Euler(0.0f, 30.0f, 0.0f));
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
             eventSystem.InvokeUpdate();
@@ -466,7 +466,7 @@ internal class UITests : InputTestFixture
             Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
             rightChildReceiver.Reset();
 
-            trackedDevice.select.WriteValueInto(stateEvent, (byte)0);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update();
             eventSystem.InvokeUpdate();

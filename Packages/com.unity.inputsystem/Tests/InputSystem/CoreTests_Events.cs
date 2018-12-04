@@ -168,10 +168,10 @@ partial class CoreTests
         {
             float xVal;
             float yVal;
-            Assert.IsTrue(mouse.delta.x.ReadValueFrom(eventPtr, out xVal));
+            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out xVal));
             Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
 
-            Assert.IsTrue(mouse.delta.y.ReadValueFrom(eventPtr, out yVal));
+            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out yVal));
             Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
@@ -497,14 +497,14 @@ partial class CoreTests
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
-                StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[0])->state, UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
             Assert.That(events[1].deviceId, Is.EqualTo(device.id));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
-                StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[1])->state, UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
     }
 
@@ -755,7 +755,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanDetectWhetherControlIsPartOfEvent()
+    public unsafe void Events_CanDetectWhetherControlIsPartOfEvent()
     {
         // We use a mouse here as it has several controls that are "parked" outside MouseState.
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -767,13 +767,13 @@ partial class CoreTests
             // return IntPtr.Zero.
             if (eventPtr.IsA<StateEvent>())
             {
-                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
-                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr) != null);
+                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr) == null);
             }
             else if (eventPtr.IsA<DeltaStateEvent>())
             {
-                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr), Is.Not.EqualTo(IntPtr.Zero));
-                Assert.That(mouse.leftButton.GetStatePtrFromStateEvent(eventPtr), Is.EqualTo(IntPtr.Zero));
+                Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr) != null);
+                Assert.That(mouse.leftButton.GetStatePtrFromStateEvent(eventPtr) == null);
             }
             else
             {
@@ -849,12 +849,12 @@ partial class CoreTests
             using (var buffer = new InputEventBuffer())
             {
                 // Write two events into buffer.
-                gamepad.leftStick.WriteValueInto(eventPtr, Vector2.one);
+                gamepad.leftStick.WriteValueIntoEvent(Vector2.one, eventPtr);
                 eventPtr.id = 111;
                 eventPtr.time = 123;
                 eventPtr.handled = false;
                 buffer.AppendEvent(eventPtr);
-                gamepad.leftStick.WriteValueInto(eventPtr, Vector2.zero);
+                gamepad.leftStick.WriteValueIntoEvent(Vector2.zero, eventPtr);
                 eventPtr.id = 222;
                 eventPtr.time = 234;
                 eventPtr.handled = true;
@@ -874,8 +874,8 @@ partial class CoreTests
                 Assert.That(events[1].handled, Is.True);
                 Assert.That(events[0].deviceId, Is.EqualTo(gamepad.id));
                 Assert.That(events[1].deviceId, Is.EqualTo(gamepad.id));
-                Assert.That(gamepad.leftStick.ReadUnprocessedValueFrom(events[0]), Is.EqualTo(Vector2.one));
-                Assert.That(gamepad.leftStick.ReadUnprocessedValueFrom(events[1]), Is.EqualTo(Vector2.zero));
+                Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[0]), Is.EqualTo(Vector2.one));
+                Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[1]), Is.EqualTo(Vector2.zero));
             }
         }
     }

@@ -93,6 +93,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         Action<int, string> onDeviceDiscovered { set; }
 
+        Action<bool> onFocusChanged { set; }
+
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
         /// </summary>

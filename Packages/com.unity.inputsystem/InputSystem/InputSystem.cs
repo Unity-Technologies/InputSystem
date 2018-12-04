@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -25,6 +24,10 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
+
+////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
+
 ////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
 ////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
 ////       simply start losing input but it won't grow infinitely
@@ -45,13 +48,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native allocations when exiting
-
-[assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
-
-// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
-// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
-//       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.12")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -517,7 +513,7 @@ namespace UnityEngine.Experimental.Input
         ///                 Debug.Log("Device removed: " + device);
         ///                 break;
         ///             case InputDeviceChange.ConfigurationChanged:
-        ///                 Debug.Log("Device coniguration changed: " + device);
+        ///                 Debug.Log("Device configuration changed: " + device);
         ///                 break;
         ///         }
         ///     };
@@ -529,6 +525,20 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        /// <summary>
+        /// Event that is signalled when a <see cref="InputDeviceCommand"/> is sent to
+        /// an <see cref="InputDevice"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to intercept commands and optionally handle them without them reaching
+        /// the <see cref="IInputRuntime"/>.
+        ///
+        /// The first delegate in the list that returns a result other than <c>null</c> is considered
+        /// to have handled the command. If a command is handled by a delegate in the list, it will
+        /// not be sent on to the runtime.
+        /// </remarks>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
+        /// <seealso cref="IInputRuntime.DeviceCommand"/>
         public static event InputDeviceCommandDelegate onDeviceCommand
         {
             add { s_Manager.onDeviceCommand += value; }
@@ -689,10 +699,10 @@ namespace UnityEngine.Experimental.Input
                 if (deviceOfType == null)
                     continue;
 
-                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
                     result = deviceOfType;
-                    lastUpdateTime = result.lastUpdateTime;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
 
@@ -712,10 +722,10 @@ namespace UnityEngine.Experimental.Input
                 if (!deviceOfType.usages.Contains(usage))
                     continue;
 
-                if (result == null || deviceOfType.lastUpdateTime > lastUpdateTime)
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
                     result = deviceOfType;
-                    lastUpdateTime = result.lastUpdateTime;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
 
@@ -777,11 +787,24 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        ////REVIEW: should this be a device-level reset along with sending the reset IOCTL
-        ////        or a control-level reset on just the memory state?
-        public static void ResetDevice(InputDevice device)
+        public static bool TrySyncDevice(InputDevice device)
         {
-            throw new NotImplementedException();
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var syncCommand = RequestSyncCommand.Create();
+            long result = device.ExecuteCommand(ref syncCommand);
+            return result >= 0;
+        }
+
+        public static bool TryResetDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var resetCommand = RequestResetCommand.Create();
+            long result = device.ExecuteCommand(ref resetCommand);
+            return result >= 0;
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -911,10 +934,10 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.FindControls("&lt;Gamepad&gt;/*stick");
         ///
         /// // Same but filter stick by type rather than by name.
-        /// InputSystem.FindControls<StickControl>("&lt;Gamepad&gt;/*");
+        /// InputSystem.FindControls&lt;StickControl&gt;("&lt;Gamepad&gt;/*");
         /// </code>
         /// </example>
-        /// <seealso cref="FindControls{TControl}"/>
+        /// <seealso cref="FindControls{TControl}(string)"/>
         /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
         public static InputControlList<InputControl> FindControls(string path)
         {
@@ -1220,6 +1243,34 @@ namespace UnityEngine.Experimental.Input
             get { return s_Manager.updateMask; }
             set { s_Manager.updateMask = value; }
         }
+
+#if UNITY_2018_3_OR_NEWER
+        private const InputUpdateType s_runInBackgroundMask = (InputUpdateType)(1 << 31);
+
+        /// <summary>
+        /// Tells the Input System to run even when the application is in the backgrond, and continue to trigger events and actions regardless of current focus state
+        /// </summary>
+        /// <remarks>
+        /// Off by default, this does not work on all platforms and devices, only those that can recieve their own input data while not in focus.
+        /// </remarks>
+        public static bool runInBackground
+        {
+            get { return (s_Manager.updateMask & s_runInBackgroundMask) != 0; }
+            set
+            {
+                if (runInBackground != value)
+                {
+                    InputUpdateType currentUpdateMask = s_Manager.updateMask;
+                    if (value)
+                        currentUpdateMask |= s_runInBackgroundMask;
+                    else
+                        currentUpdateMask &= ~s_runInBackgroundMask;
+
+                    s_Manager.updateMask = currentUpdateMask;
+                }
+            }
+        }
+#endif
 
         /// <summary>
         /// Event that is fired before the input system updates.
@@ -1603,12 +1654,19 @@ namespace UnityEngine.Experimental.Input
 
         private static void ResetUpdateMask()
         {
+            InputUpdateType newUpdateMask = InputUpdateType.Default;
+
             // Preserve before-render status as that is enabled in accordance with whether we
             // have devices that requested it.
             if ((updateMask & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-                updateMask = InputUpdateType.Default | InputUpdateType.BeforeRender;
-            else
-                updateMask = InputUpdateType.Default;
+                newUpdateMask |= InputUpdateType.BeforeRender;
+
+#if UNITY_2018_3_OR_NEWER
+            if ((updateMask & s_runInBackgroundMask) == s_runInBackgroundMask)
+                newUpdateMask |= s_runInBackgroundMask;
+#endif //#if UNITY_2018_3_OR_NEWER
+
+            updateMask = newUpdateMask;
         }
 
 #else
@@ -1619,16 +1677,16 @@ namespace UnityEngine.Experimental.Input
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance);
 
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
-            #endif
+#endif
 
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
-            #if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
                 SetUpRemoting();
-            #endif
+#endif
 
             // Send an initial Update so that user methods such as Start and Awake
             // can access the input devices prior to their Update methods.
@@ -1664,6 +1722,10 @@ namespace UnityEngine.Experimental.Input
             Plugins.iOS.iOSSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_WEBGL
+            Plugins.WebGL.WebGLSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_SWITCH
             Plugins.Switch.SwitchSupport.Initialize();
             #endif
@@ -1692,6 +1754,14 @@ namespace UnityEngine.Experimental.Input
         internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
             #if UNITY_EDITOR
+
+            // Some devices keep globals. Get rid of them by pretending the devices
+            // are removed.
+            if (s_Manager != null)
+            {
+                foreach (var device in s_Manager.devices)
+                    device.NotifyRemoved();
+            }
 
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance);
@@ -1774,6 +1844,7 @@ namespace UnityEngine.Experimental.Input
                 s_SavedStateStack = new Stack<State>();
 
             ////FIXME: does not preserve global state in InputActionMapState
+            ////TODO: preserve InputUser state
 
             s_SavedStateStack.Push(new State
             {
@@ -1807,6 +1878,11 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.Restore(state.managerState.updateState);
 
             s_Manager.InstallGlobals();
+
+            // Get devices that keep global lists (like Gamepad) to re-initialize them
+            // by pretending the devices have been added.
+            foreach (var device in devices)
+                device.NotifyAdded();
         }
 
 #endif

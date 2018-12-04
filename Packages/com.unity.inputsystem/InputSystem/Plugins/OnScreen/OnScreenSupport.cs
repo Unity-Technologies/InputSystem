@@ -13,7 +13,8 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     {
         public static void Initialize()
         {
-            InputSystem.RegisterLayout<OnScreenKeyboard>();
+            ////TODO: OnScreenKeyboard support
+            //InputSystem.RegisterLayout<OnScreenKeyboard>();
         }
     }
 }
