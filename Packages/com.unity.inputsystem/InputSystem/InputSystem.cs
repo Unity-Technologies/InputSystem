@@ -787,11 +787,24 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        ////REVIEW: should this be a device-level reset along with sending the reset IOCTL
-        ////        or a control-level reset on just the memory state?
-        public static void ResetDevice(InputDevice device)
+        public static bool TrySyncDevice(InputDevice device)
         {
-            throw new NotImplementedException();
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var syncCommand = RequestSyncCommand.Create();
+            long result = device.ExecuteCommand(ref syncCommand);
+            return result >= 0;
+        }
+
+        public static bool TryResetDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var resetCommand = RequestResetCommand.Create();
+            long result = device.ExecuteCommand(ref resetCommand);
+            return result >= 0;
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -1231,6 +1244,34 @@ namespace UnityEngine.Experimental.Input
             set { s_Manager.updateMask = value; }
         }
 
+#if UNITY_2018_3_OR_NEWER
+        private const InputUpdateType s_runInBackgroundMask = (InputUpdateType)(1 << 31);
+
+        /// <summary>
+        /// Tells the Input System to run even when the application is in the backgrond, and continue to trigger events and actions regardless of current focus state
+        /// </summary>
+        /// <remarks>
+        /// Off by default, this does not work on all platforms and devices, only those that can recieve their own input data while not in focus.
+        /// </remarks>
+        public static bool runInBackground
+        {
+            get { return (s_Manager.updateMask & s_runInBackgroundMask) != 0; }
+            set
+            {
+                if (runInBackground != value)
+                {
+                    InputUpdateType currentUpdateMask = s_Manager.updateMask;
+                    if (value)
+                        currentUpdateMask |= s_runInBackgroundMask;
+                    else
+                        currentUpdateMask &= ~s_runInBackgroundMask;
+
+                    s_Manager.updateMask = currentUpdateMask;
+                }
+            }
+        }
+#endif
+
         /// <summary>
         /// Event that is fired before the input system updates.
         /// </summary>
@@ -1613,12 +1654,19 @@ namespace UnityEngine.Experimental.Input
 
         private static void ResetUpdateMask()
         {
+            InputUpdateType newUpdateMask = InputUpdateType.Default;
+
             // Preserve before-render status as that is enabled in accordance with whether we
             // have devices that requested it.
             if ((updateMask & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-                updateMask = InputUpdateType.Default | InputUpdateType.BeforeRender;
-            else
-                updateMask = InputUpdateType.Default;
+                newUpdateMask |= InputUpdateType.BeforeRender;
+
+#if UNITY_2018_3_OR_NEWER
+            if ((updateMask & s_runInBackgroundMask) == s_runInBackgroundMask)
+                newUpdateMask |= s_runInBackgroundMask;
+#endif //#if UNITY_2018_3_OR_NEWER
+
+            updateMask = newUpdateMask;
         }
 
 #else
@@ -1629,16 +1677,16 @@ namespace UnityEngine.Experimental.Input
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance);
 
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
-            #endif
+#endif
 
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
-            #if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
                 SetUpRemoting();
-            #endif
+#endif
 
             // Send an initial Update so that user methods such as Start and Awake
             // can access the input devices prior to their Update methods.

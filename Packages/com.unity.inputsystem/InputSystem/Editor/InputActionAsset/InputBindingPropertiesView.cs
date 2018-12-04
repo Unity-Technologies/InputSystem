@@ -40,7 +40,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private Action m_OnChange;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
-        private AdvancedDropdownState m_ControlPickerState;
+        private InputControlPickerState m_ControlPickerState;
         private InputControlPickerDropdown m_InputControlPickerDropdown;
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
@@ -58,6 +58,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionWindowToolbar m_Toolbar;
         private string m_ExpectedControlLayout;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
+        private InputControlPickerPopup m_InputControlPickerPopup;
 
         public bool isCompositeBinding { get; set; }
 
@@ -72,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action onChange,
-                                          AdvancedDropdownState controlPickerState, InputActionWindowToolbar toolbar,
+            InputControlPickerState controlPickerState, InputActionWindowToolbar toolbar,
                                           string expectedControlLayout = null)
         {
             m_ControlPickerState = controlPickerState;
@@ -89,6 +90,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ControlSchemes = toolbar.controlSchemes;
             m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
+            m_InputControlPickerPopup = new InputControlPickerPopup(m_PathProperty, controlPickerState, onChange, DrawInteractivePickButton);
         }
 
         public void CancelInteractivePicking()
@@ -147,7 +149,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_GeneralFoldout)
             {
                 DrawBindingGUI(m_PathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
-                    s =>
+                    () =>
                     {
                         m_ManualPathEditMode = false;
                         OnBindingModified();
@@ -205,7 +207,7 @@ namespace UnityEngine.Experimental.Input.Editor
         ////      candidates for user to choose from
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
-        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, AdvancedDropdownState pickerState, Action<SerializedProperty> onModified)
+        internal void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, InputControlPickerState pickerState, Action onModified)
         {
             EditorGUILayout.BeginHorizontal();
 
@@ -240,7 +242,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     pathProperty.stringValue = path;
                     pathProperty.serializedObject.ApplyModifiedProperties();
-                    onModified(pathProperty);
+                    onModified();
                 }
                 DrawInteractivePickButton(interactivePickButtonRect, pathProperty, onModified);
                 if (GUI.Button(editButtonRect, "˅"))
@@ -272,7 +274,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private void DrawInteractivePickButton(Rect rect, SerializedProperty pathProperty, Action<SerializedProperty> onModified)
+        private void DrawInteractivePickButton(Rect rect, SerializedProperty pathProperty, Action onModified)
         {
             ////FIXME: need to suppress triggering shortcuts in the editor while doing rebinds
             ////TODO: need to have good way to cancel binding
@@ -306,7 +308,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         {
                             pathProperty.stringValue = newPath;
                             pathProperty.serializedObject.ApplyModifiedProperties();
-                            onModified(pathProperty);
+                            onModified();
                         });
 
                 // For all control schemes that the binding is part of, constrain what we pick
@@ -335,12 +337,12 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, AdvancedDropdownState pickerState,
-            Action<SerializedProperty> onPickCallback)
+        private void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, InputControlPickerState pickerState,
+            Action onPickCallback)
         {
             if (m_InputControlPickerDropdown == null)
             {
-                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState, pathProperty, onPickCallback);
+                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState.state, pathProperty, onPickCallback);
             }
 
             if (m_Toolbar != null)

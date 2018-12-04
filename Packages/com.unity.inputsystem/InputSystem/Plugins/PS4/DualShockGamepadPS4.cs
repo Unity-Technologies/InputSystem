@@ -10,7 +10,7 @@ using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
 
 ////TODO: player ID
-
+#pragma warning disable 0649
 namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
