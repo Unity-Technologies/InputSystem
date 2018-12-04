@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class TouchForInputSystem : MonoBehaviour
+public class TouchISX : MonoBehaviour
 {
     [Tooltip("The Gameobject holds all the highlight objects for Input System")]
     public Transform m_HighlightPool;
@@ -13,6 +13,7 @@ public class TouchForInputSystem : MonoBehaviour
 
     private InputAction m_touchAction;
 
+    // Use this for initialization
     void Start()
     {
         m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
