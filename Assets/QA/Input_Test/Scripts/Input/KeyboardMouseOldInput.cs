@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class KeyboardMouseForInputManager : MonoBehaviour
+public class KeyboardMouseOldInput : MonoBehaviour
 {
     [Tooltip("Highlight Prefab")]
     public ParticleSystem m_keyHighlight;
