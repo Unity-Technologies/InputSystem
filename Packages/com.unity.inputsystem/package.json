@@ -1,7 +1,7 @@
 {
 	"name": "com.unity.inputsystem",
 	"displayName": "Input System",
-	"version": "0.0.12-preview",
+	"version": "0.0.13-preview",
 	"unity": "2018.2",
 	"description": "A new input system.",
 	"keywords": [
