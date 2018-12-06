@@ -27,6 +27,11 @@ public class ScreenKeyboardTest : MonoBehaviour
     public InputField m_OldKeyboardStatus;
     public InputField m_OldKeyboardInputField;
 
+    public GameObject m_Info;
+    public GameObject m_Log;
+
+    public Text m_LogText;
+
     ScreenKeyboard m_ScreenKeyboard;
     // Start is called before the first frame update
 
@@ -36,13 +41,31 @@ public class ScreenKeyboardTest : MonoBehaviour
     {
         m_ScreenKeyboard = ScreenKeyboard.GetInstance();
         m_KeyboardTypeDropDown.ClearOptions();
-    
+
+        m_ScreenKeyboard.statusChanged += StatusChangedCallback;
+        m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextChanged;
+
+
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
         {
             m_KeyboardTypeDropDown.options.Add(new Dropdown.OptionData(t.ToString()));
         }
         m_KeyboardTypeDropDown.RefreshShownValue();
+
+        m_LogText.text = "";
+
+
+    }
+
+    private void InputFieldTextChanged(string text)
+    {
+        m_LogText.text += "Input: " + text + Environment.NewLine;
+    }
+
+    private void StatusChangedCallback(ScreenKeyboardStatus status)
+    {
+        m_LogText.text += "Status: " + status + Environment.NewLine;
     }
 
     // Update is called once per frame
@@ -95,6 +118,18 @@ public class ScreenKeyboardTest : MonoBehaviour
             m_KeyboardSecure.isOn,
             m_KeyboardAlert.isOn,
             "No placeholder");
+    }
+
+    public void ShowInfo()
+    {
+        m_Info.SetActive(true);
+        m_Log.SetActive(false);
+    }
+
+    public void ShowLog()
+    {
+        m_Info.SetActive(false);
+        m_Log.SetActive(true);
     }
 
     public void Hide()
