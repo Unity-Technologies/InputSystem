@@ -50,7 +50,6 @@ static const unsigned       kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical 
     BOOL            _inputHidden;
     BOOL            _active;
     KeyboardStatus          _status;
-    int             _characterLimit;
     
     // not pretty but seems like easiest way to keep "we are rotating" status
     BOOL            _rotating;
@@ -77,7 +76,7 @@ static const unsigned       kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical 
         // TODO
         //UnityKeyboard_StatusChanged(_status);
     }
-    [self hide];
+    [self Hide];
 }
 
 - (void)textInputCancel:(id)sender
@@ -85,7 +84,7 @@ static const unsigned       kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical 
     _status = Canceled;
     // TODO
     //UnityKeyboard_StatusChanged(_status);
-    [self hide];
+    [self Hide];
 }
 
 - (void)textInputLostFocus
@@ -96,7 +95,7 @@ static const unsigned       kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical 
         // TODO
         //UnityKeyboard_StatusChanged(_status);
     }
-    [self hide];
+    [self Hide];
 }
 
 - (void)textViewDidChange:(UITextView *)textView
@@ -174,6 +173,86 @@ static const unsigned       kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical 
         s_Keyboard = [[iOSScreenKeyboardDelegate alloc] init];
     
     return s_Keyboard;
+}
+
+- (void)Show:(iOSScreenKeyboardShowParamsNative)param :(const char*)initialTextCStr :(const char*)placeholderTextCStr
+{
+    if (!editView.hidden)
+    {
+        [NSObject cancelPreviousPerformRequestsWithTarget: self];
+        if (cachedKeyboardParam.multiline != param.multiline ||
+            cachedKeyboardParam.secure != param.secure ||
+            cachedKeyboardParam.keyboardType != param.keyboardType ||
+            cachedKeyboardParam.autocorrectionType != param.autocorrectionType ||
+            cachedKeyboardParam.appearance != param.appearance)
+        {
+            [self hideUIDelayed];
+        }
+    }
+    cachedKeyboardParam = param;
+    
+    if (_active)
+        [self Hide];
+    
+    initialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
+    
+    // TODO
+    //_characterLimit = param.characterLimit;
+    
+    UITextAutocapitalizationType capitalization = UITextAutocapitalizationTypeSentences;
+    if (param.keyboardType == UIKeyboardTypeURL || param.keyboardType == UIKeyboardTypeEmailAddress || param.keyboardType == UIKeyboardTypeWebSearch)
+        capitalization = UITextAutocapitalizationTypeNone;
+    
+#if PLATFORM_IOS
+    _multiline = param.multiline;
+    if (_multiline)
+    {
+        textView.text = initialText;
+        [self setTextInputTraits: textView withParam: param withCap: capitalization];
+        
+        UITextPosition* end = [textView endOfDocument];
+        UITextRange* endTextRange = [textView textRangeFromPosition: end toPosition: end];
+        [textView setSelectedTextRange: endTextRange];
+    }
+    else
+    {
+        textField.text = initialText;
+        [self setTextInputTraits: textField withParam: param withCap: capitalization];
+        textField.placeholder = placeholderTextCStr ? [NSString stringWithUTF8String: placeholderTextCStr] : @"";
+        
+        UITextPosition* end = [textField endOfDocument];
+        UITextRange* endTextRange = [textField textRangeFromPosition: end toPosition: end];
+        [textField setSelectedTextRange: endTextRange];
+    }
+    inputView = _multiline ? textView : textField;
+    editView = _multiline ? textView : fieldToolbar;
+    
+#else // PLATFORM_TVOS
+    textField.text = initialText;
+    [self setTextInputTraits: textField withParam: param withCap: capitalization];
+    textField.placeholder = [NSString stringWithUTF8String: param.placeholder];
+    inputView = textField;
+    editView = textField;
+    
+    UITextPosition* end = [textField endOfDocument];
+    UITextRange* endTextRange = [textField textRangeFromPosition: end toPosition: end];
+    [textField setSelectedTextRange: endTextRange];
+#endif
+    
+    // TODO
+    //[self shouldHideInput: _shouldHideInput];
+    
+    _status     = Visible;
+    // TODO
+    //UnityKeyboard_StatusChanged(_status);
+    _active     = YES;
+    
+    [self showUI];
+}
+
+- (void)Hide
+{
+    [self hideUI];
 }
 
 #if PLATFORM_IOS
@@ -268,78 +347,6 @@ i = res.items;                                              \
     traits.autocapitalizationType = capitalization;
 }
 
-- (void)setKeyboardParams:(iOSScreenKeyboardShowParamsNative)param
-{
-    if (!editView.hidden)
-    {
-        [NSObject cancelPreviousPerformRequestsWithTarget: self];
-        if (cachedKeyboardParam.multiline != param.multiline ||
-            cachedKeyboardParam.secure != param.secure ||
-            cachedKeyboardParam.keyboardType != param.keyboardType ||
-            cachedKeyboardParam.autocorrectionType != param.autocorrectionType ||
-            cachedKeyboardParam.appearance != param.appearance)
-        {
-            [self hideUIDelayed];
-        }
-    }
-    cachedKeyboardParam = param;
-    
-    if (_active)
-        [self hide];
-    
-    initialText = param.text ? [[NSString alloc] initWithUTF8String: param.text] : @"";
-    
-    _characterLimit = param.characterLimit;
-    
-    UITextAutocapitalizationType capitalization = UITextAutocapitalizationTypeSentences;
-    if (param.keyboardType == UIKeyboardTypeURL || param.keyboardType == UIKeyboardTypeEmailAddress || param.keyboardType == UIKeyboardTypeWebSearch)
-        capitalization = UITextAutocapitalizationTypeNone;
-    
-#if PLATFORM_IOS
-    _multiline = param.multiline;
-    if (_multiline)
-    {
-        textView.text = initialText;
-        [self setTextInputTraits: textView withParam: param withCap: capitalization];
-        
-        UITextPosition* end = [textView endOfDocument];
-        UITextRange* endTextRange = [textView textRangeFromPosition: end toPosition: end];
-        [textView setSelectedTextRange: endTextRange];
-    }
-    else
-    {
-        textField.text = initialText;
-        [self setTextInputTraits: textField withParam: param withCap: capitalization];
-        textField.placeholder = [NSString stringWithUTF8String: param.placeholder];
-        
-        UITextPosition* end = [textField endOfDocument];
-        UITextRange* endTextRange = [textField textRangeFromPosition: end toPosition: end];
-        [textField setSelectedTextRange: endTextRange];
-    }
-    inputView = _multiline ? textView : textField;
-    editView = _multiline ? textView : fieldToolbar;
-    
-#else // PLATFORM_TVOS
-    textField.text = initialText;
-    [self setTextInputTraits: textField withParam: param withCap: capitalization];
-    textField.placeholder = [NSString stringWithUTF8String: param.placeholder];
-    inputView = textField;
-    editView = textField;
-    
-    UITextPosition* end = [textField endOfDocument];
-    UITextRange* endTextRange = [textField textRangeFromPosition: end toPosition: end];
-    [textField setSelectedTextRange: endTextRange];
-#endif
-    
-    // TODO
-    //[self shouldHideInput: _shouldHideInput];
-    
-    _status     = Visible;
-    // TODO
-    //UnityKeyboard_StatusChanged(_status);
-    _active     = YES;
-}
-
 // we need to show/hide keyboard to react to orientation too, so extract we extract UI fiddling
 
 - (void)showUI
@@ -382,16 +389,6 @@ i = res.items;                                              \
     editView.hidden = YES;
     
     _area = CGRectMake(0, 0, 0, 0);
-}
-
-- (void)show
-{
-    [self showUI];
-}
-
-- (void)hide
-{
-    [self hideUI];
 }
 
 - (void)updateInputHidden

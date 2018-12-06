@@ -4,9 +4,24 @@
 #include "UnityForwardDecls.h"
 #include <string>
 
+// Keep in sync with ScreenKeyboardType from com.unity.inputsystem/InputSystem/Devices/ScreenKeyboard.cs
+enum iOSScreenKeyboardType : int
+{
+    kDefault = 0,
+    kASCIICapable = 1,
+    kNumbersAndPunctuation = 2,
+    kURL = 3,
+    kNumberPad = 4,
+    kPhonePad = 5,
+    kNamePhonePad = 6,
+    kEmailAddress = 7,
+    kSocial = 8,
+    kSearch = 9
+};
+
 struct iOSScreenKeyboardShowParams
 {
-    int type;
+    iOSScreenKeyboardType type;
     const char* initialText;
     const char* placeholderText;
     int autocorrection;
@@ -15,7 +30,54 @@ struct iOSScreenKeyboardShowParams
     int alert;
 };
 
-extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, int sizeOfShowParams)
+typedef void (*OnTextChangedCallback) (const char* text);
+typedef void (*OnStatusChangedCallback) (int status);
+
+struct iOSScreenKeyboardCallbacks
+{
+    OnTextChangedCallback textChangedCallback;
+    OnStatusChangedCallback statusChangedCallback;
+};
+
+struct UnityRect
+{
+    float x;
+    float y;
+    float width;
+    float height;
+};
+
+UIKeyboardType GetUIKeyboardType(iOSScreenKeyboardType type)
+{
+    switch (type)
+    {
+        case kDefault:
+            return UIKeyboardTypeDefault;
+        case kASCIICapable:
+            return UIKeyboardTypeASCIICapable;
+        case kNumbersAndPunctuation:
+            return UIKeyboardTypeNumbersAndPunctuation;
+        case kURL:
+            return UIKeyboardTypeURL;
+        case kNumberPad:
+            return UIKeyboardTypeNumberPad;
+        case kPhonePad:
+            return UIKeyboardTypePhonePad;
+        case kNamePhonePad:
+            return UIKeyboardTypeNamePhonePad;
+        case kEmailAddress:
+            return UIKeyboardTypeEmailAddress;
+        case kSocial:
+            return UIKeyboardTypeTwitter;
+        case kSearch:
+            return UIKeyboardTypeWebSearch;
+        default:
+            NSLog(@"Unknown keyboard type: %d", type);
+            return UIKeyboardTypeDefault;
+    }
+}
+
+extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, int sizeOfShowParams, iOSScreenKeyboardCallbacks* callbacks, int sizeOfCallbacks)
 {
     if (sizeof(iOSScreenKeyboardShowParams) != sizeOfShowParams)
     {
@@ -23,40 +85,33 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         return;
     }
     
-    
-#if PLATFORM_TVOS
-    // Not supported. The API for showing keyboard for editing multi-line text
-    // is not available on tvOS
-    multiline = false;
-#endif
-    
-    static const UIKeyboardType keyboardTypes[] =
+    if (sizeof(iOSScreenKeyboardCallbacks) != sizeOfCallbacks)
     {
-        UIKeyboardTypeDefault,
-        UIKeyboardTypeASCIICapable,
-        UIKeyboardTypeNumbersAndPunctuation,
-        UIKeyboardTypeURL,
-        UIKeyboardTypeNumberPad,
-        UIKeyboardTypePhonePad,
-        UIKeyboardTypeNamePhonePad,
-        UIKeyboardTypeEmailAddress,
-        UIKeyboardTypeDefault, // Default is used in case Wii U specific NintendoNetworkAccount type is selected (indexed at 8 in UnityEngine.TouchScreenKeyboardType)
-        UIKeyboardTypeTwitter,
-        UIKeyboardTypeWebSearch
-    };
-    
+        NSLog(@"iOSScreenKeyboardCallbacks size mismatch, expected %lu was %d", sizeof(iOSScreenKeyboardCallbacks), sizeOfCallbacks);
+        return;
+    }
     
     iOSScreenKeyboardShowParamsNative param =
     {
-        // TODO is it safe to pass char pointers?
-        showParams->initialText, showParams->placeholderText,
-        keyboardTypes[showParams->type],
+        GetUIKeyboardType(showParams->type),
         showParams->autocorrection ? UITextAutocorrectionTypeDefault : UITextAutocorrectionTypeNo,
         showParams->alert ? UIKeyboardAppearanceAlert : UIKeyboardAppearanceDefault,
-        (BOOL)showParams->multiline, (BOOL)showParams->secure,
-        0 //TODO
+#if PLATFORM_TVOS
+        //The API for showing keyboard for editing multi-line text is not available on tvOS
+        FALSE,
+#else
+        (BOOL)showParams->multiline,
+#endif
+        (BOOL)showParams->secure
     };
     
-    [[iOSScreenKeyboardDelegate Instance] setKeyboardParams: param];
-    [[iOSScreenKeyboardDelegate Instance] show];
+    [[iOSScreenKeyboardDelegate Instance] Show :param :showParams->initialText :showParams->placeholderText];
 }
+
+extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
+{
+    CGRect rc = [iOSScreenKeyboardDelegate Instance].area;
+    UnityRect unityRC = {(float)rc.origin.x, (float)rc.origin.y, (float)rc.size.width, (float)rc.size.height};
+    return unityRC;
+}
+

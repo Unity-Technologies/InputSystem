@@ -3,16 +3,12 @@
 
 struct iOSScreenKeyboardShowParamsNative
 {
-    const char* text;
-    const char* placeholder;
-    
     UIKeyboardType              keyboardType;
     UITextAutocorrectionType    autocorrectionType;
     UIKeyboardAppearance        appearance;
     
     BOOL multiline;
     BOOL secure;
-    int characterLimit;
 };
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
@@ -20,6 +16,11 @@ struct iOSScreenKeyboardShowParamsNative
 + (void)Initialize;
 + (iOSScreenKeyboardDelegate*)Instance;
 
+- (void)Show:(iOSScreenKeyboardShowParamsNative)param :(const char*)initialTextCStr :(const char*)placeholderTextCStr;
+- (void)Hide;
+
+// These are all privates
+/*
 - (BOOL)textFieldShouldReturn:(UITextField*)textField;
 - (void)textInputDone:(id)sender;
 - (void)textInputCancel:(id)sender;
@@ -34,18 +35,16 @@ struct iOSScreenKeyboardShowParamsNative
 //     keyboard will be created on demand anyway (in Instance method)
 
 - (id)init;
-- (void)setKeyboardParams:(iOSScreenKeyboardShowParamsNative)param;
-- (void)show;
-- (void)hide;
 - (void)positionInput:(CGRect)keyboardRect x:(float)x y:(float)y;
 - (void)shouldHideInput:(BOOL)hide;
 
 + (void)StartReorientation;
 + (void)FinishReorientation;
 
-- (CGRect)queryArea;
+
 - (NSString*)getText;
 - (void)setText:(NSString*)newText;
+ */
 
 @property (readonly, nonatomic, getter = queryArea)               CGRect          area;
 @property (readonly, nonatomic)                                 BOOL            active;
