@@ -14,7 +14,7 @@
                 {
                     "name": "move",
                     "id": "50fd2809-3aa3-4a90-988e-1facf6773553",
-                    "expectedControlLayout": "Stick",
+                    "expectedControlLayout": "Vector2",
                     "bindings": []
                 },
                 {

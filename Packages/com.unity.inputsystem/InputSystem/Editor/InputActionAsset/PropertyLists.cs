@@ -67,6 +67,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                     var index = list.index;
                     list.list.RemoveAt(index);
                     ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, index);
+                    m_EditableParametersForSelectedItem.Clear();
                     m_Apply();
                     list.index = -1;
                 },
@@ -74,6 +75,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 {
                     MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex],
                         ref m_ParametersForEachListItem[newIndex]);
+                    OnSelection(list);
                     m_Apply();
                 },
                 onSelectCallback = OnSelection
@@ -139,6 +141,9 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         public string ToSerializableString()
         {
+            if (m_ParametersForEachListItem == null)
+                return string.Empty;
+
             return string.Join(InputControlLayout.kSeparatorString,
                 m_ParametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
@@ -151,18 +156,6 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         private InputControlLayout.NameAndParameters[] m_ParametersForEachListItem;
         private ParameterListView m_EditableParametersForSelectedItem;
         private Action m_Apply;
-
-        private struct EditableParameterValue
-        {
-            public InputControlLayout.ParameterValue value;
-            public int[] enumValues;
-            public string[] enumNames;
-
-            public bool isEnum
-            {
-                get { return enumValues != null; }
-            }
-        }
     }
 }
 #endif // UNITY_EDITOR

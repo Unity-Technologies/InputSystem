@@ -224,7 +224,7 @@ public class KeyboardMouseISX : MonoBehaviour
     private void ShowMessage(string msg)
     {
         m_MessageWindow.text += "<color=red>" + msg + "</color>\n";
-    }    
+    }
 
     // From "KeyboardLastKey" by @Rene
     private String StringForNonPrintable(char ascii)

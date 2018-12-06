@@ -1,28 +1,27 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class JoystickISX : MonoBehaviour {
-
-
-
+public class JoystickISX : MonoBehaviour
+{
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
 
     private InputAction m_stickAction;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         m_stickAction = new InputAction(name: "StickAction", binding: "<joystick>/<stick>");
         m_stickAction.performed += callbackContext => OnStickMove(callbackContext.control as StickControl);
         m_stickAction.Enable();
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+    }
 
     private void OnStickMove(StickControl control)
     {

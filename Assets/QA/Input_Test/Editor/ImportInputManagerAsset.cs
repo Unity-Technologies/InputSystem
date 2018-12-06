@@ -1,10 +1,10 @@
-﻿using System.IO;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
 [InitializeOnLoad]
-public class ImportInputManagerAsset {
-
+public class ImportInputManagerAsset
+{
     static private string m_inputTestAssetFile = "InputTest_InputManager.asset.backup";
     static private string m_defaultAssetFile = "default_InputManager.asset.backup";
     static private string m_inputAssetFile = "InputManager.asset";
@@ -30,7 +30,7 @@ public class ImportInputManagerAsset {
     static void RevertToDefaultInputAsset()
     {
         File.Copy(m_defaultAssetFile, m_inputAssetFile, true);
-        File.Delete(m_defaultAssetFile);        
+        File.Delete(m_defaultAssetFile);
         //FileUtil.ReplaceFile("Assets/QA/Input_Test/Editor/default_InputManager.asset", "ProjectSettings/InputManager.asset");
         //FileUtil.DeleteFileOrDirectory("Assets/QA/Input_Test/Editor/default_InputManager.asset");
     }
@@ -48,6 +48,4 @@ public class ImportInputManagerAsset {
         m_defaultAssetFile = Path.GetFullPath(Application.dataPath + "/QA/Input_Test/Editor/" + m_defaultAssetFile);
         m_inputAssetFile = Path.GetFullPath(Directory.GetCurrentDirectory() + "/ProjectSettings/" + m_inputAssetFile);
     }
-	
-	
 }

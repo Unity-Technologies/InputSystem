@@ -38,8 +38,7 @@ public class ControllerDiagramOldInput : GamepadOldInput
         axis.GetComponent<TextMesh>().text = value.ToString("F2");
 
         if (value != 0f)
-            RemoveTransparency(axis);  
-        
+            RemoveTransparency(axis);
     }
 
     private void RemoveTransparency(Transform controlTrans)
