@@ -15,12 +15,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
             void OnTextChanged(string text)
             {
-                Debug.Log("OnTextChanged: " + text);
-                // TODO: fix this
-                for (var i = 0; i < m_Parent.m_TextInputListeners.length; ++i)
-                {
-                    m_Parent.m_TextInputListeners[i](text[0]);
-                }
+                m_Parent.ChangeInputFieldText(text);
             }
 
             void OnStatusChanged(int status)

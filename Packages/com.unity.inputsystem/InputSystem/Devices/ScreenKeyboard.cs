@@ -51,6 +51,7 @@ namespace UnityEngine.Experimental.Input
 
         internal ScreenKeyboardStatus m_Status;
         internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
+        internal InlinedArray<Action<string>> m_InputFieldTextListeners;
 
         public static ScreenKeyboard GetInstance()
         {
@@ -85,6 +86,18 @@ namespace UnityEngine.Experimental.Input
         {
             add { m_StatusChangedListeners.Append(value); }
             remove { m_StatusChangedListeners.Remove(value); }
+        }
+
+        protected void ChangeInputFieldText(string text)
+        {
+            foreach (var inputFieldTextListener in m_InputFieldTextListeners)
+                inputFieldTextListener(text);
+        }
+
+        public event Action<string> inputFieldTextChanged
+        {
+            add { m_InputFieldTextListeners.Append(value); }
+            remove { m_InputFieldTextListeners.Remove(value); }
         }
 
 
