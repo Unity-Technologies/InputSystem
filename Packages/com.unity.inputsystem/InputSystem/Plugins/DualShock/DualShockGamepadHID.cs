@@ -7,7 +7,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: removing incorrect gyro wiring
+////TODO: remove incorrect gyro wiring
 
 namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 {

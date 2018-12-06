@@ -388,6 +388,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         depth = parent.depth + 1,
                         displayName = namePrefix != null ? device.name.Substring(namePrefix.Length) : device.name,
                         device = device,
+                        icon = EditorInputControlLayoutCache.GetIconForLayout(device.layout),
                     };
                     parent.AddChild(item);
                 }
@@ -414,16 +415,17 @@ namespace UnityEngine.Experimental.Input.Editor
                 foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
                 {
                     var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
-                    if (string.IsNullOrEmpty(rootBaseLayoutName))
-                        rootBaseLayoutName = "Other";
-                    else
-                        rootBaseLayoutName += "s";
+                    var groupName = string.IsNullOrEmpty(rootBaseLayoutName) ? "Other" : rootBaseLayoutName + "s";
 
                     var group = products.children != null
-                        ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
+                        ? products.children.FirstOrDefault(x => x.displayName == groupName)
                         : null;
                     if (group == null)
-                        group = AddChild(products, rootBaseLayoutName, ref id);
+                    {
+                        group = AddChild(products, groupName, ref id);
+                        if (!string.IsNullOrEmpty(rootBaseLayoutName))
+                            group.icon = EditorInputControlLayoutCache.GetIconForLayout(rootBaseLayoutName);
+                    }
 
                     AddControlLayoutItem(layout, group, ref id);
                 }
@@ -443,6 +445,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private TreeViewItem AddControlLayoutItem(InputControlLayout layout, TreeViewItem parent, ref int id)
             {
                 var item = AddChild(parent, layout.name, ref id);
+                item.icon = EditorInputControlLayoutCache.GetIconForLayout(layout.name);
 
                 // Header.
                 AddChild(item, "Type: " + layout.type.Name, ref id);
@@ -490,6 +493,9 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var item = AddChild(parent, control.variants.IsEmpty() ? control.name : string.Format("{0} ({1})",
                     control.name, control.variants), ref id);
+
+                if (!control.layout.IsEmpty())
+                    item.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
 
                 ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
 
