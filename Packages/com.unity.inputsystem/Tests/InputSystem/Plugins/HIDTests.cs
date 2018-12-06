@@ -778,10 +778,36 @@ internal class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
+    public void Devices_GenericHIDJoystickIsTurnedIntoJoystick()
     {
-        Assert.Fail();
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                // 16bit X and Y axes.
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
+            }
+        };
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+
+        var device = InputSystem.devices[0];
+        Assert.That(device, Is.TypeOf<Joystick>());
     }
 
     // Based on the HID spec, we can't make *any* guarantees on where a HID-only gamepad puts its axes
@@ -793,10 +819,127 @@ internal class HIDTests : InputTestFixture
     // all but rather turn them into joysticks instead.
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()
+    public void Devices_GenericHIDGamepadIsTurnedIntoJoystick()
     {
-        Assert.Fail();
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Gamepad,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+    {
+                // 16bit X and Y axes.
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
+            }
+        };
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+
+        var device = InputSystem.devices[0];
+        Assert.That(device, Is.TypeOf<Joystick>());
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_GenericHIDConvertsXAndYUsagesToStickControl()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                // 16bit X and Y axes.
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
+            }
+        };
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+      
+        var device = InputSystem.devices[0];
+        Assert.That(device, Is.TypeOf<Joystick>());
+        Assert.That(device["Stick"], Is.TypeOf<StickControl>());
+    }
+
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct SimpleJoystickLayout : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte reportId;
+        [FieldOffset(1)] public ushort x;
+        [FieldOffset(3)] public ushort y;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('H', 'I', 'D');
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_GenericHIDXAndYDrivesStickControl()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 9,
+            elements = new[]
+            {
+                // 16bit X and Y axes.
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
+            }
+        };
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+
+        var device = InputSystem.devices[0];
+        Assert.That(device, Is.TypeOf<Joystick>());
+        Assert.That(device["Stick"], Is.TypeOf<StickControl>());
+
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MaxValue });
+        InputSystem.Update();
+
+        Vector2 stickValue = (device["Stick"] as StickControl).ReadValue();
+        Assert.That(stickValue.x, Is.EqualTo(1.0f).Within(0.01f));
+        Assert.That(stickValue.y, Is.EqualTo(1.0f).Within(0.01f));
     }
 
     // It should be possible to reuse parts of the HID layout builder for building custom HID-based layouts
