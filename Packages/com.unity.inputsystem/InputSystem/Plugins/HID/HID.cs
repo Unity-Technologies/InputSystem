@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 foreach (var element in hidDeviceDescriptor.elements)
                 {
-                    if (element.DetermineLayout() != null)
+                    if (element.IsUsableElement())
                     {
                         hasUsableElements = true;
                         break;
@@ -117,15 +117,18 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
                 if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
                 {
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
                 }
-                /*
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
-                    baseLayout = "Gamepad";
+                {
+                    baseLayout = "Joystick";
+                    baseType = typeof(Joystick);
+                }
+                ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
+                /*
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Mouse)
                     baseLayout = "Mouse";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Pointer)
@@ -595,6 +598,18 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
                 // Fallback that generates a somewhat useless but at least very informative name.
                 return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
+            }
+
+            internal bool IsUsableElement()
+            {
+                switch (usage)
+                {
+                    case (int)GenericDesktop.X:
+                    case (int)GenericDesktop.Y:
+                        return usagePage == UsagePage.GenericDesktop;
+                    default:
+                        return DetermineLayout() != null;
+                }
             }
 
             internal string DetermineLayout()
