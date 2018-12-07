@@ -1157,7 +1157,9 @@ namespace UnityEngine.Experimental.Input
 
             ////TODO: recognize a matching C# representation of a state format and convert to what we expect for trivial cases
             if (deltaSize != control.stateBlock.alignedSizeInBytes)
-                throw new NotImplementedException("Delta state and control format don't match");
+                throw new ArgumentException(string.Format(
+                    "Size {0} of delta state of type {1} provided for control '{2}' does not match size {3} of control",
+                    deltaSize, typeof(TDelta).Name, control, control.stateBlock.alignedSizeInBytes));
 
             var eventSize = UnsafeUtility.SizeOf<DeltaStateEvent>() + deltaSize - 1;
 

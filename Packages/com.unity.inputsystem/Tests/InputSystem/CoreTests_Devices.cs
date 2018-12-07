@@ -1798,58 +1798,6 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanAdjustSensitivityOnPointerDeltas()
-    {
-        var pointer = InputSystem.AddDevice<Pointer>();
-
-        const float kWindowWidth = 640f;
-        const float kWindowHeight = 480f;
-        const float kSensitivity = 6f;
-
-        InputConfiguration.PointerDeltaSensitivity = kSensitivity;
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(pointer.id,
-                (id, commandPtr) =>
-                {
-                    if (commandPtr->type == QueryDimensionsCommand.Type)
-                    {
-                        var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
-                        windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
-                        return InputDeviceCommand.kGenericSuccess;
-                    }
-
-                    return InputDeviceCommand.kGenericFailure;
-                });
-        }
-
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
-        InputSystem.Update();
-
-        // NOTE: Whereas the tests above access .delta.x.value and .delta.y.value, here we access
-        //       delta.value.x and delta.value.y. This is because the sensitivity processor sits
-        //       on the vector control and not on the individual component axes.
-
-        Assert.That(pointer.delta.ReadValue().x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
-        Assert.That(pointer.delta.ReadValue().y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_PointerSensitivity_DoesNothingIfDeviceDimensionsAreUnknown()
-    {
-        // Add pointer that does not respond to QueryDimensionsComment.
-        var pointer = InputSystem.AddDevice<Pointer>();
-
-        InputSystem.QueueDeltaStateEvent(pointer.delta, new Vector2(59.0f, 38.0f));
-        InputSystem.Update();
-
-        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(59.0).Within(0.000001));
-        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(38.0f).Within(0.000001));
-    }
-
-    [Test]
-    [Category("Devices")]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Pointer", typeof(Pointer))]
