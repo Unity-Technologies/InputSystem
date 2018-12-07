@@ -326,23 +326,23 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     if (control.valueSizeInBytes == 1)
                     {
-                        value = MemoryHelpers.ReadSingleBit(new IntPtr(ptr), control.m_StateBlock.bitOffset) ? "1" : "0";
+                        value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "0";
                     }
                     else
                     {
-                        value = (float)(MemoryHelpers.ReadIntFromMultipleBits(new IntPtr(ptr), control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
+                        value = (float)(MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
                     }
                 }
                 else if(format == InputStateBlock.kTypeSBit)
                 {
                     if(control.valueSizeInBytes == 1)
                     {
-                        value = MemoryHelpers.ReadSingleBit(new IntPtr(ptr), control.m_StateBlock.bitOffset) ? "1" : "-1";
+                        value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "-1";
                     }
                     else
                     {
                         int halfMaxValue = ((1 << (int)control.m_StateBlock.sizeInBits) - 1) / 2;
-                        int fullValue = (MemoryHelpers.ReadIntFromMultipleBits(new IntPtr(ptr), control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
+                        int fullValue = (MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
                         value = fullValue - halfMaxValue;
                     }
                 }

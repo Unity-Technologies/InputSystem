@@ -813,7 +813,7 @@ namespace UnityEngine.Experimental.Input
 
                     // If the control that cancels has been actuated, abort the operation now.
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
-                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeIn(statePtr))
+                        !control.CheckStateIsAtDefault(statePtr))
                     {
                         OnCancel();
                         break;

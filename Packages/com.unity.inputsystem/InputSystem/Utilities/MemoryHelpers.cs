@@ -214,7 +214,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 int newBitOffset = (int)bitOffset % 32;
                 int intOffset = ((int)bitOffset - newBitOffset) / 32;
-                IntPtr offsetPtr = new IntPtr(ptr.ToInt64() + (intOffset * 4));
+                void* offsetPtr = (byte*)ptr + (intOffset * 4);
                 return ReadIntFromMultipleBits(offsetPtr, (uint)newBitOffset, bitCount);
             }
 
@@ -347,13 +347,6 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             Debug.Assert(bytePos <= (byte*)buffer +
                 ComputeFollowingByteOffset((uint)byteOffset, (uint)bitOffset + (uint)sizeInBits));
-        }
-
-        public static void Swap<TValue>(ref TValue a, ref TValue b)
-        {
-            var temp = a;
-            a = b;
-            b = temp;
         }
 
         public static void Swap<TValue>(ref TValue a, ref TValue b)

@@ -70,15 +70,15 @@ public class InputUIPicker : MonoBehaviour
         Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
         if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
         {
-            if (m_currentKeyboard.digit1Key.isPressed)
+            if (currentKeyboard.digit1Key.isPressed)
                 SwitchToInputMethod(0);
-            else if (m_currentKeyboard.digit2Key.isPressed)
+            else if (currentKeyboard.digit2Key.isPressed)
                 SwitchToInputMethod(1);
-            else if (m_currentKeyboard.digit3Key.isPressed)
+            else if (currentKeyboard.digit3Key.isPressed)
                 SwitchToInputMethod(2);
-            else if (m_currentKeyboard.digit4Key.isPressed)
+            else if (currentKeyboard.digit4Key.isPressed)
                 SwitchToInputMethod(3);
-            else if (m_currentKeyboard.digit5Key.isPressed)
+            else if (currentKeyboard.digit5Key.isPressed)
                 SwitchToInputMethod(4);
         }
     }

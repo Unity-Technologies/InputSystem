@@ -185,12 +185,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 if (sizeInBits == 1)
                 {
-                    value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1 : -1;
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : -1;
                 }
                 else
                 {
                     int halfMax = (1 << (int)sizeInBits) / 2;
-                    int unsignedValue = MemoryHelpers.ReadIntFromMultipleBits(new IntPtr(valuePtr), bitOffset, sizeInBits);
+                    int unsignedValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
                     value = unsignedValue - halfMax;
                 }
             }
