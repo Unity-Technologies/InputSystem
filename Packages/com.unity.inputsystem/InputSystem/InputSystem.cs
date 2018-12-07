@@ -1098,7 +1098,7 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Size of '{0}' exceeds maximum supported state size of {1}", typeof(TState).Name,
                         StateEventBuffer.kMaxSize),
                     "state");
-            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
+            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - StateEvent.kStateDataSizeToSubtract;
 
             if (time < 0)
                 time = InputRuntime.s_Instance.currentTime;

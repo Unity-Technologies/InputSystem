@@ -12,23 +12,20 @@ partial class DemoGameTests
     [Category("Demo")]
     [Property("Platform", "XboxOne")]
     [Ignore("TODO")]
-    public void TODO_Demo_XboxOne_ShowsUserNameWhenJoined()
+    public unsafe void TODO_Demo_XboxOne_ShowsUserNameWhenJoined()
     {
         input.runtime.SetDeviceCommandCallback(xboxGamepad,
             (id, command) =>
             {
-                unsafe
+                if (command->type == QueryPairedUserAccountCommand.Type)
                 {
-                    if (command->type == QueryPairedUserAccountCommand.Type)
-                    {
-                        var queryPairedUser = (QueryPairedUserAccountCommand*)command;
-                        queryPairedUser->handle = 1;
-                        queryPairedUser->name = "TestUser";
-                        return InputDeviceCommand.kGenericSuccess;
-                    }
-
-                    return InputDeviceCommand.kGenericFailure;
+                    var queryPairedUser = (QueryPairedUserAccountCommand*)command;
+                    queryPairedUser->handle = 1;
+                    queryPairedUser->name = "TestUser";
+                    return InputDeviceCommand.kGenericSuccess;
                 }
+
+                return InputDeviceCommand.kGenericFailure;
             });
 
         Press(xboxGamepad.aButton);
@@ -41,7 +38,7 @@ partial class DemoGameTests
     [Category("Demo")]
     [Property("Platform", "XboxOne")]
     [Ignore("TODO")]
-    public void TODO_Demo_XboxOne_ShowsAccountPickerIfDeviceIsNotPairedToUser()
+    public unsafe void TODO_Demo_XboxOne_ShowsAccountPickerIfDeviceIsNotPairedToUser()
     {
         int? returnUserId = null;
         string returnUserName = null;
@@ -50,26 +47,23 @@ partial class DemoGameTests
         input.runtime.SetDeviceCommandCallback(xboxGamepad,
             (id, command) =>
             {
-                unsafe
+                if (command->type == QueryPairedUserAccountCommand.Type)
                 {
-                    if (command->type == QueryPairedUserAccountCommand.Type)
+                    if (returnUserId != null)
                     {
-                        if (returnUserId != null)
-                        {
-                            var queryPairUserCommand = (QueryPairedUserAccountCommand*)command;
-                            queryPairUserCommand->handle = (ulong)returnUserId.Value;
-                            queryPairUserCommand->name = returnUserName;
-                            return InputDeviceCommand.kGenericSuccess;
-                        }
-                    }
-                    else if (command->type == InitiateUserAccountPairingCommand.Type)
-                    {
-                        Assert.That(receivedPairingCommand, Is.False);
-                        receivedPairingCommand = true;
+                        var queryPairUserCommand = (QueryPairedUserAccountCommand*)command;
+                        queryPairUserCommand->handle = (ulong)returnUserId.Value;
+                        queryPairUserCommand->name = returnUserName;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                    return InputDeviceCommand.kGenericFailure;
                 }
+                else if (command->type == InitiateUserAccountPairingCommand.Type)
+                {
+                    Assert.That(receivedPairingCommand, Is.False);
+                    receivedPairingCommand = true;
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+                return InputDeviceCommand.kGenericFailure;
             });
 
         Press(xboxGamepad.aButton);
