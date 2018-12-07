@@ -14,10 +14,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 Core:
 - Invalid memory accesses when using .NET 4 runtime
+- Mouse.button not being identical to Mouse.leftButton
 
-Action Editor:
-- Parameters disappearing on processors and interactions when edited
-- Parameters on processors and interactions having wrong value type (e.g. int instead of float)
+Actions:
+- Parameters disappearing on processors and interactions in UI when edited
+- Parameters on processors and interactions having wrong value type in UI (e.g. int instead of float)
+- RebindingOperation calling OnComplete() after being cancelled
 
 Misc:
 - Documentation no longer picked up as assets in user project
