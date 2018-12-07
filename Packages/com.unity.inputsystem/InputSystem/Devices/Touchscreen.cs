@@ -200,7 +200,7 @@ namespace UnityEngine.Experimental.Input
                             hadActivityThisFrame = device.wasUpdatedThisFrame;
                         if (hadActivityThisFrame.Value)
                         {
-                            var previousPhase = phaseControl.ReadPreviousValue();
+                            var previousPhase = phaseControl.ReadValueFromPreviousFrame();
                             if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Cancelled)
                                 isActive = true;
                         }
@@ -271,7 +271,7 @@ namespace UnityEngine.Experimental.Input
         //       sending state to any other device. The code here only presents an alternate path for sending
         //       state to a Touchscreen and have it perform touch allocation internally.
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
@@ -281,7 +281,7 @@ namespace UnityEngine.Experimental.Input
 
             // Reset all touches that have ended last frame to being unused.
             // Also mark any ongoing touches as stationary.
-            var touchStatePtr = (TouchState*)((byte*)statePtr.ToPointer() + stateBlock.byteOffset);
+            var touchStatePtr = (TouchState*)((byte*)statePtr + stateBlock.byteOffset);
             for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
             {
                 var phase = touchStatePtr->phase;
@@ -311,7 +311,7 @@ namespace UnityEngine.Experimental.Input
             return haveChangedState;
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             if (stateFormat != TouchState.kFormat)
@@ -324,7 +324,7 @@ namespace UnityEngine.Experimental.Input
             // unlike other devices, is hardwired to a single memory layout only.
 
             var newTouchState = (TouchState*)statePtr;
-            var currentTouchState = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
+            var currentTouchState = (TouchState*)((byte*)currentStatePtr + stateBlock.byteOffset);
 
             // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
             // previously.
@@ -371,7 +371,7 @@ namespace UnityEngine.Experimental.Input
             return false;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 

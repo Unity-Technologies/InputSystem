@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+
+////FIXME: when saving, processor/interaction selection is cleared
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -51,15 +53,19 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         private TreeViewState m_ActionsTreeState;
         [SerializeField]
-        private TreeViewState m_PickerTreeViewState;
+        private InputControlPickerState m_PickerTreeViewState;
         [SerializeField]
         private InputActionAssetManager m_ActionAssetManager;
         [SerializeField]
         internal InputActionWindowToolbar m_InputActionWindowToolbar;
         [SerializeField]
         internal ActionInspectorContextMenu m_ContextMenu;
+        [SerializeField]
+        List<string> m_SelectedActionMaps = new List<string>();
 
         private InputBindingPropertiesView m_BindingPropertyView;
+        private InputActionPropertiesView m_ActionPropertyView;
+
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
         internal CopyPasteUtility m_CopyPasteUtility;
@@ -188,7 +194,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
-                m_PickerTreeViewState = new TreeViewState();
+                m_PickerTreeViewState = new InputControlPickerState();
         }
 
         private void OnUndoRedoCallback()
@@ -208,6 +214,15 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionMapsTree.GetSelectedRow() != null)
                 m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
             m_ActionsTree.Reload();
+            if (m_ActionMapsTree.GetSelectedRow() != null)
+            {
+                var row = m_ActionMapsTree.GetSelectedRow();
+                if (!m_SelectedActionMaps.Contains(row.displayName))
+                {
+                    m_ActionsTree.SetExpandedRecursive(m_ActionsTree.GetRootElement().id, true);
+                    m_SelectedActionMaps.Add(row.displayName);
+                }
+            }
         }
 
         private void OnActionSelection()
@@ -218,6 +233,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void LoadPropertiesForSelection()
         {
             m_BindingPropertyView = null;
+            m_ActionPropertyView = null;
 
             // Column #1: Load selected action map.
             if (m_ActionMapsTree.GetSelectedRow() != null)
@@ -246,20 +262,30 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_BindingPropertyView =
                         new InputBindingPropertiesView(
                             item.elementProperty,
-                            () =>
+                            change =>
                             {
                                 Apply();
-                                LoadPropertiesForSelection();
                             },
                             m_PickerTreeViewState,
                             m_InputActionWindowToolbar,
                             item.expectedControlLayout);
 
-                    // For composite groups, don't show the binding path and control scheme section.
+                    // For composite groups, don't show the binding path and control scheme section,
+                    // but show composite parameters instead.
                     if (item is CompositeGroupTreeItem)
-                        m_BindingPropertyView.showPathAndControlSchemeSection = false;
+                        m_BindingPropertyView.isCompositeBinding = true;
                 }
-                ////TODO: properties for actions
+                if (item is ActionTreeItem)
+                {
+                    var actionItem = item as ActionTreeItem;
+                    Debug.Assert(actionItem != null);
+
+                    // Show properties for binding.
+                    m_ActionPropertyView =
+                        new InputActionPropertiesView(
+                            item.elementProperty,
+                            Apply);
+                }
             }
         }
 
@@ -280,8 +306,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-
-            LoadPropertiesForSelection();
         }
 
         private void OnGUI()
@@ -396,6 +420,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
             {
                 m_ContextMenu.OnAddAction();
+                m_ContextMenu.OnAddBinding(m_ActionsTree.GetSelectedAction());
+                m_ActionsTree.SelectNewActionRow();
             }
 
             // Draw border rect
@@ -427,11 +453,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_BindingPropertyView.OnGUI();
                 EditorGUILayout.EndScrollView();
             }
+            else if (m_ActionPropertyView != null)
+            {
+                m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
+                m_ActionPropertyView.OnGUI();
+                EditorGUILayout.EndScrollView();
+            }
             else
             {
                 GUILayout.FlexibleSpace();
             }
-
 
             EditorGUILayout.EndVertical();
         }

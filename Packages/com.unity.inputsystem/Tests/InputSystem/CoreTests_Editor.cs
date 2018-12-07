@@ -148,36 +148,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
-    {
-        InputNoiseFilter filter = new InputNoiseFilter
-        {
-            elements = new InputNoiseFilter.FilterElement[]
-            {
-                new InputNoiseFilter.FilterElement
-                {
-                    controlIndex = 0,
-                    type = InputNoiseFilter.ElementType.EntireControl
-                }
-            }
-        };
-
-        var device = InputSystem.AddDevice<Gamepad>();
-        device.userInteractionFilter = filter;
-
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
-
-        var newDevice = InputSystem.devices.First(x => x is Gamepad);
-
-        Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
-        Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
-        Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
-        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(InputNoiseFilter.ElementType.EntireControl));
-    }
-
-    [Test]
-    [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
     {
@@ -249,7 +219,7 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
 
     [Test]
@@ -321,7 +291,7 @@ partial class CoreTests
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
-        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("New action"));
         Assert.That(asset.actionMaps[0].actions[2].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
@@ -513,6 +483,28 @@ partial class CoreTests
         Assert.That(code, Contains.Substring("class NewControls4"));
         Assert.That(code, Contains.Substring("public InputAction @action"));
         Assert.That(code, Contains.Substring("public InputAction @_1thing"));
+    }
+
+    // Can take any given registered layout and generate a cross-platform C# struct for it
+    // that collects all the control values from both proper and optional controls (based on
+    // all derived layouts).
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_CanGenerateStateStructForLayout()
+    {
+        Assert.Fail();
+    }
+
+    // Can take any given registered layout and generate a piece of code that takes as input
+    // memory in the state format of the layout and generates as output state in the cross-platform
+    // C# struct format.
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_CanGenerateStateStructConversionCodeForLayout()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -719,6 +711,24 @@ partial class CoreTests
         Assert.That(optionalControlsForFirstDerived[0].layout, Is.EqualTo(new InternedString("Vector2")));
 
         Assert.That(optionalControlsForSecondDerived, Is.Empty);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanIconsForLayouts()
+    {
+        const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Button.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Axis"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Axis.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Key"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Button.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("DualShockGamepad"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Gamepad.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Pen"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Pen.png")));
     }
 
     private class TestEditorWindow : EditorWindow

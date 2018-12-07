@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
@@ -43,7 +42,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
         [InputControl(layout = "Analog", usage = "Pressure")]
@@ -173,36 +172,38 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected bool ResetDelta(IntPtr statePtr, InputControl<float> control)
+        protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
-            var value = control.ReadValueFrom(statePtr);
+            ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
+            var value = control.ReadValueFromState(statePtr);
             if (Mathf.Approximately(0f, value))
                 return false;
-            control.WriteValueInto(statePtr, 0f);
+            control.WriteValueIntoState(0f, statePtr);
             return true;
         }
 
-        protected void AccumulateDelta(IntPtr oldStatePtr, IntPtr newStatePtr, InputControl<float> control)
+        protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
-            var oldDelta = control.ReadValueFrom(oldStatePtr);
-            var newDelta = control.ReadValueFrom(newStatePtr);
-            control.WriteValueInto(newStatePtr, oldDelta + newDelta);
+            ////FIXME: if there's processors on the delta, this is junk
+            var oldDelta = control.ReadValueFromState(oldStatePtr);
+            var newDelta = control.ReadValueFromState(newStatePtr);
+            control.WriteValueIntoState(oldDelta + newDelta, newStatePtr);
         }
 
-        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
             return deltaXChanged || deltaYChanged;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
-        bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }

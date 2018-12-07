@@ -767,7 +767,7 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.OnEventHooked;
             }
 
-            private void OnEvent(InputEventPtr eventPtr)
+            private unsafe void OnEvent(InputEventPtr eventPtr)
             {
                 // Ignore if not a state event.
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
@@ -787,8 +787,28 @@ namespace UnityEngine.Experimental.Input
                     var control = controls[i];
 
                     // Skip controls that have no state in the event.
-                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
-                    if (statePtr == IntPtr.Zero)
+                    var statePtr = (void*)control.GetStatePtrFromStateEvent(eventPtr);
+                    if (statePtr == null)
+                        continue;
+
+                    // If the control that cancels has been actuated, abort the operation now.
+                    if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
+                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeInState(statePtr))
+                    {
+                        OnCancel();
+                        break;
+                    }
+
+                    // Skip noisy controls.
+                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
+                        continue;
+
+                    // If controls have to match a certain path, check if this one does.
+                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
+                        continue;
+
+                    // If controls must not match certain path, make sure the control doesn't.
+                    if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
 
                     // If the control that cancels has been actuated, abort the operation now.
@@ -831,7 +851,7 @@ namespace UnityEngine.Experimental.Input
 
                     // Skip controls that have no effective value change.
                     // NOTE: This will run the full processor stack and is move involved.
-                    if (!control.HasValueChangeIn(statePtr))
+                    if (!control.HasValueChangeInState(statePtr))
                         continue;
 
                     // If we have a magnitude threshold, see if control passes it.

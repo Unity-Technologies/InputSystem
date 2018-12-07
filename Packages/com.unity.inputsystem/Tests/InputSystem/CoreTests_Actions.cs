@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Layouts;
@@ -554,7 +555,7 @@ partial class CoreTests
 
         action.Enable();
 
-        using (var queue = new InputActionQueue())
+        using (var queue = new InputActionTrace())
         {
             action.performed += queue.RecordAction;
 
@@ -1361,6 +1362,60 @@ partial class CoreTests
         Assert.That(receivedVector, Is.Not.Null);
         Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
+    }
+
+    ////FIXME: the sensitivity processor is wonky and will need improvement
+
+    [Test]
+    [Category("Actions")]
+    public unsafe void Actions_CanAddSensitivityProcessorToMouseDeltas()
+    {
+        const float kWindowWidth = 640f;
+        const float kWindowHeight = 480f;
+        const float kSensitivity = 6f;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction();
+        action.AddBinding("<Mouse>/delta").WithProcessor(string.Format("sensitivity(sensitivity={0})", kSensitivity));
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => value = ctx.ReadValue<Vector2>();
+
+        ////REVIEW: what's really the best behavior here?
+        // First, try with the mouse not responding to QueryDimensionsCommand, i.e. without the mouse
+        // being able to tell us the dimensions of the pointer surface. The result should be that we
+        // don't touch the incoming values.
+        InputSystem.QueueDeltaStateEvent(mouse.delta, new Vector2(59, 38));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo(59).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo(38).Within(0.00001));
+
+        // Now add support for device dimensions to the mouse.
+        runtime.SetDeviceCommandCallback(mouse.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == QueryDimensionsCommand.Type)
+                {
+                    var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
+                    windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        value = null;
+
+        InputSystem.QueueDeltaStateEvent(mouse.delta, new Vector2(32f, 64f));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
     }
 
     [Test]
@@ -2503,6 +2558,35 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnAction_WhenEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction
+        {
+            bindingMask = new InputBinding {groups = "a"}
+        };
+
+        action.AddBinding("<Gamepad>/buttonSouth").WithGroup("a");
+        action.AddBinding("<Gamepad>/buttonNorth").WithGroup("b");
+
+        action.Enable();
+
+        action.bindingMask = new InputBinding {groups = "b"};
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(action.lastTriggerControl, Is.Null);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
+        InputSystem.Update();
+
+        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.buttonNorth));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanMaskOutBindingsByBindingGroup_OnActionMap()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2665,6 +2749,56 @@ partial class CoreTests
         Assert.That(wasPerformed, Is.False);
     }
 
+    private class CompositeWithParameters : InputBindingComposite<float>
+    {
+        public int intParameter;
+        public float floatParameter;
+        public bool boolParameter;
+        public EnumParameter enumParameter;
+
+        public static CompositeWithParameters s_Instance;
+
+        public CompositeWithParameters()
+        {
+            s_Instance = this;
+        }
+
+        public enum EnumParameter
+        {
+            A,
+            B,
+            C,
+        }
+
+        public override float ReadValue(ref InputBindingCompositeContext context)
+        {
+            return 0;
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanHaveParametersOnComposites()
+    {
+        InputSystem.RegisterBindingComposite<CompositeWithParameters>();
+
+        // NOTE: Enums aren't supported at the JSON level. The editor uses reflection to display textual names rather
+        //       than plain integer values but underneath, enums are treated as ints.
+        var action = new InputAction();
+        action.AddCompositeBinding(
+            "CompositeWithParameters(intParameter=123,floatParameter=0.234,boolParameter=true,enumParameter=1)");
+
+        CompositeWithParameters.s_Instance = null;
+        action.Enable();
+
+        Assert.That(CompositeWithParameters.s_Instance, Is.Not.Null);
+        Assert.That(CompositeWithParameters.s_Instance.intParameter, Is.EqualTo(123));
+        Assert.That(CompositeWithParameters.s_Instance.floatParameter, Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(CompositeWithParameters.s_Instance.boolParameter, Is.True);
+        Assert.That(CompositeWithParameters.s_Instance.enumParameter,
+            Is.EqualTo(CompositeWithParameters.EnumParameter.B));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanCreateAxisComposite()
@@ -2673,32 +2807,81 @@ partial class CoreTests
 
         var action = new InputAction();
         action.AddCompositeBinding("Axis")
-            .With("Negative", "/<Gamepad>/leftShoulder")
-            .With("Positive", "/<Gamepad>/rightShoulder");
+            .With("Negative", "/<Gamepad>/leftTrigger")
+            .With("Positive", "/<Gamepad>/rightTrigger");
         action.Enable();
 
         float? value = null;
         action.performed += ctx => { value = ctx.ReadValue<float>(); };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.LeftShoulder));
+        // Negative.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.345f});
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
-        Assert.That(value.Value, Is.EqualTo(-1).Within(0.00001));
+        Assert.That(value.Value, Is.EqualTo(-0.345f).Within(0.00001));
 
+        // Positive.
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.RightShoulder));
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
-        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+        Assert.That(value.Value, Is.EqualTo(0.456f).Within(0.00001));
 
+        // Neither.
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.Zero.Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateAxisComposite_AndDetermineWhichSideWins()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding(string.Format("Axis(whichSideWins={0})", (int)AxisComposite.WhichSideWins.Neither))
+            .With("Negative", "/<Gamepad>/leftTrigger", groups: "neither")
+            .With("Positive", "/<Gamepad>/rightTrigger", groups: "neither");
+        action.AddCompositeBinding(string.Format("Axis(whichSideWins={0})", (int)AxisComposite.WhichSideWins.Positive))
+            .With("Negative", "/<Gamepad>/leftTrigger", groups: "positive")
+            .With("Positive", "/<Gamepad>/rightTrigger", groups: "positive");
+        action.AddCompositeBinding(string.Format("Axis(whichSideWins={0})", (int)AxisComposite.WhichSideWins.Negative))
+            .With("Negative", "/<Gamepad>/leftTrigger", groups: "negative")
+            .With("Positive", "/<Gamepad>/rightTrigger", groups: "negative");
+
+        action.bindingMask = new InputBinding {groups = "neither"};
+        action.Enable();
+
+        float? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<float>(); };
+
+        // Neither wins.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.345f, rightTrigger = 0.543f});
+        InputSystem.Update();
+
+        Assert.That(value.Value, Is.Zero.Within(0.00001));
+
+        // Positive wins.
+        action.bindingMask = new InputBinding {groups = "positive"};
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.123f, rightTrigger = 0.234f});
+        InputSystem.Update();
+
+        Assert.That(value.Value, Is.EqualTo(0.234f).Within(0.00001));
+
+        // Negative wins.
+        action.bindingMask = new InputBinding {groups = "negative"};
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.567f, rightTrigger = 0.765f});
+        InputSystem.Update();
+
+        Assert.That(value.Value, Is.EqualTo(-0.567f).Within(0.00001));
     }
 
     [Test]
@@ -3870,7 +4053,7 @@ partial class CoreTests
             InputEventPtr eventPtr;
             using (StateEvent.From(derived, out eventPtr))
             {
-                derived["controlFromBase/x"].WriteValueFromObjectInto(eventPtr, 0.5f);
+                derived["controlFromBase/x"].WriteValueFromObjectIntoEvent(eventPtr, 0.5f);
 
                 InputSystem.QueueEvent(eventPtr);
                 InputSystem.Update();
@@ -4284,9 +4467,6 @@ partial class CoreTests
         // Deadzoning alters values on the stick. For this test, get rid of it.
         InputConfiguration.DeadzoneMin = 0f;
         InputConfiguration.DeadzoneMax = 1f;
-
-        // Same for pointer sensitivity.
-        InputConfiguration.PointerDeltaSensitivity = 1f;
 
         var action = new InputAction();
 

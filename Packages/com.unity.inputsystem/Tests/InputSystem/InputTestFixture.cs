@@ -173,7 +173,7 @@ namespace UnityEngine.Experimental.Input
             using (StateEvent.From(control.device, out eventPtr))
             {
                 eventPtr.time += timeOffset;
-                control.WriteValueInto(eventPtr, state);
+                control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
 

@@ -212,12 +212,12 @@ namespace UnityEngine.Experimental.Input.Editor
             var devices = new List<string>();
             if (m_SelectedControlSchemeIndex >= 0)
             {
-                devices.Add("All devices");
+                devices.Add("[All devices]");
                 var controlScheme = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName);
                 devices.AddRange(controlScheme.deviceRequirements.Select(a => a.controlPath).ToList());
             }
             m_DeviceIdList = devices.ToArray();
-            m_DeviceNamesList = devices.Select(InputControlPath.ToHumanReadableString).ToArray();
+            m_DeviceNamesList = devices.Select(a => a.Substring(1, a.Length - 2)).ToArray();
         }
 
         private void AddControlScheme(object position)

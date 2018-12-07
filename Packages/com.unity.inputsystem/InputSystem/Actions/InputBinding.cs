@@ -1,6 +1,9 @@
 using System;
+using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: add a redirectPath separate from overridePath
 
 ////REVIEW: should bindings have unique IDs, too? maybe instead of "name"?
 
@@ -266,6 +269,35 @@ namespace UnityEngine.Experimental.Input
                 hashCode = (hashCode * 397) ^ (action != null ? action.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+
+            // Add path.
+            builder.Append('<');
+            var path = effectivePath;
+            if (!string.IsNullOrEmpty(path))
+                builder.Append(path);
+            builder.Append('>');
+
+            // Add groups.
+            if (!string.IsNullOrEmpty(groups))
+            {
+                builder.Append('(');
+                builder.Append(groups);
+                builder.Append(')');
+            }
+
+            // Add actions.
+            if (!string.IsNullOrEmpty(action))
+            {
+                builder.Append(':');
+                builder.Append(action);
+            }
+
+            return builder.ToString();
         }
 
         ////TODO: also support matching by name (taking the binding tree into account so that components

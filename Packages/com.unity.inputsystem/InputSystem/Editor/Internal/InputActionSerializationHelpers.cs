@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             var mapCount = mapArrayProperty.arraySize;
             var index = mapCount;
-            var name = FindUniqueName(mapArrayProperty, "default");
+            var name = FindUniqueName(mapArrayProperty, "New action map");
 
             mapArrayProperty.InsertArrayElementAtIndex(index);
             var mapProperty = mapArrayProperty.GetArrayElementAtIndex(index);
@@ -119,7 +119,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionsCount = actionsArrayProperty.arraySize;
             var actionIndex = actionsCount;
 
-            var actionName = FindUniqueName(actionsArrayProperty, "action");
+            var actionName = FindUniqueName(actionsArrayProperty, "New action");
 
             actionsArrayProperty.InsertArrayElementAtIndex(actionIndex);
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
