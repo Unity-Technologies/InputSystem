@@ -246,10 +246,29 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else if (format == kTypeBit || format == kTypeSBit)
             {
-                if (sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
+                if (sizeInBits == 1)
+                {
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == kTypeSBit ? -1.0f : 0.0f);
+                }
+                else if (sizeInBits != 31)
+                {
+                    float maxValue = (float)(1 << (int)sizeInBits);
+                    float rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
+                    if (format == kTypeSBit)
+                    {
+                        float unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
+                        value = Mathf.Clamp(unclampedValue, -1.0f, 1.0f);
+                    }
+                    else
+                    {
+                        value = Mathf.Clamp(rawValue / maxValue, 0.0f, 1.0f);
+                    }
 
-                value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : 0.0f;
+                }
+                else
+                {
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields greater than 31 bits to floats");
+                }
             }
             // If a control with an integer-based representation does not use the full range
             // of its integer size (e.g. only goes from [0..128]), processors or the parameters
