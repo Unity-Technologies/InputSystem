@@ -377,8 +377,37 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             .WithLayout("Axis")
                             .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                             .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    //Need to handle Up/Down/Left/Right
+                    builder.AddControl(stickName + "/up")
+                            .WithFormat(InputStateBlock.kTypeSBit)
+                            .WithLayout("Button")
+                            .WithParameters("clampMin=0,clampMax=1")
+                            .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/down")
+                            .WithFormat(InputStateBlock.kTypeSBit)
+                            .WithLayout("Button")
+                            .WithParameters("clampMin=0,clampMax=1,invert=true")
+                            .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/left")
+                            .WithFormat(InputStateBlock.kTypeSBit)
+                            .WithLayout("Button")
+                            .WithParameters("clampMin=0,clampMax=1,invert=true")
+                            .WithBitOffset(0)
+                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/right")
+                            .WithFormat(InputStateBlock.kTypeSBit)
+                            .WithLayout("Button")
+                            .WithParameters("clampMin=0,clampMax=1")
+                            .WithBitOffset(0)
+                            .WithSizeInBits((uint)xElement.reportSizeInBits);
                 }
-               
+
 
                 // Process HID descriptor.
                 foreach (var element in hidDescriptor.elements)

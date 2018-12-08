@@ -31,6 +31,8 @@ namespace UnityEngine.Experimental.Input.Controls
 
         protected float Preprocess(float value)
         {
+            if (invert)
+                value *= -1.0f;
             if (clampToConstant)
             {
                 if (value < clampMin || value > clampMax)
@@ -40,8 +42,6 @@ namespace UnityEngine.Experimental.Input.Controls
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);
-            if (invert)
-                value *= -1.0f;
             return value;
         }
 

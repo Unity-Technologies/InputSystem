@@ -53,14 +53,13 @@ internal class HIDTests : InputTestFixture
         var device = InputSystem.devices[0];
         Assert.That(device, Is.TypeOf<HID>());
         Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
-        Assert.That(device.children, Has.Count.EqualTo(4));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Count.EqualTo(3));
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Stick").And.TypeOf<StickControl>());
 
-        var x = device["x"];
-        var y = device["y"];
+        var x = device["Stick/x"];
+        var y = device["Stick/y"];
         var button1 = device["button1"];
         var button2 = device["button2"];
 
