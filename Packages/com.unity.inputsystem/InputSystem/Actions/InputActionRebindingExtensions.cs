@@ -811,26 +811,6 @@ namespace UnityEngine.Experimental.Input
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
 
-                    // If the control that cancels has been actuated, abort the operation now.
-                    if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
-                        !control.CheckStateIsAtDefault(statePtr))
-                    {
-                        OnCancel();
-                        break;
-                    }
-
-                    // Skip noisy controls.
-                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
-                        continue;
-
-                    // If controls have to match a certain path, check if this one does.
-                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
-                        continue;
-
-                    // If controls must not match certain path, make sure the control doesn't.
-                    if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
-                        continue;
-
                     // If we're expecting controls of a certain type, skip if control isn't of
                     // the right type.
                     if (m_ControlType != null && !m_ControlType.IsInstanceOfType(control))
