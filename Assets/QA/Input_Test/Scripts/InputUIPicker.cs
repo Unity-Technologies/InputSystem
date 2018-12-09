@@ -71,15 +71,15 @@ public class InputUIPicker : MonoBehaviour
         if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
         {
             if (currentKeyboard.digit1Key.isPressed)
-                SwitchToInputMethod(0);
+                m_inputPickerDropdown.value = 0;
             else if (currentKeyboard.digit2Key.isPressed)
-                SwitchToInputMethod(1);
+                m_inputPickerDropdown.value = 1;
             else if (currentKeyboard.digit3Key.isPressed)
-                SwitchToInputMethod(2);
+                m_inputPickerDropdown.value = 2;
             else if (currentKeyboard.digit4Key.isPressed)
-                SwitchToInputMethod(3);
+                m_inputPickerDropdown.value = 3;
             else if (currentKeyboard.digit5Key.isPressed)
-                SwitchToInputMethod(4);
+                m_inputPickerDropdown.value = 4;
         }
     }
 
