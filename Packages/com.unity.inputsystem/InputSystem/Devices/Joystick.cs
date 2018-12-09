@@ -4,6 +4,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.Plugins.HID;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -45,7 +46,7 @@ namespace UnityEngine.Experimental.Input
     // By default comes with just a trigger, a potentially twistable
     // stick and an optional single hatswitch.
     [InputControlLayout(stateType = typeof(JoystickState))]
-    public class Joystick : InputDevice
+    public class Joystick : HID
     {
         public ButtonControl trigger { get; private set; }
         public StickControl stick { get; private set; }

@@ -389,14 +389,14 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     builder.AddControl(stickName + "/down")
                             .WithFormat(InputStateBlock.kTypeSBit)
                             .WithLayout("Button")
-                            .WithParameters("clampMin=0,clampMax=1,invert=true")
+                            .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
                             .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                             .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/left")
                             .WithFormat(InputStateBlock.kTypeSBit)
                             .WithLayout("Button")
-                            .WithParameters("clampMin=0,clampMax=1,invert=true")
+                            .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
                             .WithBitOffset(0)
                             .WithSizeInBits((uint)xElement.reportSizeInBits);
 
@@ -657,8 +657,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         {
                             case (int)GenericDesktop.X:
                             case (int)GenericDesktop.Y:
-                                return null; //This needs to be done as a special case
-
                             case (int)GenericDesktop.Z:
                             case (int)GenericDesktop.Rx:
                             case (int)GenericDesktop.Ry:
