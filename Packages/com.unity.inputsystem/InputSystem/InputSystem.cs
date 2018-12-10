@@ -1640,6 +1640,10 @@ namespace UnityEngine.Experimental.Input
                     EditorPlayerSettings.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
+
+            // Send an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            Update();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
