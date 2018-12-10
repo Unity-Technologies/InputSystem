@@ -263,7 +263,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     {
                         value = Mathf.Clamp(rawValue / maxValue, 0.0f, 1.0f);
                     }
-
                 }
                 else
                 {

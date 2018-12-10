@@ -342,10 +342,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 var xElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.X);
                 var yElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.Y);
                 //Since HIDElementDescriptor is a struct and not nullable, the easiest way to verify we found an element is to double check it's usage is what we were looking for.
-                if((xElement.usage == (int)GenericDesktop.X) && (yElement.usage == (int)GenericDesktop.Y))
+                if ((xElement.usage == (int)GenericDesktop.X) && (yElement.usage == (int)GenericDesktop.Y))
                 {
                     int bitOffset, byteOffset, sizeInBits;
-                    if(xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
+                    if (xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
                     {
                         bitOffset = xElement.reportOffsetInBits % 8;
                         byteOffset = xElement.reportOffsetInBits / 8;
@@ -360,52 +360,52 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
                     var stickName = "Stick";
                     var control = builder.AddControl(stickName)
-                                        .WithLayout("Stick")
-                                        .WithBitOffset((uint)bitOffset)
-                                        .WithByteOffset((uint)byteOffset)
-                                        .WithSizeInBits((uint)sizeInBits)
-                                        .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
+                        .WithLayout("Stick")
+                        .WithBitOffset((uint)bitOffset)
+                        .WithByteOffset((uint)byteOffset)
+                        .WithSizeInBits((uint)sizeInBits)
+                        .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
 
                     builder.AddControl(stickName + "/x")
-                            .WithFormat(InputStateBlock.kTypeSBit)
-                            .WithLayout("Axis")
-                            .WithBitOffset(0)
-                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Axis")
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/y")
-                            .WithFormat(InputStateBlock.kTypeSBit)
-                            .WithLayout("Axis")
-                            .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
-                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Axis")
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     //Need to handle Up/Down/Left/Right
                     builder.AddControl(stickName + "/up")
-                            .WithFormat(InputStateBlock.kTypeSBit)
-                            .WithLayout("Button")
-                            .WithParameters("clampMin=0,clampMax=1")
-                            .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
-                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clampMin=0,clampMax=1")
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/down")
-                            .WithFormat(InputStateBlock.kTypeSBit)
-                            .WithLayout("Button")
-                            .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
-                            .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
-                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/left")
-                            .WithFormat(InputStateBlock.kTypeSBit)
-                            .WithLayout("Button")
-                            .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
-                            .WithBitOffset(0)
-                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/right")
-                            .WithFormat(InputStateBlock.kTypeSBit)
-                            .WithLayout("Button")
-                            .WithParameters("clampMin=0,clampMax=1")
-                            .WithBitOffset(0)
-                            .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clampMin=0,clampMax=1")
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
                 }
 
 

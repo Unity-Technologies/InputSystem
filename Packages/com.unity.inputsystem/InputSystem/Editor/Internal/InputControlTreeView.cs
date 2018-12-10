@@ -333,9 +333,9 @@ namespace UnityEngine.Experimental.Input.Editor
                         value = (float)(MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
                     }
                 }
-                else if(format == InputStateBlock.kTypeSBit)
+                else if (format == InputStateBlock.kTypeSBit)
                 {
-                    if(control.valueSizeInBytes == 1)
+                    if (control.valueSizeInBytes == 1)
                     {
                         value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "-1";
                     }

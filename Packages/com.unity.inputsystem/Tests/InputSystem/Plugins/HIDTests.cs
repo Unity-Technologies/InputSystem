@@ -831,7 +831,7 @@ internal class HIDTests : InputTestFixture
             productId = 0x5678,
             inputReportSize = 4,
             elements = new[]
-    {
+            {
                 // 16bit X and Y axes.
                 new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
                 new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
@@ -882,12 +882,11 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-      
+
         var device = InputSystem.devices[0];
         Assert.That(device, Is.TypeOf<Joystick>());
         Assert.That(device["Stick"], Is.TypeOf<StickControl>());
     }
-
 
     [StructLayout(LayoutKind.Explicit)]
     struct SimpleJoystickLayout : IInputStateTypeInfo
