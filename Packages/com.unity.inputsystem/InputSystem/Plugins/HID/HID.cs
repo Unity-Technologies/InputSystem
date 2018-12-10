@@ -117,12 +117,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
-                {
-                    baseLayout = "Joystick";
-                    baseType = typeof(Joystick);
-                }
-                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
+                if ((hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick) || (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad))
                 {
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
@@ -338,7 +333,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     stateFormat = new FourCC('H', 'I', 'D'),
                 };
 
-                ////TODO: for joysticks, set up stick from X and Y
                 var xElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.X);
                 var yElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.Y);
                 //Since HIDElementDescriptor is a struct and not nullable, the easiest way to verify we found an element is to double check it's usage is what we were looking for.

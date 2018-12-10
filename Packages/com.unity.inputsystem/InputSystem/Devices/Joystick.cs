@@ -46,7 +46,7 @@ namespace UnityEngine.Experimental.Input
     // By default comes with just a trigger, a potentially twistable
     // stick and an optional single hatswitch.
     [InputControlLayout(stateType = typeof(JoystickState))]
-    public class Joystick : HID
+    public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }
         public StickControl stick { get; private set; }

@@ -330,7 +330,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     else
                     {
-                        value = (float)(MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
+                        value = MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits);
                     }
                 }
                 else if (format == InputStateBlock.kTypeSBit)

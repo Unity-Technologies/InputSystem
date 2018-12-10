@@ -169,50 +169,53 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
 
         // Grab device.
-        var device = (HID)InputSystem.GetDeviceById(deviceId);
+        var device = (Joystick)InputSystem.GetDeviceById(deviceId);
         Assert.That(device, Is.Not.Null);
         Assert.That(device, Is.TypeOf<Joystick>());
 
+        InputDeviceDescription deviceDescription = device.description;
+        Assert.That(deviceDescription.interfaceName, Is.EqualTo(HID.kHIDInterface));
+        HID.HIDDeviceDescriptor hidDescriptor = HID.ReadHIDDeviceDescriptor(device, runtime);
         // Check HID descriptor.
-        Assert.That(device.hidDescriptor.vendorId, Is.EqualTo(0x54C));
-        Assert.That(device.hidDescriptor.productId, Is.EqualTo(0x9CC));
-        Assert.That(device.hidDescriptor.usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
-        Assert.That(device.hidDescriptor.usage, Is.EqualTo((int)HID.GenericDesktop.Gamepad));
-        Assert.That(device.hidDescriptor.elements.Length, Is.EqualTo(kNumElements));
+        Assert.That(hidDescriptor.vendorId, Is.EqualTo(0x54C));
+        Assert.That(hidDescriptor.productId, Is.EqualTo(0x9CC));
+        Assert.That(hidDescriptor.usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
+        Assert.That(hidDescriptor.usage, Is.EqualTo((int)HID.GenericDesktop.Gamepad));
+        Assert.That(hidDescriptor.elements.Length, Is.EqualTo(kNumElements));
 
-        Assert.That(device.hidDescriptor.elements[0].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
-        Assert.That(device.hidDescriptor.elements[0].usage, Is.EqualTo((int)HID.GenericDesktop.X));
-        Assert.That(device.hidDescriptor.elements[0].reportId, Is.EqualTo(1));
-        Assert.That(device.hidDescriptor.elements[0].reportOffsetInBits, Is.EqualTo(8)); // Descriptor has report ID so that's the first thing in reports.
-        Assert.That(device.hidDescriptor.elements[0].reportSizeInBits, Is.EqualTo(8));
-        Assert.That(device.hidDescriptor.elements[0].logicalMin, Is.EqualTo(0));
-        Assert.That(device.hidDescriptor.elements[0].logicalMax, Is.EqualTo(255));
+        Assert.That(hidDescriptor.elements[0].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
+        Assert.That(hidDescriptor.elements[0].usage, Is.EqualTo((int)HID.GenericDesktop.X));
+        Assert.That(hidDescriptor.elements[0].reportId, Is.EqualTo(1));
+        Assert.That(hidDescriptor.elements[0].reportOffsetInBits, Is.EqualTo(8)); // Descriptor has report ID so that's the first thing in reports.
+        Assert.That(hidDescriptor.elements[0].reportSizeInBits, Is.EqualTo(8));
+        Assert.That(hidDescriptor.elements[0].logicalMin, Is.EqualTo(0));
+        Assert.That(hidDescriptor.elements[0].logicalMax, Is.EqualTo(255));
 
-        Assert.That(device.hidDescriptor.elements[1].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
-        Assert.That(device.hidDescriptor.elements[1].usage, Is.EqualTo((int)HID.GenericDesktop.Y));
-        Assert.That(device.hidDescriptor.elements[1].reportId, Is.EqualTo(1));
-        Assert.That(device.hidDescriptor.elements[1].reportOffsetInBits, Is.EqualTo(16));
-        Assert.That(device.hidDescriptor.elements[1].reportSizeInBits, Is.EqualTo(8));
-        Assert.That(device.hidDescriptor.elements[1].logicalMin, Is.EqualTo(0));
-        Assert.That(device.hidDescriptor.elements[1].logicalMax, Is.EqualTo(255));
+        Assert.That(hidDescriptor.elements[1].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
+        Assert.That(hidDescriptor.elements[1].usage, Is.EqualTo((int)HID.GenericDesktop.Y));
+        Assert.That(hidDescriptor.elements[1].reportId, Is.EqualTo(1));
+        Assert.That(hidDescriptor.elements[1].reportOffsetInBits, Is.EqualTo(16));
+        Assert.That(hidDescriptor.elements[1].reportSizeInBits, Is.EqualTo(8));
+        Assert.That(hidDescriptor.elements[1].logicalMin, Is.EqualTo(0));
+        Assert.That(hidDescriptor.elements[1].logicalMax, Is.EqualTo(255));
 
-        Assert.That(device.hidDescriptor.elements[4].hasNullState, Is.True);
-        Assert.That(device.hidDescriptor.elements[4].physicalMax, Is.EqualTo(315));
-        Assert.That(device.hidDescriptor.elements[4].unit, Is.EqualTo(0x14));
+        Assert.That(hidDescriptor.elements[4].hasNullState, Is.True);
+        Assert.That(hidDescriptor.elements[4].physicalMax, Is.EqualTo(315));
+        Assert.That(hidDescriptor.elements[4].unit, Is.EqualTo(0x14));
 
-        Assert.That(device.hidDescriptor.elements[5].unit, Is.Zero);
+        Assert.That(hidDescriptor.elements[5].unit, Is.Zero);
 
-        Assert.That(device.hidDescriptor.elements[5].reportOffsetInBits, Is.EqualTo(5 * 8 + 4));
-        Assert.That(device.hidDescriptor.elements[5].usagePage, Is.EqualTo(HID.UsagePage.Button));
-        Assert.That(device.hidDescriptor.elements[6].usagePage, Is.EqualTo(HID.UsagePage.Button));
-        Assert.That(device.hidDescriptor.elements[7].usagePage, Is.EqualTo(HID.UsagePage.Button));
-        Assert.That(device.hidDescriptor.elements[5].usage, Is.EqualTo(1));
-        Assert.That(device.hidDescriptor.elements[6].usage, Is.EqualTo(2));
-        Assert.That(device.hidDescriptor.elements[7].usage, Is.EqualTo(3));
+        Assert.That(hidDescriptor.elements[5].reportOffsetInBits, Is.EqualTo(5 * 8 + 4));
+        Assert.That(hidDescriptor.elements[5].usagePage, Is.EqualTo(HID.UsagePage.Button));
+        Assert.That(hidDescriptor.elements[6].usagePage, Is.EqualTo(HID.UsagePage.Button));
+        Assert.That(hidDescriptor.elements[7].usagePage, Is.EqualTo(HID.UsagePage.Button));
+        Assert.That(hidDescriptor.elements[5].usage, Is.EqualTo(1));
+        Assert.That(hidDescriptor.elements[6].usage, Is.EqualTo(2));
+        Assert.That(hidDescriptor.elements[7].usage, Is.EqualTo(3));
 
-        Assert.That(device.hidDescriptor.collections.Length, Is.EqualTo(1));
-        Assert.That(device.hidDescriptor.collections[0].type, Is.EqualTo(HID.HIDCollectionType.Application));
-        Assert.That(device.hidDescriptor.collections[0].childCount, Is.EqualTo(kNumElements));
+        Assert.That(hidDescriptor.collections.Length, Is.EqualTo(1));
+        Assert.That(hidDescriptor.collections[0].type, Is.EqualTo(HID.HIDCollectionType.Application));
+        Assert.That(hidDescriptor.collections[0].childCount, Is.EqualTo(kNumElements));
 
         ////TODO: check hat switch
     }
