@@ -167,7 +167,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             if (device == null)
                 throw new ArgumentNullException("device");
 
-            InputDeviceDescription deviceDescription = device.description;
+            var deviceDescription = device.description;
             if (deviceDescription.interfaceName != kHIDInterface)
                 throw new ArgumentException(
                     string.Format("Device '{0}' is not a HID (interface is '{1}')", device,

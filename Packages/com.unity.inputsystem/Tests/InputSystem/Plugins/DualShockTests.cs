@@ -6,6 +6,7 @@ using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
@@ -19,27 +20,7 @@ internal class DualShockTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID()
     {
-#if !UNITY_WSA
-        var device = InputSystem.AddDevice(new InputDeviceDescription
-        {
-            product = "Wireless Controller",
-            manufacturer = "Sony Interactive Entertainment",
-            interfaceName = "HID",
-        });
-#else // UWP requires different query logic (manufacture not available)
-        var device = InputSystem.AddDevice(new InputDeviceDescription
-        {
-            product = "Wireless Controller",
-            interfaceName = "HID",
-            capabilities = new HID.HIDDeviceDescriptor
-            {
-                vendorId = 0x054C, // Sony
-            }.ToJson()
-        });
-#endif
-
-        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
-        var gamepad = (DualShockGamepad)device;
+        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
 
         // Dpad has default state value so make sure that one is coming through.
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
@@ -88,16 +69,47 @@ internal class DualShockTests : InputTestFixture
 
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
     }
+    
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHID_WithProductAndManufacturerName()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            manufacturer = "Sony Interactive Entertainment",
+            interfaceName = "HID",
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsDualShockAsHID_WithAlternateManufacturerName()
+    public void Devices_SupportsDualShockAsHID_WithProductAndAlternateManufacturerName()
     {
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             product = "Wireless Controller",
             manufacturer = "Sony Computer Entertainment",
-            interfaceName = "HID"
+            interfaceName = "HID",
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+    
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "HID",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x54C,
+                productId = 0x9CC,
+            }.ToJson()
         });
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Core:
 - Invalid memory accesses when using .NET 4 runtime
 - Mouse.button not being identical to Mouse.leftButton
+- DualShock not being recognized when connected via Bluetooth
 
 Actions:
 - Parameters disappearing on processors and interactions in UI when edited

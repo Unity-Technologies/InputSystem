@@ -446,6 +446,21 @@ namespace UnityEngine.Experimental.Input
             // See if we can make sense of any device we couldn't make sense of before.
             AddAvailableDevicesMatchingDescription(matcher, internedLayoutName);
         }
+        
+        public void RegisterControlLayoutMatcher(Type type, InputDeviceMatcher matcher)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+            if (matcher.empty)
+                throw new ArgumentException("Matcher cannot be empty", "matcher");
+
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
+                throw new ArgumentException(
+                    string.Format("Type '{0}' has not been registered as a control layout", type.Name), "type");
+
+            RegisterControlLayoutMatcher(layoutName, matcher);
+        }
 
         private void RecreateDevicesUsingLayoutWithInferiorMatch(InputDeviceMatcher deviceMatcher)
         {
@@ -1313,6 +1328,7 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
+            processors.AddTypeRegistration("Scale", typeof(ScaleProcessor));
             processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));

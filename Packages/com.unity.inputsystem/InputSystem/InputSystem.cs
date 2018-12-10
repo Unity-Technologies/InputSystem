@@ -186,6 +186,12 @@ namespace UnityEngine.Experimental.Input
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
+        
+        public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
+            where TDevice : InputDevice
+        {
+            s_Manager.RegisterControlLayoutMatcher(typeof(TDevice), matcher);
+        }
 
         /// <summary>
         /// Register a builder that delivers an <see cref="InputControlLayout"/> instance on demand.
