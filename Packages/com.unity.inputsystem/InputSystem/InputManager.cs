@@ -1328,7 +1328,7 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
-            processors.AddTypeRegistration("Scale", typeof(ScaleProcessor));
+            //processors.AddTypeRegistration("Scale", typeof(ScaleProcessor));
             processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
