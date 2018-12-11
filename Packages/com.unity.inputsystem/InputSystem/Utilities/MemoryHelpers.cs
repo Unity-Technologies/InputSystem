@@ -214,8 +214,8 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 int newBitOffset = (int)bitOffset % 32;
                 int intOffset = ((int)bitOffset - newBitOffset) / 32;
-                void* offsetPtr = (byte*)ptr + (intOffset * 4);
-                return ReadIntFromMultipleBits(offsetPtr, (uint)newBitOffset, bitCount);
+                ptr = (byte*)ptr + (intOffset * 4);
+                bitOffset = (uint)newBitOffset;
             }
 
             // Bits out of byte.

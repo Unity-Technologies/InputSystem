@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.HID;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
