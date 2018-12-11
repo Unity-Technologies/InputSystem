@@ -11,6 +11,10 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: can we collects tooltips from the fields we're looking at?
 
+////REVIEW: For some of the parameters (like SlowTap.duration) it is confusing to see any value at all while not yet having
+////        entered a value and seeing a value that doesn't seem to make sense (0 in this case means "no value, use default").
+////        Can we do this better? Maybe display "<default>" as text while the control is at default value?
+
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
     /// <summary>
@@ -146,7 +150,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 var existingParameterIndex = existingParameters.IndexOf(x => x.name == field.Name);
                 if (existingParameterIndex >= 0)
                 {
-                    parameter.value = existingParameters[existingParameterIndex];
+                    // Make sure we're preserving the right type.
+                    parameter.value = existingParameters[existingParameterIndex].ConvertTo(parameter.value.type);
                 }
                 else
                 {

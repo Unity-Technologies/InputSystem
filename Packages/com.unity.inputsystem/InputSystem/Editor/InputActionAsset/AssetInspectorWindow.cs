@@ -1,10 +1,11 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+
+////FIXME: when saving, processor/interaction selection is cleared
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -261,10 +262,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_BindingPropertyView =
                         new InputBindingPropertiesView(
                             item.elementProperty,
-                            () =>
+                            change =>
                             {
                                 Apply();
-                                LoadPropertiesForSelection();
                             },
                             m_PickerTreeViewState,
                             m_InputActionWindowToolbar,
@@ -284,16 +284,11 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionPropertyView =
                         new InputActionPropertiesView(
                             item.elementProperty,
-                            () =>
-                            {
-                                Apply();
-                                LoadPropertiesForSelection();
-                            });
+                            Apply);
                 }
             }
         }
 
-        ////FIXME: this is stupid; don't trigger a full reload of the entire tree on every modification
         internal void Apply()
         {
             m_ActionAssetManager.SetAssetDirty();
@@ -311,8 +306,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-
-            LoadPropertiesForSelection();
         }
 
         private void OnGUI()

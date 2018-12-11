@@ -4,8 +4,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: is the sensitivity stuff actually good to put directly on a device or should it be confined to actions?
-
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
 ////REVIEW: should we put lock state directly on Pointer?
@@ -44,7 +42,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
         [InputControl(layout = "Analog", usage = "Pressure")]

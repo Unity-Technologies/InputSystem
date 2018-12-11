@@ -15,7 +15,7 @@ public class PenISX : MonoBehaviour
 
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
-    
+
     [Header("UI Elements for Debug Info")]
     public TextMesh m_pressureText;
     public Text m_penInfoText;

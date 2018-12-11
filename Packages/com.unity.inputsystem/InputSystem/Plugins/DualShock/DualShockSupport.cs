@@ -15,24 +15,25 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             // This works without any PS4-specific drivers but does not support the full
             // range of capabilities of the controller (the HID format is undocumented
             // and only partially understood).
-            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR
+            //
+            // NOTE: We match by PID and VID here as that is the most reliable way. The product
+            //       and manufacturer strings we get from APIs often return inconsistent results
+            //       or none at all. E.g. when connected via Bluetooth on OSX, the DualShock will
+            //       not return anything from IOHIDDevice_GetProduct() and IOHIDevice_GetManufacturer()
+            //       even though it will report the expected results when plugged in via USB.
+            #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR
             InputSystem.RegisterLayout<DualShockGamepadHID>(
                 matches: new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x54C) // Sony Entertainment.
+                    .WithCapability("productId", 0x9CC)); // Wireless controller.
+            
+            // Just to make sure, also set up a matcher that goes by strings so that we cover
+            // all bases.
+            InputSystem.RegisterLayoutMatcher<DualShockGamepadHID>(
+                new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithManufacturer("Sony.+Entertainment")
-                    .WithProduct("Wireless Controller"));
-            #endif
-
-            ////TODO: make this work side-by-side with the other profile so that we can have this
-            ////      active in UNITY_EDITOR; having tests that are active only on a specific platform
-            ////      is a PITA
-            // The "Manufacturer" field is not available in UWP (for some reason).
-            // Identify PS4 controller by Sony's VendorID (VID).
-            #if UNITY_WSA
-            InputSystem.RegisterLayout<DualShockGamepadHID>(
-                matches: new InputDeviceMatcher()
-                    .WithInterface("HID")
-                    .WithCapability("vendorId", 0x054c)
                     .WithProduct("Wireless Controller"));
             #endif
         }

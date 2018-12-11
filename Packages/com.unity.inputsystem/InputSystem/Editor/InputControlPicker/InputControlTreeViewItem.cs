@@ -43,7 +43,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ControlPath = optionalLayout.name;
             m_Device = deviceControlId;
             m_Usage = commonUsage;
-            icon = EditorInputControlLayoutCache.GetIconForLayout(optionalLayout.layout);
         }
     }
 
@@ -73,7 +72,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 name += " (" + commonUsage + ")";
             id = name.GetHashCode();
             m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
-            icon = EditorInputControlLayoutCache.GetIconForLayout(layout.name);
         }
 
         public DeviceTreeViewItem(InputControlLayout layout)
@@ -97,7 +95,6 @@ namespace UnityEngine.Experimental.Input.Editor
             name += control.name;
             id = controlPathWithDevice.GetHashCode();
             m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
-            icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
         }
     }
 }
