@@ -9,7 +9,6 @@ public class XboxISX : GamepadISX
     public Text m_leftStickText;
     public Text m_rightStickText;
 
-    // Use this for initialization
     void Start()
     {
         //m_stickMaxMove = 0.25f;
