@@ -1364,6 +1364,60 @@ partial class CoreTests
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
+    ////FIXME: the sensitivity processor is wonky and will need improvement
+
+    [Test]
+    [Category("Actions")]
+    public unsafe void Actions_CanAddSensitivityProcessorToMouseDeltas()
+    {
+        const float kWindowWidth = 640f;
+        const float kWindowHeight = 480f;
+        const float kSensitivity = 6f;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction();
+        action.AddBinding("<Mouse>/delta").WithProcessor(string.Format("sensitivity(sensitivity={0})", kSensitivity));
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => value = ctx.ReadValue<Vector2>();
+
+        ////REVIEW: what's really the best behavior here?
+        // First, try with the mouse not responding to QueryDimensionsCommand, i.e. without the mouse
+        // being able to tell us the dimensions of the pointer surface. The result should be that we
+        // don't touch the incoming values.
+        InputSystem.QueueDeltaStateEvent(mouse.delta, new Vector2(59, 38));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo(59).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo(38).Within(0.00001));
+
+        // Now add support for device dimensions to the mouse.
+        runtime.SetDeviceCommandCallback(mouse.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == QueryDimensionsCommand.Type)
+                {
+                    var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
+                    windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        value = null;
+
+        InputSystem.QueueDeltaStateEvent(mouse.delta, new Vector2(32f, 64f));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ControlsUpdateWhenNewDeviceIsAdded()
@@ -4187,13 +4241,14 @@ partial class CoreTests
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
             InputSystem.Update();
 
-            // The keyboard's AnyKey control will get picked, too, but will end up with the
-            // lowest score.
+            // The keyboard's synthetic AnyKey control and the mouse's button will get picked, too,
+            // but will end up with the lowest scores.
 
-            Assert.That(rebind.candidates, Has.Count.EqualTo(3));
+            Assert.That(rebind.candidates, Has.Count.EqualTo(4));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(keyboard.spaceKey));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(mouse.leftButton));
-            Assert.That(rebind.candidates[2], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
+            Assert.That(rebind.candidates[2], Is.SameAs(mouse.button));
+            Assert.That(rebind.candidates[3], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
         }
     }
 
@@ -4413,9 +4468,6 @@ partial class CoreTests
         // Deadzoning alters values on the stick. For this test, get rid of it.
         InputConfiguration.DeadzoneMin = 0f;
         InputConfiguration.DeadzoneMax = 1f;
-
-        // Same for pointer sensitivity.
-        InputConfiguration.PointerDeltaSensitivity = 1f;
 
         var action = new InputAction();
 

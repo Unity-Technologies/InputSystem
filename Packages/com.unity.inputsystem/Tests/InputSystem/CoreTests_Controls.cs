@@ -706,10 +706,13 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_AfterAddingDeviceCanQueryValueOfControls()
+    public void Controls_CanQueryValueOfControls_AfterAddingDevice()
     {
         var setup = new InputDeviceBuilder("Gamepad");
         var device = (Gamepad)setup.Finish();
+
+        Assert.That(() => device.leftStick.ReadValue(), Throws.InvalidOperationException);
+
         InputSystem.AddDevice(device);
 
         Assert.That(device.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));

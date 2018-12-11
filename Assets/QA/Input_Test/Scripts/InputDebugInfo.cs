@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 
-public class DebugInfo : MonoBehaviour
+public class InputDebugInfo : MonoBehaviour
 {
     private bool m_isShowing = false;
     private bool m_isPlaying = false;       // if the menu is in the process of sliding in/out
@@ -17,9 +17,33 @@ public class DebugInfo : MonoBehaviour
     private float m_startMouseY;
     private float m_startY;
 
-    public void Update()
+    private InputAction m_toggleAction;
+
+    void Start()
     {
-        var currentKeyboard = InputSystem.GetDevice<Keyboard>();
+        //m_toggleAction = new InputAction(name: "ToggleInfoDisplay");
+        //m_toggleAction.AddBinding("<keyboard>/leftCtrl");
+
+        //m_toggleAction.performed += _ => OnToggleDebugInfo();
+        //m_toggleAction.Enable();
+    }
+
+    void OnEnable()
+    {
+        //if (m_toggleAction != null)
+        //    m_toggleAction.Enable();
+    }
+
+    void OnDisable()
+    {
+        //m_toggleAction.Disable();
+    }
+
+    void Update()
+    {
+        if (InputSystem.GetDevice<Keyboard>() == null) return;
+
+        Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
         if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
         {
             if (currentKeyboard.iKey.isPressed)
@@ -29,8 +53,7 @@ public class DebugInfo : MonoBehaviour
 
     public void OnToggleDebugInfo()
     {
-        if (m_isPlaying || m_isDragging)
-            return;
+        if (m_isPlaying || m_isDragging) return;
 
         m_isShowing = !m_isShowing;
         StartCoroutine("SlideToPositionX");
@@ -49,8 +72,8 @@ public class DebugInfo : MonoBehaviour
     {
         if (m_isPlaying) return;
 
-        var delta = Input.mousePosition.y - m_startMouseY;
-        var pos = transform.position;
+        float delta = Input.mousePosition.y - m_startMouseY;
+        Vector3 pos = transform.position;
         pos.y = Mathf.Min(Mathf.Max(m_startY + delta, m_info.rect.height * GetComponentInParent<Canvas>().scaleFactor), Screen.height);
         transform.position = pos;
     }
@@ -61,14 +84,14 @@ public class DebugInfo : MonoBehaviour
     }
 
     // Slide the debug info menu window in/out from view
-    // Rotate the arrow UI 180 degrees
+    // Ratote the arrow UI 180 degrees
     private IEnumerator SlideToPositionX()
     {
         m_isPlaying = true;
 
-        var posDifference = m_isShowing ? -1f * CalculateInfoContainerWidth() : CalculateInfoContainerWidth();
-        var currentX = transform.position.x;
-        var targetX = currentX + posDifference;
+        float posDifference = m_isShowing ? -1f * CalculateInfoContainerWidth() : CalculateInfoContainerWidth();
+        float currentX = transform.position.x;
+        float targetX = currentX + posDifference;
 
         Quaternion targetAngle = m_arrowUI.rotation * Quaternion.Euler(0f, 0f, 180f);
 
@@ -93,12 +116,13 @@ public class DebugInfo : MonoBehaviour
     {
         if (m_info != null)
             return m_info.rect.width * GetComponentInParent<Canvas>().scaleFactor;
-        throw new Exception("Need assign \"info\" Transform Rect.");
+        else
+            throw new Exception("Need assign \"info\" Transform Rect.");
     }
 
     private void SetPositionByX(float posX)
     {
-        var pos = transform.position;
+        Vector3 pos = transform.position;
         pos.x = posX;
         transform.position = pos;
     }

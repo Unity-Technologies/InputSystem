@@ -99,6 +99,29 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// Checks if the device is capable of getting inputs while the application is running in the background.
+        /// </summary>
+        /// <remarks>
+        /// The Input system is capable of running while the application is running in the background, but that doesn't mean all devices can recieve input while in the background.
+        /// At the OS or SDK level, some devices simply don't send input when the application is out of focus, and this helps identify those devices.
+        /// </remarks>
+        /// <seealso cref="InputSystem.runInBackground"/>
+        public bool canRunInBackground
+        {
+            get
+            {
+#if UNITY_2019_1_OR_NEWER
+                var command = QueryCanRunInBackground.Create();
+                if (ExecuteCommand(ref command) >= 0)
+                {
+                    return command.canRunInBackground;
+                }
+#endif
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Whether the device has been added to the system.
         /// </summary>
         /// <remarks>

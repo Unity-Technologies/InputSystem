@@ -44,10 +44,8 @@ namespace UnityEngine.Experimental.Input
         // How long does a button have to be held for it to be considered a hold?
         public static float HoldTime = 0.4f;
 
-        ////TODO: add support for disabling pointer sensitivity globally
-
         /// <summary>
-        /// Default sensitivity for pointer deltas.
+        /// Default mouse/pen/touch sensitivity for motion deltas. This only applies when using <see cref="SensitivityProcessor"/>.
         /// </summary>
         /// <remarks>
         /// Pointer deltas flow into the system in pixel space. This means that the values are dependent on
@@ -63,7 +61,8 @@ namespace UnityEngine.Experimental.Input
         /// pointer delta value will be (15/640*6, -20/480*6) = (0.14, -0.25).
         /// </remarks>
         /// <seealso cref="Pointer.delta"/>
-        public static float PointerDeltaSensitivity = 0.25f;
+        /// <seealso cref="SensitivityProcessor"/>
+        public static float Sensitivity = 0.25f;
 
         /// <summary>
         /// Should sensors be compensated for screen orientation.
@@ -107,7 +106,7 @@ namespace UnityEngine.Experimental.Input
                 slowTapTime = SlowTapTime,
                 multiTapMaximumDelay = MultiTapMaximumDelay,
                 holdTime = HoldTime,
-                pointerDeltaSensitivity = PointerDeltaSensitivity,
+                pointerDeltaSensitivity = Sensitivity,
                 compensateSensorsForScreenOrientation = CompensateSensorsForScreenOrientation,
                 #if UNITY_EDITOR
                 lockInputToGame = LockInputToGame
@@ -117,13 +116,14 @@ namespace UnityEngine.Experimental.Input
 
         internal static void Restore(SerializedState state)
         {
+            ButtonPressPoint = state.buttonPressPoint;
             DeadzoneMin = state.deadzoneMin;
             DeadzoneMax = state.deadzoneMax;
             TapTime = state.tapTime;
             SlowTapTime = state.slowTapTime;
             MultiTapMaximumDelay = state.multiTapMaximumDelay;
             HoldTime = state.holdTime;
-            PointerDeltaSensitivity = state.pointerDeltaSensitivity;
+            Sensitivity = state.pointerDeltaSensitivity;
             CompensateSensorsForScreenOrientation = state.compensateSensorsForScreenOrientation;
             #if UNITY_EDITOR
             LockInputToGame = state.lockInputToGame;

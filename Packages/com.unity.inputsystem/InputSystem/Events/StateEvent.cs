@@ -12,10 +12,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <remarks>
     /// This is a variable-sized event.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 5)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 4 + kStateDataSizeToSubtract, Pack = 1)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x53544154; // 'STAT'
+
+        internal const int kStateDataSizeToSubtract = 1;
 
         [FieldOffset(0)] public InputEvent baseEvent;
 
@@ -24,7 +26,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
 
-        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))] public fixed byte stateData[1]; // Variable-sized.
+        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))] public fixed byte stateData[kStateDataSizeToSubtract]; // Variable-sized.
 
         public uint stateSizeInBytes
         {

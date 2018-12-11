@@ -886,7 +886,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                if (haveChangedCandidates)
+                if (haveChangedCandidates && !cancelled)
                 {
                     // If we have a callback that wants to control matching, leave it to the callback to decide
                     // whether the rebind is complete or not. Otherwise, just complete.

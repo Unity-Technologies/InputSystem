@@ -221,6 +221,35 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
+            public ParameterValue ConvertTo(ParameterType type)
+            {
+                switch (type)
+                {
+                    case ParameterType.Boolean:
+                        if (this.type == ParameterType.Float)
+                            return new ParameterValue(name, GetFloatValue() > 0 || GetFloatValue() < 0);
+                        if (this.type == ParameterType.Integer)
+                            return new ParameterValue(name, GetIntValue() != 0);
+                        return this;
+
+                    case ParameterType.Integer:
+                        if (this.type == ParameterType.Boolean)
+                            return new ParameterValue(name, GetBoolValue() ? 1 : 0);
+                        if (this.type == ParameterType.Float)
+                            return new ParameterValue(name, (int)GetFloatValue());
+                        return this;
+
+                    case ParameterType.Float:
+                        if (this.type == ParameterType.Boolean)
+                            return new ParameterValue(name, GetBoolValue() ? 1f : 0f);
+                        if (this.type == ParameterType.Integer)
+                            return new ParameterValue(name, (float)GetIntValue());
+                        return this;
+                }
+
+                throw new InvalidOperationException("Should not reach here");
+            }
+
             public string GetValueAsString()
             {
                 fixed(byte* ptr = value)
@@ -475,6 +504,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 result.variants = variants.IsEmpty() ? other.variants : variants;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
                 result.arraySize = !isArray ? other.arraySize : arraySize;
+                ////FIXME: allow overrides to unset this
                 result.isNoisy = isNoisy || other.isNoisy;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;

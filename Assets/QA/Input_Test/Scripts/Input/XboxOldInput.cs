@@ -9,7 +9,7 @@ using UnityEngine.UI;
 // Alternatively, ingore the requirement and change the code
 // --------------------------------------------------------------------------------
 
-public class XboxForInputManager : GamepadForInputManager
+public class XboxOldInput : GamepadOldInput
 {
     [Header("UI Element for Other Information")]
     public Text m_leftStickText;
@@ -18,6 +18,7 @@ public class XboxForInputManager : GamepadForInputManager
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
     private Color m_stickButtonColor = new Color(0.4f, 0.4f, 0.55f, 1f);    // The default color for Stick when it is NOT pressed.
 
+    // Use this for initialization
     void Start()
     {
         // Button map is different for each platform
@@ -61,9 +62,34 @@ public class XboxForInputManager : GamepadForInputManager
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick/Stick - Input Manager"), "Axis 3", "Axis 4", posText: m_rightStickText, isYReversed: true));
         xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("LeftTrigger"), "Axis 5"));
         xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("RightTrigger"), "Axis 6"));
+#elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || UNITY_STANDALONE_LINUX_API
+        button_map.Add("Button0", "A");
+        button_map.Add("Button1", "B");
+        button_map.Add("Button2", "X");
+        button_map.Add("Button3", "Y");
+        button_map.Add("Button4", "LeftShoulder");
+        button_map.Add("Button5", "RightShoulder");
+        button_map.Add("Button6", "Select");
+        button_map.Add("Button7", "Start");
+        button_map.Add("Button9", "LeftStick/Stick - Input Manager");
+        button_map.Add("Button10", "RightStick/Stick - Input Manager");
+        button_map.Add("Button11", "Dpad/Left");
+        button_map.Add("Button12", "Dpad/Right");
+        button_map.Add("Button13", "Dpad/Up");
+        button_map.Add("Button14", "Dpad/Down");
+        button_map.Add("Button8", "Xbox");
+        analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("LeftStick/Stick - Input Manager"), "Axis 1", "Axis 2", posText: m_leftStickText, isYReversed: true));
+        analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick/Stick - Input Manager"), "Axis 4", "Axis 5", posText: m_rightStickText, isYReversed: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("LeftTrigger"), "Axis 3", 0f, 1f));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("RightTrigger"), "Axis 6", 0f, 1f));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Left"), "Axis 7", -1f, 0f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Right"), "Axis 7", 0f, 1f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Up"), "Axis 8", -1f, 0f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Down"), "Axis 8", 0f, 1f, isDpad: true));
 #endif
     }
 
+    // Update is called once per frame
     void Update()
     {
         UpdateAllButtons();

@@ -3,12 +3,13 @@ using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class XboxForInputSystem : GamepadForInputSystem
+public class XboxISX : GamepadISX
 {
     [Header("UI Element for Other Information")]
     public Text m_leftStickText;
     public Text m_rightStickText;
 
+    // Use this for initialization
     void Start()
     {
         //m_stickMaxMove = 0.25f;

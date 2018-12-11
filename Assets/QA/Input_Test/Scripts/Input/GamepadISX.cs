@@ -8,7 +8,7 @@ using UnityEngine.Experimental.Input.Controls;
 // Parent Class for All Gamepad/Controller Input from New Input System.
 //---------------------------------------------------------------------------
 
-public class GamepadForInputSystem : MonoBehaviour
+public class GamepadISX : MonoBehaviour
 {
     [Tooltip("The GameObject that is the parent for all the buttons.")]
     public Transform m_buttonContainer;

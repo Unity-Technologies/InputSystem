@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -353,6 +354,25 @@ namespace UnityEngine.Experimental.Input
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            if (Count == 0)
+                return "()";
+
+            var builder = new StringBuilder();
+            builder.Append('(');
+
+            for (var i = 0; i < Count; ++i)
+            {
+                if (i != 0)
+                    builder.Append(',');
+                builder.Append(this[i]);
+            }
+
+            builder.Append(')');
+            return builder.ToString();
         }
 
         private int m_Count;
