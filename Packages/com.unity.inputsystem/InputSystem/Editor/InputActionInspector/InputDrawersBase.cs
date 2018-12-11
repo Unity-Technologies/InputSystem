@@ -101,12 +101,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (Event.current.type == EventType.ValidateCommand)
                 {
                     if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
-                    {
                         Event.current.Use();
-                    }
                 }
-
-                if (Event.current.type == EventType.ExecuteCommand)
+                else if (Event.current.type == EventType.ExecuteCommand)
                 {
                     m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
                 }

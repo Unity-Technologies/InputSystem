@@ -11,11 +11,11 @@ namespace UnityEngine.Experimental.Input.Editor
     internal class InputControlPickerDropdown : AdvancedDropdown
     {
         SerializedProperty m_PathProperty;
-        Action<SerializedProperty> m_OnPickCallback;
+        Action m_OnPickCallback;
         string[] m_DeviceFilter;
         Type m_ExpectedControlLayoutFilterType;
 
-        public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action<SerializedProperty> onPickCallback)
+        public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action onPickCallback)
             : base(state)
         {
             m_Gui = new InputControlPickerGUI();
@@ -75,7 +75,7 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
             m_PathProperty.stringValue = ((InputControlTreeViewItem)item).controlPathWithDevice;
-            m_OnPickCallback(m_PathProperty);
+            m_OnPickCallback();
         }
 
         private AdvancedDropdownItem BuildTreeForUsages()

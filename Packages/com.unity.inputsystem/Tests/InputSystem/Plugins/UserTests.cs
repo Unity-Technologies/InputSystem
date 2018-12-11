@@ -124,7 +124,7 @@ internal class UserTests : InputTestFixture
     //       associated with the device.
     [Test]
     [Category("Users")]
-    public void Users_CanPairDevice_WhenDeviceNeedsPlatformLevelUserAccountSelection()
+    public unsafe void Users_CanPairDevice_WhenDeviceNeedsPlatformLevelUserAccountSelection()
     {
         var receivedChanges = new List<UserChange>();
         InputUser.onChange +=
@@ -142,31 +142,28 @@ internal class UserTests : InputTestFixture
         runtime.SetDeviceCommandCallback(gamepadId,
             (id, command) =>
             {
-                unsafe
+                if (command->type == QueryPairedUserAccountCommand.Type)
                 {
-                    if (command->type == QueryPairedUserAccountCommand.Type)
+                    receivedUserIdRequest = true;
+                    var result = InputDeviceCommand.kGenericSuccess;
+                    if (returnUserAccountHandle != 0)
                     {
-                        receivedUserIdRequest = true;
-                        var result = InputDeviceCommand.kGenericSuccess;
-                        if (returnUserAccountHandle != 0)
-                        {
-                            var queryPairedUser = (QueryPairedUserAccountCommand*)command;
-                            queryPairedUser->handle = (uint)returnUserAccountHandle;
-                            queryPairedUser->name = returnUserAccountName;
-                            queryPairedUser->id = returnUserAccountId;
-                            result |= (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
-                        }
+                        var queryPairedUser = (QueryPairedUserAccountCommand*)command;
+                        queryPairedUser->handle = (uint)returnUserAccountHandle;
+                        queryPairedUser->name = returnUserAccountName;
+                        queryPairedUser->id = returnUserAccountId;
+                        result |= (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
+                    }
 
-                        if (returnUserAccountSelectionCancelled)
-                            result |= (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled;
-                        return result;
-                    }
-                    if (command->type == InitiateUserAccountPairingCommand.Type)
-                    {
-                        Assert.That(receivedPairingRequest, Is.False);
-                        receivedPairingRequest = true;
-                        return (long)InitiateUserAccountPairingCommand.Result.SuccessfullyInitiated;
-                    }
+                    if (returnUserAccountSelectionCancelled)
+                        result |= (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled;
+                    return result;
+                }
+                if (command->type == InitiateUserAccountPairingCommand.Type)
+                {
+                    Assert.That(receivedPairingRequest, Is.False);
+                    receivedPairingRequest = true;
+                    return (long)InitiateUserAccountPairingCommand.Result.SuccessfullyInitiated;
                 }
 
                 return InputDeviceCommand.kGenericFailure;

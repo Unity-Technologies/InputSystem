@@ -5,13 +5,19 @@ using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class PenForInputSystem : MonoBehaviour
+public class PenISX : MonoBehaviour
 {
-    [Tooltip("Highlight for Pen Input")] public ParticleSystem m_highlightPS;
+    [Tooltip("Highlight for Pen Input")]
+    public ParticleSystem m_highlightPS;
 
-    [Tooltip("Where all the messages go")] public InputField m_MessageWindow;
+    [Tooltip("Sign for Out of Range")]
+    public GameObject m_outOfRangeSign;
 
-    [Header("UI Elements for Debug Info")] public TextMesh m_pressureText;
+    [Tooltip("Where all the messages go")]
+    public InputField m_MessageWindow;
+
+    [Header("UI Elements for Debug Info")]
+    public TextMesh m_pressureText;
     public Text m_penInfoText;
 
     private InputAction m_penAction;
@@ -26,7 +32,8 @@ public class PenForInputSystem : MonoBehaviour
 
     private bool is_pen_rotating = false;
 
-    public void Start()
+    // Use this for initialization
+    void Start()
     {
         pen_holder = transform.Find("Pen");
         if (pen_holder == null)
@@ -53,23 +60,23 @@ public class PenForInputSystem : MonoBehaviour
         m_penAction.Disable();
     }
 
-    public void Update()
+    // Update is called once per frame
+    void Update()
     {
-        var pen = InputSystem.GetDevice<Pen>();
-        if (pen == null)
-            return;
+        Pen pen = InputSystem.GetDevice<Pen>();
+        if (pen == null) return;
 
         // Update position
-        var pos = pen.position.ReadValue();
+        Vector2 pos = pen.position.ReadValue();
         pen_holder.position = original_pos + new Vector3(pos.x * HORIZONTAL_RANGE / Screen.width,
             pos.y * VERTICAL_RANGE / Screen.height, 0);
 
         // Update tilt
-        var tilt = pen.tilt.ReadValue();
+        Vector2 tilt = pen.tilt.ReadValue();
         pen_rotation.localEulerAngles = new Vector3(tilt.y, 0, tilt.x) * -90;
 
         // Update twist if available
-        var twist = pen.twist.ReadValue();
+        float twist = pen.twist.ReadValue();
         pen_rotation.GetChild(0).localEulerAngles = rotation_adjust + new Vector3(0, twist * -360, 0);
 
         // Update ISX information text UI
@@ -79,16 +86,19 @@ public class PenForInputSystem : MonoBehaviour
             + twist.ToString("F2");
 
         // Update pressure indicator
-        var pressure = pen.pressure.ReadValue();
-        var newColor = Color.red;
+        float pressure = pen.pressure.ReadValue();
+        Color newColor = Color.red;
         newColor.a = pressure;
         m_pressureText.color = newColor;
         m_pressureText.text = "Pressure: " + pressure.ToString("F2");
+
+        // Update inRange state/indicator
+        m_outOfRangeSign.SetActive(!pen.inRange.isPressed);
     }
 
     private void ButtonPress(ButtonControl control)
     {
-        var buttonName = control.name;
+        string buttonName = control.name;
         if (buttonName == "tip" || buttonName == "eraser")
         {
             if (control.ReadValue() > 0)
@@ -108,9 +118,9 @@ public class PenForInputSystem : MonoBehaviour
             }
         }
         // Any other button is listed in the Input Name list
-        else
+        else if (buttonName != "inRange")
         {
-            var str = buttonName + ((control.ReadValue() == 0) ? " released" : " pressed");
+            string str = buttonName + ((control.ReadValue() == 0) ? " released" : " pressed");
             ShowMessage(str);
         }
     }
@@ -128,23 +138,23 @@ public class PenForInputSystem : MonoBehaviour
     private IEnumerator RotatePen(int target_angel)
     {
         is_pen_rotating = true;
-        var step = (target_angel - rotation_adjust.z) * 0.2f;
+        float step = (target_angel - rotation_adjust.z) * 0.2f;
         while (Mathf.Abs(rotation_adjust.z - target_angel) > 1)
         {
             rotation_adjust.z += step;
             yield return new WaitForEndOfFrame();
         }
-
         is_pen_rotating = false;
     }
 
     private string FirstLetterToUpper(string str)
     {
-        if (string.IsNullOrEmpty(str))
+        if (String.IsNullOrEmpty(str))
             return null;
-        if (str.Length == 1)
+        else if (str.Length == 1)
             return str.ToUpper();
-        return char.ToUpper(str[0]) + str.Substring(1);
+        else
+            return char.ToUpper(str[0]) + str.Substring(1);
     }
 
     private void ShowMessage(string msg)

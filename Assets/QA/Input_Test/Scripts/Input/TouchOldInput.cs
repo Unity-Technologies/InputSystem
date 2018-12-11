@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TouchForInputManager : MonoBehaviour
+public class TouchOldInput : MonoBehaviour
 {
     // This is the object contains all the highlight for touch inputs
     // There should be 10 highlight gameobjects in the pool for 10 touches at the same time

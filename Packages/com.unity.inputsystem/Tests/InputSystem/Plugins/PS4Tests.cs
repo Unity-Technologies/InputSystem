@@ -132,7 +132,7 @@ public class PS4Tests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public unsafe void Devices_CanReadSlotIndexAndGetDualShockPS4BySlotIndex()
+    public void Devices_CanReadSlotIndexAndGetDualShockPS4BySlotIndex()
     {
         runtime.ReportNewInputDevice(new InputDeviceDescription
         {
@@ -180,7 +180,7 @@ public class PS4Tests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanQueryPS4UserIdFromDualShockPS4()
+    public unsafe void Devices_CanQueryPS4UserIdFromDualShockPS4()
     {
         runtime.ReportNewInputDevice(new InputDeviceDescription
         {
@@ -189,24 +189,22 @@ public class PS4Tests : InputTestFixture
         }.ToJson(), 1);
 
         bool? receivedCommand = null;
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(1,
-                (id, commandPtr) =>
+        runtime.SetDeviceCommandCallback(1,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == QueryPS4ControllerInfo.Type)
                 {
-                    if (commandPtr->type == QueryPS4ControllerInfo.Type)
-                    {
-                        Assert.That(receivedCommand.HasValue, Is.False);
-                        receivedCommand = true;
-                        ((QueryPS4ControllerInfo*)commandPtr)->slotIndex = 1;  // Otherwise we query over and over again.
-                        ((QueryPS4ControllerInfo*)commandPtr)->userId = 1234;
-                        return 1;
-                    }
+                    Assert.That(receivedCommand.HasValue, Is.False);
+                    receivedCommand = true;
+                    ((QueryPS4ControllerInfo*)commandPtr)->slotIndex = 1;  // Otherwise we query over and over again.
+                    ((QueryPS4ControllerInfo*)commandPtr)->userId = 1234;
+                    return 1;
+                }
 
-                    Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
-                });
-        }
+                Assert.Fail("Received wrong type of command");
+                return InputDeviceCommand.kGenericFailure;
+            });
+        
         InputSystem.Update();
         var gamepad = (DualShockGamepadPS4)InputSystem.devices[0];
 

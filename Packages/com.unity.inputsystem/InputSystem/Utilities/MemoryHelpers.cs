@@ -209,6 +209,15 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (bitCount >= sizeof(int) * 8)
                 throw new ArgumentException("Trying to read more than 32 bits as int", "bitCount");
 
+            //Shift the pointer up on larger bitmasks and retry
+            if (bitOffset > 32)
+            {
+                int newBitOffset = (int)bitOffset % 32;
+                int intOffset = ((int)bitOffset - newBitOffset) / 32;
+                ptr = (byte*)ptr + (intOffset * 4);
+                bitOffset = (uint)newBitOffset;
+            }
+
             // Bits out of byte.
             if (bitOffset + bitCount <= 8)
             {

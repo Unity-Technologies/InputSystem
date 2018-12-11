@@ -10,7 +10,7 @@ using UnityEngine.UI;
 // Alternatively, ingore the requirement and change the code
 // --------------------------------------------------------------------------------
 
-public class GamepadForInputManager : MonoBehaviour
+public class GamepadOldInput : MonoBehaviour
 {
     [Tooltip("Highlight Prefab")]
     public ParticleSystem m_buttonHighlight;

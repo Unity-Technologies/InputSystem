@@ -2,15 +2,16 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class ControllerDiagramForInputSystem : GamepadForInputSystem
+public class ControllerDiagramISX : GamepadISX
 {
+    // Use this for initialization
     void Start()
     {
         m_buttonAction = new InputAction(name: "ButtonPressAction", binding: "*/<button>");
         m_buttonAction.performed += callbackContext => OnButtonPress(callbackContext.control as ButtonControl);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "dpadpressaction", binding: "*/<dpad>");
+        m_dPadAction = new InputAction(name: "Dpadpressaction", binding: "*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 

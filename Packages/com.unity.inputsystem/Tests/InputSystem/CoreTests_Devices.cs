@@ -1798,44 +1798,6 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanAdjustSensitivityOnPointerDeltas()
-    {
-        var pointer = InputSystem.AddDevice<Pointer>();
-
-        const float kWindowWidth = 640f;
-        const float kWindowHeight = 480f;
-        const float kSensitivity = 6f;
-
-        InputConfiguration.PointerDeltaSensitivity = kSensitivity;
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(pointer.id,
-                (id, commandPtr) =>
-                {
-                    if (commandPtr->type == QueryDimensionsCommand.Type)
-                    {
-                        var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
-                        windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
-                        return InputDeviceCommand.kGenericSuccess;
-                    }
-
-                    return InputDeviceCommand.kGenericFailure;
-                });
-        }
-
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
-        InputSystem.Update();
-
-        // NOTE: Whereas the tests above access .delta.x.value and .delta.y.value, here we access
-        //       delta.value.x and delta.value.y. This is because the sensitivity processor sits
-        //       on the vector control and not on the individual component axes.
-
-        Assert.That(pointer.delta.ReadValue().x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
-        Assert.That(pointer.delta.ReadValue().y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
-    }
-
-    [Test]
-    [Category("Devices")]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Pointer", typeof(Pointer))]
@@ -2058,11 +2020,12 @@ partial class CoreTests
             new MouseState
             {
                 position = new Vector2(0.123f, 0.456f),
-            });
+            }.WithButton(MouseButton.Left));
         InputSystem.Update();
 
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.button.isPressed, Is.True);
         ////TODO: mouse phase should be driven by Mouse device automatically
         Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
         ////TODO: pointer ID etc.
@@ -3169,6 +3132,69 @@ partial class CoreTests
         //virtual devices are marked with flag
         Assert.Fail();
     }
+
+#if UNITY_2019_1_OR_NEWER
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var keyboardDeviceReset = false;
+        runtime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(keyboardDeviceReset, Is.False);
+                    keyboardDeviceReset = true;
+
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepadDeviceReset = false;
+        runtime.SetDeviceCommandCallback(gamepad.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(gamepadDeviceReset, Is.False);
+                    gamepadDeviceReset = true;
+
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        var pointer = InputSystem.AddDevice<Pointer>();
+        var pointerDeviceReset = false;
+        runtime.SetDeviceCommandCallback(pointer.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    Assert.That(pointerDeviceReset, Is.False);
+                    pointerDeviceReset = true;
+
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        runtime.InvokeFocusChanged(true);
+
+        Assert.That(keyboardDeviceReset, Is.True);
+        Assert.That(gamepadDeviceReset, Is.True);
+        Assert.That(pointerDeviceReset, Is.True);
+    }
+
+#endif
 
     [Test]
     [Category("Devices")]
