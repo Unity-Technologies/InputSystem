@@ -186,6 +186,12 @@ namespace UnityEngine.Experimental.Input
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
+        
+        public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
+            where TDevice : InputDevice
+        {
+            s_Manager.RegisterControlLayoutMatcher(typeof(TDevice), matcher);
+        }
 
         /// <summary>
         /// Register a builder that delivers an <see cref="InputControlLayout"/> instance on demand.
@@ -1098,7 +1104,7 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Size of '{0}' exceeds maximum supported state size of {1}", typeof(TState).Name,
                         StateEventBuffer.kMaxSize),
                     "state");
-            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
+            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - StateEvent.kStateDataSizeToSubtract;
 
             if (time < 0)
                 time = InputRuntime.s_Instance.currentTime;
@@ -1634,6 +1640,10 @@ namespace UnityEngine.Experimental.Input
                     EditorPlayerSettings.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
+
+            // Send an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            Update();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)

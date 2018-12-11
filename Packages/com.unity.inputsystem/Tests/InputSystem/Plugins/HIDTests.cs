@@ -162,8 +162,8 @@ internal class HIDTests : InputTestFixture
                 product = "TestHID",
                 capabilities = new HID.HIDDeviceDescriptor
                 {
-                    vendorId = 0x54C, // Sony
-                    productId = 0x9CC // PS4 Wireless Controller
+                    vendorId = 0x123,
+                    productId = 0x234
                 }.ToJson()
             }.ToJson(), deviceId);
         InputSystem.Update();
@@ -177,8 +177,8 @@ internal class HIDTests : InputTestFixture
         Assert.That(deviceDescription.interfaceName, Is.EqualTo(HID.kHIDInterface));
         HID.HIDDeviceDescriptor hidDescriptor = HID.ReadHIDDeviceDescriptor(device, runtime);
         // Check HID descriptor.
-        Assert.That(hidDescriptor.vendorId, Is.EqualTo(0x54C));
-        Assert.That(hidDescriptor.productId, Is.EqualTo(0x9CC));
+        Assert.That(hidDescriptor.vendorId, Is.EqualTo(0x123));
+        Assert.That(hidDescriptor.productId, Is.EqualTo(0x234));
         Assert.That(hidDescriptor.usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
         Assert.That(hidDescriptor.usage, Is.EqualTo((int)HID.GenericDesktop.Gamepad));
         Assert.That(hidDescriptor.elements.Length, Is.EqualTo(kNumElements));

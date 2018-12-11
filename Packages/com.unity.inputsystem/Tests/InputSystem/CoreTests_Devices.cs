@@ -2020,11 +2020,12 @@ partial class CoreTests
             new MouseState
             {
                 position = new Vector2(0.123f, 0.456f),
-            });
+            }.WithButton(MouseButton.Left));
         InputSystem.Update();
 
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.button.isPressed, Is.True);
         ////TODO: mouse phase should be driven by Mouse device automatically
         Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
         ////TODO: pointer ID etc.

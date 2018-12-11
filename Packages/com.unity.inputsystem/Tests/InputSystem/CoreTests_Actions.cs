@@ -4241,13 +4241,14 @@ partial class CoreTests
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
             InputSystem.Update();
 
-            // The keyboard's AnyKey control will get picked, too, but will end up with the
-            // lowest score.
+            // The keyboard's synthetic AnyKey control and the mouse's button will get picked, too,
+            // but will end up with the lowest scores.
 
-            Assert.That(rebind.candidates, Has.Count.EqualTo(3));
+            Assert.That(rebind.candidates, Has.Count.EqualTo(4));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(keyboard.spaceKey));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(mouse.leftButton));
-            Assert.That(rebind.candidates[2], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
+            Assert.That(rebind.candidates[2], Is.SameAs(mouse.button));
+            Assert.That(rebind.candidates[3], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
         }
     }
 
