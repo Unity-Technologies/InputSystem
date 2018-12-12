@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
-        
+
         public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
             where TDevice : InputDevice
         {

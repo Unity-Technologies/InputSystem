@@ -446,7 +446,7 @@ namespace UnityEngine.Experimental.Input
             // See if we can make sense of any device we couldn't make sense of before.
             AddAvailableDevicesMatchingDescription(matcher, internedLayoutName);
         }
-        
+
         public void RegisterControlLayoutMatcher(Type type, InputDeviceMatcher matcher)
         {
             if (type == null)

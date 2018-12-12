@@ -71,7 +71,7 @@ public class ScriptCompilersTests
 
         var apiCompatibilityLevel = PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup);
 
-        // Hopefully the churn on these mono library helpers is over, this is going to be a bit a pain to 
+        // Hopefully the churn on these mono library helpers is over, this is going to be a bit a pain to
         // always chase.
 #if UNITY_2018_3_OR_NEWER && !(UNITY_2019_1_OR_NEWER)
         var scriptAssembly = new ScriptAssembly

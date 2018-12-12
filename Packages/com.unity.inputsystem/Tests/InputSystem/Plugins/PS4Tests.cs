@@ -260,7 +260,7 @@ public class PS4Tests : InputTestFixture
                 Assert.Fail("Received wrong type of command");
                 return InputDeviceCommand.kGenericFailure;
             });
-        
+
         InputSystem.Update();
         var gamepad = (DualShockGamepadPS4)InputSystem.devices[0];
 
