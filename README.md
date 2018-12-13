@@ -1,7 +1,7 @@
 
 A new input system for Unity.
 
->NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.2+.
+>NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.3+.
 
 Some [videos](https://www.youtube.com/playlist?list=PLXbAKDQVwztY0hyyeEy9gifk-ffkgoy_Y).
 

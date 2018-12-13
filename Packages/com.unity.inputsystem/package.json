@@ -2,7 +2,7 @@
 	"name": "com.unity.inputsystem",
 	"displayName": "Input System",
 	"version": "0.0.14-preview",
-	"unity": "2018.2",
+	"unity": "2018.3",
 	"description": "A new input system composed of Controls, Layouts, States and Actions.",
 	"keywords": [
 		"input",
