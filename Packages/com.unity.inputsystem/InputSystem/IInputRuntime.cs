@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
+
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.
     /// </summary>
@@ -70,7 +72,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Set delegate to be called on input updates.
         /// </summary>
-        Action<InputUpdateType, int, IntPtr> onUpdate { set; }
+        InputUpdateDelegate onUpdate { set; }
 
         /// <summary>
         /// Set delegate to be called right before <see cref="onUpdate"/>.
@@ -130,6 +132,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
+
+        /// <summary>
+        /// Frequency at which fixed updates are being run.
+        /// </summary>
+        double fixedUpdateIntervalInSeconds { get; }
 
         /// <summary>
         /// Mask that determines which input updates are executed by the runtime.

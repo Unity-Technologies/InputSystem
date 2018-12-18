@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
-        
+
         public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
             where TDevice : InputDevice
         {
@@ -1226,7 +1226,6 @@ namespace UnityEngine.Experimental.Input
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: call ForceUpdate?
         public static void Update()
         {
             s_Manager.Update();

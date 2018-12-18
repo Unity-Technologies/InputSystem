@@ -382,4 +382,17 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
     }
+
+    internal static class InputArrayExtensions
+    {
+        public static bool ContainsReference<TValue>(this InlinedArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            for (var i = 0; i < array.length; ++i)
+                if (ReferenceEquals(array[i], value))
+                    return true;
+
+            return false;
+        }
+    }
 }

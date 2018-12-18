@@ -14,11 +14,9 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
-
-#if UNITY_2018_3_OR_NEWER
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-#endif
+using Property = NUnit.Framework.PropertyAttribute;
 
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 partial class CoreTests
@@ -539,6 +537,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanRecordActionsAsEvents()
     {
         var action = new InputAction();
@@ -625,6 +624,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -682,6 +682,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -739,6 +740,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformPressAndReleaseInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1575,6 +1577,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanDistinguishTapAndSlowTapOnSameAction()
     {
         // Bindings can have more than one interaction. Depending on the interaction happening on the bound
@@ -1985,6 +1988,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanQueryStartAndPerformTime()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -2686,6 +2690,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanQueryLastTrigger()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

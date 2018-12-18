@@ -51,13 +51,40 @@ namespace UnityEngine.Experimental.Input
                 {
                     onBeforeUpdate(type);
                 }
+
+                // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
+                // don't get bumped into the following update.
+                if (type == InputUpdateType.Dynamic)
+                    currentTime += m_AdvanceTimeEachDynamicUpdate;
+
                 if (onUpdate != null)
                 {
-                    onUpdate(type, m_EventCount, (IntPtr)m_EventBuffer.GetUnsafePtr());
+                    var buffer = new InputEventBuffer(
+                        (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
+                        m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
+
+                    onUpdate(type, ref buffer);
+
+                    #if UNITY_2019_1_OR_NEWER
+                    m_EventCount = buffer.eventCount;
+                    m_EventWritePosition = (int)buffer.sizeInBytes;
+                    if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
+                        NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
+                        m_EventBuffer = buffer.data;
+                    #else
+                    if (type != InputUpdateType.BeforeRender)
+                    {
+                        m_EventCount = 0;
+                        m_EventWritePosition = 0;
+                    }
+                    #endif
+                }
+                else
+                {
+                    m_EventCount = 0;
+                    m_EventWritePosition = 0;
                 }
 
-                m_EventCount = 0;
-                m_EventWritePosition = 0;
                 ++frameCount;
             }
         }
@@ -267,7 +294,7 @@ namespace UnityEngine.Experimental.Input
             public string userId;
         }
 
-        public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
+        public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
@@ -277,29 +304,28 @@ namespace UnityEngine.Experimental.Input
         public InputUpdateType updateMask { get; set; }
         public int frameCount { get; set; }
 
+        public double advanceTimeEachDynamicUpdate
+        {
+            get { return m_AdvanceTimeEachDynamicUpdate; }
+            set { m_AdvanceTimeEachDynamicUpdate = value; }
+        }
+
+        public double fixedUpdateIntervalInSeconds
+        {
+            get { return m_FixedUpdateIntervalInSeconds; }
+            set { m_FixedUpdateIntervalInSeconds = value; }
+        }
+
         public ScreenOrientation screenOrientation
         {
-            set
-            {
-                m_ScreenOrientation = value;
-            }
-
-            get
-            {
-                return m_ScreenOrientation;
-            }
+            set { m_ScreenOrientation = value; }
+            get { return m_ScreenOrientation; }
         }
 
         public Vector2 screenSize
         {
-            set
-            {
-                m_ScreenSize = value;
-            }
-            get
-            {
-                return m_ScreenSize;
-            }
+            set { m_ScreenSize = value; }
+            get { return m_ScreenSize; }
         }
 
         public List<PairedUser> userAccountPairings
@@ -340,6 +366,8 @@ namespace UnityEngine.Experimental.Input
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+        private double m_FixedUpdateIntervalInSeconds = 1.0 / 30;
+        private double m_AdvanceTimeEachDynamicUpdate = 1.0 / 60;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

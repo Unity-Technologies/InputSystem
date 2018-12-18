@@ -15,11 +15,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
-
-#if UNITY_2018_3_OR_NEWER
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-#endif
+using Property = NUnit.Framework.PropertyAttribute;
 
 ////TODO: test that device re-creation doesn't lose flags and such
 
@@ -1194,6 +1192,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Property("TimesliceEvents", "Off")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
     {
         // Devices added directly via AddDevice() don't end up on the list of
@@ -1718,6 +1717,7 @@ partial class CoreTests
     // "for the future".
     [Test]
     [Category("Devices")]
+    [Property("TimesliceEvents", "Off")]
     public void Devices_PointerDeltaUpdatedInFixedUpdate_DoesNotGetResetInDynamicUpdate()
     {
         var pointer = InputSystem.AddDevice<Pointer>();
@@ -1736,6 +1736,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Property("TimesliceEvents", "Off")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
         var pointer = InputSystem.AddDevice<Pointer>();
@@ -1870,7 +1871,7 @@ partial class CoreTests
         const int highBits = 0x12;
         const int lowBits = 0x21;
 
-        var inputEvent = TextEvent.Create(keyboard.id, 0x10000 + (highBits << 10 | lowBits), 123);
+        var inputEvent = TextEvent.Create(keyboard.id, 0x10000 + (highBits << 10 | lowBits));
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 

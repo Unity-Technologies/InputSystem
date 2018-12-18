@@ -14,10 +14,43 @@ namespace UnityEngine.Experimental.Input.Utilities
                 case "Mouse": return "Mice";
                 case "mouse": return "mice";
                 case "Axis": return "Axes";
-                case "axis": return "axis";
+                case "axis": return "axes";
             }
 
             return str + 's';
+        }
+
+        public static string NicifyMemorySize(long numBytes)
+        {
+            // Gigabytes.
+            if (numBytes > 1024 * 1024 * 1024)
+            {
+                var gb = numBytes / (1024 * 1024 * 1024);
+                var remainder = (numBytes % (1024 * 1024 * 1024)) / 1.0f;
+
+                return string.Format("{0} GB", gb + remainder);
+            }
+
+            // Megabytes.
+            if (numBytes > 1024 * 1024)
+            {
+                var mb = numBytes / (1024 * 1024);
+                var remainder = (numBytes % (1024 * 1024)) / 1.0f;
+
+                return string.Format("{0} MB", mb + remainder);
+            }
+
+            // Kilobytes.
+            if (numBytes > 1024)
+            {
+                var kb = numBytes / 1024;
+                var remainder = (numBytes % 1024) / 1.0f;
+
+                return string.Format("{0} KB", kb + remainder);
+            }
+
+            // Bytes.
+            return string.Format("{0} Bytes", numBytes);
         }
 
         public static int CountOccurrences(this string str, char ch)
