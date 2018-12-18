@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: find better way to present controls when filtering to specific devices
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     internal class InputControlPickerDropdown : AdvancedDropdown

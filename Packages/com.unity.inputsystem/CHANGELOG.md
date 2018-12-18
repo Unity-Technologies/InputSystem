@@ -29,7 +29,7 @@ We've started working on documentation. The current work-in-progress can be foun
 - `InputSystem.settings` contains the current input system settings.
 - A new UI has been added to "Edit >> Project Settings..." to edit input system settings. Settings are stored in a user-controlled asset in any location inside `Assets/`. Multiple assets can be used and switched between.
 - Events are now timesliced across updates by default. This behavior can be turned off through `InputSettings.timesliceEvents`.
-    >NOTE: This behavior is currently only enabled on 2019.1.
+    >NOTE: This change depends on changes to Unity's native runtime. We are in the process of landing the changes in 2019.1 and 2018.3. While the changes have not landed yet, timeslicing will not work correctly yet.
 - Joystick HIDs are now supported on Windows, Mac, and UWP.
 - Can now put system into manual update mode (`InputSettings.updateMode`). In this mode, events will not get automatically processed. To process events, call `InputSystem.Update()`.
 - Can now determine if actions track fixed or dynamic updates (`InputSettings.actionUpdateMode`). Note that this is relevant only if `InputSettings.updateMode` is set to `InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate`. In other modes, actions will automatically track whatever update processes events.

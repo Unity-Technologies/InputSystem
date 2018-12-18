@@ -263,8 +263,9 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.True);
     }
 
-    ////TODO: remove #if when backported
-    #if UNITY_2019_1_OR_NEWER
+    ////TODO: temporary; remove when the native changes have landed in publc 2019.1
+    #if false
+    //#if UNITY_2019_1_OR_NEWER
     [Test]
     [Category("Events")]
     public unsafe void Events_AreTimeslicedByDefault()

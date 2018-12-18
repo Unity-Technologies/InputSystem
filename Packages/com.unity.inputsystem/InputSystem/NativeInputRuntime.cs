@@ -64,7 +64,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 ////      to mutate the buffer and keep events around from update to update.
 
                 if (value != null)
-#if UNITY_2019_1_OR_NEWER
+                ////TODO: temporary; remove when the native changes have landed in public 2019.1
+                    #if false
+                    //#if UNITY_2019_1_OR_NEWER
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
