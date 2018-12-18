@@ -14,10 +14,10 @@ The following controls are present on every gamepad:
 
 |Control|Type|Description|
 |-------|----|-----------|
-|leftStick|Stick|Thumbstick on the left side of the gamepad. Deadzoned. Provides a normalized 2D motion vector.|
-|rightStick|Stick|Thumbstick on the right side of the gamepad. Deadzoned. Provides a normalized 2D motion vector.|
+|leftStick|Stick|Thumbstick on the left side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in dpad-like fashion.|
+|rightStick|Stick|Thumbstick on the right side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in dpad-like fashion.|
 |dpad|Dpad||
-|buttonNorth|Button||
+|buttonNorth|Button|The topmost of the four face buttons (usually located on the right side of the gamepad).|
 |buttonSouth|Button||
 |buttonWest|Button||
 |buttonEast|Button||

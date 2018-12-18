@@ -1,3 +1,5 @@
+    ////TODO: the screenshots are outdated and need updating
+
 # Migrate From Old Input System
 
 This guide provides a listing of the APIs in `UnityEngine.Input` (and related APIs in `UnityEngine`) and their corresponding APIs in the new input system. Not all APIs have a corresponding version in the new API yet.

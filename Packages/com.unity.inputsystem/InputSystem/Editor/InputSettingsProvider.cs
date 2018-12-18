@@ -101,12 +101,13 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
                 // when we have both dynamic and fixed updates in the picture.
-                EditorGUILayout.PropertyField(m_ActionUpdateMode);
+                ////TODO: enable when action update mode is properly sorted
+                //EditorGUILayout.PropertyField(m_ActionUpdateMode);
             }
-            ////TODO: remove #if when changes are backported
-            #if UNITY_2019_1_OR_NEWER
-            EditorGUILayout.PropertyField(m_TimesliceEvents);
-            #endif
+
+            ////TODO: enable when backported
+            //EditorGUILayout.PropertyField(m_TimesliceEvents);
+
             EditorGUILayout.PropertyField(m_RunInBackground);
             EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
             EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);

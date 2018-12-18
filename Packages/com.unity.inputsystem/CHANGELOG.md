@@ -32,7 +32,6 @@ We've started working on documentation. The current work-in-progress can be foun
     >NOTE: This change depends on changes to Unity's native runtime. We are in the process of landing the changes in 2019.1 and 2018.3. While the changes have not landed yet, timeslicing will not work correctly yet.
 - Joystick HIDs are now supported on Windows, Mac, and UWP.
 - Can now put system into manual update mode (`InputSettings.updateMode`). In this mode, events will not get automatically processed. To process events, call `InputSystem.Update()`.
-- Can now determine if actions track fixed or dynamic updates (`InputSettings.actionUpdateMode`). Note that this is relevant only if `InputSettings.updateMode` is set to `InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate`. In other modes, actions will automatically track whatever update processes events.
 - Added shortcuts to action editor window (requires 2019.1).
 - Added icons for .inputactions assets.
 

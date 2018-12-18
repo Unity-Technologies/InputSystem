@@ -3,7 +3,7 @@ A new input system for Unity.
 
 >NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.3+.
 
-Work-in-progress documentation can be found at [here](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
+Work-in-progress documentation can be found [here](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
 
 Issues are expected at this point. However, feel free to report what you find here on GitHub.
 

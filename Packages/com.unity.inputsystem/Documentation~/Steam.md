@@ -7,3 +7,5 @@
 ## In-Game Actions (IGA) Files
 
 ## SteamController Devices
+
+## ISteamControllerAPI

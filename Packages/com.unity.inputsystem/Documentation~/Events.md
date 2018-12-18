@@ -80,6 +80,8 @@ InputSystem.onEvent +=
 
 New input events can be created and queued by anyone and against any existing device. Queueing an input event is thread-safe meaning that event generation can happen in background threads.
 
+>NOTE: Memory allocated to events coming from background threads is limited. If too many events are produced by background threads, queueing an event from a thread will block the thread until the main thread has flushed out the background event queue.
+
 Note that queuing an event will not immediately consume the event. Processing of events happens on the next update (depending `InputSettings.updateMode`, either manually triggered via `InputSystem.Update` or triggered automatically as part of the player loop).
 
 #### Sending State Events

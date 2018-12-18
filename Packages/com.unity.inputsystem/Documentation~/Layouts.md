@@ -10,15 +10,27 @@ The set of currently understood layouts can be browsed from the input debugger.
 
 ![Layouts in Debugger](Images/LayoutsInDebugger.png)
 
+A layout has two primary functions:
+
+* Describe a certain memory layout containing input data.
+* Assign names, structure, and meaning to the controls operating on the data.
+
 ## Layout Formats
 
 New layouts can be added in one of three ways.
 
 1. Represented by C# structs and classes.
 2. In JSON format.
-3. Built-on the fly at runtime using what's called a "layout builder".
+3. Built-on the fly at runtime using what's called "layout builders".
 
 ### Layout from Type
+
+In its most basic form, a layout can simply be a C# class.
+
+```
+// A control layout.
+public class My
+```
 
 ### Layout from JSON
 

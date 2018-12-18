@@ -105,6 +105,12 @@ The left column contains the "action maps" in the asset. Each map is a collectio
 
 Click the plus icon next to "Action Maps" to add new action maps and the plus icon next to "Actions" to add new actions.
 
+...
+
 # Adding Control Schemes
 
+...
+
 # Adding UI Support
+
+...
