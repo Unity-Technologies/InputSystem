@@ -545,7 +545,7 @@ namespace UnityEngine.Experimental.Input
         private InputDevice RecreateDevice(InputDevice device, InternedString newLayout, InputDeviceBuilder builder)
         {
             // Remove.
-            RemoveDevice(device);
+            RemoveDevice(device, keepOnListOfAvailableDevices: true);
 
             // Re-setup device.
             builder.Setup(newLayout, device.m_Variants, deviceDescription: device.m_Description,
@@ -563,6 +563,10 @@ namespace UnityEngine.Experimental.Input
             // sense of a device we couldn't make sense of so far.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
+                // Ignore if it's a device that has been explicitly removed.
+                if (m_AvailableDevices[i].isRemoved)
+                    continue;
+
                 var deviceId = m_AvailableDevices[i].deviceId;
                 if (TryGetDeviceById(deviceId) != null)
                     continue;
@@ -607,7 +611,7 @@ namespace UnityEngine.Experimental.Input
                 var device = m_Devices[i];
                 if (IsControlOrChildUsingLayoutRecursive(device, internedName))
                 {
-                    RemoveDevice(device);
+                    RemoveDevice(device, keepOnListOfAvailableDevices: true);
                 }
                 else
                 {
@@ -689,6 +693,39 @@ namespace UnityEngine.Experimental.Input
             }
 
             return layoutName;
+        }
+
+        /// <summary>
+        /// Return true if the given device layout is supported by the game according to <see cref="InputSettings.supportedDevices"/>.
+        /// </summary>
+        /// <param name="layoutName">Name of the device layout.</param>
+        /// <returns>True if a device with the given layout should be created for the game, false otherwise.</returns>
+        private bool IsDeviceLayoutMarkedAsSupportedInSettings(InternedString layoutName)
+        {
+            // In the editor, "Supported Devices" can be overridden by a user setting. This causes
+            // all available devices to be added regardless of what "Supported Devices" says. This
+            // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
+            // even if not supported as devices in the game.
+            #if UNITY_EDITOR
+            if (InputEditorUserSettings.addDevicesNotSupportedByProject)
+                return true;
+            #endif
+
+            var supportedDevices = m_Settings.supportedDevices;
+            if (supportedDevices.Count == 0)
+            {
+                // If supportedDevices is empty, all device layouts are considered supported.
+                return true;
+            }
+
+            for (var n = 0; n < supportedDevices.Count; ++n)
+            {
+                var supportedLayout = new InternedString(supportedDevices[n]);
+                if (layoutName == supportedLayout || m_Layouts.IsBasedOn(supportedLayout, layoutName))
+                    return true;
+            }
+
+            return false;
         }
 
         private bool DoesLayoutExist(InternedString name)
@@ -919,6 +956,11 @@ namespace UnityEngine.Experimental.Input
             m_Metrics.maxNumDevices = Mathf.Max(m_DevicesCount, m_Metrics.maxNumDevices);
             m_Metrics.maxStateSizeInBytes = Mathf.Max((int)m_StateBuffers.totalSize, m_Metrics.maxStateSizeInBytes);
 
+            // Make sure that if the device ID is listed in m_AvailableDevices, the device
+            // is no longer marked as removed.
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
+                m_AvailableDevices[i].isRemoved = false;
+
             ////REVIEW: we may want to suppress this during the initial device discovery phase
             // Let actions re-resolve their paths.
             if (!m_SuppressReResolvingOfActions)
@@ -988,7 +1030,7 @@ namespace UnityEngine.Experimental.Input
             return device;
         }
 
-        public void RemoveDevice(InputDevice device)
+        public void RemoveDevice(InputDevice device, bool keepOnListOfAvailableDevices = false)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
@@ -1025,17 +1067,16 @@ namespace UnityEngine.Experimental.Input
                 m_StateBuffers.FreeAll();
             }
 
-            // Remove from list of available devices if it's a device coming from
-            // the runtime.
-            if (device.native)
+            // Update list of available devices.
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
-                for (var i = 0; i < m_AvailableDeviceCount; ++i)
+                if (m_AvailableDevices[i].deviceId == deviceId)
                 {
-                    if (m_AvailableDevices[i].deviceId == deviceId)
-                    {
-                        ArrayHelpers.EraseAtByMovingTail(m_AvailableDevices, ref m_AvailableDeviceCount, i);
-                        break;
-                    }
+                    if (keepOnListOfAvailableDevices)
+                        m_AvailableDevices[i].isRemoved = true;
+                    else
+                        ArrayHelpers.EraseAtWithCapacity(ref m_AvailableDevices, ref m_AvailableDeviceCount, i);
+                    break;
                 }
             }
 
@@ -1477,6 +1518,7 @@ namespace UnityEngine.Experimental.Input
             public InputDeviceDescription description;
             public int deviceId;
             public bool isNative;
+            public bool isRemoved;
         }
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
@@ -1834,21 +1876,38 @@ namespace UnityEngine.Experimental.Input
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
-            // See if we have a disconnected device we can revive.
-            InputDevice device = null;
-            for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
-            {
-                if (m_DisconnectedDevices[i].description == description)
-                {
-                    device = m_DisconnectedDevices[i];
-                    ArrayHelpers.EraseAtWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
-                    break;
-                }
-            }
-
             // Add it.
+            var markAsRemoved = false;
             try
             {
+                // If we have a restricted set of supported devices, first check if it's a device
+                // we should support.
+                if (m_Settings.supportedDevices.Count > 0)
+                {
+                    var layout = TryFindMatchingControlLayout(ref description, deviceId);
+                    if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
+                    {
+                        // Not support. Ignore device. Still will get added to m_AvailableDevices
+                        // list in finally clause below. If later the set of supported devices changes
+                        // so that the device is now supported, ApplySettings() will pull it back out
+                        // and create the device.
+                        markAsRemoved = true;
+                        return;
+                    }
+                }
+
+                // See if we have a disconnected device we can revive.
+                InputDevice device = null;
+                for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
+                {
+                    if (m_DisconnectedDevices[i].description == description)
+                    {
+                        device = m_DisconnectedDevices[i];
+                        ArrayHelpers.EraseAtWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
+                        break;
+                    }
+                }
+
                 if (device != null)
                 {
                     // It's a device we pulled from the disconnected list. Update the device with the
@@ -1887,7 +1946,8 @@ namespace UnityEngine.Experimental.Input
                     {
                         description = description,
                         deviceId = deviceId,
-                        isNative = true
+                        isNative = true,
+                        isRemoved = markAsRemoved,
                     });
             }
         }
@@ -1998,6 +2058,105 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_BeforeUpdateListeners.length; ++i)
                 m_BeforeUpdateListeners[i](updateType);
+        }
+
+        /// <summary>
+        /// Apply the settings in <see cref="m_Settings"/>.
+        /// </summary>
+        internal void ApplySettings()
+        {
+            // Sync update mask.
+            var newUpdateMask = InputUpdateType.Editor;
+            if ((m_UpdateMask & InputUpdateType.BeforeRender) != 0)
+            {
+                // BeforeRender updates are enabled in response to devices needing BeforeRender updates
+                // so we always preserve this if set.
+                newUpdateMask |= InputUpdateType.BeforeRender;
+            }
+            switch (m_Settings.updateMode)
+            {
+                case InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate:
+                    newUpdateMask |= InputUpdateType.Fixed;
+                    newUpdateMask |= InputUpdateType.Dynamic;
+                    break;
+                case InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly:
+                    newUpdateMask |= InputUpdateType.Dynamic;
+                    break;
+                case InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly:
+                    newUpdateMask |= InputUpdateType.Fixed;
+                    break;
+                case InputSettings.UpdateMode.ProcessEventsManually:
+                    newUpdateMask |= InputUpdateType.Manual;
+                    break;
+                default:
+                    throw new NotImplementedException("Input update mode: " + m_Settings.updateMode);
+            }
+            if (m_Settings.runInBackground)
+                newUpdateMask |= (InputUpdateType)(1 << 31);
+            #if UNITY_EDITOR
+            // In the editor, we force editor updates to be on even if InputEditorUserSettings.lockInputToGameView is
+            // on as otherwise we'll end up accumulating events in edit mode without anyone flushing the
+            // queue out regularly.
+            newUpdateMask |= InputUpdateType.Editor;
+            #endif
+            updateMask = newUpdateMask;
+
+            ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
+            ////      (same goes for not resolving actions repeatedly)
+
+            // Check if there's any native device we aren't using ATM which now fits
+            // the set of supported devices.
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
+            {
+                var id = m_AvailableDevices[i].deviceId;
+                if (TryGetDeviceById(id) != null)
+                    continue;
+
+                var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
+                if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
+                {
+                    AddDevice(m_AvailableDevices[i].description, false, id,
+                        m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                }
+            }
+
+            // If the settings restrict the set of supported devices, demote any native
+            // device we currently have that doesn't fit the requirements.
+            if (settings.supportedDevices.Count > 0)
+            {
+                for (var i = 0; i < m_DevicesCount; ++i)
+                {
+                    var device = m_Devices[i];
+                    var layout = device.m_Layout;
+
+                    // If it's not in m_AvailableDevices, we don't automatically remove it.
+                    // Whatever has been added directly through AddDevice(), we keep and don't
+                    // restrict by `supportDevices`.
+                    var isInAvailableDevices = false;
+                    for (var n = 0; n < m_AvailableDeviceCount; ++n)
+                    {
+                        if (m_AvailableDevices[n].deviceId == device.id)
+                        {
+                            isInAvailableDevices = true;
+                            break;
+                        }
+                    }
+                    if (!isInAvailableDevices)
+                        continue;
+
+                    // If the device layout isn't supported according to the current settings,
+                    // remove the device.
+                    if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
+                    {
+                        RemoveDevice(device, keepOnListOfAvailableDevices: true);
+                        --i;
+                    }
+                }
+            }
+
+            // Let listeners know.
+            for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
+                m_SettingsChangedListeners[i]();
         }
 
         private void OnFocusChanged(bool focus)
@@ -3158,6 +3317,9 @@ namespace UnityEngine.Experimental.Input
                 {
                     var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
                     if (device != null)
+                        continue;
+
+                    if (m_AvailableDevices[i].isRemoved)
                         continue;
 
                     var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,

@@ -9,7 +9,7 @@ using UnityEngine.Experimental.Input.Editor;
 
 public class AssetEditorTests
 {
-    static AssetInspectorWindow GetTestAssetWindow()
+    private static AssetInspectorWindow GetTestAssetWindow()
     {
         var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>("Packages/com.unity.inputsystem/Tests/InputSystem/Editor/TestAsset.inputactions");
         AssetInspectorWindow.OnOpenAsset(asset.GetInstanceID(), -1);
@@ -172,9 +172,7 @@ public class AssetEditorTests
 
         assetWindow.m_ActionsTree.SetSelection(new[] {assetWindow.m_ActionsTree.GetRootElement().children[1].id});
 
-        var e = new Event();
-        e.type = EventType.ExecuteCommand;
-        e.commandName = "Copy";
+        var e = new Event {type = EventType.ExecuteCommand, commandName = "Copy"};
         assetWindow.SendEvent(e);
 
         yield return null;
@@ -189,12 +187,12 @@ public class AssetEditorTests
     [UnityTest]
     public IEnumerator PickerWillNotThrowError_WhenEscIsPressed()
     {
-        var picker = new InputControlPickerDropdown(new AdvancedDropdownState(), null, () => {});
+        var picker = new InputControlPickerDropdown(new AdvancedDropdownState(), path => {});
         picker.Show(Rect.zero);
 
         yield return null;
 
-        Event e = new Event();
+        var e = new Event();
         e.keyCode = KeyCode.Escape;
         e.type = EventType.KeyDown;
         picker.m_WindowInstance.SendEvent(e);

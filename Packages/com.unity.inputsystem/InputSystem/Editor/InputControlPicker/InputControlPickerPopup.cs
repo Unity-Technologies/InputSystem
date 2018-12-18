@@ -2,6 +2,10 @@
 using System;
 using UnityEditor;
 
+////TODO: refactor to not mandate a SerializedProperty; must be able to pick anything
+
+////TODO: make interactive pick button optional
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     public class InputControlPickerPopup
@@ -111,7 +115,12 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_InputControlPickerDropdown == null)
             {
-                m_InputControlPickerDropdown = new InputControlPickerDropdown(m_PickerState.state, m_PathProperty, m_OnModified);
+                m_InputControlPickerDropdown = new InputControlPickerDropdown(m_PickerState.state,
+                    path =>
+                    {
+                        m_PathProperty.stringValue = path;
+                        m_OnModified();
+                    });
             }
 
             if (m_DeviceFilter != null)

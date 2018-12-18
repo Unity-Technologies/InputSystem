@@ -632,6 +632,129 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanRestrictSetOfSupportedDevices()
+    {
+        // Add native devices.
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Keyboard",
+        });
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+        });
+
+        InputSystem.Update();
+
+        var keyboardId = ((Keyboard)InputSystem.devices[0]).id;
+        var gamepadId = ((Gamepad)InputSystem.devices[1]).id;
+
+        // Add manually added device.
+        var mouseId = InputSystem.AddDevice<Mouse>().id;
+
+        // We don't mandate that the system reuses the same device instances it had created before.
+        // Makes our checks here a little contrived. Can't use just IsEquivalentTo() as the device
+        // instances may change.
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(3));
+        Assert.That(InputSystem.devices[0], Is.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices[0].id, Is.EqualTo(keyboardId));
+        Assert.That(InputSystem.devices[1], Is.TypeOf<Gamepad>());
+        Assert.That(InputSystem.devices[1].id, Is.EqualTo(gamepadId));
+        Assert.That(InputSystem.devices[2], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[2].id, Is.EqualTo(mouseId));
+
+        bool? receivedSettingsChange = null;
+        var receivedDeviceChanges = new List<InputDeviceChange>();
+        var receivedDevices = new List<InputDevice>();
+
+        InputSystem.onSettingsChange +=
+            () =>
+        {
+            Assert.That(receivedSettingsChange, Is.Null);
+            receivedSettingsChange = true;
+        };
+
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+        {
+            receivedDeviceChanges.Add(change);
+            receivedDevices.Add(device);
+        };
+
+        // Restrict to just gamepads.
+        InputSystem.settings.supportedDevices = new[] {"Gamepad"};
+
+        // Keyboard should have been removed as it comes from the runtime. Mouse should have been
+        // kept as it has been explicitly added in code. Gamepad should have been kept as it
+        // is explicitly listed as supported.
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
+        Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
+        Assert.That(InputSystem.devices[0].id, Is.EqualTo(gamepadId));
+        Assert.That(InputSystem.devices[1], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[1].id, Is.EqualTo(mouseId));
+        Assert.That(receivedSettingsChange, Is.True);
+        Assert.That(InputSystem.settings.supportedDevices, Is.EquivalentTo(new[] { "Gamepad" }));
+        Assert.That(receivedDeviceChanges, Is.EquivalentTo(new[] {InputDeviceChange.Removed}));
+        Assert.That(receivedDevices[0].id, Is.EqualTo(keyboardId));
+
+        receivedSettingsChange = null;
+        receivedDevices.Clear();
+        receivedDeviceChanges.Clear();
+
+        // Switch set of supported devices to mouse&keyboard.
+        InputSystem.settings.supportedDevices = new[] {"Keyboard", "Mouse"};
+
+        // Keyboard should have been re-added. Gamepad should have been removed.
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
+        Assert.That(InputSystem.devices[0], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[0].id, Is.EqualTo(mouseId));
+        Assert.That(InputSystem.devices[1], Is.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices[1].id, Is.EqualTo(keyboardId));
+        Assert.That(receivedSettingsChange, Is.True);
+        Assert.That(InputSystem.settings.supportedDevices, Is.EquivalentTo(new[] { "Keyboard", "Mouse" }));
+        Assert.That(receivedDeviceChanges, Is.EquivalentTo(new[] {InputDeviceChange.Added, InputDeviceChange.Removed}));
+        Assert.That(receivedDevices[0].id, Is.EqualTo(keyboardId));
+        Assert.That(receivedDevices[1].id, Is.EqualTo(gamepadId));
+
+        receivedSettingsChange = null;
+        receivedDevices.Clear();
+        receivedDeviceChanges.Clear();
+
+        // Setting to same value should result in no change.
+        InputSystem.settings.supportedDevices = new[] {"Keyboard", "Mouse"};
+
+        Assert.That(receivedSettingsChange, Is.Null);
+        Assert.That(receivedDeviceChanges, Is.Empty);
+        Assert.That(receivedDevices, Is.Empty);
+
+        // Clearing should restore gamepad.
+        InputSystem.settings.supportedDevices = new ReadOnlyArray<string>();
+
+        // Keyboard should have been re-added. Gamepad should have been removed.
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(3));
+        Assert.That(InputSystem.devices[0], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[0].id, Is.EqualTo(mouseId));
+        Assert.That(InputSystem.devices[1], Is.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices[1].id, Is.EqualTo(keyboardId));
+        Assert.That(InputSystem.devices[2], Is.TypeOf<Gamepad>());
+        Assert.That(InputSystem.devices[2].id, Is.EqualTo(gamepadId));
+
+        Assert.That(receivedSettingsChange, Is.True);
+        Assert.That(InputSystem.settings.supportedDevices, Is.Empty);
+        Assert.That(receivedDeviceChanges, Is.EquivalentTo(new[] {InputDeviceChange.Added}));
+        Assert.That(receivedDevices[0].id, Is.EqualTo(gamepadId));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsAllRecognizedDefaultsByDefault()
+    {
+        Assert.That(InputSystem.settings.supportedDevices, Is.Empty);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanTellIfDeviceHasNoisyControls()
     {
         const string layout = @"
