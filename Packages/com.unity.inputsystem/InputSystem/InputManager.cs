@@ -2756,11 +2756,9 @@ namespace UnityEngine.Experimental.Input
                 #else
                 // Mark as processed.
                 currentEventReadPtr->handled = true;
-                if (remainingEventCount >= 1)
-                {
+                if (remainingEventCount > 1)
                     currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                    --remainingEventCount;
-                }
+                --remainingEventCount;
                 #endif
             }
 

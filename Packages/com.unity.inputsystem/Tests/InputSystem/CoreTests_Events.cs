@@ -263,6 +263,8 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.True);
     }
 
+    ////TODO: remove #if when backported
+    #if UNITY_2019_1_OR_NEWER
     [Test]
     [Category("Events")]
     public unsafe void Events_AreTimeslicedByDefault()
@@ -343,6 +345,8 @@ partial class CoreTests
         Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
         Assert.That(InputUpdate.s_LastFixedUpdateTime, Is.EqualTo(3 + 4 * (1.0 / 60)).Within(0.0001));
     }
+
+    #endif
 
     [Test]
     [Category("Events")]

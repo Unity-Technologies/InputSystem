@@ -110,9 +110,9 @@ namespace UnityEngine.Experimental.Input.Editor
             // EXCEPTION: We're okay with empty devices if we're picking devices and not controls.
             if (layout.controls.Count == 0 && m_Mode != Mode.PickDevice)
                 return;
-            
+
             var deviceItem = new DeviceTreeViewItem(layout);
-            
+
             // If we have a device filter, see if we should ignore the device.
             if (m_DeviceFilter != null)
             {

@@ -12,6 +12,10 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
+    #if UNITY_2018_3
+    using SettingsScope = SettingsScopes;
+    #endif
+
     internal class InputSettingsProvider : SettingsProvider
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
@@ -288,7 +292,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 InitializeWithCurrentSettings();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
+            ////FIXME: doesn't seem like there's a way to issue a repaint with the 2018.3 API
+            #if UNITY_2019_1_OR_NEWER
             Repaint();
+            #endif
         }
 
         /// <summary>
@@ -337,7 +344,9 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 // Force next OnGUI() to re-initialize.
                 s_Instance.m_Settings = null;
+                #if UNITY_2019_1_OR_NEWER
                 s_Instance.Repaint();
+                #endif
             }
         }
     }

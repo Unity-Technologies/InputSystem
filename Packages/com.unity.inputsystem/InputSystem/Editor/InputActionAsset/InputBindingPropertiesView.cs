@@ -372,12 +372,12 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);
                 }
             }
-            
+
             // If there's no device filter coming from a control scheme, filter by supported
             // devices as given by settings .
             if (!haveDeviceFilterFromControlScheme)
                 m_InputControlPickerDropdown.SetDeviceFilter(InputSystem.settings.supportedDevices.ToArray());
-            
+
             m_InputControlPickerDropdown.Show(rect);
         }
 

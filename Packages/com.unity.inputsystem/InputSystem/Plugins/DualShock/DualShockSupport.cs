@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x54C) // Sony Entertainment.
                     .WithCapability("productId", 0x9CC)); // Wireless controller.
-            
+
             // Just to make sure, also set up a matcher that goes by strings so that we cover
             // all bases.
             InputSystem.RegisterLayoutMatcher<DualShockGamepadHID>(
