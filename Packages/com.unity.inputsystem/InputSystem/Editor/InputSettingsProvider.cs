@@ -1,4 +1,4 @@
-#if UNITY_2018_3_OR_NEWER
+#if UNITY_EDITOR && UNITY_2018_3_OR_NEWER
 using System;
 using System.IO;
 using System.Linq;
@@ -348,4 +348,4 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 }
-#endif // UNITY_2018_3_OR_NEWER
+#endif // UNITY_EDITOR && UNITY_2018_3_OR_NEWER
