@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Processors
 
         public float sensitivityOrDefault
         {
-            get { return sensitivity == 0f ? InputConfiguration.Sensitivity : sensitivity; }
+            get { return sensitivity == 0f ? InputSystem.settings.defaultSensitivity : sensitivity; }
         }
 
         public Vector2 Process(Vector2 value, InputControl control)

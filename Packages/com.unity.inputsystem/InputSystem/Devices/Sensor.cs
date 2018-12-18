@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public virtual Vector3 Process(Vector3 value, InputControl control)
         {
-            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
+            if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;
 
             var rotation = Quaternion.identity;
@@ -112,7 +112,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public virtual Quaternion Process(Quaternion value, InputControl control)
         {
-            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
+            if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;
 
             const float kSqrtOfTwo = 1.4142135623731f;

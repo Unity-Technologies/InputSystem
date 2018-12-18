@@ -1,14 +1,14 @@
 namespace UnityEngine.Experimental.Input.Interactions
 {
     // Performs the action if the control is pressed, held for at least the set duration
-    // (which defaults to InputConfiguration.SlowTapTime) and then *released*.
+    // (which defaults to InputSettings.defaultSlowTapTime) and then *released*.
     public class SlowTapInteraction : IInputInteraction
     {
         public float duration;
         ////REVIEW: this seems stupid; shouldn't a slow tap just be anything that takes longer than TapTime?
         public float durationOrDefault
         {
-            get { return duration > 0.0f ? duration : InputConfiguration.SlowTapTime; }
+            get { return duration > 0.0f ? duration : InputSystem.settings.defaultSlowTapTime; }
         }
 
         // If this is non-zero, then if the control is held for longer than

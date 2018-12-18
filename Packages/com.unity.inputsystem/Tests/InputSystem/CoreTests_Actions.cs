@@ -725,7 +725,7 @@ partial class CoreTests
 
         startedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), InputConfiguration.TapTime);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), InputSystem.settings.defaultTapTime);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
@@ -1623,7 +1623,7 @@ partial class CoreTests
         // Perform slow tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.A}, 2.0);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0},
-            2.0 + InputConfiguration.SlowTapTime + 0.0001);
+            2.0 + InputSystem.settings.defaultSlowTapTime + 0.0001);
         InputSystem.Update();
 
         // First tap was started, then slow tap was started.
@@ -1812,7 +1812,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A}, 0.0);
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputConfiguration.SlowTapTime + 0.1);
+            new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputSystem.settings.defaultSlowTapTime + 0.1);
         InputSystem.Update();
 
         Assert.That(performed, Has.Count.EqualTo(1));
@@ -2003,7 +2003,7 @@ partial class CoreTests
         };
 
         var startTime = 0.123;
-        var endTime = 0.123 + InputConfiguration.SlowTapTime + 1.0;
+        var endTime = 0.123 + InputSystem.settings.defaultSlowTapTime + 1.0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f}, startTime);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.0f}, endTime);
@@ -3724,7 +3724,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad,
                 new GamepadState
                 {
-                    rightStick = new Vector2(InputConfiguration.DeadzoneMin - 0.0001f, InputConfiguration.DeadzoneMin - 0.0001f)
+                    rightStick = new Vector2(InputSystem.settings.defaultDeadzoneMin - 0.0001f, InputSystem.settings.defaultDeadzoneMin - 0.0001f)
                 });
             InputSystem.Update();
 
@@ -4466,8 +4466,8 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Deadzoning alters values on the stick. For this test, get rid of it.
-        InputConfiguration.DeadzoneMin = 0f;
-        InputConfiguration.DeadzoneMax = 1f;
+        InputSystem.settings.defaultDeadzoneMin = 0f;
+        InputSystem.settings.defaultDeadzoneMax = 1f;
 
         var action = new InputAction();
 

@@ -263,8 +263,11 @@ partial class CoreTests
         {
             runtime = new InputTestRuntime();
             manager = new InputManager();
+            manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
+            manager.m_Settings.timesliceEvents = false;
             manager.InstallRuntime(runtime);
             manager.InitializeData();
+            manager.ApplySettings();
 
             local = new InputRemoting(InputSystem.s_Manager);
             remote = new InputRemoting(manager);
