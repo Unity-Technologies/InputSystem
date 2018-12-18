@@ -12,10 +12,6 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    #if UNITY_2018_3
-    using SettingsScope = SettingsScopes;
-    #endif
-
     internal class InputSettingsProvider : SettingsProvider
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";

@@ -95,7 +95,12 @@ public class ScriptCompilersTests
         // Hopefully the churn on these mono library helpers is over, this is going to be a bit a pain to
         // always chase.
 #if UNITY_2018_3_OR_NEWER && !(UNITY_2019_1_OR_NEWER)
-        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, AssetPath.GetFileName(outputAssemblyPath)));
+        var scriptAssembly = new ScriptAssembly
+        {
+            Filename = AssetPath.GetFileName(outputAssemblyPath),
+            Flags = AssemblyFlags.None
+        };
+        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, scriptAssembly));
 #elif UNITY_2019_1_OR_NEWER
         references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language));
 #endif

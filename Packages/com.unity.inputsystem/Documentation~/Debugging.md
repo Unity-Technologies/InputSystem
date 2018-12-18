@@ -8,7 +8,7 @@ The "Input Debugger" view provides a window into the data and activity of the in
 
 ## Connecting a Player
 
->NOTE: The input debugger connection to the player is still being worked on. At the moment, is is still unstable and unreliable.
+>NOTE: The input debugger connection to the player is still being worked on. At the moment, it is still unstable and unreliable.
 
 >NOTE: At the moment, debugging input in players is restricted to seeing devices and events from connected players. There is no support yet for seeing other input-related data from players.
 
