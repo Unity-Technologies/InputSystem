@@ -1244,7 +1244,8 @@ partial class CoreTests
         using (var runtime = new InputTestRuntime())
         {
             var manager = new InputManager();
-            manager.Initialize(runtime);
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            manager.Initialize(runtime, settings);
 
             // Create a device layout that will fail to instantiate.
             const string layout = @"
@@ -3060,6 +3061,100 @@ partial class CoreTests
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad1));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanFilterNoiseOnCurrent()
+    {
+        // Make left trigger on gamepads noisy.
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""LeftTriggerIsNoisy"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""leftTrigger"", ""noisy"" : true }
+                ]
+            }
+        ");
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        // Make sure the layout override came through okay.
+        Assert.That(gamepad1.noisy, Is.True);
+        Assert.That(gamepad1.leftTrigger.noisy, Is.True);
+        Assert.That(gamepad1.rightTrigger.noisy, Is.False);
+        Assert.That(Gamepad.current, Is.SameAs(gamepad2));
+
+        var receivedSettingsChange = false;
+        InputSystem.onSettingsChange += () => receivedSettingsChange = true;
+
+        // Enable filtering. Off by default.
+        InputSystem.settings.filterNoiseOnCurrent = true;
+
+        Assert.That(InputSystem.settings.filterNoiseOnCurrent, Is.True);
+        Assert.That(receivedSettingsChange, Is.True);
+
+        // Send delta state without noise on first gamepad.
+        InputSystem.QueueDeltaStateEvent(gamepad1.leftStick, new Vector2(0.123f, 0.234f));
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+
+        // Send full state without noise on second gamepad.
+        InputSystem.QueueStateEvent(gamepad2, new GamepadState {rightStick = new Vector2(0.123f, 0.234f)});
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad2));
+
+        // Send delta state with only noise on first gamepad.
+        InputSystem.QueueDeltaStateEvent(gamepad1.leftTrigger, 0.345f);
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad2)); // Should be unchanged.
+
+        // Send full state with only noise on first gamepad.
+        // NOTE: We already have non-default state on leftStick which we need to preserve.
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.123f, 0.234f), leftTrigger = 0.567f});
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad2)); // Should be unchanged.
+
+        // Send full state with some noise on first gamepad.
+        // NOTE: We already have non-default state on leftStick which we need to preserve.
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.345f, 0.456f), leftTrigger = 0.567f});
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_FilteringNoiseOnCurrentIsTurnedOffByDefault()
+    {
+        Assert.That(InputSystem.settings.filterNoiseOnCurrent, Is.False);
+    }
+
+    // We currently do not read out actual values during noise detection. This means that any state change on a control
+    // that isn't marked as noisy will pass the noise filter. If, for example, the sticks are wiggled but they are still
+    // below deadzone threshold, they will still classify as carrying signal. To do that differently, we would have to
+    // mirror processors back onto state or actually invoke the processors during noise filtering.
+    [Test]
+    [Category("Devices")]
+    public void Devices_FilteringNoiseOnCurrentDoesNotTakeProcessorsIntoAccount()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.settings.filterNoiseOnCurrent = true;
+
+        // Actuate leftStick below deadzone threshold.
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.001f, 0.001f)});
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_AreUpdatedWithTimestampOfLastEvent()
