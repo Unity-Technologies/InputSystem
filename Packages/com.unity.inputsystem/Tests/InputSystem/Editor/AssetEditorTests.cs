@@ -147,7 +147,7 @@ public class AssetEditorTests
 
         // Is new composite selected
         var selectedRow = (ActionMapTreeItem)assetWindow.m_ActionMapsTree.GetSelectedRow();
-        Assert.That(selectedRow.displayName, Is.EqualTo("default"));
+        Assert.That(selectedRow.displayName, Is.EqualTo("New action map"));
     }
 
     [UnityTest]
@@ -160,7 +160,7 @@ public class AssetEditorTests
 
         // Is new composite selected
         var selectedRow = (ActionTreeItem)assetWindow.m_ActionsTree.GetSelectedRow();
-        Assert.That(selectedRow.displayName, Is.EqualTo("action"));
+        Assert.That(selectedRow.displayName, Is.EqualTo("New action"));
     }
 
     [UnityTest]
