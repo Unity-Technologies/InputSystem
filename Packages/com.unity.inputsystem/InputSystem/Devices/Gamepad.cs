@@ -229,6 +229,11 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
+        /// </summary>
+        public static Gamepad current { get; private set; }
+
+        /// <summary>
         /// A list of gamepads currently connected to the system.
         /// </summary>
         /// <remarks>
@@ -270,6 +275,12 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
         protected override void OnAdded()
         {
             ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
@@ -277,7 +288,10 @@ namespace UnityEngine.Experimental.Input
 
         protected override void OnRemoved()
         {
-            // Remove from array.
+            if (current == this)
+                current = null;
+
+            // Remove from `all`.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
             Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));
             if (wasFound)

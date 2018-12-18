@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 scroll;
 
         [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true)]
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
+        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
         [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
         [FieldOffset(24)]
@@ -116,6 +116,25 @@ namespace UnityEngine.Experimental.Input
         /// The right mouse button.
         /// </summary>
         public ButtonControl rightButton { get; private set; }
+
+        /// <summary>
+        /// The mouse that was added or updated last or null if there is no mouse
+        /// connected to the system.
+        /// </summary>
+        public new static Mouse current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>

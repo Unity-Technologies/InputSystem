@@ -226,6 +226,25 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public ReadOnlyArray<TouchControl> allTouchControls { get; private set; }
 
+        /// <summary>
+        /// The touchscreen that was added or updated last or null if there is no
+        /// touchscreen connected to the system.
+        /// </summary>
+        public new static Touchscreen current { get; internal set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             var touchArray = new TouchControl[TouchscreenState.kMaxTouches];

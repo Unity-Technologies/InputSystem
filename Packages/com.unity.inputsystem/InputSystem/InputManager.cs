@@ -78,7 +78,42 @@ namespace UnityEngine.Experimental.Input
                 var result = m_Metrics;
                 if (m_Runtime != null)
                     result.totalFrameCount = m_Runtime.frameCount;
+
+                result.currentNumDevices = m_DevicesCount;
+                result.currentStateSizeInBytes = (int)m_StateBuffers.totalSize;
+
+                // Count controls.
+                result.currentControlCount = m_DevicesCount;
+                for (var i = 0; i < m_DevicesCount; ++i)
+                    result.currentControlCount += m_Devices[i].allControls.Count;
+
+                // Count layouts.
+                result.currentLayoutCount = m_Layouts.layoutTypes.Count;
+                result.currentLayoutCount += m_Layouts.layoutStrings.Count;
+                result.currentLayoutCount += m_Layouts.layoutBuilders.Count;
+                result.currentLayoutCount += m_Layouts.layoutOverrides.Count;
+
                 return result;
+            }
+        }
+
+        public InputSettings settings
+        {
+            get
+            {
+                Debug.Assert(m_Settings != null);
+                return m_Settings;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                if (m_Settings == value)
+                    return;
+
+                m_Settings = value;
+                ApplySettings();
             }
         }
 
@@ -169,6 +204,12 @@ namespace UnityEngine.Experimental.Input
         {
             add { m_AfterUpdateListeners.Append(value); }
             remove { m_AfterUpdateListeners.Remove(value); }
+        }
+
+        public event Action onSettingsChange
+        {
+            add { m_SettingsChangedListeners.Append(value);  }
+            remove { m_SettingsChangedListeners.Append(value);  }
         }
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
@@ -762,6 +803,9 @@ namespace UnityEngine.Experimental.Input
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+
+            // Usage may affect current device so update.
+            device.MakeCurrent();
         }
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
@@ -898,6 +942,9 @@ namespace UnityEngine.Experimental.Input
 
             // Notify device.
             device.NotifyAdded();
+
+            // Make the device current.
+            device.MakeCurrent();
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -1232,11 +1279,17 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime)
+        internal void Initialize(IInputRuntime runtime, InputSettings settings)
         {
+            Debug.Assert(settings != null);
+
+            m_Settings = settings;
+
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
+
+            ApplySettings();
         }
 
         internal void Destroy()
@@ -1464,6 +1517,7 @@ namespace UnityEngine.Experimental.Input
 
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
+        internal InputSettings m_Settings;
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;

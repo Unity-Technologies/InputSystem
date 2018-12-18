@@ -45,7 +45,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure", defaultState = "1.0")]
         public float pressure;
 
         [InputControl(layout = "Axis", usage = "Twist")]
@@ -155,6 +155,25 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: give this a better name; primaryButton?
         public ButtonControl button { get; private set; }
+
+        /// <summary>
+        /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
+        /// device connected to the system.
+        /// </summary>
+        public static Pointer current { get; internal set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {

@@ -141,9 +141,22 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public ButtonControl inRange { get; private set; }
 
-        public bool isTouching
+        /// <summary>
+        /// The pen that was active or connected last or <c>null</c> if there is no pen.
+        /// </summary>
+        public new static Pen current { get; internal set; }
+
+        public override void MakeCurrent()
         {
-            get { throw new NotImplementedException(); }
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

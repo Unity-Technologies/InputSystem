@@ -427,6 +427,15 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_AddingDevice_MakesItCurrent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_AddingDevice_DoesNotCauseExistingDevicesToForgetTheirState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1095,6 +1104,7 @@ partial class CoreTests
         Assert.That(gamepad1.added, Is.False);
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad2));
+        Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
         Assert.That(gamepad1WasRemoved, Is.True);
     }
 
@@ -1683,6 +1693,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice("MyJoystick");
 
         Assert.That(device, Is.TypeOf<Joystick>());
+        Assert.That(Joystick.current, Is.SameAs(device));
 
         var joystick = (Joystick)device;
 
@@ -2699,6 +2710,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(accelerometer.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
+        Assert.That(Accelerometer.current, Is.SameAs(accelerometer));
     }
 
     [Test]
@@ -2711,6 +2723,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gyro.angularVelocity.ReadValue(), Is.EqualTo(value).Within(0.00001));
+        Assert.That(Gyroscope.current, Is.SameAs(gyro));
     }
 
     [Test]
@@ -2723,6 +2736,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(sensor.gravity.ReadValue(), Is.EqualTo(value).Within(0.00001));
+        Assert.That(Gravity.current, Is.SameAs(sensor));
     }
 
     [Test]
@@ -2735,6 +2749,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(sensor.attitude.ReadValue(), Is.EqualTo(value).Within(0.00001));
+        Assert.That(Attitude.current, Is.SameAs(sensor));
     }
 
     [Test]
@@ -2747,6 +2762,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
+        Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
     }
 
     [Test]
@@ -2767,7 +2783,7 @@ partial class CoreTests
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.Update();
 
-            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            InputSystem.settings.compensateForScreenOrientation = true;
 
             runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(directionControl.ReadValue(),
@@ -2784,7 +2800,7 @@ partial class CoreTests
             runtime.screenOrientation = ScreenOrientation.Portrait;
             Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
 
-            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            InputSystem.settings.compensateForScreenOrientation = false;
             Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
         }
     }
@@ -2805,7 +2821,7 @@ partial class CoreTests
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.Update();
 
-            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            InputSystem.settings.compensateForScreenOrientation = true;
             runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(rotationControl.ReadValue().eulerAngles,
                 Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(Vector3EqualityComparer.Instance));
@@ -2822,7 +2838,7 @@ partial class CoreTests
             Assert.That(rotationControl.ReadValue().eulerAngles,
                 Is.EqualTo(angles).Using(Vector3EqualityComparer.Instance));
 
-            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            InputSystem.settings.compensateForScreenOrientation = false;
             Assert.That(rotationControl.ReadValue().eulerAngles,
                 Is.EqualTo(angles).Using(Vector3EqualityComparer.Instance));
         }
@@ -3026,6 +3042,26 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_AreMadeCurrentWhenReceivingStateEvent()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
+
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+
+        // Sending event that isn't a state event should result in no change.
+        InputSystem.QueueConfigChangeEvent(gamepad2);
+        InputSystem.Update();
+
+        Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+    }
+    [Test]
+    [Category("Devices")]
     public void Devices_AreUpdatedWithTimestampOfLastEvent()
     {
         var device = InputSystem.AddDevice<Gamepad>();
@@ -3198,7 +3234,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_IMECompositionEventsGoThroughKeyboard()
+    public void Devices_CanListenForIMECompositionEvents()
     {
         const string imeCompositionCharacters = "CompositionTestCharacters! ɝ";
         var callbackWasCalled = false;
@@ -3221,61 +3257,60 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_IMEEnableSendsCorrectIOCTLCommand()
+    public unsafe void Devices_CanEnableAndDisableIME()
     {
-        var commandWasSent = false;
-
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(keyboard.id,
-                (id, commandPtr) =>
+
+        bool? receivedIMEEnabledValue = null;
+        runtime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == EnableIMECompositionCommand.Type)
                 {
-                    if (commandPtr->type == EnableIMECompositionCommand.Type)
-                    {
-                        Assert.That(commandWasSent, Is.False);
-                        commandWasSent = true;
+                    Assert.That(receivedIMEEnabledValue, Is.Null);
+                    receivedIMEEnabledValue = ((EnableIMECompositionCommand*)commandPtr)->imeEnabled;
+                    return InputDeviceCommand.kGenericSuccess;
+                }
 
-                        var command = *(EnableIMECompositionCommand*)commandPtr;
-                        Assert.That(command.imeEnabled, Is.True);
-                        return InputDeviceCommand.kGenericSuccess;
-                    }
-
-                    return InputDeviceCommand.kGenericFailure;
-                });
-        }
+                return InputDeviceCommand.kGenericFailure;
+            });
 
         keyboard.imeEnabled = true;
-        Assert.That(commandWasSent, Is.True);
+
+        Assert.That(receivedIMEEnabledValue, Is.True);
+
+        receivedIMEEnabledValue = null;
+
+        keyboard.imeEnabled = false;
+
+        Assert.That(receivedIMEEnabledValue, Is.False);
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_IMECursorPositionSendsCorrectIOCTLCommand()
+    public unsafe void Devices_CanSetIMECursorPositionOnKeyboard()
     {
         var commandWasSent = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(keyboard.id,
-                (id, commandPtr) =>
+        runtime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == SetIMECursorPositionCommand.Type)
                 {
-                    if (commandPtr->type == SetIMECursorPositionCommand.Type)
-                    {
-                        Assert.That(commandWasSent, Is.False);
-                        commandWasSent = true;
+                    Assert.That(commandWasSent, Is.False);
+                    commandWasSent = true;
 
-                        var command = *(SetIMECursorPositionCommand*)commandPtr;
-                        Assert.AreEqual(Vector2.one, command.position);
-                        return InputDeviceCommand.kGenericSuccess;
-                    }
+                    var command = *(SetIMECursorPositionCommand*)commandPtr;
+                    Assert.AreEqual(Vector2.one, command.position);
+                    return InputDeviceCommand.kGenericSuccess;
+                }
 
-                    return InputDeviceCommand.kGenericFailure;
-                });
-        }
+                return InputDeviceCommand.kGenericFailure;
+            });
 
+        ////REVIEW: should this require IME to be enabled?
         keyboard.imeCursorPosition = Vector2.one;
         Assert.That(commandWasSent, Is.True);
     }
