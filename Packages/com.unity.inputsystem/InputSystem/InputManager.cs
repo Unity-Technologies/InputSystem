@@ -2048,15 +2048,16 @@ namespace UnityEngine.Experimental.Input
             }
             #endif
 
+            ////TODO: manual mode must be treated like lockInputToGameView in editor
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
             // of the other editor windows has focus, we route input to edit mode buffers.
             var gameIsPlayingAndHasFocus = true;
             var buffersToUseForUpdate = updateType;
-#if UNITY_EDITOR
-            gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused) ||
-                ((updateMask & (InputUpdateType)(1 << 31)) != 0);
+
+            #if UNITY_EDITOR
+            gameIsPlayingAndHasFocus = InputEditorUserSettings.lockInputToGameView ||
+                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
 
             if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
             {
@@ -2926,10 +2927,17 @@ namespace UnityEngine.Experimental.Input
             // If it *is* a dynamic update and we haven't flipped for the current update
             // yet, do it.
             if (updateType == InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != InputUpdate.dynamicUpdateCount)
+                device.m_CurrentDynamicUpdateCount != InputUpdate.s_DynamicUpdateCount)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = InputUpdate.dynamicUpdateCount;
+                device.m_CurrentDynamicUpdateCount = InputUpdate.s_DynamicUpdateCount;
+                flipped = true;
+            }
+
+            // In manual mode, we always flip. There are no frame boundaries.
+            if (updateType == InputUpdateType.Manual)
+            {
+                m_StateBuffers.m_ManualUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 flipped = true;
             }
 
@@ -3031,10 +3039,10 @@ namespace UnityEngine.Experimental.Input
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices != null ? m_AvailableDevices.Take(m_AvailableDeviceCount).ToArray() : null,
                 buffers = m_StateBuffers,
-                configuration = InputConfiguration.Save(),
                 updateState = InputUpdate.Save(),
                 updateMask = m_UpdateMask,
                 metrics = m_Metrics,
+                settings = m_Settings,
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,

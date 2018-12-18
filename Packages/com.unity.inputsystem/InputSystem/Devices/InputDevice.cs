@@ -220,11 +220,11 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                var updateType = InputUpdate.lastUpdateType;
+                var updateType = InputUpdate.s_LastUpdateType;
                 if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.BeforeRender)
-                    return m_CurrentDynamicUpdateCount == InputUpdate.dynamicUpdateCount;
+                    return m_CurrentDynamicUpdateCount == InputUpdate.s_DynamicUpdateCount;
                 if (updateType == InputUpdateType.Fixed)
-                    return m_CurrentFixedUpdateCount == InputUpdate.fixedUpdateCount;
+                    return m_CurrentFixedUpdateCount == InputUpdate.s_FixedUpdateCount;
 
                 ////REVIEW: how should this behave in the editor
                 return false;

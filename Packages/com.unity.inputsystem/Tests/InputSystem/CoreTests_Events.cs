@@ -174,6 +174,40 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.False);
         Assert.That(mouse.rightButton.isPressed, Is.True);
     }
+
+    [Test]
+    [Category("Events")]
+    [Property("TimesliceEvents", "Off")]
+    public void Events_CanSwitchToFullyManualUpdates()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var receivedOnChange = true;
+        InputSystem.onSettingsChange += () => receivedOnChange = true;
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+
+        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsManually));
+        Assert.That(receivedOnChange, Is.True);
+        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(runtime.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
+        Assert.That(runtime.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.True);
+
+        #if UNITY_EDITOR
+        // Edit mode updates shouldn't have been disabled in editor.
+        Assert.That(runtime.updateMask & InputUpdateType.Editor, Is.Not.Zero);
+        #endif
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.Update(InputUpdateType.Manual);
+
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+    }
+
     [Test]
     [Category("Events")]
     [Property("TimesliceEvents", "Off")]
