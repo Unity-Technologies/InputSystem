@@ -3,7 +3,7 @@
 	"displayName": "Input System",
 	"version": "0.0.14-preview",
 	"unity": "2018.3",
-	"description": "A new input system composed of Controls, Layouts, States and Actions.",
+  	"description": "A new input system which can be used as a more extensible and customizable alternative to Unity's classic input system in UnityEngine.Input.",
 	"keywords": [
 		"input",
 		"events",
