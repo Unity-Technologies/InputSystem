@@ -4,7 +4,7 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.1-preview] - ???
+## [0.1.0-preview] - 12/19/2018
 
     NOTE: The minimum version requirement for the new input system has been bumped
           to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
@@ -28,8 +28,6 @@ We've started working on documentation. The current work-in-progress can be foun
 
 - `InputSystem.settings` contains the current input system settings.
 - A new UI has been added to "Edit >> Project Settings..." to edit input system settings. Settings are stored in a user-controlled asset in any location inside `Assets/`. Multiple assets can be used and switched between.
-- Events are now timesliced across updates by default. This behavior can be turned off through `InputSettings.timesliceEvents`.
-    >NOTE: This change depends on changes to Unity's native runtime. We are in the process of landing the changes in 2019.1 and 2018.3. While the changes have not landed yet, timeslicing will not work correctly yet.
 - Joystick HIDs are now supported on Windows, Mac, and UWP.
 - Can now put system into manual update mode (`InputSettings.updateMode`). In this mode, events will not get automatically processed. To process events, call `InputSystem.Update()`.
 - Added shortcuts to action editor window (requires 2019.1).
@@ -42,7 +40,7 @@ We've started working on documentation. The current work-in-progress can be foun
 ### Known Issues
 
 - Input settings are not yet included in player builds. This means that at the moment, player builds will always start out with default input settings.
-- Timeslicing depends on native changes that have not yet landed in a public Unity release. We're actively working on getting the changes into 2019.1 and 2018.3.
+- There have been reports of some stickiness to buttons on 2019.1 alpha builds.  We are looking at this now.
 
 ## [0.0.14-preview] - 2018-12-11
 
