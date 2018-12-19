@@ -61,6 +61,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     private void InputFieldTextChanged(string text)
     {
         m_LogText.text += "Input: " + text + Environment.NewLine;
+        m_InputField.text = text;
     }
 
     private void StatusChangedCallback(ScreenKeyboardStatus status)
