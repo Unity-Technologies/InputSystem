@@ -1,7 +1,7 @@
 {
 	"name": "com.unity.inputsystem",
 	"displayName": "Input System",
-	"version": "0.1.0-preview",
+	"version": "0.1.1-preview",
 	"unity": "2018.3",
   	"description": "A new input system which can be used as a more extensible and customizable alternative to Unity's classic input system in UnityEngine.Input.",
 	"keywords": [

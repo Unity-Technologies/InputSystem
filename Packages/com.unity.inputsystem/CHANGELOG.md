@@ -4,7 +4,7 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.1.0-preview] - 12/19/2018
+## [0.1.1-preview] - 2018-12-19
 
     NOTE: The minimum version requirement for the new input system has been bumped
           to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
