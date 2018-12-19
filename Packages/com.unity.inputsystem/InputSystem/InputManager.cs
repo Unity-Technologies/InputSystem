@@ -2279,9 +2279,10 @@ namespace UnityEngine.Experimental.Input
             //       device, it depends on the producer of these events to queue them in correct order.
             //       Otherwise, once an event with a newer timestamp has been processed, events coming later
             //       in the buffer and having older timestamps will get rejected.
-            var timesliceEvents = false;
+            
             var timesliceTime = m_Runtime.currentTime;
             #if UNITY_2019_1_OR_NEWER
+            var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
 
             ////TODO: account for fixed updates getting dropped when framerate tanks
@@ -2296,7 +2297,7 @@ namespace UnityEngine.Experimental.Input
                     timesliceTime = InputUpdate.s_LastFixedUpdateTime + m_Runtime.fixedUpdateIntervalInSeconds;
                 InputUpdate.s_LastFixedUpdateTime = timesliceTime;
             }
-            #endif
+#endif
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)

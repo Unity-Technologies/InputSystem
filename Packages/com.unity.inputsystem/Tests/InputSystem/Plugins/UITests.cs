@@ -13,6 +13,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
+#pragma warning disable CS0649
 ////TODO: app focus handling
 ////TODO: send IUpdateSelectedHandler.OnUpdateSelected event
 

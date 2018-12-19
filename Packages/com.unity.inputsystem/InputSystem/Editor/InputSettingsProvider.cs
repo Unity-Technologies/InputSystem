@@ -9,7 +9,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
 ////TODO: keywords (2019.1+)
-
+#pragma warning disable CS0414
 namespace UnityEngine.Experimental.Input.Editor
 {
     internal class InputSettingsProvider : SettingsProvider
