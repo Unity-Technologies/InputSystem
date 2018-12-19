@@ -4,6 +4,10 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.ShortcutManagement;
+
+////TODO: add helpers to very quickly set up certai common configs (e.g. "FPS Controls" in add-action context menu;
+////      "WASD Control" in add-binding context menu)
 
 ////FIXME: when saving, processor/interaction selection is cleared
 
@@ -543,6 +547,40 @@ namespace UnityEngine.Experimental.Input.Editor
                 Repaint();
             }
         }
+
+        #if UNITY_2019_1_OR_NEWER
+        ////FIXME: the shortcuts seem to have focus problems; often requires clicking away and then back to the window
+        [Shortcut("Input Action Editor/Save", typeof(AssetInspectorWindow), KeyCode.S, ShortcutModifiers.Alt)]
+        private static void SaveShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ActionAssetManager.SaveChangesToAsset();
+        }
+
+        [Shortcut("Input Action Editor/Add Action Map", typeof(AssetInspectorWindow), KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ContextMenu.OnAddActionMap();
+        }
+
+        [Shortcut("Input Action Editor/Add Action", typeof(AssetInspectorWindow), KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ContextMenu.OnAddAction();
+            window.m_ContextMenu.OnAddBinding(window.m_ActionsTree.GetSelectedAction());
+            window.m_ActionsTree.SelectNewActionRow();
+        }
+
+        [Shortcut("Input Action Editor/Add Binding", typeof(AssetInspectorWindow), KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ContextMenu.OnAddBinding(window.m_ActionsTree.GetSelectedAction());
+        }
+
+        #endif
 
         [OnOpenAsset]
         internal static bool OnOpenAsset(int instanceId, int line)

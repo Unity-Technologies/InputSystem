@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public virtual Vector3 Process(Vector3 value, InputControl control)
         {
-            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
+            if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;
 
             var rotation = Quaternion.identity;
@@ -112,7 +112,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public virtual Quaternion Process(Quaternion value, InputControl control)
         {
-            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
+            if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;
 
             const float kSqrtOfTwo = 1.4142135623731f;
@@ -156,6 +156,21 @@ namespace UnityEngine.Experimental.Input
     {
         public Vector3Control acceleration { get; private set; }
 
+        public static Accelerometer current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             acceleration = builder.GetControl<Vector3Control>("acceleration");
@@ -167,6 +182,21 @@ namespace UnityEngine.Experimental.Input
     public class Gyroscope : Sensor
     {
         public Vector3Control angularVelocity { get; private set; }
+
+        public static Gyroscope current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -185,6 +215,21 @@ namespace UnityEngine.Experimental.Input
             gravity = builder.GetControl<Vector3Control>("gravity");
             base.FinishSetup(builder);
         }
+
+        public static Gravity current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
     }
 
     //// REVIEW: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
@@ -193,6 +238,21 @@ namespace UnityEngine.Experimental.Input
     public class Attitude : Sensor
     {
         public QuaternionControl attitude { get; private set; }
+
+        public static Attitude current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -205,6 +265,21 @@ namespace UnityEngine.Experimental.Input
     public class LinearAcceleration : Sensor
     {
         public Vector3Control acceleration { get; private set; }
+
+        public static LinearAcceleration current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {

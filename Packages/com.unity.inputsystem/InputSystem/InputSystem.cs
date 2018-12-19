@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
-        
+
         public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
             where TDevice : InputDevice
         {
@@ -592,6 +592,7 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onFindControlLayoutForDevice -= value; }
         }
 
+        ////REVIEW: should this be disambiguated more to separate it more from sensor sampling frequency?
         /// <summary>
         /// Frequency at which devices that need polling are being queried in the background.
         /// </summary>
@@ -1225,7 +1226,6 @@ namespace UnityEngine.Experimental.Input
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: call ForceUpdate?
         public static void Update()
         {
             s_Manager.Update();
@@ -1235,50 +1235,6 @@ namespace UnityEngine.Experimental.Input
         {
             s_Manager.Update(updateType);
         }
-
-        ////TODO: disable collection of input if all input updates are disabled
-        /// <summary>
-        /// Mask that determines which updates are run by the input system.
-        /// </summary>
-        /// <remarks>
-        /// By default, all update types are enabled. Disabling a specific update
-        ///
-        /// Clearing all flags in this mask will disable all input processing. Note, however,
-        /// that it will not currently disable collection of input.
-        /// </remarks>
-        public static InputUpdateType updateMask
-        {
-            get { return s_Manager.updateMask; }
-            set { s_Manager.updateMask = value; }
-        }
-
-#if UNITY_2018_3_OR_NEWER
-        private const InputUpdateType s_runInBackgroundMask = (InputUpdateType)(1 << 31);
-
-        /// <summary>
-        /// Tells the Input System to run even when the application is in the backgrond, and continue to trigger events and actions regardless of current focus state
-        /// </summary>
-        /// <remarks>
-        /// Off by default, this does not work on all platforms and devices, only those that can recieve their own input data while not in focus.
-        /// </remarks>
-        public static bool runInBackground
-        {
-            get { return (s_Manager.updateMask & s_runInBackgroundMask) != 0; }
-            set
-            {
-                if (runInBackground != value)
-                {
-                    InputUpdateType currentUpdateMask = s_Manager.updateMask;
-                    if (value)
-                        currentUpdateMask |= s_runInBackgroundMask;
-                    else
-                        currentUpdateMask &= ~s_runInBackgroundMask;
-
-                    s_Manager.updateMask = currentUpdateMask;
-                }
-            }
-        }
-#endif
 
         /// <summary>
         /// Event that is fired before the input system updates.
@@ -1310,6 +1266,46 @@ namespace UnityEngine.Experimental.Input
         {
             add { s_Manager.onAfterUpdate += value; }
             remove { s_Manager.onAfterUpdate -= value; }
+        }
+
+        #endregion
+
+        #region Settings
+
+        public static InputSettings settings
+        {
+            get { return s_Manager.settings; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                if (s_Manager.m_Settings == value)
+                    return;
+
+                // In the editor, we keep track of the settings asset through EditorBuildSettings.
+                #if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                        value, true);
+                }
+                #endif
+
+                s_Manager.settings = value;
+            }
+        }
+
+        /// <summary>
+        /// Event that is triggered if any of the properties in <see cref="settings"/> changes or if
+        /// <see cref="settings"/> is replaced entirely with a new <see cref="InputSettings"/> object.
+        /// </summary>
+        /// <seealso cref="settings"/>
+        /// <seealso cref="InputSettings"/>
+        public static event Action onSettingsChange
+        {
+            add { s_Manager.onSettingsChange += value; }
+            remove { s_Manager.onSettingsChange -= value; }
         }
 
         #endregion
@@ -1498,8 +1494,7 @@ namespace UnityEngine.Experimental.Input
             get { return Assembly.GetExecutingAssembly().GetName().Version; }
         }
 
-        ////TODO: put metrics gathering behind #if
-
+        ////REVIEW: restrict metrics to editor and development builds?
         public static InputMetrics GetMetrics()
         {
             return s_Manager.metrics;
@@ -1615,6 +1610,9 @@ namespace UnityEngine.Experimental.Input
                 s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
                 s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
 
+                // Restore editor settings.
+                InputEditorUserSettings.s_Settings = s_SystemObject.systemState.userSettings;
+
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
             }
@@ -1622,10 +1620,31 @@ namespace UnityEngine.Experimental.Input
             {
                 s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
+
+                // See if we have a remembered settings object.
+                InputSettings settingsAsset;
+                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                    out settingsAsset))
+                {
+                    if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                        ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
+                    s_Manager.m_Settings = settingsAsset;
+                    s_Manager.ApplySettings();
+                }
+
+                InputEditorUserSettings.Load();
+
                 SetUpRemoting();
             }
 
+            Debug.Assert(settings != null);
+            #if UNITY_EDITOR
+            Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
+                "InputSettings has lost its native object");
+            #endif
+
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+            EditorApplication.projectChanged += OnProjectChange;
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session.
@@ -1640,41 +1659,41 @@ namespace UnityEngine.Experimental.Input
                     EditorPlayerSettings.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
+
+            // Send an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            Update();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
-                case PlayModeStateChange.EnteredPlayMode:
-                    ResetUpdateMask();
-                    break;
-
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
                 case PlayModeStateChange.EnteredEditMode:
                     ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                     ////        InputDevices that have been created with AddDevice<> during play mode?
                     DisableAllEnabledActions();
-                    ResetUpdateMask();
                     break;
             }
         }
 
-        private static void ResetUpdateMask()
+        private static void OnProjectChange()
         {
-            InputUpdateType newUpdateMask = InputUpdateType.Default;
+            // May have added, removed, moved, or renamed settings asset. Force a refresh
+            // of the UI.
+            InputSettingsProvider.ForceReload();
 
-            // Preserve before-render status as that is enabled in accordance with whether we
-            // have devices that requested it.
-            if ((updateMask & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-                newUpdateMask |= InputUpdateType.BeforeRender;
-
-#if UNITY_2018_3_OR_NEWER
-            if ((updateMask & s_runInBackgroundMask) == s_runInBackgroundMask)
-                newUpdateMask |= s_runInBackgroundMask;
-#endif //#if UNITY_2018_3_OR_NEWER
-
-            updateMask = newUpdateMask;
+            // Also, if the asset holding our current settings got deleted, switch back to a
+            // temporary settings object.
+            // NOTE: We access m_Settings directly here to make sure we're not running into asserts
+            //       from the settings getter checking it has a valid object.
+            if (EditorUtility.InstanceIDToObject(s_Manager.m_Settings.GetInstanceID()) == null)
+            {
+                var newSettings = ScriptableObject.CreateInstance<InputSettings>();
+                newSettings.hideFlags = HideFlags.HideAndDontSave;
+                settings = newSettings;
+            }
         }
 
 #else
@@ -1682,8 +1701,10 @@ namespace UnityEngine.Experimental.Input
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
+            ////TODO: figure out bring settings into player
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
-            s_Manager.Initialize(NativeInputRuntime.instance);
+            s_Manager.Initialize(NativeInputRuntime.instance, settings);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -1771,8 +1792,15 @@ namespace UnityEngine.Experimental.Input
                     device.NotifyRemoved();
             }
 
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,
+            // this should get replaced with an actual InputSettings asset.
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            settings.hideFlags = HideFlags.HideAndDontSave;
+
             s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
             if (enableRemoting)
                 SetUpRemoting();
@@ -1807,6 +1835,7 @@ namespace UnityEngine.Experimental.Input
             #if UNITY_EDITOR
             EditorInputControlLayoutCache.Clear();
             InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
             #endif
 
             s_Manager = null;
@@ -1828,7 +1857,10 @@ namespace UnityEngine.Experimental.Input
             [SerializeField] public RemoteInputPlayerConnection remoteConnection;
             [SerializeField] public InputManager.SerializedState managerState;
             [SerializeField] public InputRemoting.SerializedState remotingState;
-            ////REVIEW: preserve user state? (if even possible)
+            #if UNITY_EDITOR
+            [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+            #endif
+            ////REVIEW: preserve InputUser state? (if even possible)
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -1861,6 +1893,9 @@ namespace UnityEngine.Experimental.Input
                 remoteConnection = s_RemoteConnection,
                 managerState = s_Manager.SaveState(),
                 remotingState = s_Remote.SaveState(),
+                #if UNITY_EDITOR
+                userSettings = InputEditorUserSettings.s_Settings,
+                #endif
             });
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
@@ -1882,10 +1917,13 @@ namespace UnityEngine.Experimental.Input
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;
 
-            InputConfiguration.Restore(state.managerState.configuration);
             InputUpdate.Restore(state.managerState.updateState);
 
             s_Manager.InstallGlobals();
+
+            #if UNITY_EDITOR
+            InputEditorUserSettings.s_Settings = state.userSettings;
+            #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them
             // by pretending the devices have been added.

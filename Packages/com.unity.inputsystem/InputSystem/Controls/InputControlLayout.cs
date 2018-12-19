@@ -45,6 +45,9 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 namespace UnityEngine.Experimental.Input.Layouts
 {
+    public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
+        IInputRuntime runtime);
+
     /// <summary>
     /// A control layout specifies the composition of an input control.
     /// </summary>

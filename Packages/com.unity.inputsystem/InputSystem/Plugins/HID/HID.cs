@@ -26,7 +26,7 @@ using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, CS0219
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 foreach (var element in hidDeviceDescriptor.elements)
                 {
-                    if (element.DetermineLayout() != null)
+                    if (element.IsUsableElement())
                     {
                         hasUsableElements = true;
                         break;
@@ -113,15 +113,17 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 return null;
 
             // Determine base layout.
+            Type baseType = null;
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                /*
-                ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
-                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
+                if ((hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick) || (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad))
+                {
                     baseLayout = "Joystick";
-                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
-                    baseLayout = "Gamepad";
+                    baseType = typeof(Joystick);
+                }
+                ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
+                /*
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Mouse)
                     baseLayout = "Mouse";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Pointer)
@@ -155,7 +157,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
-            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor};
+            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, parentLayout = baseLayout, deviceType = baseType ?? typeof(HID)};
             InputSystem.RegisterLayoutBuilder(() => layout.Build(),
                 layoutName, baseLayout, deviceMatcher);
 
@@ -319,16 +321,87 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         private class HIDLayoutBuilder
         {
             public HIDDeviceDescriptor hidDescriptor;
+            public string parentLayout;
+            public Type deviceType;
 
             public InputControlLayout Build()
             {
                 var builder = new InputControlLayout.Builder
                 {
-                    type = typeof(HID),
+                    type = deviceType,
+                    extendsLayout = parentLayout,
                     stateFormat = new FourCC('H', 'I', 'D'),
                 };
 
-                ////TODO: for joysticks, set up stick from X and Y
+                var xElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.X);
+                var yElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.Y);
+                //Since HIDElementDescriptor is a struct and not nullable, the easiest way to verify we found an element is to double check it's usage is what we were looking for.
+                if ((xElement.usage == (int)GenericDesktop.X) && (yElement.usage == (int)GenericDesktop.Y))
+                {
+                    int bitOffset, byteOffset, sizeInBits;
+                    if (xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
+                    {
+                        bitOffset = xElement.reportOffsetInBits % 8;
+                        byteOffset = xElement.reportOffsetInBits / 8;
+                        sizeInBits = yElement.reportOffsetInBits - xElement.reportOffsetInBits + yElement.reportSizeInBits;
+                    }
+                    else
+                    {
+                        bitOffset = yElement.reportOffsetInBits % 8;
+                        byteOffset = yElement.reportOffsetInBits / 8;
+                        sizeInBits = xElement.reportOffsetInBits - yElement.reportOffsetInBits + xElement.reportSizeInBits;
+                    }
+
+                    var stickName = "Stick";
+                    var control = builder.AddControl(stickName)
+                        .WithLayout("Stick")
+                        .WithBitOffset((uint)bitOffset)
+                        .WithByteOffset((uint)byteOffset)
+                        .WithSizeInBits((uint)sizeInBits)
+                        .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
+
+                    builder.AddControl(stickName + "/x")
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Axis")
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/y")
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Axis")
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    //Need to handle Up/Down/Left/Right
+                    builder.AddControl(stickName + "/up")
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clampMin=0,clampMax=1")
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/down")
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/left")
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+
+                    builder.AddControl(stickName + "/right")
+                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithLayout("Button")
+                        .WithParameters("clampMin=0,clampMax=1")
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+                }
+
 
                 // Process HID descriptor.
                 foreach (var element in hidDescriptor.elements)
@@ -550,6 +623,18 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
             }
 
+            internal bool IsUsableElement()
+            {
+                switch (usage)
+                {
+                    case (int)GenericDesktop.X:
+                    case (int)GenericDesktop.Y:
+                        return usagePage == UsagePage.GenericDesktop;
+                    default:
+                        return DetermineLayout() != null;
+                }
+            }
+
             internal string DetermineLayout()
             {
                 if (reportType != HIDReportType.Input)
@@ -625,10 +710,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             internal InternedString[] DetermineUsages()
             {
-                if (usagePage == UsagePage.Button && usage == 0)
-                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
                 if (usagePage == UsagePage.Button && usage == 1)
+                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
+                if (usagePage == UsagePage.Button && usage == 2)
                     return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.Rz)
+                    return new[] { CommonUsages.Twist };
                 ////TODO: assign hatswitch usage to first and only to first hatswitch element
                 return null;
             }

@@ -1,13 +1,13 @@
 namespace UnityEngine.Experimental.Input.Interactions
 {
     // Performs the action if the control is pressed and *released* within the set
-    // duration (which defaults to InputConfiguration.TapTime).
+    // duration (which defaults to InputSystem.settings.defaultTapTime).
     public class TapInteraction : IInputInteraction
     {
         public float duration;
         public float durationOrDefault
         {
-            get { return duration > 0.0 ? duration : InputConfiguration.TapTime; }
+            get { return duration > 0.0 ? duration : InputSystem.settings.defaultTapTime; }
         }
 
         private double m_TapStartTime;

@@ -13,6 +13,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
+
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
 
 ////REVIEW: can we have a read-only version of this

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Modules;
@@ -22,17 +23,37 @@ public class ScriptCompilersTests
     public void InputSystemSourceCodeCompilesWithoutWarnings()
     {
         var messages = CompileCSharp();
-        Assert.True(messages.Count(m => m.type == CompilerMessageType.Warning) == 0);
+
+        Assert.That(messages, Has.None.Matches<CompilerMessage>(x => x.type == CompilerMessageType.Warning),
+            CompilerMessagesToString(messages));
     }
 
     [Test]
     public void InputSystemSourceCodeCompilesWithoutErrors()
     {
         var messages = CompileCSharp();
-        Assert.True(messages.Count(m => m.type == CompilerMessageType.Error) == 0);
+        Assert.That(messages, Has.None.Matches<CompilerMessage>(x => x.type == CompilerMessageType.Error),
+            CompilerMessagesToString(messages));
     }
 
-    static CompilerMessage[] CompileCSharp()
+    private static string CompilerMessagesToString(CompilerMessage[] messages)
+    {
+        var builder = new StringBuilder();
+
+        foreach (var message in messages)
+        {
+            var indexOfFirstColon = message.message.IndexOf(':');
+            var indexOfSecondColon = message.message.IndexOf(':', indexOfFirstColon + 1);
+            var messageTextWithoutFilenameLineAndMessageNumber = message.message.Substring(indexOfSecondColon + 2); // Skip space, too.
+            builder.Append(string.Format("{0}:{1}: {2}", Path.GetFileNameWithoutExtension(message.file), message.line,
+                messageTextWithoutFilenameLineAndMessageNumber));
+            builder.Append('\n');
+        }
+
+        return builder.ToString();
+    }
+
+    private static CompilerMessage[] CompileCSharp()
     {
         var supportedLanguage = (SupportedLanguage)Activator.CreateInstance(typeof(CSharpLanguage));
         var island = CreateMonoIsland(supportedLanguage);
@@ -43,9 +64,9 @@ public class ScriptCompilersTests
         }
     }
 
-    static MonoIsland CreateMonoIsland(SupportedLanguage language)
+    private static MonoIsland CreateMonoIsland(SupportedLanguage language)
     {
-        var inputFilePath = "Packages/com.unity.inputsystem/InputSystem";
+        const string kInputFilePath = "Packages/com.unity.inputsystem/InputSystem";
         var outputAssemblyPath = Path.GetTempFileName();
 
         var options = EditorScriptCompilationOptions.BuildingForEditor;
@@ -71,7 +92,7 @@ public class ScriptCompilersTests
 
         var apiCompatibilityLevel = PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.activeBuildTargetGroup);
 
-        // Hopefully the churn on these mono library helpers is over, this is going to be a bit a pain to 
+        // Hopefully the churn on these mono library helpers is over, this is going to be a bit a pain to
         // always chase.
 #if UNITY_2018_3_OR_NEWER && !(UNITY_2019_1_OR_NEWER)
         var scriptAssembly = new ScriptAssembly
@@ -85,15 +106,15 @@ public class ScriptCompilersTests
 #endif
 
         var sources = new List<string>();
-        sources.AddRange(Directory.GetFiles(inputFilePath, "*.cs", SearchOption.AllDirectories));
+        sources.AddRange(Directory.GetFiles(kInputFilePath, "*.cs", SearchOption.AllDirectories));
 
-        MonoIsland island = new MonoIsland(buildTarget, apiCompatibilityLevel, true, sources.ToArray(),
+        var island = new MonoIsland(buildTarget, apiCompatibilityLevel, true, sources.ToArray(),
             references.ToArray(), defines, outputAssemblyPath);
 
         return island;
     }
 
-    static CompilerMessage[] Compile(ScriptCompilerBase compiler, MonoIsland island)
+    private static CompilerMessage[] Compile(ScriptCompilerBase compiler, MonoIsland island)
     {
         var assemblyOutputPath = island._output;
 

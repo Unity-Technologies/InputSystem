@@ -1,13 +1,13 @@
 namespace UnityEngine.Experimental.Input.Interactions
 {
     // Performs the action if the control is pressed and *held* for at least the
-    // set duration (which defaults to InputConfiguration.HoldTime).
+    // set duration (which defaults to InputSystem.settings.defaultHoldTime).
     public class HoldInteraction : IInputInteraction
     {
         public float duration;
         public float durationOrDefault
         {
-            get { return duration > 0.0 ? duration : InputConfiguration.HoldTime; }
+            get { return duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime; }
         }
 
         // If true, the action will be performed repeatedly every 'duration'

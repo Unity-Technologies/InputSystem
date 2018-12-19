@@ -1,13 +1,9 @@
 
 A new input system for Unity.
 
->NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.2+.
+>NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.3+.
 
-Some [videos](https://www.youtube.com/playlist?list=PLXbAKDQVwztY0hyyeEy9gifk-ffkgoy_Y).
-
->DISCLAIMER: The videos are fairly outdated by now.
-
-More info in the [wiki](https://github.com/Unity-Technologies/InputSystem/wiki) (varying degrees of up-to-dateness).
+Work-in-progress documentation can be found [here](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
 
 Issues are expected at this point. However, feel free to report what you find here on GitHub.
 

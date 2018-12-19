@@ -69,7 +69,7 @@ internal class DualShockTests : InputTestFixture
 
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
     }
-    
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID_WithProductAndManufacturerName()
@@ -97,7 +97,7 @@ internal class DualShockTests : InputTestFixture
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
     }
-    
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID()

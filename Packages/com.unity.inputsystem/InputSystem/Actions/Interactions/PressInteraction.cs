@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Interactions
             {
                 if (pressPoint > 0)
                     return pressPoint;
-                return InputConfiguration.ButtonPressPoint;
+                return InputSystem.settings.defaultButtonPressPoint;
             }
         }
 

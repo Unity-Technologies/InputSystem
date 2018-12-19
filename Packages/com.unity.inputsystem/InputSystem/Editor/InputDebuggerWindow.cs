@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
@@ -8,6 +9,8 @@ using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: refresh metrics on demand
 
 ////TODO: when an action is triggered and when a device changes state, make them bold in the list for a brief moment
 
@@ -18,15 +21,6 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: append " (Disabled) to disabled devices and grey them out
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
-
-////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDiagnostics to automatically
-////      be docked into the container window of InputDebuggerWindow
-
-////TODO: add view to tweak InputConfiguration interactively in the editor
-
-////TODO: display icons on devices depending on type of device
-
-////TODO: make configuration update when changed
 
 ////TODO: refresh when unrecognized device pops up
 
@@ -97,6 +91,11 @@ namespace UnityEngine.Experimental.Input.Editor
             Refresh();
         }
 
+        private void OnSettingsChange()
+        {
+            Refresh();
+        }
+
         private string OnFindLayout(int deviceId, ref InputDeviceDescription description, string matchedLayout,
             IInputRuntime runtime)
         {
@@ -126,6 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onLayoutChange += OnLayoutChange;
             InputSystem.onFindLayoutForDevice += OnFindLayout;
             InputSystem.onActionChange += OnActionChange;
+            InputSystem.onSettingsChange += OnSettingsChange;
         }
 
         private void UninstallHooks()
@@ -134,6 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onLayoutChange -= OnLayoutChange;
             InputSystem.onFindLayoutForDevice -= OnFindLayout;
             InputSystem.onActionChange -= OnActionChange;
+            InputSystem.onSettingsChange -= OnSettingsChange;
         }
 
         private void Initialize()
@@ -188,35 +189,53 @@ namespace UnityEngine.Experimental.Input.Editor
             m_TreeView.OnGUI(rect);
         }
 
+        private void ToggleLockInputToGameView()
+        {
+            InputEditorUserSettings.lockInputToGameView = !InputEditorUserSettings.lockInputToGameView;
+        }
+
+        private void ToggleAddDeviesNotSupportedByProject()
+        {
+            InputEditorUserSettings.addDevicesNotSupportedByProject =
+                !InputEditorUserSettings.addDevicesNotSupportedByProject;
+        }
+
+        private void ToggleDiagnosticMode()
+        {
+            if (InputSystem.s_Manager.m_Diagnostics != null)
+            {
+                InputSystem.s_Manager.m_Diagnostics = null;
+            }
+            else
+            {
+                if (m_Diagnostics == null)
+                    m_Diagnostics = new InputDiagnostics();
+                InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
+            }
+        }
+
         private void DrawToolbarGUI()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // Enable/disable diagnostics mode.
-            var diagnosticsMode = GUILayout.Toggle(m_DiagnosticsMode, Contents.diagnosticsModeContent, EditorStyles.toolbarButton);
-            if (diagnosticsMode != m_DiagnosticsMode)
+            if (GUILayout.Button(Contents.optionsContent, EditorStyles.toolbarButton))
             {
-                if (diagnosticsMode)
-                {
-                    if (m_Diagnostics == null)
-                        m_Diagnostics = new InputDiagnostics();
-                    InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
-                }
-                else
-                {
-                    InputSystem.s_Manager.m_Diagnostics = null;
-                }
-                m_DiagnosticsMode = diagnosticsMode;
-            }
+                var menu = new GenericMenu();
 
-            InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
-                Contents.lockInputToGameContent, EditorStyles.toolbarButton);
+                menu.AddItem(Contents.addDevicesNotSupportedByProjectContent, InputEditorUserSettings.addDevicesNotSupportedByProject,
+                    ToggleAddDeviesNotSupportedByProject);
+                menu.AddItem(Contents.diagnosticsModeContent, InputSystem.s_Manager.m_Diagnostics != null,
+                    ToggleDiagnosticMode);
+                menu.AddItem(Contents.lockInputToGameViewContent, InputEditorUserSettings.lockInputToGameView,
+                    ToggleLockInputToGameView);
+
+                menu.ShowAsContext();
+            }
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
         }
 
-        [SerializeField] private bool m_DiagnosticsMode;
         [SerializeField] private TreeViewState m_TreeViewState;
 
         [NonSerialized] private InputDiagnostics m_Diagnostics;
@@ -236,8 +255,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static class Contents
         {
-            public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
-            public static GUIContent diagnosticsModeContent = new GUIContent("Enable Diagnostics");
+            public static GUIContent optionsContent = new GUIContent("Options");
+            public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
+            public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
+            public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -254,7 +275,8 @@ namespace UnityEngine.Experimental.Input.Editor
             public TreeViewItem actionsItem { get; private set; }
             public TreeViewItem devicesItem { get; private set; }
             public TreeViewItem layoutsItem { get; private set; }
-            public TreeViewItem configurationItem { get; private set; }
+            public TreeViewItem settingsItem { get; private set; }
+            public TreeViewItem metricsItem { get; private set; }
             public TreeViewItem usersItem { get; private set; }
 
             public InputSystemTreeView(TreeViewState state)
@@ -359,13 +381,45 @@ namespace UnityEngine.Experimental.Input.Editor
                 AddControlLayouts(layoutsItem, ref id);
 
                 ////FIXME: this shows local configuration only
-                // Configuration.
-                configurationItem = AddChild(root, "Configuration", ref id);
-                AddConfigurationItem(configurationItem, "ButtonPressPoint", InputConfiguration.ButtonPressPoint, ref id);
-                AddConfigurationItem(configurationItem, "DeadzoneMin", InputConfiguration.DeadzoneMin, ref id);
-                AddConfigurationItem(configurationItem, "DeadzoneMax", InputConfiguration.DeadzoneMax, ref id);
-                AddConfigurationItem(configurationItem, "LockInputToGame", InputConfiguration.LockInputToGame, ref id);
-                configurationItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                // Settings.
+                var settings = InputSystem.settings;
+                var settingsAssetPath = AssetDatabase.GetAssetPath(settings);
+                var settingsLabel = "Settings";
+                if (settingsAssetPath != null)
+                    settingsLabel = string.Format("Settings ({0})", Path.GetFileName(settingsAssetPath));
+                settingsItem = AddChild(root, settingsLabel, ref id);
+                AddValueItem(settingsItem, "Update Mode", settings.updateMode, ref id);
+                AddValueItem(settingsItem, "Timeslice Events", settings.timesliceEvents, ref id);
+                AddValueItem(settingsItem, "Run In Background", settings.runInBackground, ref id);
+                AddValueItem(settingsItem, "Compensate For Screen Orientation", settings.compensateForScreenOrientation, ref id);
+                AddValueItem(settingsItem, "Filter Noise On .current", settings.filterNoiseOnCurrent, ref id);
+                AddValueItem(settingsItem, "Default Button Press Point", settings.defaultButtonPressPoint, ref id);
+                AddValueItem(settingsItem, "Default Deadzone Min", settings.defaultDeadzoneMin, ref id);
+                AddValueItem(settingsItem, "Default Deadzone Max", settings.defaultDeadzoneMax, ref id);
+                AddValueItem(settingsItem, "Default Tap Time", settings.defaultTapTime, ref id);
+                AddValueItem(settingsItem, "Default Slow Tap Time", settings.defaultSlowTapTime, ref id);
+                AddValueItem(settingsItem, "Default Hold Time", settings.defaultHoldTime, ref id);
+                AddValueItem(settingsItem, "Default Sensitivity", settings.defaultSensitivity, ref id);
+                AddValueItem(settingsItem, "Lock Input To Game View", InputEditorUserSettings.lockInputToGameView, ref id);
+                if (settings.supportedDevices.Count > 0)
+                {
+                    var supportedDevices = AddChild(settingsItem, "Supported Devices", ref id);
+                    foreach (var item in settings.supportedDevices)
+                    {
+                        var icon = EditorInputControlLayoutCache.GetIconForLayout(item);
+                        AddChild(supportedDevices, item, ref id, icon);
+                    }
+                }
+                settingsItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+
+                // Metrics.
+                var metrics = InputSystem.GetMetrics();
+                metricsItem = AddChild(root, "Metrics", ref id);
+                AddChild(metricsItem,
+                    "Current State Size in Bytes: " + StringHelpers.NicifyMemorySize(metrics.currentStateSizeInBytes),
+                    ref id);
+                AddValueItem(metricsItem, "Current Control Count", metrics.currentControlCount, ref id);
+                AddValueItem(metricsItem, "Current Layout Count", metrics.currentLayoutCount, ref id);
 
                 return root;
             }
@@ -566,7 +620,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
 
-            private void AddConfigurationItem<TValue>(TreeViewItem parent, string name, TValue value, ref int id)
+            private void AddValueItem<TValue>(TreeViewItem parent, string name, TValue value, ref int id)
             {
                 var item = new ConfigurationItem
                 {
@@ -596,13 +650,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.CurrentCultureIgnoreCase));
             }
 
-            private TreeViewItem AddChild(TreeViewItem parent, string displayName, ref int id)
+            private TreeViewItem AddChild(TreeViewItem parent, string displayName, ref int id, Texture2D icon = null)
             {
                 var item = new TreeViewItem
                 {
                     id = id++,
                     depth = parent.depth + 1,
-                    displayName = displayName
+                    displayName = displayName,
+                    icon = icon,
                 };
                 parent.AddChild(item);
                 return item;

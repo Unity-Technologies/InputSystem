@@ -43,6 +43,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         // Primitive state type codes.
         public static FourCC kTypeBit = new FourCC('B', 'I', 'T');
+        public static FourCC kTypeSBit = new FourCC('S', 'B', 'I', 'T');
         public static FourCC kTypeInt = new FourCC('I', 'N', 'T');
         public static FourCC kTypeUInt = new FourCC('U', 'I', 'N', 'T');
         public static FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
@@ -65,7 +66,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
-            if (type == kTypeBit)
+            if (type == kTypeBit || type == kTypeSBit)
                 return 1;
             if (type == kTypeInt || type == kTypeUInt)
                 return 4 * 8;
@@ -180,6 +181,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 else
                     value = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
             }
+            else if (format == kTypeSBit)
+            {
+                if (sizeInBits == 1)
+                {
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : -1;
+                }
+                else
+                {
+                    int halfMax = (1 << (int)sizeInBits) / 2;
+                    int unsignedValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+                    value = unsignedValue - halfMax;
+                }
+            }
             else if (format == kTypeByte)
             {
                 Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
@@ -230,12 +244,30 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
                 value = *(float*)valuePtr;
             }
-            else if (format == kTypeBit)
+            else if (format == kTypeBit || format == kTypeSBit)
             {
-                if (sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
-
-                value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : 0.0f;
+                if (sizeInBits == 1)
+                {
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == kTypeSBit ? -1.0f : 0.0f);
+                }
+                else if (sizeInBits != 31)
+                {
+                    float maxValue = (float)(1 << (int)sizeInBits);
+                    float rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
+                    if (format == kTypeSBit)
+                    {
+                        float unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
+                        value = Mathf.Clamp(unclampedValue, -1.0f, 1.0f);
+                    }
+                    else
+                    {
+                        value = Mathf.Clamp(rawValue / maxValue, 0.0f, 1.0f);
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields greater than 31 bits to floats");
+                }
             }
             // If a control with an integer-based representation does not use the full range
             // of its integer size (e.g. only goes from [0..128]), processors or the parameters
@@ -287,10 +319,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else if (format == kTypeBit)
             {
-                if (sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
-
-                MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+                if (sizeInBits == 1)
+                {
+                    MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+                }
+                else
+                {
+                    int maxValue = (1 << (int)sizeInBits) - 1;
+                    int intValue = (int)(value * maxValue);
+                    MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
+                }
             }
             else if (format == kTypeShort)
             {
@@ -331,7 +369,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             var valuePtr = (byte*)statePtr + (int)byteOffset;
 
-            if (format == kTypeBit)
+            if (format == kTypeBit || format == kTypeSBit)
             {
                 if (sizeInBits > 32)
                     throw new NotImplementedException(

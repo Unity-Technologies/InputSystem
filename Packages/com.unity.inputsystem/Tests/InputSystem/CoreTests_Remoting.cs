@@ -7,6 +7,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
+using Property = NUnit.Framework.PropertyAttribute;
 
 #if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
@@ -34,6 +35,7 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
+    [Property("TimesliceEvents", "Off")]
     public void Remote_EventsAreSentToRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -263,8 +265,11 @@ partial class CoreTests
         {
             runtime = new InputTestRuntime();
             manager = new InputManager();
+            manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
+            manager.m_Settings.timesliceEvents = false;
             manager.InstallRuntime(runtime);
             manager.InitializeData();
+            manager.ApplySettings();
 
             local = new InputRemoting(InputSystem.s_Manager);
             remote = new InputRemoting(manager);

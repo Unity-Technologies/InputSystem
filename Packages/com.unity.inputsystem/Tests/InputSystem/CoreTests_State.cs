@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools.Utils;
+using Property = NUnit.Framework.PropertyAttribute;
 
 partial class CoreTests
 {
@@ -145,6 +146,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [Property("TimesliceEvents", "Off")]
     public void State_RunningNoFixedUpdateInFrame_StillCapturesStateForNextFixedUpdate()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -441,60 +443,6 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
-    public void State_CanDisableFixedUpdates()
-    {
-        // Add a device as otherwise we don't have any state.
-        InputSystem.AddDevice<Gamepad>();
-
-        // Disable fixed updates.
-        InputSystem.updateMask &= ~InputUpdateType.Fixed;
-
-        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo((InputUpdateType)0));
-        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
-#if UNITY_EDITOR
-        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
-#endif
-
-        // Make sure we disabled the update in the runtime.
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
-
-        // Make sure we got rid of the memory for fixed update.
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
-
-        // Re-enable fixed updates.
-        InputSystem.updateMask |= InputUpdateType.Fixed;
-
-        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
-        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
-#if UNITY_EDITOR
-        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
-#endif
-
-        // Make sure we re-enabled the update in the runtime.
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
-
-        // Make sure we got re-instated the fixed update state buffers.
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
-    }
-
-    ////REVIEW: if we do this, we have to have something like InputUpdateType.Manual that allows using the system
-    ////        in a way where all updates are controlled manually by the user through InputSystem.Update
-    [Test]
-    [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
-    {
-        InputSystem.updateMask = InputUpdateType.None;
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger, Is.Zero);
-    }
-
-    [Test]
-    [Category("State")]
     public void State_CanListenForInputUpdates()
     {
         var receivedUpdate = false;
@@ -546,6 +494,7 @@ partial class CoreTests
     // system to build its entire machinery but the core mechanism is available to anyone.
     [Test]
     [Category("State")]
+    [Property("TimesliceEvents", "Off")]
     public void State_CanSetUpMonitorsForStateChanges()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
