@@ -22,7 +22,8 @@ namespace UnityEngine.Experimental.Input
     {
         Visible,
         Done,
-        Canceled
+        Canceled,
+        LostFocus
     }
 
 
@@ -45,7 +46,7 @@ namespace UnityEngine.Experimental.Input
 
 
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
-    public abstract class ScreenKeyboard : Keyboard
+    public class ScreenKeyboard : Keyboard
     {
         private static ScreenKeyboard m_ScreenKeyboard;
 
@@ -63,6 +64,9 @@ namespace UnityEngine.Experimental.Input
             m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.WSA.WSAScreenKeyboard>();
 #elif UNITY_IOS || UNITY_TVOS
             m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.iOS.iOSScreenKeyboard>();
+#elif UNITY_EDITOR
+            // ToDo: Should we show something for Editor?
+            m_ScreenKeyboard = new ScreenKeyboard();
 #else
             throw new NotImplementedException("ScreenKeyboard is not implemented for this platform."); 
 #endif
@@ -101,14 +105,19 @@ namespace UnityEngine.Experimental.Input
         }
 
 
-        public abstract void Show(ScreenKeyboardShowParams showParams);
+        public virtual void Show(ScreenKeyboardShowParams showParams)
+        {
+            
+        }
 
         public void Show()
         {
             Show(new ScreenKeyboardShowParams());
         }
 
-        public abstract void Hide();
+        public virtual void Hide()
+        {
+        }
 
         public ScreenKeyboardStatus status
         {
@@ -122,7 +131,7 @@ namespace UnityEngine.Experimental.Input
         /// Modifies text in screen keyboard's input field.
         /// If screen keyboard doesn't have an input field, this property does nothing.
         /// </summary>
-        public abstract string inputFieldText { set; get; }
+        public virtual string inputFieldText { set; get; }
 
         /// <summary>
         /// Returns portion of the screen which is covered by the keyboard.
