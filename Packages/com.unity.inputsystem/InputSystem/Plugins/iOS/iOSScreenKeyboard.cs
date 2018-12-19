@@ -26,13 +26,19 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS
         [MonoPInvokeCallback(typeof(OnTextChanged))]
         private static void OnTextChangedCallback(string text)
         {
-            Debug.Log("OnTextChangedCallback:" + text);
+            var screenKeyboard = (iOSScreenKeyboard) ScreenKeyboard.GetInstance();
+            if (screenKeyboard == null)
+                throw new Exception("OnTextChangedCallback: Failed to get iOSScreenKeyboard instance");
+            screenKeyboard.ChangeInputFieldText(text);
         }
 
         [MonoPInvokeCallback(typeof(OnStatusChanged))]
         private static void OnStatusChangedCallback(ScreenKeyboardStatus status)
         {
-            Debug.Log("OnStatusChangedCallback:" + status.ToString());
+            var screenKeyboard = (iOSScreenKeyboard) ScreenKeyboard.GetInstance();
+            if (screenKeyboard == null)
+                throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
+            screenKeyboard.ChangeStatus(status);
         }
 
         public override void Show(ScreenKeyboardShowParams showParams)

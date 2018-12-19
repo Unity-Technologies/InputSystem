@@ -30,15 +30,6 @@ struct iOSScreenKeyboardShowParams
     int alert;
 };
 
-typedef void (*OnTextChangedCallback) (const char* text);
-typedef void (*OnStatusChangedCallback) (int status);
-
-struct iOSScreenKeyboardCallbacks
-{
-    OnTextChangedCallback textChangedCallback;
-    OnStatusChangedCallback statusChangedCallback;
-};
-
 struct UnityRect
 {
     float x;
@@ -102,15 +93,22 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
 #else
         (BOOL)showParams->multiline,
 #endif
-        (BOOL)showParams->secure
+        (BOOL)showParams->secure,
+        *callbacks
     };
     
-    [[iOSScreenKeyboardDelegate Instance] Show :param :showParams->initialText :showParams->placeholderText];
+    [[iOSScreenKeyboardDelegate GetInstanceOrCreate] Show :param :showParams->initialText :showParams->placeholderText];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
 {
-    CGRect rc = [iOSScreenKeyboardDelegate Instance].area;
+    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate GetInstance];
+    if (keyboard == NULL)
+    {
+        UnityRect zero = {0, 0, 0, 0};
+        return zero;
+    }
+    CGRect rc = keyboard.area;
     UnityRect unityRC = {(float)rc.origin.x, (float)rc.origin.y, (float)rc.size.width, (float)rc.size.height};
     return unityRC;
 }

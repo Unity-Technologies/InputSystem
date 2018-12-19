@@ -1,5 +1,13 @@
 #pragma once
 
+typedef void (*OnTextChangedCallback) (const char* text);
+typedef void (*OnStatusChangedCallback) (int status);
+
+struct iOSScreenKeyboardCallbacks
+{
+    OnTextChangedCallback textChangedCallback;
+    OnStatusChangedCallback statusChangedCallback;
+};
 
 struct iOSScreenKeyboardShowParamsNative
 {
@@ -9,12 +17,15 @@ struct iOSScreenKeyboardShowParamsNative
     
     BOOL multiline;
     BOOL secure;
+    iOSScreenKeyboardCallbacks  callbacks;
 };
+
+
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
 
-+ (void)Initialize;
-+ (iOSScreenKeyboardDelegate*)Instance;
++ (iOSScreenKeyboardDelegate*)GetInstanceOrCreate;
++ (iOSScreenKeyboardDelegate*)GetInstance;
 
 - (void)Show:(iOSScreenKeyboardShowParamsNative)param :(const char*)initialTextCStr :(const char*)placeholderTextCStr;
 - (void)Hide;
@@ -47,12 +58,12 @@ struct iOSScreenKeyboardShowParamsNative
  */
 
 @property (readonly, nonatomic, getter = queryArea)               CGRect          area;
-@property (readonly, nonatomic)                                 BOOL            active;
-@property (readonly, nonatomic)                                 KeyboardStatus  status;
-@property (retain, nonatomic, getter = getText, setter = setText:)  NSString*       text;
-@property (assign, nonatomic)   int characterLimit;
-@property (readonly, nonatomic)                                 BOOL        canGetSelection;
-@property (nonatomic, getter = querySelection, setter = assignSelection:)  NSRange   selection;
+//@property (readonly, nonatomic)                                 BOOL            active;
+//@property (readonly, nonatomic)                                 KeyboardStatus  status;
+//@property (retain, nonatomic, getter = getText, setter = setText:)  NSString*       text;
+//@property (assign, nonatomic)   int characterLimit;
+//@property (readonly, nonatomic)                                 BOOL        canGetSelection;
+//@property (nonatomic, getter = querySelection, setter = assignSelection:)  NSRange   selection;
 
 @end
 
