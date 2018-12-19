@@ -18,6 +18,7 @@ using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
 
+#pragma warning disable CS0649
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 partial class CoreTests
 {
@@ -2754,6 +2755,7 @@ partial class CoreTests
         Assert.That(wasPerformed, Is.False);
     }
 
+    #pragma warning disable CS0649
     private class CompositeWithParameters : InputBindingComposite<float>
     {
         public int intParameter;
