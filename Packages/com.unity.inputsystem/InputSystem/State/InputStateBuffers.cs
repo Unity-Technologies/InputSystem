@@ -138,6 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         internal DoubleBuffers m_DynamicUpdateBuffers;
         internal DoubleBuffers m_FixedUpdateBuffers;
+        internal DoubleBuffers m_ManualUpdateBuffers;
 
 #if UNITY_EDITOR
         internal DoubleBuffers m_EditorUpdateBuffers;
@@ -156,6 +157,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                         return m_DynamicUpdateBuffers;
                     else
                         return m_FixedUpdateBuffers;
+                case InputUpdateType.Manual:
+                    return m_ManualUpdateBuffers;
 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
                     return m_EditorUpdateBuffers;
@@ -196,8 +199,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 return null;
             sizePerBuffer = NumberHelpers.AlignToMultiple(sizePerBuffer, 4);
 
-            var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) == InputUpdateType.Dynamic;
-            var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) == InputUpdateType.Fixed;
+            var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) != 0;
+            var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) != 0;
+            var isManualUpdateEnabled = (updateMask & InputUpdateType.Manual) != 0;
 
             // Determine how much memory we need.
             var mappingTableSizePerBuffer = (uint)(deviceCount * sizeof(void*) * 2);
@@ -212,12 +216,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 totalSize += sizePerBuffer * 2;
                 totalSize += mappingTableSizePerBuffer;
             }
+            if (isManualUpdateEnabled)
+            {
+                totalSize += sizePerBuffer * 2;
+                totalSize += mappingTableSizePerBuffer;
+            }
             // Before render doesn't have its own buffers.
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             totalSize += sizePerBuffer * 2;
             totalSize += mappingTableSizePerBuffer;
-#endif
+            #endif
 
             // Plus 2 more buffers (1 for default states, and one for noise filters).
             totalSize += sizePerBuffer * 2;
@@ -231,18 +240,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (isDynamicUpdateEnabled)
             {
                 m_DynamicUpdateBuffers =
-                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
+                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
+                        mappingTableSizePerBuffer);
             }
             if (isFixedUpdateEnabled)
             {
                 m_FixedUpdateBuffers =
-                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
+                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
+                        mappingTableSizePerBuffer);
+            }
+            if (isManualUpdateEnabled)
+            {
+                m_ManualUpdateBuffers =
+                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
+                        mappingTableSizePerBuffer);
             }
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             m_EditorUpdateBuffers =
                 SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
-#endif
+            #endif
 
             // Default state and noise filter buffers go last.
             defaultStateBuffer = ptr;
@@ -251,7 +268,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return newDeviceOffsets;
         }
 
-        private DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
+        private static DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
         {
             var front = bufferPtr;
             var back = bufferPtr + sizePerBuffer;
@@ -349,7 +366,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        private void MigrateDoubleBuffer(DoubleBuffers newBuffer, InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
+        private static void MigrateDoubleBuffer(DoubleBuffers newBuffer, InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
         {
             // Nothing to migrate if we no longer keep a buffer of the corresponding type.
             if (!newBuffer.valid)
@@ -393,7 +410,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        private void MigrateSingleBuffer(void* newBuffer, InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, void* oldBuffer)
+        private static void MigrateSingleBuffer(void* newBuffer, InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, void* oldBuffer)
         {
             // Migrate every device that has allocated state blocks.
             var newDeviceCount = deviceCount;

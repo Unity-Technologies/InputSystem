@@ -3,6 +3,10 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Plugins.XR;
+
+////TODO: finer-grained control over what devices deliver input while running in background
+////      (e.g. get gamepad input but do *not* get mouse and keyboard input)
 
 ////REVIEW: should be possible to completely hijack the input stream of a device such that its original input is suppressed
 
@@ -99,13 +103,13 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Checks if the device is capable of getting inputs while the application is running in the background.
+        /// If true, the device is capable of delivering input while the application is running in the background.
         /// </summary>
         /// <remarks>
-        /// The Input system is capable of running while the application is running in the background, but that doesn't mean all devices can recieve input while in the background.
-        /// At the OS or SDK level, some devices simply don't send input when the application is out of focus, and this helps identify those devices.
+        /// Note that by default, even if capable of doing so, devices will not generate input while the application is not
+        /// focused. To enable the behavior, use <see cref="InputSettings.runInBackground"/>.
         /// </remarks>
-        /// <seealso cref="InputSystem.runInBackground"/>
+        /// <seealso cref="InputSettings.runInBackground"/>
         public bool canRunInBackground
         {
             get
@@ -216,11 +220,11 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                var updateType = InputUpdate.lastUpdateType;
+                var updateType = InputUpdate.s_LastUpdateType;
                 if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.BeforeRender)
-                    return m_CurrentDynamicUpdateCount == InputUpdate.dynamicUpdateCount;
+                    return m_CurrentDynamicUpdateCount == InputUpdate.s_DynamicUpdateCount;
                 if (updateType == InputUpdateType.Fixed)
-                    return m_CurrentFixedUpdateCount == InputUpdate.fixedUpdateCount;
+                    return m_CurrentFixedUpdateCount == InputUpdate.s_FixedUpdateCount;
 
                 ////REVIEW: how should this behave in the editor
                 return false;
@@ -325,6 +329,23 @@ namespace UnityEngine.Experimental.Input
 
             // Make sure we fetch the enabled/disabled state again.
             m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+        }
+
+        /// <summary>
+        /// Make this the current device of its type.
+        /// </summary>
+        /// <remarks>
+        /// Use this to set static properties that give fast access to the latest device used of a given
+        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
+        ///
+        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
+        /// be multiple current working directories, one for each type.
+        ///
+        /// A device will be made current by the system initially when it is created and subsequently whenever
+        /// it receives an event.
+        /// </remarks>
+        public virtual void MakeCurrent()
+        {
         }
 
         protected virtual void OnAdded()

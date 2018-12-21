@@ -9,14 +9,27 @@ namespace UnityEngine.Experimental.Input
     public struct InputMetrics
     {
         /// <summary>
-        /// The maximum number of devices that were concurrently added to the system.
+        /// Maximum number of devices that were concurrently added to the system.
         /// </summary>
         public int maxNumDevices;
+
+        /// <summary>
+        /// Number of devices currently added to the system.
+        /// </summary>
+        public int currentNumDevices;
 
         /// <summary>
         /// The largest the combined state memory for all devices got.
         /// </summary>
         public int maxStateSizeInBytes;
+
+        /// <summary>
+        /// Total size of the combined state memory for all current devices.
+        /// </summary>
+        public int currentStateSizeInBytes;
+
+        public int currentControlCount;
+        public int currentLayoutCount;
 
         public int totalEventBytes;
         public int totalEventCount;

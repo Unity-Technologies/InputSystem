@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Controls
         public float pressPoint;
         public float pressPointOrDefault
         {
-            get { return pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint; }
+            get { return pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint; }
         }
 
         public ButtonControl()

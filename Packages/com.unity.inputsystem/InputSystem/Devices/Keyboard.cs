@@ -742,6 +742,21 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public static Keyboard current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");

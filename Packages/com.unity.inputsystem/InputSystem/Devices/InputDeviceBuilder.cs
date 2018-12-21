@@ -15,6 +15,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
+////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingChildControlByPath
+
 namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>

@@ -19,6 +19,11 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private const int kVersion = 4;
 
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap.png";
+        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action.png";
+        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap.png";
+
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
         [SerializeField] internal string m_WrapperClassName;
@@ -50,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             catch (Exception exception)
             {
-                ctx.LogImportError(string.Format("Could read file '{0}' ({1})",
+                ctx.LogImportError(string.Format("Could not read file '{0}' ({1})",
                     ctx.assetPath, exception));
                 return;
             }
@@ -72,7 +77,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
-            ctx.AddObjectToAsset("<root>", asset);
+            // Load icons.
+            ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
+            var isDarkSkin = EditorGUIUtility.isProSkin;
+            var assetIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kAssetIconDark : kAssetIcon);
+            var actionIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kActionIconDark : kActionIcon);
+
+            // Add asset.
+            ctx.AddObjectToAsset("<root>", asset, assetIcon);
             ctx.SetMainObject(asset);
 
             // Make sure every map and every action has a stable ID assigned to it.
@@ -155,7 +167,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         objectName = string.Format("{0}/{1}", map.name, action.name);
 
                     actionReference.name = objectName;
-                    ctx.AddObjectToAsset(objectName, actionReference);
+                    ctx.AddObjectToAsset(objectName, actionReference, actionIcon);
                 }
             }
 

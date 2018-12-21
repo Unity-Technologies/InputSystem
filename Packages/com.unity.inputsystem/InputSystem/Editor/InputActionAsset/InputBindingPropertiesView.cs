@@ -58,7 +58,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionWindowToolbar m_Toolbar;
         private string m_ExpectedControlLayout;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
-        private InputControlPickerPopup m_InputControlPickerPopup;
 
         public bool isCompositeBinding { get; set; }
 
@@ -90,8 +89,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ControlSchemes = toolbar.controlSchemes;
             m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
-            m_InputControlPickerPopup = new InputControlPickerPopup(m_PathProperty, controlPickerState,
-                OnPathModified, DrawInteractivePickButton);
         }
 
         public void CancelInteractivePicking()
@@ -343,24 +340,44 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_InputControlPickerDropdown == null)
             {
-                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState.state, pathProperty, onPickCallback);
+                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState.state,
+                    path =>
+                    {
+                        pathProperty.stringValue = path;
+                        onPickCallback();
+                    });
             }
 
+            var haveDeviceFilterFromControlScheme = false;
             if (m_Toolbar != null)
             {
                 if (m_Toolbar.selectedDevice != null)
                 {
+                    // Single device selected from set of devices in control scheme.
                     m_InputControlPickerDropdown.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
+                    haveDeviceFilterFromControlScheme = true;
                 }
                 else
                 {
-                    m_InputControlPickerDropdown.SetDeviceFilter(m_Toolbar.allDevices);
+                    var allDevices = m_Toolbar.allDevices;
+                    if (allDevices.Length > 0)
+                    {
+                        // Filter by all devices in current control scheme.
+                        m_InputControlPickerDropdown.SetDeviceFilter(allDevices);
+                        haveDeviceFilterFromControlScheme = true;
+                    }
                 }
                 if (m_ExpectedControlLayout != null)
                 {
                     m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);
                 }
             }
+
+            // If there's no device filter coming from a control scheme, filter by supported
+            // devices as given by settings .
+            if (!haveDeviceFilterFromControlScheme)
+                m_InputControlPickerDropdown.SetDeviceFilter(InputSystem.settings.supportedDevices.ToArray());
+
             m_InputControlPickerDropdown.Show(rect);
         }
 

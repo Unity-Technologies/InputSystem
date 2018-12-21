@@ -74,8 +74,12 @@ namespace UnityEngine.Experimental.Input
                 #if UNITY_EDITOR
                 // Make sure we're not affected by the user giving focus away from the
                 // game view.
-                InputConfiguration.LockInputToGame = true;
+                InputEditorUserSettings.lockInputToGameView = true;
                 #endif
+
+                var testProperties = TestContext.CurrentContext.Test.Properties;
+                if (testProperties.ContainsKey("TimesliceEvents") && testProperties["TimesliceEvents"][0].Equals("Off"))
+                    InputSystem.settings.timesliceEvents = false;
             }
             catch (Exception exception)
             {

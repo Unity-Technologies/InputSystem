@@ -15,6 +15,13 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// </summary>
     internal static class ArrayHelpers
     {
+        public static int LengthSafe<TValue>(this TValue[] array)
+        {
+            if (array == null)
+                return 0;
+            return array.Length;
+        }
+
         public static void Clear<TValue>(TValue[] array, ref int count)
         {
             if (array == null)
@@ -119,6 +126,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             var comparer = EqualityComparer<TValue>.Default;
             for (var i = 0; i < length; ++i)
                 if (comparer.Equals(array[i], value))
+                    return i;
+
+            return -1;
+        }
+
+        public static int IndexOf<TValue>(TValue[] array, Predicate<TValue> predicate)
+        {
+            if (array == null)
+                return -1;
+
+            var length = array.Length;
+            for (var i = 0; i < length; ++i)
+                if (predicate(array[i]))
                     return i;
 
             return -1;

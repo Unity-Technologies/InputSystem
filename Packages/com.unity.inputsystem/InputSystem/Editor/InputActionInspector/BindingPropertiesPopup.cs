@@ -2,9 +2,11 @@
 using System;
 using UnityEditor;
 
+////TODO: this needs to also have an interactive pick button
+
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class BindingPropertiesPopup : EditorWindow
+    internal class BindingPropertiesPopup : EditorWindow
     {
         InputBindingPropertiesView m_BindingPropertyView;
         Action OnChange;
@@ -18,14 +20,14 @@ namespace UnityEngine.Experimental.Input.Editor
             w.ShowAsDropDown(btnRect, new Vector2(250, 350));
         }
 
-        void SetProperty(ActionTreeViewItem treeViewLine)
+        private void SetProperty(ActionTreeViewItem treeViewLine)
         {
             m_BindingPropertyView = new InputBindingPropertiesView(treeViewLine.elementProperty,
                 change => OnChange(),
                 new InputControlPickerState(), null);
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             m_BindingPropertyView.OnGUI();
         }

@@ -9,6 +9,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: switch to NativeArray long length (think we have it in Unity 2018.3)
 
+////REVIEW: can we get rid of kBufferSizeUnknown and force size to always be known? (think this would have to wait until
+////        the native changes have landed in 2018.3)
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
@@ -42,7 +45,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         public long sizeInBytes
         {
-            get { return m_BufferEnd; }
+            get { return m_SizeInBytes; }
         }
 
         /// <summary>
@@ -56,10 +59,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get
             {
-                if (!m_Buffer.IsCreated || m_BufferEnd == kBufferSizeUnknown)
+                if (!m_Buffer.IsCreated)
                     return 0;
 
-                return m_Buffer.Length - m_BufferEnd;
+                return m_Buffer.Length;
             }
             set { throw new NotImplementedException(); }
         }
@@ -77,16 +80,22 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer); }
         }
 
-        public InputEventBuffer(InputEvent* eventPtr, int eventCount)
+        public InputEventBuffer(InputEvent* eventPtr, int eventCount, int sizeInBytes = -1, int capacityInBytes = -1)
             : this()
         {
             if (eventPtr == null && eventCount != 0)
                 throw new ArgumentException("eventPtr is NULL but eventCount is != 0", "eventCount");
+            if (capacityInBytes != 0 && capacityInBytes < sizeInBytes)
+                throw new ArgumentException("capacity cannot be smaller than size", "capacityInBytes");
 
             if (eventPtr != null)
             {
-                m_Buffer = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(eventPtr, 0, Allocator.None);
-                m_BufferEnd = kBufferSizeUnknown;
+                if (capacityInBytes < 0)
+                    capacityInBytes = sizeInBytes;
+
+                m_Buffer = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(eventPtr,
+                    capacityInBytes > 0 ? capacityInBytes : 0, Allocator.None);
+                m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : kBufferSizeUnknown;
                 m_EventCount = eventCount;
                 m_WeOwnTheBuffer = false;
             }
@@ -101,7 +110,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             m_Buffer = buffer;
             m_WeOwnTheBuffer = false;
-            m_BufferEnd = sizeInBytes >= 0 ? sizeInBytes : buffer.Length;
+            m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : buffer.Length;
             m_EventCount = eventCount;
         }
 
@@ -155,7 +164,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 if (m_Buffer.IsCreated)
                     UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_Buffer.GetUnsafeReadOnlyPtr(), this.sizeInBytes);
                 else
-                    m_BufferEnd = 0;
+                    m_SizeInBytes = 0;
 
                 if (m_WeOwnTheBuffer)
                     m_Buffer.Dispose();
@@ -163,19 +172,91 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 m_WeOwnTheBuffer = true;
             }
 
-            var eventPtr = (InputEvent*)((byte*)m_Buffer.GetUnsafePtr() + m_BufferEnd);
+            var eventPtr = (InputEvent*)((byte*)m_Buffer.GetUnsafePtr() + m_SizeInBytes);
             eventPtr->sizeInBytes = (uint)sizeInBytes;
-            m_BufferEnd += alignedSizeInBytes;
+            m_SizeInBytes += alignedSizeInBytes;
             ++m_EventCount;
 
             return eventPtr;
         }
 
+        /// <summary>
+        /// Whether the given event pointer refers to data within the event buffer.
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Note that this method does NOT check whether the given pointer points to an actual
+        /// event in the buffer. It solely performs a pointer out-of-bounds check.
+        ///
+        /// Also note that if the size of the memory buffer is unknown (<see cref="kBufferSizeUnknown"/>,
+        /// only a lower-bounds check is performed.
+        /// </remarks>
+        public bool Contains(InputEvent* eventPtr)
+        {
+            if (eventPtr == null)
+                return false;
+
+            if (sizeInBytes == 0)
+                return false;
+
+            var bufferPtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(data);
+            if (eventPtr < bufferPtr)
+                return false;
+
+            if (sizeInBytes != kBufferSizeUnknown && eventPtr >= (byte*)bufferPtr + sizeInBytes)
+                return false;
+
+            return true;
+        }
+
         public void Reset()
         {
             m_EventCount = 0;
-            if (m_BufferEnd != kBufferSizeUnknown)
-                m_BufferEnd = 0;
+            if (m_SizeInBytes != kBufferSizeUnknown)
+                m_SizeInBytes = 0;
+        }
+
+        /// <summary>
+        /// Advance the read position to the next event in the buffer, preserving or not preserving the
+        /// current event depending on <paramref name="leaveEventInBuffer"/>.
+        /// </summary>
+        /// <param name="currentReadPos"></param>
+        /// <param name="currentWritePos"></param>
+        /// <param name="numEventsRetainedInBuffer"></param>
+        /// <param name="numRemainingEvents"></param>
+        /// <param name="leaveEventInBuffer"></param>
+        /// <remarks>
+        /// This method MUST ONLY BE CALLED if the current event has been fully processed. If the at <paramref name="currentWritePos"/>
+        /// is smaller than the current event, then this method will OVERWRITE parts or all of the current event.
+        /// </remarks>
+        internal void AdvanceToNextEvent(ref InputEvent* currentReadPos,
+            ref InputEvent* currentWritePos, ref int numEventsRetainedInBuffer,
+            ref int numRemainingEvents, bool leaveEventInBuffer)
+        {
+            Debug.Assert(Contains(currentReadPos));
+            Debug.Assert(Contains(currentWritePos));
+            Debug.Assert(currentReadPos >= currentWritePos);
+
+            // Get new read position *before* potentially moving the current event so that we don't
+            // end up overwriting the data we need to find the next event in memory.
+            var newReadPos = currentReadPos;
+            if (numRemainingEvents > 1)
+                newReadPos = InputEvent.GetNextInMemoryChecked(currentReadPos, ref this);
+
+            // If the current event should be left in the buffer, advance write position.
+            if (leaveEventInBuffer)
+            {
+                // Move down in buffer if read and write pos have deviated from each other.
+                var numBytes = currentReadPos->sizeInBytes;
+                if (currentReadPos != currentWritePos)
+                    UnsafeUtility.MemMove(currentWritePos, currentReadPos, numBytes);
+                currentWritePos = (InputEvent*)((byte*)currentWritePos + NumberHelpers.AlignToMultiple(numBytes, 4));
+                ++numEventsRetainedInBuffer;
+            }
+
+            currentReadPos = newReadPos;
+            --numRemainingEvents;
         }
 
         public IEnumerator<InputEventPtr> GetEnumerator()
@@ -198,12 +279,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             m_Buffer.Dispose();
             m_WeOwnTheBuffer = false;
-            m_BufferEnd = 0;
+            m_SizeInBytes = 0;
             m_EventCount = 0;
         }
 
         private NativeArray<byte> m_Buffer;
-        private long m_BufferEnd;
+        private long m_SizeInBytes;
         private int m_EventCount;
         private bool m_WeOwnTheBuffer; ////FIXME: what we really want is access to NativeArray's allocator label
 

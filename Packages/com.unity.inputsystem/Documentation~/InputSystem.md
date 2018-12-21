@@ -1,7 +1,34 @@
-You can read about the [architecture of the system.](https://github.com/Unity-Technologies/InputSystemX/wiki/Architecture)
+# Input System
 
-Or see some [code snippets showing how to achieve various things.](https://github.com/Unity-Technologies/InputSystemX/wiki/How-Do-I...)
+>NOTE: The new input system is still under development and this manual is a work-in-progress. There is still outdated and missing information.
 
-Also, if you know some things about the old new input system, you might be interested in [how this one is different.](https://github.com/Unity-Technologies/InputSystemX/wiki/Differences-to-the-Old-New-Input-System)
+This is the manual for Unity's new input system.
 
-Finally, you can also watch some [videos about this stuff](https://www.youtube.com/playlist?list=PLXbAKDQVwztY0hyyeEy9gifk-ffkgoy_Y) on YouTube.
+* [Installation](Installation.md)
+* [Quick Start Guide](QuickStartGuide.md)
+    * [How Do I...?](HowDoI.md)
+    * [Migrate from Old Input System](Migration.md)
+* [Settings](Settings.md)
+* [Debugging](Debugging.md)
+* [Supported Devices](SupportedDevices.md)
+    * [Touch](Touch.md)
+    * [Pen](Pen.md)
+    * [Gamepad](Gamepad.md)
+    * [Joystick](Joystick.md)
+    * [Keyboard](Keyboard.md)
+    * [Mouse](Mouse.md)
+    * [Steam](Steam.md)
+    * [XR](XR.md)
+    * [Sensors](Sensors.md)
+    * [Haptics](Haptics.md) (e.g. rumble)
+    * [HID](HID.md)
+* [User Management](UserManagement.md)
+* [UI Support](UISupport.md)
+* [Use In Editor](UseInEditor.md)
+* [Architecture](Architecture.md)
+    * [Actions](Actions.md)
+    * [Devices](Devices.md)
+    * [Events](Events.md)
+    * [Layouts](Layouts.md)
+* [Future](Future.md)
+* [Contributing](Contributing.md)

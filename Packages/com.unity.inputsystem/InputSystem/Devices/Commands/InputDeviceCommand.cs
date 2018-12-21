@@ -5,6 +5,9 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    ////TODO: pass IInputRuntime to this as well
+    public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
+
     /// <summary>
     /// Data header for a command send to an <see cref="InputDevice"/>.
     /// </summary>

@@ -29,8 +29,8 @@ namespace UnityEngine.Experimental.Input.Editor
         protected GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         protected GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
         protected GUIContent m_CompositeGUI = EditorGUIUtility.TrTextContent("Composite");
-        private GUIContent m_PlusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
-        private GUIContent m_MinusIconContext = EditorGUIUtility.IconContent("Toolbar Minus");
+        private GUIContent m_PlusIconContent = EditorGUIUtility.IconContent("Toolbar Plus");
+        private GUIContent m_MinusIconContent = EditorGUIUtility.IconContent("Toolbar Minus");
 
         protected InputDrawersBase()
         {
@@ -77,13 +77,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            if (GUI.Button(labelRect, m_PlusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, m_PlusIconContent, GUIStyle.none))
             {
                 OpenAddMenu(property);
             }
 
             labelRect.x += labelRect.width;
-            if (GUI.Button(labelRect, m_MinusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, m_MinusIconContent, GUIStyle.none))
             {
                 EditorWindow.focusedWindow.SendEvent(EditorGUIUtility.CommandEvent("Delete"));
             }

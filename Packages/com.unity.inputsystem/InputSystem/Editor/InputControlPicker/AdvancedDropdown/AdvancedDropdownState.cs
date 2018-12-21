@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using System.Linq;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -13,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public AdvancedDropdownItemState(AdvancedDropdownItem item)
             {
-                this.itemId = item.id;
+                itemId = item.id;
             }
 
             public int itemId;

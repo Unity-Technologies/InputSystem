@@ -1,37 +1,41 @@
 #if UNITY_EDITOR
 using System;
 using System.Linq;
-using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: find better way to present controls when filtering to specific devices
 
 namespace UnityEngine.Experimental.Input.Editor
 {
     internal class InputControlPickerDropdown : AdvancedDropdown
     {
-        SerializedProperty m_PathProperty;
-        Action m_OnPickCallback;
-        string[] m_DeviceFilter;
-        Type m_ExpectedControlLayoutFilterType;
+        private Action<string> m_OnPickCallback;
+        private string[] m_DeviceFilter;
+        private Type m_ExpectedControlLayoutFilterType;
+        private Mode m_Mode;
 
-        public InputControlPickerDropdown(AdvancedDropdownState state, SerializedProperty pathProperty, Action onPickCallback)
+        public InputControlPickerDropdown(AdvancedDropdownState state, Action<string> onPickCallback, Mode mode = Mode.PickControl)
             : base(state)
         {
             m_Gui = new InputControlPickerGUI();
             minimumSize = new Vector2(350, 250);
             maximumSize = new Vector2(0, 300);
-            m_PathProperty = pathProperty;
             m_OnPickCallback = onPickCallback;
+            m_Mode = mode;
         }
 
         protected override AdvancedDropdownItem BuildRoot()
         {
             var root = new AdvancedDropdownItem("");
 
-            var usages = BuildTreeForUsages();
-            if (usages.children.Any())
-                root.AddChild(usages);
+            if (m_Mode != Mode.PickDevice)
+            {
+                var usages = BuildTreeForUsages();
+                if (usages.children.Any())
+                    root.AddChild(usages);
+            }
+
             var devices = BuildTreeForAbstractDevices();
             if (devices.children.Any())
                 root.AddChild(devices);
@@ -39,43 +43,13 @@ namespace UnityEngine.Experimental.Input.Editor
             if (products.children.Any())
                 root.AddChild(products);
 
-            if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
-            {
-                var newRoot = new AdvancedDropdownItem("");
-                FindDevice(newRoot, root, m_DeviceFilter);
-                if (newRoot.children.Count() == 1)
-                {
-                    return newRoot.children.ElementAt(0);
-                }
-                return newRoot;
-            }
-
             return root;
-        }
-
-        void FindDevice(AdvancedDropdownItem newRoot, AdvancedDropdownItem root, string[] deviceFilter)
-        {
-            foreach (var child in root.children)
-            {
-                var deviceItem = child as DeviceTreeViewItem;
-                if (child is DeviceTreeViewItem)
-                {
-                    if (deviceFilter.Contains(deviceItem.controlPathWithDevice))
-                    {
-                        newRoot.AddChild(deviceItem);
-                    }
-                }
-                if (child.children.Any())
-                {
-                    FindDevice(newRoot, child, deviceFilter);
-                }
-            }
         }
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
-            m_PathProperty.stringValue = ((InputControlTreeViewItem)item).controlPathWithDevice;
-            m_OnPickCallback();
+            var path = ((InputControlTreeViewItem)item).controlPathWithDevice;
+            m_OnPickCallback(path);
         }
 
         private AdvancedDropdownItem BuildTreeForUsages()
@@ -135,23 +109,54 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Ignore devices that have no controls. We're looking at fully merged layouts here so
             // we're also taking inherited controls into account.
-            if (layout.controls.Count == 0)
+            // EXCEPTION: We're okay with empty devices if we're picking devices and not controls.
+            if (layout.controls.Count == 0 && m_Mode != Mode.PickDevice)
                 return;
 
             var deviceItem = new DeviceTreeViewItem(layout);
 
-            AddControlTreeItemsRecursive(layout, deviceItem, "", layout.name, null);
+            // If we have a device filter, see if we should ignore the device.
+            if (m_DeviceFilter != null)
+            {
+                var matchesAnyInDeviceFilter = false;
+                foreach (var entry in m_DeviceFilter)
+                {
+                    if (entry == layout.name ||
+                        InputControlLayout.s_Layouts.IsBasedOn(new InternedString(entry), layout.name))
+                    {
+                        matchesAnyInDeviceFilter = true;
+                    }
+                    else
+                    {
+                        ////FIXME: this also needs to work for full control paths and not just stuff like "<Gamepad>"
+                        var expectedLayout = InputControlPath.TryGetDeviceLayout(entry);
+                        if (!string.IsNullOrEmpty(expectedLayout) &&
+                            (expectedLayout == layout.name ||
+                             InputControlLayout.s_Layouts.IsBasedOn(new InternedString(expectedLayout), layout.name)))
+                        {
+                            matchesAnyInDeviceFilter = true;
+                        }
+                    }
+                }
 
-            if (deviceItem.children.Any())
+                if (!matchesAnyInDeviceFilter)
+                    return;
+            }
+
+            if (m_Mode != Mode.PickDevice)
+                AddControlTreeItemsRecursive(layout, deviceItem, "", layout.name, null);
+
+            if (deviceItem.children.Any() || m_Mode == Mode.PickDevice)
                 parent.AddChild(deviceItem);
 
-            foreach (var commonUsage in layout.commonUsages)
-            {
-                var commonUsageGroup = new DeviceTreeViewItem(layout, commonUsage);
-                AddControlTreeItemsRecursive(layout, commonUsageGroup, "", layout.name, commonUsage);
-                if (commonUsageGroup.children.Any())
-                    parent.AddChild(commonUsageGroup);
-            }
+            if (m_Mode != Mode.PickDevice)
+                foreach (var commonUsage in layout.commonUsages)
+                {
+                    var commonUsageGroup = new DeviceTreeViewItem(layout, commonUsage);
+                    AddControlTreeItemsRecursive(layout, commonUsageGroup, "", layout.name, commonUsage);
+                    if (commonUsageGroup.children.Any())
+                        parent.AddChild(commonUsageGroup);
+                }
         }
 
         private void AddControlTreeItemsRecursive(InputControlLayout layout, AdvancedDropdownItem parent, string prefix, string deviceControlId, string commonUsage)
@@ -197,7 +202,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        bool LayoutMatchesExpectedControlLayoutFilter(string layout)
+        private bool LayoutMatchesExpectedControlLayoutFilter(string layout)
         {
             if (m_ExpectedControlLayoutFilterType == null)
             {
@@ -215,6 +220,12 @@ namespace UnityEngine.Experimental.Input.Editor
         public void SetExpectedControlLayoutFilter(string expectedControlLayout)
         {
             m_ExpectedControlLayoutFilterType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout));
+        }
+
+        public enum Mode
+        {
+            PickControl,
+            PickDevice,
         }
     }
 }
