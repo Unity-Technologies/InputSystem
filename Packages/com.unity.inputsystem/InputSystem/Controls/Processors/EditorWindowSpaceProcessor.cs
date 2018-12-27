@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
+using UnityEngine.Experimental.Input.Editor;
 
 namespace UnityEngine.Experimental.Input.Processors
 {
@@ -20,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Processors
         public Vector2 Process(Vector2 position, InputControl control)
         {
             // Don't convert to EditorWindowSpace if input is going to game view.
-            if (InputConfiguration.LockInputToGame ||
+            if (InputEditorUserSettings.lockInputToGameView ||
                 (EditorApplication.isPlaying && Application.isFocused))
                 return position;
 

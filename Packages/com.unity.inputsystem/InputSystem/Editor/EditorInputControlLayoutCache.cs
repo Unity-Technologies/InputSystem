@@ -145,7 +145,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // No, so see if we have an icon on disk for exactly the layout
             // we're looking at (i.e. with the same name).
-            var path = Path.Combine(kIconPath, layoutName + ".png");
+            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
+            var path = Path.Combine(kIconPath, skinPrefix + layoutName + ".png");
             icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (icon != null)
                 return icon;

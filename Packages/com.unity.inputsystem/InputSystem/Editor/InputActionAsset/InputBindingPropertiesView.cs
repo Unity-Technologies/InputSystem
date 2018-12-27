@@ -37,7 +37,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_BindingProperty;
         private SerializedProperty m_PathProperty;
 
-        private Action m_OnChange;
+        private Action<Change> m_OnChange;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
         private InputControlPickerState m_ControlPickerState;
@@ -58,7 +58,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionWindowToolbar m_Toolbar;
         private string m_ExpectedControlLayout;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
-        private InputControlPickerPopup m_InputControlPickerPopup;
 
         public bool isCompositeBinding { get; set; }
 
@@ -72,8 +71,8 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_ExpectedControlLayout; }
         }
 
-        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action onChange,
-            InputControlPickerState controlPickerState, InputActionWindowToolbar toolbar,
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action<Change> onChange,
+                                          InputControlPickerState controlPickerState, InputActionWindowToolbar toolbar,
                                           string expectedControlLayout = null)
         {
             m_ControlPickerState = controlPickerState;
@@ -90,7 +89,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ControlSchemes = toolbar.controlSchemes;
             m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
-            m_InputControlPickerPopup = new InputControlPickerPopup(m_PathProperty, controlPickerState, onChange, DrawInteractivePickButton);
         }
 
         public void CancelInteractivePicking()
@@ -152,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     () =>
                     {
                         m_ManualPathEditMode = false;
-                        OnBindingModified();
+                        OnPathModified();
                     });
 
                 DrawUseInControlSchemes();
@@ -342,24 +340,44 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_InputControlPickerDropdown == null)
             {
-                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState.state, pathProperty, onPickCallback);
+                m_InputControlPickerDropdown = new InputControlPickerDropdown(pickerState.state,
+                    path =>
+                    {
+                        pathProperty.stringValue = path;
+                        onPickCallback();
+                    });
             }
 
+            var haveDeviceFilterFromControlScheme = false;
             if (m_Toolbar != null)
             {
                 if (m_Toolbar.selectedDevice != null)
                 {
+                    // Single device selected from set of devices in control scheme.
                     m_InputControlPickerDropdown.SetDeviceFilter(new[] {m_Toolbar.selectedDevice});
+                    haveDeviceFilterFromControlScheme = true;
                 }
                 else
                 {
-                    m_InputControlPickerDropdown.SetDeviceFilter(m_Toolbar.allDevices);
+                    var allDevices = m_Toolbar.allDevices;
+                    if (allDevices.Length > 0)
+                    {
+                        // Filter by all devices in current control scheme.
+                        m_InputControlPickerDropdown.SetDeviceFilter(allDevices);
+                        haveDeviceFilterFromControlScheme = true;
+                    }
                 }
                 if (m_ExpectedControlLayout != null)
                 {
                     m_InputControlPickerDropdown.SetExpectedControlLayoutFilter(m_ExpectedControlLayout);
                 }
             }
+
+            // If there's no device filter coming from a control scheme, filter by supported
+            // devices as given by settings .
+            if (!haveDeviceFilterFromControlScheme)
+                m_InputControlPickerDropdown.SetDeviceFilter(InputSystem.settings.supportedDevices.ToArray());
+
             m_InputControlPickerDropdown.Show(rect);
         }
 
@@ -395,17 +413,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
 
-            OnBindingModified();
+            OnPathModified();
         }
-
-        ////FIXME: m_OnChange triggers a needless reload of the entire tree on every reload for now good reason
 
         private void OnProcessorsModified()
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
             m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             if (m_OnChange != null)
-                m_OnChange();
+                m_OnChange(Change.ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
@@ -413,7 +429,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
             if (m_OnChange != null)
-                m_OnChange();
+                m_OnChange(Change.InteractionsChanged);
         }
 
         private void OnBindingGroupsModified()
@@ -421,14 +437,22 @@ namespace UnityEngine.Experimental.Input.Editor
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
             if (m_OnChange != null)
-                m_OnChange();
+                m_OnChange(Change.GroupsChanged);
         }
 
-        private void OnBindingModified()
+        private void OnPathModified()
         {
             m_BindingProperty.serializedObject.ApplyModifiedProperties();
             if (m_OnChange != null)
-                m_OnChange();
+                m_OnChange(Change.PathChanged);
+        }
+
+        public enum Change
+        {
+            PathChanged,
+            GroupsChanged,
+            InteractionsChanged,
+            ProcessorsChanged,
         }
     }
 }

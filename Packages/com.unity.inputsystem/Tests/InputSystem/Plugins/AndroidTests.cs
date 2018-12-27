@@ -428,10 +428,10 @@ internal class AndroidTests : InputTestFixture
             InputSystem.Update();
 
             runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
-            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            InputSystem.settings.compensateForScreenOrientation = false;
             Assert.That(control.ReadValue(), Is.EqualTo(value).Using(Vector3EqualityComparer.Instance));
 
-            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            InputSystem.settings.compensateForScreenOrientation = true;
             Assert.That(control.ReadValue(), Is.EqualTo(isAffectedByOrientation ? new Vector3(-value.y, value.x, value.z) : value).Using(Vector3EqualityComparer.Instance));
         }
     }
@@ -458,11 +458,11 @@ internal class AndroidTests : InputTestFixture
             InputSystem.Update();
 
             runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
-            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            InputSystem.settings.compensateForScreenOrientation = false;
             Assert.That(control.ReadValue(), Is.EqualTo(q).Within(0.01));
             Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(Vector3EqualityComparer.Instance));
 
-            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            InputSystem.settings.compensateForScreenOrientation = true;
             Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(Vector3EqualityComparer.Instance));
         }
     }

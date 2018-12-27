@@ -244,7 +244,7 @@ partial class CoreTests
     public void Controls_CanChangeDefaultDeadzoneValuesOnTheFly()
     {
         // Deadzone processor with no specified min/max should take default values
-        // from InputConfiguration.
+        // from InputSettings.
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -263,14 +263,14 @@ partial class CoreTests
 
         var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
-        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
-        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
+        Assert.That(processor.minOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMin));
+        Assert.That(processor.maxOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMax));
 
-        InputConfiguration.DeadzoneMin = InputConfiguration.DeadzoneMin + 0.1f;
-        InputConfiguration.DeadzoneMax = InputConfiguration.DeadzoneMin - 0.1f;
+        InputSystem.settings.defaultDeadzoneMin = InputSystem.settings.defaultDeadzoneMin + 0.1f;
+        InputSystem.settings.defaultDeadzoneMax = InputSystem.settings.defaultDeadzoneMin - 0.1f;
 
-        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
-        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
+        Assert.That(processor.minOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMin));
+        Assert.That(processor.maxOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMax));
     }
 
     [Test]
@@ -706,10 +706,13 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_AfterAddingDeviceCanQueryValueOfControls()
+    public void Controls_CanQueryValueOfControls_AfterAddingDevice()
     {
         var setup = new InputDeviceBuilder("Gamepad");
         var device = (Gamepad)setup.Finish();
+
+        Assert.That(() => device.leftStick.ReadValue(), Throws.InvalidOperationException);
+
         InputSystem.AddDevice(device);
 
         Assert.That(device.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));

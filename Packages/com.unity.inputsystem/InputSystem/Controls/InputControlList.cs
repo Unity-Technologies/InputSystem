@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -11,6 +12,8 @@ using UnityEngine.Experimental.Input.Utilities;
 #if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
 
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
 
@@ -353,6 +356,25 @@ namespace UnityEngine.Experimental.Input
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            if (Count == 0)
+                return "()";
+
+            var builder = new StringBuilder();
+            builder.Append('(');
+
+            for (var i = 0; i < Count; ++i)
+            {
+                if (i != 0)
+                    builder.Append(',');
+                builder.Append(this[i]);
+            }
+
+            builder.Append(')');
+            return builder.ToString();
         }
 
         private int m_Count;

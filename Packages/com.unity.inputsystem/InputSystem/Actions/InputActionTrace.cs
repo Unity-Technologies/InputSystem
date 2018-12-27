@@ -5,6 +5,9 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
+////        the actions-update-when-not-expected problem; plus give us access to easy polling
+
 ////TODO: make it possible to persist this same way that it should be possible to persist InputEventTrace
 
 ////TODO: make this one thread-safe

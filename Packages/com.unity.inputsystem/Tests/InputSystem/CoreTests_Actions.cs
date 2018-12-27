@@ -14,12 +14,11 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
-
-#if UNITY_2018_3_OR_NEWER
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-#endif
+using Property = NUnit.Framework.PropertyAttribute;
 
+#pragma warning disable CS0649
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 partial class CoreTests
 {
@@ -539,6 +538,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanRecordActionsAsEvents()
     {
         var action = new InputAction();
@@ -625,6 +625,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -682,6 +683,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -725,7 +727,7 @@ partial class CoreTests
 
         startedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), InputConfiguration.TapTime);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), InputSystem.settings.defaultTapTime);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
@@ -739,6 +741,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformPressAndReleaseInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1364,6 +1367,60 @@ partial class CoreTests
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
+    ////FIXME: the sensitivity processor is wonky and will need improvement
+
+    [Test]
+    [Category("Actions")]
+    public unsafe void Actions_CanAddSensitivityProcessorToMouseDeltas()
+    {
+        const float kWindowWidth = 640f;
+        const float kWindowHeight = 480f;
+        const float kSensitivity = 6f;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction();
+        action.AddBinding("<Mouse>/delta").WithProcessor(string.Format("sensitivity(sensitivity={0})", kSensitivity));
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => value = ctx.ReadValue<Vector2>();
+
+        ////REVIEW: what's really the best behavior here?
+        // First, try with the mouse not responding to QueryDimensionsCommand, i.e. without the mouse
+        // being able to tell us the dimensions of the pointer surface. The result should be that we
+        // don't touch the incoming values.
+        InputSystem.QueueDeltaStateEvent(mouse.delta, new Vector2(59, 38));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo(59).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo(38).Within(0.00001));
+
+        // Now add support for device dimensions to the mouse.
+        runtime.SetDeviceCommandCallback(mouse.id,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == QueryDimensionsCommand.Type)
+                {
+                    var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
+                    windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
+                    return InputDeviceCommand.kGenericSuccess;
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        value = null;
+
+        InputSystem.QueueDeltaStateEvent(mouse.delta, new Vector2(32f, 64f));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ControlsUpdateWhenNewDeviceIsAdded()
@@ -1521,6 +1578,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanDistinguishTapAndSlowTapOnSameAction()
     {
         // Bindings can have more than one interaction. Depending on the interaction happening on the bound
@@ -1569,7 +1627,7 @@ partial class CoreTests
         // Perform slow tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.A}, 2.0);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0},
-            2.0 + InputConfiguration.SlowTapTime + 0.0001);
+            2.0 + InputSystem.settings.defaultSlowTapTime + 0.0001);
         InputSystem.Update();
 
         // First tap was started, then slow tap was started.
@@ -1758,7 +1816,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A}, 0.0);
         InputSystem.QueueStateEvent(gamepad,
-            new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputConfiguration.SlowTapTime + 0.1);
+            new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputSystem.settings.defaultSlowTapTime + 0.1);
         InputSystem.Update();
 
         Assert.That(performed, Has.Count.EqualTo(1));
@@ -1931,6 +1989,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanQueryStartAndPerformTime()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -1949,7 +2008,7 @@ partial class CoreTests
         };
 
         var startTime = 0.123;
-        var endTime = 0.123 + InputConfiguration.SlowTapTime + 1.0;
+        var endTime = 0.123 + InputSystem.settings.defaultSlowTapTime + 1.0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f}, startTime);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.0f}, endTime);
@@ -2632,6 +2691,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanQueryLastTrigger()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2695,6 +2755,7 @@ partial class CoreTests
         Assert.That(wasPerformed, Is.False);
     }
 
+    #pragma warning disable CS0649
     private class CompositeWithParameters : InputBindingComposite<float>
     {
         public int intParameter;
@@ -3670,7 +3731,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad,
                 new GamepadState
                 {
-                    rightStick = new Vector2(InputConfiguration.DeadzoneMin - 0.0001f, InputConfiguration.DeadzoneMin - 0.0001f)
+                    rightStick = new Vector2(InputSystem.settings.defaultDeadzoneMin - 0.0001f, InputSystem.settings.defaultDeadzoneMin - 0.0001f)
                 });
             InputSystem.Update();
 
@@ -4187,13 +4248,14 @@ partial class CoreTests
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
             InputSystem.Update();
 
-            // The keyboard's AnyKey control will get picked, too, but will end up with the
-            // lowest score.
+            // The keyboard's synthetic AnyKey control and the mouse's button will get picked, too,
+            // but will end up with the lowest scores.
 
-            Assert.That(rebind.candidates, Has.Count.EqualTo(3));
+            Assert.That(rebind.candidates, Has.Count.EqualTo(4));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(keyboard.spaceKey));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(mouse.leftButton));
-            Assert.That(rebind.candidates[2], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
+            Assert.That(rebind.candidates[2], Is.SameAs(mouse.button));
+            Assert.That(rebind.candidates[3], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
         }
     }
 
@@ -4411,11 +4473,8 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Deadzoning alters values on the stick. For this test, get rid of it.
-        InputConfiguration.DeadzoneMin = 0f;
-        InputConfiguration.DeadzoneMax = 1f;
-
-        // Same for pointer sensitivity.
-        InputConfiguration.PointerDeltaSensitivity = 1f;
+        InputSystem.settings.defaultDeadzoneMin = 0f;
+        InputSystem.settings.defaultDeadzoneMax = 1f;
 
         var action = new InputAction();
 

@@ -12,11 +12,7 @@ allPlatforms = ["Editor", "StandaloneLinux", "StandaloneLinux64", "StandaloneOSX
 allRuntimes = ["latest", "legacy"]
 allTestPlatforms = ["editmode", "playmode"]
 
-editorRevisions = {
-    "2018.2": "5c716fc4faab59de610b4b74b9dad7c9f7ae60b0",
-    "2018.3": "a92967dc9cef35097913700341cac00023cf4810",
-    "2019.1": "f5b7b61dc93ab9b7e65257218be5487d6e201a2e"
-}
+editorRevisions = ["2018.2", "2018.3", "2019.1"]
 
 def GetDownloadComponentsArgs(platforms):
     components = set(["Editor"])
@@ -52,7 +48,7 @@ def RunProcess(args):
 
 parser = argparse.ArgumentParser(description="Run the trace event profiler tests")
 parser.add_argument('runtimePlatform', nargs='*', choices=allPlatforms)
-parser.add_argument('--version', choices=editorRevisions.keys())
+parser.add_argument('--version', choices=editorRevisions)
 parser.add_argument('--runtime', choices=allRuntimes)
 parser.add_argument('--testPlatform', choices=allTestPlatforms)
 parser.add_argument("--warningscheck", action="store_true")
@@ -62,6 +58,7 @@ runtimePlatforms = args.runtimePlatform
 unityVersion = args.version
 runtimeVersion = args.runtime
 testPlatform = args.testPlatform
+
 
 kRootRepoDirectory = os.path.dirname(os.path.realpath(__file__))
 kProjectPath = os.path.dirname(os.path.realpath(__file__))
@@ -86,8 +83,7 @@ if not os.path.isdir(kTestArtifactPath):
 RunProcess(["pip", "install", "unity-downloader-cli", "--extra-index-url", "https://artifactory.eu-cph-1.unityops.net/api/pypi/common-python/simple"])
 
 componentsArgs = GetDownloadComponentsArgs(runtimePlatforms)
-revision = editorRevisions[unityVersion]
-RunProcess(["unity-downloader-cli", "-r", revision, "-p", kInstallPath] + componentsArgs)
+RunProcess(["unity-downloader-cli", "-u", unityVersion, "-p", kInstallPath] + componentsArgs)
 
 for platform in runtimePlatforms:
 

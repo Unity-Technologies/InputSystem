@@ -1,6 +1,6 @@
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: rename to IInputBindingInteraction (and RegisterBindingInteraction)
+////TODO: add way for interactions to advertise the layouts they work with
 
 ////REVIEW: what about putting an instance of one of these on every resolved control instead of sharing it between all controls resolved from a binding?
 

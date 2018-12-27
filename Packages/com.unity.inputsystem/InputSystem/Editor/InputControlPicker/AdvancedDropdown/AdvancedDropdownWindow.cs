@@ -44,6 +44,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private long m_LastTime = 0;
         private bool m_ScrollToSelected = true;
         private float m_InitialSelectionPosition = 0f;
+        ////FIXME: looks like a bug?
+        #pragma warning disable CS0649
         private Rect m_ButtonRectScreenPos;
         private Stack<AdvancedDropdownItem> m_ViewsStack = new Stack<AdvancedDropdownItem>();
         private bool m_DirtyList = true;
@@ -120,10 +122,6 @@ namespace UnityEngine.Experimental.Input.Editor
         protected virtual void OnEnable()
         {
             m_DirtyList = true;
-        }
-
-        protected virtual void OnDisable()
-        {
         }
 
         protected virtual void OnDestroy()
@@ -492,7 +490,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Scroll to selected on windows creation
             if (m_ScrollToSelected && m_InitialSelectionPosition != 0)
             {
-                float diffOfPopupAboveTheButton = m_ButtonRectScreenPos.y - position.y;
+                var diffOfPopupAboveTheButton = m_ButtonRectScreenPos.y - position.y;
                 diffOfPopupAboveTheButton -= m_Gui.searchHeight + m_Gui.headerHeight;
                 m_State.SetScrollState(item, new Vector2(0, m_InitialSelectionPosition - diffOfPopupAboveTheButton));
                 m_ScrollToSelected = false;

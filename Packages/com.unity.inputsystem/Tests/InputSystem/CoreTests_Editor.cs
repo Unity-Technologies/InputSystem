@@ -206,7 +206,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
     {
-        InputConfiguration.LockInputToGame = true;
+        InputEditorUserSettings.lockInputToGameView = true;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -588,52 +588,19 @@ partial class CoreTests
         Assert.That(map2.name, Is.EqualTo("mapB"));
     }
 
-    // We don't want the game code's update mask affect editor code and vice versa.
     [Test]
     [Category("Editor")]
-    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode()
+    [Ignore("TODO")]
+    public void TODO_Editor_SettingsModifiedInPlayMode_AreRestoredWhenReEnteringEditMode()
     {
-        InputSystem.updateMask = InputUpdateType.Dynamic;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
-
-        InputSystem.updateMask = InputUpdateType.Dynamic;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode_ButPreservesBeforeRenderState()
-    {
-        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
-
-        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+        Assert.Fail();
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
-        InputSystem.updateMask = InputUpdateType.Dynamic;
-
-        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(runtime.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
     }
 
     [Test]
@@ -718,17 +685,18 @@ partial class CoreTests
     public void Editor_CanIconsForLayouts()
     {
         const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+        var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
 
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Button.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button.png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Axis"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Axis.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Axis.png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Key"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Button.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button.png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("DualShockGamepad"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Gamepad.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Gamepad.png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Pen"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + "Pen.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Pen.png")));
     }
 
     private class TestEditorWindow : EditorWindow

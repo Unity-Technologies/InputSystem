@@ -17,9 +17,6 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////REVIEW: how do we do stuff like smoothing over time?
 
-////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
-////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

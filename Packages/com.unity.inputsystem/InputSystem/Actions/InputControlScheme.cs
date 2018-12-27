@@ -15,8 +15,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
 ////        (and thus support it only input assets only)
 
-////FIXME: doesn't show up in generated docs either; Doxygen is a fucking disaster
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

@@ -4,8 +4,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: is the sensitivity stuff actually good to put directly on a device or should it be confined to actions?
-
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
 ////REVIEW: should we put lock state directly on Pointer?
@@ -44,10 +42,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure", defaultState = "1.0")]
         public float pressure;
 
         [InputControl(layout = "Axis", usage = "Twist")]
@@ -157,6 +155,25 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: give this a better name; primaryButton?
         public ButtonControl button { get; private set; }
+
+        /// <summary>
+        /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
+        /// device connected to the system.
+        /// </summary>
+        public static Pointer current { get; internal set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {

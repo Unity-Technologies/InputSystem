@@ -7,12 +7,12 @@ namespace UnityEngine.Experimental.Input.Processors
 
         public float minOrDefault
         {
-            get { return min == 0.0f ? InputConfiguration.DeadzoneMin : min; }
+            get { return min == 0.0f ? InputSystem.settings.defaultDeadzoneMin : min; }
         }
 
         public float maxOrDefault
         {
-            get { return max == 0.0f ? InputConfiguration.DeadzoneMax : max; }
+            get { return max == 0.0f ? InputSystem.settings.defaultDeadzoneMax : max; }
         }
 
         public float Process(float value, InputControl control)
