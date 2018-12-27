@@ -39,8 +39,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     public class OculusTouchController : XRControllerWithRumble
     {
         public AxisControl combinedTrigger { get; private set; }
-        [InputControl(aliases = new[] { "Primary2DAxis" })]
-        public Vector2Control joystick { get; private set; }
+        [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
+        public Vector2Control thumbstick { get; private set; }
 
         public AxisControl trigger { get; private set; }
 
@@ -80,7 +80,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             base.FinishSetup(builder);
 
             combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
-            joystick = builder.GetControl<Vector2Control>("joystick");
+            thumbstick = builder.GetControl<Vector2Control>("thumbstick");
             trigger = builder.GetControl<AxisControl>("trigger");
             grip = builder.GetControl<AxisControl>("grip");
             indexNearTouched = builder.GetControl<AxisControl>("indexNearTouched");
