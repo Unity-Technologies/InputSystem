@@ -6,6 +6,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout]
     public class GearVRHMD : XRHMD
     {
+        public ButtonControl back { get; private set; }
         public Vector2Control touchpad { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -38,6 +39,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
+            back = builder.GetControl<ButtonControl>("back");
             touchpad = builder.GetControl<Vector2Control>("touchpad");
             trackingState = builder.GetControl<IntegerControl>("trackingState");
             isTracked = builder.GetControl<ButtonControl>("isTracked");
@@ -71,8 +73,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
-        public AxisControl combinedTrigger { get; private set; }
-        public Vector2Control joystick { get; private set; }
+        public Vector2Control touchpad { get; private set; }
         public AxisControl trigger { get; private set; }
         public ButtonControl back { get; private set; }
         public ButtonControl triggerPressed { get; private set; }
@@ -91,8 +92,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
-            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
-            joystick = builder.GetControl<Vector2Control>("joystick");
+            touchpad = builder.GetControl<Vector2Control>("touchpad");
             trigger = builder.GetControl<AxisControl>("trigger");
             back = builder.GetControl<ButtonControl>("back");
             triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");
