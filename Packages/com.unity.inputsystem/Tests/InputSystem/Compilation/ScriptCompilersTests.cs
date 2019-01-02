@@ -102,7 +102,7 @@ public class ScriptCompilersTests
         };
         references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, scriptAssembly));
 #elif UNITY_2019_1_OR_NEWER
-        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language));
+        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, language));
 #endif
 
         var sources = new List<string>();

@@ -355,12 +355,5 @@ namespace UnityEngine.Experimental.Input.Utilities
             a = b;
             b = temp;
         }
-
-        public static void Swap<TValue>(ref TValue a, ref TValue b)
-        {
-            var temp = a;
-            a = b;
-            b = temp;
-        }
     }
 }

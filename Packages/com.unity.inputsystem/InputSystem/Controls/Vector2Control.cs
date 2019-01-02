@@ -60,11 +60,5 @@ namespace UnityEngine.Experimental.Input.Controls
             ////REVIEW: this can go beyond 1; that okay?
             return ReadValueFromState(statePtr).magnitude;
         }
-
-        public override float EvaluateMagnitude(IntPtr statePtr)
-        {
-            ////REVIEW: this can go beyond 1; that okay?
-            return ReadValueFrom(statePtr).magnitude;
-        }
     }
 }
