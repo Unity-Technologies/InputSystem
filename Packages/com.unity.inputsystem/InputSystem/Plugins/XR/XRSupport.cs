@@ -129,7 +129,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct(@"((Tracking Reference)|(^(Oculus Rift [a-zA-Z0-9]* \(Camera)))"));
 
-            InputSystem.RegisterLayout<GearVRHMD>(
+            InputSystem.RegisterLayout<GearVRSimpleHMD>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
+                    .WithProduct("Oculus Go"));
+            
+            InputSystem.RegisterLayout<GearVRExtendedHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct("Oculus HMD"));

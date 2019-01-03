@@ -1943,7 +1943,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/devicePosition
+      m_Path: <GearVRSimpleHMD>/centerEyePosition
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -2883,7 +2883,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/deviceAcceleration
+      m_Path: <GearVRSimpleHMD>/deviceAngularAcceleration
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -3102,7 +3102,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/deviceAngularVelocity
+      m_Path: <GearVRSimpleHMD>/deviceAngularVelocity
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -3639,7 +3639,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Vive with Wand Controllers
+  m_Text: GearVR with Remote
 --- !u!222 &821363209
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4238,7 +4238,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 1234
+  m_Text: Unset
 --- !u!222 &895208564
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5082,7 +5082,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/deviceRotation
+      m_Path: <GearVRSimpleHMD>/deviceRotation
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -5882,7 +5882,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/isTracked
+      m_Path: <GearVRSimpleHMD>/isTracked
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6257,14 +6257,7 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
-    m_SingletonActionBindings:
-    - m_Name: 
-      m_Path: <GearVRHMD>/deviceVelocity
-      m_Interactions: 
-      m_Processors: 
-      m_Groups: 
-      m_Action: Vector 3
-      m_Flags: 0
+    m_SingletonActionBindings: []
   statusText: {fileID: 1422969350}
 --- !u!1 &1282581081
 GameObject:
@@ -6323,7 +6316,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/trackingState
+      m_Path: <GearVRSimpleHMD>/trackingState
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -7614,7 +7607,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/deviceRotation
+      m_Path: <GearVRSimpleHMD>/centerEyeRotation
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8548,7 +8541,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/deviceAcceleration
+      m_Path: <GearVRSimpleHMD>/deviceAcceleration
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8925,7 +8918,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/back
+      m_Path: <GearVRExtendedHMD>/back
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -9072,7 +9065,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/touchpad
+      m_Path: <GearVRExtendedHMD>/touchpad
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -9972,7 +9965,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0.22808743, b: 1, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -10277,7 +10270,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRHMD>/devicePosition
+      m_Path: <GearVRSimpleHMD>/devicePosition
       m_Interactions: 
       m_Processors: 
       m_Groups: 
