@@ -166,7 +166,7 @@ internal class XRTests : InputTestFixture
     [TestCase("Oculus HMD", "Samsung", typeof(GearVRExtendedHMD))]
     [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
     [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
-    [TestCase("Daydream Controller", null, typeof(DaydreamController))]
+    [TestCase("Daydream Controller Left", null, typeof(DaydreamController))]
     [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]

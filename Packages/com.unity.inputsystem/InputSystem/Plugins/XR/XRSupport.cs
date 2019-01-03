@@ -150,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterLayout<DaydreamController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithProduct("Daydream Controller"));
+                    .WithProduct("^(Daydream Controller)"));
 
             InputSystem.RegisterLayout<ViveHMD>(
                 matches: new InputDeviceMatcher()
