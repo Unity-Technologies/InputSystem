@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.UI;
 
+using UnityEngine.Experimental.Input.Utilities;
+
 public class ButtonControlActionStatus : MonoBehaviour
 {
     public InputAction buttonPressAction;
@@ -18,15 +20,29 @@ public class ButtonControlActionStatus : MonoBehaviour
 
     void OnEnable()
     {
-        buttonTouchAction.Enable();
         buttonTouchAction.performed += UpdateTouchStatus;
         buttonTouchAction.started += UpdateTouchStatus;
         buttonTouchAction.cancelled += UpdateTouchStatus;
-
-        buttonPressAction.Enable();
+        buttonTouchAction.Enable();
+        
+        ReadOnlyArray<InputControl> controls = buttonTouchAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            m_isTouched = (float)(controls[i].ReadValueAsObject()) > 0.5f;
+        }
+        
         buttonPressAction.performed += UpdatePressStatus;
         buttonPressAction.started += UpdatePressStatus;
         buttonPressAction.cancelled += UpdatePressStatus;
+        buttonPressAction.Enable();
+        
+        controls = buttonPressAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            m_isPressed = (float)(controls[i].ReadValueAsObject()) > 0.5f;
+        }
+        
+        ApplyStatusColor();
     }
 
     void OnDisable()

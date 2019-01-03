@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.UI;
 
+using UnityEngine.Experimental.Input.Utilities;
+
 public class IntegerControlActionStatus : MonoBehaviour
 {
     public InputAction IntegerAction;
@@ -14,10 +16,16 @@ public class IntegerControlActionStatus : MonoBehaviour
 
     void OnEnable()
     {
-        IntegerAction.Enable();
         IntegerAction.performed += UpdateInteger;
         IntegerAction.started += UpdateInteger;
         IntegerAction.cancelled += UpdateInteger;
+        IntegerAction.Enable();
+
+        ReadOnlyArray<InputControl> controls = IntegerAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            statusText.text = controls[i].ReadValueAsObject().ToString();
+        }
     }
 
     void OnDisable()
