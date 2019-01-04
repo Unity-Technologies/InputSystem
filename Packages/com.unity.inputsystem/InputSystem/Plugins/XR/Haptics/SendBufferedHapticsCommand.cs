@@ -22,13 +22,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        public int channel;
+        int channel;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int))]
-        public int bufferSize;
+        int bufferSize;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + (sizeof(int) * 2))]
-        public fixed byte buffer[kMaxHapticBufferSize];
+        fixed byte buffer[kMaxHapticBufferSize];
 
         public static SendBufferedHapticCommand Create(int channel, byte[] rumbleBuffer)
         {
