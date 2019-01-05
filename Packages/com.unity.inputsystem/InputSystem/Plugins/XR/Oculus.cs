@@ -57,9 +57,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl start { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl thumbstickClicked { get; private set; }
-        [InputControl(aliases = new[] { "ATouch", "XTouch" })]
+        [InputControl(aliases = new[] { "ATouched", "XTouched" })]
         public ButtonControl primaryTouched { get; private set; }
-        [InputControl(aliases = new[] { "BTouch", "YTouch" })]
+        [InputControl(aliases = new[] { "BTouched", "YTouched" })]
         public ButtonControl secondaryTouched { get; private set; }
         public ButtonControl indexTouched { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
