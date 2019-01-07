@@ -56,8 +56,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public AxisControl grip { get; private set; }
         public ButtonControl gripPressed { get; private set; }
         public ButtonControl primary { get; private set; }
-        public ButtonControl joystickOrPadPressed { get; private set; }
-        public ButtonControl joystickOrPadTouched { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
+        public ButtonControl trackpadPressed { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
+        public ButtonControl trackpadTouched { get; private set; }
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
         public AxisControl trigger { get; private set; }
@@ -77,8 +79,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             grip = builder.GetControl<AxisControl>("grip");
             primary = builder.GetControl<ButtonControl>("primary");
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");
-            joystickOrPadPressed = builder.GetControl<ButtonControl>("joystickOrPadPressed");
-            joystickOrPadTouched = builder.GetControl<ButtonControl>("joystickOrPadTouched");
+            trackpadPressed = builder.GetControl<ButtonControl>("trackpadPressed");
+            trackpadTouched = builder.GetControl<ButtonControl>("trackpadTouched");
             trackpad = builder.GetControl<Vector2Control>("trackpad");
             trigger = builder.GetControl<AxisControl>("trigger");
             triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");
