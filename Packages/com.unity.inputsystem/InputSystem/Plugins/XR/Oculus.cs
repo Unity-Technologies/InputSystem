@@ -44,7 +44,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public AxisControl trigger { get; private set; }
 
         public AxisControl grip { get; private set; }
-        [InputControl(aliases = new[] { "TriggerPressed" })]
         public AxisControl indexNearTouched { get; private set; }
         public AxisControl thumbNearTouched { get; private set; }
 
@@ -60,6 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl primaryTouched { get; private set; }
         [InputControl(aliases = new[] { "BTouched", "YTouched" })]
         public ButtonControl secondaryTouched { get; private set; }
+        [InputControl(aliases = new[] { "TriggerPressed" })]
         public ButtonControl indexTouched { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl thumbstickTouched { get; private set; }
