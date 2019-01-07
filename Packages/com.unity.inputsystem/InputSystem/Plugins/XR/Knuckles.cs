@@ -8,7 +8,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public ButtonControl primary { get; private set; }
         public ButtonControl alternate { get; private set; }
-        public AxisControl combinedTrigger { get; private set; }
         public AxisControl grip { get; private set; }
         public ButtonControl gripPressed { get; private set; }
         public AxisControl index { get; private set; }
@@ -34,7 +33,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             primary = builder.GetControl<ButtonControl>("primary");
             alternate = builder.GetControl<ButtonControl>("alternate");
-            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
             grip = builder.GetControl<AxisControl>("grip");
             index = builder.GetControl<AxisControl>("index");
             middle = builder.GetControl<AxisControl>("middle");

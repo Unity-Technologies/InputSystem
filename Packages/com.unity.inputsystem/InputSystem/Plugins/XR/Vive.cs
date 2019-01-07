@@ -53,7 +53,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class ViveWand : XRControllerWithRumble
     {
-        public AxisControl combinedTrigger { get; private set; }
         public AxisControl grip { get; private set; }
         public ButtonControl gripPressed { get; private set; }
         public ButtonControl primary { get; private set; }
@@ -75,7 +74,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
-            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
             grip = builder.GetControl<AxisControl>("grip");
             primary = builder.GetControl<ButtonControl>("primary");
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");

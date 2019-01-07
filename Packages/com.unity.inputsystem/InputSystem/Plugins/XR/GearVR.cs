@@ -94,7 +94,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
-            touchpad = builder.GetControl<Vector2Control>("touchpad");
+            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
+            joystick = builder.GetControl<Vector2Control>("joystick");
             trigger = builder.GetControl<AxisControl>("trigger");
             back = builder.GetControl<ButtonControl>("back");
             triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");

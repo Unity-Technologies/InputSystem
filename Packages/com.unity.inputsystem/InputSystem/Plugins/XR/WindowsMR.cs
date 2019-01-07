@@ -38,7 +38,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class WMRSpatialController : XRControllerWithRumble
     {
-        public AxisControl combinedTrigger { get; private set; }
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control joystick { get; private set; }
         public AxisControl trigger { get; private set; }
@@ -63,7 +62,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
-            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
             joystick = builder.GetControl<Vector2Control>("joystick");
             trigger = builder.GetControl<AxisControl>("trigger");
             touchpad = builder.GetControl<Vector2Control>("touchpad");
