@@ -112,4 +112,49 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
         }
     }
+
+    public class ViveTracker : InputDevice
+    {
+        public IntegerControl trackingState { get; private set; }
+        public ButtonControl isTracked { get; private set; }
+        public Vector3Control devicePosition { get; private set; }
+        public QuaternionControl deviceRotation { get; private set; }
+        public Vector3Control deviceVelocity { get; private set; }
+        public Vector3Control deviceAngularVelocity { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
+        }
+    }
+
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    public class HandedViveTracker : ViveTracker
+    {
+        public AxisControl grip { get; private set; }
+        public ButtonControl gripPressed { get; private set; }
+        public ButtonControl primary { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
+        public ButtonControl trackpadPressed { get; private set; }
+
+        public ButtonControl triggerPressed { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            grip = builder.GetControl<AxisControl>("grip");
+            primary = builder.GetControl<ButtonControl>("primary");
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
+            trackpadPressed = builder.GetControl<ButtonControl>("trackpadPressed");
+            triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");
+
+            base.FinishSetup(builder);
+        }
+    }
 }

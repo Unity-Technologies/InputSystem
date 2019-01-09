@@ -168,7 +168,11 @@ internal class XRTests : InputTestFixture
     [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
     [TestCase("Daydream Controller Left", null, typeof(DaydreamController))]
     [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
+    [TestCase("Vive DVT", "HTC", typeof(ViveHMD))]
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
+    [TestCase("OpenVR Controller(Vive. Controller MV) - Left", "HTC", typeof(ViveWand))]
+    [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
+    [TestCase("OPenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
     [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
