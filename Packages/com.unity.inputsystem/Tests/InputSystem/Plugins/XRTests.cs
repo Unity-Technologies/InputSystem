@@ -169,6 +169,7 @@ internal class XRTests : InputTestFixture
     [TestCase("Daydream Controller Left", null, typeof(DaydreamController))]
     [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
     [TestCase("Vive DVT", "HTC", typeof(ViveHMD))]
+    [TestCase("Vive Pro", "HTC", typeof(ViveHMD))]
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
     [TestCase("OpenVR Controller(Vive. Controller MV) - Left", "HTC", typeof(ViveWand))]
     [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]

@@ -156,7 +156,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
-                    .WithProduct(@"^((Vive DVT)|(Vive MV.))"));
+                    .WithProduct(@"^((Vive DVT)|(Vive MV.)|(Vive Pro))"));
             InputSystem.RegisterLayout<ViveWand>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
