@@ -8010,6 +8010,13 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Button Press
       m_Flags: 0
+    - m_Name: 
+      m_Path: <HandedViveTracker>{LeftHand}/triggerPressed
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Button Press
+      m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
@@ -9743,6 +9750,13 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Path: <ViveWand>{RightHand}/trigger
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Button Press
+      m_Flags: 0
+    - m_Name: 
+      m_Path: <HandedViveTracker>{RightHand}/triggerPressed
       m_Interactions: 
       m_Processors: 
       m_Groups: 
