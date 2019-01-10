@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId || s_AllUserCount == 0)
+                if (m_Id == kInvalidId)
                     return false;
 
                 // See if there's a currently active user with the given ID.
@@ -106,10 +106,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// The ID stays valid and unique even if the user is removed and no longer <see cref="valid"/>.
         /// </remarks>
         /// <seealso cref="platformUserAccountHandle"/>
-        public uint id
-        {
-            get { return m_Id; }
-        }
+        public uint id => m_Id;
 
         /// <summary>
         /// If the user is is associated with a user account at the platform level, this is the handle used by the
@@ -129,10 +126,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="platformUserAccountName"/>
         /// <seealso cref="platformUserAccountId"/>
         /// <seealso cref="InputUserChange.AccountChanged"/>
-        public InputUserAccountHandle? platformUserAccountHandle
-        {
-            get { return s_AllUserData[index].platformUserAccountHandle; }
-        }
+        public InputUserAccountHandle? platformUserAccountHandle => s_AllUserData[index].platformUserAccountHandle;
 
         /// <summary>
         /// Human-readable name assigned to the user account at the platform level.
@@ -147,10 +141,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="platformUserAccountId"/>
         /// <seealso cref="InputUserChange.AccountChanged"/>
         /// <seealso cref="InputUserChange.AccountNameChanged"/>
-        public string platformUserAccountName
-        {
-            get { return s_AllUserData[index].platformUserAccountName; }
-        }
+        public string platformUserAccountName => s_AllUserData[index].platformUserAccountName;
 
         /// <summary>
         /// Platform-specific user ID that is valid across sessions even if the <see cref="platformUserAccountName"/> of
@@ -165,10 +156,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="platformUserAccountHandle"/>
         /// <seealso cref="platformUserAccountName"/>
         /// <seealso cref="InputUserChange.AccountChanged"/>
-        public string platformUserAccountId
-        {
-            get { return s_AllUserData[index].platformUserAccountId; }
-        }
+        public string platformUserAccountId => s_AllUserData[index].platformUserAccountId;
 
         ////REVIEW: Does it make sense to track used devices separately from paired devices?
         /// <summary>
@@ -268,10 +256,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="InputActionMap"/>
         /// <seealso cref="InputActionAsset"/>
         /// <seealso cref="InputUserChange.BindingsChanged"/>
-        public IInputActionCollection actions
-        {
-            get { return s_AllUserData[index].actions; }
-        }
+        public IInputActionCollection actions => s_AllUserData[index].actions;
 
         /// <summary>
         /// The control scheme currently employed by the user.
@@ -290,10 +275,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="ActivateControlScheme(string)"/>
         /// <seealso cref="ActivateControlScheme(InputControlScheme)"/>
         /// <seealso cref="InputUserChange.ControlSchemeChanged"/>
-        public InputControlScheme? controlScheme
-        {
-            get { return s_AllUserData[index].controlScheme; }
-        }
+        public InputControlScheme? controlScheme => s_AllUserData[index].controlScheme;
 
         /// <summary>
         /// The result of matching the device requirements given by <see cref="controlScheme"/> against
@@ -305,10 +287,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
         /// <seealso cref="InputControlScheme.PickDevicesFrom{TDevices}"/>
-        public InputControlScheme.MatchResult controlSchemeMatch
-        {
-            get { return s_AllUserData[index].controlSchemeMatch; }
-        }
+        public InputControlScheme.MatchResult controlSchemeMatch => s_AllUserData[index].controlSchemeMatch;
 
         /// <summary>
         /// Whether the user is missing devices required by the <see cref="controlScheme"/> activated
@@ -320,10 +299,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// devices if they cannot be satisfied based on the devices paired to the user.
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
-        public bool hasMissingDevices
-        {
-            get { return s_AllUserData[index].controlSchemeMatch.hasMissingRequiredDevices; }
-        }
+        public bool hasMissingRequiredDevices => s_AllUserData[index].controlSchemeMatch.hasMissingRequiredDevices;
 
         /// <summary>
         /// Profile settings associated with the user or <c>null</c> if the user has no associated
@@ -472,7 +448,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <seealso cref="PerformPairingWithDevice"/>
         public static bool listenForUnpairedDeviceActivity
         {
-            get { return s_ListenForUnpairedDeviceActivity; }
+            get => s_ListenForUnpairedDeviceActivity;
             set
             {
                 if (value)
@@ -803,6 +779,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             return s_AllUsers[userIndex];
         }
 
+        public static InputUser CreateUserWithoutPairedDevices()
+        {
+            var userIndex = AddUser();
+            return s_AllUsers[userIndex];
+        }
+
         ////REVIEW: allow re-adding a user through this method?
         /// <summary>
         /// Pair the given device to a user.
@@ -1057,8 +1039,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             {
                 if (s_AllUserData[userIndex].actions != null)
                     s_AllUserData[userIndex].actions.bindingMask = null;
-                s_AllUserData[userIndex].controlSchemeMatch.Dispose();
             }
+            s_AllUserData[userIndex].controlSchemeMatch.Dispose();
 
             // Remove lost devices.
             var lostDeviceCount = s_AllUserData[userIndex].lostDeviceCount;
@@ -1169,6 +1151,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 ? s_AllUserData[userIndex].lostDeviceStartIndex
                 : s_AllUserData[userIndex].deviceStartIndex;
 
+            ++s_PairingStateVersion;
+
             // Move our devices to end of array.
             if (deviceCount > 0)
             {
@@ -1247,6 +1231,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             }
             else
             {
+                --s_PairingStateVersion;
                 ArrayHelpers.EraseAtWithCapacity(ref s_AllPairedDevices, ref s_AllPairedDeviceCount, deviceIndex);
                 --s_AllUserData[userIndex].deviceCount;
             }
@@ -1630,40 +1615,57 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
                     ////TODO: allow filtering (e.g. by device requirements on user actions)
 
-                    unsafe
+                    // Yes, it is so let's find out whether there was actual user activity
+                    // on the device. As a first level, we run the noise mask over the state
+                    // while concurrently comparing whatever bits make it through to the default
+                    // state buffer.
+                    if (device.CheckStateIsAtDefaultIgnoringNoise())
+                        return; // No activity at all.
+
+                    // Go through controls and for any one that isn't noisy or synthetic, find out
+                    // if we have a magnitude greater than zero.
+                    var controls = device.allControls;
+                    for (var i = 0; i < controls.Count; ++i)
                     {
-                        // Yes, it is so let's find out whether there was actual user activity
-                        // on the device. As a first level, we run the noise mask over the state
-                        // while concurrently comparing whatever bits make it through to the default
-                        // state buffer.
-                        if (device.CheckStateIsAtDefaultIgnoringNoise())
-                            return; // No activity at all.
+                        var control = controls[i];
+                        if (control.noisy || control.synthetic)
+                            continue;
 
-                        ////REVIEW: should we restrict this to just leaf controls?
-                        // Go through controls and for any one that isn't noisy or synthetic, find out
-                        // if we have a magnitude greater than zero.
-                        var controls = device.allControls;
-                        for (var i = 0; i < controls.Count; ++i)
+                        ////REVIEW: is this safe?
+                        // Ignore non-leaf controls.
+                        if (control.children.Count > 0)
+                            continue;
+
+                        // Check for default state. Cheaper check than magnitude evaluation
+                        // which may involve several virtual method calls.
+                        if (control.CheckStateIsAtDefault())
+                            continue;
+
+                        // Ending up here is costly. We now do per-control work that may involve
+                        // walking all over the place in the InputControl machinery.
+                        var magnitude = control.EvaluateMagnitude();
+                        if (magnitude > 0)
                         {
-                            var control = controls[i];
-                            if (control.noisy || control.synthetic)
-                                continue;
-
-                            // Check for default state. Cheaper check than magnitude evaluation
-                            // which may involve several virtual method calls.
-                            if (control.CheckStateIsAtDefault())
-                                continue;
-
-                            // Ending up here is costly. We now do per-control work that may involve
-                            // walking all over the place in the InputControl machinery.
-                            var magnitude = control.EvaluateMagnitude();
-                            if (magnitude > 0)
+                            // Yes, something was actuated on the device.
+                            var deviceHasBeenPaired = false;
+                            for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
                             {
-                                // Yes, something was actuated on the device.
-                                for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
-                                    s_OnUnpairedDeviceUsed[n](control);
-                                break;
+                                var pairingStateVersionBefore = s_PairingStateVersion;
+
+                                s_OnUnpairedDeviceUsed[n](control);
+
+                                if (pairingStateVersionBefore != s_PairingStateVersion
+                                    && FindUserPairedToDevice(device) != null)
+                                {
+                                    deviceHasBeenPaired = true;
+                                    break;
+                                }
                             }
+
+                            // If the device was paired in one of the callbacks, stop processing
+                            // changes on it.
+                            if (deviceHasBeenPaired)
+                                break;
                         }
                     }
 
@@ -1868,6 +1870,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             public uint userId;
         }
 
+        private static int s_PairingStateVersion;
         private static uint s_LastUserId;
         private static int s_AllUserCount;
         private static int s_AllPairedDeviceCount;
@@ -1910,6 +1913,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             // Don't reset s_LastUserId and just let it increment instead so we never generate
             // the same ID twice.
 
+            s_PairingStateVersion = 0;
             s_AllUserCount = 0;
             s_AllPairedDeviceCount = 0;
             s_AllUsers = null;
@@ -1920,6 +1924,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl>>();
             s_OnDeviceChangeDelegate = null;
             s_OnDeviceChangeHooked = false;
+            s_ListenForUnpairedDeviceActivity = false;
         }
     }
 }
