@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
 
+### Fixes
+
+- `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
+
 ## [0.1.2-preview] - 2018-12-19
 
     NOTE: The minimum version requirement for the new input system has been bumped

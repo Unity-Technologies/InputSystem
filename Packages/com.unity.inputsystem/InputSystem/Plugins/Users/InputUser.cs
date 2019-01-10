@@ -684,6 +684,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
             // Remove.
             ArrayHelpers.EraseSliceWithCapacity(ref s_AllPairedDevices, ref s_AllPairedDeviceCount, deviceStartIndex, deviceCount);
+
+            // Adjust indices of other users.
+            for (var i = 0; i < s_AllUserCount; ++i)
+            {
+                if (s_AllUserData[i].deviceStartIndex <= deviceStartIndex)
+                    continue;
+                s_AllUserData[i].deviceStartIndex -= deviceCount;
+            }
         }
 
         /// <summary>
