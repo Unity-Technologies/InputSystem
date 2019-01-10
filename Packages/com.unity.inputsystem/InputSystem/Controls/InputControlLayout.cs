@@ -8,10 +8,6 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
 ////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format

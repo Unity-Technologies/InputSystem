@@ -5,9 +5,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
 
 ////REVIEW: can we collects tooltips from the fields we're looking at?
 
@@ -177,6 +174,10 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             if (m_Parameters == null)
                 return;
 
+            ////TODO: give parameters an explicit foldout
+
+            ////REVIEW: how does this handle undo?
+
             for (var i = 0; i < m_Parameters.Length; i++)
             {
                 var parameter = m_Parameters[i];
@@ -225,15 +226,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             public int[] enumValues;
             public string[] enumNames;
 
-            public bool isEnum
-            {
-                get { return enumValues != null; }
-            }
-
-            public bool isAtDefault
-            {
-                get { return defaultValue != null && value == defaultValue.Value; }
-            }
+            public bool isEnum => enumValues != null;
+            public bool isAtDefault => defaultValue != null && value == defaultValue.Value;
         }
     }
 }

@@ -20,9 +20,7 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
+////TODO: allow aliasing processors etc
 
 ////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
 

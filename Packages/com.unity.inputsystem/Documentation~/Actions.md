@@ -83,8 +83,13 @@ moveAction.AddCompositeBinding("Dpad")
 |Press|
 |Tap|
 |SlowTap|
+|Hold|
 
 ### `Press`
+
+### `Hold`
+
+
 
 ### `Tap`
 

@@ -621,12 +621,12 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 // No, so create a new window.
-                window = CreateInstance<AssetInspectorWindow>();
-                window.m_Title = new GUIContent(asset.name + " (Input Manager)");
+                var title = asset.name + " (Input Actions)";
+                window = GetWindow<AssetInspectorWindow>(title, focus: true, desiredDockNextTo: typeof(SceneView));
+                window.m_Title = new GUIContent(title);
                 window.m_DirtyTitle = new GUIContent("(*) " + window.m_Title.text);
                 window.titleContent = window.m_Title;
                 window.SetAsset(asset);
-                window.Show();
             }
 
             // If user clicked on an action inside the asset, focus on that action (if we can find it).

@@ -70,112 +70,17 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanLayerMapsOnTopOfEachOther()
+    public void Actions_CanDetermineIfMapIsUsableWithGivenDevice()
     {
-        // Make up a layered control scheme three levels deep.
-        /*
-        var fpsControls = new InputActionMap("fpsControls");
-        var moveAction = fpsControls.AddAction("move");
-        var shootAction = fpsControls.AddAction("shoot");
-        var lookAction = fpsControls.AddAction("look");
-        var sniperControls = new InputActionMap("sniper", extend: fpsControls);
-        var scopeAction = sniperControls.AddAction("scope");
-        var swapScopeControls = new InputActionMap("swapScope", extend: sniperControls);
-
-        swapScopeControls.AddBinding();
-
-        // Information from 'baseMap' coming through on 'derivedMap'.
-        Assert.That(sniperControls.actions, Has.Count.EqualTo(1));
-        Assert.That(sniperControls["action"], Is.TypeOf<InputAction>());
-        Assert.That(sniperControls["action"], Is.Not.SameAs(baseAction));
-        Assert.That(sniperControls["action"].actionMap, Is.SameAs(derivedMap));
-        Assert.That(sniperControls["action"].bindings, Has.Count.EqualTo(1));
-        Assert.That(sniperControls["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
-
-        // Information from 'baseMap' coming through on 'derivedFromDerivedMap'.
-        Assert.That(derivedFromDerivedMap.actions, Has.Count.EqualTo(1));
-        Assert.That(derivedFromDerivedMap["action"], Is.TypeOf<InputAction>());
-        Assert.That(derivedFromDerivedMap["action"], Is.Not.SameAs(baseAction));
-        Assert.That(derivedFromDerivedMap["action"].actionMap, Is.SameAs(derivedFromDerivedMap));
-        Assert.That(derivedFromDerivedMap["action"].bindings, Has.Count.EqualTo(1));
-        Assert.That(derivedFromDerivedMap["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
-        */
-
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_MapsCanBeBasedOnOtherMaps()
-    {
-        var baseMap = new InputActionMap("Base");
-        var baseAction = baseMap.AddAction("action", binding: "<Gamepad>/buttonSouth");
-        var derivedMap = new InputActionMap("Derived", extend: baseMap);
-        var derivedFromDerivedMap = new InputActionMap("DerivedFromDerived", extend: derivedMap);
-
-        //NO! We want to set up bindings on the *existing* action
-        // But how can we have the same action answer with different bindings depending on context?
-        // Should we remove the per-action control and device arrays? How do singleton actions deal with that then?
-        // Alternatively, we can change how you connect to endpoints such that you don't go to an individual action
-        // to connect to it.
-        // It may really make sense to completely divorce delivery from InputAction and make that a pure configuration object.
-
-        // Or... we simply don't list actions from the base in the derived map... I.e. a map will only list the
-        // information *directly* defined in the map. Explicit lookups could still take bases into account.
-        // But then, how do you query the bindings for an action in a derived map?
-
-        // Or... we actually *do* replicate the information from the base in the derived map but triggering actions in
-        // a derived map also triggers actions in the base map
-
-        // Information from 'baseMap' coming through on 'derivedMap'.
-        Assert.That(derivedMap.actions, Has.Count.EqualTo(1));
-        Assert.That(derivedMap["action"], Is.TypeOf<InputAction>());
-        Assert.That(derivedMap["action"], Is.Not.SameAs(baseAction));
-        Assert.That(derivedMap["action"].actionMap, Is.SameAs(derivedMap));
-        Assert.That(derivedMap["action"].bindings, Has.Count.EqualTo(1));
-        Assert.That(derivedMap["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
-
-        // Information from 'baseMap' coming through on 'derivedFromDerivedMap'.
-        Assert.That(derivedFromDerivedMap.actions, Has.Count.EqualTo(1));
-        Assert.That(derivedFromDerivedMap["action"], Is.TypeOf<InputAction>());
-        Assert.That(derivedFromDerivedMap["action"], Is.Not.SameAs(baseAction));
-        Assert.That(derivedFromDerivedMap["action"].actionMap, Is.SameAs(derivedFromDerivedMap));
-        Assert.That(derivedFromDerivedMap["action"].bindings, Has.Count.EqualTo(1));
-        Assert.That(derivedFromDerivedMap["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_MapsCanBeBasedOnOtherMaps_AndPickUpChangesMadeToTheirBaseMaps()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_MapsCanBeBasedOnOtherMaps_AndAddBindingsToActionsDefinedInBaseMaps()
-    {
-        var baseMap = new InputActionMap("Base");
-        var action = baseMap.AddAction("action", binding: "<Gamepad>/buttonSouth");
-
-        var derivedMap = new InputActionMap("Derived", extend: baseMap);
-        derivedMap.AddBinding("<Gamepad>/buttonNorth", action: "action");
+        var map = new InputActionMap();
+        var action = map.AddAction("action1");
+        action.AddBinding("<Gamepad>/leftStick");
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var actionWasPerformed = false;
-        action.performed += _ => actionWasPerformed = true;
-
-        derivedMap.Enable();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-        InputSystem.Update();
-
-        Assert.That(actionWasPerformed);
+        Assert.That(map.IsUsableWithDevice(gamepad), Is.True);
+        Assert.That(map.IsUsableWithDevice(keyboard), Is.False);
     }
 
     [Test]
@@ -2118,6 +2023,10 @@ partial class CoreTests
         Assert.That(asset.FindAction("map1/action1"), Is.SameAs(action1));
         Assert.That(asset.FindAction("map1/action2"), Is.SameAs(action2));
         Assert.That(asset.FindAction("map2/action3"), Is.SameAs(action3));
+
+        Assert.That(asset.FindAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
+        Assert.That(asset.FindAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
+        Assert.That(asset.FindAction($"{{{action3.id.ToString()}}}"), Is.SameAs(action3));
 
         // Shouldn't allocate.
         #if UNITY_2018_3_OR_NEWER

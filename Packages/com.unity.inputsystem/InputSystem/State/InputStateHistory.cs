@@ -3,10 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////REVIEW: What about instead of capturing a control directly, this works on bindings instead?
 ////        This would still allow tracing individual controls but at the same time would allow
 ////        capturing history including procesors and composites and everything (and multiple

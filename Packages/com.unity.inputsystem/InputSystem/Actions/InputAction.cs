@@ -69,10 +69,7 @@ namespace UnityEngine.Experimental.Input
         /// The name is just the name of the action alone, not a "setName/actionName"
         /// combination.
         /// </remarks>
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
         /// <summary>
         /// A stable, unique identifier for the action.
@@ -85,18 +82,7 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_Guid == Guid.Empty)
-                {
-                    if (m_Id == null)
-                    {
-                        m_Guid = Guid.NewGuid();
-                        m_Id = m_Guid.ToString();
-                    }
-                    else
-                    {
-                        m_Guid = new Guid(m_Id);
-                    }
-                }
+                MakeSureIdIsInPlace();
                 return m_Guid;
             }
         }
@@ -123,8 +109,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string expectedControlLayout
         {
-            get { return m_ExpectedControlLayout; }
-            set { m_ExpectedControlLayout = value; }
+            get => m_ExpectedControlLayout;
+            set => m_ExpectedControlLayout = value;
         }
 
         /// <summary>
@@ -133,18 +119,12 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// If the action is a loose action created in code, this will be <c>null</c>.
         /// </remarks>
-        public InputActionMap actionMap
-        {
-            get { return isSingletonAction ? null : m_ActionMap; }
-        }
+        public InputActionMap actionMap => isSingletonAction ? null : m_ActionMap;
 
         public InputBinding? bindingMask
         {
-            get
-            {
-                ////REVIEW: if no mask is set on the action but one is set on the map, should we return that one?
-                return m_BindingMask;
-            }
+            ////REVIEW: if no mask is set on the action but one is set on the map, should we return that one?
+            get => m_BindingMask;
             set
             {
                 if (value == m_BindingMask)
@@ -178,10 +158,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// May allocate memory on first hit.
         /// </remarks>
-        public ReadOnlyArray<InputBinding> bindings
-        {
-            get { return GetOrCreateActionMap().GetBindingsForSingleAction(this); }
-        }
+        public ReadOnlyArray<InputBinding> bindings => GetOrCreateActionMap().GetBindingsForSingleAction(this);
 
         /// <summary>
         /// The set of controls to which the action's bindings resolve.
@@ -212,10 +189,7 @@ namespace UnityEngine.Experimental.Input
         /// When listening for control input and when responding to control value changes,
         /// actions will go through several possible phases. TODO
         /// </remarks>
-        public InputActionPhase phase
-        {
-            get { return currentState.phase; }
-        }
+        public InputActionPhase phase => currentState.phase;
 
         ////REVIEW: expose these as a struct?
         ////REVIEW: do we need/want the lastTrigger stuff at all?
@@ -236,15 +210,9 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public double lastTriggerTime
-        {
-            get { return currentState.time; }
-        }
+        public double lastTriggerTime => currentState.time;
 
-        public double lastTriggerStartTime
-        {
-            get { return currentState.startTime; }
-        }
+        public double lastTriggerStartTime => currentState.startTime;
 
         public double lastTriggerDuration
         {
@@ -295,10 +263,7 @@ namespace UnityEngine.Experimental.Input
         /// When enabled, an action will listen for changes on the controls it is bound to and trigger
         /// ...
         /// </remarks>
-        public bool enabled
-        {
-            get { return phase != InputActionPhase.Disabled; }
-        }
+        public bool enabled => phase != InputActionPhase.Disabled;
 
         /// <summary>
         /// Event that is triggered when the action has been started.
@@ -306,8 +271,8 @@ namespace UnityEngine.Experimental.Input
         /// <see cref="InputActionPhase.Started"/>
         public event Action<CallbackContext> started
         {
-            add { m_OnStarted.Append(value); }
-            remove { m_OnStarted.Remove(value); }
+            add => m_OnStarted.Append(value);
+            remove => m_OnStarted.Remove(value);
         }
 
         /// <summary>
@@ -317,8 +282,8 @@ namespace UnityEngine.Experimental.Input
         /// <see cref="InputActionPhase.Cancelled"/>
         public event Action<CallbackContext> cancelled
         {
-            add { m_OnCancelled.Append(value); }
-            remove { m_OnCancelled.Remove(value); }
+            add => m_OnCancelled.Append(value);
+            remove => m_OnCancelled.Remove(value);
         }
 
         /// <summary>
@@ -327,8 +292,8 @@ namespace UnityEngine.Experimental.Input
         /// <see cref="InputActionPhase.Performed"/>
         public event Action<CallbackContext> performed
         {
-            add { m_OnPerformed.Append(value); }
-            remove { m_OnPerformed.Remove(value); }
+            add => m_OnPerformed.Append(value);
+            remove => m_OnPerformed.Remove(value);
         }
 
         // Constructor we use for serialization and for actions that are part
@@ -414,8 +379,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
+        [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
+            + "without breaking references to the action.")]
         [SerializeField] internal string m_Name;
+        [Tooltip("Type of control expected by the action (e.g. \"Button\" or \"Stick\"). This will limit the controls shown "
+            + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
         [SerializeField] internal string m_ExpectedControlLayout;
+        [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
+            + "without breaking references.")]
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
 
         // For singleton actions, we serialize the bindings directly as part of the action.
@@ -494,9 +465,20 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        internal bool HaveBindingFilterMatching(ref InputBinding bindingFilter)
+        internal void MakeSureIdIsInPlace()
         {
-            throw new NotImplementedException();
+            if (m_Guid != Guid.Empty)
+                return;
+
+            if (string.IsNullOrEmpty(m_Id))
+            {
+                m_Guid = Guid.NewGuid();
+                m_Id = m_Guid.ToString();
+            }
+            else
+            {
+                m_Guid = new Guid(m_Id);
+            }
         }
 
         internal InputActionMap GetOrCreateActionMap()

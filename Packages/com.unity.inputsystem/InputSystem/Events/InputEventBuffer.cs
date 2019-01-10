@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// concurrently from multiple threads. It is, however, safe to traverse the contents of an
     /// existing buffer from multiple threads as long as it is not mutated at the same time.
     /// </remarks>
-    public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable
+    public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable, ICloneable
     {
         public const long kBufferSizeUnknown = -1;
 
@@ -281,6 +281,25 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_WeOwnTheBuffer = false;
             m_SizeInBytes = 0;
             m_EventCount = 0;
+        }
+
+        public InputEventBuffer Clone()
+        {
+            var clone = new InputEventBuffer();
+            if (m_Buffer.IsCreated)
+            {
+                clone.m_Buffer = new NativeArray<byte>(m_Buffer.Length, Allocator.Persistent);
+                clone.m_Buffer.CopyFrom(m_Buffer);
+                clone.m_WeOwnTheBuffer = true;
+            }
+            clone.m_SizeInBytes = m_SizeInBytes;
+            clone.m_EventCount = m_EventCount;
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         private NativeArray<byte> m_Buffer;

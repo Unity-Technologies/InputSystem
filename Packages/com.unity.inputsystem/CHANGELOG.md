@@ -4,6 +4,23 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.3-preview] - ????
+
+### Changed
+
+- Removed Unity 2018.2 support code
+- Removed .NET 3.5 support code
+- `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls
+- Action editor now gets docked by default
+
+### Added
+
+- `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
+
+### Fixes
+
+- `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
+
 ## [0.1.2-preview] - 2018-12-19
 
     NOTE: The minimum version requirement for the new input system has been bumped

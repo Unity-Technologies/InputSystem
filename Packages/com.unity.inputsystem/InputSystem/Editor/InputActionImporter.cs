@@ -44,8 +44,19 @@ namespace UnityEngine.Experimental.Input.Editor
             public string guid;
         }
 
+        private static InlinedArray<Action> s_OnImportCallbacks;
+
+        public static event Action onImport
+        {
+            add { s_OnImportCallbacks.Append(value); }
+            remove { s_OnImportCallbacks.Remove(value); }
+        }
+
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            foreach (var callback in s_OnImportCallbacks)
+                callback();
+
             ////REVIEW: need to check with version control here?
             // Read file.
             string text;

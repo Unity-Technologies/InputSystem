@@ -4,6 +4,8 @@
 
 ## Controls
 
+### Paths
+
 ### Noisy Controls
 
 ## Device Descriptions

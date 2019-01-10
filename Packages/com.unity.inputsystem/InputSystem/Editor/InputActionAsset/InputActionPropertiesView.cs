@@ -34,6 +34,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private string m_ExpectedControlLayout;
         private string[] m_ControlTypeList;
         private int m_SelectedControlType;
+        private GUIContent m_ActionTypeLabel;
 
         public InputActionPropertiesView(SerializedProperty actionProperty, Action reloadTree)
         {
@@ -46,9 +47,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlLayoutProperty.stringValue);
             if (m_SelectedControlType == -1)
                 m_SelectedControlType = 0;
+
+            m_ActionTypeLabel =
+                EditorGUIUtility.TrTextContent("Type", m_ExpectedControlLayoutProperty.tooltip);
         }
 
-        private string[] BuildControlTypeList()
+        private static string[] BuildControlTypeList()
         {
             var types = new List<string>();
             foreach (var layoutName in InputSystem.s_Manager.m_Layouts.layoutTypes.Keys)
@@ -84,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_GeneralFoldout)
             {
                 EditorGUI.BeginChangeCheck();
-                m_SelectedControlType = EditorGUILayout.Popup("Type", m_SelectedControlType, m_ControlTypeList);
+                m_SelectedControlType = EditorGUILayout.Popup(m_ActionTypeLabel, m_SelectedControlType, m_ControlTypeList);
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (m_SelectedControlType == 0)

@@ -374,7 +374,7 @@ public class DemoPlayerController : MonoBehaviour, IGameplayActions
         // also need to pair to the user. This process may fail and we may end up a player missing
         // devices to start playing.
         user.ActivateControlScheme(controlScheme.Value).AndPairRemainingDevices();
-        if (user.hasMissingDevices)
+        if (user.hasMissingRequiredDevices)
             return false;
 
         // Put the player in joined state.

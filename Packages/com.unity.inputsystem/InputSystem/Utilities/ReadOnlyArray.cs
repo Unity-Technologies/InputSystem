@@ -2,10 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////REVIEW: switch to something that doesn't require the backing store to be an actual array?
 ////  (maybe switch m_Array to an InlinedArray and extend InlinedArray to allow having three configs:
 ////  1. firstValue only, 2. firstValue + additionalValues, 3. everything in additionalValues)
@@ -61,10 +57,9 @@ namespace UnityEngine.Experimental.Input.Utilities
         /// <returns>A new array containing a copy of the contents of the read-only array.</returns>
         public TValue[] ToArray()
         {
-            if (m_Length == 0)
-                return null;
             var result = new TValue[m_Length];
-            Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
+            if (m_Length > 0)
+                Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
             return result;
         }
 

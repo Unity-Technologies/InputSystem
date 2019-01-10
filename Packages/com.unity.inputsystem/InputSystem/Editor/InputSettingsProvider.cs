@@ -15,11 +15,12 @@ namespace UnityEngine.Experimental.Input.Editor
     internal class InputSettingsProvider : SettingsProvider
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
+        public const string kSettingsPath = "Project/Input (NEW)";
 
         [SettingsProvider]
         public static SettingsProvider CreateInputSettingsProvider()
         {
-            return new InputSettingsProvider("Project/Input (NEW)", SettingsScope.Project);
+            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project);
         }
 
         private InputSettingsProvider(string path, SettingsScope scopes)
