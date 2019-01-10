@@ -38,7 +38,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static InputDebuggerWindow s_Instance;
 
         [MenuItem("Window/Input Debugger", false, 2100)]
-        public static void Init()
+        public static void CreateOrShow()
         {
             if (s_Instance == null)
             {

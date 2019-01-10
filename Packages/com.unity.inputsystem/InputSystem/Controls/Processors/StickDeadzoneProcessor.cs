@@ -1,3 +1,7 @@
+////REVIEW: rename to Vector2DeadzoneProcessor
+
+////TODO: add different deadzone shapes and/or option to min/max X and Y separately
+
 namespace UnityEngine.Experimental.Input.Processors
 {
     /// <summary>

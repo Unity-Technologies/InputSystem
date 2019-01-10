@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
+////REVIEW: should each of the actions be *lists* of actions?
+
 ////TODO: add ability to query which device was last used with any of the actions
 
 ////TODO: come up with an action response system that doesn't require hooking and unhooking all those delegates

@@ -423,6 +423,7 @@ partial class CoreTests
         Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));
     }
 
+    ////TODO: kill this behavior
     [Test]
     [Category("Devices")]
     public void Devices_AddingDevice_MakesItCurrent()

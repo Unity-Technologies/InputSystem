@@ -26,21 +26,15 @@ namespace UnityEngine.Experimental.Input
     /// of <see cref="InputAction">input actions</see>. Instead of executing response code right away whenever
     /// an action triggers, an <see cref="RecordAction">event is recorded</see> which can then be queried on demand.
     /// </remarks>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable, ICloneable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
         /// Directly access the underlying raw memory queue.
         /// </summary>
-        public InputEventBuffer buffer
-        {
-            get { return m_EventBuffer; }
-        }
+        public InputEventBuffer buffer => m_EventBuffer;
 
-        public int count
-        {
-            get { return m_EventBuffer.eventCount; }
-        }
+        public int count => m_EventBuffer.eventCount;
 
         /// <summary>
         /// Record the triggering of an action as an <see cref="ActionEventPtr">action event</see>.
@@ -89,6 +83,20 @@ namespace UnityEngine.Experimental.Input
             m_ActionMapStates.Clear();
         }
 
+        public InputActionTrace Clone()
+        {
+            return new InputActionTrace
+            {
+                m_EventBuffer = m_EventBuffer.Clone(),
+                m_ActionMapStates = m_ActionMapStates.Clone()
+            };
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
         public IEnumerator<ActionEventPtr> GetEnumerator()
         {
             return new Enumerator(this);
@@ -121,20 +129,11 @@ namespace UnityEngine.Experimental.Input
                 m_Ptr = eventPtr;
             }
 
-            public InputAction action
-            {
-                get { return m_State.GetActionOrNull(m_Ptr->bindingIndex); }
-            }
+            public InputAction action => m_State.GetActionOrNull(m_Ptr->bindingIndex);
 
-            public InputActionPhase phase
-            {
-                get { return m_Ptr->phase; }
-            }
+            public InputActionPhase phase => m_Ptr->phase;
 
-            public InputControl control
-            {
-                get { return m_State.controls[m_Ptr->controlIndex]; }
-            }
+            public InputControl control => m_State.controls[m_Ptr->controlIndex];
 
             public IInputInteraction interaction
             {
@@ -148,25 +147,13 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public double time
-            {
-                get { return m_Ptr->baseEvent.time; }
-            }
+            public double time => m_Ptr->baseEvent.time;
 
-            public double startTime
-            {
-                get { return m_Ptr->startTime; }
-            }
+            public double startTime => m_Ptr->startTime;
 
-            public double duration
-            {
-                get { return time - startTime; }
-            }
+            public double duration => time - startTime;
 
-            public int valueSizeInBytes
-            {
-                get { return m_Ptr->valueSizeInBytes; }
-            }
+            public int valueSizeInBytes => m_Ptr->valueSizeInBytes;
 
             public void ReadValue(void* buffer, int bufferSize)
             {
@@ -249,10 +236,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 }

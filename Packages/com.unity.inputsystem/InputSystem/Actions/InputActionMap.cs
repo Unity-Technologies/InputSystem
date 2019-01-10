@@ -36,18 +36,12 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Name of the action map.
         /// </summary>
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
         /// <summary>
         /// If the action map is part of an asset, this refers to the asset. Otherwise it is <c>null</c>.
         /// </summary>
-        public InputActionAsset asset
-        {
-            get { return m_Asset; }
-        }
+        public InputActionAsset asset => m_Asset;
 
         /// <summary>
         /// A stable, unique identifier for the map.
@@ -89,10 +83,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Whether any action in the map is currently enabled.
         /// </summary>
-        public bool enabled
-        {
-            get { return m_EnabledActionsCount > 0; }
-        }
+        public bool enabled => m_EnabledActionsCount > 0;
 
         /// <summary>
         /// List of actions contained in the map.
@@ -103,10 +94,7 @@ namespace UnityEngine.Experimental.Input
         /// Does not allocate. Note that values returned by the property become invalid if
         /// the setup of actions in a set is changed.
         /// </remarks>
-        public ReadOnlyArray<InputAction> actions
-        {
-            get { return new ReadOnlyArray<InputAction>(m_Actions); }
-        }
+        public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
         ////REVIEW: what about explicitly grouping bindings into named sets?
 
@@ -120,10 +108,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// Bindings that trigger actions refer to the action by name.
         /// </remarks>
-        public ReadOnlyArray<InputBinding> bindings
-        {
-            get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
-        }
+        public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings);
 
         public ReadOnlyArray<InputControlScheme> controlSchemes
         {
@@ -138,7 +123,7 @@ namespace UnityEngine.Experimental.Input
         /// <inheritdoc />
         public InputBinding? bindingMask
         {
-            get { return m_BindingMask; }
+            get => m_BindingMask;
             set
             {
                 if (m_BindingMask == value)
@@ -204,16 +189,13 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.cancelled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
-            add { m_ActionCallbacks.AppendWithCapacity(value); }
-            remove { m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); } // Changes callback ordering.
+            add => m_ActionCallbacks.AppendWithCapacity(value);
+            remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
         }
 
-        public InputActionMap(string name = null, InputActionMap extend = null)
+        public InputActionMap(string name = null)
         {
             m_Name = name;
-
-            if (extend != null)
-                throw new NotImplementedException();
         }
 
         internal int TryGetActionIndex(string nameOrId)
@@ -259,9 +241,9 @@ namespace UnityEngine.Experimental.Input
             return InputActionMapState.kInvalidIndex;
         }
 
-        public InputAction TryGetAction(string name)
+        public InputAction TryGetAction(string nameOrId)
         {
-            var index = TryGetActionIndex(name);
+            var index = TryGetActionIndex(nameOrId);
             if (index == -1)
                 return null;
             return m_Actions[index];
@@ -275,12 +257,12 @@ namespace UnityEngine.Experimental.Input
             return m_Actions[index];
         }
 
-        public InputAction GetAction(string name)
+        public InputAction GetAction(string nameOrId)
         {
-            var action = TryGetAction(name);
+            var action = TryGetAction(nameOrId);
             if (action == null)
-                throw new KeyNotFoundException(string.Format("Could not find action '{0}' in map '{1}'", name,
-                    this.name));
+                throw new KeyNotFoundException(string.Format("Could not find action '{0}' in map '{1}'", nameOrId,
+                    name));
             return action;
         }
 
@@ -291,6 +273,27 @@ namespace UnityEngine.Experimental.Input
                 throw new KeyNotFoundException(string.Format("Could not find action with ID '{0}' in map '{1}'", id,
                     name));
             return action;
+        }
+
+        public bool IsUsableWithDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            if (m_Bindings == null)
+                return false;
+
+            foreach (var binding in m_Bindings)
+            {
+                var path = binding.path;
+                if (string.IsNullOrEmpty(path))
+                    continue;
+
+                if (InputControlPath.Matches(path, device))
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
