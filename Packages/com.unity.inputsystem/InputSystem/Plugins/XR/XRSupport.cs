@@ -124,6 +124,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("Oculus")
                     .WithProduct(@"((Oculus Touch Controller)|(^(OpenVR Controller\(Oculus Rift [a-zA-Z0-9]*)))"));
+            InputSystem.RegisterLayout<OculusRemote>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
+                    .WithManufacturer("Oculus")
+                    .WithProduct(@"Oculus Remote"));
             InputSystem.RegisterLayout<OculusTrackingReference>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)

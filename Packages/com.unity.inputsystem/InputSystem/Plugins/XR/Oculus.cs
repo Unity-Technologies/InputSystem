@@ -124,4 +124,20 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
         }
     }
+
+    public class OculusRemote : InputDevice
+    {
+        public ButtonControl back { get; private set; }
+        public ButtonControl start { get; private set; }
+        public Vector2Control touchpad { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            back = builder.GetControl<ButtonControl>("back");
+            start = builder.GetControl<ButtonControl>("start");
+            touchpad = builder.GetControl<Vector2Control>("touchpad");
+        }
+    }
 }

@@ -162,6 +162,7 @@ internal class XRTests : InputTestFixture
     [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
     [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
+    [TestCase("Oculus Remote", "Oculus", typeof(OculusRemote))]
     [TestCase("Oculus Go", "Samsung", typeof(GearVRSimpleHMD))]
     [TestCase("Oculus HMD", "Samsung", typeof(GearVRExtendedHMD))]
     [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
