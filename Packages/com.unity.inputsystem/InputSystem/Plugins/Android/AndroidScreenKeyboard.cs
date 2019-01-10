@@ -2,7 +2,7 @@ using System;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
-    public class AndroidScreenKeyboard : ScreenKeyboard
+    internal class AndroidScreenKeyboard : ScreenKeyboard
     {
         class ScreenKeyboardCallbacks : AndroidJavaProxy
         {
@@ -13,9 +13,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 m_Parent = parent;
             }
 
-            void OnTextChanged(string text)
+            void OnTextChanged(string text, int selectionStart, int selectionLength)
             {
-                m_Parent.ChangeInputFieldText(text);
+                m_Parent.ChangeInputFieldText(new InputFieldEventArgs() { text = text, selection = new RangeInt(selectionStart, selectionLength) });
             }
 
             void OnStatusChanged(int status)

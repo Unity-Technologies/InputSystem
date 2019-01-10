@@ -1,6 +1,6 @@
 #pragma once
 
-typedef void (*OnTextChangedCallback) (const char* text);
+typedef void (*OnTextChangedCallback) (const char* text, int selectionStart, int selectionLength);
 typedef void (*OnStatusChangedCallback) (int status);
 
 struct iOSScreenKeyboardCallbacks

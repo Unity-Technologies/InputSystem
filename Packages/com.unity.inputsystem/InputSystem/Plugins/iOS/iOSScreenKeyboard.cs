@@ -4,9 +4,9 @@ using AOT;
 
 namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
-    public class iOSScreenKeyboard : ScreenKeyboard
+    internal class iOSScreenKeyboard : ScreenKeyboard
     {
-        internal delegate void OnTextChanged(string text);
+        internal delegate void OnTextChanged(string text, int selectionStart, int selectionLength);
 
         internal delegate void OnStatusChanged(ScreenKeyboardStatus status);
         
@@ -24,12 +24,12 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS
         private static extern Rect _iOSScreenKeyboardOccludingArea();
 
         [MonoPInvokeCallback(typeof(OnTextChanged))]
-        private static void OnTextChangedCallback(string text)
+        private static void OnTextChangedCallback(string text, int selectionStart, int selectionLength)
         {
             var screenKeyboard = (iOSScreenKeyboard) ScreenKeyboard.GetInstance();
             if (screenKeyboard == null)
                 throw new Exception("OnTextChangedCallback: Failed to get iOSScreenKeyboard instance");
-            screenKeyboard.ChangeInputFieldText(text);
+            screenKeyboard.ChangeInputFieldText(new InputFieldEventArgs() { text = text, selection = new RangeInt(selectionStart, selectionLength) });
         }
 
         [MonoPInvokeCallback(typeof(OnStatusChanged))]
