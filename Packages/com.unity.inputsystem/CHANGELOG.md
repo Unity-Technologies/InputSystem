@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixes
 
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
+- Control picker in UI having no devices if list of supported devices is empty but not null
 
 ## [0.1.2-preview] - 2018-12-19
 

@@ -116,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var deviceItem = new DeviceTreeViewItem(layout);
 
             // If we have a device filter, see if we should ignore the device.
-            if (m_DeviceFilter != null)
+            if (m_DeviceFilter != null && m_DeviceFilter.Length > 0)
             {
                 var matchesAnyInDeviceFilter = false;
                 foreach (var entry in m_DeviceFilter)
