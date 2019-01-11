@@ -11,12 +11,6 @@ using UnityEngine.Experimental.Input.Plugins.Android;
 using UnityEngine.Experimental.Input.Plugins.WSA;
 #endif
 
-
-public enum AutomaticOperation
-{
-    FakeCharacterLimit
-}
-
 public class ScreenKeyboardTest : MonoBehaviour
 {
     public Dropdown m_KeyboardTypeDropDown;
@@ -32,8 +26,6 @@ public class ScreenKeyboardTest : MonoBehaviour
     public InputField m_OldOccludingAreaField;
     public InputField m_OldKeyboardStatus;
     public InputField m_OldKeyboardInputField;
-
-   // public Dropdown m_KeyboardTypeDropDown;
 
     public GameObject m_Info;
     public GameObject m_Log;
@@ -66,10 +58,10 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     }
 
-    private void InputFieldTextChanged(InputFieldEventArgs args)
+    private void InputFieldTextChanged(string text)
     {
-        m_LogText.text += string.Format("Input: {0} ({1}, {2})", args.text, args.selection.start, args.selection.length) + Environment.NewLine;
-        m_InputField.text = args.text;
+        m_LogText.text += "Input: " + text + Environment.NewLine;
+        m_InputField.text = text;
     }
 
     private void StatusChangedCallback(ScreenKeyboardStatus status)

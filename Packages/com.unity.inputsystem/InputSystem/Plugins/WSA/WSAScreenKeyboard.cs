@@ -8,7 +8,7 @@ using Windows.UI.Text.Core;
 
 namespace UnityEngine.Experimental.Input.Plugins.WSA
 {
-    internal class WSAScreenKeyboard : ScreenKeyboard
+    public class WSAScreenKeyboard : ScreenKeyboard
     {
 
 #if ENABLE_WINMD_SUPPORT

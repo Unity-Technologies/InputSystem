@@ -41,13 +41,9 @@ namespace UnityEngine.Experimental.Input
         public bool alert;
 
 
-        ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from inputFieldTextChanged callback
+        ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
-    public class InputFieldEventArgs
-    {
-        public string text { set; get; }
-        public RangeInt selection { set; get; }
-    }
+
 
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
     public class ScreenKeyboard : Keyboard
@@ -56,7 +52,7 @@ namespace UnityEngine.Experimental.Input
 
         internal ScreenKeyboardStatus m_Status;
         internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
-        internal InlinedArray<Action<InputFieldEventArgs>> m_InputFieldTextListeners;
+        internal InlinedArray<Action<string>> m_InputFieldTextListeners;
 
         public static ScreenKeyboard GetInstance()
         {
@@ -96,13 +92,13 @@ namespace UnityEngine.Experimental.Input
             remove { m_StatusChangedListeners.Remove(value); }
         }
 
-        protected void ChangeInputFieldText(InputFieldEventArgs inputFieldEventAgs)
+        protected void ChangeInputFieldText(string text)
         {
             foreach (var inputFieldTextListener in m_InputFieldTextListeners)
-                inputFieldTextListener(inputFieldEventAgs);
+                inputFieldTextListener(text);
         }
 
-        public event Action<InputFieldEventArgs> inputFieldTextChanged
+        public event Action<string> inputFieldTextChanged
         {
             add { m_InputFieldTextListeners.Append(value); }
             remove { m_InputFieldTextListeners.Remove(value); }

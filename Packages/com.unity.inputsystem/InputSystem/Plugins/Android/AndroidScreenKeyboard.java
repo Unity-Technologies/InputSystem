@@ -36,7 +36,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 {
     interface IScreenKeyboardCallbacks
     {
-        void OnTextChanged(String text, int selectionStart, int selectionLength);
+        void OnTextChanged(String text);
         void OnStatusChanged(int status);
     }
 
