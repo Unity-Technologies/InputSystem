@@ -21,6 +21,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.View.MeasureSpec;
+import android.view.inputmethod.InputMethodSubtype;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -29,6 +30,7 @@ import android.util.*;
 import com.unity3d.player.*;
 
 import java.text.MessageFormat;
+import java.util.Locale;
 
 public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher, OnDismissListener
 {
@@ -149,19 +151,28 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void afterTextChanged (Editable s)
     {
-        Log.v("Unity", "afterTextChanged");
-       // mUnityPlayer.reportSoftInputStr (s.toString (), kbCommand.dontHide, false);
-        m_Callbacks.OnTextChanged(s.toString());
+
+        InputMethodManager imm = (InputMethodManager)UnityPlayer.currentActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodSubtype ims = imm.getCurrentInputMethodSubtype();
+        String localeString = ims.getLocale();
+        Locale locale = new Locale(localeString);
+        String currentLanguage = locale.getDisplayLanguage();
+
+        EditText txtInput = (EditText) findViewById (id.txtInput);
+        Log.v("Unity", MessageFormat.format("afterTextChanged: {0} Start {1} End {2} Lang {3}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd(), currentLanguage));
+
+		// TODO: For IME SelectionEnd and Start doesn't return what you would expect
+        m_Callbacks.OnTextChanged(s.toString(), txtInput.getSelectionStart(), txtInput.getSelectionEnd() - txtInput.getSelectionStart());
     }
 
     public void beforeTextChanged (CharSequence s, int start, int count, int after)
     {
-        Log.v("Unity", "beforeTextChanged");
+        Log.v("Unity", MessageFormat.format("beforeTextChanged {0} start {1}, count {2}, after {3}", s.toString(), start, count, after));
     }
 
     public void onTextChanged (CharSequence s, int start, int before, int count)
     {
-        Log.v("Unity", MessageFormat.format("onTextChanged {0}, {1}, {2}", start, before, count));
+        Log.v("Unity", MessageFormat.format("onTextChanged {0} start {1}, before {2}, count {3}", s.toString(), start, before, count));
     }
 
     private int convertInputType (ScreenKeyboardType keyboardType, boolean correction, boolean multiline, boolean secure)
@@ -247,6 +258,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                 @Override
                 protected void onSelectionChanged(int start, int end)
                 {
+                    Log.v("Unity", String.format("Selection %d %d", start, end));
                     //TODO
                    // mUnityPlayer.reportSoftInputSelection (start, end - start);
                 }
