@@ -45,6 +45,10 @@ namespace UnityEngine.Experimental.Input
     }
 
 
+    public class InputFieldEventArgs
+    {
+        public string text { set; get; }
+    }
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
     public class ScreenKeyboard : Keyboard
     {
@@ -52,7 +56,7 @@ namespace UnityEngine.Experimental.Input
 
         internal ScreenKeyboardStatus m_Status;
         internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
-        internal InlinedArray<Action<string>> m_InputFieldTextListeners;
+        internal InlinedArray<Action<InputFieldEventArgs>> m_InputFieldTextListeners;
 
         public static ScreenKeyboard GetInstance()
         {
@@ -92,13 +96,13 @@ namespace UnityEngine.Experimental.Input
             remove { m_StatusChangedListeners.Remove(value); }
         }
 
-        protected void ChangeInputFieldText(string text)
+        protected void ChangeInputField(InputFieldEventArgs text)
         {
             foreach (var inputFieldTextListener in m_InputFieldTextListeners)
                 inputFieldTextListener(text);
         }
 
-        public event Action<string> inputFieldTextChanged
+        public event Action<InputFieldEventArgs> inputFieldTextChanged
         {
             add { m_InputFieldTextListeners.Append(value); }
             remove { m_InputFieldTextListeners.Remove(value); }

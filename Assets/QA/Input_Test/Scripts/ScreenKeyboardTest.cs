@@ -74,27 +74,27 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     }
 
-    private void InputFieldTextChanged(string text)
+    private void InputFieldTextChanged(InputFieldEventArgs args)
     {
-        var oldText = text;
+        var oldText = args.text;
         AutomaticOperation op = (AutomaticOperation) Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch(op)
         {
             case AutomaticOperation.CharacterLimit:
-                if (text.Length > 5)
-                    text = text.Substring(0, 5);
+                if (args.text.Length > 5)
+                    args.text = args.text.Substring(0, 5);
                 break;
             case AutomaticOperation.LetterReplacement:
-                text = text.Replace("a", "c");
+                args.text = args.text.Replace("a", "c");
                 break;
         }
 
-        if (text != oldText)
+        if (args.text != oldText)
         {
-            m_ScreenKeyboard.inputFieldText = text;
+            m_ScreenKeyboard.inputFieldText = args.text;
         }
-        m_LogText.text += "Input: " + text + Environment.NewLine;
-        m_InputField.text = text;
+        m_LogText.text += "Input: " + args.text + Environment.NewLine;
+        m_InputField.text = args.text;
     }
 
     private void StatusChangedCallback(ScreenKeyboardStatus status)

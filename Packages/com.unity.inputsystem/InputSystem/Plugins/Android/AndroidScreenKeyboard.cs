@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
             void OnTextChanged(string text)
             {
-                m_Parent.ChangeInputFieldText(text);
+                m_Parent.ChangeInputField(new InputFieldEventArgs() { text = text });
             }
 
             void OnStatusChanged(int status)
