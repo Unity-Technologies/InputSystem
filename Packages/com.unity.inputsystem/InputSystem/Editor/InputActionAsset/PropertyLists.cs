@@ -115,10 +115,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             var name = (string)data;
 
-            if (m_ListItems.Count == 1 && m_ListItems[0] == "")
-                m_ListItems.Clear();
-
-            m_ListItems.Add(name);
+            m_ListItems.Add(ObjectNames.NicifyVariableName(name));
             ArrayHelpers.Append(ref m_ParametersForEachListItem,
                 new InputControlLayout.NameAndParameters {name = name});
             m_Apply();
@@ -132,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
             m_ParametersForEachListItem[selected] = new InputControlLayout.NameAndParameters
             {
-                name = m_ListItems[selected],
+                name = m_ParametersForEachListItem[selected].name,
                 parameters = m_EditableParametersForSelectedItem.GetParameters(),
             };
 
@@ -148,7 +145,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 return;
             }
 
-            var typeName = m_ListItems[index];
+            var typeName = m_ParametersForEachListItem[index].name;
             var rowType =  m_ListOptions.LookupTypeRegistration(typeName);
             Debug.Assert(rowType != null);
 
