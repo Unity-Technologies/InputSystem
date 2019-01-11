@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed .NET 3.5 support code
 - `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls
 - Action editor now gets docked by default
+- Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite
+    - The old names can still be used and existing data will load as expected
+    - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged
 
 ### Added
 

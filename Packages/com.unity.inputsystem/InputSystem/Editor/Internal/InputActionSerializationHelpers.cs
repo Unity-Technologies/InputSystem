@@ -317,7 +317,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public static void AddCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type, string group = "")
         {
             var newProperty = AddBinding(actionProperty, actionMapProperty);
-            newProperty.FindPropertyRelative("m_Name").stringValue = compositeName;
+            newProperty.FindPropertyRelative("m_Name").stringValue = ObjectNames.NicifyVariableName(compositeName);
             newProperty.FindPropertyRelative("m_Path").stringValue = compositeName;
             newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.Composite;
 

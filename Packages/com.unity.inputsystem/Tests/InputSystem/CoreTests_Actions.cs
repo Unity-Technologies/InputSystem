@@ -12,6 +12,7 @@ using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
@@ -1458,6 +1459,18 @@ partial class CoreTests
         Assert.That(TestInteraction.s_GotInvoked, Is.True);
     }
 
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Actions")]
+    public void Actions_RegisteringExistingInteractionUnderNewName_CreatesAlias()
+    {
+        InputSystem.RegisterInteraction<PressInteraction>("TestTest");
+
+        Assert.That(InputSystem.s_Manager.interactions.aliases.Contains(new InternedString("TestTest")));
+    }
+
+    #endif // UNITY_EDITOR
+
     [Test]
     [Category("Actions")]
     public void Actions_CanTriggerActionFromPartialStateUpdate()
@@ -2663,6 +2676,18 @@ partial class CoreTests
 
         Assert.That(wasPerformed, Is.False);
     }
+
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Actions")]
+    public void Actions_RegisteringExistingCompositeUnderNewName_CreatesAlias()
+    {
+        InputSystem.RegisterBindingComposite<Vector2Composite>("TestTest");
+
+        Assert.That(InputSystem.s_Manager.composites.aliases.Contains(new InternedString("TestTest")));
+    }
+
+    #endif // UNITY_EDITOR
 
     #pragma warning disable CS0649
     private class CompositeWithParameters : InputBindingComposite<float>

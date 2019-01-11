@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Composites
     /// and right horizontal button are pressed, the resulting horizontal movement value will
     /// be zero.
     /// </remarks>
-    public class DpadComposite : InputBindingComposite<Vector2>
+    public class Vector2Composite : InputBindingComposite<Vector2>
     {
         [InputControl(layout = "Button")] public int up;
         [InputControl(layout = "Button")] public int down;

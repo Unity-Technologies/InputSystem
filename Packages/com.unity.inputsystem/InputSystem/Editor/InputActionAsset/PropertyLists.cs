@@ -58,8 +58,12 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 onAddDropdownCallback = (rect, list) =>
                 {
                     var menu = new GenericMenu();
-                    foreach (var name in m_ListOptions.names)
-                        menu.AddItem(new GUIContent(name), false, OnAddElement, name);
+                    // Add only original names to the menu and not aliases.
+                    foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)))
+                    {
+                        var niceName = ObjectNames.NicifyVariableName(name);
+                        menu.AddItem(new GUIContent(niceName), false, OnAddElement, name.ToString());
+                    }
                     menu.ShowAsContext();
                 },
                 onRemoveCallback = list =>
