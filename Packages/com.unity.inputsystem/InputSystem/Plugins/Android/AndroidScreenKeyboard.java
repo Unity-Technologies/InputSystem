@@ -162,7 +162,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         Log.v("Unity", MessageFormat.format("afterTextChanged: {0} Start {1} End {2} Lang {3}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd(), currentLanguage));
 
 		// TODO: For IME SelectionEnd and Start doesn't return what you would expect
-        m_Callbacks.OnTextChanged(s.toString(), txtInput.getSelectionStart(), txtInput.getSelectionEnd() - txtInput.getSelectionStart());
+        m_Callbacks.OnTextChanged(s.toString());
     }
 
     public void beforeTextChanged (CharSequence s, int start, int count, int after)
@@ -319,30 +319,10 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         EditText txtInput = (EditText) findViewById (id.txtInput);
         if (txtInput != null)
         {
-            txtInput.setText(text);
+            // Don't call txtInput.setText directly, because it causes issues like "endBatchEdit on inactive InputConnection"
+            txtInput.getText().clear();
+            txtInput.append(text);
             txtInput.setSelection(text.length());
         }
     }
-
-    /*
-    public void setCharacterLimit(int characterLimit)
-    {
-        EditText txtInput = (EditText) findViewById(id.txtInput);
-        if(txtInput != null)
-        {
-            if (characterLimit > 0)
-                txtInput.setFilters(new InputFilter[] { new InputFilter.LengthFilter(characterLimit) });
-            else
-                txtInput.setFilters(new InputFilter[] { });
-
-        }
-    }
-
-    public void setSelection(int start, int length) {
-        EditText txtInput = (EditText) findViewById(id.txtInput);
-        if (txtInput != null && txtInput.getText().length() >= start + length) {
-            txtInput.setSelection(start, start + length);
-        }
-    }
-    */
 }

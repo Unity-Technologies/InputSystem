@@ -11,6 +11,13 @@ using UnityEngine.Experimental.Input.Plugins.Android;
 using UnityEngine.Experimental.Input.Plugins.WSA;
 #endif
 
+public enum AutomaticOperation
+{
+    None,
+    CharacterLimit,
+    LetterReplacement
+}
+
 public class ScreenKeyboardTest : MonoBehaviour
 {
     public Dropdown m_KeyboardTypeDropDown;
@@ -27,6 +34,8 @@ public class ScreenKeyboardTest : MonoBehaviour
     public InputField m_OldKeyboardStatus;
     public InputField m_OldKeyboardInputField;
 
+    public Dropdown m_AutomaticOperation;
+
     public GameObject m_Info;
     public GameObject m_Log;
 
@@ -41,6 +50,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     {
         m_ScreenKeyboard = ScreenKeyboard.GetInstance();
         m_KeyboardTypeDropDown.ClearOptions();
+        m_AutomaticOperation.ClearOptions();
 
         m_ScreenKeyboard.statusChanged += StatusChangedCallback;
         m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextChanged;
@@ -53,6 +63,12 @@ public class ScreenKeyboardTest : MonoBehaviour
         }
         m_KeyboardTypeDropDown.RefreshShownValue();
 
+        foreach (var t in Enum.GetValues(typeof(AutomaticOperation)))
+        {
+            m_AutomaticOperation.options.Add(new Dropdown.OptionData(t.ToString()));
+        }
+        m_AutomaticOperation.RefreshShownValue();
+
         m_LogText.text = "";
 
 
@@ -60,6 +76,23 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     private void InputFieldTextChanged(string text)
     {
+        var oldText = text;
+        AutomaticOperation op = (AutomaticOperation) Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
+        switch(op)
+        {
+            case AutomaticOperation.CharacterLimit:
+                if (text.Length > 5)
+                    text = text.Substring(0, 5);
+                break;
+            case AutomaticOperation.LetterReplacement:
+                text = text.Replace("a", "c");
+                break;
+        }
+
+        if (text != oldText)
+        {
+            m_ScreenKeyboard.inputFieldText = text;
+        }
         m_LogText.text += "Input: " + text + Environment.NewLine;
         m_InputField.text = text;
     }
