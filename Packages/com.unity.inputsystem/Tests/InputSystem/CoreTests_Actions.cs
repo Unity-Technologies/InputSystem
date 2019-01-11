@@ -1273,6 +1273,35 @@ partial class CoreTests
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
+    [Test]
+    [Category("Actions_CanAddScaleProcessor")]
+    public void Actions_CanAddScaleProcessor()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/leftStick").WithProcessor("scaleVector2(x=2,y=3)");
+        action.AddBinding("<Gamepad>/leftTrigger").WithProcessor("scale(factor=2)");
+        action.Enable();
+
+        var receivedValues = new List<object>();
+        action.performed +=
+            ctx =>
+        {
+            if (ctx.control is ButtonControl)
+                receivedValues.Add(ctx.ReadValue<float>());
+            else
+                receivedValues.Add(ctx.ReadValue<Vector2>());
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f), leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        Assert.That(receivedValues, Has.Count.EqualTo(2));
+        Assert.That(receivedValues, Has.Exactly(1).EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick) * new Vector2(2, 3)));
+        Assert.That(receivedValues, Has.Exactly(1).EqualTo(0.5f * 2));
+    }
+
     ////FIXME: the sensitivity processor is wonky and will need improvement
 
     [Test]

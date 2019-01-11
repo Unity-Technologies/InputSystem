@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
+- New processors:
+    * `ScaleProcessor`
+    * `ScaleVector2Processor`
+    * `ScaleVector3Processor`
 
 ### Fixes
 
