@@ -14,57 +14,39 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// If the binding is not associated with an action, this is <c>null</c>.
         /// </remarks>
-        public InputAction action
-        {
-            get { return m_State.GetActionOrNull(ref m_TriggerState); }
-        }
+        public InputAction action => m_State.GetActionOrNull(ref m_TriggerState);
 
         /// <summary>
         /// The bound control that changed its state to trigger the binding associated
         /// with the interaction.
         /// </summary>
-        public InputControl control
-        {
-            get { return m_State.GetControl(ref m_TriggerState); }
-        }
+        public InputControl control => m_State.GetControl(ref m_TriggerState);
 
-        public InputActionPhase phase
-        {
-            get { return m_TriggerState.phase; }
-        }
+        public InputActionPhase phase => m_TriggerState.phase;
 
-        public double time
-        {
-            get { return m_TriggerState.time; }
-        }
+        public double time => m_TriggerState.time;
 
-        public double startTime
-        {
-            get { return m_TriggerState.startTime; }
-        }
+        public double startTime => m_TriggerState.startTime;
 
         ////REVIEW: how should this be handled for timer expired calls
         public bool controlHasDefaultValue
         {
             get
             {
-                unsafe
+                if ((m_Flags & Flags.ControlHasDefaultValueInitialized) != Flags.ControlHasDefaultValueInitialized)
                 {
-                    if ((m_Flags & Flags.ControlHasDefaultValueInitialized) != Flags.ControlHasDefaultValueInitialized)
-                    {
-                        var triggerControl = control;
-                        if (triggerControl.CheckStateIsAtDefault())
-                            m_Flags |= Flags.ControlHasDefaultValue;
-                        m_Flags |= Flags.ControlHasDefaultValueInitialized;
-                    }
-                    return (m_Flags & Flags.ControlHasDefaultValue) == Flags.ControlHasDefaultValue;
+                    var triggerControl = control;
+                    if (triggerControl.CheckStateIsAtDefault())
+                        m_Flags |= Flags.ControlHasDefaultValue;
+                    m_Flags |= Flags.ControlHasDefaultValueInitialized;
                 }
+                return (m_Flags & Flags.ControlHasDefaultValue) == Flags.ControlHasDefaultValue;
             }
         }
 
         public bool timerHasExpired
         {
-            get { return (m_Flags & Flags.TimerHasExpired) == Flags.TimerHasExpired; }
+            get => (m_Flags & Flags.TimerHasExpired) == Flags.TimerHasExpired;
             internal set
             {
                 if (value)
@@ -74,15 +56,9 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public bool isWaiting
-        {
-            get { return phase == InputActionPhase.Waiting; }
-        }
+        public bool isWaiting => phase == InputActionPhase.Waiting;
 
-        public bool isStarted
-        {
-            get { return phase == InputActionPhase.Started; }
-        }
+        public bool isStarted => phase == InputActionPhase.Started;
 
         public void Started()
         {
@@ -120,25 +96,13 @@ namespace UnityEngine.Experimental.Input
         internal Flags m_Flags;
         internal InputActionMapState.TriggerState m_TriggerState;
 
-        internal int mapIndex
-        {
-            get { return m_TriggerState.mapIndex; }
-        }
+        internal int mapIndex => m_TriggerState.mapIndex;
 
-        internal int controlIndex
-        {
-            get { return m_TriggerState.controlIndex; }
-        }
+        internal int controlIndex => m_TriggerState.controlIndex;
 
-        internal int bindingIndex
-        {
-            get { return m_TriggerState.bindingIndex; }
-        }
+        internal int bindingIndex => m_TriggerState.bindingIndex;
 
-        internal int interactionIndex
-        {
-            get { return m_TriggerState.interactionIndex; }
-        }
+        internal int interactionIndex => m_TriggerState.interactionIndex;
 
 
         [Flags]

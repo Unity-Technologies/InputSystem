@@ -9,37 +9,45 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
-    ////TODO: rename to InteractionsListView
-    internal class InteractionsReorderableReorderableList : PropertiesReorderableList
+    internal class InteractionsListView : PropertiesReorderableList
     {
-        public InteractionsReorderableReorderableList(SerializedProperty property, Action applyAction)
-            : base(property, applyAction)
+        public InteractionsListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
+            : base(property, applyAction, expectedControlLayout)
         {
         }
 
         protected override TypeTable GetOptions()
         {
-            return InputSystem.s_Manager.interactions;
+            return InputInteraction.s_Interactions;
+        }
+
+        protected override Type GetValueType(Type type)
+        {
+            return InputInteraction.GetValueType(type);
         }
     }
 
-    ////TODO: rename to ProcessorsListView
-    internal class ProcessorsReorderableReorderableList : PropertiesReorderableList
+    internal class ProcessorsListView : PropertiesReorderableList
     {
-        public ProcessorsReorderableReorderableList(SerializedProperty property, Action applyAction)
-            : base(property, applyAction)
+        public ProcessorsListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
+            : base(property, applyAction, expectedControlLayout)
         {
         }
 
         protected override TypeTable GetOptions()
         {
-            return InputSystem.s_Manager.processors;
+            return InputControlProcessor.s_Processors;
+        }
+
+        protected override Type GetValueType(Type type)
+        {
+            return InputControlProcessor.GetValueType(type);
         }
     }
 
     internal abstract class PropertiesReorderableList
     {
-        protected PropertiesReorderableList(SerializedProperty property, Action applyAction)
+        protected PropertiesReorderableList(SerializedProperty property, Action applyAction, string expectedControlLayout)
         {
             m_Property = property;
             m_Apply = applyAction;
@@ -48,19 +56,33 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_EditableParametersForSelectedItem = new ParameterListView {onChange = OnParametersChanged};
             m_ParametersForEachListItem = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue)
                 ?? new InputControlLayout.NameAndParameters[0];
+            m_ExpectedControlLayout = expectedControlLayout;
 
             foreach (var nameAndParams in m_ParametersForEachListItem)
-                m_ListItems.Add(nameAndParams.name);
+                m_ListItems.Add(ObjectNames.NicifyVariableName(nameAndParams.name));
 
             m_ListView = new ReorderableList(m_ListItems, typeof(string))
             {
                 headerHeight = 3,
                 onAddDropdownCallback = (rect, list) =>
                 {
-                    var menu = new GenericMenu();
+                    Type expectedValueType = null;
+                    if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
+                        expectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
+
                     // Add only original names to the menu and not aliases.
-                    foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)))
+                    var menu = new GenericMenu();
+                    foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
                     {
+                        // Skip if not compatible with value type.
+                        if (expectedValueType != null)
+                        {
+                            var type = m_ListOptions.LookupTypeRegistration(name);
+                            var valueType = GetValueType(type);
+                            if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
+                                continue;
+                        }
+
                         var niceName = ObjectNames.NicifyVariableName(name);
                         menu.AddItem(new GUIContent(niceName), false, OnAddElement, name.ToString());
                     }
@@ -87,6 +109,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         }
 
         protected abstract TypeTable GetOptions();
+        protected abstract Type GetValueType(Type type);
 
         private void OnAddElement(object data)
         {
@@ -156,6 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         private ReorderableList m_ListView;
         private SerializedProperty m_Property;
         private TypeTable m_ListOptions;
+        private string m_ExpectedControlLayout;
 
         private InputControlLayout.NameAndParameters[] m_ParametersForEachListItem;
         private ParameterListView m_EditableParametersForSelectedItem;

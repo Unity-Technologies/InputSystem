@@ -54,11 +54,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private int m_Index;
 
         public virtual bool isDraggable => false;
-
         public SerializedProperty elementProperty => m_ElementProperty;
-
         public int index => m_Index;
-
         public virtual string expectedControlLayout => string.Empty;
 
         protected abstract GUIStyle colorTagStyle
@@ -130,7 +127,6 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override GUIStyle colorTagStyle => Styles.yellowRect;
 
         public SerializedProperty bindingsProperty => elementProperty.FindPropertyRelative("m_Bindings");
-
         public SerializedProperty actionsProperty => elementProperty.FindPropertyRelative("m_Actions");
 
         public void AddAction()
@@ -173,9 +169,9 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_ActionMapProperty;
         private string m_ExpectedControlLayout;
 
-        public int bindingsStartIndex { get; private set; }
-        public int bindingsCount { get; private set; }
-        public string actionName { get; private set; }
+        public int bindingsStartIndex { get; }
+        public int bindingsCount { get; }
+        public string actionName { get; }
 
         public override string expectedControlLayout => m_ExpectedControlLayout;
 

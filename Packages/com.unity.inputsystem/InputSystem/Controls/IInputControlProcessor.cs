@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -81,5 +82,13 @@ namespace UnityEngine.Experimental.Input
     internal static class InputControlProcessor
     {
         public static TypeTable s_Processors;
+
+        public static Type GetValueType(Type processorType)
+        {
+            if (processorType == null)
+                throw new ArgumentNullException(nameof(processorType));
+
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(processorType, typeof(IInputControlProcessor<>), 0);
+        }
     }
 }

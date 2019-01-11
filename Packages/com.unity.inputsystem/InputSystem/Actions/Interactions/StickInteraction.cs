@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Interactions
     /// Starts when stick leaves deadzone, performs while stick moves outside
     /// of deadzone, cancels when stick goes back into deadzone.
     /// </summary>
-    public class StickInteraction : IInputInteraction
+    public class StickInteraction : IInputInteraction<Vector2>
     {
         public void Process(ref InputInteractionContext context)
         {

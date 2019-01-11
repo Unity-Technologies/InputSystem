@@ -10,9 +10,11 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
@@ -601,6 +603,30 @@ partial class CoreTests
     public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
         Assert.That(runtime.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfLayout()
+    {
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Axis"), Is.SameAs(typeof(float)));
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Button"), Is.SameAs(typeof(float)));
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Stick"), Is.SameAs(typeof(Vector2)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfProcessor()
+    {
+        Assert.That(InputControlProcessor.GetValueType(typeof(StickDeadzoneProcessor)), Is.SameAs(typeof(Vector2)));
+        Assert.That(InputControlProcessor.GetValueType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfInteraction()
+    {
+        Assert.That(InputInteraction.GetValueType(typeof(StickInteraction)), Is.SameAs(typeof(Vector2)));
     }
 
     [Test]

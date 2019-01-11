@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add way for interactions to advertise the layouts they work with
@@ -27,8 +28,30 @@ namespace UnityEngine.Experimental.Input
         void Reset();
     }
 
+    /// <summary>
+    /// Identical to <see cref="IInputInteraction"/> except that it allows an interaction to explicitly
+    /// advertise the value it expects.
+    /// </summary>
+    /// <typeparam name="TValue">Type of values expected by the interaction</typeparam>
+    /// <remarks>
+    /// Advertising the value type will an interaction type to be filtered out in the UI if the value type
+    /// it has is not compatible with the value type expected by the action.
+    /// </remarks>
+    public interface IInputInteraction<TValue> : IInputInteraction
+        where TValue : struct
+    {
+    }
+
     internal static class InputInteraction
     {
         public static TypeTable s_Interactions;
+
+        public static Type GetValueType(Type interactionType)
+        {
+            if (interactionType == null)
+                throw new ArgumentNullException(nameof(interactionType));
+
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(interactionType, typeof(IInputInteraction<>), 0);
+        }
     }
 }

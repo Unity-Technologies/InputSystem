@@ -5,10 +5,7 @@ namespace UnityEngine.Experimental.Input.Interactions
     public class HoldInteraction : IInputInteraction
     {
         public float duration;
-        public float durationOrDefault
-        {
-            get { return duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime; }
-        }
+        public float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime;
 
         // If true, the action will be performed repeatedly every 'duration'
         // intervals for as long as a control is pressed.

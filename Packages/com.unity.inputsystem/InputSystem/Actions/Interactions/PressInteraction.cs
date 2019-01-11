@@ -1,11 +1,13 @@
 ////TODO: have ability to also observe release (separate from ReleaseInteraction)
 
+////TODO: have ability to repeatedly perform the action while it is pressed (set interval via parameter)
+
 namespace UnityEngine.Experimental.Input.Interactions
 {
     // A interaction for button-like behavior. Will perform action once
     // when control is pressed and then not perform again until control
     // is released again.
-    public class PressInteraction : IInputInteraction
+    public class PressInteraction : IInputInteraction<float>
     {
         public float pressPoint;
 
