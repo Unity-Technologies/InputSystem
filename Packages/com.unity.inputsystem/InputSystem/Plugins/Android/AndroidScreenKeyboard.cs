@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || UNITY_ANDROID
 using System;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
@@ -40,7 +41,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 showParams.autocorrection,
                 showParams.multiline,
                 showParams.secure,
-                showParams.alert);
+                showParams.alert,
+                showParams.inputFieldHidden);
         }
 
         public override void Hide()
@@ -75,3 +77,4 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 }
+#endif

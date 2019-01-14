@@ -94,6 +94,11 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         // Don't dim the view behind the dialog
         window.clearFlags (WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+
+        WindowManager.LayoutParams param = window.getAttributes();
+        param.gravity = Gravity.AXIS_CLIP;
+        param.x = 2000;
+        window.setAttributes(param);
     }
 
     public void show(
@@ -104,32 +109,21 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             boolean correction,
             boolean multiline,
             boolean secure,
-            boolean alert)
+            boolean alert,
+			boolean inputFieldHidden)
     {
         m_Callbacks = callbacks;
 
         setContentView (createSoftInputView ());
-
         EditText txtInput = (EditText) findViewById (id.txtInput);
-        txtInput.setImeOptions (EditorInfo.IME_ACTION_DONE);
+        txtInput.setImeOptions (EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_FULLSCREEN);
         txtInput.setText (initialText);
         txtInput.setHint (placeholderText);
         txtInput.setHintTextColor (0x61000000);
         txtInput.setInputType (convertInputType (ScreenKeyboardType.values()[keyboardType], correction, multiline, secure));
-        txtInput.setImeOptions(EditorInfo.IME_FLAG_NO_FULLSCREEN);
-
-        // if ( characterLimit > 0 )
-        //    txtInput.setFilters (new InputFilter[] { new InputFilter.LengthFilter(characterLimit) });
-
         txtInput.addTextChangedListener (this);
         txtInput.setSelection(txtInput.getText().length());
         txtInput.setClickable (true);
-
-        Button okButton = (Button) findViewById (id.okButton);
-
-        // set up click events
-        okButton.setOnClickListener (this);
-
         txtInput.setOnFocusChangeListener (new View.OnFocusChangeListener ()
         {
             @Override
@@ -143,6 +137,9 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             }
         });
 
+        Button okButton = (Button) findViewById (id.okButton);
+        okButton.setOnClickListener (this);
+
         setOnDismissListener(this);
 
         show();
@@ -151,7 +148,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void afterTextChanged (Editable s)
     {
-
+        // TODO remove this
         InputMethodManager imm = (InputMethodManager)UnityPlayer.currentActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
         InputMethodSubtype ims = imm.getCurrentInputMethodSubtype();
         String localeString = ims.getLocale();

@@ -40,7 +40,12 @@ namespace UnityEngine.Experimental.Input
         ////TODO: this one is iPhone specific?
         public bool alert;
 
-
+        /// <summary>
+        /// Show keyboard without input field?
+        /// Only supported on iOS and Android.
+        /// Note: TODO, review this If input field is hidden, you won't receive inputFieldTextChanged callback, instead you'll be receiving onTextInput
+        /// </summary>
+        public bool inputFieldHidden;
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
