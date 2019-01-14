@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+using System;
 using System.Runtime.InteropServices;
 using AOT;
 
@@ -73,5 +74,5 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS
             get { return _iOSScreenKeyboardOccludingArea(); }
         }
     }
-
 }
+#endif
