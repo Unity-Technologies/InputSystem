@@ -25,6 +25,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     public Toggle m_KeyboardMultiline;
     public Toggle m_KeyboardSecure;
     public Toggle m_KeyboardAlert;
+    public Toggle m_KeyboardInputFieldHidden;
     public InputField m_InputField;
     public InputField m_OccludingAreaField;
     public InputField m_KeyboardStatus;
@@ -131,6 +132,7 @@ public class ScreenKeyboardTest : MonoBehaviour
             multiline = m_KeyboardMultiline.isOn,
             secure = m_KeyboardSecure.isOn,
             alert = m_KeyboardAlert.isOn,
+            inputFieldHidden = m_KeyboardInputFieldHidden.isOn,
             type = ToScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text)
 
         };
@@ -145,6 +147,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     public void ShowOldKeyboard()
     {
+        TouchScreenKeyboard.hideInput = m_KeyboardInputFieldHidden.isOn;
         m_OldScreenKeyboard = TouchScreenKeyboard.Open(m_InputField.text,
             ToTouchScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text),
             m_KeyboardAutocorrection.isOn,
@@ -169,5 +172,10 @@ public class ScreenKeyboardTest : MonoBehaviour
     public void Hide()
     {
         m_ScreenKeyboard.Hide();
+    }
+    
+    public void HideMobileInputField()
+    {
+        m_InputField.shouldHideMobileInput = m_KeyboardInputFieldHidden.isOn;
     }
 }
