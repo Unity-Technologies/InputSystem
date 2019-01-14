@@ -183,12 +183,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(HTC V2-XD/XE)"));
 
-            InputSystem.RegisterLayout<KnucklesController>(
-                matches: new InputDeviceMatcher()
-                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithManufacturer("Valve")
-                    .WithProduct(@"^(OpenVR Controller\(Knuckles)"));
-
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
         }
     }
