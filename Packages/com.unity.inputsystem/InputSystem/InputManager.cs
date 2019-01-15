@@ -2278,7 +2278,9 @@ namespace UnityEngine.Experimental.Input
             //       in the buffer and having older timestamps will get rejected.
 
             var timesliceTime = m_Runtime.currentTime;
-            #if UNITY_2019_1_OR_NEWER
+
+#if false
+//#if UNITY_2019_1_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
 
@@ -2294,7 +2296,8 @@ namespace UnityEngine.Experimental.Input
                     timesliceTime = InputUpdate.s_LastFixedUpdateTime + m_Runtime.fixedUpdateIntervalInSeconds;
                 InputUpdate.s_LastFixedUpdateTime = timesliceTime;
             }
-#endif
+//#endif //UNITY_2019_1_OR_NEWER
+#endif // false
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
@@ -2375,7 +2378,10 @@ namespace UnityEngine.Experimental.Input
                 if (remainingEventCount == 0)
                     break;
 
-                #if UNITY_2019_1_OR_NEWER
+
+                /// FIXME  need to disable for now , causing slowdowns with input events
+                #if false
+                //#if UNITY_2019_1_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventReadPtr->internalTime >= timesliceTime)
                 {
@@ -2383,7 +2389,8 @@ namespace UnityEngine.Experimental.Input
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     continue;
                 }
-                #endif
+                //#endif //UNITY_2019_1_OR_NEWER
+                #endif // false
 
                 // Give listeners a shot at the event.
                 var listenerCount = m_EventListeners.length;
