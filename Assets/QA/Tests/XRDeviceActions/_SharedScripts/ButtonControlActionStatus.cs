@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.UI;
-
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.UI;
 
 public class ButtonControlActionStatus : MonoBehaviour
 {
@@ -28,7 +28,13 @@ public class ButtonControlActionStatus : MonoBehaviour
         ReadOnlyArray<InputControl> controls = buttonTouchAction.controls;
         for (int i = 0; i < controls.Count; i++)
         {
-            m_isTouched = (float)(controls[i].ReadValueAsObject()) > 0.5f;
+            ButtonControl control = controls[i] as ButtonControl;
+            if (control != null)
+                m_isTouched = control.isPressed;
+            else
+            {
+                Debug.LogWarningFormat(this, "ButtonControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(ButtonControl).FullName, controls[i].GetType().FullName, controls[i].name);
+            }
         }
         
         buttonPressAction.performed += UpdatePressStatus;
@@ -39,7 +45,13 @@ public class ButtonControlActionStatus : MonoBehaviour
         controls = buttonPressAction.controls;
         for (int i = 0; i < controls.Count; i++)
         {
-            m_isPressed = (float)(controls[i].ReadValueAsObject()) > 0.5f;
+            ButtonControl control = controls[i] as ButtonControl;
+            if(control != null)
+                m_isPressed = control.isPressed;
+            else
+            {
+                Debug.LogWarningFormat(this, "ButtonControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(ButtonControl).FullName, controls[i].GetType().FullName, controls[i].name);
+            }
         }
         
         ApplyStatusColor();
@@ -60,14 +72,22 @@ public class ButtonControlActionStatus : MonoBehaviour
 
     private void UpdatePressStatus(InputAction.CallbackContext context)
     {
-        m_isPressed = ((ButtonControl)(context.control)).isPressed;
-        ApplyStatusColor();
+        ButtonControl control = context.control as ButtonControl;
+        if(control != null)
+        {
+            m_isPressed = control.isPressed;
+            ApplyStatusColor();
+        }  
     }
 
     private void UpdateTouchStatus(InputAction.CallbackContext context)
     {
-        m_isTouched = ((ButtonControl)(context.control)).isPressed;
-        ApplyStatusColor();
+        ButtonControl buttonControl = context.control as ButtonControl;
+        if (buttonControl != null)
+        {
+            m_isTouched = buttonControl.isPressed;
+            ApplyStatusColor();
+        }
     }
 
     private void ApplyStatusColor()
