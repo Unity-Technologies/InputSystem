@@ -53,25 +53,10 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_ElementProperty;
         private int m_Index;
 
-        public virtual bool isDraggable
-        {
-            get { return false; }
-        }
-
-        public virtual SerializedProperty elementProperty
-        {
-            get { return m_ElementProperty; }
-        }
-
-        public int index
-        {
-            get { return m_Index; }
-        }
-
-        public virtual string expectedControlLayout
-        {
-            get { return string.Empty; }
-        }
+        public virtual bool isDraggable => false;
+        public SerializedProperty elementProperty => m_ElementProperty;
+        public int index => m_Index;
+        public virtual string expectedControlLayout => string.Empty;
 
         protected abstract GUIStyle colorTagStyle
         {
@@ -139,26 +124,10 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(displayName);
         }
 
-        protected override GUIStyle colorTagStyle
-        {
-            get { return Styles.yellowRect; }
-        }
+        protected override GUIStyle colorTagStyle => Styles.yellowRect;
 
-        public SerializedProperty bindingsProperty
-        {
-            get
-            {
-                return elementProperty.FindPropertyRelative("m_Bindings");
-            }
-        }
-
-        public SerializedProperty actionsProperty
-        {
-            get
-            {
-                return elementProperty.FindPropertyRelative("m_Actions");
-            }
-        }
+        public SerializedProperty bindingsProperty => elementProperty.FindPropertyRelative("m_Bindings");
+        public SerializedProperty actionsProperty => elementProperty.FindPropertyRelative("m_Actions");
 
         public void AddAction()
         {
@@ -192,10 +161,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return name.GetHashCode();
         }
 
-        public override bool isDraggable
-        {
-            get { return true; }
-        }
+        public override bool isDraggable => true;
     }
 
     internal class ActionTreeItem : ActionTreeViewItem
@@ -203,14 +169,11 @@ namespace UnityEngine.Experimental.Input.Editor
         private SerializedProperty m_ActionMapProperty;
         private string m_ExpectedControlLayout;
 
-        public int bindingsStartIndex { get; private set; }
-        public int bindingsCount { get; private set; }
-        public string actionName { get; private set; }
+        public int bindingsStartIndex { get; }
+        public int bindingsCount { get; }
+        public string actionName { get; }
 
-        public override string expectedControlLayout
-        {
-            get { return m_ExpectedControlLayout; }
-        }
+        public override string expectedControlLayout => m_ExpectedControlLayout;
 
         public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty actionProperty, int index)
             : base(actionProperty, index)
@@ -232,15 +195,9 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(displayName);
         }
 
-        protected override GUIStyle colorTagStyle
-        {
-            get { return Styles.greenRect; }
-        }
+        protected override GUIStyle colorTagStyle => Styles.greenRect;
 
-        public override bool isDraggable
-        {
-            get { return true; }
-        }
+        public override bool isDraggable => true;
 
         public void AddCompositeBinding(string compositeName, string group)
         {
@@ -298,10 +255,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return (actionMapName + " " + action + " " + name + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle colorTagStyle
-        {
-            get { return Styles.blueRect; }
-        }
+        protected override GUIStyle colorTagStyle => Styles.blueRect;
 
         public void Rename(string newName)
         {
@@ -319,15 +273,9 @@ namespace UnityEngine.Experimental.Input.Editor
             displayName = name + ": " + InputControlPath.ToHumanReadableString(path);
         }
 
-        protected override GUIStyle colorTagStyle
-        {
-            get { return Styles.pinkRect; }
-        }
+        protected override GUIStyle colorTagStyle => Styles.pinkRect;
 
-        public override bool isDraggable
-        {
-            get { return false; }
-        }
+        public override bool isDraggable => false;
 
         public override string expectedControlLayout
         {
@@ -382,10 +330,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public string action { get; private set; }
         public string name { get; private set; }
 
-        public override bool isDraggable
-        {
-            get { return true; }
-        }
+        public override bool isDraggable => true;
 
         public override string expectedControlLayout
         {
@@ -407,10 +352,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return (actionMapName + " " + action + " " + index).GetHashCode();
         }
 
-        protected override GUIStyle colorTagStyle
-        {
-            get { return Styles.blueRect; }
-        }
+        protected override GUIStyle colorTagStyle => Styles.blueRect;
 
         public override string SerializeToString()
         {

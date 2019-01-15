@@ -1426,7 +1426,9 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
-            //processors.AddTypeRegistration("Scale", typeof(ScaleProcessor));
+            processors.AddTypeRegistration("Scale", typeof(ScaleProcessor));
+            processors.AddTypeRegistration("ScaleVector2", typeof(ScaleVector2Processor));
+            processors.AddTypeRegistration("ScaleVector3", typeof(ScaleVector3Processor));
             processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
@@ -1450,8 +1452,10 @@ namespace UnityEngine.Experimental.Input
             //interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
 
             // Register composites.
+            composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
+            composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
             composites.AddTypeRegistration("Axis", typeof(AxisComposite));
-            composites.AddTypeRegistration("Dpad", typeof(DpadComposite));
+            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1617,10 +1621,7 @@ namespace UnityEngine.Experimental.Input
             public StateChangeMonitorListener[] listeners;
             public DynamicBitfield signalled;
 
-            public int count
-            {
-                get { return signalled.length; }
-            }
+            public int count => signalled.length;
 
             public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
             {
@@ -1705,7 +1706,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private void ResetControlPathsRecursive(InputControl control)
+        private static void ResetControlPathsRecursive(InputControl control)
         {
             control.m_Path = null;
 

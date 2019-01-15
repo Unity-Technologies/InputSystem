@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     /// Call <see cref="Initialize"/> to set up (can be done repeatedly on the same instance). Call
     /// <see cref="OnGUI"/> to render.
     /// </remarks>
-    public class ParameterListView
+    internal class ParameterListView
     {
         public Action onChange { get; set; }
 

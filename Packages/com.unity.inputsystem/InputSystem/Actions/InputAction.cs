@@ -543,20 +543,11 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public bool started
-            {
-                get { return phase == InputActionPhase.Started; }
-            }
+            public bool started => phase == InputActionPhase.Started;
 
-            public bool performed
-            {
-                get { return phase == InputActionPhase.Performed; }
-            }
+            public bool performed => phase == InputActionPhase.Performed;
 
-            public bool cancelled
-            {
-                get { return phase == InputActionPhase.Cancelled; }
-            }
+            public bool cancelled => phase == InputActionPhase.Cancelled;
 
             /// <summary>
             /// The action that got triggered.
@@ -611,10 +602,7 @@ namespace UnityEngine.Experimental.Input
             /// This is usually determined by the timestamp of the input event that activated a control
             /// bound to the action.
             /// </remarks>
-            public double time
-            {
-                get { return m_Time; }
-            }
+            public double time => m_Time;
 
             /// <summary>
             /// Time at which the action was started.
@@ -638,10 +626,7 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Time difference between <see cref="time"/> and <see cref="startTime"/>.
             /// </summary>
-            public double duration
-            {
-                get { return time - startTime; }
-            }
+            public double duration => time - startTime;
 
             public Type valueType
             {

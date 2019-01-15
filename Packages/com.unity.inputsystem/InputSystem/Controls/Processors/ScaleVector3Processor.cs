@@ -1,0 +1,17 @@
+namespace UnityEngine.Experimental.Input.Processors
+{
+    /// <summary>
+    /// Scale the components of a <see cref="Vector3"/> by constant factors.
+    /// </summary>
+    public class ScaleVector3Processor : IInputControlProcessor<Vector3>
+    {
+        public float x;
+        public float y;
+        public float z;
+
+        public Vector3 Process(Vector3 value, InputControl control)
+        {
+            return new Vector3(value.x * x, value.y * y, value.z * z);
+        }
+    }
+}

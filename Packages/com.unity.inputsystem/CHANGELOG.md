@@ -12,14 +12,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed .NET 3.5 support code
 - `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls
 - Action editor now gets docked by default
+- Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name
+- Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite
+    - The old names can still be used and existing data will load as expected
+    - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged
 
 ### Added
 
 - `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
+- New processors:
+    * `ScaleProcessor`
+    * `ScaleVector2Processor`
+    * `ScaleVector3Processor`
 
 ### Fixes
 
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
+- Control picker in UI having no devices if list of supported devices is empty but not null
 
 ## [0.1.2-preview] - 2018-12-19
 
