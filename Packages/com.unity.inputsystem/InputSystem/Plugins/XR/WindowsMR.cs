@@ -57,6 +57,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl isTracked { get; private set; }
         public Vector3Control devicePosition { get; private set; }
         public QuaternionControl deviceRotation { get; private set; }
+        public Vector3Control deviceVelocity { get; private set; }
+        public Vector3Control deviceAngularVelocity { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -76,6 +78,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             isTracked = builder.GetControl<ButtonControl>("isTracked");
             devicePosition = builder.GetControl<Vector3Control>("devicePosition");
             deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
         }
     }
 }
