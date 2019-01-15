@@ -47,11 +47,11 @@ public class QuaternionControlActionStatus : MonoBehaviour
     private void UpdateQuaternion(InputAction.CallbackContext context)
     {
         QuaternionControl control = context.control as QuaternionControl;
-        if(control != null)
+        if (control != null)
         {
             Quaternion value = control.ReadValue();
             statusText.text = QuaternionToFieldText(value);
-        } 
+        }
     }
 
     private string QuaternionToFieldText(Quaternion inQuat)

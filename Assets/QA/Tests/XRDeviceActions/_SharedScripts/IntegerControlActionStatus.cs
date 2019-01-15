@@ -52,7 +52,5 @@ public class IntegerControlActionStatus : MonoBehaviour
             int value = control.ReadValue();
             statusText.text = value.ToString();
         }
-
-        
     }
 }

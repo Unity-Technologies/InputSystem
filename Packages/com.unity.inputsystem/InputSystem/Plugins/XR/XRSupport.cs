@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct("Oculus Go"));
-            
+
             InputSystem.RegisterLayout<GearVRExtendedHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)

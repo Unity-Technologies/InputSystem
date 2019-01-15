@@ -24,7 +24,7 @@ public class ButtonControlActionStatus : MonoBehaviour
         buttonTouchAction.started += UpdateTouchStatus;
         buttonTouchAction.cancelled += UpdateTouchStatus;
         buttonTouchAction.Enable();
-        
+
         ReadOnlyArray<InputControl> controls = buttonTouchAction.controls;
         for (int i = 0; i < controls.Count; i++)
         {
@@ -36,24 +36,24 @@ public class ButtonControlActionStatus : MonoBehaviour
                 Debug.LogWarningFormat(this, "ButtonControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(ButtonControl).FullName, controls[i].GetType().FullName, controls[i].name);
             }
         }
-        
+
         buttonPressAction.performed += UpdatePressStatus;
         buttonPressAction.started += UpdatePressStatus;
         buttonPressAction.cancelled += UpdatePressStatus;
         buttonPressAction.Enable();
-        
+
         controls = buttonPressAction.controls;
         for (int i = 0; i < controls.Count; i++)
         {
             ButtonControl control = controls[i] as ButtonControl;
-            if(control != null)
+            if (control != null)
                 m_isPressed = control.isPressed;
             else
             {
                 Debug.LogWarningFormat(this, "ButtonControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(ButtonControl).FullName, controls[i].GetType().FullName, controls[i].name);
             }
         }
-        
+
         ApplyStatusColor();
     }
 
@@ -73,11 +73,11 @@ public class ButtonControlActionStatus : MonoBehaviour
     private void UpdatePressStatus(InputAction.CallbackContext context)
     {
         ButtonControl control = context.control as ButtonControl;
-        if(control != null)
+        if (control != null)
         {
             m_isPressed = control.isPressed;
             ApplyStatusColor();
-        }  
+        }
     }
 
     private void UpdateTouchStatus(InputAction.CallbackContext context)

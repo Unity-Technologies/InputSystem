@@ -47,7 +47,7 @@ public class AxisControlActionStatus : MonoBehaviour
     private void UpdateAxis(InputAction.CallbackContext context)
     {
         AxisControl control = context.control as AxisControl;
-        if(control != null)
+        if (control != null)
         {
             float value = control.ReadValue();
             statusSlider.value = value;

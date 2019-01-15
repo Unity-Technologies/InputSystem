@@ -47,11 +47,11 @@ public class Vector3ControlActionStatus : MonoBehaviour
     private void UpdateVector3(InputAction.CallbackContext context)
     {
         Vector3Control control = context.control as Vector3Control;
-        if(control != null)
+        if (control != null)
         {
             Vector3 value = control.ReadValue();
             statusText.text = Vector3ToFieldText(value);
-        }  
+        }
     }
 
     private string Vector3ToFieldText(Vector3 inVec)

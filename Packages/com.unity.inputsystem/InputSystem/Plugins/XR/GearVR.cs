@@ -28,7 +28,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control centerEyeAngularVelocity { get; private set; }
         public Vector3Control centerEyeAcceleration { get; private set; }
         public Vector3Control centerEyeAngularAcceleration { get; private set; }
-        
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);

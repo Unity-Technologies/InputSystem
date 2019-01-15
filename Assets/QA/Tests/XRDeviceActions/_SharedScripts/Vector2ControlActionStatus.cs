@@ -49,12 +49,11 @@ public class Vector2ControlActionStatus : MonoBehaviour
     private void UpdateVector2(InputAction.CallbackContext context)
     {
         Vector2Control control = context.control as Vector2Control;
-        if(control != null)
+        if (control != null)
         {
             Vector2 value = control.ReadValue();
             status1Slider.value = value.x;
             status2Slider.value = value.y;
         }
-        
     }
 }
