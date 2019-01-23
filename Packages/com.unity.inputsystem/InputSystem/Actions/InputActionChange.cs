@@ -31,21 +31,35 @@ namespace UnityEngine.Experimental.Input
         ActionMapDisabled,
 
         /// <summary>
-        /// An <see cref="InputAction"/> was <see cref="InputActionPhase.Started">started</see>,
-        /// <see cref="InputActionPhase.Performed">performed</see> or <see cref="InputActionPhase.Cancelled">
-        /// cancelled</see>.
+        /// An <see cref="InputAction"/> was started.
         /// </summary>
         /// <seealso cref="InputAction.started"/>
-        /// <seealso cref="InputAction.performed"/>
-        /// <seealso cref="InputAction.cancelled"/>
-        ActionTriggered,
+        /// <seealso cref="InputActionPhase.Started"/>
+        ActionStarted,
 
-        ////TODO: turn this into BoundControlsChanged and fire it whenever we change the set of controls on an action or map
         /// <summary>
-        /// An action had its set of bound controls change while the action
-        /// was enabled.
+        /// An <see cref="InputAction"/> was performed.
+        /// </summary>
+        /// <seealso cref="InputAction.performed"/>
+        /// <seealso cref="InputActionPhase.Performed"/>
+        ActionPerformed,
+
+        /// <summary>
+        /// An <see cref="InputAction"/> was cancelled.
+        /// </summary>
+        /// <seealso cref="InputAction.cancelled"/>
+        /// <seealso cref="InputActionPhase.Cancelled"/>
+        ActionCancelled,
+
+        /// <summary>
+        ///
+        /// </summary>
+        BoundControlsAboutToChange,
+
+        /// <summary>
+        ///
         /// </summary>
         /// <seealso cref="InputAction.controls"/>
-        BoundControlsHaveChangedWhileEnabled,
+        BoundControlsChanged,
     }
 }

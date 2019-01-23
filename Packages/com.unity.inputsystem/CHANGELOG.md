@@ -41,6 +41,9 @@ This release contains a number of fairly significant changes. The focus has been
     - The old names can still be used and existing data will load as expected.
     - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged.
 - `InputInteractionContext.controlHasDefaultValue` has been replaced with `InputInteractionContext.ControlIsActuated()`.
+- `InputActionChange.BindingsHaveChangedWhileEnabled` has been reworked and split in two:
+    1. `InputActionChange.BoundControlsAboutToChange`: Bindings have been previously resolved but are about to be re-resolved.
+    2. `InputActionChange.BoundControlsChanged`: Bindings have been resolved on one or more actions.
 
 ### Added
 
