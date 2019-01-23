@@ -755,8 +755,8 @@ partial class CoreTests
         receivedTimerIndex = null;
         receivedTime = null;
 
-        // Add timeout and obsolete it by state change. Then advance past timeout time
-        // and make sure we *don't* get a notification.
+        // Add timeout and perform a state change. Then advance past timeout time
+        // and make sure we *DO* get a notification.
         InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
@@ -765,10 +765,15 @@ partial class CoreTests
         Assert.That(monitorFired);
         Assert.That(!timeoutFired);
 
+        monitorFired = false;
+
         runtime.currentTime += 2;
         InputSystem.Update();
 
-        Assert.That(!timeoutFired);
+        Assert.That(!monitorFired);
+        Assert.That(timeoutFired);
+
+        timeoutFired = false;
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.

@@ -20,6 +20,7 @@ This release contains a number of fairly significant changes. The focus has been
 - `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls.
 - `SensitivityProcessor` has been removed.
     * The approach needs rethinking. What `SensitivityProcessor` did caused more problems than it solved.
+- State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
 
 ### Added
 

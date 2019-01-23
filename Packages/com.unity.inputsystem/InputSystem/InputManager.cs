@@ -2950,32 +2950,12 @@ namespace UnityEngine.Experimental.Input
                 if (signals.TestBit(i))
                 {
                     var listener = listeners[i];
-
-                    // Remove pending timeouts. They've been preempted by the control triggering.
-                    // NOTE: Do so *before* invoking the monitor callback as the callback may itself
-                    //       add new timeouts.
-                    RemoveStateChangeMonitorTimeouts(listener.control);
-
                     listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr, listener.monitorIndex);
                     signals.ClearBit(i);
                 }
             }
 
             m_StateChangeMonitors[deviceIndex].signalled = signals;
-        }
-
-        private void RemoveStateChangeMonitorTimeouts(InputControl control)
-        {
-            Debug.Assert(control != null);
-
-            // Reset all timeout entries referring to the given control. We compact
-            // the array in ProcessStateChangeMonitorTimeouts.
-            var timeoutCount = m_StateChangeMonitorTimeouts.length;
-            for (var i = 0; i < timeoutCount; ++i)
-            {
-                if (m_StateChangeMonitorTimeouts[i].control == control)
-                    m_StateChangeMonitorTimeouts[i] = default(StateChangeMonitorTimeout);
-            }
         }
 
         private void ProcessStateChangeMonitorTimeouts()
