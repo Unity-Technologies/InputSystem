@@ -1441,7 +1441,6 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             // Register interactions.
-            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
             interactions.AddTypeRegistration("PressAndRelease", typeof(PressAndReleaseInteraction));
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));

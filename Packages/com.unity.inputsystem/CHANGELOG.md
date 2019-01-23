@@ -29,6 +29,7 @@ This release contains a number of fairly significant changes. The focus has been
   * Control actuation is defined as a control having a magnitude (see `InputControl.EvaluateMagnitude`) greater than zero. If a control does not support magnitudes (returns -1 from `EvaluateMagnitude`), then the control is considered actuated when it changes state away from its default state.
 - As part of the aforementioned change, the following interactions have been removed as they are no longer relevant:
   - `StickInteraction`: Can simply be removed from bindings. The new default behavior obsoletes the need for what `StickInteraction` did. Use `started` to know then the stick starts being actuated, `performed` to be updated on movements, and `cancelled` to know when the stick goes back into rest position.
+  - `PressInteraction`: Can simply be removed from bindings. The default behavior with no interaction encompasses press detection. Use either `started` or `performed` to know when a button is pressed. There will no longer be a `performed` call on button release. To set a custom button press point, simply put an `AxisDeadzoneProcessor` on the binding.
 ### Added
 
 - `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
