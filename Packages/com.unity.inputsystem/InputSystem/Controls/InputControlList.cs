@@ -42,10 +42,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Number of controls in the list.
         /// </summary>
-        public int Count
-        {
-            get { return m_Count; }
-        }
+        public int Count => m_Count;
 
         /// <summary>
         /// Number of controls that can be added before more (unmanaged) memory has to be allocated.
@@ -78,10 +75,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Return the control at the given index.
@@ -453,10 +447,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
 
             public void Dispose()
             {
@@ -474,10 +465,7 @@ namespace UnityEngine.Experimental.Input
             m_Controls = list.ToArray();
         }
 
-        public TControl[] controls
-        {
-            get { return m_Controls; }
-        }
+        public TControl[] controls => m_Controls;
     }
 
     public static class InputControlListExtensions

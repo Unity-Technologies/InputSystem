@@ -20,10 +20,10 @@ namespace UnityEngine.Experimental.Input.Composites
     /// </remarks>
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
-        [InputControl(layout = "Button")] public int up;
-        [InputControl(layout = "Button")] public int down;
-        [InputControl(layout = "Button")] public int left;
-        [InputControl(layout = "Button")] public int right;
+        [InputControl(layout = "Button")] public int up = 0;
+        [InputControl(layout = "Button")] public int down = 0;
+        [InputControl(layout = "Button")] public int left = 0;
+        [InputControl(layout = "Button")] public int right = 0;
 
         /// <summary>
         /// If true (default), then the resulting vector will be normalized. Otherwise, diagonal
@@ -38,12 +38,20 @@ namespace UnityEngine.Experimental.Input.Composites
             var leftValue = context.ReadValue<float>(left);
             var rightValue = context.ReadValue<float>(right);
 
+            ////REVIEW: should this respect press points?
+
             var upIsPressed = upValue > 0;
             var downIsPressed = downValue > 0;
             var leftIsPressed = leftValue > 0;
             var rightIsPressed = rightValue > 0;
 
             return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
+        }
+
+        public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            var value = ReadValue(ref context);
+            return value.magnitude;
         }
     }
 }

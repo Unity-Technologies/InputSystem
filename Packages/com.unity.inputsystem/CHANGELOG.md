@@ -35,6 +35,13 @@ This release contains a number of fairly significant changes. The focus has been
   - In other words, if e.g. you have a binding to the A button of the gamepad and the A button is already pressed when the action is first enabled, then the action associated with the A button will trigger as if the button had just been pressed. Previously, it required releasing and re-pressing the button first -- which, together with certain interactions, could lead to actions ending up in a confused state.
 - When an action is disabled, it will now cancel all ongoing interactions, if any (i.e. you will see `InputAction.cancelled` being called).
   - Note that unlike the above-mentioned callbacks that happen when an action starts out with a control already actuated, the cancellation callbacks happen __immediately__ rather than in the next input update.
+- Action editor now gets docked by default.
+- Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name.
+- Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite.
+    - The old names can still be used and existing data will load as expected.
+    - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged.
+- `InputInteractionContext.controlHasDefaultValue` has been replaced with `InputInteractionContext.ControlIsActuated()`.
+
 ### Added
 
 - `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
