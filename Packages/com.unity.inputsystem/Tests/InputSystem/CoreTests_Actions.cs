@@ -1696,67 +1696,215 @@ partial class CoreTests
         Assert.That(phases, Is.EquivalentTo(new[] { InputActionPhase.Cancelled }));
     }
 
-        public void Process(ref InputInteractionContext context)
-        {
-            Assert.That(parm1, Is.EqualTo(5.0).Within(0.000001));
-            s_GotInvoked = true;
-        }
-
-        public void Reset()
-        {
-        }
-    }
-
     [Test]
     [Category("Actions")]
-    public void Actions_CanRegisterNewInteraction()
-    {
-        InputSystem.RegisterInteraction<TestInteraction>();
-        TestInteraction.s_GotInvoked = false;
-
-        var gamepad = InputSystem.AddDevice("Gamepad");
-        var action = new InputAction(binding: "/gamepad/leftStick/x", interactions: "test(parm1=5.0)");
-        action.Enable();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
-        InputSystem.Update();
-
-        Assert.That(TestInteraction.s_GotInvoked, Is.True);
-    }
-
-    #if UNITY_EDITOR
-    [Test]
-    [Category("Actions")]
-    public void Actions_RegisteringExistingInteractionUnderNewName_CreatesAlias()
-    {
-        InputSystem.RegisterInteraction<PressInteraction>("TestTest");
-
-        Assert.That(InputSystem.s_Manager.interactions.aliases.Contains(new InternedString("TestTest")));
-    }
-
-    #endif // UNITY_EDITOR
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanTriggerActionFromPartialStateUpdate()
+    public void Actions_CanTriggerActionContinuously()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/leftStick");
+        runtime.advanceTimeEachDynamicUpdate = 0;
+
+        // Set up an action that will trigger continuously for as long as the right trigger
+        // is held down on the gamepad.
+        var action = new InputAction(binding: "<Gamepad>/rightTrigger") {continuous = true};
         action.Enable();
 
-        var receivedCalls = 0;
-        InputControl receivedControl = null;
-        action.performed += ctx =>
+        using (var trace = new InputActionTrace())
         {
-            ++receivedCalls;
-            receivedControl = ctx.control;
-        };
+            trace.SubscribeTo(action);
 
-        InputSystem.QueueDeltaStateEvent(gamepad.leftStick, Vector2.one);
-        InputSystem.Update();
+            runtime.currentTime = 0.123f;
+            Set(gamepad.rightTrigger, 0.123f);
 
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+            // Initial actuation should start and then perform the action.
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.123).Within(0.0001));
+            Assert.That(actions[0].time, Is.EqualTo(0.123).Within(0.0001));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(0.123).Within(0.0001));
+            Assert.That(actions[1].time, Is.EqualTo(0.123).Within(0.0001));
+            Assert.That(actions[1].control, Is.SameAs(gamepad.rightTrigger));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.234f;
+            InputSystem.Update();
+            runtime.currentTime = 0.345f;
+            InputSystem.Update();
+
+            // No actuation in update should result in action being performed again.
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.123).Within(0.0001));
+            Assert.That(actions[0].time, Is.EqualTo(0.234).Within(0.0001));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(0.123).Within(0.0001));
+            Assert.That(actions[1].time, Is.EqualTo(0.345).Within(0.0001));
+            Assert.That(actions[1].control, Is.SameAs(gamepad.rightTrigger));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.456f;
+            Set(gamepad.rightTrigger, 0.234f);
+
+            // Further actuation should lead to one single performed.
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.234).Within(0.0001));
+            Assert.That(actions[0].time, Is.EqualTo(0.456).Within(0.0001));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.567f;
+            Set(gamepad.rightTrigger, 0);
+
+            // Reset to default state should result in a single cancellation.
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.0001));
+            Assert.That(actions[0].time, Is.EqualTo(0.567).Within(0.0001));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.678f;
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformContinuousHold()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/rightTrigger").WithInteraction("Hold(duration=0.5)");
+        action.continuous = true;
+        action.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+
+            runtime.currentTime = 0;
+            runtime.advanceTimeEachDynamicUpdate = 0;
+
+            Set(gamepad.rightTrigger, 0.7f);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.7).Within(0.00001));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.25f;
+            InputSystem.Update();
+
+            // We haven't yet reached the hold time so there shouldn't have been a change in state.
+            Assert.That(trace, Is.Empty);
+
+            runtime.currentTime = 0.6f;
+            InputSystem.Update();
+
+            // Now we've exceeded the hold time so the hold should have been performed.
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.7).Within(0.00001));
+
+            trace.Clear();
+
+            // When we run another update now, we should get another triggering of the action.
+            InputSystem.Update();
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.7).Within(0.00001));
+
+            trace.Clear();
+
+            Set(gamepad.rightTrigger, 0);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
+            Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
+
+            trace.Clear();
+
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    // Triggers (any analog axis really) may jitted. Make sure that we can perform a hold
+    // even if the control wiggles around.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformHoldOnTrigger()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "hold(duration=0.4)");
+        action.Enable();
+
+        runtime.advanceTimeEachDynamicUpdate = 0;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+
+            runtime.currentTime = 0.1f;
+            Set(gamepad.leftTrigger, 0.123f);
+            runtime.currentTime = 0.2f;
+            Set(gamepad.leftTrigger, 0.234f);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].time, Is.EqualTo(0.1).Within(0.00001));
+            Assert.That(actions[0].ReadValue<float>, Is.EqualTo(0.123).Within(0.00001));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.6f;
+            Set(gamepad.leftTrigger, 0.345f);
+            runtime.currentTime = 0.7f;
+            Set(gamepad.leftTrigger, 0.456f);
+
+            actions = trace.ToArray();
+            Debug.Log(string.Join(",\n", actions));//DBG
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].time, Is.EqualTo(0.6).Within(0.00001));
+            Assert.That(actions[0].ReadValue<float>, Is.EqualTo(0.345).Within(0.00001));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanPerformContinuousStartsOnHold()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -4313,8 +4461,7 @@ partial class CoreTests
 
         using (action.PerformInteractiveRebinding().Start())
         {
-            InputEventPtr eventPtr;
-            using (StateEvent.From(derived, out eventPtr))
+            using (StateEvent.From(derived, out var eventPtr))
             {
                 derived["controlFromBase/x"].WriteValueFromObjectIntoEvent(eventPtr, 0.5f);
 
@@ -4681,21 +4828,21 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanDisableAllEnabledActionsInOneGo()
     {
-        var action1 = new InputAction(binding: "/gamepad/leftStick");
-        var action2 = new InputAction(binding: "/gamepad/rightStick");
-        var set = new InputActionMap();
-        var action3 = set.AddAction("action", "/gamepad/buttonSouth");
+        var action1 = new InputAction(binding: "<Gamepad>/leftStick");
+        var action2 = new InputAction(binding: "<Gamepad>/rightStick");
+        var map = new InputActionMap();
+        var action3 = map.AddAction("action", "<Gamepad>/buttonSouth");
 
         action1.Enable();
         action2.Enable();
-        set.Enable();
+        map.Enable();
 
         InputSystem.DisableAllEnabledActions();
 
         Assert.That(action1.enabled, Is.False);
         Assert.That(action2.enabled, Is.False);
         Assert.That(action3.enabled, Is.False);
-        Assert.That(set.enabled, Is.False);
+        Assert.That(map.enabled, Is.False);
     }
 
     [Test]
@@ -4704,9 +4851,9 @@ partial class CoreTests
     {
         InputSystem.AddDevice<Gamepad>();
 
-        var action1 = new InputAction(binding: "/<Gamepad>/leftStick");
-        var action2 = new InputAction(binding: "/<Gamepad>/rightStick");
-        var action3 = new InputAction(binding: "/<Gamepad>/buttonSouth");
+        var action1 = new InputAction(binding: "<Gamepad>/leftStick");
+        var action2 = new InputAction(binding: "<Gamepad>/rightStick");
+        var action3 = new InputAction(binding: "<Gamepad>/buttonSouth");
 
         action1.Enable();
         action2.Enable();
@@ -4734,36 +4881,51 @@ partial class CoreTests
 
         var action = new InputAction();
 
-        action.AddBinding("/<Gamepad>/leftStick");
-        action.AddBinding("/<Pointer>/delta");
-
-        Vector2? movement = null;
-        action.performed +=
-            ctx => { movement = ctx.ReadValue<Vector2>(); };
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Pointer>/delta");
 
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
-        InputSystem.Update();
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
 
-        Assert.That(movement.HasValue, Is.True);
-        Assert.That(movement.Value.x, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(movement.Value.y, Is.EqualTo(0.5).Within(0.000001));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)});
+            InputSystem.Update();
 
-        movement = null;
-        InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(0.25f, 0.25f)});
-        InputSystem.Update();
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
 
-        Assert.That(movement.HasValue, Is.True);
-        Assert.That(movement.Value.x, Is.EqualTo(0.25).Within(0.000001));
-        Assert.That(movement.Value.y, Is.EqualTo(0.25).Within(0.000001));
+            trace.Clear();
 
-        movement = null;
-        InputSystem.Update();
+            InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(0.234f, 0.345f)});
+            InputSystem.Update();
 
-        Assert.That(movement.HasValue, Is.True);
-        Assert.That(movement.Value.x, Is.EqualTo(0).Within(0.000001));
-        Assert.That(movement.Value.y, Is.EqualTo(0).Within(0.000001));
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.234f, 0.345f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[0].control, Is.SameAs(mouse.delta));
+
+            trace.Clear();
+
+            ////REVIEW: This behavior is somewhat unfortunate. It means that an action bound to <mouse>/delta will constantly
+            ////        restart every frame when there is mouse deltas. Also, the accumulation of deltas is really bad for actions.
+            // Update should reset mouse delta to zero which should cancel the action.
+            InputSystem.Update();
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[0].control, Is.SameAs(mouse.delta));
+        }
     }
 
     [Test]

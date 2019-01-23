@@ -62,6 +62,11 @@ This release contains a number of fairly significant changes. The focus has been
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 
+#### Actions:
+- Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \
+  ![Continuous Action](Documentation~/Images/ContinuousAction.png)
+- Values can now be read out as objects using `InputAction.CallbackContext.ReadValueAsObject()`.
+    * Allocates GC memory. Should not be used during normal gameplay but is very useful for testing and debugging.
 ### Fixes
 
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
