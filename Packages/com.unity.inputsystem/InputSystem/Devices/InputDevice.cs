@@ -251,6 +251,11 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: Is making devices be byte[] values really all that useful? Seems better than returning nulls but
         ////        at the same time, seems questionable.
 
+        public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
+        {
+            throw new NotImplementedException();
+        }
+
         public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {
             if (m_DeviceIndex == kInvalidDeviceIndex)

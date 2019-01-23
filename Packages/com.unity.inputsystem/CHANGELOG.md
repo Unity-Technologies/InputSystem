@@ -50,6 +50,7 @@ This release contains a number of fairly significant changes. The focus has been
   ![PlayerInput](Documentation~/Images/PlayerInputManager.png)
 - `InputDevice.all` (equivalent to `InputSystem.devices`)
 - `InputControl.IsActuated()` can be used to determine whether control is currently actuated (defined as extension method in `InputControlExtensions`).
+- Can now read control values from buffers as objects using `InputControl.ReadValueFromBufferAsObject`. This allows reading a value stored in memory without having to know the value type.
 - New processors:
     * `ScaleProcessor`
     * `ScaleVector2Processor`

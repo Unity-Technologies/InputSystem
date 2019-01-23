@@ -363,6 +363,8 @@ namespace UnityEngine.Experimental.Input
             return -1;
         }
 
+        public abstract unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize);
+
         /// <summary>
         /// Read the control's final, processed value from the given state and return the value as an object.
         /// </summary>
@@ -790,6 +792,23 @@ namespace UnityEngine.Experimental.Input
                 $"Control '{this}' does not support writing");
         }
 
+        /// <inheritdoc />
+        public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
+
+            var valueSize = UnsafeUtility.SizeOf<TValue>();
+            if (bufferSize < valueSize)
+                throw new ArgumentException(
+                    $"Expecting buffer of at least {valueSize} bytes for value of type {typeof(TValue).Name} but got buffer of only {bufferSize} bytes instead",
+                    nameof(bufferSize));
+
+            var value = default(TValue);
+            var valuePtr = UnsafeUtility.AddressOf(ref value);
+            UnsafeUtility.MemCpy(valuePtr, buffer, valueSize);
+
+            return value;
         }
 
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)

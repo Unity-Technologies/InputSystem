@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input
         public static unsafe object ReadValueAsObject(this InputControl control)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             return control.ReadValueFromStateAsObject(control.currentStatePtr);
         }
