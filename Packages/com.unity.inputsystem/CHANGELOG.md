@@ -44,7 +44,11 @@ This release contains a number of fairly significant changes. The focus has been
 
 ### Added
 
-- `PlayerInput` and `PlayerInputManager` MonoBehaviours that simplify setting up player device/action management, player joins, and split-screen setups.
+- `PlayerInput` component which simplifies setting up individual player input actions and device pairings. \
+  ![PlayerInput](Documentation~/Images/PlayerInput.png)
+- `PlayerInputManager` component which simplifies player joining and split-screen setups. \
+  ![PlayerInput](Documentation~/Images/PlayerInputManager.png)
+- `InputDevice.all` (equivalent to `InputSystem.devices`)
 - New processors:
     * `ScaleProcessor`
     * `ScaleVector2Processor`

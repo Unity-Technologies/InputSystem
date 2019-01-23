@@ -860,7 +860,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             for (var n = 0; n < processorCount; ++n)
             {
                 var name = controlItem.processors[n].name;
-                var type = InputControlProcessor.s_Processors.LookupTypeRegistration(name);
+                var type = InputProcessor.s_Processors.LookupTypeRegistration(name);
                 if (type == null)
                     throw new Exception(
                         string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,
