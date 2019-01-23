@@ -60,59 +60,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     /// <summary>
     /// Identifies a controller that is capable of rumble or haptics.
     /// </summary>
-    public class XRControllerWithRumble : XRController, IHaptics
+    public class XRControllerWithRumble : XRController
     {
-        SimpleRumble m_Rumble;
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-            m_Rumble = new SimpleRumble(this);
         }
 
-        /// <summary>
-        /// Set's this device's motor intensity.
-        /// </summary>
-        /// <param name="intensity">The intensity of [0-1] you'd like to set device's haptic rumbling to.</param>
-        /// <remarks>Intensities are updated immediately, and all values outside of the [0-1] range will be clamped.</remarks>
-        public void SetIntensity(float intensity)
+        public void SendImpulse(float amplitude, float duration)
         {
-            m_Rumble.intensity = intensity;
-        }
-
-        /// <summary>
-        /// Used to check if the haptics for this device is currently paused.
-        /// </summary>
-        public bool isHapticsPaused
-        {
-            get
-            {
-                return m_Rumble.isPaused;
-            }
-        }
-
-        /// <summary>
-        /// Pauses haptics so that motor speed on the device will be 0, regardless of the current intensity level.
-        /// </summary>
-        public void PauseHaptics()
-        {
-            m_Rumble.isPaused = true;
-        }
-
-        /// <summary>
-        /// Resumes haptics so that motor intensity is again forwarded onto the actual device.
-        /// </summary>
-        public void ResumeHaptics()
-        {
-            m_Rumble.isPaused = false;
-        }
-
-        /// <summary>
-        /// Resets the haptics for this device to defaults.  Defaults are an intensity of 0 and unpaused.
-        /// </summary>
-        public void ResetHaptics()
-        {
-            m_Rumble.Reset();
+            var command = SendHapticImpulseCommand.Create(0, amplitude, duration);
+            ExecuteCommand(ref command);
         }
     }
 }
