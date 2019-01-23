@@ -84,6 +84,77 @@ partial class CoreTests
         Assert.That(map.IsUsableWithDevice(keyboard), Is.False);
     }
 
+    // Controls may already be actuated when we enable an action. To deal with this, we pretend that at
+    // the time an action is enabled, any bound control that isn't at default
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenEnabled_ReactToCurrentValueOfControlsInNextUpdate()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+        Press(gamepad.buttonSouth);
+
+        var actionWithoutInteraction = new InputAction("ActionWithoutInteraction", binding: "<Gamepad>/leftStick");
+        var actionWithHold = new InputAction("ActionWithHold", binding: "<Gamepad>/buttonSouth", interactions: "Hold");
+        var actionThatShouldNotTrigger = new InputAction("ActionThatShouldNotTrigger", binding: "<Gamepad>/rightStick");
+
+        actionWithHold.performed += ctx => Assert.Fail("Hold should not complete");
+        actionThatShouldNotTrigger.started += ctx => Assert.Fail("Action should not start");
+        actionThatShouldNotTrigger.performed += ctx => Assert.Fail("Action should not be performed");
+
+        using (var trace1 = new InputActionTrace())
+        using (var trace2 = new InputActionTrace())
+        {
+            trace1.SubscribeTo(actionWithoutInteraction);
+            trace2.SubscribeTo(actionWithHold);
+
+            actionWithoutInteraction.Enable();
+            actionWithHold.Enable();
+            actionThatShouldNotTrigger.Enable();
+
+            Assert.That(trace1, Is.Empty);
+            Assert.That(trace2, Is.Empty);
+
+            InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.234f, 0.345f));
+            InputSystem.Update();
+
+            var actions1 = trace1.ToArray();
+            var actions2 = trace2.ToArray();
+
+            Assert.That(actions1, Has.Length.EqualTo(3));
+            Assert.That(actions2, Has.Length.EqualTo(1));
+
+            Assert.That(actions1[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions1[0].action, Is.SameAs(actionWithoutInteraction));
+            Assert.That(actions1[0].interaction, Is.Null);
+            Assert.That(actions1[0].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions1[0].ReadValue<Vector2>(),
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions1[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions1[1].action, Is.SameAs(actionWithoutInteraction));
+            Assert.That(actions1[1].interaction, Is.Null);
+            Assert.That(actions1[1].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions1[1].ReadValue<Vector2>(),
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions1[2].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions1[2].action, Is.SameAs(actionWithoutInteraction));
+            Assert.That(actions1[2].interaction, Is.Null);
+            Assert.That(actions1[2].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions1[2].ReadValue<Vector2>(),
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                    .Using(Vector2EqualityComparer.Instance));
+
+            Assert.That(actions2[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions2[0].action, Is.SameAs(actionWithHold));
+            Assert.That(actions2[0].interaction, Is.TypeOf<HoldInteraction>());
+            Assert.That(actions2[0].control, Is.SameAs(gamepad.buttonSouth));
+            Assert.That(actions2[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenEnabled_TriggerNotification()

@@ -409,9 +409,9 @@ namespace UnityEngine.Experimental.Input
 
         private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
         {
-            Debug.Assert(controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalControlCount);
-            Debug.Assert(controlStartIndex + numControls <= totalControlCount);
+            Debug.Assert(controls != null, "State must have controls");
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalControlCount, "Control start index out of range");
+            Debug.Assert(controlStartIndex + numControls <= totalControlCount, "Control range out of bounds");
 
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < numControls; ++i)
@@ -420,15 +420,16 @@ namespace UnityEngine.Experimental.Input
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
+                bindingStates[bindingIndex].needsInitialStateCheck = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
         }
 
         private void DisableControls(int mapIndex, int controlStartIndex, int numControls)
         {
-            Debug.Assert(controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalControlCount);
-            Debug.Assert(controlStartIndex + numControls <= totalControlCount);
+            Debug.Assert(controls != null, "State must have controls");
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalControlCount, "Control start index out of range");
+            Debug.Assert(controlStartIndex + numControls <= totalControlCount, "Control range out of bounds");
 
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < numControls; ++i)
@@ -437,10 +438,83 @@ namespace UnityEngine.Experimental.Input
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
+                bindingStates[bindingIndex].needsInitialStateCheck = false;
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
         }
 
+        private void HookOnBeforeUpdate()
+        {
+            if (m_OnBeforeUpdateHooked)
+                return;
+
+            if (m_OnBeforeUpdateDelegate == null)
+                m_OnBeforeUpdateDelegate = OnBeforeInitialUpdate;
+            InputSystem.s_Manager.onBeforeUpdate += m_OnBeforeUpdateDelegate;
+            m_OnBeforeUpdateHooked = true;
+        }
+
+        private void UnhookOnBeforeUpdate()
+        {
+            if (!m_OnBeforeUpdateHooked)
+                return;
+
+            InputSystem.s_Manager.onBeforeUpdate -= m_OnBeforeUpdateDelegate;
+            m_OnBeforeUpdateHooked = false;
+        }
+
+        // We hook this into InputManager.onBeforeUpdate every time actions are enabled and then take it off
+        // the list after the first call. Inside here we check whether any actions we enabled already have
+        // non-default state on bound controls.
+        //
+        // NOTE: We do this as a callback from onBeforeUpdate rather than directly when the action is enabled
+        //       to ensure that the callbacks happen during input processing and not randomly from wherever
+        //       an action happens to be enabled.
+        private unsafe void OnBeforeInitialUpdate(InputUpdateType type)
+        {
+            ////TODO: deal with update type
+
+            // Remove us from the callback.
+            UnhookOnBeforeUpdate();
+
+            Profiler.BeginSample("InitialActionStateCheck");
+
+            // The composite logic relies on the event ID to determine whether a composite binding should trigger again
+            // when already triggered. Make up a fake event with just an ID.
+            var inputEvent = new InputEvent {eventId = 1234};
+            var eventPtr = new InputEventPtr(&inputEvent);
+
+            // Use current time as time of control state change.
+            var time = InputRuntime.s_Instance.currentTime;
+
+            ////REVIEW: should we store this data in a separate place rather than go through all bindingStates?
+
+            // Go through all binding states and for every binding that needs an initial state check,
+            // go through all bound controls and for each one that isn't in its default state, pretend
+            // that the control just got actuated.
+            for (var bindingIndex = 0; bindingIndex < totalBindingCount; ++bindingIndex)
+            {
+                if (!bindingStates[bindingIndex].needsInitialStateCheck)
+                    continue;
+
+                bindingStates[bindingIndex].needsInitialStateCheck = false;
+
+                var mapIndex = actionStates[bindingIndex].mapIndex;
+                var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
+                var controlCount = bindingStates[bindingIndex].controlCount;
+
+                for (var n = 0; n < controlCount; ++n)
+                {
+                    var controlIndex = controlStartIndex + n;
+                    var control = controls[controlIndex];
+
+                    if (!control.CheckStateIsAtDefault())
+                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
+                }
+            }
+
+            Profiler.EndSample();
+        }
         // Called from InputManager when one of our state change monitors has fired.
         // Tells us the time of the change *according to the state events coming in*.
         // Also tells us which control of the controls we are binding to triggered the
