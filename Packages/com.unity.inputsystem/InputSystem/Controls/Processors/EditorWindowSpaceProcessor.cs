@@ -6,19 +6,20 @@ using UnityEngine.Experimental.Input.Editor;
 namespace UnityEngine.Experimental.Input.Processors
 {
     /// <summary>
-    /// If Unity is currently in an EditorWindow callback, transforms a 2D coordinate from
+    /// If Unity is currently in an <see cref="EditorWindow"/> callback, transforms a 2D coordinate from
     /// player window space into window space of the current EditorWindow.
     /// </summary>
     /// <remarks>
     /// This processor is only available in the editor. Also, it only works on devices that
     /// support the <see cref="QueryEditorWindowCoordinatesCommand"/> request.
     ///
-    /// Outside of EditorWindow callbacks, this processor does nothing and just passes through
+    /// Outside of <see cref="EditorWindow"/> callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
     /// </remarks>
-    public class EditorWindowSpaceProcessor : IInputControlProcessor<Vector2>
+    /// <seealso cref="Pointer.position"/>
+    public class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
-        public Vector2 Process(Vector2 position, InputControl control)
+        public override Vector2 Process(Vector2 position, InputControl<Vector2> control)
         {
             // Don't convert to EditorWindowSpace if input is going to game view.
             if (InputEditorUserSettings.lockInputToGameView ||

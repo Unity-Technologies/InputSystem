@@ -1438,8 +1438,12 @@ namespace UnityEngine.Experimental.Input
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
+            processors.AddTypeRegistration("InvertVector2", typeof(InvertVector2Processor));
+            processors.AddTypeRegistration("InvertVector3", typeof(InvertVector3Processor));
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
+            processors.AddTypeRegistration("NormalizeVector2", typeof(NormalizeVector2Processor));
+            processors.AddTypeRegistration("NormalizeVector3", typeof(NormalizeVector3Processor));
             processors.AddTypeRegistration("Scale", typeof(ScaleProcessor));
             processors.AddTypeRegistration("ScaleVector2", typeof(ScaleVector2Processor));
             processors.AddTypeRegistration("ScaleVector3", typeof(ScaleVector3Processor));

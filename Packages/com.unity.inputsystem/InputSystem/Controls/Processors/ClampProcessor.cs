@@ -2,12 +2,12 @@
 
 namespace UnityEngine.Experimental.Input.Processors
 {
-    public class ClampProcessor : IInputControlProcessor<float>
+    public class ClampProcessor : InputProcessor<float>
     {
         public float min;
         public float max;
 
-        public float Process(float value, InputControl control)
+        public override float Process(float value, InputControl<float> control)
         {
             return Mathf.Clamp(value, min, max);
         }

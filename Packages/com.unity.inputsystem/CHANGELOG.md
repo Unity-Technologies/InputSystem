@@ -55,6 +55,10 @@ This release contains a number of fairly significant changes. The focus has been
     * `ScaleProcessor`
     * `ScaleVector2Processor`
     * `ScaleVector3Processor`
+    * `InvertVector2Processor`
+    * `InvertVector3Processor`
+    * `NormalizeVector2Processor`
+    * `NormalizeVector3Processor`
 
 ### Fixes
 

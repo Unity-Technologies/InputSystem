@@ -1,4 +1,4 @@
-////REVIEW: rename to Vector2DeadzoneProcessor
+////REVIEW: rename to RadialDeadzone
 
 ////TODO: add different deadzone shapes and/or option to min/max X and Y separately
 
@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Input.Processors
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
     /// than just clamping individual axes). Normalizes to the min/max range.
     /// </summary>
-    public class StickDeadzoneProcessor : IInputControlProcessor<Vector2>
+    public class StickDeadzoneProcessor : InputProcessor<Vector2>
     {
         /// <summary>
         /// Value at which the lower bound deadzone starts.
@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Processors
         public float minOrDefault => min == 0.0f ? InputSystem.settings.defaultDeadzoneMin : min;
         public float maxOrDefault => max == 0.0f ? InputSystem.settings.defaultDeadzoneMax : max;
 
-        public Vector2 Process(Vector2 vector, InputControl control)
+        public override Vector2 Process(Vector2 vector, InputControl<Vector2> control = null)
         {
             var magnitude = vector.magnitude;
             var newMagnitude = GetDeadZoneAdjustedValue(magnitude);
