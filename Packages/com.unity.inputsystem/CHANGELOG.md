@@ -49,6 +49,7 @@ This release contains a number of fairly significant changes. The focus has been
 - `PlayerInputManager` component which simplifies player joining and split-screen setups. \
   ![PlayerInput](Documentation~/Images/PlayerInputManager.png)
 - `InputDevice.all` (equivalent to `InputSystem.devices`)
+- `InputControl.IsActuated()` can be used to determine whether control is currently actuated (defined as extension method in `InputControlExtensions`).
 - New processors:
     * `ScaleProcessor`
     * `ScaleVector2Processor`
