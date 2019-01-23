@@ -10,25 +10,31 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls' and 'bindings')
 
-////REVIEW: should the enable/disable API actually sit on InputSystem?
-
 ////REVIEW: might have to revisit when we fire actions in relation to Update/FixedUpdate
 
 ////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
 
 ////REVIEW: the entire 'lastXXX' API section is shit and needs a pass
 
-////REVIEW: resolving as a side-effect of 'controls' and 'devices' seems pretty heavy handed
-
-////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
-////      a single start cycle
-
 ////TODO: allow changing bindings without having to disable
 
-////REVIVEW: what about having the concept of "consumed" on the callback context?
+////REVIEW: what about having the concept of "consumed" on the callback context?
 
 ////REVIEW: should actions basically be handles to data that is stored in an array in the map?
 ////        (with this, we could also implement more efficient duplication where we duplicate all the binding data but not the action data)
+
+////REVIEW: have "Always Enabled" toggle on actions?
+
+// An issue that has come up repeatedly is the request for having a polling-based API that allows actions to be used the same
+// way UnityEngine.Input allows axes to be used. Here's my thoughts. While such an API is a bad fit for how actions operate,
+// the request is definitely reasonable and a simple polling-based API could be created in a relatively straightforward way. It'd
+// have to drop some details on the floor and do some aggregation of state, but where someone reaches the limits, there would always
+// be a possible migration to the callback-based API.
+//
+// However, before launching into creating an entirely separate API to interface with actions, I would first like to try and see
+// if something can be done to obsolete the need for it. The main obstacle with the callback-based API is that setting up and managing
+// the callbacks is very tedious and requires a lot of duct tape. What if instead the setup was trivial and something you never have
+// to worry about? Would the need for a polling-based API still be there? That's what I would like to find out first.
 
 namespace UnityEngine.Experimental.Input
 {

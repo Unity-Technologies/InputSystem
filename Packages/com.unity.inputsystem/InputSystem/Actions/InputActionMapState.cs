@@ -548,25 +548,7 @@ namespace UnityEngine.Experimental.Input
                 }
                 else if (!haveInteractionsOnComposite)
                 {
-                    // Default logic has no support for cancellations and won't ever go into started
-                    // phase. Will go from waiting straight to performed and then straight to waiting
-                    // again.
-                    //
-                    // Also, we perform the action on *any* value change. For buttons, this means that
-                    // if you use the default logic without an interaction, the action will be performed
-                    // both when you press and when you release the button.
-
-                    var trigger = new TriggerState
-                    {
-                        phase = InputActionPhase.Performed,
-                        mapIndex = mapIndex,
-                        controlIndex = controlIndex,
-                        bindingIndex = bindingIndex,
-                        interactionIndex = kInvalidIndex,
-                        time = time,
-                        startTime = time,
-                    };
-                    ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
+                    ProcessDefaultInteraction(mapIndex, controlIndex, bindingIndex, time);
                 }
             }
         }
@@ -595,6 +577,68 @@ namespace UnityEngine.Experimental.Input
 
             binding->triggerEventIdForComposite = eventId;
             return false;
+        }
+
+        /// <summary>
+        /// When there is no interaction on an action, this method perform the default interaction logic that we
+        /// run when a bound control changes value.
+        /// </summary>
+        /// <param name="mapIndex"></param>
+        /// <param name="controlIndex"></param>
+        /// <param name="bindingIndex"></param>
+        /// <param name="time"></param>
+        private void ProcessDefaultInteraction(int mapIndex, int controlIndex, int bindingIndex, double time)
+        {
+            var actionIndex = bindingStates[bindingIndex].actionIndex;
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range");
+
+            var continuous = actionStates[actionIndex].continuous;
+            var trigger = new TriggerState
+            {
+                mapIndex = mapIndex,
+                controlIndex = controlIndex,
+                bindingIndex = bindingIndex,
+                interactionIndex = kInvalidIndex,
+                time = time,
+                startTime = time,
+                continuous = continuous,
+            };
+
+            switch (actionStates[actionIndex].phase)
+            {
+                case InputActionPhase.Waiting:
+                {
+                    // Ignore if the control has crossed its actuation threshold.
+                    if (!IsActuated(bindingIndex, controlIndex))
+                        return;
+
+                    // Go into started, then perform and then go back to started.
+                    ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
+                    ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                        phaseAfterPerformedOrCancelled: InputActionPhase.Started);
+                    break;
+                }
+
+                case InputActionPhase.Started:
+                {
+                    if (!IsActuated(bindingIndex, controlIndex))
+                    {
+                        // Control went back to below actuation threshold. Cancel interaction.
+                        ChangePhaseOfAction(InputActionPhase.Cancelled, ref trigger);
+                    }
+                    else
+                    {
+                        // Control changed value above magnitude threshold. Perform and remain started.
+                        ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                            phaseAfterPerformedOrCancelled: InputActionPhase.Started);
+                    }
+                    break;
+                }
+
+                default:
+                    Debug.Assert(false, "Should not get here");
+                    break;
+            }
         }
 
         private void ProcessInteractions(int mapIndex, int controlIndex, int bindingIndex, double time, int interactionStartIndex, int interactionCount)
