@@ -75,6 +75,7 @@ This release contains a number of fairly significant changes. The focus has been
         .With("Positive", "<Keyboard>/a")
         .With("Negative", "<Keyboard>/d");
     ```
+- "C# Class File" property on .inputactions importer settings now has a file picker next to it.
 ### Fixes
 
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
