@@ -17,6 +17,9 @@ This release contains a number of fairly significant changes. The focus has been
 - Started using C# 7.
 - `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcess<TValue>` base classes.
 - `IInputBindingComposite` has been replaced with an `InputBindingComposite` base class and the `IInputBindingComposite<TValue>` interface has been merged with the `InputBindingComposite<TValue>` class which had already existed.
+- `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls.
+- `SensitivityProcessor` has been removed.
+    * The approach needs rethinking. What `SensitivityProcessor` did caused more problems than it solved.
 
 ### Added
 
