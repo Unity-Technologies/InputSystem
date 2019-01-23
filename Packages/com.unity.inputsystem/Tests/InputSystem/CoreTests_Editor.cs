@@ -22,7 +22,6 @@ using UnityEngine.TestTools;
 partial class CoreTests
 {
     [Serializable]
-
     struct PackageJson
     {
         public string version;
@@ -42,7 +41,7 @@ partial class CoreTests
         var version = new Version(versionString);
 
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
-        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Major));
+        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Minor));
         Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
     }
 
@@ -618,15 +617,23 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_CanGetValueTypeOfProcessor()
     {
-        Assert.That(InputControlProcessor.GetValueType(typeof(StickDeadzoneProcessor)), Is.SameAs(typeof(Vector2)));
-        Assert.That(InputControlProcessor.GetValueType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
+        Assert.That(InputProcessor.GetValueTypeFromType(typeof(StickDeadzoneProcessor)), Is.SameAs(typeof(Vector2)));
+        Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_CanGetValueTypeOfInteraction()
     {
-        Assert.That(InputInteraction.GetValueType(typeof(StickInteraction)), Is.SameAs(typeof(Vector2)));
+        Assert.That(InputInteraction.GetValueType(typeof(HoldInteraction)), Is.SameAs(typeof(float)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetParameterEditorFromInteractionType()
+    {
+        Assert.That(InputParameterEditor.LookupEditorForType(typeof(HoldInteraction)),
+            Is.SameAs(typeof(HoldInteractionEditor)));
     }
 
     [Test]

@@ -400,15 +400,12 @@ partial class CoreTests
         InputSystem.QueueStateEvent(mouse, new MouseState {delta = Vector2.one});
         InputSystem.Update();
 
-        InputEventPtr eventPtr;
-        using (var buffer = StateEvent.From(mouse, out eventPtr))
+        using (var buffer = StateEvent.From(mouse, out var eventPtr))
         {
-            float xVal;
-            float yVal;
-            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out xVal));
+            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out var xVal));
             Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
 
-            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out yVal));
+            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out var yVal));
             Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
@@ -966,8 +963,7 @@ partial class CoreTests
 
         unsafe
         {
-            InputEventPtr eventPtr;
-            using (StateEvent.From(gamepad, out eventPtr))
+            using (StateEvent.From(gamepad, out var eventPtr))
             using (var buffer = new InputEventBuffer(eventPtr, 1))
             {
                 Assert.That(buffer.eventCount, Is.EqualTo(1));
@@ -990,8 +986,7 @@ partial class CoreTests
 
         unsafe
         {
-            InputEventPtr eventPtr;
-            using (StateEvent.From(gamepad, out eventPtr))
+            using (StateEvent.From(gamepad, out var eventPtr))
             using (var buffer = new InputEventBuffer())
             {
                 // Write two events into buffer.
