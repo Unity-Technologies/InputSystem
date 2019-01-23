@@ -86,6 +86,7 @@ This release contains a number of fairly significant changes. The focus has been
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
 - Control picker in UI having no devices if list of supported devices is empty but not null
 - `IndexOutOfRangeException` when having multiple action maps in an asset (#359 and #358).
+- Interactions timing out even if there was a pending event that would complete the interaction in time.
 
 ## [0.1.2-preview] - 2018-12-19
 

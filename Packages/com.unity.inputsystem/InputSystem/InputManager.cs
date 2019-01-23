@@ -2254,14 +2254,6 @@ namespace UnityEngine.Experimental.Input
             // Store current time offset.
             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
-            // When doing player updates, first go through our action timeouts and
-            // notify any timer that has expired.
-            if (gameIsPlayingAndHasFocus)
-            {
-                SwitchToBuffersForActions();
-                ProcessStateChangeMonitorTimeouts();
-            }
-
             InputUpdate.s_LastUpdateType = updateType;
             InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
 
@@ -2309,6 +2301,11 @@ namespace UnityEngine.Experimental.Input
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
             {
+                // Normally, we process action timeouts after first processing all events. If we have no
+                // events, we still need to check timeouts.
+                if (gameIsPlayingAndHasFocus)
+                    ProcessStateChangeMonitorTimeouts();
+
                 if (buffersToUseForUpdate != updateType)
                     InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
                 #if ENABLE_PROFILER
@@ -2801,6 +2798,9 @@ namespace UnityEngine.Experimental.Input
                 eventBuffer.Reset();
             #endif
 
+            if (gameIsPlayingAndHasFocus)
+                ProcessStateChangeMonitorTimeouts();
+
             ////TODO: fire event that allows code to update state *from* state we just updated
 
             if (buffersToUseForUpdate != updateType)
@@ -2975,6 +2975,8 @@ namespace UnityEngine.Experimental.Input
             var timeoutCount = m_StateChangeMonitorTimeouts.length;
             if (timeoutCount == 0)
                 return;
+
+            SwitchToBuffersForActions();
 
             // Go through the list and both trigger expired timers and remove any irrelevant
             // ones by compacting the array.
