@@ -6,6 +6,10 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: rename to just InputActionState?
+
+////TODO: when control is actuated and initiates an interaction, lock the interaction to the control until the interaction is complete or cancelled
+
 ////TODO: add a serialized form of this and take it across domain reloads
 
 ////TODO: remove direct references to InputManager
@@ -14,10 +18,6 @@ using UnityEngine.Profiling;
 
 ////REVIEW: can we pack all the state that is blittable into a single chunk of unmanaged memory instead of into several managed arrays?
 ////        (this also means we can update more data with direct pointers)
-
-////REVIEW: can we have a global array of InputControls?
-
-////REVIEW: rename to just InputActionState?
 
 ////REVIEW: allow setup where state monitor is enabled but action is disabled?
 
@@ -36,7 +36,7 @@ namespace UnityEngine.Experimental.Input
     /// asset in the game, you get a single InputActionMapState that contains the entire dynamic
     /// execution state for your game's actions.
     /// </remarks>
-    internal class InputActionMapState : IInputStateChangeMonitor
+    internal class InputActionMapState : IInputStateChangeMonitor, ICloneable
     {
         public const int kInvalidIndex = -1;
 
@@ -68,12 +68,12 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public IInputInteraction[] interactions;
 
-        public object[] processors;
+        public InputProcessor[] processors;
 
         /// <summary>
         /// Array of instantiated composite objects.
         /// </summary>
-        public object[] composites;
+        public InputBindingComposite[] composites;
 
         public int totalMapCount;
 
@@ -124,10 +124,14 @@ namespace UnityEngine.Experimental.Input
         ///
         /// This array should not require GC scanning.
         /// </remarks>
-        public TriggerState[] triggerStates;
+        public TriggerState[] actionStates;
 
         public int[] controlIndexToBindingIndex;
 
+        private Action<InputUpdateType> m_OnBeforeUpdateDelegate;
+        private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+        private bool m_OnBeforeUpdateHooked;
+        private bool m_OnAfterUpdateHooked;
         /// <summary>
         /// Initialize execution state with given resolved binding information.
         /// </summary>
@@ -150,7 +154,7 @@ namespace UnityEngine.Experimental.Input
 
             maps = resolver.maps;
             mapIndices = resolver.mapIndices;
-            triggerStates = resolver.actionStates;
+            actionStates = resolver.actionStates;
             bindingStates = resolver.bindingStates;
             interactionStates = resolver.interactionStates;
             interactions = resolver.interactions;
@@ -165,7 +169,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < totalMapCount; ++i)
             {
                 var map = maps[i];
-                Debug.Assert(!map.enabled);
+                Debug.Assert(!map.enabled, "Cannot destroy action map state while a map in the state is still enabled");
                 map.m_State = null;
                 map.m_MapIndexInState = kInvalidIndex;
 
@@ -180,69 +184,134 @@ namespace UnityEngine.Experimental.Input
             RemoveMapFromGlobalList();
         }
 
-        public void ResetTriggerState(InputAction action)
+        /// <summary>
+        /// Create a copy of the state.
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>
+        /// The copy is non-functional in so far as it cannot be used to keep track of changes made to
+        /// any associated actions. However, it can be used to freeze the binding resolution state of
+        /// a particular set of enabled actions. This is used by <see cref="InputActionTrace"/>.
+        /// </remarks>
+        public InputActionMapState Clone()
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex);
-            Debug.Assert(maps.Contains(action.m_ActionMap));
-            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount);
-
-            // Reset interactions, if necessary. Do this on all instead of the one
-            // that triggered to make sure we get a full reset.
-            var actionIndex = action.m_ActionIndex;
-            if (triggerStates[actionIndex].phase != InputActionPhase.Waiting)
+            return new InputActionMapState
             {
-                var bindingIndex = triggerStates[actionIndex].bindingIndex;
-                if (bindingIndex != kInvalidIndex)
+                maps = ArrayHelpers.Copy(maps),
+                mapIndices = ArrayHelpers.Copy(mapIndices),
+                controls = ArrayHelpers.Copy(controls),
+                interactions = ArrayHelpers.Copy(interactions),
+                processors = ArrayHelpers.Copy(processors),
+                composites = ArrayHelpers.Copy(composites),
+                totalMapCount = totalMapCount,
+                totalActionCount = totalActionCount,
+                totalBindingCount = totalBindingCount,
+                totalControlCount = totalControlCount,
+                totalInteractionCount = totalInteractionCount,
+                totalProcessorCount = totalProcessorCount,
+                totalCompositeCount = totalCompositeCount,
+                bindingStates = ArrayHelpers.Copy(bindingStates),
+                interactionStates = ArrayHelpers.Copy(interactionStates),
+                actionStates = ArrayHelpers.Copy(actionStates),
+                controlIndexToBindingIndex = ArrayHelpers.Copy(controlIndexToBindingIndex),
+            };
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
+        /// <summary>
+        /// Reset the trigger state of the given action such that the action has no record of being triggered.
+        /// </summary>
+        /// <param name="actionIndex">Action whose state to reset.</param>
+        /// <param name="toPhase">Phase to reset the action to. Must be either <see cref="InputActionPhase.Waiting"/>
+        /// or <see cref="InputActionPhase.Disabled"/>. Other phases cannot be transitioned to through resets.</param>
+        public void ResetActionState(int actionIndex, InputActionPhase toPhase = InputActionPhase.Waiting)
+        {
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range");
+            Debug.Assert(toPhase == InputActionPhase.Waiting || toPhase == InputActionPhase.Disabled,
+                "Phase must be Waiting or Disabled");
+
+            // If the action in started or performed phase, cancel it first.
+            if (actionStates[actionIndex].phase != InputActionPhase.Waiting)
+            {
+                // Cancellation calls should receive current time.
+                actionStates[actionIndex].time = InputRuntime.s_Instance.currentTime;
+
+                // If the action got triggered from an interaction, go and reset all interactions on the binding
+                // that got triggered.
+                if (actionStates[actionIndex].interactionIndex != kInvalidIndex)
                 {
-                    var interactionCount = bindingStates[bindingIndex].interactionCount;
-                    var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
-                    for (var i = 0; i < interactionCount; ++i)
+                    var bindingIndex = actionStates[actionIndex].bindingIndex;
+                    if (bindingIndex != kInvalidIndex)
                     {
-                        interactions[i].Reset();
-                        interactionStates[i] = new InteractionState();
+                        var mapIndex = actionStates[actionIndex].mapIndex;
+                        var interactionCount = bindingStates[bindingIndex].interactionCount;
+                        var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
+
+                        for (var i = 0; i < interactionCount; ++i)
+                        {
+                            var interactionIndex = interactionStartIndex + i;
+                            ResetInteractionStateAndCancelIfNecessary(mapIndex, bindingIndex, interactionIndex);
+                        }
                     }
+                }
+                else
+                {
+                    // No interactions. Cancel the action directly.
+
+                    Debug.Assert(actionStates[actionIndex].bindingIndex != kInvalidIndex, "Binding index on trigger state is invalid");
+                    Debug.Assert(bindingStates[actionStates[actionIndex].bindingIndex].interactionCount == 0,
+                        "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
+
+                    ChangePhaseOfAction(InputActionPhase.Cancelled, ref actionStates[actionIndex]);
                 }
             }
 
             // Wipe state.
-            triggerStates[actionIndex] = new TriggerState
+            var state = actionStates[actionIndex];
+            state.phase = toPhase;
+            state.controlIndex = kInvalidIndex;
+            state.bindingIndex = 0;
+            state.interactionIndex = kInvalidIndex;
+            state.startTime = 0;
+            state.time = 0;
+            actionStates[actionIndex] = state;
+
+            // Remove if currently on the list of continuous actions.
+            if (state.continuous)
             {
-                phase = InputActionPhase.Waiting,
-                controlIndex = kInvalidIndex,
-                bindingIndex = 0,
-                interactionIndex = kInvalidIndex,
-                mapIndex = action.m_ActionMap.m_MapIndexInState,
-                startTime = 0,
-                time = 0
-            };
+                var continuousIndex = ArrayHelpers.IndexOf(m_ContinuousActions, actionIndex, count: m_ContinuousActionCount);
+                if (continuousIndex != -1)
+                    ArrayHelpers.EraseAtByMovingTail(m_ContinuousActions, ref m_ContinuousActionCount, continuousIndex);
+            }
         }
 
-        ////TODO: switch to ref returns once we're on C#7
-        public TriggerState FetchTriggerState(InputAction action)
+        public ref TriggerState FetchActionState(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex);
-            Debug.Assert(maps.Contains(action.m_ActionMap));
-            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount);
+            Debug.Assert(action != null, "Action must not be null");
+            Debug.Assert(action.m_ActionMap != null, "Action must have an action map");
+            Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex, "Action must have index set");
+            Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
+            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount, "Action index is out of range");
 
-            return triggerStates[action.m_ActionIndex];
+            return ref actionStates[action.m_ActionIndex];
         }
 
         public ActionMapIndices FetchMapIndices(InputActionMap map)
         {
-            Debug.Assert(map != null);
-            Debug.Assert(maps.Contains(map));
+            Debug.Assert(map != null, "Must must not be null");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
             return mapIndices[map.m_MapIndexInState];
         }
 
         public void EnableAllActions(InputActionMap map)
         {
-            Debug.Assert(map != null);
-            Debug.Assert(map.m_Actions != null);
-            Debug.Assert(maps.Contains(map));
+            Debug.Assert(map != null, "Map must not be null");
+            Debug.Assert(map.m_Actions != null, "Map must have actions");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
             EnableControls(map);
 
@@ -252,16 +321,20 @@ namespace UnityEngine.Experimental.Input
             var actionCount = mapIndices[mapIndex].actionCount;
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
-                triggerStates[actionStartIndex + i].phase = InputActionPhase.Waiting;
+            {
+                var actionIndex = actionStartIndex + i;
+                actionStates[actionIndex].phase = InputActionPhase.Waiting;
+            }
 
+            HookOnBeforeUpdate();
             NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
         }
 
-        public void EnableControls(InputActionMap map)
+        private void EnableControls(InputActionMap map)
         {
-            Debug.Assert(map != null);
-            Debug.Assert(map.m_Actions != null);
-            Debug.Assert(maps.Contains(map));
+            Debug.Assert(map != null, "Map must not be null");
+            Debug.Assert(map.m_Actions != null, "Map must have actions");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
             var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
@@ -275,32 +348,33 @@ namespace UnityEngine.Experimental.Input
 
         public void EnableSingleAction(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(maps.Contains(action.m_ActionMap));
+            Debug.Assert(action != null, "Action must not be null");
+            Debug.Assert(action.m_ActionMap != null, "Action must have action map");
+            Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
             EnableControls(action);
 
             // Put action into waiting state.
             var actionIndex = action.m_ActionIndex;
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
-            triggerStates[actionIndex].phase = InputActionPhase.Waiting;
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range");
+            actionStates[actionIndex].phase = InputActionPhase.Waiting;
 
+            HookOnBeforeUpdate();
             NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
         }
 
-        public void EnableControls(InputAction action)
+        private void EnableControls(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(maps.Contains(action.m_ActionMap));
+            Debug.Assert(action != null, "Action must not be null");
+            Debug.Assert(action.m_ActionMap != null, "Action must have action map");
+            Debug.Assert(maps.Contains(action.m_ActionMap), "Map must be contained in state");
 
             var actionIndex = action.m_ActionIndex;
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range");
 
             var map = action.m_ActionMap;
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
 
             // Go through all bindings in the map and for all that belong to the given action,
             // enable the associated controls.
@@ -325,31 +399,144 @@ namespace UnityEngine.Experimental.Input
 
         public void DisableAllActions(InputActionMap map)
         {
-            Debug.Assert(map != null);
-            Debug.Assert(map.m_Actions != null);
-            Debug.Assert(maps.Contains(map));
+            Debug.Assert(map != null, "Map must not be null");
+            Debug.Assert(map.m_Actions != null, "Map must have actions");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
             DisableControls(map);
 
             // Mark all actions as disabled.
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
-            var actionCount = mapIndices[mapIndex].actionCount;
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            var actionCount = mapIndices[mapIndex].actionCount;
             for (var i = 0; i < actionCount; ++i)
-                triggerStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
+            {
+                var actionIndex = actionStartIndex + i;
+                if (actionStates[actionIndex].phase != InputActionPhase.Disabled)
+                    ResetActionState(actionIndex, toPhase: InputActionPhase.Disabled);
+            }
 
             NotifyListenersOfActionChange(InputActionChange.ActionMapDisabled, map);
         }
 
-        public void DisableControls(InputActionMap map)
+        /// <summary>
+        /// Disable all actions in the given map that are currently enabled such that they can be
+        /// re-enabled with <see cref="ReenableTemporarilyDisabledActions"/>.
+        /// </summary>
+        /// <param name="map"></param>
+        /// <remarks>
+        /// When re-resolving bindings while an action map is enabled, we temporarily have to disable
+        /// </remarks>
+        public void TemporarilyDisableActions(InputActionMap map)
         {
-            Debug.Assert(map != null);
-            Debug.Assert(map.m_Actions != null);
-            Debug.Assert(maps.Contains(map));
+            Debug.Assert(map != null, "Map must not be null");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
+
+            // Nothing to do if there's no enabled actions in the map.
+            var numEnabledActions = map.m_EnabledActionsCount;
+            if (numEnabledActions <= 0)
+                return;
+
+            UnhookOnBeforeUpdate();
 
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            var actionCount = mapIndices[mapIndex].actionCount;
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+
+            if (numEnabledActions == actionCount)
+            {
+                // Cancel any action that isn't waiting.
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var actionIndex = actionStartIndex + n;
+                    var phase = actionStates[actionIndex].phase;
+                    if (phase == InputActionPhase.Started || phase == InputActionPhase.Performed)
+                        ResetActionState(actionIndex);
+                }
+
+                DisableControls(map);
+            }
+            else
+            {
+                var actions = map.m_Actions;
+                Debug.Assert(actions != null, "Map has no actions");
+
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var actionIndex = actionStartIndex + n;
+                    var phase = actionStates[actionIndex].phase;
+
+                    if (phase == InputActionPhase.Disabled)
+                        continue;
+
+                    var action = actions[n];
+                    action.m_NeedsReEnabling = true;
+
+                    // Cancel action if it isn't waiting.
+                    if (phase == InputActionPhase.Started || phase == InputActionPhase.Performed)
+                        ResetActionState(actionIndex);
+
+                    DisableControls(action);
+                }
+            }
+        }
+
+        public void ReenableTemporarilyDisabledActions(InputActionMap map)
+        {
+            Debug.Assert(map != null, "Map must not be null");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
+
+            // Nothing to do if there's no enabled actions in the map.
+            var numEnabledActions = map.m_EnabledActionsCount;
+            if (numEnabledActions <= 0)
+                return;
+
+            var mapIndex = map.m_MapIndexInState;
+            var actionCount = mapIndices[mapIndex].actionCount;
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+
+            // The actions we enable controls on here need an initial state check in
+            // OnBeforeInitialUpdate().
+            HookOnBeforeUpdate();
+
+            if (numEnabledActions == actionCount)
+            {
+                EnableControls(map);
+
+                // Put all actions into waiting state.
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var actionIndex = actionStartIndex + n;
+                    actionStates[actionIndex].phase = InputActionPhase.Waiting;
+                }
+            }
+            else
+            {
+                var actions = map.m_Actions;
+                Debug.Assert(actions != null, "Map has no actions");
+
+                for (var n = 0; n < actionCount; ++n)
+                {
+                    var action = actions[n];
+                    if (!action.m_NeedsReEnabling)
+                        continue;
+
+                    EnableControls(action);
+                    actionStates[actionStartIndex + n].phase = InputActionPhase.Waiting;
+                    action.m_NeedsReEnabling = false;
+                }
+            }
+        }
+
+        private void DisableControls(InputActionMap map)
+        {
+            Debug.Assert(map != null, "Map must not be null");
+            Debug.Assert(map.m_Actions != null, "Map must have actions");
+            Debug.Assert(maps.Contains(map), "Map must be contained in state");
+
+            var mapIndex = map.m_MapIndexInState;
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
 
             // Remove state monitors from all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
@@ -360,32 +547,27 @@ namespace UnityEngine.Experimental.Input
 
         public void DisableSingleAction(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(maps.Contains(action.m_ActionMap));
+            Debug.Assert(action != null, "Action must not be null");
+            Debug.Assert(action.m_ActionMap != null, "Action must have action map");
+            Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
             DisableControls(action);
-
-            // Put action into disabled state.
-            var actionIndex = action.m_ActionIndex;
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
-            triggerStates[actionIndex].phase = InputActionPhase.Disabled;
-
+            ResetActionState(action.m_ActionIndex, toPhase: InputActionPhase.Disabled);
             NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
         }
 
-        public void DisableControls(InputAction action)
+        private void DisableControls(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(maps.Contains(action.m_ActionMap));
+            Debug.Assert(action != null, "Action must not be null");
+            Debug.Assert(action.m_ActionMap != null, "Action must have action map");
+            Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
             var actionIndex = action.m_ActionIndex;
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range");
 
             var map = action.m_ActionMap;
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
 
             // Go through all bindings in the map and for all that belong to the given action,
             // disable the associated controls.
