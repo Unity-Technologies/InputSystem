@@ -902,17 +902,22 @@ partial class CoreTests
     [Ignore("TODO")]
     public void TODO_State_CanRecordHistoryOfState()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        //have to record raw, unprocessed state; deadzone processor will break asserts below, though
-        using (var history = new InputStateHistory<Vector2>(gamepad.leftStick))
+        using (var history = new InputStateHistory<Vector2>("<Gamepad>/*stick"))
         {
+            Assert.That(history.controls,
+                Is.EquivalentTo(
+                    new[] {gamepad1.leftStick, gamepad1.rightStick, gamepad2.leftStick, gamepad2.rightStick}));
+
             history.Enable();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightStick = new Vector2(0.321f, 0.432f)});
             InputSystem.Update();
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
             InputSystem.Update();
 
             Assert.That(history.Count, Is.EqualTo(3));

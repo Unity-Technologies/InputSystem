@@ -76,6 +76,11 @@ This release contains a number of fairly significant changes. The focus has been
         .With("Negative", "<Keyboard>/d");
     ```
 - "C# Class File" property on .inputactions importer settings now has a file picker next to it.
+- `InputActionTrace` has seen various improvements.
+    * Recorded data will now stay valid even if actions are rebound to different controls.
+    * Can listen to all actions using `InputActionTrace.SubscribeToAll`.
+    * `InputActionTrace` now maintains a list of subscriptions. Add subscriptions with `SubscribeTo` and remove a subscription with `UnsubscribeFrom`. See the [documentation](Documentation~/Actions.md#tracing-actions) for details.
+
 ### Fixes
 
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers

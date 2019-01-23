@@ -267,7 +267,7 @@ internal class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-            // Pretend that tigger values for dualshock come from range [-1.0..1.0]
+            // Pretend that trigger values for dualshock come from range [-1.0..1.0]
             // after normalization they will be transformed to range [0.0..1.0]
                 .WithAxis(AndroidAxis.Rx, rxValue * 2.0f - 1.0f)
                 .WithAxis(AndroidAxis.Ry, ryValue * 2.0f - 1.0f)
@@ -366,8 +366,7 @@ internal class AndroidTests : InputTestFixture
         var device = InputSystem.AddDevice(layoutName);
         var control = (AxisControl)device[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             control.WriteValueIntoEvent(0.123f, stateEventPtr);
 
@@ -387,8 +386,7 @@ internal class AndroidTests : InputTestFixture
         var device = InputSystem.AddDevice(layoutName);
         var control = (IntegerControl)device[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             control.WriteValueIntoEvent(5, stateEventPtr);
 
@@ -413,8 +411,7 @@ internal class AndroidTests : InputTestFixture
         var device = InputSystem.AddDevice(layoutName);
         var control = (Vector3Control)device[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             var value = new Vector3(0.1f, 0.2f, 0.3f);
             ////FIXME: Seems like written value doesn't through processor, for ex, AndroidCompensateDirectionProcessor, thus we need to manually apply preprocessing
@@ -444,8 +441,7 @@ internal class AndroidTests : InputTestFixture
         var device = InputSystem.AddDevice(layoutName);
         var control = (QuaternionControl)device[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             var rotation = new Vector3(5.0f, 12.0f, 16.0f);
             var q = Quaternion.Euler(rotation);
