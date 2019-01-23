@@ -224,7 +224,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// Enabling this behavior is useful for implementing automatic control scheme switching that does not
         /// rely on <see cref="onUnpairedDeviceUsed"/>. Instead of listening for unpaired device activity (which
         /// can be costly), one can instead hook into <see cref="InputSystem.onActionChange"/> and use
-        /// <see cref="InputActionChange.ActionTriggered"/> to detect when an action was triggered from a device
+        /// <see cref="InputActionChange.ActionPerformed"/> to detect when an action was triggered from a device
         /// not currently paired to the user, in which case <see cref="ActivateControlScheme(InputControlScheme)"/>
         /// can be used to automatically switch to a different control scheme.
         /// </remarks>
@@ -1115,7 +1115,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             Debug.Assert(device != null);
 
-            var indexOfDevice = ArrayHelpers.IndexOfReference(s_AllPairedDevices, s_AllPairedDeviceCount, device);
+            var indexOfDevice = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, s_AllPairedDeviceCount);
             if (indexOfDevice == -1)
                 return -1;
 
@@ -1215,8 +1215,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             Debug.Assert(device != null);
 
             var deviceIndex = asLostDevice
-                ? ArrayHelpers.IndexOfReference(s_AllLostDevices, s_AllLostDeviceCount, device)
-                : ArrayHelpers.IndexOfReference(s_AllPairedDevices, s_AllPairedDeviceCount, device);
+                ? ArrayHelpers.IndexOfReference(s_AllLostDevices, device, s_AllLostDeviceCount)
+                : ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, s_AllPairedDeviceCount);
             Debug.Assert(deviceIndex != -1);
             if (deviceIndex == -1)
             {
@@ -1533,7 +1533,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 {
                     // Could have been removed from multiple users. Repeatedly search in s_AllPairedDevices
                     // until we can't find the device anymore.
-                    var deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device);
+                    var deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, s_AllPairedDeviceCount);
                     while (deviceIndex != -1)
                     {
                         // Find user. Must be there as we found the device in s_AllPairedDevices.
@@ -1557,7 +1557,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                         RemoveDeviceFromUser(userIndex, device);
 
                         // Search for another user paired to the same device.
-                        deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, deviceIndex + 1);
+                        deviceIndex =
+                            ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, deviceIndex + 1, s_AllPairedDeviceCount);
                     }
                     break;
                 }
@@ -1567,7 +1568,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 {
                     // Could be a previously lost device. Could affect multiple users. Repeatedly search in
                     // s_AllLostDevices until we can't find the device anymore.
-                    var deviceIndex = ArrayHelpers.IndexOfReference(s_AllLostDevices, device);
+                    var deviceIndex = ArrayHelpers.IndexOfReference(s_AllLostDevices, device, s_AllLostDeviceCount);
                     while (deviceIndex != -1)
                     {
                         // Find user. Must be there as we found the device in s_AllLostDevices.
@@ -1592,7 +1593,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                         AddDeviceToUser(userIndex, device);
 
                         // Search for another user who had lost the same device.
-                        deviceIndex = ArrayHelpers.IndexOfReference(s_AllLostDevices, device, deviceIndex + 1);
+                        deviceIndex =
+                            ArrayHelpers.IndexOfReference(s_AllLostDevices, device, deviceIndex + 1, s_AllLostDeviceCount);
                     }
                     break;
                 }
@@ -1706,7 +1708,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     {
                         // Could paired to multiple users. Repeatedly search in s_AllPairedDevices
                         // until we can't find the device anymore.
-                        var deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device);
+                        var deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, s_AllPairedDeviceCount);
                         while (deviceIndex != -1)
                         {
                             // Find user. Must be there as we found the device in s_AllPairedDevices.
@@ -1725,7 +1727,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                             UpdatePlatformUserAccount(userIndex, device);
 
                             // Search for another user paired to the same device.
-                            deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, deviceIndex + 1);
+                            deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, deviceIndex + 1, s_AllPairedDeviceCount);
                         }
                     }
                     break;

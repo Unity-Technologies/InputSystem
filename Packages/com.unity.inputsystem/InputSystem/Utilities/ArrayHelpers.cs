@@ -9,6 +9,10 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// <summary>
     /// A collection of utility functions for working with arrays.
     /// </summary>
+    /// <remarks>
+    /// The goal of this collection is to make it easy to use arrays directly rather than resorting to
+    /// <see cref="List{T}"/>.
+    /// </remarks>
     internal static class ArrayHelpers
     {
         public static int LengthSafe<TValue>(this TValue[] array)
@@ -113,14 +117,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             return true;
         }
 
-        public static int IndexOf<TValue>(TValue[] array, TValue value)
+        ////REVIEW: remove this to get rid of default equality comparer?
+        public static int IndexOf<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
         {
             if (array == null)
                 return -1;
 
-            var length = array.Length;
+            if (count < 0)
+                count = array.Length - startIndex;
             var comparer = EqualityComparer<TValue>.Default;
-            for (var i = 0; i < length; ++i)
+            for (var i = startIndex; i < startIndex + count; ++i)
                 if (comparer.Equals(array[i], value))
                     return i;
 
@@ -140,28 +146,37 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex = 0)
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int count = -1)
+            where TValue : class
+        {
+            return IndexOfReference(array, value, 0, count);
+        }
+
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex, int count)
             where TValue : class
         {
             if (array == null)
                 return -1;
 
-            var length = array.Length;
-            for (var i = startIndex; i < length; ++i)
+            if (count < 0)
+                count = array.Length - startIndex;
+            for (var i = startIndex; i < startIndex + count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return i;
 
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, int count, TValue value)
-            where TValue : class
+        public static int IndexOfValue<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
+            where TValue : struct, IEquatable<TValue>
         {
             if (array == null)
                 return -1;
 
-            for (var i = 0; i < count; ++i)
-                if (ReferenceEquals(array[i], value))
+            if (count < 0)
+                count = array.Length - startIndex;
+            for (var i = startIndex; i < startIndex + count; ++i)
+                if (value.Equals(array[i]))
                     return i;
 
             return -1;
@@ -508,7 +523,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 Array.Copy(array, index + 1, array, index, count - index - 1);
             }
 
-            array[count - 1] = default(TValue); // Tail has been moved down by one.
+            array[count - 1] = default; // Tail has been moved down by one.
             --count;
         }
 

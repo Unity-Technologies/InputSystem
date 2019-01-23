@@ -16,6 +16,19 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
     /// <seealso cref="InputAction"/>
     public class InputValue
     {
+        /// <summary>
+        /// Read the value as an object.
+        /// </summary>
+        /// <remarks>
+        /// This method allocates GC memory and will thus created garbage. If used during gameplay,
+        /// it will lead to GC spikes.
+        /// </remarks>
+        /// <returns>The current value in the form of a boxed object.</returns>
+        public object Get()
+        {
+            return m_Context.Value.ReadValueAsObject();
+        }
+
         ////TODO: add automatic conversions
         public TValue Get<TValue>()
             where TValue : struct

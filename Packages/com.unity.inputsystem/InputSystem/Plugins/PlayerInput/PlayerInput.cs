@@ -8,6 +8,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: refresh caches when asset is modified at runtime
 
+////TODO: handle required actions ahead of time so that we catch it if a device matches by type but doesn't otherwise
+
 ////FIXME: why can't I join with a mouse left click?
 
 //pairing with specific devices requires PlayerInputManager
@@ -262,7 +264,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             set { throw new NotImplementedException(); }
         }
 
-        public Camera camera
+        public new Camera camera
         {
             get => m_Camera;
             set => m_Camera = value;
@@ -866,7 +868,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             m_Enabled = false;
 
             // Remove from global list.
-            var index = ArrayHelpers.IndexOfReference(s_AllActivePlayers, s_AllActivePlayersCount, this);
+            var index = ArrayHelpers.IndexOfReference(s_AllActivePlayers, this, s_AllActivePlayersCount);
             if (index != -1)
                 ArrayHelpers.EraseAtWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, index);
 
@@ -969,11 +971,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [Serializable]
         public class ControlSchemeChangeEvent : UnityEvent
         {
-        }
-
-        public enum DevicePairing
-        {
-            UseDefaultControlScheme,
         }
     }
 }

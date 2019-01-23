@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// </summary>
         public float splitScreenBorderWidth
         {
-            get { throw new NotImplementedException(); }
+            get => m_SplitScreenBorderWidth;
             set { throw new NotImplementedException(); }
         }
 
@@ -361,6 +361,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal bool m_SplitScreen;
         [SerializeField] internal bool m_MaintainAspectRatioInSplitScreen;
         [SerializeField] internal int m_FixedNumberOfSplitScreens = -1;
+        [SerializeField] internal float m_SplitScreenBorderWidth;
         [SerializeField] internal Rect m_SplitScreenRect = new Rect(0, 0, 1, 1);
 
         [NonSerialized] private bool m_JoinActionDelegateHooked;
@@ -609,15 +610,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [Serializable]
         public class PlayerLeftEvent : UnityEvent<GameObject>
         {
-        }
-
-        public enum SplitScreen
-        {
-            Disabled,
-
-            MaintainAspectRatio,
-
-            IncrementByTwo,
         }
     }
 }
