@@ -4,18 +4,18 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.1.3-preview] - ????
+## [0.1.3-preview] (Teuton) - ????
+
+This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
+
+>NOTE: There are some breaking changes. Please see the "Changed" section below.
 
 ### Changed
 
-- Removed Unity 2018.2 support code
-- Removed .NET 3.5 support code
-- `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls
-- Action editor now gets docked by default
-- Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name
-- Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite
-    - The old names can still be used and existing data will load as expected
-    - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged
+- Removed Unity 2018.2 support code.
+- Removed .NET 3.5 support code.
+- Started using C# 7.
+- `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcess<TValue>` base classes.
 
 ### Added
 
