@@ -60,6 +60,7 @@ This release contains a number of fairly significant changes. The focus has been
     * `NormalizeVector2Processor`
     * `NormalizeVector3Processor`
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
+- Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 
 ### Fixes
 

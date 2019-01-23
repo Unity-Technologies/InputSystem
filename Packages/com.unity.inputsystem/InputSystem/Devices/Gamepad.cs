@@ -22,10 +22,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('G', 'P', 'A', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
 
         /// <summary>
         /// Button bit mask.
@@ -85,6 +82,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public FourCC GetFormat()
         {
             return kFormat;
+        }
+
+        public GamepadState(params GamepadButton[] buttons)
+            : this()
+        {
+            foreach (var button in buttons)
+            {
+                var bit = (uint)1 << (int)button;
+                this.buttons |= bit;
+            }
         }
 
         public GamepadState WithButton(GamepadButton button, bool value = true)
@@ -243,10 +250,7 @@ namespace UnityEngine.Experimental.Input
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
         /// </remarks>
-        public static ReadOnlyArray<Gamepad> all
-        {
-            get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
-        }
+        public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {

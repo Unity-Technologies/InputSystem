@@ -399,7 +399,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 AddValueItem(settingsItem, "Default Tap Time", settings.defaultTapTime, ref id);
                 AddValueItem(settingsItem, "Default Slow Tap Time", settings.defaultSlowTapTime, ref id);
                 AddValueItem(settingsItem, "Default Hold Time", settings.defaultHoldTime, ref id);
-                AddValueItem(settingsItem, "Default Sensitivity", settings.defaultSensitivity, ref id);
                 AddValueItem(settingsItem, "Lock Input To Game View", InputEditorUserSettings.lockInputToGameView, ref id);
                 if (settings.supportedDevices.Count > 0)
                 {

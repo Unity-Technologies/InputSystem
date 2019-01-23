@@ -35,12 +35,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public const int kSizeInBytes = 36;
 
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'O', 'U', 'C'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
         [InputControl(layout = "Integer")][FieldOffset(0)] public int touchId;
+        ////TODO: kill the processor here
         [InputControl(processors = "TouchPositionTransform")][FieldOffset(4)] public Vector2 position;
         [InputControl][FieldOffset(12)] public Vector2 delta;
         [InputControl(layout = "Axis")][FieldOffset(20)] public float pressure;
@@ -51,8 +49,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public PointerPhase phase
         {
-            get { return (PointerPhase)phaseId; }
-            set { phaseId = (ushort)value; }
+            get => (PointerPhase)phaseId;
+            set => phaseId = (ushort)value;
         }
 
         public FourCC GetFormat()
@@ -61,9 +59,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
 
-    public class TouchPositionTransformProcessor : IInputControlProcessor<Vector2>
+    ////FIXME: this thing should go; the Android player should do this in the backend
+    public class TouchPositionTransformProcessor : InputProcessor<Vector2>
     {
-        public Vector2 Process(Vector2 value, InputControl control)
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
 #if UNITY_EDITOR
             return value;
@@ -89,10 +88,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'S', 'C', 'R'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
 
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.

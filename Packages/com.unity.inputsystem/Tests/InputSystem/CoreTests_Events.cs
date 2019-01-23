@@ -393,6 +393,29 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanGetAverageEventLag()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        runtime.advanceTimeEachDynamicUpdate = 0;
+        runtime.currentTime = 10;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A), 6);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)}, 1);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A), 10);
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.234f, 0.345f)}, 3);
+        InputSystem.Update();
+
+        var metrics = InputSystem.GetMetrics();
+
+        Assert.That(metrics.averageLagTimePerEvent, Is.EqualTo((9 + 7 + 4 + 0) / 4.0).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Events")]
     public unsafe void Events_CanInitializeStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();

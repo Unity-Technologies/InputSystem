@@ -1462,8 +1462,7 @@ namespace UnityEngine.Experimental.Input
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
-            //interactions.AddTypeRegistration("DoubleTap", typeof(DoubleTapInteraction));
-            //interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
+            interactions.AddTypeRegistration("MultiTap", typeof(MultiTapInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
@@ -2398,6 +2397,9 @@ namespace UnityEngine.Experimental.Input
                 }
                 #endif
 
+                if (currentEventReadPtr->time <= currentTime)
+                    totalEventLag += currentTime - currentEventReadPtr->time;
+
                 // Give listeners a shot at the event.
                 var listenerCount = m_EventListeners.length;
                 if (listenerCount > 0)
@@ -2768,7 +2770,8 @@ namespace UnityEngine.Experimental.Input
                 #endif
             }
 
-            m_Metrics.totalEventProcessingTime = Time.realtimeSinceStartup - processingStartTime;
+            m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
+            m_Metrics.totalEventLagTime += totalEventLag;
 
             #if UNITY_2019_2_OR_NEWER
             // Remember how much data we retained so that we don't count it against the next

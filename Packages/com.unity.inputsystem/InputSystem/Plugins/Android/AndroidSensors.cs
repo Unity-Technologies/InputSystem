@@ -5,7 +5,7 @@ using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 {
@@ -118,12 +118,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
     public class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
-        // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
+        // Taken from platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public override Vector3 Process(Vector3 vector, InputControl control)
+        public override Vector3 Process(Vector3 vector, InputControl<Vector3> control)
         {
             return base.Process(vector * kAccelerationMultiplier, control);
         }
@@ -131,7 +131,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
     public class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
-        public override Quaternion Process(Quaternion value, InputControl control)
+        public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
         {
             // https://developer.android.com/reference/android/hardware/SensorEvent#values
             // "...The rotation vector represents the orientation of the device as a combination of an angle and an axis, in which the device has rotated through an angle theta around an axis <x, y, z>."
@@ -139,7 +139,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
             // "...The three elements of the rotation vector are equal to the last three components of a unit quaternion < cos(theta / 2), x* sin(theta/ 2), y* sin(theta / 2), z* sin(theta/ 2)>."
             //
             // In other words, axis + rotation is combined into Vector3, to recover the quaternion from it, we must compute 4th component as 1 - sqrt(x*x + y*y + z*z)
-            float sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
+            var sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
             value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
 
             return base.Process(value, control);
