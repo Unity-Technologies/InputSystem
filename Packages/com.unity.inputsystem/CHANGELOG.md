@@ -16,6 +16,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Removed .NET 3.5 support code.
 - Started using C# 7.
 - `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcess<TValue>` base classes.
+- `IInputBindingComposite` has been replaced with an `InputBindingComposite` base class and the `IInputBindingComposite<TValue>` interface has been merged with the `InputBindingComposite<TValue>` class which had already existed.
 
 ### Added
 
