@@ -67,6 +67,7 @@ This release contains a number of fairly significant changes. The focus has been
   ![Continuous Action](Documentation~/Images/ContinuousAction.png)
 - Values can now be read out as objects using `InputAction.CallbackContext.ReadValueAsObject()`.
     * Allocates GC memory. Should not be used during normal gameplay but is very useful for testing and debugging.
+- Processors, interactions, and composites can now define their own parameter editor UIs by deriving from `InputParameterEditor`. This solves the problem of these elements not making it clear that the parameters usually have global defaults and do not need to be edited except if local overrides are necessary.
 ### Fixes
 
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
