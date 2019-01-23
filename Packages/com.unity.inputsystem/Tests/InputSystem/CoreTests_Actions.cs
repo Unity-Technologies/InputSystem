@@ -440,6 +440,198 @@ partial class CoreTests
         Assert.That(action.actionMap, Is.Null);
     }
 
+    // This test is chiefly to make sure that the various pieces of indexing we do in InputActionMapState
+    // end up leading to the right data once we have a setup that involves several action maps each with
+    // a separate set of actions and enabled/disabled at different times. We go through a relatively complex
+    // number of steps to make sure we hit a good number of code paths so in a way this is a bit of a catch-all
+    // kind of sanity test.
+    //
+    // Another thing this test is useful for is that it has to spell out some fairly complex state changes
+    // to the action system and spell out what exactly happens when we progress from one kind of setup to another.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateActionAssetWithMultipleActionMaps()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        var map3 = new InputActionMap("map3");
+        var map4 = new InputActionMap("map4");
+
+        var action1 = map1.AddAction("action1");
+        var action2 = map1.AddAction("action2");
+        var action3 = map2.AddAction("action3");
+        var action4 = map3.AddAction("action4");
+        var action5 = map3.AddAction("action5");
+        var action6 = map3.AddAction("action6");
+        var action7 = map4.AddAction("action7");
+
+        action1.AddBinding("<Gamepad>/leftStick").WithProcessor("invertVector2(invertY=false)");
+        action2.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
+        action3.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
+        action4.AddBinding("<Gamepad>/leftStick").WithProcessor("invertVector2(invertX=false)");
+        action5.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
+        action6.AddBinding("<Gamepad>/leftTrigger").WithProcessor("invert");
+        action7.AddBinding("<Gamepad>/leftTrigger").WithProcessor("clamp(min=0,max=0.5)");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+        asset.AddActionMap(map3);
+        asset.AddActionMap(map4);
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            // Enable only map1.
+            map1.Enable();
+
+            Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), 0.123);
+
+            var actions = trace.ToArray();
+
+            // map1/action1 should have been started and performed.
+            Assert.That(actions.Length, Is.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].action, Is.SameAs(action1));
+            Assert.That(actions[0].ReadValue<Vector2>,
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[0].interaction, Is.Null);
+            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[0].time, Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].action, Is.SameAs(action1));
+            Assert.That(actions[1].ReadValue<Vector2>,
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[1].interaction, Is.Null);
+            Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[1].time, Is.EqualTo(0.123).Within(0.00001));
+
+            trace.Clear();
+
+            runtime.currentTime = 0.234f;
+
+            // Disable map1 and enable map2+map3.
+            map1.Disable();
+            map2.Enable();
+            map3.Enable();
+
+            Press(gamepad.buttonSouth, 0.345f);
+            Set(gamepad.leftStick, new Vector2(0.234f, 0.345f), 0.456f);
+
+            actions = trace.ToArray();
+            Assert.That(actions.Length, Is.EqualTo(6));
+
+            // map1/action1 should have been cancelled.
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].action, Is.SameAs(action1));
+            Assert.That(actions[0].ReadValue<Vector2>(),
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[0].interaction, Is.Null);
+            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[0].time, Is.EqualTo(0.234f));
+
+            // map3/action4 should immediately start as the stick was already actuated
+            // when we enabled the action.
+            // NOTE: We get a different value here than what action1 got as we have a different
+            //       processor on the binding.
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[1].action, Is.SameAs(action4));
+            Assert.That(actions[1].ReadValue<Vector2>,
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[1].interaction, Is.Null);
+            Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[1].time, Is.EqualTo(0.234).Within(0.00001));
+
+            Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[2].action, Is.SameAs(action4));
+            Assert.That(actions[2].ReadValue<Vector2>,
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[2].interaction, Is.Null);
+            Assert.That(actions[2].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[2].time, Is.EqualTo(0.234).Within(0.00001));
+
+            // map2/action3 should have been started.
+            Assert.That(actions[3].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[3].action, Is.SameAs(action3));
+            Assert.That(actions[3].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+            Assert.That(actions[3].interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(actions[3].control, Is.SameAs(gamepad.buttonSouth));
+            Assert.That(actions[3].time, Is.EqualTo(0.345).Within(0.00001));
+
+            // map3/action5 should have been started.
+            Assert.That(actions[4].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[4].action, Is.SameAs(action5));
+            Assert.That(actions[4].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+            Assert.That(actions[4].interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(actions[4].interaction, Is.Not.SameAs(actions[1].interaction));
+            Assert.That(actions[4].control, Is.SameAs(gamepad.buttonSouth));
+            Assert.That(actions[4].time, Is.EqualTo(0.345).Within(0.00001));
+
+            // map3/action4 should have been performed as the stick has been moved
+            // beyond where it had already moved.
+            Assert.That(actions[5].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[5].action, Is.SameAs(action4));
+            Assert.That(actions[5].ReadValue<Vector2>,
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)) * new Vector2(1, -1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[5].interaction, Is.Null);
+            Assert.That(actions[5].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[5].time, Is.EqualTo(0.456).Within(0.00001));
+
+            trace.Clear();
+
+            // Disable all maps.
+            map2.Disable();
+            map3.Disable();
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(3));
+
+            // map2/action3 should have been cancelled.
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].action, Is.SameAs(action3));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+            Assert.That(actions[0].interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
+            Assert.That(actions[0].time, Is.EqualTo(runtime.currentTime).Within(0.00001));
+
+            // map3/action3 should have been cancelled.
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[1].action, Is.SameAs(action4));
+            Assert.That(actions[1].ReadValue<Vector2>,
+                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)) * new Vector2(1, -1))
+                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(actions[1].interaction, Is.Null);
+            Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(actions[1].time, Is.EqualTo(runtime.currentTime).Within(0.00001));
+
+            // map3/action5 should have been cancelled.
+            Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[2].action, Is.SameAs(action5));
+            Assert.That(actions[2].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+            Assert.That(actions[2].interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(actions[2].interaction, Is.Not.SameAs(actions[1].interaction));
+            Assert.That(actions[2].control, Is.SameAs(gamepad.buttonSouth));
+            Assert.That(actions[2].time, Is.EqualTo(runtime.currentTime).Within(0.00001));
+
+            trace.Clear();
+
+            Set(gamepad.buttonSouth, 0, 1.23);
+            Set(gamepad.buttonSouth, 0, 1.34);
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_PathLeadingNowhereIsIgnored()
@@ -1956,26 +2148,26 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WhenControlsUpdateWhileEnabled_NotificationIsTriggered()
+    public void Actions_WhenControlsUpdate_NotificationIsTriggered()
     {
-        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var action = new InputAction("action", binding: "<Gamepad>/leftTrigger");
         action.Enable();
 
-        InputActionChange? receivedChange = null;
-        object receivedObject = null;
+        var received = new List<object>();
         InputSystem.onActionChange +=
             (obj, change) =>
         {
-            Assert.That(receivedChange, Is.Null);
-            receivedChange = change;
-            receivedObject = obj;
+            received.Add(obj);
+            received.Add(change);
         };
 
         InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(receivedChange, Is.Not.Null);
-        Assert.That(receivedChange.Value, Is.EqualTo(InputActionChange.BoundControlsHaveChangedWhileEnabled));
-        Assert.That(receivedObject, Is.SameAs(action));
+        Assert.That(received,
+            Is.EquivalentTo(new object[]
+            {
+                action, InputActionChange.BoundControlsAboutToChange, action, InputActionChange.BoundControlsChanged
+            }));
     }
 
     [Test]
