@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
+
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
 ////        "I expect a 'look' and a 'move' action in here"
 
@@ -44,25 +46,42 @@ namespace UnityEngine.Experimental.Input
         public const string kExtension = "inputactions";
 
         /// <summary>
+        /// True if any action in the asset is currently enabled.
+        /// </summary>
+        /// <seealso cref="InputAction.enabled"/>
+        /// <seealso cref="InputActionMap.enabled"/>
+        /// <seealso cref="InputAction.Enable"/>
+        /// <seealso cref="InputActionMap.Enable"/>
+        /// <seealso cref="Enable"/>
+        public bool enabled
+        {
+            get
+            {
+                foreach (var actionMap in actionMaps)
+                    if (actionMap.enabled)
+                        return true;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// List of action maps defined in the asset.
         /// </summary>
-        public ReadOnlyArray<InputActionMap> actionMaps
-        {
-            get { return new ReadOnlyArray<InputActionMap>(m_ActionMaps); }
-        }
+        /// <seealso cref="AddActionMap"/>
+        /// <seealso cref="RemoveActionMap(InputActionMap)"/>
+        public ReadOnlyArray<InputActionMap> actionMaps => new ReadOnlyArray<InputActionMap>(m_ActionMaps);
 
         /// <summary>
         /// List of control schemes defined in the asset.
         /// </summary>
-        public ReadOnlyArray<InputControlScheme> controlSchemes
-        {
-            get { return new ReadOnlyArray<InputControlScheme>(m_ControlSchemes); }
-        }
+        /// <seealso cref="AddControlScheme"/>
+        /// <seealso cref="RemoveControlScheme"/>
+        public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);
 
         /// <inheritdoc />
         public InputBinding? bindingMask
         {
-            get { return m_BindingMask; }
+            get => m_BindingMask;
             set
             {
                 if (m_BindingMask == value)
@@ -77,7 +96,7 @@ namespace UnityEngine.Experimental.Input
         /// <inheritdoc />
         public ReadOnlyArray<InputDevice>? devices
         {
-            get { return m_Devices; }
+            get => m_Devices;
             set
             {
                 if (value == null)
@@ -136,6 +155,16 @@ namespace UnityEngine.Experimental.Input
             parsedJson.ToAsset(this);
         }
 
+        public static InputActionAsset FromJson(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                throw new ArgumentNullException("json");
+
+            var asset = CreateInstance<InputActionAsset>();
+            asset.LoadFromJson(json);
+            return asset;
+        }
+
         /// <summary>
         /// Find an <see cref="InputAction">action</see> by its name in of of the <see cref="InputActionMap">
         /// action maps</see> in the asset.
@@ -173,6 +202,11 @@ namespace UnityEngine.Experimental.Input
         /// asset.FindAction("map1/action1") // Returns action1.
         /// asset.FindAction("map2/action2") // Returns action2.
         /// asset.FindAction("map3/action3") // Returns action3.
+        ///
+        /// Search by unique action ID. The GUID needs to be surrounded by "{...}".
+        /// asset.FindAction($"{{{action1.id.ToString()}}}") // Returns action1.
+        /// asset.FindAction($"{{{action2.id.ToString()}}}") // Returns action2.
+        /// asset.FindAction($"{{{action3.id.ToString()}}}") // Returns action3.
         /// </code>
         /// </example>
         public InputAction FindAction(string name)
@@ -190,13 +224,9 @@ namespace UnityEngine.Experimental.Input
                 // No slash so it's just a simple action name.
                 for (var i = 0; i < m_ActionMaps.Length; ++i)
                 {
-                    var actions = m_ActionMaps[i].m_Actions;
-                    for (var n = 0; n < actions.Length; ++n)
-                    {
-                        var action = actions[n];
-                        if (string.Compare(action.name, name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                            return action;
-                    }
+                    var action = m_ActionMaps[i].TryGetAction(name);
+                    if (action != null)
+                        return action;
                 }
             }
             else
@@ -329,6 +359,22 @@ namespace UnityEngine.Experimental.Input
             return map;
         }
 
+        public InputAction TryGetAction(Guid guid)
+        {
+            if (m_ActionMaps == null)
+                return null;
+
+            for (var i = 0; i < m_ActionMaps.Length; ++i)
+            {
+                var map = m_ActionMaps[i];
+                var action = map.TryGetAction(guid);
+                if (action != null)
+                    return action;
+            }
+
+            return null;
+        }
+
         public void AddControlScheme(InputControlScheme controlScheme)
         {
             if (string.IsNullOrEmpty(controlScheme.name))
@@ -451,7 +497,7 @@ namespace UnityEngine.Experimental.Input
             return GetEnumerator();
         }
 
-        private void ReResolveIfNecessary()
+        internal void ReResolveIfNecessary()
         {
             if (m_ActionMapState == null)
                 return;

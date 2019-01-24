@@ -15,11 +15,17 @@ namespace UnityEngine.Experimental.Input.Editor
     internal class InputSettingsProvider : SettingsProvider
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
+        public const string kSettingsPath = "Project/Input (NEW)";
+
+        public static void Open()
+        {
+            SettingsService.OpenProjectSettings(kSettingsPath);
+        }
 
         [SettingsProvider]
         public static SettingsProvider CreateInputSettingsProvider()
         {
-            return new InputSettingsProvider("Project/Input (NEW)", SettingsScope.Project);
+            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project);
         }
 
         private InputSettingsProvider(string path, SettingsScope scopes)
@@ -118,7 +124,6 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.PropertyField(m_DefaultTapTime);
             EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
             EditorGUILayout.PropertyField(m_DefaultHoldTime);
-            EditorGUILayout.PropertyField(m_DefaultSensitivity);
 
             EditorGUILayout.Space();
             EditorGUILayout.Separator();
@@ -229,7 +234,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_DefaultTapTime = m_SettingsObject.FindProperty("m_DefaultTapTime");
             m_DefaultSlowTapTime = m_SettingsObject.FindProperty("m_DefaultSlowTapTime");
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
-            m_DefaultSensitivity = m_SettingsObject.FindProperty("m_DefaultSensitivity");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -322,7 +326,6 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private SerializedProperty m_DefaultTapTime;
         [NonSerialized] private SerializedProperty m_DefaultSlowTapTime;
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
-        [NonSerialized] private SerializedProperty m_DefaultSensitivity;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;

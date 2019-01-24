@@ -1,9 +1,10 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: make sure that 'inRange' is always true if not supported by the device
 
 ////TODO: expose whether pen actually has eraser and which barrel buttons it has
 
@@ -22,10 +23,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 36)]
     public struct PenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', 'E', 'N'); }
-        }
+        public static FourCC kFormat => new FourCC('P', 'E', 'N');
 
         [InputControl(usage = "Point")]
         [FieldOffset(0)]

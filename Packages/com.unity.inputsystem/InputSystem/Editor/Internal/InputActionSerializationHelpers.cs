@@ -5,10 +5,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Helpers for doctoring around in InputActions using SerializedProperties.
@@ -321,7 +317,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public static void AddCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type, string group = "")
         {
             var newProperty = AddBinding(actionProperty, actionMapProperty);
-            newProperty.FindPropertyRelative("m_Name").stringValue = compositeName;
+            newProperty.FindPropertyRelative("m_Name").stringValue = ObjectNames.NicifyVariableName(compositeName);
             newProperty.FindPropertyRelative("m_Path").stringValue = compositeName;
             newProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.Composite;
 

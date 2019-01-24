@@ -121,7 +121,7 @@ This will generate a C# script that makes working with the asset a lot simpler. 
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 
-// IGameplayActions is an interface generate from the "gameplay" action map
+// IGameplayActions is an interface generated from the "gameplay" action map
 // we added (note that if you called the action map differently, the name of
 // the interface will be different). This was triggered by the "Generate Interfaces"
 // checkbox.
@@ -165,12 +165,6 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 With this in place, we can assign the asset we have created to our `MyPlayerScript` component in the editor.
 
 ![MyPlayerScript Controls Assigned](Images/MyPlayerScriptControlsAssigned.png)
-
-## Limiting the Set of Supported Devices
-
-Usually, any given game or application will only support a specific set of ways it can be interacted with.
-
-...
 
 # Adding Control Schemes
 

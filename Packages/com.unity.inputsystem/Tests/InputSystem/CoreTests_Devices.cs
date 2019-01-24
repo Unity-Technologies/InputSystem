@@ -25,6 +25,25 @@ partial class CoreTests
 {
     [Test]
     [Category("Devices")]
+    public void Devices_CanGetAllDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(InputSystem.devices, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, keyboard, mouse }));
+        // Alternate getter.
+        Assert.That(InputDevice.all, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, keyboard, mouse }));
+
+        InputSystem.RemoveDevice(keyboard);
+
+        Assert.That(InputSystem.devices, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, mouse }));
+        Assert.That(InputDevice.all, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, mouse }));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayout()
     {
         var setup = new InputDeviceBuilder("Gamepad");
@@ -423,6 +442,7 @@ partial class CoreTests
         Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));
     }
 
+    ////TODO: refine this behavior such that this only occurs if the given device is the first of its kind
     [Test]
     [Category("Devices")]
     public void Devices_AddingDevice_MakesItCurrent()
@@ -1890,8 +1910,7 @@ partial class CoreTests
         var deltaControl = (Vector2Control)device[controlName];
         Debug.Assert(deltaControl != null);
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             deltaControl.WriteValueIntoEvent(new Vector2(0.5f, 0.5f), stateEventPtr);
 
@@ -1915,8 +1934,7 @@ partial class CoreTests
         var deltaControl = (Vector2Control)device[controlName];
         Debug.Assert(deltaControl != null);
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             deltaControl.WriteValueIntoEvent(new Vector2(0.5f, 0.5f), stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -2901,8 +2919,7 @@ partial class CoreTests
         var value = new Vector3(0.123f, 0.456f, 0.789f);
         var directionControl = (Vector3Control)sensor[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(sensor, out stateEventPtr))
+        using (StateEvent.From(sensor, out var stateEventPtr))
         {
             directionControl.WriteValueIntoEvent(value, stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -2939,8 +2956,7 @@ partial class CoreTests
         var angles = new Vector3(11, 22, 33);
         var rotationControl = (QuaternionControl)sensor[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(sensor, out stateEventPtr))
+        using (StateEvent.From(sensor, out var stateEventPtr))
         {
             rotationControl.WriteValueIntoEvent(Quaternion.Euler(angles), stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -3124,8 +3140,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_RemovingDeviceCleansUpUpdateCallback()
     {
-        InputSystem.RegisterLayout<CustomDeviceWithUpdate>();
-        var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
+        var device = InputSystem.AddDevice<CustomDeviceWithUpdate>();
         InputSystem.RemoveDevice(device);
 
         InputSystem.Update();
@@ -3388,7 +3403,8 @@ partial class CoreTests
         Assert.Fail();
     }
 
-#if UNITY_2019_1_OR_NEWER
+    #if UNITY_2019_1_OR_NEWER
+    // NOTE: The focus logic will also implicitly take care of cancelling and restarting actions.
     [Test]
     [Category("Devices")]
     public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
@@ -3449,7 +3465,7 @@ partial class CoreTests
         Assert.That(pointerDeviceReset, Is.True);
     }
 
-#endif
+    #endif
 
     [Test]
     [Category("Devices")]

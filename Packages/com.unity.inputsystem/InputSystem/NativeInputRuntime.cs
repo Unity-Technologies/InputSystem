@@ -59,14 +59,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             set
             {
-                ////TODO: This is 2019.1-only right now but the native API change is in the process of getting backported
+                ////TODO: This is 2019.2-only right now but the native API change is in the process of getting backported
                 ////      to 2018.3 (and hopefully 2018.2). What changed is that the native side now allows the managed side
                 ////      to mutate the buffer and keep events around from update to update.
 
                 if (value != null)
-                ////TODO: temporary; remove when the native changes have landed in public 2019.1
-                    #if false
-                    //#if UNITY_2019_1_OR_NEWER
+                    #if UNITY_2019_2_OR_NEWER
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
@@ -130,7 +128,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public Action<int, string> onDeviceDiscovered
         {
-            set { NativeInputSystem.onDeviceDiscovered = value; }
+            set => NativeInputSystem.onDeviceDiscovered = value;
         }
 
         public Action onShutdown
@@ -174,27 +172,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public float pollingFrequency
         {
-            set { NativeInputSystem.SetPollingFrequency(value); }
+            set => NativeInputSystem.SetPollingFrequency(value);
         }
 
-        public double currentTime
-        {
-            get { return NativeInputSystem.currentTime; }
-        }
+        public double currentTime => NativeInputSystem.currentTime;
 
-        public double currentTimeOffsetToRealtimeSinceStartup
-        {
-            get { return NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup; }
-        }
+        public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
 
-        public double fixedUpdateIntervalInSeconds
-        {
-            get { return Time.fixedDeltaTime; }
-        }
+        public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
 
         public InputUpdateType updateMask
         {
-            set { NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value); }
+            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
         }
 
         private Action m_ShutdownMethod;
@@ -211,20 +200,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_FocusChangedMethod(focus);
         }
 
-        public ScreenOrientation screenOrientation
-        {
-            get { return Screen.orientation; }
-        }
+        public ScreenOrientation screenOrientation => Screen.orientation;
 
-        public Vector2 screenSize
-        {
-            get { return new Vector2(Screen.width, Screen.height); }
-        }
+        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
 
-        public int frameCount
-        {
-            get { return Time.frameCount; }
-        }
+        public int frameCount => Time.frameCount;
 
 #if UNITY_ANALYTICS || UNITY_EDITOR
 

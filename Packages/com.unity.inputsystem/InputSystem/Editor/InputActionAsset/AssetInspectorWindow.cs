@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
-        internal CopyPasteUtility m_CopyPasteUtility;
+        internal InputActionCopyPasteUtility m_CopyPasteUtility;
 
         private static bool s_RefreshPending;
         private static readonly string k_FileExtension = ".inputactions";
@@ -196,7 +196,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
-            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
+            m_CopyPasteUtility = new InputActionCopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new InputControlPickerState();
         }
@@ -359,7 +359,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (Event.current.type == EventType.ValidateCommand)
             {
-                if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                if (InputActionCopyPasteUtility.IsValidCommand(Event.current.commandName))
                 {
                     Event.current.Use();
                 }
@@ -621,12 +621,12 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 // No, so create a new window.
-                window = CreateInstance<AssetInspectorWindow>();
-                window.m_Title = new GUIContent(asset.name + " (Input Manager)");
+                var title = asset.name + " (Input Actions)";
+                window = GetWindow<AssetInspectorWindow>(title, focus: true, desiredDockNextTo: typeof(SceneView));
+                window.m_Title = new GUIContent(title);
                 window.m_DirtyTitle = new GUIContent("(*) " + window.m_Title.text);
                 window.titleContent = window.m_Title;
                 window.SetAsset(asset);
-                window.Show();
             }
 
             // If user clicked on an action inside the asset, focus on that action (if we can find it).

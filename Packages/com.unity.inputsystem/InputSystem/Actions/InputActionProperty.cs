@@ -99,6 +99,11 @@ namespace UnityEngine.Experimental.Input
             return !ReferenceEquals(left, right.action);
         }
 
+        public static implicit operator InputActionProperty(InputAction action)
+        {
+            return new InputActionProperty(action);
+        }
+
         [SerializeField] private bool m_UseReference;
         [SerializeField] private InputAction m_Action;
         [SerializeField] private InputActionReference m_Reference;

@@ -38,7 +38,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static InputDebuggerWindow s_Instance;
 
         [MenuItem("Window/Input Debugger", false, 2100)]
-        public static void Init()
+        public static void CreateOrShow()
         {
             if (s_Instance == null)
             {
@@ -399,7 +399,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 AddValueItem(settingsItem, "Default Tap Time", settings.defaultTapTime, ref id);
                 AddValueItem(settingsItem, "Default Slow Tap Time", settings.defaultSlowTapTime, ref id);
                 AddValueItem(settingsItem, "Default Hold Time", settings.defaultHoldTime, ref id);
-                AddValueItem(settingsItem, "Default Sensitivity", settings.defaultSensitivity, ref id);
                 AddValueItem(settingsItem, "Lock Input To Game View", InputEditorUserSettings.lockInputToGameView, ref id);
                 if (settings.supportedDevices.Count > 0)
                 {

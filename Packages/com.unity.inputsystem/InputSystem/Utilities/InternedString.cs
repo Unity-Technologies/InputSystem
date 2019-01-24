@@ -17,10 +17,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         private readonly string m_StringOriginalCase;
         private readonly string m_StringLowerCase;
 
-        public int length
-        {
-            get { return m_StringLowerCase != null ? m_StringLowerCase.Length : 0; }
-        }
+        public int length => m_StringLowerCase != null ? m_StringLowerCase.Length : 0;
 
         public InternedString(string text)
         {

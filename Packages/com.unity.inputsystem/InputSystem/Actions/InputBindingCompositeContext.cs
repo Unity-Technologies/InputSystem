@@ -5,9 +5,9 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// Contextual data made available when processing values of composite bindings.
     /// </summary>
-    /// <seealso cref="IInputBindingComposite"/>
-    /// <seealso cref="IInputBindingComposite{TValue}"/>
-    /// <seealso cref="IInputBindingComposite{TValue}.ReadValue(ref InputBindingCompositeContext)"/>
+    /// <seealso cref="InputBindingComposite"/>
+    /// <seealso cref="InputBindingComposite{TValue}"/>
+    /// <seealso cref="InputBindingComposite{TValue}.ReadValue(ref InputBindingCompositeContext)"/>
     public struct InputBindingCompositeContext
     {
         internal InputActionMapState m_State;

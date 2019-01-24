@@ -25,20 +25,24 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private SerializedProperty m_ActionProperty;
         private SerializedProperty m_ExpectedControlLayoutProperty;
+        private SerializedProperty m_FlagsProperty;
 
         private Action m_ReloadTree;
         private bool m_GeneralFoldout = true;
 
-        private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
-
         private string m_ExpectedControlLayout;
         private string[] m_ControlTypeList;
         private int m_SelectedControlType;
+        private GUIContent m_ActionTypeLabel;
+
+        private static readonly GUIContent s_GeneralFoldoutLabel = EditorGUIUtility.TrTextContent("General");
+        private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous");
 
         public InputActionPropertiesView(SerializedProperty actionProperty, Action reloadTree)
         {
             m_ActionProperty = actionProperty;
             m_ExpectedControlLayoutProperty = actionProperty.FindPropertyRelative("m_ExpectedControlLayout");
+            m_FlagsProperty = actionProperty.FindPropertyRelative("m_Flags");
             m_ReloadTree = reloadTree;
 
             m_ControlTypeList = BuildControlTypeList();
@@ -46,9 +50,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlLayoutProperty.stringValue);
             if (m_SelectedControlType == -1)
                 m_SelectedControlType = 0;
+
+            m_ActionTypeLabel =
+                EditorGUIUtility.TrTextContent("Type", m_ExpectedControlLayoutProperty.tooltip);
         }
 
-        private string[] BuildControlTypeList()
+        private static string[] BuildControlTypeList()
         {
             var types = new List<string>();
             foreach (var layoutName in InputSystem.s_Manager.m_Layouts.layoutTypes.Keys)
@@ -79,12 +86,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
 
-            m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
+            m_GeneralFoldout = DrawFoldout(s_GeneralFoldoutLabel, m_GeneralFoldout);
             EditorGUI.indentLevel++;
             if (m_GeneralFoldout)
             {
                 EditorGUI.BeginChangeCheck();
-                m_SelectedControlType = EditorGUILayout.Popup("Type", m_SelectedControlType, m_ControlTypeList);
+                m_SelectedControlType = EditorGUILayout.Popup(m_ActionTypeLabel, m_SelectedControlType, m_ControlTypeList);
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (m_SelectedControlType == 0)
@@ -92,6 +99,20 @@ namespace UnityEngine.Experimental.Input.Editor
                     else
                         m_ExpectedControlLayoutProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
                     ApplyModifiers();
+                }
+
+                var flags = (InputAction.ActionFlags)m_FlagsProperty.intValue;
+                var isContinuousOld = (flags & InputAction.ActionFlags.Continuous) != 0;
+                var isContinuousNew = EditorGUILayout.Toggle(s_ContinuousLabel, isContinuousOld);
+
+                if (isContinuousOld != isContinuousNew)
+                {
+                    flags = InputAction.ActionFlags.None;
+                    if (isContinuousNew)
+                        flags |= InputAction.ActionFlags.Continuous;
+
+                    m_FlagsProperty.intValue = (int)flags;
+                    m_FlagsProperty.serializedObject.ApplyModifiedProperties();
                 }
             }
             EditorGUI.indentLevel--;

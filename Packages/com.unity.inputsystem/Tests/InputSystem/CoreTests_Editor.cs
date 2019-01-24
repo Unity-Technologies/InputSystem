@@ -10,9 +10,11 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
@@ -20,7 +22,6 @@ using UnityEngine.TestTools;
 partial class CoreTests
 {
     [Serializable]
-
     struct PackageJson
     {
         public string version;
@@ -40,7 +41,7 @@ partial class CoreTests
         var version = new Version(versionString);
 
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
-        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Major));
+        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Minor));
         Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
     }
 
@@ -601,6 +602,38 @@ partial class CoreTests
     public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
         Assert.That(runtime.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfLayout()
+    {
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Axis"), Is.SameAs(typeof(float)));
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Button"), Is.SameAs(typeof(float)));
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Stick"), Is.SameAs(typeof(Vector2)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfProcessor()
+    {
+        Assert.That(InputProcessor.GetValueTypeFromType(typeof(StickDeadzoneProcessor)), Is.SameAs(typeof(Vector2)));
+        Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfInteraction()
+    {
+        Assert.That(InputInteraction.GetValueType(typeof(HoldInteraction)), Is.SameAs(typeof(float)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetParameterEditorFromInteractionType()
+    {
+        Assert.That(InputParameterEditor.LookupEditorForType(typeof(HoldInteraction)),
+            Is.SameAs(typeof(HoldInteractionEditor)));
     }
 
     [Test]

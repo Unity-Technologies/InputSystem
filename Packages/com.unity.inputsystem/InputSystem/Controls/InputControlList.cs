@@ -9,10 +9,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
 
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
@@ -46,10 +42,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Number of controls in the list.
         /// </summary>
-        public int Count
-        {
-            get { return m_Count; }
-        }
+        public int Count => m_Count;
 
         /// <summary>
         /// Number of controls that can be added before more (unmanaged) memory has to be allocated.
@@ -82,10 +75,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Return the control at the given index.
@@ -457,10 +447,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
 
             public void Dispose()
             {
@@ -478,10 +465,7 @@ namespace UnityEngine.Experimental.Input
             m_Controls = list.ToArray();
         }
 
-        public TControl[] controls
-        {
-            get { return m_Controls; }
-        }
+        public TControl[] controls => m_Controls;
     }
 
     public static class InputControlListExtensions

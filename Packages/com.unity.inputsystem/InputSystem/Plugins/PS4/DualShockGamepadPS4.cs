@@ -307,16 +307,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
-        public new static ReadOnlyArray<DualShockGamepadPS4> all
-        {
-            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_Devices); }
-        }
+        public new static ReadOnlyArray<DualShockGamepadPS4> all => new ReadOnlyArray<DualShockGamepadPS4>(s_Devices);
 
-        public static ReadOnlyArray<DualShockGamepadPS4> allAimDevices
-        {
-            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_AimDevices); }
-        }
-
+        public static ReadOnlyArray<DualShockGamepadPS4> allAimDevices => new ReadOnlyArray<DualShockGamepadPS4>(s_AimDevices);
 
         public Color lightBarColor
         {

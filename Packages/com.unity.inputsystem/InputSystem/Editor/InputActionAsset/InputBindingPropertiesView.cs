@@ -27,8 +27,8 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private InteractionsReorderableReorderableList m_InteractionsList;
-        private ProcessorsReorderableReorderableList m_ProcessorsList;
+        private InteractionsListView m_InteractionsList;
+        private ProcessorsListView m_ProcessorsList;
         private ParameterListView m_CompositeParameters;
 
         private SerializedProperty m_InteractionsProperty;
@@ -60,16 +60,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
 
         public bool isCompositeBinding { get; set; }
-
-        public bool isInteractivelyPicking
-        {
-            get { return m_RebindingOperation != null && m_RebindingOperation.started; }
-        }
-
-        public string expectedControlLayout
-        {
-            get { return m_ExpectedControlLayout; }
-        }
+        public bool isInteractivelyPicking => m_RebindingOperation != null && m_RebindingOperation.started;
+        public string expectedControlLayout => m_ExpectedControlLayout;
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action<Change> onChange,
                                           InputControlPickerState controlPickerState, InputActionWindowToolbar toolbar,
@@ -82,8 +74,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("m_Processors");
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
-            m_InteractionsList = new InteractionsReorderableReorderableList(m_InteractionsProperty, OnInteractionsModified);
-            m_ProcessorsList = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, OnProcessorsModified);
+            m_InteractionsList = new InteractionsListView(m_InteractionsProperty, OnInteractionsModified, expectedControlLayout);
+            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
             m_Toolbar = toolbar;
             if (m_Toolbar != null)
                 m_ControlSchemes = toolbar.controlSchemes;
@@ -93,8 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void CancelInteractivePicking()
         {
-            if (m_RebindingOperation != null)
-                m_RebindingOperation.Cancel();
+            m_RebindingOperation?.Cancel();
         }
 
         public void OnGUI()
@@ -420,31 +411,27 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
             m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.ProcessorsChanged);
+            m_OnChange?.Invoke(Change.ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.InteractionsChanged);
+            m_OnChange?.Invoke(Change.InteractionsChanged);
         }
 
         private void OnBindingGroupsModified()
         {
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.GroupsChanged);
+            m_OnChange?.Invoke(Change.GroupsChanged);
         }
 
         private void OnPathModified()
         {
             m_BindingProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.PathChanged);
+            m_OnChange?.Invoke(Change.PathChanged);
         }
 
         public enum Change
