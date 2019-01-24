@@ -8,30 +8,26 @@ namespace UnityEngine.Experimental.Input.Editor
     [Serializable]
     public class InputActionAssetManager
     {
-        [SerializeField]
-        internal InputActionAsset m_AssetObjectForEditing;
-        [SerializeField]
-        private InputActionAsset m_ImportedAssetObject;
-        [SerializeField]
-        private string m_AssetGUID;
-        [SerializeField]
-        private string m_AssetPath;
-        [SerializeField]
-        private string m_ImportedAssetJson;
-        [SerializeField]
-        private bool m_IsDirty;
+        [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
+        [SerializeField] private InputActionAsset m_ImportedAssetObject;
+        [SerializeField] private string m_AssetGUID;
+        [SerializeField] private string m_AssetPath;
+        [SerializeField] private string m_ImportedAssetJson;
+        [SerializeField] private bool m_IsDirty;
 
         private SerializedObject m_SerializedObject;
-        Action<bool> m_SetTitle;
+        private Action<bool> m_SetTitle;
 
-        InputActionAsset importedAsset
+        public string guid => m_AssetGUID;
+
+        private InputActionAsset importedAsset
         {
             get
             {
                 if (m_ImportedAssetObject == null)
-                {
                     LoadImportedObjectFromGuid();
-                }
+
+                Debug.Assert(m_ImportedAssetObject != null);
                 return m_ImportedAssetObject;
             }
         }
@@ -43,15 +39,9 @@ namespace UnityEngine.Experimental.Input.Editor
             m_AssetGUID = AssetDatabase.AssetPathToGUID(m_AssetPath);
         }
 
-        public SerializedObject serializedObject
-        {
-            get { return m_SerializedObject; }
-        }
+        public SerializedObject serializedObject => m_SerializedObject;
 
-        public bool dirty
-        {
-            get { return m_IsDirty; }
-        }
+        public bool dirty => m_IsDirty;
 
         public void InitializeObjectReferences()
         {
@@ -68,9 +58,8 @@ namespace UnityEngine.Experimental.Input.Editor
         internal void CreateWorkingCopyAsset()
         {
             if (m_AssetObjectForEditing != null)
-            {
                 CleanupAssets();
-            }
+
             // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
             // GUIDs.
             m_AssetObjectForEditing = Object.Instantiate(importedAsset);
@@ -83,6 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_AssetObjectForEditing == null)
                 return;
+
             Object.DestroyImmediate(m_AssetObjectForEditing);
             m_AssetObjectForEditing = null;
         }

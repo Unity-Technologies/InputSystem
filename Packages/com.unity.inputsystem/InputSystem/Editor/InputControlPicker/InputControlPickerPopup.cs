@@ -24,7 +24,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public InputControlPickerPopup(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified, Action<Rect, SerializedProperty, Action> drawInteractivePickButton)
         {
             if (pathProperty == null)
-                throw new ArgumentNullException("pathProperty");
+                throw new ArgumentNullException(nameof(pathProperty));
+
             m_PathProperty = pathProperty;
 
             m_DrawInteractivePickButton = drawInteractivePickButton;
@@ -79,8 +80,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_PathProperty.serializedObject.ApplyModifiedProperties();
                     m_OnModified();
                 }
-                if (m_DrawInteractivePickButton != null)
-                    m_DrawInteractivePickButton(interactivePickButtonRect, m_PathProperty, m_OnModified);
+
+                m_DrawInteractivePickButton?.Invoke(interactivePickButtonRect, m_PathProperty, m_OnModified);
                 if (GUI.Button(editButtonRect, "˅"))
                 {
                     bindingTextRect.x += editButtonRect.width;
@@ -98,8 +99,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 // Button to bind interactively.
-                if (m_DrawInteractivePickButton != null)
-                    m_DrawInteractivePickButton(interactivePickButtonRect, m_PathProperty, m_OnModified);
+                m_DrawInteractivePickButton?.Invoke(interactivePickButtonRect, m_PathProperty, m_OnModified);
 
                 // Button that switches binding into text edit mode.
                 if (GUI.Button(editButtonRect, "...", EditorStyles.miniButton))

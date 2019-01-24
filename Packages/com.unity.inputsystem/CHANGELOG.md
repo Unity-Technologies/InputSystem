@@ -27,6 +27,15 @@ This release contains a number of fairly significant changes. The focus has been
   * Previously, these bindings would trigger `performed` on every value change including when going back to their default value. This is why you would see two calls of `performed` with a button; one when the button was pressed, another when it was depressed.
   * Now, a binding without an interaction will trigger `started` and then `performed` when a bound control is actuated. Thereafter, the action will remain in `Started` phase. For as long as the control is actuated, every value change will trigger `performed` again. When the control stops being actuated, it will trigger `cancelled` and the action will remain in `Waiting` state.
   * Control actuation is defined as a control having a magnitude (see `InputControl.EvaluateMagnitude`) greater than zero. If a control does not support magnitudes (returns -1 from `EvaluateMagnitude`), then the control is considered actuated when it changes state away from its default state.
+  * To restore the previous behavior, simply change code like
+      ```
+        myAction.performed += MyCallback;
+      ```
+    to
+      ```
+        myAction.performed += MyCallback;
+        myAction.cancelled += MyCallback;
+      ```
 - As part of the aforementioned change, the following interactions have been removed as they are no longer relevant:
   - `StickInteraction`: Can simply be removed from bindings. The new default behavior obsoletes the need for what `StickInteraction` did. Use `started` to know then the stick starts being actuated, `performed` to be updated on movements, and `cancelled` to know when the stick goes back into rest position.
   - `PressInteraction`: Can simply be removed from bindings. The default behavior with no interaction encompasses press detection. Use either `started` or `performed` to know when a button is pressed. There will no longer be a `performed` call on button release. To set a custom button press point, simply put an `AxisDeadzoneProcessor` on the binding.
@@ -36,6 +45,8 @@ This release contains a number of fairly significant changes. The focus has been
 - When an action is disabled, it will now cancel all ongoing interactions, if any (i.e. you will see `InputAction.cancelled` being called).
   - Note that unlike the above-mentioned callbacks that happen when an action starts out with a control already actuated, the cancellation callbacks happen __immediately__ rather than in the next input update.
 - Action editor now gets docked by default.
+- Action editor now closes when asset is deleted.
+  - If there are unsaved changes, asks for confirmation first.
 - Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name.
 - Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite.
     - The old names can still be used and existing data will load as expected.
