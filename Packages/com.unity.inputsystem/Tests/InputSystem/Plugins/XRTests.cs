@@ -379,8 +379,7 @@ internal class XRTests : InputTestFixture
         var tpd = tpd1;
         var device = InputSystem.AddDevice<TestHMD>();
 
-        InputEventPtr stateEvent;
-        using (StateEvent.From(device, out stateEvent))
+        using (StateEvent.From(device, out var stateEvent))
         {
             var positionAction = new InputAction();
             positionAction.AddBinding("<TestHMD>/vector3");

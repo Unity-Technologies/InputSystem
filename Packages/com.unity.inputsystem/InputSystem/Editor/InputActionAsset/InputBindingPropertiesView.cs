@@ -85,8 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void CancelInteractivePicking()
         {
-            if (m_RebindingOperation != null)
-                m_RebindingOperation.Cancel();
+            m_RebindingOperation?.Cancel();
         }
 
         public void OnGUI()
@@ -412,31 +411,27 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
             m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.ProcessorsChanged);
+            m_OnChange?.Invoke(Change.ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.InteractionsChanged);
+            m_OnChange?.Invoke(Change.InteractionsChanged);
         }
 
         private void OnBindingGroupsModified()
         {
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.GroupsChanged);
+            m_OnChange?.Invoke(Change.GroupsChanged);
         }
 
         private void OnPathModified()
         {
             m_BindingProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.PathChanged);
+            m_OnChange?.Invoke(Change.PathChanged);
         }
 
         public enum Change

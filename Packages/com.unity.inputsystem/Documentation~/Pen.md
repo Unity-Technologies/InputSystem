@@ -37,7 +37,9 @@ A small number of pens (such as the Wacom Art Pen) also support twist, i.e. dete
 
 ## In-Range Detection
 
-A pen may not need to touch the tablet/screen surface in order to be able to control the cursor. To determine whether the pen ...
+A pen may not need to touch the tablet/screen surface in order to be able to control the cursor. The `inRange` control can be used to determine whether the pen is currently in detection range. If the button is on, the pen registers with the tablet/screen.
+
+For devices that do not support this feature, `inRange` is always on.
 
 ## Barrel Buttons
 

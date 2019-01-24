@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
-        internal CopyPasteUtility m_CopyPasteUtility;
+        internal InputActionCopyPasteUtility m_CopyPasteUtility;
 
         private static bool s_RefreshPending;
         private static readonly string k_FileExtension = ".inputactions";
@@ -196,7 +196,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
-            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
+            m_CopyPasteUtility = new InputActionCopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new InputControlPickerState();
         }
@@ -359,7 +359,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (Event.current.type == EventType.ValidateCommand)
             {
-                if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                if (InputActionCopyPasteUtility.IsValidCommand(Event.current.commandName))
                 {
                     Event.current.Use();
                 }

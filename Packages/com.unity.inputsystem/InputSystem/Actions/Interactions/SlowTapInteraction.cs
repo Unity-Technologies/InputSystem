@@ -11,23 +11,23 @@ namespace UnityEngine.Experimental.Input.Interactions
         // If this is non-zero, then if the control is held for longer than
         // this time, the slow tap is not performed when the control is finally
         // released.
-        public float expiresAfter;
+        //public float expiresAfter;////TODO
 
         private double m_SlowTapStartTime;
 
         public void Process(ref InputInteractionContext context)
         {
-            if (context.isWaiting && !context.controlHasDefaultValue)
+            if (context.isWaiting && context.ControlIsActuated())
             {
                 m_SlowTapStartTime = context.time;
                 context.Started();
                 return;
             }
 
-            if (context.isStarted && context.controlHasDefaultValue)
+            if (context.isStarted && !context.ControlIsActuated())
             {
                 if (context.time - m_SlowTapStartTime >= durationOrDefault)
-                    context.Performed();
+                    context.PerformedAndGoBackToWaiting();
                 else
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
                     context.Cancelled();

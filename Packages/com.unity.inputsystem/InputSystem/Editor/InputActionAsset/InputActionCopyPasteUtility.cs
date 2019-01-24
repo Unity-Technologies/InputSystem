@@ -8,7 +8,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class CopyPasteUtility
+    internal class InputActionCopyPasteUtility
     {
         private const string k_InputAssetMarker = "INPUTASSET ";
 
@@ -26,7 +26,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_DuplicateGUI = EditorGUIUtility.TrTextContent("Duplicate");
         private readonly GUIContent m_RenameGUI = EditorGUIUtility.TrTextContent("Rename");
 
-        public CopyPasteUtility(Action apply, ActionMapsTree actionMapsTree, ActionsTree actionsTree, SerializedObject serializedObject)
+        public InputActionCopyPasteUtility(Action apply, ActionMapsTree actionMapsTree, ActionsTree actionsTree, SerializedObject serializedObject)
         {
             m_Apply = apply;
             m_ActionMapsTree = actionMapsTree;
@@ -34,13 +34,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SerializedObject = serializedObject;
         }
 
-        public CopyPasteUtility(InspectorTree tree)
+        public InputActionCopyPasteUtility(InspectorTree tree)
         {
             m_Tree = tree;
             m_Apply = () =>
             {
-                if (m_Tree != null)
-                    m_Tree.Reload();
+                m_Tree?.Reload();
             };
         }
 
@@ -57,7 +56,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
 
             // Don't allow to copy different type. It will hard to handle pasting
-            if (rowTypes.Count() > 1)
+            if (rowTypes.Count > 1)
             {
                 EditorGUIUtility.systemCopyBuffer = null;
                 EditorApplication.Beep();
@@ -214,16 +213,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static bool IsValidCommand(string currentCommandName)
         {
-            return Event.current.commandName == "Copy"
-                || Event.current.commandName == "Paste"
-                || Event.current.commandName == "Cut"
-                || Event.current.commandName == "Duplicate"
-                || Event.current.commandName == "Delete";
+            return currentCommandName == "Copy"
+                || currentCommandName == "Paste"
+                || currentCommandName == "Cut"
+                || currentCommandName == "Duplicate"
+                || currentCommandName == "Delete";
         }
 
         public void HandleCommandEvent(string currentCommandName)
         {
-            switch (Event.current.commandName)
+            switch (currentCommandName)
             {
                 case "Copy":
                     HandleCopyEvent();
@@ -314,7 +313,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Apply();
         }
 
-        static IEnumerable<T> FindRowsToDeleteOfType<T>(ActionTreeViewItem[] rows)
+        private static IEnumerable<T> FindRowsToDeleteOfType<T>(ActionTreeViewItem[] rows)
         {
             return rows.Where(r => r.GetType() == typeof(T)).OrderByDescending(r => r.index).Cast<T>();
         }
@@ -354,7 +353,7 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
         }
 
-        IEnumerable<ActionTreeViewItem> GetSelectedRows()
+        private IEnumerable<ActionTreeViewItem> GetSelectedRows()
         {
             if (m_Tree != null && m_Tree.HasFocus())
                 return m_Tree.GetSelectedRows();
@@ -365,25 +364,21 @@ namespace UnityEngine.Experimental.Input.Editor
             return null;
         }
 
-        ActionTreeItem GetSelectedAction()
+        private ActionTreeItem GetSelectedAction()
         {
             if (m_Tree != null)
                 return m_Tree.GetSelectedAction();
-            if (m_ActionsTree != null)
-                return m_ActionsTree.GetSelectedAction();
-            return null;
+            return m_ActionsTree?.GetSelectedAction();
         }
 
-        ActionMapTreeItem GetSelectedActionMap()
+        private ActionMapTreeItem GetSelectedActionMap()
         {
             if (m_Tree != null)
                 return m_Tree.GetSelectedActionMap();
-            if (m_ActionMapsTree != null)
-                return m_ActionMapsTree.GetSelectedActionMap();
-            return null;
+            return m_ActionMapsTree?.GetSelectedActionMap();
         }
 
-        bool CanRenameCurrentSelection()
+        private bool CanRenameCurrentSelection()
         {
             if (m_Tree != null && m_Tree.HasFocus())
                 return m_Tree.CanRenameCurrentSelection();
@@ -394,7 +389,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return false;
         }
 
-        void SetEmptySelection()
+        private void SetEmptySelection()
         {
             if (m_Tree != null && m_Tree.HasFocus())
                 m_Tree.SetSelection(new int[0]);
@@ -405,7 +400,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ;
         }
 
-        void BeginRename()
+        private void BeginRename()
         {
             if (m_Tree != null && m_Tree.HasFocus())
                 m_Tree.BeginRename(m_Tree.GetSelectedRow());

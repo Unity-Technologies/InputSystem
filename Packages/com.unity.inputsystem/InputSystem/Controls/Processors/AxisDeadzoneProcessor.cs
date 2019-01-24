@@ -1,21 +1,14 @@
 namespace UnityEngine.Experimental.Input.Processors
 {
-    public class AxisDeadzoneProcessor : IInputControlProcessor<float>
+    public class AxisDeadzoneProcessor : InputProcessor<float>
     {
         public float min;
         public float max;
 
-        public float minOrDefault
-        {
-            get { return min == 0.0f ? InputSystem.settings.defaultDeadzoneMin : min; }
-        }
+        public float minOrDefault => min == 0.0f ? InputSystem.settings.defaultDeadzoneMin : min;
+        public float maxOrDefault => max == 0.0f ? InputSystem.settings.defaultDeadzoneMax : max;
 
-        public float maxOrDefault
-        {
-            get { return max == 0.0f ? InputSystem.settings.defaultDeadzoneMax : max; }
-        }
-
-        public float Process(float value, InputControl control)
+        public override float Process(float value, InputControl<float> control = null)
         {
             var min = minOrDefault;
             var max = maxOrDefault;

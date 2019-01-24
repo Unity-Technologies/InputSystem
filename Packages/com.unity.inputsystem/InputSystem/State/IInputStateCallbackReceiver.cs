@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel

@@ -192,9 +192,7 @@ public class AssetEditorTests
 
         yield return null;
 
-        var e = new Event();
-        e.keyCode = KeyCode.Escape;
-        e.type = EventType.KeyDown;
+        var e = new Event {keyCode = KeyCode.Escape, type = EventType.KeyDown};
         picker.m_WindowInstance.SendEvent(e);
     }
 }

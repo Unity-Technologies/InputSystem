@@ -400,9 +400,9 @@ namespace UnityEngine.Experimental.Input
         #region Processors
 
         /// <summary>
-        /// Register an <see cref="IInputControlProcessor{TValue}"/> with the system.
+        /// Register an <see cref="InputProcessor{TValue}"/> with the system.
         /// </summary>
-        /// <param name="type">Type that implements <see cref="IInputControlProcessor{TValue}"/>.</param>
+        /// <param name="type">Type that implements <see cref="InputProcessor{TValue}"/>.</param>
         /// <param name="name">Name to use for the processor. If null or empty, name will be taken from short name
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
         public static void RegisterControlProcessor(Type type, string name = null)
@@ -1092,7 +1092,7 @@ namespace UnityEngine.Experimental.Input
             // Make sure device is actually in the system.
             if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
-                    string.Format("Cannot queue state event device '{0}' because device has not been added to system",
+                    string.Format("Cannot queue state event for device '{0}' because device has not been added to system",
                         device));
 
             ////REVIEW: does it make more sense to go off the 'stateBlock' on the device and let that determine size?
@@ -1251,8 +1251,8 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="Update(InputUpdateType)"/>
         public static event Action<InputUpdateType> onBeforeUpdate
         {
-            add { s_Manager.onBeforeUpdate += value; }
-            remove { s_Manager.onBeforeUpdate -= value; }
+            add => s_Manager.onBeforeUpdate += value;
+            remove => s_Manager.onBeforeUpdate -= value;
         }
 
         /// <summary>
@@ -1262,8 +1262,8 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="Update(InputUpdateType)"/>
         public static event Action<InputUpdateType> onAfterUpdate
         {
-            add { s_Manager.onAfterUpdate += value; }
-            remove { s_Manager.onAfterUpdate -= value; }
+            add => s_Manager.onAfterUpdate += value;
+            remove => s_Manager.onAfterUpdate -= value;
         }
 
         #endregion
@@ -1302,8 +1302,8 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputSettings"/>
         public static event Action onSettingsChange
         {
-            add { s_Manager.onSettingsChange += value; }
-            remove { s_Manager.onSettingsChange -= value; }
+            add => s_Manager.onSettingsChange += value;
+            remove => s_Manager.onSettingsChange -= value;
         }
 
         #endregion
@@ -1324,7 +1324,7 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.onActionChange +=
         ///     (obj, change) =>
         ///     {
-        ///         if (change == InputActionChange.ActionTriggered)
+        ///         if (change == InputActionChange.ActionPerformed)
         ///         {
         ///             var action = (InputAction)obj;
         ///             var control = action.lastTriggerControl;
@@ -1335,14 +1335,14 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public static event Action<object, InputActionChange> onActionChange
         {
-            add { InputActionMapState.s_OnActionChange.Append(value); }
-            remove { InputActionMapState.s_OnActionChange.Remove(value); }
+            add => InputActionMapState.s_OnActionChange.Append(value);
+            remove => InputActionMapState.s_OnActionChange.Remove(value);
         }
 
         /// <summary>
         /// Register a new type of interaction with the system.
         /// </summary>
-        /// <param name="type">Type that implements the interaction. Must support <see cref="IInputInteraction"/>.</param>
+        /// <param name="type">Type that implements the interaction. Must support <see cref="InputInteraction"/>.</param>
         /// <param name="name">Name to register the interaction with. This is used in bindings to refer to the interaction
         /// (e.g. an interactions called "Tap" can be added to a binding by listing it in its <see cref="InputBinding.interactions"/>
         /// property). If no name is supplied, the short name of <paramref name="type"/> is used (with "Interaction" clipped off
@@ -1350,7 +1350,7 @@ namespace UnityEngine.Experimental.Input
         /// <example>
         /// <code>
         /// // Interaction that is performed when control resets to default state.
-        /// public class ResetInteraction : IInputInteraction
+        /// public class ResetInteraction : InputInteraction
         /// {
         ///     public void Process(ref InputInteractionContext context)
         ///     {
@@ -1369,7 +1369,7 @@ namespace UnityEngine.Experimental.Input
         /// var action = new InputAction(binding: "/&lt;Gamepad>/buttonSouth", interactions: "reset");
         /// </code>
         /// </example>
-        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="InputInteraction"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
             if (string.IsNullOrEmpty(name))

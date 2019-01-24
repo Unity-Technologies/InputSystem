@@ -25,8 +25,15 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     /// </remarks>
     internal class ParameterListView
     {
+        /// <summary>
+        /// Invoked whenever a parameter is changed.
+        /// </summary>
         public Action onChange { get; set; }
 
+        /// <summary>
+        /// Get the current parameter values according to the editor state.
+        /// </summary>
+        /// <returns>An array of parameter values.</returns>
         public InputControlLayout.ParameterValue[] GetParameters()
         {
             // See if we have parameters that aren't at their default value.
@@ -57,16 +64,24 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         }
 
         /// <summary>
-        ///
+        /// Initialize the parameter list view based on the given registered type that has parameters to edit. This can be
+        /// things such as interactions, processors, or composites.
         /// </summary>
         /// <param name="registeredType">Type of object that the parameters will be passed to at runtime.
         /// We need this to be able to determine the possible set of parameters and their possible values. This
         /// can be a class implementing <see cref="IInputInteraction"/>, for example.</param>
-        /// <param name="existingParameters">List of existing parameters. Can be empty/null.</param>
+        /// <param name="existingParameters">List of existing parameters. Can be empty.</param>
         public void Initialize(Type registeredType, ReadOnlyArray<InputControlLayout.ParameterValue> existingParameters)
         {
             if (registeredType == null)
-                throw new ArgumentNullException("registeredType");
+            {
+                // No registered type. This usually happens when data references a registration that has
+                // been removed in the meantime (e.g. an interaction that is no longer supported). We want
+                // to accept this case and simply pretend that the given type has no parameters.
+
+                Clear();
+                return;
+            }
 
             // Try to instantiate object so that we can determine defaults.
             object instance = null;
@@ -93,7 +108,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                     continue;
 
                 // Determine parameter name from field.
-                var parameter = new EditableParameterValue();
+                var parameter = new EditableParameterValue {field = field};
                 var name = field.Name;
                 parameter.value.name = name;
 
@@ -162,22 +177,75 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             }
 
             m_Parameters = parameters.ToArray();
+
+            // See if we have a dedicated parameter editor.
+            var parameterEditorType = InputParameterEditor.LookupEditorForType(registeredType);
+            if (parameterEditorType != null)
+            {
+                // Create an editor instance and hand it the instance we created. Unlike our default
+                // editing logic, on this path we will be operating on an object instance that contains
+                // the parameter values. So on this path, we actually need to update the object to reflect
+                // the current parameter values.
+
+                foreach (var parameter in m_Parameters)
+                {
+                    if (parameter.isEnum)
+                    {
+                        var enumValue = Enum.ToObject(parameter.field.GetType(), parameter.value.GetIntValue());
+                        parameter.field.SetValue(instance, enumValue);
+                    }
+                    else
+                    {
+                        switch (parameter.value.type)
+                        {
+                            case InputControlLayout.ParameterType.Float:
+                                parameter.field.SetValue(instance, parameter.value.GetFloatValue());
+                                break;
+
+                            case InputControlLayout.ParameterType.Boolean:
+                                parameter.field.SetValue(instance, parameter.value.GetBoolValue());
+                                break;
+
+                            case InputControlLayout.ParameterType.Integer:
+                                parameter.field.SetValue(instance, parameter.value.GetIntValue());
+                                break;
+                        }
+                    }
+                }
+
+                m_ParameterEditor = (InputParameterEditor)Activator.CreateInstance(parameterEditorType);
+                m_ParameterEditor.SetTarget(instance);
+            }
+            else
+            {
+                m_ParameterEditor = null;
+            }
         }
 
         public void Clear()
         {
             m_Parameters = null;
+            m_ParameterEditor = null;
         }
 
         public void OnGUI()
         {
+            // If we have a dedicated parameter editor, let it do all the work.
+            if (m_ParameterEditor != null)
+            {
+                EditorGUI.BeginChangeCheck();
+                m_ParameterEditor.OnGUI();
+                if (EditorGUI.EndChangeCheck())
+                {
+                    ReadParameterValuesFrom(m_ParameterEditor.target);
+                    onChange?.Invoke();
+                }
+                return;
+            }
+
+            // Otherwise, fall back to our default logic.
             if (m_Parameters == null)
                 return;
-
-            ////TODO: give parameters an explicit foldout
-
-            ////REVIEW: how does this handle undo?
-
             for (var i = 0; i < m_Parameters.Length; i++)
             {
                 var parameter = m_Parameters[i];
@@ -211,12 +279,66 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 {
                     parameter.value.SetValue(result);
                     m_Parameters[i] = parameter;
-                    if (onChange != null)
-                        onChange();
+                    onChange?.Invoke();
                 }
             }
         }
 
+        ////REVIEW: check whether parameters have *actually* changed?
+        /// <summary>
+        /// Refresh <see cref="m_Parameters"/> from the current parameter values in <paramref name="target"/>.
+        /// </summary>
+        /// <param name="target">An instance of the current type we are editing parameters on.</param>
+        private void ReadParameterValuesFrom(object target)
+        {
+            if (m_Parameters == null)
+                return;
+
+            for (var i = 0; i < m_Parameters.Length; ++i)
+            {
+                var parameter = m_Parameters[i];
+
+                var newValue = new InputControlLayout.ParameterValue();
+                newValue.name = parameter.value.name;
+
+                var value = parameter.field.GetValue(target);
+                if (parameter.isEnum)
+                {
+                    var intValue = Convert.ToInt32(value);
+                    newValue.SetValue(intValue);
+                }
+                else
+                {
+                    switch (parameter.value.type)
+                    {
+                        case InputControlLayout.ParameterType.Float:
+                        {
+                            var floatValue = Convert.ToSingle(value);
+                            newValue.SetValue(floatValue);
+                            break;
+                        }
+
+                        case InputControlLayout.ParameterType.Boolean:
+                        {
+                            var intValue = Convert.ToInt32(value);
+                            newValue.SetValue(intValue);
+                            break;
+                        }
+
+                        case InputControlLayout.ParameterType.Integer:
+                        {
+                            var boolValue = Convert.ToBoolean(value);
+                            newValue.SetValue(boolValue);
+                            break;
+                        }
+                    }
+                }
+
+                m_Parameters[i].value = newValue;
+            }
+        }
+
+        private InputParameterEditor m_ParameterEditor;
         private EditableParameterValue[] m_Parameters;
 
         public struct EditableParameterValue
@@ -225,6 +347,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             public InputControlLayout.ParameterValue? defaultValue;
             public int[] enumValues;
             public string[] enumNames;
+            public FieldInfo field;
 
             public bool isEnum => enumValues != null;
             public bool isAtDefault => defaultValue != null && value == defaultValue.Value;

@@ -34,6 +34,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
         private void Refresh()
         {
+            ////FIXME: doesn't seem like we're picking up the results of the latest import
             m_ActionAssetInitialized = false;
             Repaint();
         }
@@ -42,15 +43,41 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         {
             ////TODO: cache properties
 
+            EditorGUI.BeginChangeCheck();
+
             // Action config section.
             EditorGUI.BeginChangeCheck();
             var actionsProperty = serializedObject.FindProperty("m_Actions");
             EditorGUILayout.PropertyField(actionsProperty);
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
                 OnActionAssetChange();
+            if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 0)
+            {
+                // Default control scheme picker.
+
+                ++EditorGUI.indentLevel;
+                var selected = EditorGUILayout.Popup(m_DefaultControlSchemeText, m_SelectedDefaultControlScheme,
+                    m_ControlSchemeOptions);
+                if (selected != m_SelectedDefaultControlScheme)
+                {
+                    var defaultControlSchemeProperty = serializedObject.FindProperty("m_DefaultControlScheme");
+                    if (selected == 0)
+                    {
+                        defaultControlSchemeProperty.stringValue = null;
+                    }
+                    else
+                    {
+                        defaultControlSchemeProperty.stringValue =
+                            m_ControlSchemeOptions[m_SelectedDefaultControlScheme].text;
+                    }
+                    m_SelectedDefaultControlScheme = selected;
+                }
+                --EditorGUI.indentLevel;
+            }
             DoHelpCreateAssetUI();
 
             // UI config section.
+            /*
             var uiProperty = serializedObject.FindProperty("m_UIEventSystem");
             if (m_UIPropertyText == null)
                 m_UIPropertyText = EditorGUIUtility.TrTextContent("UI", uiProperty.tooltip);
@@ -59,6 +86,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             if (EditorGUI.EndChangeCheck() || !m_UIConnectionInitialized)
                 OnUIConnectionChange();
             DoHelpSetUpUnityUI();
+            */
 
             // Camera section.
             var cameraProperty = serializedObject.FindProperty("m_Camera");
@@ -87,21 +115,26 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                     m_EventsGroupUnfolded = EditorGUILayout.Foldout(m_EventsGroupUnfolded, m_EventsGroupText);
                     if (m_EventsGroupUnfolded)
                     {
-                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceLostEvent"));
-                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceRegainedEvent"));
-
+                        // Action events.
                         if (m_ActionNames != null)
                         {
                             var actionEvents = serializedObject.FindProperty("m_ActionEvents");
                             for (var i = 0; i < m_ActionNames.Length; ++i)
                                 EditorGUILayout.PropertyField(actionEvents.GetArrayElementAtIndex(i), m_ActionNames[i]);
                         }
+
+                        // Misc events.
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceLostEvent"));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceRegainedEvent"));
                     }
                     break;
             }
 
             // Miscellaneous buttons.
             DoUtilityButtonsUI();
+
+            if (EditorGUI.EndChangeCheck())
+                serializedObject.ApplyModifiedProperties();
         }
 
         private void DoHelpCreateAssetUI()
@@ -123,18 +156,18 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 var fileName = EditorUtility.SaveFilePanel("Create Input Actions Asset", "Assets", defaultFileName,
                     InputActionAsset.kExtension);
 
-                if (!fileName.StartsWith(Application.dataPath))
-                {
-                    Debug.LogError(string.Format("Path must be located in Assets/ folder (got: '{0}')", fileName));
-                    EditorGUILayout.EndHorizontal();
-                    return;
-                }
-
                 ////TODO: take current Supported Devices into account when creating this
 
                 // Create and import asset and open editor.
                 if (!string.IsNullOrEmpty(fileName))
                 {
+                    if (!fileName.StartsWith(Application.dataPath))
+                    {
+                        Debug.LogError(string.Format("Path must be located in Assets/ folder (got: '{0}')", fileName));
+                        EditorGUILayout.EndHorizontal();
+                        return;
+                    }
+
                     if (!fileName.EndsWith("." + InputActionAsset.kExtension))
                         fileName += "." + InputActionAsset.kExtension;
 
@@ -201,7 +234,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             EditorGUILayout.BeginHorizontal();
 
             if (GUILayout.Button(m_OpenSettingsText, EditorStyles.miniButton))
-                SettingsService.OpenProjectSettings(InputSettingsProvider.kSettingsPath);
+                InputSettingsProvider.Open();
 
             if (GUILayout.Button(m_OpenDebuggerText, EditorStyles.miniButton))
                 InputDebuggerWindow.CreateOrShow();
@@ -298,7 +331,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                     if (action != null)
                     {
                         newActionEvents.Add(oldActionEvents[i]);
-                        newActionNames.Add(new GUIContent(action.ToString()));
+                        newActionNames.Add(new GUIContent(action.ToString() + " Action"));
                     }
                 }
             }
@@ -307,11 +340,29 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             foreach (var action in asset)
             {
                 newActionEvents.Add(new PlayerInput.ActionEvent(action.id));
-                newActionNames.Add(new GUIContent(action.ToString()));
+                newActionNames.Add(new GUIContent(action.ToString() + " Action"));
             }
 
             m_ActionNames = newActionNames.ToArray();
             playerInput.m_ActionEvents = newActionEvents.ToArray();
+
+            // Read out control schemes.
+            var selectedDefaultControlScheme = playerInput.defaultControlScheme;
+            m_SelectedDefaultControlScheme = 0;
+            var controlSchemes = asset.controlSchemes;
+            m_ControlSchemeOptions = new GUIContent[controlSchemes.Count + 1];
+            m_ControlSchemeOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
+            ////TODO: sort alphabetically
+            for (var i = 0; i < controlSchemes.Count; ++i)
+            {
+                var name = controlSchemes[i].name;
+                m_ControlSchemeOptions[i + 1] = new GUIContent(controlSchemes[i].name);
+                if (selectedDefaultControlScheme != null && string.Compare(name, selectedDefaultControlScheme,
+                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                    m_SelectedDefaultControlScheme = i + 1;
+            }
+            if (m_SelectedDefaultControlScheme <= 0)
+                playerInput.defaultControlScheme = null;
 
             serializedObject.Update();
         }
@@ -380,6 +431,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         [NonSerialized] private GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
         [NonSerialized] private GUIContent m_EventsGroupText = EditorGUIUtility.TrTextContent("Events");
         [NonSerialized] private GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
+        [NonSerialized] private GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
         [NonSerialized] private GUIContent m_SendMessagesHelpText;

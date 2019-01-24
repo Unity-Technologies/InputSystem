@@ -630,8 +630,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(hid["dpad/left"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
         Assert.That(hid["dpad/right"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
 
-        InputEventPtr eventPtr;
-        using (StateEvent.From(hid, out eventPtr))
+        using (StateEvent.From(hid, out var eventPtr))
         {
             var stateData = (byte*)StateEvent.From(eventPtr)->state;
 

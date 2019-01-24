@@ -12,6 +12,43 @@ namespace UnityEngine.Experimental.Input
     public static class InputControlExtensions
     {
         /// <summary>
+        /// Return true if the given control is actuated.
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="threshold">Magnitude threshold that the control must match or exceed to be considered actuated.
+        /// An exception to this is the default value of zero. If threshold is zero, the control must have a magnitude
+        /// greater than zero.</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Actuation is defined as a control having a magnitude (<see cref="InputControl.EvaluateMagnitude()"/>
+        /// greater than zero or, if the control does not support magnitudes, has been moved from its default
+        /// state.
+        ///
+        /// In practice, this means that when actuated, a control will produce a value other than its default
+        /// value.
+        /// </remarks>
+        public static bool IsActuated(this InputControl control, float threshold = 0)
+        {
+            // First perform cheap memory check. If we're in default state, we don't
+            // need to invoke virtuals on the control.
+            if (control.CheckStateIsAtDefault())
+                return false;
+
+            // Check magnitude of actuation.
+            var magnitude = control.EvaluateMagnitude();
+            if (magnitude < 0)
+            {
+                ////REVIEW: we probably want to do a value comparison on this path to compare it to the default value
+                return true;
+            }
+
+            if (Mathf.Approximately(threshold, 0))
+                return magnitude > 0;
+
+            return magnitude >= threshold;
+        }
+
+        /// <summary>
         /// Read the current value of the control and return it as an object.
         /// </summary>
         /// <returns></returns>
@@ -26,7 +63,7 @@ namespace UnityEngine.Experimental.Input
         public static unsafe object ReadValueAsObject(this InputControl control)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             return control.ReadValueFromStateAsObject(control.currentStatePtr);
         }
@@ -45,9 +82,19 @@ namespace UnityEngine.Experimental.Input
         public static unsafe void ReadValueIntoBuffer(this InputControl control, void* buffer, int bufferSize)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
 
             control.ReadValueFromStateIntoBuffer(control.currentStatePtr, buffer, bufferSize);
+        }
+
+        public static unsafe void ReadDefaultValue(this InputControl control, void* buffer, int bufferSize)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -64,7 +111,7 @@ namespace UnityEngine.Experimental.Input
         public static unsafe object ReadDefaultValueAsObject(this InputControl control)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             return control.ReadValueFromStateAsObject(control.defaultStatePtr);
         }

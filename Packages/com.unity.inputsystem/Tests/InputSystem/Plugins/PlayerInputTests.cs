@@ -1,20 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEditor.VersionControl;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.PlayerInput;
-using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.SceneManagement;
-using UnityEngine.TestTools;
-using UnityEngine.TestTools.Utils;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 
@@ -353,7 +345,7 @@ internal class PlayerInputTests : InputTestFixture
         Press(gamepad.buttonSouth);
 
         Assert.That(listener.messages,
-            Is.EquivalentTo(new[] {new Message("gameplay/fire", 1f)}));
+            Is.EquivalentTo(new[] {new Message("gameplay/fire Started", 1f), new Message("gameplay/fire Performed", 1f)}));
     }
 
     [Test]
@@ -927,17 +919,17 @@ internal class PlayerInputTests : InputTestFixture
 
         public void OnFireEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message { name = "gameplay/fire", value = context.ReadValue<float>() });
+            messages.Add(new Message { name = "gameplay/fire " + context.phase, value = context.ReadValue<float>() });
         }
 
         public void OnLookEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message { name = "gameplay/look", value = context.ReadValue<Vector2>() });
+            messages.Add(new Message { name = "gameplay/look " + context.phase, value = context.ReadValue<Vector2>() });
         }
 
         public void OnMoveEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message { name = "gameplay/move", value = context.ReadValue<Vector2>() });
+            messages.Add(new Message { name = "gameplay/move" + context.phase, value = context.ReadValue<Vector2>() });
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -961,7 +953,6 @@ internal class PlayerInputTests : InputTestFixture
         // ReSharper disable once UnusedMember.Local
         public void OnDeviceLost(PlayerInput player)
         {
-            Debug.Log("OnDeviceLost");
             messages.Add(new Message { name = "OnDeviceLost", value = player});
         }
 

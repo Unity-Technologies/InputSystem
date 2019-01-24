@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Layouts;
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     [InputControlLayout]
-    public class OculusStandaloneHMDBase : XRHMD
+    public class GearVRHMD : XRHMD
     {
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }

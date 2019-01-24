@@ -3,12 +3,12 @@ namespace UnityEngine.Experimental.Input.Processors
     /// <summary>
     /// Scale a float value by a constant factor.
     /// </summary>
-    public class ScaleProcessor : IInputControlProcessor<float>
+    public class ScaleProcessor : InputProcessor<float>
     {
         [Tooltip("Scale factor to multiply incoming float values by.")]
         public float factor;
 
-        public float Process(float value, InputControl control)
+        public override float Process(float value, InputControl<float> control)
         {
             return value * factor;
         }

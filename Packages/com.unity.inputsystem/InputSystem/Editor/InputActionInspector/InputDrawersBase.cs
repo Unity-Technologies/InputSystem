@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected InspectorTree m_Tree;
-        private CopyPasteUtility m_CopyPasteUtility;
+        private InputActionCopyPasteUtility m_CopyPasteUtility;
 
         protected GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         protected GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (Event.current.type == EventType.ValidateCommand)
                 {
-                    if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                    if (InputActionCopyPasteUtility.IsValidCommand(Event.current.commandName))
                         Event.current.Use();
                 }
                 else if (Event.current.type == EventType.ExecuteCommand)
@@ -118,7 +118,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_Tree = CreateTree(property);
                 m_Tree.OnContextClick = OnContextClick;
-                m_CopyPasteUtility = new CopyPasteUtility(m_Tree);
+                m_CopyPasteUtility = new InputActionCopyPasteUtility(m_Tree);
             }
         }
 
