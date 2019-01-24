@@ -686,7 +686,7 @@ namespace UnityEngine.Experimental.Input
 
                 bindingStates[bindingIndex].needsInitialStateCheck = false;
 
-                var mapIndex = actionStates[bindingIndex].mapIndex;
+                var mapIndex = bindingStates[bindingIndex].mapIndex;
                 var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
                 var controlCount = bindingStates[bindingIndex].controlCount;
 

@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct, IComparable<TValue>
         {
             if (m_State == null)
-                return default(TValue);
+                return default;
 
             return m_State.ReadCompositePartValue<TValue>(m_BindingIndex, partNumber);
         }
