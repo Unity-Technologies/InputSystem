@@ -9,31 +9,32 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private static class Styles
         {
-            public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
-            public static GUIStyle foldoutStyle = new GUIStyle("foldout");
+            public static readonly GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
+            public static readonly GUIStyle foldoutStyle = new GUIStyle("foldout");
 
             static Styles()
             {
                 var darkGreyBackgroundWithBorderTexture =
                     AssetDatabase.LoadAssetAtPath<Texture2D>(
                         InputActionTreeBase.ResourcesPath + "foldoutBackground.png");
+
                 foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
                 foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
                 foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
             }
         }
 
-        private SerializedProperty m_ActionProperty;
-        private SerializedProperty m_ExpectedControlLayoutProperty;
-        private SerializedProperty m_FlagsProperty;
+        private readonly SerializedProperty m_ActionProperty;
+        private readonly SerializedProperty m_ExpectedControlLayoutProperty;
+        private readonly SerializedProperty m_FlagsProperty;
 
-        private Action m_ReloadTree;
+        private readonly Action m_ReloadTree;
         private bool m_GeneralFoldout = true;
 
         private string m_ExpectedControlLayout;
-        private string[] m_ControlTypeList;
+        private readonly string[] m_ControlTypeList;
         private int m_SelectedControlType;
-        private GUIContent m_ActionTypeLabel;
+        private readonly GUIContent m_ActionTypeLabel;
 
         private static readonly GUIContent s_GeneralFoldoutLabel = EditorGUIUtility.TrTextContent("General");
         private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous");
@@ -113,6 +114,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                     m_FlagsProperty.intValue = (int)flags;
                     m_FlagsProperty.serializedObject.ApplyModifiedProperties();
+
+                    ////REVIEW: this is quite brute-force; ideally we'd have a softer way of applying the changes; all we need here is to dirty the asset
+                    m_ReloadTree();
                 }
             }
             EditorGUI.indentLevel--;
