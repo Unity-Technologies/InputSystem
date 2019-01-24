@@ -59,7 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     public class OculusGo : OculusStandaloneHMDBase
-    { }
+    {}
 
     [InputControlLayout]
     public class OculusStandaloneHMDExtended : OculusStandaloneHMDBase
