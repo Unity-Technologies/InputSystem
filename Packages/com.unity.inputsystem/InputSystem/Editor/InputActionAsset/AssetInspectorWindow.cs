@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -102,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
-            m_ActionAssetManager.SetReferences(SetTitle);
+            m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager, m_InputActionWindowToolbar);
@@ -142,10 +143,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // Set asset would usually only be called when the window is open
-        private void SetAsset(InputActionAsset referencedObject)
+        private void SetAsset(InputActionAsset asset)
         {
-            m_ActionAssetManager = new InputActionAssetManager(referencedObject);
-            m_ActionAssetManager.SetReferences(SetTitle);
+            m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
             m_ActionAssetManager.InitializeObjectReferences();
             m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager, m_InputActionWindowToolbar);
@@ -156,6 +156,16 @@ namespace UnityEngine.Experimental.Input.Editor
             OnActionMapSelection();
             m_ActionsTree.ExpandAll();
             LoadPropertiesForSelection();
+
+            UpdateWindowTitle();
+        }
+
+        private void UpdateWindowTitle()
+        {
+            var title = Path.GetFileNameWithoutExtension(m_ActionAssetManager.path) + " (Input Actions)";
+            m_Title = new GUIContent(title);
+            m_DirtyTitle = new GUIContent("(*) " + m_Title.text);
+            titleContent = m_Title;
         }
 
         private void InitializeTrees()
@@ -627,11 +637,7 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 // No, so create a new window.
-                var title = asset.name + " (Input Actions)";
-                window = GetWindow<AssetInspectorWindow>(title, focus: true, desiredDockNextTo: typeof(SceneView));
-                window.m_Title = new GUIContent(title);
-                window.m_DirtyTitle = new GUIContent("(*) " + window.m_Title.text);
-                window.titleContent = window.m_Title;
+                window = GetWindow<AssetInspectorWindow>(string.Empty, focus: true, desiredDockNextTo: typeof(SceneView));
                 window.SetAsset(asset);
             }
 
@@ -658,7 +664,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void SetTitle(bool dirty)
+        private void OnDirtyChanged(bool dirty)
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
         }
@@ -671,13 +677,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private class ProcessAssetModifications : AssetModificationProcessor
         {
+            // Handle .inputactions asset being deleted.
+            // ReSharper disable once UnusedMember.Local
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
-                // Only looking for deletion of .inputaction assets.
                 if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                     return default;
 
-                // See if we have an open window
+                // See if we have an open window.
                 var guid = AssetDatabase.AssetPathToGUID(path);
                 var window = FindEditorFor(guid);
                 if (window != null)
@@ -698,6 +705,24 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
 
                     window.Close();
+                }
+
+                return default;
+            }
+
+            // Handle .inputactions asset being moved.
+            // ReSharper disable once UnusedMember.Local
+            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
+            {
+                if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                    return default;
+
+                var guid = AssetDatabase.AssetPathToGUID(sourcePath);
+                var window = FindEditorFor(guid);
+                if (window != null)
+                {
+                    window.m_ActionAssetManager.path = destinationPath;
+                    window.UpdateWindowTitle();
                 }
 
                 return default;

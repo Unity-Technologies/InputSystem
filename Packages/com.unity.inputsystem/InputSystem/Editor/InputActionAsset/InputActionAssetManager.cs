@@ -16,9 +16,10 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] private bool m_IsDirty;
 
         private SerializedObject m_SerializedObject;
-        private Action<bool> m_SetTitle;
 
         public string guid => m_AssetGUID;
+
+        public string path { get; set; }
 
         private InputActionAsset importedAsset
         {
@@ -31,6 +32,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 return m_ImportedAssetObject;
             }
         }
+
+        public Action<bool> onDirtyChanged { get; set; }
 
         public InputActionAssetManager(InputActionAsset inputActionAsset)
         {
@@ -112,13 +115,13 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             m_IsDirty = false;
-            m_SetTitle(false);
+            onDirtyChanged(false);
         }
 
         public void SetAssetDirty()
         {
             m_IsDirty = true;
-            m_SetTitle(true);
+            onDirtyChanged(true);
         }
 
         public bool ImportedAssetObjectEquals(InputActionAsset inputActionAsset)
@@ -131,12 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public void UpdateAssetDirtyState()
         {
             m_IsDirty = m_AssetObjectForEditing.ToJson() != importedAsset.ToJson();
-            m_SetTitle(m_IsDirty);
-        }
-
-        public void SetReferences(Action<bool> setTitle)
-        {
-            m_SetTitle = setTitle;
+            onDirtyChanged(m_IsDirty);
         }
     }
 }
