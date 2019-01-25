@@ -214,8 +214,6 @@ As when using `InputEventTrace` for events, actions can be traced in order to ge
 
 >NOTE: `InputActionTrace` allocates unmanaged memory and needs to be disposed of in order to not create memory leaks.
 
->NOTE: The data recorded in an `InputActionTrace` is only valid while the respective action configuration does not change. If the bound controls of the action itself, of any other actions in its map, or any of the maps in the same `InputActionAsset` change, the recorded action data should no longer be used.
-
 ```CSharp
 var trace = new InputActionTrace();
 

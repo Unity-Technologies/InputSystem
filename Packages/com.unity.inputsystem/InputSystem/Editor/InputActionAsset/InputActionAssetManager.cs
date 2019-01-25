@@ -21,6 +21,20 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public string path { get; set; }
 
+        public string name
+        {
+            get
+            {
+                if (m_ImportedAssetObject != null)
+                    return m_ImportedAssetObject.name;
+
+                if (!string.IsNullOrEmpty(m_AssetPath))
+                    return Path.GetFileNameWithoutExtension(m_AssetPath);
+
+                return string.Empty;
+            }
+        }
+
         private InputActionAsset importedAsset
         {
             get

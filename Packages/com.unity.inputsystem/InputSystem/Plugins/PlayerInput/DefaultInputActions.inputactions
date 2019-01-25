@@ -22,7 +22,7 @@
                 {
                     "name": "Fire",
                     "id": "6c2ab1b8-8984-453a-af3d-a3c78ae1679a",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Button",
                     "continuous": false,
                     "bindings": []
                 }
@@ -190,6 +190,18 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
+                    "action": "Fire",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
                     "action": "Fire",
                     "chainWithPrevious": false,
                     "isComposite": false,

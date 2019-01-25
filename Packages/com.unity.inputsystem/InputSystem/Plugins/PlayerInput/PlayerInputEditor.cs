@@ -306,6 +306,12 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
             var playerInput = (PlayerInput)target;
             var asset = playerInput.actions;
+            if (asset == null)
+            {
+                m_ControlSchemeOptions = null;
+                m_ActionNames = null;
+                return;
+            }
 
             // If we're sending Unity events, read out the event list.
             if ((PlayerNotifications)serializedObject.FindProperty("m_NotificationBehavior").intValue ==

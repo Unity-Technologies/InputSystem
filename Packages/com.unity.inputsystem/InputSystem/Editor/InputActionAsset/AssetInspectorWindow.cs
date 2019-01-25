@@ -162,7 +162,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void UpdateWindowTitle()
         {
-            var title = Path.GetFileNameWithoutExtension(m_ActionAssetManager.path) + " (Input Actions)";
+            var title = m_ActionAssetManager.name + " (Input Actions)";
             m_Title = new GUIContent(title);
             m_DirtyTitle = new GUIContent("(*) " + m_Title.text);
             titleContent = m_Title;

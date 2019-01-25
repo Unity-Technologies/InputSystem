@@ -4,6 +4,8 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: expose extra pen buttons
+
 ////TODO: make sure that 'inRange' is always true if not supported by the device
 
 ////TODO: expose whether pen actually has eraser and which barrel buttons it has
