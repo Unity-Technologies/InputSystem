@@ -76,6 +76,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 - `Mouse.forwardButton` and `Mouse.backButton`.
+- The input debugger now shows users along with their paired devices and actions. See the [documentation](Documentation~/UserManagement.md#debugging)
 
 #### Actions:
 - Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \

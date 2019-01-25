@@ -17,3 +17,11 @@ The input system supports multi-user management through a separate plugin. This 
 ### Rebinding
 
 ## User Account Management
+
+## Debugging
+
+>NOTE: This feature currently only works for local players and does not yet work for showing input users from connected/remote players.
+
+In the editor, the currently active users along with their paired devices and active actions are shown in the input debugger during gameplay under "Users". To open the input debugger, select "Windows >> Input Debugger" from the main menu.
+
+![Users in Input Debugger](Images/UsersInputDebugger.png)
