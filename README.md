@@ -22,7 +22,7 @@ Rough assessment of current status:
 
 ## Roadmap
 
-At this point, we try to focus package releases on specific problem areas. The following is a tentative breakdown on the areas of focus we aim to address.
+At this point, we try to focus package releases on specific problem areas. The following is a tentative breakdown on the areas of focus we aim to address. This does not mean that the given area is necessarily fully finished in the given version but it will receive increased priority and attention at that point.
 
 |Version|Focus|
 |-------|-----|

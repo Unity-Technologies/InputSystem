@@ -608,14 +608,14 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             if (m_NotificationBehavior == PlayerNotifications.InvokeUnityEvents)
                 return;
 
-            // ATM we only care about `performed`, not about the other phases.
-            if (!context.performed)
+            // ATM we only care about `performed` and, in the case of continuous actions, `cancelled`.
+            var action = context.action;
+            if (!(context.performed || (context.cancelled && action.continuous)))
                 return;
 
             // Find message name for action.
             if (m_ActionMessageNames == null)
                 CacheMessageNames();
-            var action = context.action;
             var messageName = m_ActionMessageNames[action.m_Id];
 
             // Cache value.

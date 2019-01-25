@@ -7,6 +7,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.PlayerInput;
 using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.Experimental.Input.Processors;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 
@@ -327,6 +328,46 @@ internal class PlayerInputTests : InputTestFixture
         Press(gamepad.buttonSouth);
 
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+
+        listener.messages.Clear();
+
+        // 'Fire' is not a continuous action. Unlike with continuous actions, PlayerInput should not
+        // send a message on button release (i.e. when the action cancels).
+        Release(gamepad.buttonSouth);
+
+        Assert.That(listener.messages, Is.Empty);
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCancelled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+
+        playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[]
+            {
+                new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+            }));
+
+        listener.messages.Clear();
+
+        Set(gamepad.leftStick, Vector2.zero);
+
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[]
+            {
+                new Message("OnMove", Vector2.zero)
+            }));
     }
 
     [Test]
@@ -798,8 +839,8 @@ internal class PlayerInputTests : InputTestFixture
                     ""name"" : ""gameplay"",
                     ""actions"" : [
                         { ""name"" : ""fire"" },
-                        { ""name"" : ""look"" },
-                        { ""name"" : ""move"" }
+                        { ""name"" : ""look"", ""continuous"" : true },
+                        { ""name"" : ""move"", ""continuous"" : true }
                     ],
                     ""bindings"" : [
                         { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
