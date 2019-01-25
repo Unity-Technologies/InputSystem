@@ -163,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 {
                     if (!fileName.StartsWith(Application.dataPath))
                     {
-                        Debug.LogError(string.Format("Path must be located in Assets/ folder (got: '{0}')", fileName));
+                        Debug.LogError($"Path must be located in Assets/ folder (got: '{fileName}')");
                         EditorGUILayout.EndHorizontal();
                         return;
                     }
@@ -304,47 +304,46 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             serializedObject.ApplyModifiedProperties();
             m_ActionAssetInitialized = true;
 
-            // Ignore if we're not dealing in events. No need to generate the event list if it's
-            // not used.
-            if ((PlayerNotifications)serializedObject.FindProperty("m_NotificationBehavior").intValue !=
-                PlayerNotifications.InvokeUnityEvents)
-                return;
-
             var playerInput = (PlayerInput)target;
             var asset = playerInput.actions;
 
-            ////FIXME: this should preserve the same order that we have in the asset
-            var newActionNames = new List<GUIContent>();
-            var newActionEvents = new List<PlayerInput.ActionEvent>();
-
-            ////REVIEW: this is destructive; we may be losing connections here that the user has set up
-            ////        if the action goes missing
-
-            // Bring over any action events that we already have and that are still in the asset.
-            var oldActionEvents = playerInput.m_ActionEvents;
-            if (oldActionEvents != null)
+            // If we're sending Unity events, read out the event list.
+            if ((PlayerNotifications)serializedObject.FindProperty("m_NotificationBehavior").intValue ==
+                PlayerNotifications.InvokeUnityEvents)
             {
-                for (var i = 0; i < oldActionEvents.Length; ++i)
+                ////FIXME: this should preserve the same order that we have in the asset
+                var newActionNames = new List<GUIContent>();
+                var newActionEvents = new List<PlayerInput.ActionEvent>();
+
+                ////REVIEW: this is destructive; we may be losing connections here that the user has set up
+                ////        if the action goes missing
+
+                // Bring over any action events that we already have and that are still in the asset.
+                var oldActionEvents = playerInput.m_ActionEvents;
+                if (oldActionEvents != null)
                 {
-                    var guid = oldActionEvents[i].actionId;
-                    var action = asset.FindAction(guid);
-                    if (action != null)
+                    foreach (var entry in oldActionEvents)
                     {
-                        newActionEvents.Add(oldActionEvents[i]);
-                        newActionNames.Add(new GUIContent(action.ToString() + " Action"));
+                        var guid = entry.actionId;
+                        var action = asset.FindAction(guid);
+                        if (action != null)
+                        {
+                            newActionEvents.Add(entry);
+                            newActionNames.Add(new GUIContent(action + " Action"));
+                        }
                     }
                 }
-            }
 
-            // Add any new actions.
-            foreach (var action in asset)
-            {
-                newActionEvents.Add(new PlayerInput.ActionEvent(action.id));
-                newActionNames.Add(new GUIContent(action.ToString() + " Action"));
-            }
+                // Add any new actions.
+                foreach (var action in asset)
+                {
+                    newActionEvents.Add(new PlayerInput.ActionEvent(action.id));
+                    newActionNames.Add(new GUIContent(action + " Action"));
+                }
 
-            m_ActionNames = newActionNames.ToArray();
-            playerInput.m_ActionEvents = newActionEvents.ToArray();
+                m_ActionNames = newActionNames.ToArray();
+                playerInput.m_ActionEvents = newActionEvents.ToArray();
+            }
 
             // Read out control schemes.
             var selectedDefaultControlScheme = playerInput.defaultControlScheme;
@@ -425,13 +424,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
         [SerializeField] private bool m_EventsGroupUnfolded;
 
-        [NonSerialized] private GUIContent m_CreateActionsText = EditorGUIUtility.TrTextContent("Create Actions...");
-        [NonSerialized] private GUIContent m_AddInputModuleText = EditorGUIUtility.TrTextContent("Add UI Input Module");
-        [NonSerialized] private GUIContent m_OpenSettingsText = EditorGUIUtility.TrTextContent("Open Input Settings");
-        [NonSerialized] private GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
-        [NonSerialized] private GUIContent m_EventsGroupText = EditorGUIUtility.TrTextContent("Events");
-        [NonSerialized] private GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
-        [NonSerialized] private GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
+        [NonSerialized] private readonly GUIContent m_CreateActionsText = EditorGUIUtility.TrTextContent("Create Actions...");
+        [NonSerialized] private readonly GUIContent m_AddInputModuleText = EditorGUIUtility.TrTextContent("Add UI Input Module");
+        [NonSerialized] private readonly GUIContent m_OpenSettingsText = EditorGUIUtility.TrTextContent("Open Input Settings");
+        [NonSerialized] private readonly GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
+        [NonSerialized] private readonly GUIContent m_EventsGroupText = EditorGUIUtility.TrTextContent("Events");
+        [NonSerialized] private readonly GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
+        [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
         [NonSerialized] private GUIContent m_SendMessagesHelpText;

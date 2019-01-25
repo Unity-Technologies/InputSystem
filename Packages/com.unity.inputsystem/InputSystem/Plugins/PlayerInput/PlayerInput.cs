@@ -414,7 +414,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             int splitScreenIndex = -1, params InputDevice[] pairWithDevices)
         {
             if (prefab == null)
-                throw new ArgumentNullException("prefab");
+                throw new ArgumentNullException(nameof(prefab));
 
             // Set initialization data.
             s_InitPlayerIndex = playerIndex;
@@ -849,7 +849,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             ArrayHelpers.AppendWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, this);
             for (var i = 1; i < s_AllActivePlayersCount; ++i)
                 for (var j = i; j > 0 && s_AllActivePlayers[j - 1].playerIndex > s_AllActivePlayers[j].playerIndex; --j)
-                    ArrayHelpers.SwapElements(s_AllActivePlayers, j, j - 1);
+                    s_AllActivePlayers.SwapElements(j, j - 1);
 
             // If it's the first player, hook into user change notifications.
             if (s_AllActivePlayersCount == 1)

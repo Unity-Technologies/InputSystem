@@ -126,10 +126,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             set { throw new NotImplementedException(); }
         }
 
-        public int playerCount
-        {
-            get { return PlayerInput.s_AllActivePlayersCount; }
-        }
+        public int playerCount => PlayerInput.s_AllActivePlayersCount;
 
         /// <summary>
         /// Maximum number of players allowed concurrently in the game.

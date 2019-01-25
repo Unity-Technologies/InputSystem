@@ -9,23 +9,20 @@
                     "name": "Move",
                     "id": "351f2ccd-1f9f-44bf-9bec-d62ac5c5f408",
                     "expectedControlLayout": "Vector2",
-                    "required": false,
-                    "continuous": false,
+                    "continuous": true,
                     "bindings": []
                 },
                 {
                     "name": "Look",
                     "id": "6b444451-8a00-4d00-a97e-f47457f736a8",
                     "expectedControlLayout": "Vector2",
-                    "required": false,
-                    "continuous": false,
+                    "continuous": true,
                     "bindings": []
                 },
                 {
                     "name": "Fire",
                     "id": "6c2ab1b8-8984-453a-af3d-a3c78ae1679a",
                     "expectedControlLayout": "",
-                    "required": false,
                     "continuous": false,
                     "bindings": []
                 }
@@ -209,7 +206,6 @@
                     "name": "Navigate",
                     "id": "c95b2375-e6d9-4b88-9c4c-c5e76515df4b",
                     "expectedControlLayout": "Vector2",
-                    "required": false,
                     "continuous": false,
                     "bindings": []
                 },
@@ -217,7 +213,6 @@
                     "name": "Submit",
                     "id": "7607c7b6-cd76-4816-beef-bd0341cfe950",
                     "expectedControlLayout": "Button",
-                    "required": false,
                     "continuous": false,
                     "bindings": []
                 },
@@ -225,7 +220,6 @@
                     "name": "Cancel",
                     "id": "15cef263-9014-4fd5-94d9-4e4a6234a6ef",
                     "expectedControlLayout": "Button",
-                    "required": false,
                     "continuous": false,
                     "bindings": []
                 },
@@ -233,7 +227,6 @@
                     "name": "Point",
                     "id": "32b35790-4ed0-4e9a-aa41-69ac6d629449",
                     "expectedControlLayout": "Vector2",
-                    "required": false,
                     "continuous": false,
                     "bindings": []
                 },
@@ -241,7 +234,6 @@
                     "name": "Click",
                     "id": "3c7022bf-7922-4f7c-a998-c437916075ad",
                     "expectedControlLayout": "Button",
-                    "required": false,
                     "continuous": false,
                     "bindings": []
                 }
