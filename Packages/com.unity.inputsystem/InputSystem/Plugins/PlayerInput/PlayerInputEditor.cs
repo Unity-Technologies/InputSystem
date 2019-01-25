@@ -68,7 +68,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                     else
                     {
                         defaultControlSchemeProperty.stringValue =
-                            m_ControlSchemeOptions[m_SelectedDefaultControlScheme].text;
+                            m_ControlSchemeOptions[selected].text;
                     }
                     m_SelectedDefaultControlScheme = selected;
                 }
