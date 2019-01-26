@@ -15,6 +15,7 @@ public class JoystickISX : MonoBehaviour
     void Start () {
         m_stickAction = new InputAction(name: "StickAction", binding: "<joystick>/<stick>");
         m_stickAction.performed += callbackContext => OnStickMove(callbackContext.control as StickControl);
+        m_stickAction.cancelled += callbackContext => OnStickMove(callbackContext.control as StickControl);
         m_stickAction.Enable();
 	}
 

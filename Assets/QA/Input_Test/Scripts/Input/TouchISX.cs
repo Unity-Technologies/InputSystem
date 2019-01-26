@@ -18,6 +18,7 @@ public class TouchISX : MonoBehaviour
     {
         m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
         m_touchAction.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
+        m_touchAction.cancelled += callbackContext => TouchInput(callbackContext.control as TouchControl);
         m_touchAction.Enable();
     }
 
@@ -91,7 +92,7 @@ public class TouchISX : MonoBehaviour
         Transform highlight = m_HighlightPool.Find(id.ToString());
         if (highlight != null)
         {
-            highlight.position = new Vector3(pos.x, pos.y, 0f);
+            highlight.position = new Vector3(pos.x, pos.y, 0.5f);
 
             // Update position text
             Transform posText = highlight.Find("Pos");
