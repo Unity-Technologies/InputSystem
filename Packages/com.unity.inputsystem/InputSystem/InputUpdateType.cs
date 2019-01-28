@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.Experimental.Input.Layouts;
 
+////TODO: ManualThreaded
+
 namespace UnityEngine.Experimental.Input
 {
     [Flags]
@@ -47,38 +49,28 @@ namespace UnityEngine.Experimental.Input
         BeforeRender = 1 << 2,
 
         /// <summary>
-        /// Input update that happens right before <see cref="EditorWindow">EditorWindows</see> are updated.
+        /// Input update that happens right before <see cref="UnityEditor.EditorWindow"/>s are updated.
         /// </summary>
         /// <remarks>
-        /// This update only occurs in the editor.
+        /// This update only occurs in the editor. It is triggered right before <see cref="UnityEditor.EditorApplication.update"/>.
         /// </remarks>
+        /// <seealso cref="UnityEditor.EditorApplication.update"/>
         Editor = 1 << 3,
 
         ////TODO
         Manual = 1 << 4,
-
-        ////REVIEW: this will likely be a problem for the main thread queue; we can't block to access it; it's
-        ////        designed for exclusive access by the main thread
-        /// <summary>
-        /// Variation of <see cref="Manual"/> that additionally allows calling <see cref="InputSystem.Update"/>
-        /// on a thread other than the main thread.
-        /// </summary>
-        /// <remarks>
-        /// Note that this mode doesn't mean the input system as a whole is thread-safe and can be accessed concurrently
-        /// from multiple threads. Instead, what this mode permits is just to call <see cref="InputSystem.Update"/>
-        /// on a thread other than the main thread. While the update is running, the executing thread must be the only
-        /// one accessing the input system.
-        /// </remarks>
-        ManualThreaded = Manual | 1 << 5,
 
         Default = Dynamic | Fixed | Editor,
     }
 
     internal static class InputUpdate
     {
-        public static InputUpdateType lastUpdateType;
-        public static uint dynamicUpdateCount;
-        public static uint fixedUpdateCount;
+        public static InputUpdateType s_LastUpdateType;
+        public static uint s_DynamicUpdateCount;
+        public static uint s_FixedUpdateCount;
+        public static double s_LastFixedUpdateTime;
+        public static uint s_LastUpdateRetainedEventBytes;
+        public static uint s_LastUpdateRetainedEventCount;
 
         [Serializable]
         public struct SerializedState
@@ -86,23 +78,32 @@ namespace UnityEngine.Experimental.Input
             public InputUpdateType lastUpdateType;
             public uint dynamicUpdateCount;
             public uint fixedUpdateCount;
+            public double lastFixedUpdateTime;
+            public uint lastUpdateRetainedEventBytes;
+            public uint lastUpdateRetainedEventCount;
         }
 
         public static SerializedState Save()
         {
             return new SerializedState
             {
-                lastUpdateType = lastUpdateType,
-                dynamicUpdateCount = dynamicUpdateCount,
-                fixedUpdateCount = fixedUpdateCount,
+                lastUpdateType = s_LastUpdateType,
+                dynamicUpdateCount = s_DynamicUpdateCount,
+                fixedUpdateCount = s_FixedUpdateCount,
+                lastFixedUpdateTime = s_LastFixedUpdateTime,
+                lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
+                lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
         }
 
         public static void Restore(SerializedState state)
         {
-            lastUpdateType = state.lastUpdateType;
-            dynamicUpdateCount = state.dynamicUpdateCount;
-            fixedUpdateCount = state.fixedUpdateCount;
+            s_LastUpdateType = state.lastUpdateType;
+            s_DynamicUpdateCount = state.dynamicUpdateCount;
+            s_FixedUpdateCount = state.fixedUpdateCount;
+            s_LastFixedUpdateTime = state.lastFixedUpdateTime;
+            s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
+            s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
         }
     }
 }

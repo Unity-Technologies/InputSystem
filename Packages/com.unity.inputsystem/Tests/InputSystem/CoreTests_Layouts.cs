@@ -1384,7 +1384,7 @@ partial class CoreTests
         public AxisControl controlFromBase { get; set; }
     }
 
-    class DerivedClassModifyingcontrolFromBaseClass : BaseClassWithControl
+    class DerivedClassModifyingControlFromBaseClass : BaseClassWithControl
     {
         // One kink is that InputControlAttribute can only go on fields and properties
         // so we have to put it on some unrelated control.
@@ -1397,10 +1397,10 @@ partial class CoreTests
     public void Layouts_CanModifyControlDefinedInBaseClass()
     {
         InputSystem.RegisterLayout<BaseClassWithControl>();
-        InputSystem.RegisterLayout<DerivedClassModifyingcontrolFromBaseClass>();
+        InputSystem.RegisterLayout<DerivedClassModifyingControlFromBaseClass>();
 
         var baseLayout = InputSystem.TryLoadLayout<BaseClassWithControl>();
-        var derivedLayout = InputSystem.TryLoadLayout<DerivedClassModifyingcontrolFromBaseClass>();
+        var derivedLayout = InputSystem.TryLoadLayout<DerivedClassModifyingControlFromBaseClass>();
 
         Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
         Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
@@ -1473,6 +1473,80 @@ partial class CoreTests
         var device = InputSystem.AddDevice<DeviceWithAutoOffsetControl>();
 
         Assert.That(device["button2"].stateBlock.byteOffset, Is.EqualTo(8));
+    }
+
+    private class BaseDeviceFixedFixedOffsetControl : InputDevice
+    {
+        [InputControl(offset = 4, format = "FLT")]
+        public ButtonControl control;
+
+        [InputControl(offset = 8)]
+        public AxisControl otherControl;
+    }
+
+    private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
+    {
+        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        public new ButtonControl control;
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceControlsAutomatically_EvenIfControlIsInheritedWithFixedOffset()
+    {
+        InputSystem.RegisterLayout<BaseDeviceFixedFixedOffsetControl>();
+        InputSystem.RegisterLayout<DerivedDeviceWithAutomaticOffsetControl>();
+
+        var device = InputSystem.AddDevice<DerivedDeviceWithAutomaticOffsetControl>();
+
+        // Should have gotten placed *after* `otherControl`.
+        Assert.That(device.stateBlock.alignedSizeInBytes, Is.EqualTo(16));
+        Assert.That(device["control"].stateBlock.format, Is.EqualTo(new FourCC("FLT")));
+        Assert.That(device["control"].stateBlock.byteOffset, Is.EqualTo(12));
+        Assert.That(device["control"].stateBlock.sizeInBits, Is.EqualTo(32));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceBitfieldControlsAutomatically()
+    {
+        const string layout = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"" },
+                    { ""name"" : ""fixed"", ""layout"" : ""Axis"", ""offset"" : 4 },
+                    { ""name"" : ""third"", ""layout"" : ""Button"" },
+                    { ""name"" : ""fourth"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout);
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["fixed"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["fixed"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(device["fixed"].stateBlock.sizeInBits, Is.EqualTo(32));
+
+        // Automatically placed controls are slotted in after the last fixed offset control.
+
+        Assert.That(device["first"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["first"].stateBlock.bitOffset, Is.Zero);
+        Assert.That(device["first"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["second"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["second"].stateBlock.bitOffset, Is.EqualTo(1));
+        Assert.That(device["second"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["third"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["third"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["third"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["fourth"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["fourth"].stateBlock.bitOffset, Is.EqualTo(3));
+        Assert.That(device["fourth"].stateBlock.sizeInBits, Is.EqualTo(1));
     }
 
     [Test]
@@ -1853,7 +1927,7 @@ partial class CoreTests
                     { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
                     { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
                     { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" },
-                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A;B"" },
+                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A,B"" },
                     { ""name"" : ""ButtonNoVariant"", ""layout"" : ""Button"" }
                 ]
             }
@@ -1861,9 +1935,9 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
+        var device = InputSystem.AddDevice("TestLayout", variants: "A,B");
 
-        Assert.That(device.variants, Is.EqualTo("A;B"));
+        Assert.That(device.variants, Is.EqualTo("A,B"));
         Assert.That(device.allControls, Has.Count.EqualTo(4));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonB"));

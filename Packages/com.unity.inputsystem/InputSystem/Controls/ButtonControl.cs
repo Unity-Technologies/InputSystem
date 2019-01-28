@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Controls
         public float pressPoint;
         public float pressPointOrDefault
         {
-            get { return pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint; }
+            get { return pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint; }
         }
 
         public ButtonControl()
@@ -42,14 +42,14 @@ namespace UnityEngine.Experimental.Input.Controls
             get { return IsValueConsideredPressed(ReadValue()); }
         }
 
-        public bool wasJustPressed
+        public bool wasPressedThisFrame
         {
-            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadPreviousValue()); }
+            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
         }
 
-        public bool wasJustReleased
+        public bool wasReleasedThisFrame
         {
-            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadPreviousValue()); }
+            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
         }
     }
 }

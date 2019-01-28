@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace UnityEngine.Experimental.Input.Utilities
@@ -51,6 +52,62 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return type.Name;
+        }
+
+        public static Type GetGenericTypeArgumentFromHierarchy(Type type, Type genericTypeDefinition, int argumentIndex)
+        {
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+            if (genericTypeDefinition == null)
+                throw new ArgumentNullException(nameof(genericTypeDefinition));
+            if (argumentIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(argumentIndex));
+
+            if (genericTypeDefinition.IsInterface)
+            {
+                // Walk up the chain until we find the generic type def as an interface on a type.
+                while (true)
+                {
+                    var interfaces = type.GetInterfaces();
+                    var haveFoundInterface = false;
+                    foreach (var element in interfaces)
+                    {
+                        if (element.IsConstructedGenericType &&
+                            element.GetGenericTypeDefinition() == genericTypeDefinition)
+                        {
+                            type = element;
+                            haveFoundInterface = true;
+                            break;
+                        }
+
+                        // Recurse into interface in case we're looking for a base interface.
+                        var typeArgument =
+                            GetGenericTypeArgumentFromHierarchy(element, genericTypeDefinition, argumentIndex);
+                        if (typeArgument != null)
+                            return typeArgument;
+                    }
+
+                    if (haveFoundInterface)
+                        break;
+
+                    type = type.BaseType;
+                    if (type == null || type == typeof(object))
+                        return null;
+                }
+            }
+            else
+            {
+                // Walk up the chain until we find the generic type def.
+                while (!type.IsConstructedGenericType || type.GetGenericTypeDefinition() != genericTypeDefinition)
+                {
+                    type = type.BaseType;
+                    if (type == typeof(object))
+                        return null;
+                }
+            }
+
+
+            return type.GenericTypeArguments[argumentIndex];
         }
     }
 }

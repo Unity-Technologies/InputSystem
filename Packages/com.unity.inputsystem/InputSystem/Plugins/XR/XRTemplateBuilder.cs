@@ -104,12 +104,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
 
-            // If we are already using a generated layout, we just want to use what's there currently, instead of creating a brand new layout.
-            if (layoutName == matchedLayout)
-                return layoutName;
-
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
-            InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
+            InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
 
             return layoutName;
         }

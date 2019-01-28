@@ -3,20 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
+////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
 
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
 
 ////REVIEW: can we have a read-only version of this
 
 ////REVIEW: this would *really* profit from having a global ordering of InputControls that can be indexed
+
+////REVIEW: move this to .LowLevel? this one is pretty peculiar to use and doesn't really work like what you'd expect given C#'s List<>
 
 namespace UnityEngine.Experimental.Input
 {
@@ -41,10 +42,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Number of controls in the list.
         /// </summary>
-        public int Count
-        {
-            get { return m_Count; }
-        }
+        public int Count => m_Count;
 
         /// <summary>
         /// Number of controls that can be added before more (unmanaged) memory has to be allocated.
@@ -77,10 +75,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Return the control at the given index.
@@ -305,6 +300,20 @@ namespace UnityEngine.Experimental.Input
             m_Indices.SwapElements(index1, index2);
         }
 
+        public void Sort<TCompare>(int startIndex, int count, TCompare comparer)
+            where TCompare : IComparer<TControl>
+        {
+            if (startIndex < 0 || startIndex >= Count)
+                throw new ArgumentOutOfRangeException("startIndex");
+            if (startIndex + count >= Count)
+                throw new ArgumentOutOfRangeException("count");
+
+            // Simple insertion sort.
+            for (var i = 1; i < count; ++i)
+                for (var j = i; j > 0 && comparer.Compare(this[j - 1], this[j]) < 0; --j)
+                    SwapElements(j, j - 1);
+        }
+
         public TControl[] ToArray()
         {
             // Somewhat pointless to allocate an empty array if we have no elements instead
@@ -337,6 +346,25 @@ namespace UnityEngine.Experimental.Input
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            if (Count == 0)
+                return "()";
+
+            var builder = new StringBuilder();
+            builder.Append('(');
+
+            for (var i = 0; i < Count; ++i)
+            {
+                if (i != 0)
+                    builder.Append(',');
+                builder.Append(this[i]);
+            }
+
+            builder.Append(')');
+            return builder.ToString();
         }
 
         private int m_Count;
@@ -419,10 +447,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
 
             public void Dispose()
             {
@@ -440,10 +465,7 @@ namespace UnityEngine.Experimental.Input
             m_Controls = list.ToArray();
         }
 
-        public TControl[] controls
-        {
-            get { return m_Controls; }
-        }
+        public TControl[] controls => m_Controls;
     }
 
     public static class InputControlListExtensions

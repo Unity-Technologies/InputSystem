@@ -32,14 +32,14 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterLayout<MyDevice>();
+    ///         InputSystem.RegisterLayout&lt;MyDevice&gt;();
     ///     }
     ///
     ///     [Test]
     ///     public void CanCreateMyDevice()
     ///     {
-    ///         InputSystem.AddDevice<MyDevice>();
-    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<MyDevice>());
+    ///         InputSystem.AddDevice&lt;MyDevice&gt;();
+    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf&lt;MyDevice&gt;());
     ///     }
     /// }
     /// </code>
@@ -74,8 +74,12 @@ namespace UnityEngine.Experimental.Input
                 #if UNITY_EDITOR
                 // Make sure we're not affected by the user giving focus away from the
                 // game view.
-                InputConfiguration.LockInputToGame = true;
+                InputEditorUserSettings.lockInputToGameView = true;
                 #endif
+
+                var testProperties = TestContext.CurrentContext.Test.Properties;
+                if (testProperties.ContainsKey("TimesliceEvents") && testProperties["TimesliceEvents"][0].Equals("Off"))
+                    InputSystem.settings.timesliceEvents = false;
             }
             catch (Exception exception)
             {
@@ -140,11 +144,21 @@ namespace UnityEngine.Experimental.Input
                 var isInList = buttons.Contains(controlAsButton);
                 if (!isInList)
                     Assert.That(controlAsButton.isPressed, Is.False,
-                        string.Format("Expected button {0} to NOT be pressed", controlAsButton));
+                        $"Expected button {controlAsButton} to NOT be pressed");
                 else
                     Assert.That(controlAsButton.isPressed, Is.True,
-                        string.Format("Expected button {0} to be pressed", controlAsButton));
+                        $"Expected button {controlAsButton} to be pressed");
             }
+        }
+
+        public void Press(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Set(button, 1, absoluteTime, timeOffset);
+        }
+
+        public void Release(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Set(button, 0, absoluteTime, timeOffset);
         }
 
         /// <summary>
@@ -160,20 +174,21 @@ namespace UnityEngine.Experimental.Input
         /// Set(gamepad.leftButton, 1);
         /// </code>
         /// </example>
-        public void Set<TValue>(InputControl<TValue> control, TValue state, double timeOffset = 0)
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double absoluteTime = -1, double timeOffset = 0)
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!control.device.added)
                 throw new ArgumentException(
-                    string.Format("Device of control '{0}' has not been added to the system", control), "control");
+                    $"Device of control '{control}' has not been added to the system", nameof(control));
 
-            InputEventPtr eventPtr;
-            using (StateEvent.From(control.device, out eventPtr))
+            using (StateEvent.From(control.device, out var eventPtr))
             {
+                if (absoluteTime >= 0)
+                    eventPtr.time = absoluteTime;
                 eventPtr.time += timeOffset;
-                control.WriteValueInto(eventPtr, state);
+                control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
 
@@ -200,16 +215,16 @@ namespace UnityEngine.Experimental.Input
         public void Trigger(InputAction action)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             if (!action.enabled)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' must be enabled in order to be able to trigger it", action), "action");
+                    $"Action '{action}' must be enabled in order to be able to trigger it", nameof(action));
 
             var controls = action.controls;
             if (controls.Count == 0)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' must be bound to controls in order to be able to trigger it", action), "action");
+                    $"Action '{action}' must be bound to controls in order to be able to trigger it", nameof(action));
 
             // See if we have a button we can trigger.
             for (var i = 0; i < controls.Count; ++i)

@@ -9,36 +9,35 @@
                     "name": "fire",
                     "id": "1077f913-a9f9-41b1-acb3-b9ee0adbc744",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
                     "bindings": []
                 },
                 {
                     "name": "move",
                     "id": "50fd2809-3aa3-4a90-988e-1facf6773553",
-                    "expectedControlLayout": "Stick",
+                    "expectedControlLayout": "Vector2",
+                    "continuous": false,
                     "bindings": []
                 },
                 {
                     "name": "look",
                     "id": "c60e0974-d140-4597-a40e-9862193067e9",
                     "expectedControlLayout": "Vector2",
-                    "bindings": []
-                },
-                {
-                    "name": "jump",
-                    "id": "6890847e-f99c-43ac-a79d-0787d911a0a1",
-                    "expectedControlLayout": "Button",
+                    "continuous": false,
                     "bindings": []
                 },
                 {
                     "name": "menu",
                     "id": "4ad24240-1211-418c-9678-760c0f5e2f0f",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
                     "bindings": []
                 },
                 {
                     "name": "steamEnterMenu",
                     "id": "86bb1c77-7b7d-493c-94be-213881dd4b5b",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
                     "bindings": []
                 }
             ],
@@ -189,32 +188,8 @@
                 },
                 {
                     "name": "",
-                    "path": "<Keyboard>/space",
-                    "interactions": "Press",
-                    "processors": "",
-                    "groups": "KeyboardMouse",
-                    "action": "jump",
-                    "chainWithPrevious": false,
-                    "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
-                },
-                {
-                    "name": "",
-                    "path": "<Gamepad>/buttonNorth",
-                    "interactions": "Press",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "jump",
-                    "chainWithPrevious": false,
-                    "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
-                },
-                {
-                    "name": "",
                     "path": "<Keyboard>/escape",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
                     "groups": "KeyboardMouse",
                     "action": "menu",
@@ -226,7 +201,7 @@
                 {
                     "name": "",
                     "path": "<Gamepad>/{Menu}",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "menu",
@@ -257,22 +232,100 @@
                     "name": "navigate",
                     "id": "21e4672f-7da8-41ac-8a80-59e98f44610f",
                     "expectedControlLayout": "Vector2",
+                    "continuous": false,
                     "bindings": []
                 },
                 {
                     "name": "click",
                     "id": "09cec56e-d919-461b-b769-b5f9040ab3d2",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
                     "bindings": []
                 },
                 {
                     "name": "steamExitMenu",
                     "id": "9493c6e9-a5fc-4534-8d0c-8730c350769d",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
+                    "bindings": []
+                },
+                {
+                    "name": "submit",
+                    "id": "f6c0c6e8-e423-42cc-9071-06396825f4e2",
+                    "expectedControlLayout": "",
+                    "continuous": false,
+                    "bindings": []
+                },
+                {
+                    "name": "point",
+                    "id": "2e1d701a-4b57-4fab-bee8-5ee788974fa6",
+                    "expectedControlLayout": "",
+                    "continuous": false,
                     "bindings": []
                 }
             ],
-            "bindings": []
+            "bindings": [
+                {
+                    "name": "",
+                    "path": "<Gamepad>/{submit}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "submit",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "click",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "point",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Gamepad>/dpad",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "navigate",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                }
+            ]
         }
     ],
     "controlSchemes": [

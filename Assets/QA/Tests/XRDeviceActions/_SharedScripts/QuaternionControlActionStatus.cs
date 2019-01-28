@@ -4,6 +4,7 @@ using UnityEngine;
 
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.UI;
 
 public class QuaternionControlActionStatus : MonoBehaviour
@@ -18,6 +19,21 @@ public class QuaternionControlActionStatus : MonoBehaviour
         quaternionAction.performed += UpdateQuaternion;
         quaternionAction.started += UpdateQuaternion;
         quaternionAction.cancelled += UpdateQuaternion;
+
+        ReadOnlyArray<InputControl> controls = quaternionAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            QuaternionControl control = controls[i] as QuaternionControl;
+            if (control != null)
+            {
+                Quaternion value = control.ReadValue();
+                statusText.text = QuaternionToFieldText(value);
+            }
+            else
+            {
+                Debug.LogWarningFormat(this, "QuaternionControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(QuaternionControl).FullName, controls[i].GetType().FullName, controls[i].name);
+            }
+        }
     }
 
     void OnDisable()
@@ -30,8 +46,12 @@ public class QuaternionControlActionStatus : MonoBehaviour
 
     private void UpdateQuaternion(InputAction.CallbackContext context)
     {
-        Quaternion value = ((QuaternionControl)(context.control)).ReadValue();
-        statusText.text = QuaternionToFieldText(value);
+        QuaternionControl control = context.control as QuaternionControl;
+        if (control != null)
+        {
+            Quaternion value = control.ReadValue();
+            statusText.text = QuaternionToFieldText(value);
+        }
     }
 
     private string QuaternionToFieldText(Quaternion inQuat)

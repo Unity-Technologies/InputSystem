@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
@@ -33,8 +34,24 @@ namespace UnityEngine.Experimental.Input.Editor
                 var generateActionEventsProperty = serializedObject.FindProperty("m_GenerateActionEvents");
                 var generateInterfacesProperty = serializedObject.FindProperty("m_GenerateInterfaces");
 
-                ////TODO: tie a file selector to this
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PropertyField(wrapperCodePathProperty, m_WrapperCodePathLabel);
+                if (GUILayout.Button("...", EditorStyles.miniButton, GUILayout.MaxWidth(20)))
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(GetAsset());
+                    var defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+                    var fileName = EditorUtility.SaveFilePanel("Location for generated C# file",
+                        Path.GetDirectoryName(defaultFileName),
+                        Path.GetFileName(defaultFileName), "cs");
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        if (fileName.StartsWith(Application.dataPath))
+                            fileName = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+
+                        wrapperCodePathProperty.stringValue = fileName;
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.PropertyField(wrapperClassNameProperty, m_WrapperClassNameLabel);
                 if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))

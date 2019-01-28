@@ -38,14 +38,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class OculusTouchController : XRControllerWithRumble
     {
-        public AxisControl combinedTrigger { get; private set; }
-        [InputControl(aliases = new[] { "Primary2DAxis" })]
-        public Vector2Control joystick { get; private set; }
+        [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
+        public Vector2Control thumbstick { get; private set; }
 
         public AxisControl trigger { get; private set; }
 
         public AxisControl grip { get; private set; }
-        [InputControl(aliases = new[] { "TriggerPressed" })]
         public AxisControl indexNearTouched { get; private set; }
         public AxisControl thumbNearTouched { get; private set; }
 
@@ -57,10 +55,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl start { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl thumbstickClicked { get; private set; }
-        [InputControl(aliases = new[] { "ATouch", "XTouch" })]
+        [InputControl(aliases = new[] { "ATouched", "XTouched" })]
         public ButtonControl primaryTouched { get; private set; }
-        [InputControl(aliases = new[] { "BTouch", "YTouch" })]
+        [InputControl(aliases = new[] { "BTouched", "YTouched" })]
         public ButtonControl secondaryTouched { get; private set; }
+        [InputControl(aliases = new[] { "TriggerPressed" })]
         public ButtonControl indexTouched { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl thumbstickTouched { get; private set; }
@@ -79,8 +78,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
-            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
-            joystick = builder.GetControl<Vector2Control>("joystick");
+            thumbstick = builder.GetControl<Vector2Control>("thumbstick");
             trigger = builder.GetControl<AxisControl>("trigger");
             grip = builder.GetControl<AxisControl>("grip");
             indexNearTouched = builder.GetControl<AxisControl>("indexNearTouched");
@@ -124,6 +122,22 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             isTracked = builder.GetControl<ButtonControl>("isTracked");
             devicePosition = builder.GetControl<Vector3Control>("devicePosition");
             deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+        }
+    }
+
+    public class OculusRemote : InputDevice
+    {
+        public ButtonControl back { get; private set; }
+        public ButtonControl start { get; private set; }
+        public Vector2Control touchpad { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            back = builder.GetControl<ButtonControl>("back");
+            start = builder.GetControl<ButtonControl>("start");
+            touchpad = builder.GetControl<Vector2Control>("touchpad");
         }
     }
 }

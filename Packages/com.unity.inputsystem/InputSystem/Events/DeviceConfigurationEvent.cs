@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should this have optional data that identifies *what* has changed?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>

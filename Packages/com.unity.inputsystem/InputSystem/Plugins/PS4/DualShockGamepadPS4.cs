@@ -10,7 +10,7 @@ using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
 
 ////TODO: player ID
-
+#pragma warning disable 0649
 namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
@@ -285,15 +285,17 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
             base.FinishSetup(builder);
         }
 
-        public override unsafe PS4Touch ReadUnprocessedValueFrom(IntPtr statePtr)
+        ////FIXME: this suffers from the same problems that TouchControl has in that state layout is hardcoded
+
+        public override unsafe PS4Touch ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (PS4Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (PS4Touch*)(byte*)statePtr + (int)m_StateBlock.byteOffset;
             return *valuePtr;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, PS4Touch value)
+        public override unsafe void WriteValueIntoState(PS4Touch value, void* statePtr)
         {
-            var valuePtr = (PS4Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (PS4Touch*)(byte*)statePtr + (int)m_StateBlock.byteOffset;
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<PS4Touch>());
         }
     }
@@ -305,16 +307,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
-        public new static ReadOnlyArray<DualShockGamepadPS4> all
-        {
-            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_Devices); }
-        }
+        public new static ReadOnlyArray<DualShockGamepadPS4> all => new ReadOnlyArray<DualShockGamepadPS4>(s_Devices);
 
-        public static ReadOnlyArray<DualShockGamepadPS4> allAimDevices
-        {
-            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_AimDevices); }
-        }
-
+        public static ReadOnlyArray<DualShockGamepadPS4> allAimDevices => new ReadOnlyArray<DualShockGamepadPS4>(s_AimDevices);
 
         public Color lightBarColor
         {
@@ -352,7 +347,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
             }
         }
 
-        public bool IsAimController
+        public bool isAimController
         {
             get
             {

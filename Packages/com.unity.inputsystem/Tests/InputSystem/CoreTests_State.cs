@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools.Utils;
+using Property = NUnit.Framework.PropertyAttribute;
 
 partial class CoreTests
 {
@@ -123,7 +124,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75f).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25f).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25f).Within(0.00001));
     }
 
     [Test]
@@ -140,11 +141,12 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.Zero);
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero);
     }
 
     [Test]
     [Category("State")]
+    [Property("TimesliceEvents", "Off")]
     public void State_RunningNoFixedUpdateInFrame_StillCapturesStateForNextFixedUpdate()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -157,7 +159,7 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Fixed); // Unchanged.
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.75).Within(0.000001));
     }
 
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
@@ -362,28 +364,28 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         // Input update with no changes should make both properties go back to false.
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.True);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
     }
 
     // The way we keep state does not allow observing the state change on the final
@@ -403,8 +405,8 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
-        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
     }
 
     [Test]
@@ -437,60 +439,6 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.buttonSouth.ReadValue(), Is.EqualTo(0.5f));
-    }
-
-    [Test]
-    [Category("State")]
-    public void State_CanDisableFixedUpdates()
-    {
-        // Add a device as otherwise we don't have any state.
-        InputSystem.AddDevice<Gamepad>();
-
-        // Disable fixed updates.
-        InputSystem.updateMask &= ~InputUpdateType.Fixed;
-
-        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo((InputUpdateType)0));
-        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
-#if UNITY_EDITOR
-        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
-#endif
-
-        // Make sure we disabled the update in the runtime.
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
-
-        // Make sure we got rid of the memory for fixed update.
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
-
-        // Re-enable fixed updates.
-        InputSystem.updateMask |= InputUpdateType.Fixed;
-
-        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
-        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
-#if UNITY_EDITOR
-        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
-#endif
-
-        // Make sure we re-enabled the update in the runtime.
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
-
-        // Make sure we got re-instated the fixed update state buffers.
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
-    }
-
-    ////REVIEW: if we do this, we have to have something like InputUpdateType.Manual that allows using the system
-    ////        in a way where all updates are controlled manually by the user through InputSystem.Update
-    [Test]
-    [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
-    {
-        InputSystem.updateMask = InputUpdateType.None;
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger, Is.Zero);
     }
 
     [Test]
@@ -546,6 +494,7 @@ partial class CoreTests
     // system to build its entire machinery but the core mechanism is available to anyone.
     [Test]
     [Category("State")]
+    [Property("TimesliceEvents", "Off")]
     public void State_CanSetUpMonitorsForStateChanges()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -806,8 +755,8 @@ partial class CoreTests
         receivedTimerIndex = null;
         receivedTime = null;
 
-        // Add timeout and obsolete it by state change. Then advance past timeout time
-        // and make sure we *don't* get a notification.
+        // Add timeout and perform a state change. Then advance past timeout time
+        // and make sure we *DO* get a notification.
         InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
@@ -816,10 +765,15 @@ partial class CoreTests
         Assert.That(monitorFired);
         Assert.That(!timeoutFired);
 
+        monitorFired = false;
+
         runtime.currentTime += 2;
         InputSystem.Update();
 
-        Assert.That(!timeoutFired);
+        Assert.That(!monitorFired);
+        Assert.That(timeoutFired);
+
+        timeoutFired = false;
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.
@@ -948,17 +902,22 @@ partial class CoreTests
     [Ignore("TODO")]
     public void TODO_State_CanRecordHistoryOfState()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        //have to record raw, unprocessed state; deadzone processor will break asserts below, though
-        using (var history = new InputStateHistory<Vector2>(gamepad.leftStick))
+        using (var history = new InputStateHistory<Vector2>("<Gamepad>/*stick"))
         {
+            Assert.That(history.controls,
+                Is.EquivalentTo(
+                    new[] {gamepad1.leftStick, gamepad1.rightStick, gamepad2.leftStick, gamepad2.rightStick}));
+
             history.Enable();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightStick = new Vector2(0.321f, 0.432f)});
             InputSystem.Update();
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
             InputSystem.Update();
 
             Assert.That(history.Count, Is.EqualTo(3));

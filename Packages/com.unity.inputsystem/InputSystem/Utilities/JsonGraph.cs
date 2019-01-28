@@ -9,6 +9,10 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// A JSON parser that instead of turning a string in JSON format into a
     /// C# object graph, allows navigating the source text directly.
     /// </summary>
+    /// <remarks>
+    /// This helper is most useful for avoiding a great many string and general object allocations
+    /// that would happen when turning a JSON object into a C# object graph.
+    /// </remarks>
     internal struct JsonGraph
     {
         public JsonGraph(string json)

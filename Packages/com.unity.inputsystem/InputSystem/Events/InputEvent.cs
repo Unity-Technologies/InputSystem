@@ -124,8 +124,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set { m_Time = value; }
         }
 
-        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time)
+        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
         {
+            if (time < 0)
+                time = InputRuntime.s_Instance.currentTime;
+
             m_Type = type;
             m_SizeInBytes = (ushort)sizeInBytes;
             m_DeviceId = (ushort)deviceId;
@@ -156,10 +159,46 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 eventId, type, deviceId, sizeInBytes, time);
         }
 
-        internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
+        /// <summary>
+        /// Get the next event after the given one.
+        /// </summary>
+        /// <param name="currentPtr">A valid event pointer.</param>
+        /// <returns>Pointer to the next event in memory.</returns>
+        /// <remarks>
+        /// This method applies no checks and must only be called if there is an event following the
+        /// given one. Also, the size of the given event must be 100% as the method will simply
+        /// take the size and advance the given pointer by it (and aligning it to <see cref="kAlignment"/>).
+        /// </remarks>
+        /// <seealso cref="GetNextInMemoryChecked"/>
+        internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, kAlignment);
-            return (InputEvent*)((byte*)current + alignedSizeInBytes);
+            Debug.Assert(currentPtr != null);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
+        }
+
+        /// <summary>
+        /// Get the next event after the given one. Throw if that would point to invalid memory as indicated
+        /// by the given memory buffer.
+        /// </summary>
+        /// <param name="currentPtr">A valid event pointer to an event inside <paramref name="buffer"/>.</param>
+        /// <param name="buffer">Event buffer in which to advance to the next event.</param>
+        /// <returns>Pointer to the next event.</returns>
+        /// <exception cref="InvalidOperationException">There are no more events in the given buffer.</exception>
+        internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
+        {
+            Debug.Assert(currentPtr != null);
+            Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
+
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
+
+            if (!buffer.Contains(nextPtr))
+                throw new InvalidOperationException(string.Format(
+                    "Event '{0}' is last event in given buffer with size {1}", new InputEventPtr(currentPtr),
+                    buffer.sizeInBytes));
+
+            return nextPtr;
         }
     }
 }

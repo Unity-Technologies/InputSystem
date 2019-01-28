@@ -1,9 +1,17 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.ShortcutManagement;
+
+////TODO: add helpers to very quickly set up certai common configs (e.g. "FPS Controls" in add-action context menu;
+////      "WASD Control" in add-binding context menu)
+
+////FIXME: when saving, processor/interaction selection is cleared
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -11,10 +19,10 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public static class Styles
         {
-            public static GUIStyle actionTreeBackground = new GUIStyle("Label");
-            public static GUIStyle propertiesBackground = new GUIStyle("Label");
-            public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
-            public static GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
+            public static readonly GUIStyle actionTreeBackground = new GUIStyle("Label");
+            public static readonly GUIStyle propertiesBackground = new GUIStyle("Label");
+            public static readonly GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
+            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
 
             ////TODO: move to a better place
             public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
@@ -46,40 +54,35 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        [SerializeField]
-        private TreeViewState m_ActionMapsTreeState;
-        [SerializeField]
-        private TreeViewState m_ActionsTreeState;
-        [SerializeField]
-        private TreeViewState m_PickerTreeViewState;
-        [SerializeField]
-        private InputActionAssetManager m_ActionAssetManager;
-        [SerializeField]
-        internal InputActionWindowToolbar m_InputActionWindowToolbar;
-        [SerializeField]
-        internal ActionInspectorContextMenu m_ContextMenu;
+        [SerializeField] private TreeViewState m_ActionMapsTreeState;
+        [SerializeField] private TreeViewState m_ActionsTreeState;
+        [SerializeField] private InputControlPickerState m_PickerTreeViewState;
+        [SerializeField] private InputActionAssetManager m_ActionAssetManager;
+        [SerializeField] internal InputActionWindowToolbar m_InputActionWindowToolbar;
+        [SerializeField] internal ActionInspectorContextMenu m_ContextMenu;
+        [SerializeField] List<string> m_SelectedActionMaps = new List<string>();
 
         private InputBindingPropertiesView m_BindingPropertyView;
+        private InputActionPropertiesView m_ActionPropertyView;
+
         internal ActionMapsTree m_ActionMapsTree;
         internal ActionsTree m_ActionsTree;
-        internal CopyPasteUtility m_CopyPasteUtility;
+        internal InputActionCopyPasteUtility m_CopyPasteUtility;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = ".inputactions";
+        private static readonly string k_FileExtension = "." + InputActionAsset.kExtension;
 
-        GUIContent m_AddActionIconGUI;
-        GUIContent m_AddActionMapIconGUI;
-        GUIContent m_AddBindingGUI;
-        GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
-        GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
-        GUIContent m_WaitingForInputContent = EditorGUIUtility.TrTextContent("Waiting for input...");
-        GUIContent m_WaitingForSpecificInputContent = new GUIContent("Waiting for {0}...");// EditorGUIUtility.TrTextContent("Waiting for {0}...");
-        [SerializeField]
-        GUIContent m_DirtyTitle;
-        [SerializeField]
-        GUIContent m_Title;
-        Vector2 m_PropertiesScroll;
-        bool m_ForceQuit;
+        private GUIContent m_AddActionIconGUI;
+        private GUIContent m_AddActionMapIconGUI;
+        private GUIContent m_AddBindingGUI;
+        private readonly GUIContent m_ActionMapsHeaderGUI = EditorGUIUtility.TrTextContent("Action Maps");
+        private readonly GUIContent m_ActionsGUI = EditorGUIUtility.TrTextContent("Actions");
+        private readonly GUIContent m_WaitingForInputContent = EditorGUIUtility.TrTextContent("Waiting for input...");
+        private readonly GUIContent m_WaitingForSpecificInputContent = new GUIContent("Waiting for {0}...");// EditorGUIUtility.TrTextContent("Waiting for {0}...");
+        [SerializeField] private GUIContent m_DirtyTitle;
+        [SerializeField] private GUIContent m_Title;
+        private Vector2 m_PropertiesScroll;
+        private bool m_ForceQuit;
 
         private void OnEnable()
         {
@@ -100,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
-            m_ActionAssetManager.SetReferences(SetTitle);
+            m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
             m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager, m_InputActionWindowToolbar);
@@ -119,7 +122,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (!m_ForceQuit && m_ActionAssetManager.dirty)
             {
-                var result = EditorUtility.DisplayDialogComplex("Unsaved changes", "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
+                var result = EditorUtility.DisplayDialogComplex("Unsaved changes",
+                    "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
                 switch (result)
                 {
                     case 0:
@@ -139,10 +143,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // Set asset would usually only be called when the window is open
-        private void SetAsset(InputActionAsset referencedObject)
+        private void SetAsset(InputActionAsset asset)
         {
-            m_ActionAssetManager = new InputActionAssetManager(referencedObject);
-            m_ActionAssetManager.SetReferences(SetTitle);
+            m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
             m_ActionAssetManager.InitializeObjectReferences();
             m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager, m_InputActionWindowToolbar);
@@ -153,6 +156,16 @@ namespace UnityEngine.Experimental.Input.Editor
             OnActionMapSelection();
             m_ActionsTree.ExpandAll();
             LoadPropertiesForSelection();
+
+            UpdateWindowTitle();
+        }
+
+        private void UpdateWindowTitle()
+        {
+            var title = m_ActionAssetManager.name + " (Input Actions)";
+            m_Title = new GUIContent(title);
+            m_DirtyTitle = new GUIContent("(*) " + m_Title.text);
+            titleContent = m_Title;
         }
 
         private void InitializeTrees()
@@ -186,9 +199,9 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
-            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
+            m_CopyPasteUtility = new InputActionCopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
-                m_PickerTreeViewState = new TreeViewState();
+                m_PickerTreeViewState = new InputControlPickerState();
         }
 
         private void OnUndoRedoCallback()
@@ -208,6 +221,15 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionMapsTree.GetSelectedRow() != null)
                 m_ActionsTree.actionMapProperty = m_ActionMapsTree.GetSelectedRow().elementProperty;
             m_ActionsTree.Reload();
+            if (m_ActionMapsTree.GetSelectedRow() != null)
+            {
+                var row = m_ActionMapsTree.GetSelectedRow();
+                if (!m_SelectedActionMaps.Contains(row.displayName))
+                {
+                    m_ActionsTree.SetExpandedRecursive(m_ActionsTree.GetRootElement().id, true);
+                    m_SelectedActionMaps.Add(row.displayName);
+                }
+            }
         }
 
         private void OnActionSelection()
@@ -218,6 +240,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void LoadPropertiesForSelection()
         {
             m_BindingPropertyView = null;
+            m_ActionPropertyView = null;
 
             // Column #1: Load selected action map.
             if (m_ActionMapsTree.GetSelectedRow() != null)
@@ -246,20 +269,28 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_BindingPropertyView =
                         new InputBindingPropertiesView(
                             item.elementProperty,
-                            () =>
+                            change =>
                             {
                                 Apply();
-                                LoadPropertiesForSelection();
                             },
                             m_PickerTreeViewState,
                             m_InputActionWindowToolbar,
                             item.expectedControlLayout);
 
-                    // For composite groups, don't show the binding path and control scheme section.
+                    // For composite groups, don't show the binding path and control scheme section,
+                    // but show composite parameters instead.
                     if (item is CompositeGroupTreeItem)
-                        m_BindingPropertyView.showPathAndControlSchemeSection = false;
+                        m_BindingPropertyView.isCompositeBinding = true;
                 }
-                ////TODO: properties for actions
+
+                if (item is ActionTreeItem actionItem1)
+                {
+                    // Show properties for binding.
+                    m_ActionPropertyView =
+                        new InputActionPropertiesView(
+                            actionItem1.elementProperty,
+                            Apply);
+                }
             }
         }
 
@@ -280,8 +311,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionsTree.actionMapProperty = null;
             }
             m_ActionsTree.Reload();
-
-            LoadPropertiesForSelection();
         }
 
         private void OnGUI()
@@ -331,7 +360,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (Event.current.type == EventType.ValidateCommand)
             {
-                if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                if (InputActionCopyPasteUtility.IsValidCommand(Event.current.commandName))
                 {
                     Event.current.Use();
                 }
@@ -349,8 +378,11 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
             var columnRect = GUILayoutUtility.GetLastRect();
 
-            var labelRect = new Rect(columnRect);
-            labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
+            var labelRect = new Rect(columnRect)
+            {
+                height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2
+            };
+
             columnRect.y += labelRect.height;
             columnRect.height -= labelRect.height;
 
@@ -382,8 +414,11 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
             var columnRect = GUILayoutUtility.GetLastRect();
 
-            var labelRect = new Rect(columnRect);
-            labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
+            var labelRect = new Rect(columnRect)
+            {
+                height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2
+            };
+
             columnRect.y += labelRect.height;
             columnRect.height -= labelRect.height;
 
@@ -396,6 +431,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
             {
                 m_ContextMenu.OnAddAction();
+                m_ContextMenu.OnAddBinding(m_ActionsTree.GetSelectedAction());
+                m_ActionsTree.SelectNewActionRow();
             }
 
             // Draw border rect
@@ -427,11 +464,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_BindingPropertyView.OnGUI();
                 EditorGUILayout.EndScrollView();
             }
+            else if (m_ActionPropertyView != null)
+            {
+                m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
+                m_ActionPropertyView.OnGUI();
+                EditorGUILayout.EndScrollView();
+            }
             else
             {
                 GUILayout.FlexibleSpace();
             }
-
 
             EditorGUILayout.EndVertical();
         }
@@ -452,8 +494,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 waitingForInputText = m_WaitingForInputContent;
             }
 
-            float minWidth, maxWidth;
-            Styles.waitingForInputLabel.CalcMinMaxWidth(waitingForInputText, out minWidth, out maxWidth);
+            Styles.waitingForInputLabel.CalcMinMaxWidth(waitingForInputText, out _, out var maxWidth);
 
             var waitingForInputTextRect = rect;
             waitingForInputTextRect.width = maxWidth;
@@ -513,11 +554,57 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        #if UNITY_2019_1_OR_NEWER
+        ////FIXME: the shortcuts seem to have focus problems; often requires clicking away and then back to the window
+        [Shortcut("Input Action Editor/Save", typeof(AssetInspectorWindow), KeyCode.S, ShortcutModifiers.Alt)]
+        private static void SaveShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ActionAssetManager.SaveChangesToAsset();
+        }
+
+        [Shortcut("Input Action Editor/Add Action Map", typeof(AssetInspectorWindow), KeyCode.M, ShortcutModifiers.Alt)]
+        private static void AddActionMapShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ContextMenu.OnAddActionMap();
+        }
+
+        [Shortcut("Input Action Editor/Add Action", typeof(AssetInspectorWindow), KeyCode.A, ShortcutModifiers.Alt)]
+        private static void AddActionShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ContextMenu.OnAddAction();
+            window.m_ContextMenu.OnAddBinding(window.m_ActionsTree.GetSelectedAction());
+            window.m_ActionsTree.SelectNewActionRow();
+        }
+
+        [Shortcut("Input Action Editor/Add Binding", typeof(AssetInspectorWindow), KeyCode.B, ShortcutModifiers.Alt)]
+        private static void AddBindingShortcut(ShortcutArguments arguments)
+        {
+            var window = (AssetInspectorWindow)arguments.context;
+            window.m_ContextMenu.OnAddBinding(window.m_ActionsTree.GetSelectedAction());
+        }
+
+        #endif
+
+        internal static AssetInspectorWindow FindEditorFor(InputActionAsset asset)
+        {
+            var windows = Resources.FindObjectsOfTypeAll<AssetInspectorWindow>();
+            return windows.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(asset));
+        }
+
+        internal static AssetInspectorWindow FindEditorFor(string guid)
+        {
+            var windows = Resources.FindObjectsOfTypeAll<AssetInspectorWindow>();
+            return windows.FirstOrDefault(w => w.m_ActionAssetManager.guid == guid);
+        }
+
         [OnOpenAsset]
         internal static bool OnOpenAsset(int instanceId, int line)
         {
             var path = AssetDatabase.GetAssetPath(instanceId);
-            if (!path.EndsWith(k_FileExtension))
+            if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                 return false;
 
             string mapToSelect = null;
@@ -541,9 +628,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // See if we have an existing editor window that has the asset open.
-            var inputManagers = Resources.FindObjectsOfTypeAll<AssetInspectorWindow>();
-            var window = inputManagers.FirstOrDefault(w => w.m_ActionAssetManager.ImportedAssetObjectEquals(asset));
-
+            var window = FindEditorFor(asset);
             if (window != null)
             {
                 window.Show();
@@ -552,28 +637,21 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 // No, so create a new window.
-                window = CreateInstance<AssetInspectorWindow>();
-                window.m_Title = new GUIContent(asset.name + " (Input Manager)");
-                window.m_DirtyTitle = new GUIContent("(*) " + window.m_Title.text);
-                window.titleContent = window.m_Title;
+                window = GetWindow<AssetInspectorWindow>(string.Empty, focus: true, desiredDockNextTo: typeof(SceneView));
                 window.SetAsset(asset);
-                window.Show();
             }
 
             // If user clicked on an action inside the asset, focus on that action (if we can find it).
-            if (actionToSelect != null)
+            if (actionToSelect != null && window.m_ActionMapsTree.SetSelection(mapToSelect))
             {
-                if (window.m_ActionMapsTree.SetSelection(mapToSelect))
-                {
-                    window.OnActionMapSelection();
-                    window.m_ActionsTree.SetSelection(actionToSelect);
-                }
+                window.OnActionMapSelection();
+                window.m_ActionsTree.SetSelection(actionToSelect);
             }
 
             return true;
         }
 
-        void OnActionRowGUI(TreeViewItem treeViewItem, Rect rect)
+        private void OnActionRowGUI(TreeViewItem treeViewItem, Rect rect)
         {
             if (treeViewItem is ActionTreeItem)
             {
@@ -586,7 +664,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void SetTitle(bool dirty)
+        private void OnDirtyChanged(bool dirty)
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
         }
@@ -595,6 +673,60 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ForceQuit = true;
             Close();
+        }
+
+        private class ProcessAssetModifications : AssetModificationProcessor
+        {
+            // Handle .inputactions asset being deleted.
+            // ReSharper disable once UnusedMember.Local
+            public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
+            {
+                if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                    return default;
+
+                // See if we have an open window.
+                var guid = AssetDatabase.AssetPathToGUID(path);
+                var window = FindEditorFor(guid);
+                if (window != null)
+                {
+                    // If there's unsaved changes, ask for confirmation.
+                    if (window.m_ActionAssetManager.dirty)
+                    {
+                        var result = EditorUtility.DisplayDialog("Unsaved changes",
+                            $"You have unsaved changes for '{path}'. Do you want to discard the changes and delete the asset?",
+                            "Yes, Delete", "No, Cancel");
+                        if (!result)
+                        {
+                            // User cancelled. Stop the deletion.
+                            return AssetDeleteResult.FailedDelete;
+                        }
+
+                        window.m_ForceQuit = true;
+                    }
+
+                    window.Close();
+                }
+
+                return default;
+            }
+
+            // Handle .inputactions asset being moved.
+            // ReSharper disable once UnusedMember.Local
+            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
+            {
+                if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
+                    return default;
+
+                var guid = AssetDatabase.AssetPathToGUID(sourcePath);
+                var window = FindEditorFor(guid);
+                if (window != null)
+                {
+                    window.m_ActionAssetManager.path = destinationPath;
+                    window.UpdateWindowTitle();
+                }
+
+                return default;
+            }
         }
     }
 }

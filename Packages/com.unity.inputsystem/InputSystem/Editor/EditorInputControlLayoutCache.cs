@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.Switch;
@@ -93,17 +95,42 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public static InputControlLayout TryGetLayout(string name)
+        public static InputControlLayout TryGetLayout(string layoutName)
         {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
             Refresh();
-            return s_Cache.FindOrLoadLayout(name);
+            return s_Cache.FindOrLoadLayout(layoutName);
         }
 
-        public static IEnumerable<InputDeviceMatcher> GetDeviceMatchers(string name)
+        public static Type GetValueType(string layoutName)
         {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
+            // Load layout.
+            var layout = TryGetLayout(layoutName);
+            if (layout == null)
+                return null;
+
+            // Grab type.
+            var type = layout.type;
+            Debug.Assert(type != null, "Layout should have associated type");
+            Debug.Assert(typeof(InputControl).IsAssignableFrom(type),
+                "Layout's associated type should be derived from InputControl");
+
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(type, typeof(InputControl<>), 0);
+        }
+
+        public static IEnumerable<InputDeviceMatcher> GetDeviceMatchers(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
             Refresh();
             InlinedArray<InputDeviceMatcher> matchers;
-            s_DeviceMatchers.TryGetValue(new InternedString(name), out matchers);
+            s_DeviceMatchers.TryGetValue(new InternedString(layoutName), out matchers);
             return matchers;
         }
 
@@ -116,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public static IEnumerable<OptionalControl> GetOptionalControlsForLayout(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
-                throw new ArgumentNullException("layoutName");
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
 
             Refresh();
 
@@ -127,20 +154,63 @@ namespace UnityEngine.Experimental.Input.Editor
             return list;
         }
 
+        ////TODO: support different resolutions
+        public static Texture2D GetIconForLayout(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentNullException("layoutName");
+
+            Refresh();
+
+            // See if we already have it in the cache.
+            Texture2D icon;
+            var internedName = new InternedString(layoutName);
+            if (s_Icons.TryGetValue(internedName, out icon))
+                return icon;
+
+            // No, so see if we have an icon on disk for exactly the layout
+            // we're looking at (i.e. with the same name).
+            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
+            var path = Path.Combine(kIconPath, skinPrefix + layoutName + ".png");
+            icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (icon != null)
+                return icon;
+
+            // No, not that either so start walking up the inheritance chain
+            // until we either bump against the ceiling or find an icon.
+            var layout = TryGetLayout(layoutName);
+            if (layout != null)
+            {
+                foreach (var baseLayoutName in layout.baseLayouts)
+                {
+                    ////FIXME: remove this; looks like HIDs lose their base layout info on domain reloads
+                    if (string.IsNullOrEmpty(baseLayoutName))
+                        continue;
+
+                    icon = GetIconForLayout(baseLayoutName);
+                    if (icon != null)
+                        return icon;
+                }
+            }
+
+            // No icon for anything in this layout's chain.
+            return null;
+        }
+
         internal static void Clear()
         {
             s_LayoutRegistrationVersion = 0;
-            if (s_Cache.table != null)
-                s_Cache.table.Clear();
+            s_Cache.table?.Clear();
             s_Usages.Clear();
             s_ControlLayouts.Clear();
             s_DeviceLayouts.Clear();
             s_ProductLayouts.Clear();
             s_DeviceMatchers.Clear();
+            s_Icons.Clear();
         }
 
         // If our layout data is outdated, rescan all the layouts in the system.
-        internal static void Refresh()
+        private static void Refresh()
         {
             var manager = InputSystem.s_Manager;
             if (manager.m_LayoutRegistrationVersion == s_LayoutRegistrationVersion)
@@ -213,6 +283,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     listener();
         }
 
+        ////REVIEW: is this affected by how the package is installed?
+        private const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+
         private static int s_LayoutRegistrationVersion;
         private static InputControlLayout.Cache s_Cache;
         private static List<Action> s_RefreshListeners;
@@ -224,6 +297,8 @@ namespace UnityEngine.Experimental.Input.Editor
             new Dictionary<InternedString, List<OptionalControl>>();
         private static Dictionary<InternedString, InlinedArray<InputDeviceMatcher>> s_DeviceMatchers =
             new Dictionary<InternedString, InlinedArray<InputDeviceMatcher>>();
+        private static Dictionary<InternedString, Texture2D> s_Icons =
+            new Dictionary<InternedString, Texture2D>();
 
         // We keep a map of all unique usages we find in layouts and also
         // retain a list of the layouts they are used with.

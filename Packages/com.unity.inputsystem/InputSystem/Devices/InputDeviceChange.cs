@@ -69,6 +69,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 
+        ////REVIEW: nuke this?
         LayoutVariantChanged,
 
         /// <summary>

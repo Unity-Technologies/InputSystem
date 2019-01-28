@@ -162,14 +162,21 @@ internal class XRTests : InputTestFixture
     [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
     [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
-    [TestCase("Oculus HMD", "Samsung", typeof(GearVRHMD))]
+    [TestCase("Oculus Remote", "Oculus", typeof(OculusRemote))]
+    [TestCase("Oculus Go", "Samsung", typeof(GearVRSimpleHMD))]
+    [TestCase("Oculus HMD", "Samsung", typeof(GearVRExtendedHMD))]
     [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
     [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
-    [TestCase("Daydream Controller", null, typeof(DaydreamController))]
+    [TestCase("Daydream Controller Left", null, typeof(DaydreamController))]
     [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
+    [TestCase("Vive. MV", "HTC", typeof(ViveHMD))]
+    [TestCase("Vive DVT", "HTC", typeof(ViveHMD))]
+    [TestCase("Vive Pro", "HTC", typeof(ViveHMD))]
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
+    [TestCase("OpenVR Controller(Vive. Controller MV) - Left", "HTC", typeof(ViveWand))]
+    [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
+    [TestCase("OPenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
-    [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
@@ -212,7 +219,7 @@ internal class XRTests : InputTestFixture
         Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(Vector2.zero));
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(Vector3.zero));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(Quaternion.identity));
-        Assert.That(device["Custom"], Is.Null);
+        Assert.That(device.TryGetChildControl("Custom"), Is.Null);
         Assert.That(((ButtonControl)device["Last"]).isPressed, Is.False);
 
         InputSystem.QueueStateEvent(device, new TestXRDeviceState
@@ -233,7 +240,7 @@ internal class XRTests : InputTestFixture
         Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(new Vector2(0.1f, 0.2f)));
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(new Vector3(0.3f, 0.4f, 0.5f)));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(new Quaternion(0.6f, 0.7f, 0.8f, 0.9f)));
-        Assert.That(device["Custom"], Is.Null);
+        Assert.That(device.TryGetChildControl("Custom"), Is.Null);
         Assert.That(((ButtonControl)device["Last"]).isPressed, Is.True);
     }
 
@@ -372,8 +379,7 @@ internal class XRTests : InputTestFixture
         var tpd = tpd1;
         var device = InputSystem.AddDevice<TestHMD>();
 
-        InputEventPtr stateEvent;
-        using (StateEvent.From(device, out stateEvent))
+        using (StateEvent.From(device, out var stateEvent))
         {
             var positionAction = new InputAction();
             positionAction.AddBinding("<TestHMD>/vector3");
@@ -391,8 +397,8 @@ internal class XRTests : InputTestFixture
             tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
 
-            device.quaternion.WriteValueInto(stateEvent, testrot);
-            device.vector3.WriteValueInto(stateEvent, testpos);
+            device.quaternion.WriteValueIntoEvent(testrot, stateEvent);
+            device.vector3.WriteValueIntoEvent(testpos, stateEvent);
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);

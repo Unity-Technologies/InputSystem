@@ -1,9 +1,12 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: expose extra pen buttons
+
+////TODO: make sure that 'inRange' is always true if not supported by the device
 
 ////TODO: expose whether pen actually has eraser and which barrel buttons it has
 
@@ -22,10 +25,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 36)]
     public struct PenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', 'E', 'N'); }
-        }
+        public static FourCC kFormat => new FourCC('P', 'E', 'N');
 
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
@@ -141,9 +141,22 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public ButtonControl inRange { get; private set; }
 
-        public bool isTouching
+        /// <summary>
+        /// The pen that was active or connected last or <c>null</c> if there is no pen.
+        /// </summary>
+        public new static Pen current { get; internal set; }
+
+        public override void MakeCurrent()
         {
-            get { throw new NotImplementedException(); }
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
