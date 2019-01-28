@@ -2,17 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Plugins.PS4;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using UnityEngine.Experimental.Input.Utilities;
-
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
@@ -21,9 +20,17 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
+////TODO: allow aliasing processors etc
+
+////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
+
+////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
+
+////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
+////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
+////       simply start losing input but it won't grow infinitely
+
+////TODO: the onXXX event stuff needs to be thread-safe in order to allow finalizers to clean them up
 
 ////TODO: move state change monitor API out of here (static InputStateChangeMonitor class?)
 
@@ -39,13 +46,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native allocations when exiting
-
-[assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
-
-// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
-// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
-//       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.9")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -183,6 +183,12 @@ namespace UnityEngine.Experimental.Input
         public static void RegisterLayoutMatcher(string layoutName, InputDeviceMatcher matcher)
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
+        }
+
+        public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
+            where TDevice : InputDevice
+        {
+            s_Manager.RegisterControlLayoutMatcher(typeof(TDevice), matcher);
         }
 
         /// <summary>
@@ -383,14 +389,20 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
+        public static InputControlLayout TryLoadLayout<TControl>()
+            where TControl : InputControl
+        {
+            return s_Manager.TryLoadControlLayout(typeof(TControl));
+        }
+
         #endregion
 
         #region Processors
 
         /// <summary>
-        /// Register an <see cref="IInputControlProcessor{TValue}"/> with the system.
+        /// Register an <see cref="InputProcessor{TValue}"/> with the system.
         /// </summary>
-        /// <param name="type">Type that implements <see cref="IInputControlProcessor{TValue}"/>.</param>
+        /// <param name="type">Type that implements <see cref="InputProcessor{TValue}"/>.</param>
         /// <param name="name">Name to use for the processor. If null or empty, name will be taken from short name
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
         public static void RegisterControlProcessor(Type type, string name = null)
@@ -505,7 +517,7 @@ namespace UnityEngine.Experimental.Input
         ///                 Debug.Log("Device removed: " + device);
         ///                 break;
         ///             case InputDeviceChange.ConfigurationChanged:
-        ///                 Debug.Log("Device coniguration changed: " + device);
+        ///                 Debug.Log("Device configuration changed: " + device);
         ///                 break;
         ///         }
         ///     };
@@ -515,6 +527,26 @@ namespace UnityEngine.Experimental.Input
         {
             add { s_Manager.onDeviceChange += value; }
             remove { s_Manager.onDeviceChange -= value; }
+        }
+
+        /// <summary>
+        /// Event that is signalled when a <see cref="InputDeviceCommand"/> is sent to
+        /// an <see cref="InputDevice"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to intercept commands and optionally handle them without them reaching
+        /// the <see cref="IInputRuntime"/>.
+        ///
+        /// The first delegate in the list that returns a result other than <c>null</c> is considered
+        /// to have handled the command. If a command is handled by a delegate in the list, it will
+        /// not be sent on to the runtime.
+        /// </remarks>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
+        /// <seealso cref="IInputRuntime.DeviceCommand"/>
+        public static event InputDeviceCommandDelegate onDeviceCommand
+        {
+            add { s_Manager.onDeviceCommand += value; }
+            remove { s_Manager.onDeviceCommand -= value; }
         }
 
         /// <summary>
@@ -552,12 +584,13 @@ namespace UnityEngine.Experimental.Input
         ///     };
         /// </code>
         /// </example>
-        public static event DeviceFindControlLayoutCallback onFindLayoutForDevice
+        public static event InputDeviceFindControlLayoutDelegate onFindLayoutForDevice
         {
             add { s_Manager.onFindControlLayoutForDevice += value; }
             remove { s_Manager.onFindControlLayoutForDevice -= value; }
         }
 
+        ////REVIEW: should this be disambiguated more to separate it more from sensor sampling frequency?
         /// <summary>
         /// Frequency at which devices that need polling are being queried in the background.
         /// </summary>
@@ -660,18 +693,54 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        ////TODO: add optional index (i.e. "nth device of given type")
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
+            TDevice result = null;
+            var lastUpdateTime = -1.0;
             foreach (var device in devices)
             {
                 var deviceOfType = device as TDevice;
-                if (deviceOfType != null)
-                    return deviceOfType;
+                if (deviceOfType == null)
+                    continue;
+
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
+                {
+                    result = deviceOfType;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
+                }
             }
 
-            return null;
+            return result;
+        }
+
+        public static TDevice GetDevice<TDevice>(InternedString usage)
+            where TDevice : InputDevice
+        {
+            TDevice result = null;
+            var lastUpdateTime = -1.0;
+            foreach (var device in devices)
+            {
+                var deviceOfType = device as TDevice;
+                if (deviceOfType == null)
+                    continue;
+                if (!deviceOfType.usages.Contains(usage))
+                    continue;
+
+                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
+                {
+                    result = deviceOfType;
+                    lastUpdateTime = result.m_LastUpdateTimeInternal;
+                }
+            }
+
+            return result;
+        }
+
+        public static TDevice GetDevice<TDevice>(string usage)
+            where TDevice : InputDevice
+        {
+            return GetDevice<TDevice>(new InternedString(usage));
         }
 
         /// <summary>
@@ -723,11 +792,24 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        ////REVIEW: should this be a device-level reset along with sending the reset IOCTL
-        ////        or a control-level reset on just the memory state?
-        public static void ResetDevice(InputDevice device)
+        public static bool TrySyncDevice(InputDevice device)
         {
-            throw new NotImplementedException();
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var syncCommand = RequestSyncCommand.Create();
+            long result = device.ExecuteCommand(ref syncCommand);
+            return result >= 0;
+        }
+
+        public static bool TryResetDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            var resetCommand = RequestResetCommand.Create();
+            long result = device.ExecuteCommand(ref resetCommand);
+            return result >= 0;
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -857,10 +939,10 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.FindControls("&lt;Gamepad&gt;/*stick");
         ///
         /// // Same but filter stick by type rather than by name.
-        /// InputSystem.FindControls<StickControl>("&lt;Gamepad&gt;/*");
+        /// InputSystem.FindControls&lt;StickControl&gt;("&lt;Gamepad&gt;/*");
         /// </code>
         /// </example>
-        /// <seealso cref="FindControls{TControl}"/>
+        /// <seealso cref="FindControls{TControl}(string)"/>
         /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
         public static InputControlList<InputControl> FindControls(string path)
         {
@@ -1010,7 +1092,7 @@ namespace UnityEngine.Experimental.Input
             // Make sure device is actually in the system.
             if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
-                    string.Format("Cannot queue state event device '{0}' because device has not been added to system",
+                    string.Format("Cannot queue state event for device '{0}' because device has not been added to system",
                         device));
 
             ////REVIEW: does it make more sense to go off the 'stateBlock' on the device and let that determine size?
@@ -1021,7 +1103,7 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Size of '{0}' exceeds maximum supported state size of {1}", typeof(TState).Name,
                         StateEventBuffer.kMaxSize),
                     "state");
-            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
+            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - StateEvent.kStateDataSizeToSubtract;
 
             if (time < 0)
                 time = InputRuntime.s_Instance.currentTime;
@@ -1080,7 +1162,9 @@ namespace UnityEngine.Experimental.Input
 
             ////TODO: recognize a matching C# representation of a state format and convert to what we expect for trivial cases
             if (deltaSize != control.stateBlock.alignedSizeInBytes)
-                throw new NotImplementedException("Delta state and control format don't match");
+                throw new ArgumentException(string.Format(
+                    "Size {0} of delta state of type {1} provided for control '{2}' does not match size {3} of control",
+                    deltaSize, typeof(TDelta).Name, control, control.stateBlock.alignedSizeInBytes));
 
             var eventSize = UnsafeUtility.SizeOf<DeltaStateEvent>() + deltaSize - 1;
 
@@ -1140,7 +1224,6 @@ namespace UnityEngine.Experimental.Input
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: call ForceUpdate?
         public static void Update()
         {
             s_Manager.Update();
@@ -1149,22 +1232,6 @@ namespace UnityEngine.Experimental.Input
         public static void Update(InputUpdateType updateType)
         {
             s_Manager.Update(updateType);
-        }
-
-        ////TODO: disable collection of input if all input updates are disabled
-        /// <summary>
-        /// Mask that determines which updates are run by the input system.
-        /// </summary>
-        /// <remarks>
-        /// By default, all update types are enabled. Disabling a specific update
-        ///
-        /// Clearing all flags in this mask will disable all input processing. Note, however,
-        /// that it will not currently disable collection of input.
-        /// </remarks>
-        public static InputUpdateType updateMask
-        {
-            get { return s_Manager.updateMask; }
-            set { s_Manager.updateMask = value; }
         }
 
         /// <summary>
@@ -1181,22 +1248,62 @@ namespace UnityEngine.Experimental.Input
         /// be fed right into the upcoming update.
         /// </remarks>
         /// <seealso cref="onAfterUpdate"/>
-        /// <seealso cref="Update"/>
+        /// <seealso cref="Update(InputUpdateType)"/>
         public static event Action<InputUpdateType> onBeforeUpdate
         {
-            add { s_Manager.onBeforeUpdate += value; }
-            remove { s_Manager.onBeforeUpdate -= value; }
+            add => s_Manager.onBeforeUpdate += value;
+            remove => s_Manager.onBeforeUpdate -= value;
         }
 
         /// <summary>
         /// Event that is fired after the input system has completed an update and processed all pending events.
         /// </summary>
         /// <seealso cref="onBeforeUpdate"/>
-        /// <seealso cref="Update"/>
+        /// <seealso cref="Update(InputUpdateType)"/>
         public static event Action<InputUpdateType> onAfterUpdate
         {
-            add { s_Manager.onAfterUpdate += value; }
-            remove { s_Manager.onAfterUpdate -= value; }
+            add => s_Manager.onAfterUpdate += value;
+            remove => s_Manager.onAfterUpdate -= value;
+        }
+
+        #endregion
+
+        #region Settings
+
+        public static InputSettings settings
+        {
+            get { return s_Manager.settings; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                if (s_Manager.m_Settings == value)
+                    return;
+
+                // In the editor, we keep track of the settings asset through EditorBuildSettings.
+                #if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                        value, true);
+                }
+                #endif
+
+                s_Manager.settings = value;
+            }
+        }
+
+        /// <summary>
+        /// Event that is triggered if any of the properties in <see cref="settings"/> changes or if
+        /// <see cref="settings"/> is replaced entirely with a new <see cref="InputSettings"/> object.
+        /// </summary>
+        /// <seealso cref="settings"/>
+        /// <seealso cref="InputSettings"/>
+        public static event Action onSettingsChange
+        {
+            add => s_Manager.onSettingsChange += value;
+            remove => s_Manager.onSettingsChange -= value;
         }
 
         #endregion
@@ -1217,7 +1324,7 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.onActionChange +=
         ///     (obj, change) =>
         ///     {
-        ///         if (change == InputActionChange.ActionTriggered)
+        ///         if (change == InputActionChange.ActionPerformed)
         ///         {
         ///             var action = (InputAction)obj;
         ///             var control = action.lastTriggerControl;
@@ -1228,14 +1335,14 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public static event Action<object, InputActionChange> onActionChange
         {
-            add { InputActionMapState.s_OnActionChange.Append(value); }
-            remove { InputActionMapState.s_OnActionChange.Remove(value); }
+            add => InputActionMapState.s_OnActionChange.Append(value);
+            remove => InputActionMapState.s_OnActionChange.Remove(value);
         }
 
         /// <summary>
         /// Register a new type of interaction with the system.
         /// </summary>
-        /// <param name="type">Type that implements the interaction. Must support <see cref="IInputInteraction"/>.</param>
+        /// <param name="type">Type that implements the interaction. Must support <see cref="InputInteraction"/>.</param>
         /// <param name="name">Name to register the interaction with. This is used in bindings to refer to the interaction
         /// (e.g. an interactions called "Tap" can be added to a binding by listing it in its <see cref="InputBinding.interactions"/>
         /// property). If no name is supplied, the short name of <paramref name="type"/> is used (with "Interaction" clipped off
@@ -1243,7 +1350,7 @@ namespace UnityEngine.Experimental.Input
         /// <example>
         /// <code>
         /// // Interaction that is performed when control resets to default state.
-        /// public class ResetInteraction : IInputInteraction
+        /// public class ResetInteraction : InputInteraction
         /// {
         ///     public void Process(ref InputInteractionContext context)
         ///     {
@@ -1262,7 +1369,7 @@ namespace UnityEngine.Experimental.Input
         /// var action = new InputAction(binding: "/&lt;Gamepad>/buttonSouth", interactions: "reset");
         /// </code>
         /// </example>
-        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="InputInteraction"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
             if (string.IsNullOrEmpty(name))
@@ -1385,8 +1492,7 @@ namespace UnityEngine.Experimental.Input
             get { return Assembly.GetExecutingAssembly().GetName().Version; }
         }
 
-        ////TODO: put metrics gathering behind #if
-
+        ////REVIEW: restrict metrics to editor and development builds?
         public static InputMetrics GetMetrics()
         {
             return s_Manager.metrics;
@@ -1502,6 +1608,9 @@ namespace UnityEngine.Experimental.Input
                 s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
                 s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
 
+                // Restore editor settings.
+                InputEditorUserSettings.s_Settings = s_SystemObject.systemState.userSettings;
+
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
             }
@@ -1509,10 +1618,31 @@ namespace UnityEngine.Experimental.Input
             {
                 s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
+
+                // See if we have a remembered settings object.
+                InputSettings settingsAsset;
+                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                    out settingsAsset))
+                {
+                    if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                        ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
+                    s_Manager.m_Settings = settingsAsset;
+                    s_Manager.ApplySettings();
+                }
+
+                InputEditorUserSettings.Load();
+
                 SetUpRemoting();
             }
 
+            Debug.Assert(settings != null);
+            #if UNITY_EDITOR
+            Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
+                "InputSettings has lost its native object");
+            #endif
+
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+            EditorApplication.projectChanged += OnProjectChange;
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session.
@@ -1527,34 +1657,41 @@ namespace UnityEngine.Experimental.Input
                     EditorPlayerSettings.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
+
+            // Send an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            Update();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
-                case PlayModeStateChange.EnteredPlayMode:
-                    ResetUpdateMask();
-                    break;
-
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
                 case PlayModeStateChange.EnteredEditMode:
                     ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                     ////        InputDevices that have been created with AddDevice<> during play mode?
                     DisableAllEnabledActions();
-                    ResetUpdateMask();
                     break;
             }
         }
 
-        private static void ResetUpdateMask()
+        private static void OnProjectChange()
         {
-            // Preserve before-render status as that is enabled in accordance with whether we
-            // have devices that requested it.
-            if ((updateMask & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-                updateMask = InputUpdateType.Default | InputUpdateType.BeforeRender;
-            else
-                updateMask = InputUpdateType.Default;
+            // May have added, removed, moved, or renamed settings asset. Force a refresh
+            // of the UI.
+            InputSettingsProvider.ForceReload();
+
+            // Also, if the asset holding our current settings got deleted, switch back to a
+            // temporary settings object.
+            // NOTE: We access m_Settings directly here to make sure we're not running into asserts
+            //       from the settings getter checking it has a valid object.
+            if (EditorUtility.InstanceIDToObject(s_Manager.m_Settings.GetInstanceID()) == null)
+            {
+                var newSettings = ScriptableObject.CreateInstance<InputSettings>();
+                newSettings.hideFlags = HideFlags.HideAndDontSave;
+                settings = newSettings;
+            }
         }
 
 #else
@@ -1562,19 +1699,21 @@ namespace UnityEngine.Experimental.Input
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
+            ////TODO: figure out bring settings into player
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
-            s_Manager.Initialize(NativeInputRuntime.instance);
+            s_Manager.Initialize(NativeInputRuntime.instance, settings);
 
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
-            #endif
+#endif
 
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
-            #if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
                 SetUpRemoting();
-            #endif
+#endif
 
             // Send an initial Update so that user methods such as Start and Awake
             // can access the input devices prior to their Update methods.
@@ -1594,6 +1733,10 @@ namespace UnityEngine.Experimental.Input
             DualShockSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_PS4
+            PS4Support.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             HIDSupport.Initialize();
             #endif
@@ -1604,6 +1747,10 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
             Plugins.iOS.iOSSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_WEBGL
+            Plugins.WebGL.WebGLSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_SWITCH
@@ -1635,8 +1782,23 @@ namespace UnityEngine.Experimental.Input
         {
             #if UNITY_EDITOR
 
+            // Some devices keep globals. Get rid of them by pretending the devices
+            // are removed.
+            if (s_Manager != null)
+            {
+                foreach (var device in s_Manager.devices)
+                    device.NotifyRemoved();
+            }
+
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,
+            // this should get replaced with an actual InputSettings asset.
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            settings.hideFlags = HideFlags.HideAndDontSave;
+
             s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
             if (enableRemoting)
                 SetUpRemoting();
@@ -1671,6 +1833,7 @@ namespace UnityEngine.Experimental.Input
             #if UNITY_EDITOR
             EditorInputControlLayoutCache.Clear();
             InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
             #endif
 
             s_Manager = null;
@@ -1692,6 +1855,10 @@ namespace UnityEngine.Experimental.Input
             [SerializeField] public RemoteInputPlayerConnection remoteConnection;
             [SerializeField] public InputManager.SerializedState managerState;
             [SerializeField] public InputRemoting.SerializedState remotingState;
+            #if UNITY_EDITOR
+            [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+            #endif
+            ////REVIEW: preserve InputUser state? (if even possible)
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -1715,6 +1882,7 @@ namespace UnityEngine.Experimental.Input
                 s_SavedStateStack = new Stack<State>();
 
             ////FIXME: does not preserve global state in InputActionMapState
+            ////TODO: preserve InputUser state
 
             s_SavedStateStack.Push(new State
             {
@@ -1723,6 +1891,9 @@ namespace UnityEngine.Experimental.Input
                 remoteConnection = s_RemoteConnection,
                 managerState = s_Manager.SaveState(),
                 remotingState = s_Remote.SaveState(),
+                #if UNITY_EDITOR
+                userSettings = InputEditorUserSettings.s_Settings,
+                #endif
             });
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
@@ -1744,10 +1915,18 @@ namespace UnityEngine.Experimental.Input
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;
 
-            InputConfiguration.Restore(state.managerState.configuration);
             InputUpdate.Restore(state.managerState.updateState);
 
             s_Manager.InstallGlobals();
+
+            #if UNITY_EDITOR
+            InputEditorUserSettings.s_Settings = state.userSettings;
+            #endif
+
+            // Get devices that keep global lists (like Gamepad) to re-initialize them
+            // by pretending the devices have been added.
+            foreach (var device in devices)
+                device.NotifyAdded();
         }
 
 #endif

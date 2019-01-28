@@ -116,7 +116,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item is BindingTreeItem && !(item is CompositeGroupTreeItem))
                 return;
             BeginRename(item);
-            ((ActionTreeViewItem)item).renaming = true;
         }
 
         protected override void RenameEnded(RenameEndedArgs args)
@@ -124,8 +123,6 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionItem = FindItem(args.itemID, rootItem) as ActionTreeViewItem;
             if (actionItem == null)
                 return;
-
-            actionItem.renaming = false;
 
             if (!args.acceptedRename || args.originalName == args.newName)
                 return;
@@ -199,6 +196,11 @@ namespace UnityEngine.Experimental.Input.Editor
             DragAndDrop.PrepareStartDrag();
             DragAndDrop.paths = args.draggedItemIDs.Select(i => "" + i).ToArray();
             DragAndDrop.StartDrag(row.displayName);
+        }
+
+        public TreeViewItem GetRootElement()
+        {
+            return rootItem;
         }
     }
 }

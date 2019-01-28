@@ -236,7 +236,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (stateBuffer != null)
             {
-                ////TODO: switch to ReadValueFrom
+                ////TODO: switch to ReadValueFromState
                 var text = ReadRawValueAsString(control, stateBuffer);
                 if (text != null)
                     value = new GUIContent(text);
@@ -324,37 +324,55 @@ namespace UnityEngine.Experimental.Input.Editor
                 object value = null;
                 if (format == InputStateBlock.kTypeBit)
                 {
-                    if (MemoryHelpers.ReadSingleBit(new IntPtr(ptr), control.m_StateBlock.bitOffset))
-                        value = "1";
-                    value = "0";
+                    if (control.valueSizeInBytes == 1)
+                    {
+                        value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "0";
+                    }
+                    else
+                    {
+                        value = MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits);
+                    }
+                }
+                else if (format == InputStateBlock.kTypeSBit)
+                {
+                    if (control.valueSizeInBytes == 1)
+                    {
+                        value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "-1";
+                    }
+                    else
+                    {
+                        int halfMaxValue = ((1 << (int)control.m_StateBlock.sizeInBits) - 1) / 2;
+                        int fullValue = (MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
+                        value = fullValue - halfMaxValue;
+                    }
                 }
                 else if (format == InputStateBlock.kTypeByte || format == InputStateBlock.kTypeSByte)
                 {
-                    value = (*ptr);
+                    value = *ptr;
                 }
                 else if (format == InputStateBlock.kTypeShort)
                 {
-                    value = (*((short*)ptr));
+                    value = *(short*)ptr;
                 }
                 else if (format == InputStateBlock.kTypeUShort)
                 {
-                    value = (*((ushort*)ptr));
+                    value = *(ushort*)ptr;
                 }
                 else if (format == InputStateBlock.kTypeInt)
                 {
-                    value = (*((int*)ptr));
+                    value = *(int*)ptr;
                 }
                 else if (format == InputStateBlock.kTypeUInt)
                 {
-                    value = (*((uint*)ptr));
+                    value = *(uint*)ptr;
                 }
                 else if (format == InputStateBlock.kTypeFloat)
                 {
-                    value = (*((float*)ptr));
+                    value = *(float*)ptr;
                 }
                 else if (format == InputStateBlock.kTypeDouble)
                 {
-                    value = (*((double*)ptr));
+                    value = *(double*)ptr;
                 }
 
                 // Stringify enum values, for. ex., PointerPhase

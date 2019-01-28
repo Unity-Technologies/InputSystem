@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: reordering support for interactions
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
@@ -51,8 +52,9 @@ namespace UnityEngine.Experimental.Input.Editor
             // Pick button.
             if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
-                PopupWindow.Show(pickButtonRect,
-                    new InputControlPickerPopup(pathProperty));
+                // TODO InputControlPickerPopup was replaced with AdvancedDropdown
+//                PopupWindow.Show(pickButtonRect,
+//                    new InputControlPickerPopup(pathProperty));
             }
 
             // Modify button.

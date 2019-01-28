@@ -6,16 +6,10 @@ using System.Text;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////REVIEW: allow associating control schemes with platforms, too?
 
 ////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
 ////        (and thus support it only input assets only)
-
-////FIXME: doesn't show up in generated docs either; Doxygen is a fucking disaster
 
 namespace UnityEngine.Experimental.Input
 {
@@ -299,14 +293,14 @@ namespace UnityEngine.Experimental.Input
 
         public bool Equals(InputControlScheme other)
         {
-            if (!(string.Equals(m_Name, other.m_Name) &&
-                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName) &&
-                  string.Equals(m_BindingGroup, other.m_BindingGroup)))
+            if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
+                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName, StringComparison.InvariantCultureIgnoreCase) &&
+                  string.Equals(m_BindingGroup, other.m_BindingGroup, StringComparison.InvariantCultureIgnoreCase)))
                 return false;
 
             // Compare device requirements.
             if (m_DeviceRequirements == null || m_DeviceRequirements.Length == 0)
-                return (other.m_DeviceRequirements == null || other.m_DeviceRequirements.Length == 0);
+                return other.m_DeviceRequirements == null || other.m_DeviceRequirements.Length == 0;
             if (other.m_DeviceRequirements == null || m_DeviceRequirements.Length != other.m_DeviceRequirements.Length)
                 return false;
 
@@ -578,6 +572,11 @@ namespace UnityEngine.Experimental.Input
                 public DeviceRequirement requirement
                 {
                     get { return m_Requirements[m_RequirementIndex]; }
+                }
+
+                public bool isOptional
+                {
+                    get { return requirement.isOptional; }
                 }
 
                 internal int m_RequirementIndex;

@@ -2,6 +2,8 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: the Debug.Asserts here should be also be made as checks ahead of time (on the layout)
+
 ////TODO: the read/write methods need a proper pass for consistency
 
 ////FIXME: some architectures have strict memory alignment requirements; we should honor them when
@@ -9,6 +11,9 @@ using UnityEngine.Experimental.Input.Utilities;
 ////       where needed
 
 ////TODO: allow bitOffset to be non-zero for byte-aligned control as long as result is byte-aligned
+
+////REVIEW: kAutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
+////        controls for which a more elegant and robust mechanism can surely be devised
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -31,12 +36,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
     ///
     /// Input state memory is restricted to a maximum of 4GB in size. Offsets are recorded in 32 bits.
     /// </remarks>
-    public struct InputStateBlock
+    public unsafe struct InputStateBlock
     {
         public const uint kInvalidOffset = 0xffffffff;
+        public const uint kAutomaticOffset = 0xfffffffe;
 
         // Primitive state type codes.
         public static FourCC kTypeBit = new FourCC('B', 'I', 'T');
+        public static FourCC kTypeSBit = new FourCC('S', 'B', 'I', 'T');
         public static FourCC kTypeInt = new FourCC('I', 'N', 'T');
         public static FourCC kTypeUInt = new FourCC('U', 'I', 'N', 'T');
         public static FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
@@ -59,7 +66,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
-            if (type == kTypeBit)
+            if (type == kTypeBit || type == kTypeSBit)
                 return 1;
             if (type == kTypeInt || type == kTypeUInt)
                 return 4 * 8;
@@ -154,11 +161,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return (uint)((sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0)); }
         }
 
-        public unsafe int ReadInt(IntPtr statePtr)
+        public int ReadInt(void* statePtr)
         {
             Debug.Assert(sizeInBits != 0);
 
-            var valuePtr = (byte*)statePtr.ToPointer() + (int)byteOffset;
+            var valuePtr = (byte*)statePtr + (int)byteOffset;
 
             int value;
             if (format == kTypeInt || format == kTypeUInt)
@@ -170,9 +177,22 @@ namespace UnityEngine.Experimental.Input.LowLevel
             else if (format == kTypeBit)
             {
                 if (sizeInBits == 1)
-                    value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1 : 0;
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : 0;
                 else
-                    value = MemoryHelpers.ReadIntFromMultipleBits(new IntPtr(valuePtr), bitOffset, sizeInBits);
+                    value = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+            }
+            else if (format == kTypeSBit)
+            {
+                if (sizeInBits == 1)
+                {
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : -1;
+                }
+                else
+                {
+                    int halfMax = (1 << (int)sizeInBits) / 2;
+                    int unsignedValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+                    value = unsignedValue - halfMax;
+                }
             }
             else if (format == kTypeByte)
             {
@@ -206,16 +226,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return value;
         }
 
-        public unsafe void WriteInt(IntPtr statePtr, int value)
+        public void WriteInt(void* statePtr, int value)
         {
             throw new NotImplementedException();
         }
 
-        public unsafe float ReadFloat(IntPtr statePtr)
+        public float ReadFloat(void* statePtr)
         {
             Debug.Assert(sizeInBits != 0);
 
-            var valuePtr = (byte*)statePtr.ToPointer() + (int)byteOffset;
+            var valuePtr = (byte*)statePtr + (int)byteOffset;
 
             float value;
             if (format == kTypeFloat)
@@ -224,12 +244,30 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
                 value = *(float*)valuePtr;
             }
-            else if (format == kTypeBit)
+            else if (format == kTypeBit || format == kTypeSBit)
             {
-                if (sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
-
-                value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1.0f : 0.0f;
+                if (sizeInBits == 1)
+                {
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == kTypeSBit ? -1.0f : 0.0f);
+                }
+                else if (sizeInBits != 31)
+                {
+                    float maxValue = (float)(1 << (int)sizeInBits);
+                    float rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
+                    if (format == kTypeSBit)
+                    {
+                        float unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
+                        value = Mathf.Clamp(unclampedValue, -1.0f, 1.0f);
+                    }
+                    else
+                    {
+                        value = Mathf.Clamp(rawValue / maxValue, 0.0f, 1.0f);
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields greater than 31 bits to floats");
+                }
             }
             // If a control with an integer-based representation does not use the full range
             // of its integer size (e.g. only goes from [0..128]), processors or the parameters
@@ -240,13 +278,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
                 ////REVIEW: What's better here? This code reaches a clean -1 but doesn't reach a clean +1 as the range is [-32768..32767].
                 ////        Should we cut off at -32767? Or just live with the fact that 0.999 is as high as it gets?
-                value = *((short*)valuePtr) / 32768.0f;
+                value = *(short*)valuePtr / 32768.0f;
             }
             else if (format == kTypeUShort)
             {
                 Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
-                value = *((ushort*)valuePtr) / 65535.0f;
+                value = *(ushort*)valuePtr / 65535.0f;
             }
             else if (format == kTypeByte)
             {
@@ -259,7 +297,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
                 ////REVIEW: Same problem here as with 'short'
-                value = *((sbyte*)valuePtr) / 128.0f;
+                value = *(sbyte*)valuePtr / 128.0f;
             }
             else
             {
@@ -269,9 +307,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return value;
         }
 
-        public unsafe void WriteFloat(IntPtr statePtr, float value)
+        public void WriteFloat(void* statePtr, float value)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)byteOffset);
+            var valuePtr = (byte*)statePtr + (int)byteOffset;
 
             if (format == kTypeFloat)
             {
@@ -281,10 +319,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else if (format == kTypeBit)
             {
-                if (sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
-
-                MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+                if (sizeInBits == 1)
+                {
+                    MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+                }
+                else
+                {
+                    int maxValue = (1 << (int)sizeInBits) - 1;
+                    int intValue = (int)(value * maxValue);
+                    MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
+                }
             }
             else if (format == kTypeShort)
             {
@@ -302,7 +346,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "BYTE state must be byte-aligned");
-                *(byte*)valuePtr = (byte)(value * 255.0f);
+                *valuePtr = (byte)(value * 255.0f);
             }
             else if (format == kTypeSByte)
             {
@@ -316,16 +360,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public unsafe PrimitiveValue Read(IntPtr statePtr)
+        public PrimitiveValue Read(void* statePtr)
         {
             throw new NotImplementedException();
         }
 
-        public unsafe void Write(IntPtr statePtr, PrimitiveValue value)
+        public void Write(void* statePtr, PrimitiveValue value)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)byteOffset);
+            var valuePtr = (byte*)statePtr + (int)byteOffset;
 
-            if (format == kTypeBit)
+            if (format == kTypeBit || format == kTypeSBit)
             {
                 if (sizeInBits > 32)
                     throw new NotImplementedException(
@@ -350,13 +394,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public unsafe void CopyToFrom(IntPtr toStatePtr, IntPtr fromStatePtr)
+        public void CopyToFrom(void* toStatePtr, void* fromStatePtr)
         {
             if (bitOffset != 0 || sizeInBits % 8 != 0)
                 throw new NotImplementedException("Copying bitfields");
 
-            var from = (byte*)fromStatePtr.ToPointer() + byteOffset;
-            var to = (byte*)toStatePtr.ToPointer() + byteOffset;
+            var from = (byte*)fromStatePtr + byteOffset;
+            var to = (byte*)toStatePtr + byteOffset;
 
             UnsafeUtility.MemCpy(to, from, alignedSizeInBytes);
         }

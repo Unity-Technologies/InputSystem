@@ -53,6 +53,22 @@ namespace UnityEngine.Experimental.Input
             return m_Reference == other;
         }
 
+        public override bool Equals(object o)
+        {
+            if (m_UseReference)
+                return this.Equals(o as InputActionReference);
+            else
+                return this.Equals(o as InputAction);
+        }
+
+        public override int GetHashCode()
+        {
+            if (m_UseReference)
+                return m_Reference.GetHashCode();
+            else
+                return m_Action.GetHashCode();
+        }
+
         public static bool operator==(InputActionProperty left, InputActionProperty right)
         {
             return left.Equals(right);
@@ -81,6 +97,11 @@ namespace UnityEngine.Experimental.Input
         public static bool operator!=(InputAction left, InputActionProperty right)
         {
             return !ReferenceEquals(left, right.action);
+        }
+
+        public static implicit operator InputActionProperty(InputAction action)
+        {
+            return new InputActionProperty(action);
         }
 
         [SerializeField] private bool m_UseReference;

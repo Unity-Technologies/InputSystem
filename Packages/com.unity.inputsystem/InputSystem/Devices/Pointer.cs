@@ -1,9 +1,10 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: add capabilities indicating whether pressure and tilt is supported
 
 ////REVIEW: should we put lock state directly on Pointer?
 
@@ -34,17 +35,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace", displayName = "Position")]
 #else
-        [InputControl(layout = "Vector2", usage = "Point")]
+        [InputControl(layout = "Vector2", usage = "Point", displayName = "Position")]
 #endif
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure", defaultState = "1.0")]
         public float pressure;
 
         [InputControl(layout = "Axis", usage = "Twist")]
@@ -110,7 +111,7 @@ namespace UnityEngine.Experimental.Input
         /// single display, that means the coordinates will always be in window space of the first display.
         ///
         /// Within editor code, the coordinates are in the coordinate space of the current <see cref="UnityEditor.EditorWindow"/>.
-        /// This means that if you query <c>Mouse.current.position</c> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
+        /// This means that if you query <see cref="Mouse.position"/> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
         /// <see cref="UnityEngine.Event.mousePosition"/>).
         /// </remarks>
@@ -120,6 +121,17 @@ namespace UnityEngine.Experimental.Input
 
         public Vector2Control tilt { get; private set; }
         public Vector2Control radius { get; private set; }
+
+        /// <summary>
+        /// Normalized pressure with which the pointer is currently pressed while in contact with the pointer surface.
+        /// </summary>
+        /// <remarks>
+        /// This is only meaningful for pointing devices that support pressure. Mice do not, pens usually do, and touch
+        /// usually does on mobile platforms.
+        ///
+        /// Note that it is possible for the value to go above 1 even though it is considered normalized. The reason is
+        /// that calibration on the system can put the maximum pressure point below the physically supported maximum value.
+        /// </remarks>
         public AxisControl pressure { get; private set; }
 
         /// <summary>
@@ -158,6 +170,7 @@ namespace UnityEngine.Experimental.Input
 
         protected override void OnRemoved()
         {
+            base.OnRemoved();
             if (current == this)
                 current = null;
         }
@@ -178,36 +191,38 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected bool ResetDelta(IntPtr statePtr, InputControl<float> control)
+        protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
-            var value = control.ReadValueFrom(statePtr);
+            ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
+            var value = control.ReadValueFromState(statePtr);
             if (Mathf.Approximately(0f, value))
                 return false;
-            control.WriteValueInto(statePtr, 0f);
+            control.WriteValueIntoState(0f, statePtr);
             return true;
         }
 
-        protected void AccumulateDelta(IntPtr oldStatePtr, IntPtr newStatePtr, InputControl<float> control)
+        protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
-            var oldDelta = control.ReadValueFrom(oldStatePtr);
-            var newDelta = control.ReadValueFrom(newStatePtr);
-            control.WriteValueInto(newStatePtr, oldDelta + newDelta);
+            ////FIXME: if there's processors on the delta, this is junk
+            var oldDelta = control.ReadValueFromState(oldStatePtr);
+            var newDelta = control.ReadValueFromState(newStatePtr);
+            control.WriteValueIntoState(oldDelta + newDelta, newStatePtr);
         }
 
-        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
             return deltaXChanged || deltaYChanged;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
-        bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }

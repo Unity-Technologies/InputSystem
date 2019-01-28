@@ -2,6 +2,8 @@ using System;
 
 ////REVIEW: this (and the generated C# wrappers) really should be a struct but we can't inherit :/
 
+////REVIEW: add helpers to automatically enable/disable?
+
 ////TODO: nuke Clone()
 
 namespace UnityEngine.Experimental.Input
@@ -21,8 +23,8 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public InputActionAsset asset
         {
-            get { return m_Asset; }
-            protected set { m_Asset = value; }
+            get => m_Asset;
+            protected set => m_Asset = value;
         }
 
         public InputActionAssetReference()
@@ -46,6 +48,24 @@ namespace UnityEngine.Experimental.Input
             var sets = asset.actionMaps;
             for (var i = 0; i < sets.Count; ++i)
                 sets[i].Disable();
+        }
+
+        /// <summary>
+        /// Duplicate the referenced <see cref="asset"/> and all its action maps and actions.
+        /// </summary>
+        /// <remarks>
+        /// This method is useful to be able to use the same asset multiple times but configure it
+        /// differently each time. A common example of this use case is local multiplayer where each
+        /// player uses the same set of actions supported by the game but each player's actions are
+        /// configured to respond to just the devices assigned to the specific player.
+        /// </remarks>
+        public virtual void MakePrivateCopyOfActions()
+        {
+            if (asset == null)
+                return;
+
+            // Make a duplicate that keeps all GUIDs but nukes all callbacks and such.
+            asset = ScriptableObject.Instantiate(asset);
         }
 
         public InputActionAssetReference Clone()

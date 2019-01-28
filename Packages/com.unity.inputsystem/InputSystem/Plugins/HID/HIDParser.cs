@@ -5,6 +5,7 @@ using System.Collections.Generic;
 ////TODO: delimiter support
 ////TODO: designator support
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>

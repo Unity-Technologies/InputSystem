@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.LowLevel;
 
+////TODO: get rid of pressPoint and instead deadzone axis buttons
+
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
 namespace UnityEngine.Experimental.Input.Controls
@@ -20,15 +22,17 @@ namespace UnityEngine.Experimental.Input.Controls
         public float pressPoint;
         public float pressPointOrDefault
         {
-            get { return pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint; }
+            get { return pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint; }
         }
 
         public ButtonControl()
         {
             m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_MinValue = 0f;
+            m_MaxValue = 1f;
         }
 
-        protected bool IsValueConsideredPressed(float value)
+        public bool IsValueConsideredPressed(float value)
         {
             return value >= pressPointOrDefault;
         }
@@ -38,14 +42,14 @@ namespace UnityEngine.Experimental.Input.Controls
             get { return IsValueConsideredPressed(ReadValue()); }
         }
 
-        public bool wasJustPressed
+        public bool wasPressedThisFrame
         {
-            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadPreviousValue()); }
+            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
         }
 
-        public bool wasJustReleased
+        public bool wasReleasedThisFrame
         {
-            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadPreviousValue()); }
+            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Controls
@@ -23,18 +22,9 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        public override bool HasSignificantChange(InputEventPtr eventPtr)
+        public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
-            float value;
-            if (ReadValueFrom(eventPtr, out value))
-                return Mathf.Abs(value - ReadDefaultValue()) > float.Epsilon;
-            return false;
-        }
-
-        public override float ReadUnprocessedValueFrom(IntPtr statePtr)
-        {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            return CheckStateIsAtDefault(valuePtr) ? 0.0f : 1.0f;
+            return this.CheckStateIsAtDefault(statePtr) ? 0.0f : 1.0f;
         }
     }
 }

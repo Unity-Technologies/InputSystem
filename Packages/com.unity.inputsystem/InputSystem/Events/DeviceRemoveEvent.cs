@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public static DeviceRemoveEvent Create(int deviceId, double time)
+        public static DeviceRemoveEvent Create(int deviceId, double time = -1)
         {
             var inputEvent =
                 new DeviceRemoveEvent {baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize, deviceId, time)};

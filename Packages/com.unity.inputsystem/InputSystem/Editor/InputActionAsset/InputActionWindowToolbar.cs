@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionAssetManager m_ActionAssetManager;
         private SearchField m_SearchField;
         private string[] m_AllControlSchemeNames;
-        private string m_SearchText;
+        internal string m_SearchText;
         private Action m_Apply;
 
         private static readonly GUIContent m_NoControlScheme = EditorGUIUtility.TrTextContent("No Control Scheme");
@@ -41,6 +41,14 @@ namespace UnityEngine.Experimental.Input.Editor
             get
             {
                 return m_SelectedControlSchemeIndex < 0 ? null : m_AllControlSchemeNames[m_SelectedControlSchemeIndex];
+            }
+        }
+
+        public string selectedControlSchemeBindingGroup
+        {
+            get
+            {
+                return m_SelectedControlSchemeIndex < 0 ? null : controlSchemes[m_SelectedControlSchemeIndex].bindingGroup;
             }
         }
 
@@ -140,7 +148,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void OnControlSchemeSelected(object indexObj)
+        internal void OnControlSchemeSelected(object indexObj)
         {
             var index = (int)indexObj;
             if (m_SelectedControlSchemeIndex == index)
@@ -170,13 +178,13 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.EndDisabledGroup();
         }
 
-        private void OnDeviceSelected(object indexObj)
+        internal void OnDeviceSelected(object indexObj)
         {
             m_SelectedDeviceIndex = (int)indexObj;
             if (m_SelectedDeviceIndex == 0)
                 OnDeviceChanged(null);
             else
-                OnDeviceChanged(m_DeviceIdList[m_SelectedDeviceIndex]);
+                OnDeviceChanged(selectedDevice);
         }
 
         private void DrawSaveButton()
@@ -204,12 +212,12 @@ namespace UnityEngine.Experimental.Input.Editor
             var devices = new List<string>();
             if (m_SelectedControlSchemeIndex >= 0)
             {
-                devices.Add("All devices");
+                devices.Add("[All devices]");
                 var controlScheme = m_ActionAssetManager.m_AssetObjectForEditing.GetControlScheme(selectedControlSchemeName);
                 devices.AddRange(controlScheme.deviceRequirements.Select(a => a.controlPath).ToList());
             }
             m_DeviceIdList = devices.ToArray();
-            m_DeviceNamesList = devices.Select(InputControlPath.ToHumanReadableString).ToArray();
+            m_DeviceNamesList = devices.Select(a => a.Substring(1, a.Length - 2)).ToArray();
         }
 
         private void AddControlScheme(object position)

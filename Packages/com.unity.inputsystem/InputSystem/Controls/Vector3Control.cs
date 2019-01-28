@@ -9,11 +9,11 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </summary>
     public class Vector3Control : InputControl<Vector3>
     {
-        [InputControl(offset = 0)]
+        [InputControl(offset = 0, displayName = "X")]
         public AxisControl x { get; private set; }
-        [InputControl(offset = 4)]
+        [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; private set; }
-        [InputControl(offset = 8)]
+        [InputControl(offset = 8, displayName = "Z")]
         public AxisControl z { get; private set; }
 
         public Vector3Control()
@@ -29,16 +29,22 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector3 ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector3(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr));
+            return new Vector3(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr), z.ReadValueFromState(statePtr));
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector3 value)
+        public override unsafe void WriteValueIntoState(Vector3 value, void* statePtr)
         {
-            x.WriteValueInto(statePtr, value.x);
-            y.WriteValueInto(statePtr, value.y);
-            z.WriteValueInto(statePtr, value.z);
+            x.WriteValueIntoState(value.x, statePtr);
+            y.WriteValueIntoState(value.y, statePtr);
+            z.WriteValueIntoState(value.z, statePtr);
+        }
+
+        public override unsafe float EvaluateMagnitude(void* statePtr)
+        {
+            ////REVIEW: this can go beyond 1; that okay?
+            return ReadValueFromState(statePtr).magnitude;
         }
     }
 }

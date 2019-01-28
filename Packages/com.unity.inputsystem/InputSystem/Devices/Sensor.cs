@@ -89,45 +89,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
-
-    public class CompensateDirectionProcessor : IInputControlProcessor<Vector3>
-    {
-        public virtual Vector3 Process(Vector3 value, InputControl control)
-        {
-            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
-                return value;
-
-            var rotation = Quaternion.identity;
-            switch (InputRuntime.s_Instance.screenOrientation)
-            {
-                case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
-                case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
-                case ScreenOrientation.LandscapeRight: rotation = Quaternion.Euler(0, 0, 270); break;
-            }
-            return rotation * value;
-        }
-    }
-
-    public class CompensateRotationProcessor : IInputControlProcessor<Quaternion>
-    {
-        public virtual Quaternion Process(Quaternion value, InputControl control)
-        {
-            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
-                return value;
-
-            const float kSqrtOfTwo = 1.4142135623731f;
-            var q = Quaternion.identity;
-
-            switch (InputRuntime.s_Instance.screenOrientation)
-            {
-                case ScreenOrientation.PortraitUpsideDown: q = new Quaternion(0.0f, 0.0f, 1.0f /*sin(pi/2)*/, 0.0f /*cos(pi/2)*/); break;
-                case ScreenOrientation.LandscapeLeft:      q = new Quaternion(0.0f, 0.0f, kSqrtOfTwo * 0.5f /*sin(pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(pi/4)*/); break;
-                case ScreenOrientation.LandscapeRight:     q = new Quaternion(0.0f, 0.0f, -kSqrtOfTwo * 0.5f /*sin(3pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(3pi/4)*/); break;
-            }
-
-            return value * q;
-        }
-    }
 }
 
 namespace UnityEngine.Experimental.Input
@@ -158,12 +119,6 @@ namespace UnityEngine.Experimental.Input
 
         public static Accelerometer current { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(builder);
-        }
-
         public override void MakeCurrent()
         {
             base.MakeCurrent();
@@ -175,6 +130,12 @@ namespace UnityEngine.Experimental.Input
             base.OnRemoved();
             if (current == this)
                 current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            base.FinishSetup(builder);
         }
     }
 
@@ -210,6 +171,12 @@ namespace UnityEngine.Experimental.Input
     {
         public Vector3Control gravity { get; private set; }
 
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            gravity = builder.GetControl<Vector3Control>("gravity");
+            base.FinishSetup(builder);
+        }
+
         public static Gravity current { get; private set; }
 
         public override void MakeCurrent()
@@ -223,12 +190,6 @@ namespace UnityEngine.Experimental.Input
             base.OnRemoved();
             if (current == this)
                 current = null;
-        }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            gravity = builder.GetControl<Vector3Control>("gravity");
-            base.FinishSetup(builder);
         }
     }
 
@@ -286,10 +247,5 @@ namespace UnityEngine.Experimental.Input
             acceleration = builder.GetControl<Vector3Control>("acceleration");
             base.FinishSetup(builder);
         }
-    }
-
-
-    public class GPS : Sensor
-    {
     }
 }

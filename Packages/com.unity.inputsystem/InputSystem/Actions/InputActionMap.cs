@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add public InputActionManager that supports various device allocation strategies (one stack
-////      per device, multiple devices per stack, etc.); should also resolve the problem of having
-////      two bindings stack on top of each other and making the one on top suppress the one below
+////REVIEW: given we have the global ActionPerformed callback, do we really need the per-map callback?
 
-////REVIEW: given we have the global ActionTriggered callback, do we really need the per-map callback?
+////TODO: remove constraint of not being able to modify bindings while enabled from both actions and maps
+////      (because of the sharing of state between multiple maps in an asset, we'd have to extend that constraint
+////      to all maps in an asset in order to uphold it properly)
 
 namespace UnityEngine.Experimental.Input
 {
@@ -34,18 +34,12 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Name of the action map.
         /// </summary>
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
         /// <summary>
         /// If the action map is part of an asset, this refers to the asset. Otherwise it is <c>null</c>.
         /// </summary>
-        public InputActionAsset asset
-        {
-            get { return m_Asset; }
-        }
+        public InputActionAsset asset => m_Asset;
 
         /// <summary>
         /// A stable, unique identifier for the map.
@@ -87,10 +81,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Whether any action in the map is currently enabled.
         /// </summary>
-        public bool enabled
-        {
-            get { return m_EnabledActionsCount > 0; }
-        }
+        public bool enabled => m_EnabledActionsCount > 0;
 
         /// <summary>
         /// List of actions contained in the map.
@@ -101,12 +92,9 @@ namespace UnityEngine.Experimental.Input
         /// Does not allocate. Note that values returned by the property become invalid if
         /// the setup of actions in a set is changed.
         /// </remarks>
-        public ReadOnlyArray<InputAction> actions
-        {
-            get { return new ReadOnlyArray<InputAction>(m_Actions); }
-        }
+        public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
-        //what about explicitly grouping bindings into named sets?
+        ////REVIEW: what about explicitly grouping bindings into named sets?
 
         /// <summary>
         /// List of bindings contained in the map.
@@ -118,23 +106,61 @@ namespace UnityEngine.Experimental.Input
         ///
         /// Bindings that trigger actions refer to the action by name.
         /// </remarks>
-        public ReadOnlyArray<InputBinding> bindings
-        {
-            get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
-        }
+        public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings);
 
-        public ReadOnlyArray<InputControl> controls
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public InputBinding? bindingMask
+        public ReadOnlyArray<InputControlScheme> controlSchemes
         {
             get
             {
-                if (m_BindingMask.isEmpty)
-                    return null;
-                return m_BindingMask;
+                if (m_Asset == null)
+                    return new ReadOnlyArray<InputControlScheme>();
+                return m_Asset.controlSchemes;
+            }
+        }
+
+        /// <inheritdoc />
+        public InputBinding? bindingMask
+        {
+            get => m_BindingMask;
+            set
+            {
+                if (m_BindingMask == value)
+                    return;
+
+                m_BindingMask = value;
+                LazyResolveBindings();
+            }
+        }
+
+        /// <inheritdoc />
+        public ReadOnlyArray<InputDevice>? devices
+        {
+            get
+            {
+                // Return asset's device list if we have none (only if we're part of an asset).
+                if (m_Devices == null && asset != null)
+                    return asset.devices;
+
+                return m_Devices;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    if (m_DevicesArray != null)
+                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
+                    m_DevicesCount = 0;
+                    m_Devices = null;
+                }
+                else
+                {
+                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
+                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
+                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
+                }
+
+                ////TODO: determine if this has *actually* changed things before firing off a re-resolve
+                LazyResolveBindings();
             }
         }
 
@@ -158,16 +184,13 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.cancelled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
-            add { m_ActionCallbacks.AppendWithCapacity(value); }
-            remove { m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); } // Changes callback ordering.
+            add => m_ActionCallbacks.AppendWithCapacity(value);
+            remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
         }
 
-        public InputActionMap(string name = null, InputActionMap extend = null)
+        public InputActionMap(string name = null)
         {
             m_Name = name;
-
-            if (extend != null)
-                throw new NotImplementedException();
         }
 
         internal int TryGetActionIndex(string nameOrId)
@@ -213,9 +236,9 @@ namespace UnityEngine.Experimental.Input
             return InputActionMapState.kInvalidIndex;
         }
 
-        public InputAction TryGetAction(string name)
+        public InputAction TryGetAction(string nameOrId)
         {
-            var index = TryGetActionIndex(name);
+            var index = TryGetActionIndex(nameOrId);
             if (index == -1)
                 return null;
             return m_Actions[index];
@@ -229,12 +252,11 @@ namespace UnityEngine.Experimental.Input
             return m_Actions[index];
         }
 
-        public InputAction GetAction(string name)
+        public InputAction GetAction(string nameOrId)
         {
-            var action = TryGetAction(name);
+            var action = TryGetAction(nameOrId);
             if (action == null)
-                throw new KeyNotFoundException(string.Format("Could not find action '{0}' in map '{1}'", name,
-                    this.name));
+                throw new KeyNotFoundException($"Could not find action '{nameOrId}' in map '{name}'");
             return action;
         }
 
@@ -242,32 +264,29 @@ namespace UnityEngine.Experimental.Input
         {
             var action = TryGetAction(id);
             if (action == null)
-                throw new KeyNotFoundException(string.Format("Could not find action with ID '{0}' in map '{1}'", id,
-                    name));
+                throw new KeyNotFoundException($"Could not find action with ID '{id}' in map '{name}'");
             return action;
         }
 
-        public void SetBindingMask(InputBinding bindingMask)
+        public bool IsUsableWithDevice(InputDevice device)
         {
-            if (bindingMask == m_BindingMask)
-                return;
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
 
-            m_BindingMask = bindingMask;
+            if (m_Bindings == null)
+                return false;
 
-            if (m_State != null)
-                ResolveBindings();
-        }
+            foreach (var binding in m_Bindings)
+            {
+                var path = binding.path;
+                if (string.IsNullOrEmpty(path))
+                    continue;
 
-        public void SetBindingMask(string bindingGroups)
-        {
-            if (string.IsNullOrEmpty(bindingGroups))
-                bindingGroups = null;
-            SetBindingMask(new InputBinding {groups = bindingGroups});
-        }
+                if (InputControlPath.Matches(path, device))
+                    return true;
+            }
 
-        public void ClearBindingMask()
-        {
-            SetBindingMask(new InputBinding());
+            return false;
         }
 
         /// <summary>
@@ -302,7 +321,7 @@ namespace UnityEngine.Experimental.Input
             // them. Cloning them is not allowed.
             if (m_SingletonAction != null)
                 throw new InvalidOperationException(
-                    string.Format("Cloning internal map of singleton action '{0}' is not allowed", m_SingletonAction));
+                    $"Cloning internal map of singleton action '{m_SingletonAction}' is not allowed");
 
             var clone = new InputActionMap
             {
@@ -349,6 +368,15 @@ namespace UnityEngine.Experimental.Input
                 return false;
 
             return action.actionMap == this;
+        }
+
+        public override string ToString()
+        {
+            if (m_Asset != null)
+                return $"{m_Asset}:{m_Name}";
+            if (!string.IsNullOrEmpty(m_Name))
+                return m_Name;
+            return "<Unnamed Action Map>";
         }
 
         /// <summary>
@@ -427,7 +455,12 @@ namespace UnityEngine.Experimental.Input
         /// Initialized when map (or any action in it) is first enabled.
         /// </remarks>
         [NonSerialized] internal InputActionMapState m_State;
-        [NonSerialized] internal InputBinding m_BindingMask;
+        [NonSerialized] internal bool m_NeedToResolveBindings;
+        [NonSerialized] internal InputBinding? m_BindingMask;
+
+        [NonSerialized] internal ReadOnlyArray<InputDevice>? m_Devices;
+        [NonSerialized] internal int m_DevicesCount;
+        [NonSerialized] internal InputDevice[] m_DevicesArray;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 
@@ -504,7 +537,7 @@ namespace UnityEngine.Experimental.Input
                 Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings);
 
                 m_BindingsForEachAction = m_Bindings;
-                m_ControlsForEachAction = m_State != null ? m_State.controls : null;
+                m_ControlsForEachAction = m_State?.controls;
 
                 m_SingletonAction.m_BindingsStartIndex = 0;
                 m_SingletonAction.m_BindingsCount = m_Bindings.Length;
@@ -648,6 +681,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        ////TODO: re-use allocations such that only grow the arrays and hit zero GC allocs when we already have enough memory
         internal void ClearPerActionCachedBindingData()
         {
             m_BindingsForEachAction = null;
@@ -678,16 +712,45 @@ namespace UnityEngine.Experimental.Input
             ClearPerActionCachedBindingData();
         }
 
+        ////TODO: allow this; just disable temporarily
         internal void ThrowIfModifyingBindingsIsNotAllowed()
         {
             if (enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot modify bindings on action map '{0}' while the map is enabled", this));
+                    $"Cannot modify bindings on action map '{this}' while the map is enabled");
+        }
+
+        /// <summary>
+        /// Resolve bindings right away if we have to. Otherwise defer it to when we next need
+        /// the bindings.
+        /// </summary>
+        internal void LazyResolveBindings()
+        {
+            // If we haven't had to resolve bindings yet, we can wait until when we
+            // actually have to.
+            if (m_State == null)
+                return;
+
+            // If we don't have enabled actions, defer binding resolution to when we next
+            // enable actions.
+            if (m_EnabledActionsCount == 0)
+            {
+                m_NeedToResolveBindings = true;
+                return;
+            }
+
+            // Have to do it straight away.
+            ResolveBindings();
         }
 
         internal void ResolveBindingsIfNecessary()
         {
-            if (m_State == null)
+            // NOTE: We only check locally for the current map here. When there are multiple maps
+            //       in an asset, we may have maps that require re-resolution while others don't.
+            //       We only resolve if a map is used that needs resolution to happen. Note that
+            //       this will still resolve bindings for *all* maps in the asset.
+
+            if (m_State == null || m_NeedToResolveBindings)
                 ResolveBindings();
         }
 
@@ -696,16 +759,23 @@ namespace UnityEngine.Experimental.Input
         /// from the bindings.
         /// </summary>
         /// <remarks>
-        /// The best way is for this to happen once for each action map at the beginning of the game
+        /// This is the core method of action binding resolution. All binding resolution goes through here.
+        ///
+        /// The best way is for binding resolution to happen once for each action map at the beginning of the game
         /// and to then enable and disable the maps as needed. However, the system will also re-resolve
         /// bindings if the control setup in the system changes (i.e. if devices are added or removed
         /// or if layouts in the system are changed).
+        ///
+        /// Bindings can be re-resolved while actions are enabled. This happens changing device or binding
+        /// masks on action maps or assets (<see cref="devices"/>, <see cref="bindingMask"/>, <see cref="InputAction.bindingMask"/>,
+        /// <see cref="InputActionAsset.devices"/>, <see cref="InputActionAsset.bindingMask"/>). When this happens,
+        /// actions that have been started will be cancelled before bindings are resolved again.
         /// </remarks>
         internal void ResolveBindings()
         {
             // If we're part of an asset, we share state and thus binding resolution with
             // all maps in the asset.
-            if (m_Asset)
+            if (m_Asset != null)
             {
                 var actionMaps = m_Asset.m_ActionMaps;
                 Debug.Assert(actionMaps != null); // Should have at least us in the array.
@@ -713,6 +783,26 @@ namespace UnityEngine.Experimental.Input
 
                 // Start resolving.
                 var resolver = new InputBindingResolver();
+
+                // If we already have a state, re-use the arrays we have already allocated.
+                // NOTE: We will install the arrays on the very same InputActionMapState instance below. In the
+                //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
+                //       here.
+                if (m_State != null)
+                {
+                    // If any of the maps have actions currently enabled, remove their state monitors first.
+                    for (var i = 0; i < actionMapCount; ++i)
+                    {
+                        var map = actionMaps[i];
+                        m_State.TemporarilyDisableActions(map);
+
+                        // Let listeners know we are about to modify bindings. Do this *after* we disabled the
+                        // actions so that cancellations happen first.
+                        InputActionMapState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map);
+                    }
+
+                    resolver.StartWithArraysFrom(m_State);
+                }
 
                 // If there's a binding mask set on the asset, apply it.
                 resolver.bindingMask = m_Asset.m_BindingMask;
@@ -735,9 +825,18 @@ namespace UnityEngine.Experimental.Input
                     m_State.ClaimDataFrom(resolver);
                 }
 
-                // Wipe caches.
+                // Wipe caches and re-enable controls, if necessary.
                 for (var i = 0; i < actionMapCount; ++i)
-                    actionMaps[i].ClearPerActionCachedBindingData();
+                {
+                    var map = actionMaps[i];
+                    map.m_NeedToResolveBindings = false;
+
+                    ////TODO: determine whether we really need to wipe those; keep them if nothing has changed
+                    map.ClearPerActionCachedBindingData();
+                    m_State.ReenableTemporarilyDisabledActions(map);
+
+                    InputActionMapState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map);
+                }
             }
             else
             {
@@ -746,6 +845,17 @@ namespace UnityEngine.Experimental.Input
 
                 // Resolve all source paths.
                 var resolver = new InputBindingResolver();
+                if (m_State != null)
+                {
+                    m_State.TemporarilyDisableActions(this);
+
+                    if (m_SingletonAction != null)
+                        InputActionMapState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, m_SingletonAction);
+                    else
+                        InputActionMapState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, this);
+
+                    resolver.StartWithArraysFrom(m_State);
+                }
                 resolver.AddActionMap(this);
 
                 // Transfer final arrays into state.
@@ -758,7 +868,15 @@ namespace UnityEngine.Experimental.Input
                 {
                     m_State.ClaimDataFrom(resolver);
                     ClearPerActionCachedBindingData();
+                    m_State.ReenableTemporarilyDisabledActions(this);
                 }
+
+                m_NeedToResolveBindings = false;
+
+                if (m_SingletonAction != null)
+                    InputActionMapState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_SingletonAction);
+                else
+                    InputActionMapState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, this);
             }
         }
 
@@ -825,6 +943,7 @@ namespace UnityEngine.Experimental.Input
             public string name;
             public string id;
             public string expectedControlLayout;
+            public bool continuous;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -838,6 +957,7 @@ namespace UnityEngine.Experimental.Input
                     name = action.m_Name,
                     id = action.id.ToString(),
                     expectedControlLayout = action.m_ExpectedControlLayout,
+                    continuous = action.continuous,
                 };
             }
         }
@@ -986,6 +1106,7 @@ namespace UnityEngine.Experimental.Input
                     action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
                         ? jsonAction.expectedControlLayout
                         : null;
+                    action.continuous = jsonAction.continuous;
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -1050,6 +1171,7 @@ namespace UnityEngine.Experimental.Input
                         action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
                             ? jsonAction.expectedControlLayout
                             : null;
+                        action.continuous = jsonAction.continuous;
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.

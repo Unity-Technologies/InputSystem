@@ -2,10 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////REVIEW: switch to something that doesn't require the backing store to be an actual array?
 ////  (maybe switch m_Array to an InlinedArray and extend InlinedArray to allow having three configs:
 ////  1. firstValue only, 2. firstValue + additionalValues, 3. everything in additionalValues)
@@ -61,11 +57,22 @@ namespace UnityEngine.Experimental.Input.Utilities
         /// <returns>A new array containing a copy of the contents of the read-only array.</returns>
         public TValue[] ToArray()
         {
-            if (m_Length == 0)
-                return null;
             var result = new TValue[m_Length];
-            Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
+            if (m_Length > 0)
+                Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
             return result;
+        }
+
+        public int IndexOf(Predicate<TValue> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException("predicate");
+
+            for (var i = 0; i < m_Length; ++i)
+                if (predicate(m_Array[m_StartIndex + i]))
+                    return i;
+
+            return -1;
         }
 
         public IEnumerator<TValue> GetEnumerator()
@@ -76,6 +83,11 @@ namespace UnityEngine.Experimental.Input.Utilities
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
+        {
+            return new ReadOnlyArray<TValue>(array);
         }
 
         /// <summary>
@@ -161,6 +173,15 @@ namespace UnityEngine.Experimental.Input.Utilities
         {
             for (var i = 0; i < array.m_Length; ++i)
                 if (array.m_Array[array.m_StartIndex + i].CompareTo(value) == 0)
+                    return true;
+            return false;
+        }
+
+        public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            for (var i = 0; i < array.m_Length; ++i)
+                if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
                     return true;
             return false;
         }

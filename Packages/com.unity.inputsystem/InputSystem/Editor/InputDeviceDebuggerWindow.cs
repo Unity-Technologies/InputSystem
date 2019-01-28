@@ -7,6 +7,10 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add commands to event trace (also clickable)
+
+////TODO: add diff-to-previous-event ability to event window
+
 ////FIXME: doesn't survive domain reload correctly
 
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
@@ -22,6 +26,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: show default states of controls
 
+////TODO: provide ability to save and load event traces; also ability to record directly to a file
+////TODO: provide ability to scrub back and forth through history
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Shows status and activity of a single input device in a separate window.
@@ -34,8 +41,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static event Action<InputDevice> onToolbarGUI
         {
-            add { s_OnToolbarGUIActions.Append(value); }
-            remove { s_OnToolbarGUIActions.Remove(value); }
+            add => s_OnToolbarGUIActions.Append(value);
+            remove => s_OnToolbarGUIActions.Remove(value);
         }
 
         public static void CreateOrShowExisting(InputDevice device)
@@ -70,8 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 RemoveFromList();
 
-                if (m_EventTrace != null)
-                    m_EventTrace.Dispose();
+                m_EventTrace?.Dispose();
 
                 InputSystem.onDeviceChange -= OnDeviceChange;
             }
@@ -256,8 +262,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void RemoveFromList()
         {
-            if (s_OpenDebuggerWindows != null)
-                s_OpenDebuggerWindows.Remove(this);
+            s_OpenDebuggerWindows?.Remove(this);
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -274,8 +279,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 Repaint();
 
                 // If the state of the device changed, refresh control values in the control tree.
-                if (change == InputDeviceChange.StateChanged && m_ControlTree != null)
-                    m_ControlTree.RefreshControlValues();
+                if (change == InputDeviceChange.StateChanged)
+                    m_ControlTree?.RefreshControlValues();
             }
         }
 

@@ -24,6 +24,29 @@
 			"Button"
 			{
 				"fire"	"Action_gameplay_fire"
+				"jump"	"Action_gameplay_jump"
+				"menu"	"Action_gameplay_menu"
+				"steamEnterMenu"	"Action_gameplay_steamEnterMenu"
+			}
+		}
+		"menu"
+		{
+			"title"	"#Set_menu"
+			"StickPadGyro"
+			{
+				"navigate"
+				{
+					"title"	"#Action_menu_navigate"
+					"input_mode"	"absolute_mouse"
+				}
+			}
+			"AnalogTrigger"
+			{
+			}
+			"Button"
+			{
+				"click"	"Action_menu_click"
+				"steamExitMenu"	"Action_menu_steamExitMenu"
 			}
 		}
 	}
@@ -35,6 +58,13 @@
 			"Action_gameplay_move"	"move"
 			"Action_gameplay_look"	"look"
 			"Action_gameplay_fire"	"fire"
+			"Action_gameplay_jump"	"jump"
+			"Action_gameplay_menu"	"menu"
+			"Action_gameplay_steamEnterMenu"	"steamEnterMenu"
+			"Set_menu"	"menu"
+			"Action_menu_navigate"	"navigate"
+			"Action_menu_click"	"click"
+			"Action_menu_steamExitMenu"	"steamExitMenu"
 		}
 	}
 }

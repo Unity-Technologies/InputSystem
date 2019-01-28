@@ -5,9 +5,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
 
 ////TODO: support actions
 
@@ -520,14 +517,12 @@ namespace UnityEngine.Experimental.Input
                 try
                 {
                     device = receiver.m_LocalManager.AddDevice(data.layout,
-                        string.Format("Remote{0}::{1}", msg.participantId, data.name));
+                        $"Remote{msg.participantId}::{data.name}");
                 }
                 catch (Exception exception)
                 {
-                    Debug.Log(
-                        string.Format(
-                            "Could not create remote device '{0}' with layout '{1}' locally (exception: {2})",
-                            data.description, data.layout, exception));
+                    Debug.LogError(
+                        $"Could not create remote device '{data.description}' with layout '{data.layout}' locally (exception: {exception})");
                     return;
                 }
                 device.m_Description = data.description;

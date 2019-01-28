@@ -1,9 +1,12 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: expose extra pen buttons
+
+////TODO: make sure that 'inRange' is always true if not supported by the device
 
 ////TODO: expose whether pen actually has eraser and which barrel buttons it has
 
@@ -22,10 +25,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 36)]
     public struct PenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', 'E', 'N'); }
-        }
+        public static FourCC kFormat => new FourCC('P', 'E', 'N');
 
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
@@ -140,11 +140,6 @@ namespace UnityEngine.Experimental.Input
         /// Button control that indicates whether the pen is in range of the tablet surface or not.
         /// </summary>
         public ButtonControl inRange { get; private set; }
-
-        public bool isTouching
-        {
-            get { throw new NotImplementedException(); }
-        }
 
         /// <summary>
         /// The pen that was active or connected last or <c>null</c> if there is no pen.

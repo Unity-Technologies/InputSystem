@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Editor;
 #endif
 
+#pragma warning disable CS0649
 partial class CoreTests
 {
     [Test]
@@ -348,7 +349,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                        ""processors"" : ""stickDeadzone(min=0.1,max=0.9)""
                     }
                 ]
             }
@@ -360,9 +361,9 @@ partial class CoreTests
 
         // NOTE: Unfortunately, this currently relies on an internal method (TryGetProcessor).
 
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>(), Is.Not.Null);
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
-        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>(), Is.Not.Null);
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<StickDeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
     }
 
     private unsafe struct StateStructWithArrayOfControls
@@ -1103,9 +1104,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public byte byteAxis;
         [InputControl(layout = "Axis")] public short shortAxis;
-
         [InputControl(layout = "Axis")] public int intAxis;
-
         // No float as that is the default format for Axis anyway.
         [InputControl(layout = "Axis")] public double doubleAxis;
 
@@ -1301,7 +1300,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanSpecifyDisplayNameForControl()
+    public void Layouts_CanSpecifyLongAndShortDisplayNameForControl()
     {
         const string json = @"
             {
@@ -1311,7 +1310,8 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick"",
-                        ""displayName"" : ""Primary Stick""
+                        ""displayName"" : ""Primary Stick"",
+                        ""shortDisplayName"" : ""PS""
                     },
                     {
                         ""name"" : ""leftStick/x"",
@@ -1327,7 +1327,87 @@ partial class CoreTests
 
         Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
-        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Horizontal"));
+        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Primary Stick Horizontal"));
+        Assert.That(device.leftStick.shortDisplayName, Is.EqualTo("PS"));
+        Assert.That(device.leftStick.x.shortDisplayName, Is.Null);
+    }
+
+    class TestDeviceWithMinMaxValue : InputDevice
+    {
+        [InputControl(minValue = 0.1234f, maxValue = 0.5432f)]
+        public AxisControl control { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyMinAndMaxValuesForControlInOnAttribute()
+    {
+        InputSystem.RegisterLayout<TestDeviceWithMinMaxValue>();
+
+        var layout = InputSystem.TryLoadLayout("TestDeviceWithMinMaxValue");
+
+        Assert.That(layout["control"].minValue.isEmpty, Is.False);
+        Assert.That(layout["control"].maxValue.isEmpty, Is.False);
+        Assert.That(layout["control"].minValue.ToFloat(), Is.EqualTo(0.1234f));
+        Assert.That(layout["control"].maxValue.ToFloat(), Is.EqualTo(0.5432f));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyMinAndMaxValuesForControlInJson()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control"",
+                        ""layout"" : ""Axis"",
+                        ""minValue"" : ""-123"",
+                        ""maxValue"" : ""123""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var layout = InputSystem.TryLoadLayout("TestLayout");
+
+        Assert.That(layout["control"].minValue.isEmpty, Is.False);
+        Assert.That(layout["control"].maxValue.isEmpty, Is.False);
+        Assert.That(layout["control"].minValue.ToInt(), Is.EqualTo(-123));
+        Assert.That(layout["control"].maxValue.ToInt(), Is.EqualTo(123));
+    }
+
+    class BaseClassWithControl : InputDevice
+    {
+        public AxisControl controlFromBase { get; set; }
+    }
+
+    class DerivedClassModifyingControlFromBaseClass : BaseClassWithControl
+    {
+        // One kink is that InputControlAttribute can only go on fields and properties
+        // so we have to put it on some unrelated control.
+        [InputControl(name = "controlFromBase", format = "SHRT")]
+        public ButtonControl controlFromDerived { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanModifyControlDefinedInBaseClass()
+    {
+        InputSystem.RegisterLayout<BaseClassWithControl>();
+        InputSystem.RegisterLayout<DerivedClassModifyingControlFromBaseClass>();
+
+        var baseLayout = InputSystem.TryLoadLayout<BaseClassWithControl>();
+        var derivedLayout = InputSystem.TryLoadLayout<DerivedClassModifyingControlFromBaseClass>();
+
+        Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
+        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
+
+        // This is probably somewhat counterintuitive but if there's InputControlAttributes on a property or field,
+        // there won't be a control generated automatically from the field or property.
+        Assert.That(() => derivedLayout["controlFromDerived"], Throws.TypeOf<KeyNotFoundException>());
     }
 
     [Test]
@@ -1352,6 +1432,121 @@ partial class CoreTests
         var device = InputSystem.AddDevice("MyLayout");
 
         Assert.That(device["button"].noisy, Is.True);
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanMarkControlAsSynthetic()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button"",
+                        ""synthetic"" : true
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("MyLayout");
+
+        Assert.That(device["button"].synthetic, Is.True);
+    }
+
+    class DeviceWithAutoOffsetControl : InputDevice
+    {
+        [InputControl(offset = 4, sizeInBits = 32)]
+        public ButtonControl button1;
+
+        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        public ButtonControl button2 { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceControlsAutomatically()
+    {
+        var device = InputSystem.AddDevice<DeviceWithAutoOffsetControl>();
+
+        Assert.That(device["button2"].stateBlock.byteOffset, Is.EqualTo(8));
+    }
+
+    private class BaseDeviceFixedFixedOffsetControl : InputDevice
+    {
+        [InputControl(offset = 4, format = "FLT")]
+        public ButtonControl control;
+
+        [InputControl(offset = 8)]
+        public AxisControl otherControl;
+    }
+
+    private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
+    {
+        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        public new ButtonControl control;
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceControlsAutomatically_EvenIfControlIsInheritedWithFixedOffset()
+    {
+        InputSystem.RegisterLayout<BaseDeviceFixedFixedOffsetControl>();
+        InputSystem.RegisterLayout<DerivedDeviceWithAutomaticOffsetControl>();
+
+        var device = InputSystem.AddDevice<DerivedDeviceWithAutomaticOffsetControl>();
+
+        // Should have gotten placed *after* `otherControl`.
+        Assert.That(device.stateBlock.alignedSizeInBytes, Is.EqualTo(16));
+        Assert.That(device["control"].stateBlock.format, Is.EqualTo(new FourCC("FLT")));
+        Assert.That(device["control"].stateBlock.byteOffset, Is.EqualTo(12));
+        Assert.That(device["control"].stateBlock.sizeInBits, Is.EqualTo(32));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanPlaceBitfieldControlsAutomatically()
+    {
+        const string layout = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"" },
+                    { ""name"" : ""fixed"", ""layout"" : ""Axis"", ""offset"" : 4 },
+                    { ""name"" : ""third"", ""layout"" : ""Button"" },
+                    { ""name"" : ""fourth"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout);
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["fixed"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["fixed"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(device["fixed"].stateBlock.sizeInBits, Is.EqualTo(32));
+
+        // Automatically placed controls are slotted in after the last fixed offset control.
+
+        Assert.That(device["first"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["first"].stateBlock.bitOffset, Is.Zero);
+        Assert.That(device["first"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["second"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["second"].stateBlock.bitOffset, Is.EqualTo(1));
+        Assert.That(device["second"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["third"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["third"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["third"].stateBlock.sizeInBits, Is.EqualTo(1));
+
+        Assert.That(device["fourth"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["fourth"].stateBlock.bitOffset, Is.EqualTo(3));
+        Assert.That(device["fourth"].stateBlock.sizeInBits, Is.EqualTo(1));
     }
 
     [Test]
@@ -1609,23 +1804,6 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    [Test]
-    [Category("Layouts")]
-    [Ignore("TODO")]
-    public void TODO_Layouts_CanQueryResourceNameFromControl()
-    {
-        var json = @"
-            {
-                ""name"" : ""MyLayout"",
-                ""controls"" : [ { ""name"" : ""MyControl"",  } ]
-            }
-        ";
-
-        InputSystem.RegisterLayout(json);
-
-        Assert.Fail();
-    }
-
     private struct StateWithTwoLayoutVariants : IInputStateTypeInfo
     {
         [InputControl(name = "button", layout = "Button", variants = "A")]
@@ -1749,7 +1927,7 @@ partial class CoreTests
                     { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
                     { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
                     { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" },
-                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A;B"" },
+                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A,B"" },
                     { ""name"" : ""ButtonNoVariant"", ""layout"" : ""Button"" }
                 ]
             }
@@ -1757,9 +1935,9 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
+        var device = InputSystem.AddDevice("TestLayout", variants: "A,B");
 
-        Assert.That(device.variants, Is.EqualTo("A;B"));
+        Assert.That(device.variants, Is.EqualTo("A,B"));
         Assert.That(device.allControls, Has.Count.EqualTo(4));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonB"));
@@ -1851,7 +2029,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick/x"",
-                        ""processors"" : ""invert,deadzone""
+                        ""processors"" : ""invert,stickDeadzone""
                     }
                 ]
             }
@@ -1864,7 +2042,7 @@ partial class CoreTests
 
         Assert.That(leftStickX.processors, Has.Length.EqualTo(2));
         Assert.That(leftStickX.processors[0], Is.TypeOf<InvertProcessor>());
-        Assert.That(leftStickX.processors[1], Is.TypeOf<DeadzoneProcessor>());
+        Assert.That(leftStickX.processors[1], Is.TypeOf<StickDeadzoneProcessor>());
     }
 
     [Test]
@@ -1884,6 +2062,7 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
+
         public FourCC GetFormat()
         {
             return new FourCC("BASE");

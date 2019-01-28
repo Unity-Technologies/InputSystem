@@ -1,5 +1,7 @@
 using System;
 
+////TODO: goal should be to end up with this being internal
+
 ////TODO: instead of using string.Intern, put them in a custom table and allow passing them around as indices
 ////      (this will probably also be useful for jobs)
 ////      when this is implemented, also allow interning directly from Substrings
@@ -15,10 +17,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         private readonly string m_StringOriginalCase;
         private readonly string m_StringLowerCase;
 
-        public int length
-        {
-            get { return m_StringLowerCase != null ? m_StringLowerCase.Length : 0; }
-        }
+        public int length => m_StringLowerCase != null ? m_StringLowerCase.Length : 0;
 
         public InternedString(string text)
         {

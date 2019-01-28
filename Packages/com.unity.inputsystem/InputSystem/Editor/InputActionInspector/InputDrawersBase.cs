@@ -24,13 +24,13 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected InspectorTree m_Tree;
-        private CopyPasteUtility m_CopyPasteUtility;
+        private InputActionCopyPasteUtility m_CopyPasteUtility;
 
         protected GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         protected GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
         protected GUIContent m_CompositeGUI = EditorGUIUtility.TrTextContent("Composite");
-        private GUIContent m_PlusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
-        private GUIContent m_MinusIconContext = EditorGUIUtility.IconContent("Toolbar Minus");
+        private GUIContent m_PlusIconContent = EditorGUIUtility.IconContent("Toolbar Plus");
+        private GUIContent m_MinusIconContent = EditorGUIUtility.IconContent("Toolbar Minus");
 
         protected InputDrawersBase()
         {
@@ -77,13 +77,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            if (GUI.Button(labelRect, m_PlusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, m_PlusIconContent, GUIStyle.none))
             {
                 OpenAddMenu(property);
             }
 
             labelRect.x += labelRect.width;
-            if (GUI.Button(labelRect, m_MinusIconContext, GUIStyle.none))
+            if (GUI.Button(labelRect, m_MinusIconContent, GUIStyle.none))
             {
                 EditorWindow.focusedWindow.SendEvent(EditorGUIUtility.CommandEvent("Delete"));
             }
@@ -100,13 +100,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (Event.current.type == EventType.ValidateCommand)
                 {
-                    if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
-                    {
+                    if (InputActionCopyPasteUtility.IsValidCommand(Event.current.commandName))
                         Event.current.Use();
-                    }
                 }
-
-                if (Event.current.type == EventType.ExecuteCommand)
+                else if (Event.current.type == EventType.ExecuteCommand)
                 {
                     m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
                 }
@@ -121,7 +118,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_Tree = CreateTree(property);
                 m_Tree.OnContextClick = OnContextClick;
-                m_CopyPasteUtility = new CopyPasteUtility(m_Tree);
+                m_CopyPasteUtility = new InputActionCopyPasteUtility(m_Tree);
             }
         }
 
