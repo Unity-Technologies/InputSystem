@@ -5850,4 +5850,45 @@ partial class CoreTests
         Assert.That(reference.asset.actionMaps[0].bindings, Has.Count.EqualTo(2));
         Assert.That(reference.asset.actionMaps[1].bindings, Has.Count.EqualTo(1));
     }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionFiresWhileKeyIsReleasedDuringDiable()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+           action.AddCompositeBinding("Dpad")
+                .With("Up", "/<Keyboard>/w");
+
+        action.Enable();
+
+        Vector2? value = null;
+            action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        // Press the Key
+        Assert.That(keyboard.wKey.isPressed, Is.False);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+        Assert.That(keyboard.wKey.isPressed, Is.True);
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        action.Disable();
+
+        // Release the Key
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+        Assert.That(keyboard.wKey.isPressed, Is.False);
+
+        action.Enable();
+
+        // Press the Key Again
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+        Assert.That(keyboard.wKey.isPressed, Is.True);
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+    }
 }
