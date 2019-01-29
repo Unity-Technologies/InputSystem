@@ -46,9 +46,15 @@ The following terms and concepts are used through the input action system:
 |Action Map||
 |Action Asset||
 
-## Configuring Actions
+## Setting Up Actions
 
 There are three different workflows for setting up actions for your game.
+
+### Asset Workflow
+
+#### Using `UnityEvents`
+
+#### Using Interfaces
 
 ### Component Workflow
 
@@ -64,13 +70,6 @@ public MyBehaviour : MonoBehaviour
     public InputAction moveAction;
 }
 ```
-
-### Asset Workflow
-
-#### Using `UnityEvents`
-
-#### Using Interfaces
-
 ### Scripting Workflow
 
 Lastly, it is possible to create and set up input actions entirely in script.

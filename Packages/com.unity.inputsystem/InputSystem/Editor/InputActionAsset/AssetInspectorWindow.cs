@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -97,9 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ActionAssetManager == null)
-            {
                 return;
-            }
 
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
@@ -296,11 +293,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal void Apply()
         {
-            m_ActionAssetManager.SetAssetDirty();
-            titleContent = m_DirtyTitle;
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+                m_ActionAssetManager.SaveChangesToAsset();
+            else
+            {
+                m_ActionAssetManager.SetAssetDirty();
+                titleContent = m_DirtyTitle;
+            }
+
             m_ActionAssetManager.ApplyChanges();
             m_ActionMapsTree.Reload();
             m_InputActionWindowToolbar.RebuildData();
+
             var selectedActionMap = m_ActionMapsTree.GetSelectedActionMap();
             if (selectedActionMap != null)
             {
@@ -310,6 +314,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ActionsTree.actionMapProperty = null;
             }
+
             m_ActionsTree.Reload();
         }
 
@@ -326,12 +331,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.BeginVertical();
-            // Toolbar.
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_InputActionWindowToolbar.OnGUI();
-            GUILayout.Space(5);
-            EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
 
             var isPickingInteractively = m_BindingPropertyView != null && m_BindingPropertyView.isInteractivelyPicking;
