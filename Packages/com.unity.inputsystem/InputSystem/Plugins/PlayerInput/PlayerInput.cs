@@ -230,6 +230,18 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         }
 
         /// <summary>
+        /// Name or ID (in the form of "{...}") of the action map to enable by default.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        public string defaultActionMap
+        {
+            get => m_DefaultActionMap;
+            set => m_DefaultActionMap = value;
+        }
+
+        /// <summary>
         /// List of events invoked in response to actions being triggered.
         /// </summary>
         /// <remarks>
@@ -348,20 +360,54 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
         public void ActivateInput()
         {
-            // Enable first action map in asset, if present.
-            if (m_Actions != null && m_Actions.actionMaps.Count > 0)
-                m_Actions.actionMaps[0].Enable();
+            // Enable default action map, if set.
+            if (m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
+            {
+                var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
+                if (actionMap != null)
+                    actionMap.Enable();
+                else
+                    Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
+            }
 
             m_InputActive = true;
         }
 
         public void PassivateInput()
         {
-            // Disable first action map in asset, if present.
-            if (m_Actions != null && m_Actions.actionMaps.Count > 0)
-                m_Actions.actionMaps[0].Disable();
+            // Disable all enabled action maps.
+            if (m_Actions != null)
+                m_Actions.Disable();
 
             m_InputActive = false;
+        }
+
+        public void SwitchActions(string mapNameOrId)
+        {
+            // Must be enabled.
+            if (!m_Enabled)
+            {
+                Debug.LogError($"Cannot switch to actions '{mapNameOrId}'; input is not enabled", this);
+                return;
+            }
+
+            // Must have actions.
+            if (m_Actions == null)
+            {
+                Debug.LogError($"Cannot switch to actions '{mapNameOrId}'; no actions set on PlayerInput", this);
+                return;
+            }
+
+            // Must have map.
+            var actionMap = m_Actions.TryGetActionMap(mapNameOrId);
+            if (actionMap == null)
+            {
+                Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_Actions}'", this);
+                return;
+            }
+
+            m_Actions.Disable();
+            actionMap.Enable();
         }
 
         public static PlayerInput GetPlayerByIndex(int playerIndex)
@@ -475,6 +521,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal ActionEvent[] m_ActionEvents;
         [SerializeField] internal bool m_AutoSwitchControlScheme;
         [SerializeField] internal string m_DefaultControlScheme;
+        [SerializeField] internal string m_DefaultActionMap;
         [SerializeField] internal int m_SplitScreenIndex = -1;
         [SerializeField] internal Camera m_Camera;
 

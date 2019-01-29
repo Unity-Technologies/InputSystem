@@ -2988,6 +2988,17 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanLookUpMapInAssetById()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
+        Assert.That(asset.TryGetActionMap($"{{{map.id}}}"), Is.SameAs(map));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanLookUpActionInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();

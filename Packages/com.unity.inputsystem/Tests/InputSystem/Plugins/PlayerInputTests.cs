@@ -164,19 +164,6 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_AutomaticallyEnablesFirstActionMapInAsset()
-    {
-        var go = new GameObject();
-        var playerInput = go.AddComponent<PlayerInput>();
-
-        playerInput.actions = InputActionAsset.FromJson(kActions);
-
-        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
-        Assert.That(playerInput.actions.actionMaps[1].enabled, Is.False);
-    }
-
-    [Test]
-    [Category("PlayerInput")]
     public void PlayerInput_AssigningNewActionsToPlayer_DisablesExistingActions()
     {
         var go = new GameObject();
@@ -185,6 +172,7 @@ internal class PlayerInputTests : InputTestFixture
         var actions1 = InputActionAsset.FromJson(kActions);
         var actions2 = InputActionAsset.FromJson(kActions);
 
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = actions1;
 
         Assert.That(actions1.actionMaps[0].enabled, Is.True);
@@ -303,6 +291,56 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
     }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSetDefaultActionMap()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "Other";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
+        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSwitchActionsWithMessage()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.True);
+        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.False);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 0.234f)}));
+
+        listener.messages.Clear();
+
+        go.SendMessage("SwitchActions", "other");
+
+        // Need update to see initial state check.
+        InputSystem.Update();
+
+        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
+        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
+    }
+
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_PlayerIndex_IsAssignedAutomatically()
@@ -352,6 +390,7 @@ internal class PlayerInputTests : InputTestFixture
         var playerInput = go.AddComponent<PlayerInput>();
 
         playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
         Press(gamepad.buttonSouth);
@@ -378,6 +417,7 @@ internal class PlayerInputTests : InputTestFixture
         var playerInput = go.AddComponent<PlayerInput>();
 
         playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
@@ -409,6 +449,7 @@ internal class PlayerInputTests : InputTestFixture
         var listener = go.AddComponent<MessageListener>();
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
         listener.SetUpEvents(playerInput);
 
@@ -873,6 +914,7 @@ internal class PlayerInputTests : InputTestFixture
                     ],
                     ""bindings"" : [
                         { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+                        { ""path"" : ""<Gamepad>/leftTrigger"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""<Gamepad>/leftStick"", ""action"" : ""move"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""<Gamepad>/rightStick"", ""action"" : ""look"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""dpad"", ""action"" : ""move"", ""groups"" : ""Gamepad"", ""isComposite"" : true },
@@ -895,10 +937,10 @@ internal class PlayerInputTests : InputTestFixture
                 {
                     ""name"" : ""other"",
                     ""actions"" : [
-                        { ""name"" : ""action"" }
+                        { ""name"" : ""otherAction"" }
                     ],
                     ""bindings"" : [
-                        { ""path"" : ""<Gamepad>/leftTrigger"", ""action"" : ""action"", ""groups"" : ""Gamepad"" }
+                        { ""path"" : ""<Gamepad>/leftTrigger"", ""action"" : ""otherAction"", ""groups"" : ""Gamepad"" }
                     ]
                 }
             ],
