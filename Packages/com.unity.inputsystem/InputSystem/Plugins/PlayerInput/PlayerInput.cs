@@ -520,7 +520,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
         [SerializeField] internal ActionEvent[] m_ActionEvents;
         [SerializeField] internal bool m_AutoSwitchControlScheme;
-        [SerializeField] internal string m_DefaultControlScheme;
+        [SerializeField] internal string m_DefaultControlScheme;////REVIEW: should we have IDs for these so we can rename safely?
         [SerializeField] internal string m_DefaultActionMap;
         [SerializeField] internal int m_SplitScreenIndex = -1;
         [SerializeField] internal Camera m_Camera;

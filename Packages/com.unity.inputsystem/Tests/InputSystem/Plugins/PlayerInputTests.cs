@@ -482,16 +482,35 @@ internal class PlayerInputTests : InputTestFixture
             Is.EquivalentTo(new[] {new Message(PlayerInput.DeviceLostMessage, playerInput)}));
     }
 
+    ////TODO: should also make sure that we're only getting notifications of the specified type and not other types as well
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveJoinMessagesThroughPlayerManager()
+    [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerManagerEventListener))]
+    [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerManagerCSharpEventListener))]
+    public void PlayerInput_CanReceiveNotificationWhenPlayerJoinsOrLeaves(PlayerNotifications notificationBehavior, Type listenerType)
     {
         var go1 = new GameObject();
         var playerInput1 = go1.AddComponent<PlayerInput>();
 
         var manager = new GameObject();
-        var listener = manager.AddComponent<MessageListener>();
-        manager.AddComponent<PlayerInputManager>();
+        manager.SetActive(false); // Delay OnEnable() until we have all components.
+        IListener listener;
+        if (notificationBehavior == PlayerNotifications.BroadcastMessages)
+        {
+            // Put listener on child object to make sure we get a broadcast.
+            var child = new GameObject();
+            child.transform.parent = manager.transform;
+            listener = (IListener)child.AddComponent(listenerType);
+        }
+        else
+        {
+            listener = (IListener)manager.AddComponent(listenerType);
+        }
+        var managerComponent = manager.AddComponent<PlayerInputManager>();
+        managerComponent.notificationBehavior = notificationBehavior;
+        manager.SetActive(true);
 
         // Should get join message for player who had already joined.
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnPlayerJoined", playerInput1)}));
@@ -510,6 +529,12 @@ internal class PlayerInputTests : InputTestFixture
                 new Message("OnPlayerJoined", playerInput2),
                 new Message("OnPlayerJoined", playerInput3)
             }));
+
+        listener.messages.Clear();
+
+        Object.DestroyImmediate(go1);
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnPlayerLeft", playerInput1)}));
     }
 
     [Test]
@@ -1003,9 +1028,14 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
-    private class MessageListener : MonoBehaviour
+    private interface IListener
     {
-        public List<Message> messages = new List<Message>();
+        List<Message> messages { get; }
+    }
+
+    private class MessageListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
 
         public void SetUpEvents(PlayerInput player)
         {
@@ -1063,6 +1093,12 @@ internal class PlayerInputTests : InputTestFixture
         }
 
         // ReSharper disable once UnusedMember.Local
+        public void OnOtherAction(InputValue value)
+        {
+            messages.Add(new Message { name = "OnOtherAction", value = value.Get<float>() });
+        }
+
+        // ReSharper disable once UnusedMember.Local
         public void OnDeviceLost(PlayerInput player)
         {
             messages.Add(new Message { name = "OnDeviceLost", value = player});
@@ -1087,9 +1123,9 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
-    private class EventListener : MonoBehaviour
+    private class PlayerInputEventListener : MonoBehaviour, IListener
     {
-        public List<Message> messages = new List<Message>();
+        public List<Message> messages { get; } = new List<Message>();
 
         public void OnEnable()
         {
@@ -1110,6 +1146,54 @@ internal class PlayerInputTests : InputTestFixture
         public void OnDeviceLost()
         {
             messages.Add(new Message {name = "OnDeviceLost"});
+        }
+    }
+
+    private class PlayerManagerEventListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
+
+        public void OnEnable()
+        {
+            var manager = GetComponent<PlayerInputManager>();
+            Debug.Assert(manager != null, "Must have PlayerInputManager component");
+
+            manager.playerJoinedEvent.AddListener(OnPlayerJoined);
+            manager.playerLeftEvent.AddListener(OnPlayerLeft);
+        }
+
+        public void OnPlayerJoined(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerJoined", player));
+        }
+
+        public void OnPlayerLeft(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerLeft", player));
+        }
+    }
+
+    private class PlayerManagerCSharpEventListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
+
+        public void OnEnable()
+        {
+            var manager = GetComponent<PlayerInputManager>();
+            Debug.Assert(manager != null, "Must have PlayerInputManager component");
+
+            manager.onPlayerJoined += OnPlayerJoined;
+            manager.onPlayerLeft += OnPlayerLeft;
+        }
+
+        public void OnPlayerJoined(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerJoined", player));
+        }
+
+        public void OnPlayerLeft(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerLeft", player));
         }
     }
 }
