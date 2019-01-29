@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Plugins.UI;
+using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
@@ -25,17 +26,24 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         public void OnEnable()
         {
             InputActionImporter.onImport += Refresh;
+            InputUser.onChange += OnUserChange;
         }
 
-        public void OnDisable()
+        public void OnDestroy()
         {
             InputActionImporter.onImport -= Refresh;
+            InputUser.onChange -= OnUserChange;
         }
 
         private void Refresh()
         {
             ////FIXME: doesn't seem like we're picking up the results of the latest import
             m_ActionAssetInitialized = false;
+            Repaint();
+        }
+
+        private void OnUserChange(InputUser user, InputUserChange change, InputDevice device)
+        {
             Repaint();
         }
 
@@ -159,6 +167,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
             if (EditorGUI.EndChangeCheck())
                 serializedObject.ApplyModifiedProperties();
+
+            // Debug UI.
+            if (EditorApplication.isPlaying)
+                DoDebugUI();
         }
 
         private void DoHelpCreateAssetUI()
@@ -264,6 +276,28 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 InputDebuggerWindow.CreateOrShow();
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void DoDebugUI()
+        {
+            var playerInput = (PlayerInput)target;
+
+            if (!playerInput.user.valid)
+                return;
+
+            ////TODO: show actions when they happen
+
+            var user = playerInput.user.index.ToString();
+            var controlScheme = playerInput.user.controlScheme?.name;
+            var devices = string.Join(", ", playerInput.user.pairedDevices);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField(m_DebugText, EditorStyles.boldLabel);
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.LabelField("User", user);
+            EditorGUILayout.LabelField("Control Scheme", controlScheme);
+            EditorGUILayout.LabelField("Devices", devices);
+            EditorGUI.EndDisabledGroup();
         }
 
         private void OnNotificationBehaviorChange()
@@ -486,6 +520,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         [NonSerialized] private readonly GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
         [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
         [NonSerialized] private readonly GUIContent m_DefaultActionMapText = EditorGUIUtility.TrTextContent("Default Action Map");
+        [NonSerialized] private readonly GUIContent m_DebugText = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
         [NonSerialized] private GUIContent m_SendMessagesHelpText;
