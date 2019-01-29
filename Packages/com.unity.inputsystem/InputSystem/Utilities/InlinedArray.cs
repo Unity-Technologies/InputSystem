@@ -261,7 +261,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void RemoveAt(int index)
         {
             if (index < 0 || index >= length)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
@@ -320,18 +320,18 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void RemoveAtByMovingTailWithCapacity(int index)
         {
             if (index < 0 || index >= length)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
-                if (additionalValues != null)
+                if (length > 1)
                 {
                     firstValue = additionalValues[length - 1];
-                    additionalValues[length - 1] = default(TValue);
+                    additionalValues[length - 1] = default;
                 }
                 else
                 {
-                    firstValue = default(TValue);
+                    firstValue = default;
                 }
             }
             else

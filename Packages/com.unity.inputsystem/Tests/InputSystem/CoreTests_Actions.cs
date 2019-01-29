@@ -2063,7 +2063,7 @@ partial class CoreTests
     }
 
     [Test]
-    [Category("Actions_CanAddScaleProcessor")]
+    [Category("Actions")]
     public void Actions_CanAddScaleProcessor()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2464,7 +2464,7 @@ partial class CoreTests
         }
     }
 
-    // Triggers (any analog axis really) may jitted. Make sure that we can perform a hold
+    // Triggers (any analog axis really) may jitter. Make sure that we can perform a hold
     // even if the control wiggles around.
     [Test]
     [Category("Actions")]
@@ -2500,7 +2500,6 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.456f);
 
             actions = trace.ToArray();
-            Debug.Log(string.Join(",\n", actions));//DBG
             Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[0].time, Is.EqualTo(0.6).Within(0.00001));

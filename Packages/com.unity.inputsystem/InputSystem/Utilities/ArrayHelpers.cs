@@ -704,12 +704,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static void EraseSliceWithCapacity<TValue>(ref TValue[] array, ref int length, int index, int count)
         {
+            // Move elements down.
             if (count < length)
-            {
-                Array.Copy(array, index + count, array, index, length - index - count);
-                for (var i = 0; i < count; ++i)
-                    array[length - i - 1] = default(TValue);
-            }
+                Array.Copy(array, index + count, array, index, count);
+
+            // Erase now vacant slots.
+            for (var i = 0; i < count; ++i)
+                array[length - i - 1] = default;
 
             length -= count;
         }

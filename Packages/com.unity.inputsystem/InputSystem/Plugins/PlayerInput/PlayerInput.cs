@@ -340,6 +340,12 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
+        public static bool isSinglePlayer
+        {
+            get => s_AllActivePlayersCount <= 1 &&
+            (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
+        }
+
         public void ActivateInput()
         {
             // Enable first action map in asset, if present.
@@ -486,6 +492,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         internal static int s_AllActivePlayersCount;
         internal static PlayerInput[] s_AllActivePlayers;
         internal static Action<InputUser, InputUserChange, InputDevice> s_UserChangeDelegate;
+        internal static Action<InputControl> s_UnpairedDeviceUsedDelegate;
+        internal static bool s_OnUnpairedDeviceHooked;
 
         // The following information is used when the next PlayerInput component is enabled.
 
@@ -597,6 +605,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             }
         }
 
+        ////REVIEW: should this take the action *type* into account? e.g. have different behavior when the type is "Button"?
         private void OnActionTriggered(InputAction.CallbackContext context)
         {
             if (!m_InputActive)
@@ -859,6 +868,23 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 InputUser.onChange += s_UserChangeDelegate;
             }
 
+            // In single player, set up for automatic control scheme switching.
+            // Otherwise make sure it's disabled.
+            if (isSinglePlayer && !s_OnUnpairedDeviceHooked)
+            {
+                if (s_UnpairedDeviceUsedDelegate == null)
+                    s_UnpairedDeviceUsedDelegate = OnUnpairedDeviceUsed;
+                InputUser.onUnpairedDeviceUsed += s_UnpairedDeviceUsedDelegate;
+                ++InputUser.listenForUnpairedDeviceActivity;
+                s_OnUnpairedDeviceHooked = true;
+            }
+            else if (s_OnUnpairedDeviceHooked)
+            {
+                InputUser.onUnpairedDeviceUsed -= s_UnpairedDeviceUsedDelegate;
+                --InputUser.listenForUnpairedDeviceActivity;
+                s_OnUnpairedDeviceHooked = false;
+            }
+
             // Trigger join event.
             PlayerInputManager.instance?.NotifyPlayerJoined(this);
         }
@@ -872,9 +898,15 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             if (index != -1)
                 ArrayHelpers.EraseAtWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, index);
 
-            // Unhook from user change notification if we're the last player.
+            // Unhook from change notifications if we're the last player.
             if (s_AllActivePlayersCount == 0 && s_UserChangeDelegate != null)
                 InputUser.onChange -= s_UserChangeDelegate;
+            if (s_AllActivePlayersCount == 0 && s_OnUnpairedDeviceHooked)
+            {
+                InputUser.onUnpairedDeviceUsed -= s_UnpairedDeviceUsedDelegate;
+                --InputUser.listenForUnpairedDeviceActivity;
+                s_OnUnpairedDeviceHooked = false;
+            }
 
             // Trigger leave event.
             PlayerInputManager.instance?.NotifyPlayerLeft(this);
@@ -922,6 +954,30 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                         }
                     }
                     break;
+            }
+        }
+
+        private static void OnUnpairedDeviceUsed(InputControl control)
+        {
+            // We only support automatic control scheme switching in single player mode.
+            // OnEnable() should automatically unhook us.
+            if (!isSinglePlayer)
+                return;
+
+            var player = all[0];
+            if (player.m_Actions == null)
+                return;
+
+            // Go through all control schemes and see if there is one usable with the device.
+            // If so, switch to it.
+            var controlScheme = InputControlScheme.FindControlSchemeForControl(control, player.m_Actions.controlSchemes);
+            if (controlScheme != null)
+            {
+                // First remove the currently paired devices, then pair the device that was used,
+                // and finally switch to the new control scheme and grab whatever other devices we're missing.
+                player.user.UnpairDevices();
+                InputUser.PerformPairingWithDevice(control.device, user: player.user);
+                player.user.ActivateControlScheme(controlScheme.Value).AndPairRemainingDevices();
             }
         }
 

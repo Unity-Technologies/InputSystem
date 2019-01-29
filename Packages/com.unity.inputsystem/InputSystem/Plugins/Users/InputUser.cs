@@ -327,10 +327,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// </remarks>
         /// <seealso cref="PerformPairingWithDevice"/>
         /// <seealso cref="UnpairDevicesAndRemoveUser"/>
-        public static ReadOnlyArray<InputUser> all
-        {
-            get { return new ReadOnlyArray<InputUser>(s_AllUsers, 0, s_AllUserCount); }
-        }
+        public static ReadOnlyArray<InputUser> all => new ReadOnlyArray<InputUser>(s_AllUsers, 0, s_AllUserCount);
 
         /// <summary>
         /// Event that is triggered when the <see cref="InputUser">user</see> setup in the system
@@ -346,15 +343,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             add
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 s_OnChange.AppendWithCapacity(value);
             }
             remove
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
-                ////FIXME: probably don't want to move tail
-                s_OnChange.RemoveByMovingTailWithCapacity(value);
+                    throw new ArgumentNullException(nameof(value));
+                var index = s_OnChange.IndexOf(value);
+                if (index != -1)
+                    s_OnChange.RemoveAtWithCapacity(index);
             }
         }
 
@@ -417,17 +415,18 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             add
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 s_OnUnpairedDeviceUsed.AppendWithCapacity(value);
                 HookIntoDeviceChange();
             }
             remove
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
-                ////FIXME: probably don't want to move tail
-                s_OnUnpairedDeviceUsed.RemoveByMovingTailWithCapacity(value);
-                if (s_OnUnpairedDeviceUsed.length == 0 && !s_ListenForUnpairedDeviceActivity)
+                    throw new ArgumentNullException(nameof(value));
+                var index = s_OnUnpairedDeviceUsed.IndexOf(value);
+                if (index != -1)
+                    s_OnUnpairedDeviceUsed.RemoveAtWithCapacity(index);
+                if (s_OnUnpairedDeviceUsed.length == 0 && s_ListenForUnpairedDeviceActivity == 0)
                     UnhookFromDeviceChange();
             }
         }
@@ -442,16 +441,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// Note that enabling this has a non-zero cost. Whenever the state changes of a device that is not currently paired
         /// to a user, the system has to spend time figuring out whether there was a meaningful change or whether it's just
         /// noise on the device.
+        ///
+        /// This is an integer rather than a bool to allow multiple systems to concurrently use to listen for unpaired
+        /// device activity without treading on each other when enabling/disabling the code path.
         /// </remarks>
         /// <seealso cref="onUnpairedDeviceUsed"/>
         /// <seealso cref="pairedDevices"/>
         /// <seealso cref="PerformPairingWithDevice"/>
-        public static bool listenForUnpairedDeviceActivity
+        public static int listenForUnpairedDeviceActivity
         {
             get => s_ListenForUnpairedDeviceActivity;
             set
             {
-                if (value)
+                if (value > 0)
                 {
                     HookIntoDeviceChange();
                 }
@@ -460,6 +462,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     UnhookFromDeviceChange();
                 }
                 s_ListenForUnpairedDeviceActivity = value;
+                if (s_ListenForUnpairedDeviceActivity < 0)
+                    s_ListenForUnpairedDeviceActivity = 0;
             }
         }
 
@@ -496,7 +500,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public void AssociateActionsWithUser(InputActionAssetReference assetReference)
         {
             if (assetReference == null)
-                throw new ArgumentNullException("assetReference");
+                throw new ArgumentNullException(nameof(assetReference));
 
             AssociateActionsWithUser(assetReference.asset);
         }
@@ -512,9 +516,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 // Need actions to be available to be able to activate control schemes
                 // by name only.
                 if (s_AllUserData[userIndex].actions == null)
-                    throw new InvalidOperationException(string.Format(
-                        "Cannot set control scheme '{0}' by name on user #{1} as not actions have been associated with the user yet (AssociateActionsWithUser)",
-                        schemeName, userIndex));
+                    throw new InvalidOperationException(
+                        $"Cannot set control scheme '{schemeName}' by name on user #{userIndex} as not actions have been associated with the user yet (AssociateActionsWithUser)");
 
                 var controlSchemes = s_AllUserData[userIndex].actions.controlSchemes;
                 for (var i = 0; i < controlSchemes.Count; ++i)
@@ -526,9 +529,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     }
 
                 // Throw if we can't find it.
-                if (scheme == default(InputControlScheme))
-                    throw new ArgumentException(string.Format("Cannot find control scheme '{0}' in actions '{1}'",
-                        schemeName, s_AllUserData[userIndex].actions));
+                if (scheme == default)
+                    throw new ArgumentException(
+                        $"Cannot find control scheme '{schemeName}' in actions '{s_AllUserData[userIndex].actions}'");
             }
 
             return ActivateControlScheme(scheme);
@@ -537,7 +540,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public ControlSchemeChangeSyntax ActivateControlScheme(InputControlScheme scheme)
         {
             var userIndex = index; // Throws if user is invalid.
-            var isEmpty = scheme == default(InputControlScheme);
+            var isEmpty = scheme == default;
 
             if (s_AllUserData[userIndex].controlScheme != scheme || (isEmpty && s_AllUserData[userIndex].controlScheme != null))
             {
@@ -605,7 +608,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public void UnpairDevice(InputDevice device)
         {
             if (device == null)
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
 
             var userIndex = index; // Throws if user is invalid.
 
@@ -758,7 +761,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public static InputUser? FindUserPairedToDevice(InputDevice device)
         {
             if (device == null)
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
 
             var userIndex = TryFindUserIndex(device);
             if (userIndex == -1)
@@ -770,7 +773,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         public static InputUser? FindUserByAccount(InputUserAccountHandle platformUserAccountHandle)
         {
             if (platformUserAccountHandle == default(InputUserAccountHandle))
-                throw new ArgumentException("Empty platform user account handle", "platformUserAccountHandle");
+                throw new ArgumentException("Empty platform user account handle", nameof(platformUserAccountHandle));
 
             var userIndex = TryFindUserIndex(platformUserAccountHandle);
             if (userIndex == -1)
@@ -887,9 +890,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             InputUserPairingOptions options = InputUserPairingOptions.None)
         {
             if (device == null)
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
             if (user != default(InputUser) && !user.valid)
-                throw new ArgumentException("Invalid user", "user");
+                throw new ArgumentException("Invalid user", nameof(user));
 
             // Create new user, if needed.
             int userIndex;
@@ -1069,7 +1072,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             ArrayHelpers.EraseAtWithCapacity(ref s_AllUserData, ref s_AllUserCount, userIndex);
 
             // Remove our hook if we no longer need it.
-            if (s_AllUserCount == 0 && !s_ListenForUnpairedDeviceActivity)
+            if (s_AllUserCount == 0 && s_ListenForUnpairedDeviceActivity == 0)
                 UnhookFromDeviceChange();
         }
 
@@ -1368,13 +1371,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount);
 
-            InputUserAccountHandle? platformUserAccountHandle;
-            string platformUserAccountName;
-            string platformUserAccountId;
-
             // Fetch account details from backend.
-            var queryResult = QueryPairedPlatformUserAccount(device, out platformUserAccountHandle,
-                out platformUserAccountName, out platformUserAccountId);
+            var queryResult = QueryPairedPlatformUserAccount(device, out var platformUserAccountHandle,
+                out var platformUserAccountName, out var platformUserAccountId);
 
             // Nothing much to do if not supported by device.
             if ((queryResult & QueryPairedUserAccountCommand.Result.NotSupported) != 0)
@@ -1603,7 +1602,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 case InputDeviceChange.StateChanged:
                 {
                     // Ignore if we're not listening that kind of activity ATM.
-                    if (!s_ListenForUnpairedDeviceActivity)
+                    if (s_ListenForUnpairedDeviceActivity == 0)
                         return;
 
                     // See if it's a device not belonging to any user.
@@ -1886,7 +1885,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         private static InlinedArray<Action<InputControl>> s_OnUnpairedDeviceUsed;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
         private static bool s_OnDeviceChangeHooked;
-        private static bool s_ListenForUnpairedDeviceActivity;
+        private static int s_ListenForUnpairedDeviceActivity;
 
         private static void HookIntoDeviceChange()
         {
@@ -1926,7 +1925,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl>>();
             s_OnDeviceChangeDelegate = null;
             s_OnDeviceChangeHooked = false;
-            s_ListenForUnpairedDeviceActivity = false;
+            s_ListenForUnpairedDeviceActivity = 0;
         }
     }
 }

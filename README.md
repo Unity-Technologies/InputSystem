@@ -29,7 +29,7 @@ At this point, we try to focus package releases on specific problem areas. The f
 |`0.1.3-preview`|- Actions<br>- PlayerInput<br>- XR bugs|
 |`0.1.4-preview`|- Touch<br>- Documentation|
 |`0.1.5-preview`|- Demo<br>- UI (Single- and Multi-Player)<br>- Documentation|
-|`0.1.6-preview`|- Debugger<br>- Documentation|
+|`0.1.6-preview`|- Rebinding UI<br>- Debugger<br>- Documentation|
 
 ## Release Timeline
 

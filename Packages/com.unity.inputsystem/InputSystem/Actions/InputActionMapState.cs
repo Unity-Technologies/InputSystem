@@ -1674,7 +1674,7 @@ namespace UnityEngine.Experimental.Input
                 controlOfType = control as InputControl<TValue>;
                 if (controlOfType == null)
                     throw new InvalidOperationException(
-                        $"Cannot read value of type '{typeof(TValue).Name}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
+                        $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
 
                 value = controlOfType.ReadValue();
             }
