@@ -151,7 +151,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            var bindingsCount = actionMap.m_Bindings != null ? actionMap.m_Bindings.Length : 0;
+            var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
                 throw new ArgumentOutOfRangeException(
                     $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings", "bindingIndex");
@@ -425,9 +425,9 @@ namespace UnityEngine.Experimental.Input
                 ThrowIfRebindInProgress();
 
                 if (action == null)
-                    throw new ArgumentNullException("action");
+                    throw new ArgumentNullException(nameof(action));
                 if (action.enabled)
-                    throw new InvalidOperationException(string.Format("Cannot rebind action '{0}' while it is enabled", action));
+                    throw new InvalidOperationException($"Cannot rebind action '{action}' while it is enabled");
 
                 m_ActionToRebind = action;
 
@@ -465,7 +465,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithExpectedControlType(Type type)
             {
                 if (type != null && !typeof(InputControl).IsAssignableFrom(type))
-                    throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+                    throw new ArgumentException($"Type '{type.Name}' is not an InputControl", "type");
                 m_ControlType = type;
                 return this;
             }
@@ -535,8 +535,8 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
                 if (magnitude < 0)
-                    throw new ArgumentException(string.Format("Magnitude has to be positive but was {0}", magnitude),
-                        "magnitude");
+                    throw new ArgumentException($"Magnitude has to be positive but was {magnitude}",
+                        nameof(magnitude));
                 m_MagnitudeThreshold = magnitude;
                 return this;
             }
@@ -556,7 +556,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_IncludePathCount; ++i)
                     if (string.Compare(m_IncludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return this;
@@ -573,7 +573,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithControlsExcluding(string path)
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_ExcludePathCount; ++i)
                     if (string.Compare(m_ExcludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return this;
@@ -632,9 +632,7 @@ namespace UnityEngine.Experimental.Input
                 // Make sure our configuration is sound.
                 if (m_ActionToRebind != null && m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
                     throw new InvalidOperationException(
-                        string.Format(
-                            "Action '{0}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()",
-                            action));
+                        $"Action '{action}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()");
                 if (m_ActionToRebind == null && m_OnApplyBinding == null)
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
@@ -672,7 +670,7 @@ namespace UnityEngine.Experimental.Input
             public void AddCandidate(InputControl control, float score)
             {
                 if (control == null)
-                    throw new ArgumentNullException("control");
+                    throw new ArgumentNullException(nameof(control));
 
                 // If it's already added, update score.
                 var index = m_Candidates.IndexOf(control);
@@ -694,7 +692,7 @@ namespace UnityEngine.Experimental.Input
             public void RemoveCandidate(InputControl control)
             {
                 if (control == null)
-                    throw new ArgumentNullException("control");
+                    throw new ArgumentNullException(nameof(control));
 
                 var index = m_Candidates.IndexOf(control);
                 if (index == -1)

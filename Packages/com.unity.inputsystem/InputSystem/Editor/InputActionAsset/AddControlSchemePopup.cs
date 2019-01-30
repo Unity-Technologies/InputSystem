@@ -9,7 +9,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class AddControlSchemePopup : PopupWindowContent
+    internal class AddControlSchemePopup : PopupWindowContent
     {
         public static class Styles
         {
@@ -22,27 +22,27 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        int m_ControlSchemeIndex = -1;
-        ReorderableList m_DevicesReorderableList;
-        List<DeviceEntryForList> m_Devices = new List<DeviceEntryForList>();
-        string m_InputControlSchemeName = "New control scheme";
-        int m_RequirementsOptionsChoice;
+        private int m_ControlSchemeIndex = -1;
+        private ReorderableList m_DevicesReorderableList;
+        private List<DeviceEntryForList> m_Devices = new List<DeviceEntryForList>();
+        private string m_InputControlSchemeName = "New control scheme";
+        private int m_RequirementsOptionsChoice;
 
-        InputActionAssetManager m_AssetManager;
-        InputActionWindowToolbar m_Toolbar;
+        private InputActionAssetManager m_AssetManager;
+        private InputActionWindowToolbar m_Toolbar;
 
-        bool m_SetFocus;
-        Vector2 m_SchemaNameLabelSize;
-        float m_RequirementHeights;
-        float m_ButtonsAndLabelsHeights;
+        private bool m_SetFocus;
+        private Vector2 m_SchemaNameLabelSize;
+        private float m_RequirementHeights;
+        private float m_ButtonsAndLabelsHeights;
 
-        static readonly GUIContent m_RequirementGUI = new GUIContent("Requirements:");
-        static readonly GUIContent m_AddControlSchemeGUI = new GUIContent("Add control scheme");
-        static readonly GUIContent m_SchemaNameGUI = new GUIContent("Scheme Name");
-        static readonly Vector2 s_DefaultSize = new Vector2(300, 200);
-        static readonly string[] choices = { "Optional", "Required" };
-        string m_OriginalName;
-        Action m_Apply;
+        private static readonly GUIContent m_RequirementGUI = new GUIContent("Requirements:");
+        private static readonly GUIContent m_AddControlSchemeGUI = new GUIContent("Add control scheme");
+        private static readonly GUIContent m_SchemaNameGUI = new GUIContent("Scheme Name");
+        private static readonly Vector2 s_DefaultSize = new Vector2(300, 200);
+        private static readonly string[] choices = { "Optional", "Required" };
+        private string m_OriginalName;
+        private Action m_Apply;
 
         public AddControlSchemePopup(InputActionAssetManager assetManager, InputActionWindowToolbar toolbar, Action apply)
         {
@@ -97,19 +97,19 @@ namespace UnityEngine.Experimental.Input.Editor
             m_DevicesReorderableList.onRemoveCallback += OnDeviceRemove;
         }
 
-        void OnDeviceRemove(ReorderableList list)
+        private void OnDeviceRemove(ReorderableList list)
         {
             list.list.RemoveAt(list.index);
             list.index = -1;
         }
 
-        void OnDeviceAdd(ReorderableList list)
+        private void OnDeviceAdd(ReorderableList list)
         {
             var a = new AddDeviceDropdown(AddElement);
             a.Show(new Rect(Event.current.mousePosition, Vector2.zero));
         }
 
-        class AddDeviceDropdown : AdvancedDropdown
+        private class AddDeviceDropdown : AdvancedDropdown
         {
             Action<string, string> m_AddElement;
 
@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_AddElement((item as AddDeviceDropdownItem).name, (item as AddDeviceDropdownItem).m_DeviceId);
             }
 
-            class AddDeviceDropdownItem : AdvancedDropdownItem
+            private class AddDeviceDropdownItem : AdvancedDropdownItem
             {
                 public string m_DeviceId;
 
@@ -148,21 +148,21 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        static List<DeviceEntryForList> GetDeviceOptions()
+        private static List<DeviceEntryForList> GetDeviceOptions()
         {
-            List<DeviceEntryForList> devices = new List<DeviceEntryForList>();
+            var devices = new List<DeviceEntryForList>();
             BuildTreeForAbstractDevices(devices);
             BuildTreeForSpecificDevices(devices);
             return devices;
         }
 
-        static void BuildTreeForAbstractDevices(List<DeviceEntryForList> deviceList)
+        private static void BuildTreeForAbstractDevices(List<DeviceEntryForList> deviceList)
         {
             foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts)
                 AddDeviceTreeItem(deviceLayout, deviceList);
         }
 
-        static void BuildTreeForSpecificDevices(List<DeviceEntryForList> deviceList)
+        private static void BuildTreeForSpecificDevices(List<DeviceEntryForList> deviceList)
         {
             foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
             {
@@ -176,26 +176,33 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        static void AddDeviceTreeItem(InputControlLayout layout, List<DeviceEntryForList> deviceList)
+        private static void AddDeviceTreeItem(InputControlLayout layout, List<DeviceEntryForList> deviceList)
         {
-            var entry = new DeviceEntryForList();
-            entry.name = layout.name;
+            var entry = new DeviceEntryForList
+            {
+                name = layout.name
+            };
             deviceList.Add(entry);
+
             foreach (var commonUsage in layout.commonUsages)
             {
-                var entryWithUsage = new DeviceEntryForList();
-                entryWithUsage.name = layout.name;
-                entryWithUsage.commonUsage = commonUsage;
+                var entryWithUsage = new DeviceEntryForList
+                {
+                    name = layout.name,
+                    commonUsage = commonUsage
+                };
                 deviceList.Add(entryWithUsage);
             }
         }
 
-        void AddElement(string name, string controlPath)
+        private void AddElement(string name, string controlPath)
         {
             if (!m_DevicesReorderableList.list.Cast<DeviceEntryForList>().Any(a => a.name == name))
             {
-                var device = new InputControlScheme.DeviceRequirement();
-                device.controlPath = controlPath;
+                var device = new InputControlScheme.DeviceRequirement
+                {
+                    controlPath = controlPath
+                };
                 m_Devices.Add(new DeviceEntryForList(){name = name, deviceRequirement = device});
                 m_DevicesReorderableList.index = m_DevicesReorderableList.list.Count - 1;
             }
@@ -228,7 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.EndArea();
         }
 
-        void DrawConfirmationButton()
+        private void DrawConfirmationButton()
         {
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(true)))
@@ -256,7 +263,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        void DrawDeviceList()
+        private void DrawDeviceList()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.label);
             var requirementsLabelSize = EditorStyles.label.CalcSize(m_RequirementGUI);
@@ -279,14 +286,14 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        void DrawSpace()
+        private void DrawSpace()
         {
             GUILayout.Space(6f);
             if (Event.current.type == EventType.Repaint)
                 m_ButtonsAndLabelsHeights += 6f;
         }
 
-        void DrawTopBar()
+        private void DrawTopBar()
         {
             EditorGUILayout.LabelField(m_AddControlSchemeGUI, Styles.headerLabel);
 
@@ -294,7 +301,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ButtonsAndLabelsHeights += GUILayoutUtility.GetLastRect().height;
         }
 
-        void DrawNameEditTextField()
+        private void DrawNameEditTextField()
         {
             EditorGUILayout.BeginHorizontal();
             m_SchemaNameLabelSize = EditorStyles.label.CalcSize(m_RequirementGUI);
@@ -317,7 +324,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        float DrawRequirementsCheckboxes()
+        private float DrawRequirementsCheckboxes()
         {
             EditorGUILayout.BeginVertical();
             EditorGUILayout.LabelField(m_RequirementGUI, GUILayout.Width(200));
@@ -341,7 +348,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return requirementHeights;
         }
 
-        void Save()
+        private void Save()
         {
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_DeviceRequirements = m_Devices.Select(a => a.deviceRequirement).ToArray();
             m_AssetManager.m_AssetObjectForEditing.m_ControlSchemes[m_ControlSchemeIndex].m_Name = m_InputControlSchemeName;
@@ -350,10 +357,12 @@ namespace UnityEngine.Experimental.Input.Editor
             editorWindow.Close();
         }
 
-        void Add()
+        private void Add()
         {
-            var controlScheme = new InputControlScheme(m_InputControlSchemeName);
-            controlScheme.m_DeviceRequirements = m_Devices.Select(a => a.deviceRequirement).ToArray();
+            var controlScheme = new InputControlScheme(m_InputControlSchemeName)
+            {
+                m_DeviceRequirements = m_Devices.Select(a => a.deviceRequirement).ToArray()
+            };
             m_AssetManager.m_AssetObjectForEditing.AddControlScheme(controlScheme);
             m_Apply();
             m_Toolbar.SelectControlScheme(m_InputControlSchemeName);
@@ -372,12 +381,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     if (string.IsNullOrEmpty(commonUsage))
                     {
-                        return string.Format("<{0}>", name);
+                        return $"<{name}>";
                     }
-                    else
-                    {
-                        return string.Format("<{0}>{{{1}}}", name, commonUsage);
-                    }
+
+                    return $"<{name}>{{{commonUsage}}}";
                 }
             }
 
@@ -385,13 +392,13 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (string.IsNullOrEmpty(commonUsage))
                     return name;
-                return string.Format("{0} {1}", name, commonUsage);
+                return $"{name} {commonUsage}";
             }
 
             public int CompareTo(object obj)
             {
                 var c = (DeviceEntryForList)obj;
-                return String.Compare(id, c.id);
+                return string.Compare(id, c.id);
             }
         }
 

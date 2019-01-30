@@ -1053,13 +1053,13 @@ namespace UnityEngine.Experimental.Input
                 var bindingLists = new List<List<InputBinding>>();
 
                 // Process actions listed at toplevel.
-                var actionCount = actions != null ? actions.Length : 0;
+                var actionCount = actions?.Length ?? 0;
                 for (var i = 0; i < actionCount; ++i)
                 {
                     var jsonAction = actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
-                        throw new Exception(string.Format("Action number {0} has no name", i + 1));
+                        throw new Exception($"Action number {i + 1} has no name");
 
                     ////REVIEW: make sure all action names are unique?
 
@@ -1073,8 +1073,8 @@ namespace UnityEngine.Experimental.Input
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
-                            throw new Exception(string.Format(
-                                "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
+                            throw new Exception(
+                                $"Invalid action name '{jsonAction.name}' (missing action name after '/')");
                     }
 
                     // Try to find existing map.
@@ -1101,12 +1101,14 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Create action.
-                    var action = new InputAction(actionName);
-                    action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id;
-                    action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                        ? jsonAction.expectedControlLayout
-                        : null;
-                    action.continuous = jsonAction.continuous;
+                    var action = new InputAction(actionName)
+                    {
+                        m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
+                        m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                            ? jsonAction.expectedControlLayout
+                            : null,
+                        continuous = jsonAction.continuous
+                    };
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -1124,14 +1126,14 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Process maps.
-                var mapCount = maps != null ? maps.Length : 0;
+                var mapCount = maps?.Length ?? 0;
                 for (var i = 0; i < mapCount; ++i)
                 {
                     var jsonMap = maps[i];
 
                     var mapName = jsonMap.name;
                     if (string.IsNullOrEmpty(mapName))
-                        throw new Exception(string.Format("Map number {0} has no name", i + 1));
+                        throw new Exception($"Map number {i + 1} has no name");
 
                     // Try to find existing map.
                     InputActionMap map = null;
@@ -1148,8 +1150,10 @@ namespace UnityEngine.Experimental.Input
                     // Create new map if we haven't seen it before.
                     if (map == null)
                     {
-                        map = new InputActionMap(mapName);
-                        map.m_Id = string.IsNullOrEmpty(jsonMap.id) ? null : jsonMap.id;
+                        map = new InputActionMap(mapName)
+                        {
+                            m_Id = string.IsNullOrEmpty(jsonMap.id) ? null : jsonMap.id
+                        };
                         mapIndex = mapList.Count;
                         mapList.Add(map);
                         actionLists.Add(new List<InputAction>());
@@ -1157,21 +1161,23 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Process actions in map.
-                    var actionCountInMap = jsonMap.actions != null ? jsonMap.actions.Length : 0;
+                    var actionCountInMap = jsonMap.actions?.Length ?? 0;
                     for (var n = 0; n < actionCountInMap; ++n)
                     {
                         var jsonAction = jsonMap.actions[n];
 
                         if (string.IsNullOrEmpty(jsonAction.name))
-                            throw new Exception(string.Format("Action number {0} in map '{1}' has no name", i + 1, mapName));
+                            throw new Exception($"Action number {i + 1} in map '{mapName}' has no name");
 
                         // Create action.
-                        var action = new InputAction(jsonAction.name);
-                        action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id;
-                        action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                            ? jsonAction.expectedControlLayout
-                            : null;
-                        action.continuous = jsonAction.continuous;
+                        var action = new InputAction(jsonAction.name)
+                        {
+                            m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
+                            m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                                ? jsonAction.expectedControlLayout
+                                : null,
+                            continuous = jsonAction.continuous
+                        };
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.
@@ -1189,7 +1195,7 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Process bindings in map.
-                    var bindingCountInMap = jsonMap.bindings != null ? jsonMap.bindings.Length : 0;
+                    var bindingCountInMap = jsonMap.bindings?.Length ?? 0;
                     var bindingsForMap = bindingLists[mapIndex];
                     for (var n = 0; n < bindingCountInMap; ++n)
                     {

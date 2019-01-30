@@ -466,11 +466,11 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe struct Enumerator : IEnumerator<ActionEventPtr>
         {
-            private InputActionTrace m_Trace;
-            private ActionEvent* m_Buffer;
+            private readonly InputActionTrace m_Trace;
+            private readonly ActionEvent* m_Buffer;
+            private readonly int m_EventCount;
             private ActionEvent* m_CurrentEvent;
             private int m_CurrentIndex;
-            private int m_EventCount;
 
             public Enumerator(InputActionTrace trace)
             {
