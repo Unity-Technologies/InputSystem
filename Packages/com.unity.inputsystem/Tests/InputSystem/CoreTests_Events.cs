@@ -11,6 +11,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools.Constraints;
+using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
 
@@ -815,6 +816,30 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.5f).Within(0.000001));
+    }
+
+    // This is another case of IInputStateCallbackReceiver making everything more complicated by deviating from
+    // the common, simple code path. Basically, what this test here is trying to ensure is that we can send
+    // touch states to a Touchscreen and not have them rejected because of timestamp. It's easy to order the
+    // events for a single touch correctly but ordering them for all touches would require backends to make
+    // a sorting pass over all events before queueing them.
+    [Test]
+    [Category("Events")]
+    [Property("TimesliceEvents", "Off")]
+    public void Events_IfOldStateEventIsSentToDevice_IsIgnored_ExceptIfEventIsHandledByIInputStateCallbackReceiver()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        // Sanity check.
+        Assert.That(device is IInputStateCallbackReceiver,
+            "Test assumes that Touchscreen implements IInputStateCallbackReceiver");
+
+        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.123f, 0.234f)}, 2);
+        InputSystem.QueueStateEvent(device, new TouchState {position = new Vector2(0.234f, 0.345f)}, 1);// Goes back in time.
+        InputSystem.Update();
+
+        Assert.That(device.lastUpdateTime, Is.EqualTo(2).Within(0.00001));
+        Assert.That(device.position.ReadValue(), Is.EqualTo(new Vector2(0.234f, 0.345f)).Using(Vector2EqualityComparer.Instance));
     }
 
     private struct CustomNestedDeviceState : IInputStateTypeInfo

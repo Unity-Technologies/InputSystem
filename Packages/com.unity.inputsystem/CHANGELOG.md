@@ -21,6 +21,7 @@ This release contains a number of fairly significant changes. The focus has been
 - `SensitivityProcessor` has been removed.
     * The approach needs rethinking. What `SensitivityProcessor` did caused more problems than it solved.
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
+- Events for devices that implement `IInputStateCallbacks` (such as `Touchscreen`) are allowed to go back in time. Avoids the problem of having to order events between multiple fingers correctly or seeing events getting rejected.
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.
@@ -101,12 +102,13 @@ This release contains a number of fairly significant changes. The focus has been
 
 ### Fixes
 
-- `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
+- `InputUser.UnpairDevicesAndRemoveUser()` corrupting device pairings of other InputUsers
 - Control picker in UI having no devices if list of supported devices is empty but not null
 - `IndexOutOfRangeException` when having multiple action maps in an asset (#359 and #358).
 - Interactions timing out even if there was a pending event that would complete the interaction in time.
 - Action editor updates when asset is renamed or moved.
 - Exceptions when removing action in last position of action map.
+- Devices marked as unsupported in input settings getting added back on domain reload.
 
 ## [0.1.2-preview] - 2018-12-19
 

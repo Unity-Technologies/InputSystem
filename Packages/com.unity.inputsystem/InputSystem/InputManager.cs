@@ -1607,9 +1607,7 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
             var internedName = new InternedString(name);
-            if (table.TryGetValue(internedName, out var type))
-                return type;
-            return null;
+            return table.TryGetValue(internedName, out var type) ? type : null;
         }
 
         // Maps a single control to an action interested in the control. If
@@ -2458,16 +2456,6 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
-                        // Ignore the event if the last state update we received for the device was
-                        // newer than this state event is. We don't allow devices to go back in time.
-                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal)
-                        {
-                            #if UNITY_EDITOR
-                            m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
-                            #endif
-                            break;
-                        }
-
                         var deviceHasStateCallbacks = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
                             InputDevice.DeviceFlags.HasStateCallbacks;
                         IInputStateCallbackReceiver stateCallbacks = null;
@@ -2513,6 +2501,26 @@ namespace UnityEngine.Experimental.Input
 
                                 sizeOfStateToCopy = stateBlockSizeOfDevice - offsetInDeviceStateToCopyTo;
                             }
+                        }
+
+                        // Ignore the event if the last state update we received for the device was
+                        // newer than this state event is. We don't allow devices to go back in time.
+                        //
+                        // NOTE: We make an exception here for devices that implement IInputStateCallbackReceiver (such
+                        //       as Touchscreen). For devices that dynamically incorporate state it can be hard ensuring
+                        //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
+                        //       that are generated in the backend and would require considerable work to ensure monotonically
+                        //       increasing timestamps across all such streams.
+                        //
+                        //       This exception isn't elegant. But then, the entire IInputStateCallbackReceiver thing
+                        //       is anything but elegant...
+                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
+                            !(deviceHasStateCallbacks && stateBlockOfDevice.format != receivedStateFormat))
+                        {
+                            #if UNITY_EDITOR
+                            m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
+                            #endif
+                            break;
                         }
 
                         // If the state format doesn't match, see if the device knows what to do.
@@ -2688,7 +2696,8 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
+                        if (device.m_LastUpdateTimeInternal <= currentEventTimeInternal)
+                            device.m_LastUpdateTimeInternal = currentEventTimeInternal;
                         if (makeDeviceCurrent)
                             device.MakeCurrent();
 
