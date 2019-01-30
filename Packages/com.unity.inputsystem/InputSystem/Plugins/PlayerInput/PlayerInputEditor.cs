@@ -11,7 +11,7 @@ using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
-
+#pragma warning disable 0414
 namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 {
     /// <summary>
