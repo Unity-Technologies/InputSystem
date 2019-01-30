@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 ////      to mutate the buffer and keep events around from update to update.
 
                 if (value != null)
-                    #if UNITY_2019_2_OR_NEWER
+                    #if UNITY_2019_1_OR_NEWER
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
