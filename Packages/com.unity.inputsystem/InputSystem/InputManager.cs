@@ -975,7 +975,10 @@ namespace UnityEngine.Experimental.Input
             // Make sure that if the device ID is listed in m_AvailableDevices, the device
             // is no longer marked as removed.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
-                m_AvailableDevices[i].isRemoved = false;
+            {
+                if (m_AvailableDevices[i].deviceId == device.id)
+                    m_AvailableDevices[i].isRemoved = false;
+            }
 
             ////REVIEW: we may want to suppress this during the initial device discovery phase
             // Let actions re-resolve their paths.
@@ -1897,7 +1900,7 @@ namespace UnityEngine.Experimental.Input
                     var layout = TryFindMatchingControlLayout(ref description, deviceId);
                     if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                     {
-                        // Not support. Ignore device. Still will get added to m_AvailableDevices
+                        // Not supported. Ignore device. Still will get added to m_AvailableDevices
                         // list in finally clause below. If later the set of supported devices changes
                         // so that the device is now supported, ApplySettings() will pull it back out
                         // and create the device.
