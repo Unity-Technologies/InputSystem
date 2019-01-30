@@ -102,7 +102,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                         if (actionMap != null)
                             defaultActionMapProperty.stringValue = $"{{{actionMap.id}}}";
                     }
-                    m_SelectedDefaultControlScheme = selected;
+                    m_SelectedDefaultActionMap = selected;
                 }
             }
             --EditorGUI.indentLevel;
