@@ -27,20 +27,20 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private InteractionsListView m_InteractionsList;
-        private ProcessorsListView m_ProcessorsList;
+        private readonly InteractionsListView m_InteractionsList;
+        private readonly ProcessorsListView m_ProcessorsList;
         private ParameterListView m_CompositeParameters;
 
-        private SerializedProperty m_InteractionsProperty;
-        private SerializedProperty m_ProcessorsProperty;
-        private SerializedProperty m_GroupsProperty;
-        private SerializedProperty m_BindingProperty;
-        private SerializedProperty m_PathProperty;
+        private readonly SerializedProperty m_InteractionsProperty;
+        private readonly SerializedProperty m_ProcessorsProperty;
+        private readonly SerializedProperty m_GroupsProperty;
+        private readonly SerializedProperty m_BindingProperty;
+        private readonly SerializedProperty m_PathProperty;
 
-        private Action<Change> m_OnChange;
+        private readonly Action<Change> m_OnChange;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
-        private InputControlPickerState m_ControlPickerState;
+        private readonly InputControlPickerState m_ControlPickerState;
         private InputControlPickerDropdown m_InputControlPickerDropdown;
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
@@ -53,10 +53,10 @@ namespace UnityEngine.Experimental.Input.Editor
         private static readonly GUIContent s_UseInSchemesGui = EditorGUIUtility.TrTextContent("Use in control scheme");
 
         private bool m_ManualPathEditMode;
-        private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
-        private List<string> m_BindingGroups;
-        private InputActionWindowToolbar m_Toolbar;
-        private string m_ExpectedControlLayout;
+        private readonly ReadOnlyArray<InputControlScheme> m_ControlSchemes;
+        private readonly List<string> m_BindingGroups;
+        private readonly InputActionWindowToolbar m_Toolbar;
+        private readonly string m_ExpectedControlLayout;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
 
         public bool isCompositeBinding { get; set; }

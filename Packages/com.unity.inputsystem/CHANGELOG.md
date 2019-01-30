@@ -106,6 +106,7 @@ This release contains a number of fairly significant changes. The focus has been
 - `IndexOutOfRangeException` when having multiple action maps in an asset (#359 and #358).
 - Interactions timing out even if there was a pending event that would complete the interaction in time.
 - Action editor updates when asset is renamed or moved.
+- Exceptions when removing action in last position of action map.
 
 ## [0.1.2-preview] - 2018-12-19
 

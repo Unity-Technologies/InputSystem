@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (m_SelectedControlType == 0)
-                        m_ExpectedControlLayoutProperty.stringValue = "";
+                        m_ExpectedControlLayoutProperty.stringValue = string.Empty;
                     else
                         m_ExpectedControlLayoutProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
                     ApplyModifiers();

@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (actionLine == null)
                 return;
             actionLine.AddCompositeBinding(compositeName, m_Toolbar.selectedControlSchemeBindingGroup);
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
@@ -110,7 +110,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             actionLine.AddBinding(m_Toolbar.selectedControlSchemeBindingGroup);
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
@@ -120,14 +120,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (actionMapLine == null)
                 return;
             actionMapLine.AddAction();
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionsTree.SelectNewActionRow();
         }
 
         public void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionMapsTree.SelectNewActionMapRow();
         }
 

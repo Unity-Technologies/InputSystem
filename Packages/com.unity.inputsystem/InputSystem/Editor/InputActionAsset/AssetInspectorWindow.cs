@@ -7,6 +7,8 @@ using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ShortcutManagement;
 
+////REVIEW: should we listen for Unity project saves and save dirty .inputactions assets along with it?
+
 ////TODO: add helpers to very quickly set up certai common configs (e.g. "FPS Controls" in add-action context menu;
 ////      "WASD Control" in add-binding context menu)
 
@@ -101,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
             m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
-            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
+            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, ApplyAndReload);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager, m_InputActionWindowToolbar);
 
@@ -144,7 +146,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
             m_ActionAssetManager.InitializeObjectReferences();
-            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
+            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, ApplyAndReload);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager, m_InputActionWindowToolbar);
             InitializeTrees();
 
@@ -167,11 +169,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void InitializeTrees()
         {
-            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(Apply, m_ActionAssetManager.serializedObject, ref m_ActionMapsTreeState);
+            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(ApplyAndReload, m_ActionAssetManager.serializedObject, ref m_ActionMapsTreeState);
             m_ActionMapsTree.OnSelectionChanged = OnActionMapSelection;
             m_ActionMapsTree.OnContextClick = m_ContextMenu.OnActionMapContextClick;
 
-            m_ActionsTree = ActionsTree.CreateFromSerializedObject(Apply, ref m_ActionsTreeState);
+            m_ActionsTree = ActionsTree.CreateFromSerializedObject(ApplyAndReload, ref m_ActionsTreeState);
             m_ActionsTree.OnSelectionChanged = OnActionSelection;
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
             m_ActionsTree.OnRowGUI = OnActionRowGUI;
@@ -196,7 +198,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
-            m_CopyPasteUtility = new InputActionCopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
+            m_CopyPasteUtility = new InputActionCopyPasteUtility(ApplyAndReload, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new InputControlPickerState();
         }
@@ -207,7 +209,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             m_ActionAssetManager.LoadImportedObjectFromGuid();
-            EditorApplication.delayCall += Apply;
+            EditorApplication.delayCall += ApplyAndReload;
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
             EditorApplication.delayCall += m_ActionAssetManager.UpdateAssetDirtyState;
@@ -268,7 +270,13 @@ namespace UnityEngine.Experimental.Input.Editor
                             item.elementProperty,
                             change =>
                             {
-                                Apply();
+                                // If path changed, perform a full reload as it affects the action tree.
+                                // Otherwise just do a "soft" apply. This is important so as to not lose
+                                // edit state while editing parameters on interactions or processors.
+                                if (change == InputBindingPropertiesView.Change.PathChanged)
+                                    ApplyAndReload();
+                                else
+                                    Apply();
                             },
                             m_PickerTreeViewState,
                             m_InputActionWindowToolbar,
@@ -286,22 +294,16 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionPropertyView =
                         new InputActionPropertiesView(
                             actionItem1.elementProperty,
+                            // Apply without reload is enough here.
                             Apply);
                 }
             }
         }
 
-        internal void Apply()
+        internal void ApplyAndReload()
         {
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
-                m_ActionAssetManager.SaveChangesToAsset();
-            else
-            {
-                m_ActionAssetManager.SetAssetDirty();
-                titleContent = m_DirtyTitle;
-            }
+            Apply();
 
-            m_ActionAssetManager.ApplyChanges();
             m_ActionMapsTree.Reload();
             m_InputActionWindowToolbar.RebuildData();
 
@@ -316,6 +318,21 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             m_ActionsTree.Reload();
+
+            LoadPropertiesForSelection();
+        }
+
+        private void Apply()
+        {
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+                m_ActionAssetManager.SaveChangesToAsset();
+            else
+            {
+                m_ActionAssetManager.SetAssetDirty();
+                titleContent = m_DirtyTitle;
+            }
+
+            m_ActionAssetManager.ApplyChanges();
         }
 
         private void OnGUI()
