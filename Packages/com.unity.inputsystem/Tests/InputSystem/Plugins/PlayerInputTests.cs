@@ -92,6 +92,25 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CanInstantiatePlayer_WithSpecificDevice_AndAutomaticallyChooseControlScheme()
+    {
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        prefab.AddComponent<PlayerInput>();
+        prefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+
+        InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var instance = PlayerInput.Instantiate(prefab, pairWithDevices: new InputDevice[] { keyboard, mouse });
+
+        Assert.That(instance.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(instance.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanGetAllPlayers()
     {
         Assert.That(PlayerInput.all, Is.Empty);

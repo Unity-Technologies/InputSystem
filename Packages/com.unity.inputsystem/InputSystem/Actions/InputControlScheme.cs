@@ -89,18 +89,30 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static InputControlScheme? FindControlSchemeForControl<TList>(InputControl control, TList schemes)
+        public static InputControlScheme? FindControlSchemeForDevice<TList>(InputDevice device, TList schemes)
             where TList : IEnumerable<InputControlScheme>
         {
             foreach (var scheme in schemes)
-            {
-                var requirements = scheme.m_DeviceRequirements;
-                for (var i = 0; i < requirements.Length; ++i)
-                    if (InputControlPath.MatchesPrefix(requirements[i].controlPath, control))
-                        return scheme;
-            }
+                if (scheme.SupportsDevice(device))
+                    return scheme;
 
             return null;
+        }
+
+        public bool SupportsDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            ////FIXME: this does not take AND and OR into account
+            for (var i = 0; i < m_DeviceRequirements.Length; ++i)
+            {
+                var control = InputControlPath.TryFindControl(device, m_DeviceRequirements[i].controlPath);
+                if (control != null)
+                    return true;
+            }
+
+            return false;
         }
 
         ////REVIEW: have mode where instead of matching only the first device that matches a requirement, we match as many

@@ -6,6 +6,10 @@ using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
+////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
+////        and only temporarily disable them
+
 ////TODO: refresh caches when asset is modified at runtime
 
 ////TODO: handle required actions ahead of time so that we catch it if a device matches by type but doesn't otherwise
@@ -352,11 +356,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
-        public static bool isSinglePlayer
-        {
-            get => s_AllActivePlayersCount <= 1 &&
+        public static bool isSinglePlayer =>
+            s_AllActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
-        }
 
         public void ActivateInput()
         {
@@ -447,6 +449,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
             return DoInstantiate(prefab);
         }
+
+        ////TODO: allow instantiating with an existing InputUser
 
         /// <summary>
         /// A wrapper around <see cref="Object.Instantiate(Object)"/> that allows instantiating a player prefab and
@@ -772,25 +776,34 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                     }
                 }
 
+                // If we did not end up with a usable scheme by now but we've been given devices to pair with,
+                // search for a control scheme matching the given devices.
+                if (s_InitPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
+                {
+                    foreach (var controlScheme in m_Actions.controlSchemes)
+                    {
+                        for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
+                        {
+                            var device = s_InitPairWithDevices[i];
+                            if (controlScheme.SupportsDevice(device) && TryToActivateControlScheme(controlScheme))
+                                break;
+                        }
+                    }
+                }
                 // If we don't have a working control scheme by now and we haven't been instructed to use
                 // one specific control scheme, try each one in the asset one after the other until we
                 // either find one we can use or run out of options.
-                if ((!m_InputUser.valid || m_InputUser.controlScheme == null) && string.IsNullOrEmpty(s_InitControlScheme))
+                else if ((!m_InputUser.valid || m_InputUser.controlScheme == null) && string.IsNullOrEmpty(s_InitControlScheme))
                 {
                     foreach (var controlScheme in m_Actions.controlSchemes)
                     {
                         if (TryToActivateControlScheme(controlScheme))
                             break;
                     }
-
-                    // If we still don't have a matching control scheme but we've been given a set of devices,
-                    // just assign the devices to the user and call it a day.
-                    if (m_InputUser.controlScheme == null && s_InitPairWithDevicesCount > 0)
-                    {
-                        for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
-                            m_InputUser = InputUser.PerformPairingWithDevice(s_InitPairWithDevices[i], m_InputUser);
-                    }
                 }
+
+                if (!m_InputUser.valid)
+                    return;
             }
             else
             {
@@ -828,8 +841,30 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             ////FIXME: this will fall apart if account management is involved and a user needs to log in on device first
 
             // Pair any devices we may have been given.
-            for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
-                m_InputUser = InputUser.PerformPairingWithDevice(s_InitPairWithDevices[i], m_InputUser);
+            if (s_InitPairWithDevicesCount > 0)
+            {
+                ////REVIEW: should AndPairRemainingDevices() require that there is at least one existing
+                ////        device paired to the user that is usable with the given control scheme?
+
+                // First make sure that all of the devices actually work with the given control scheme.
+                // We're fine having to pair additional devices but we don't want the situation where
+                // we have the player grab all the devices in s_InitPairWithDevices along with a control
+                // scheme that fits none of them and then AndPairRemainingDevices() supplying the devices
+                // actually needed by the control scheme.
+                for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
+                {
+                    var device = s_InitPairWithDevices[i];
+                    if (!controlScheme.SupportsDevice(device))
+                        return false;
+                }
+
+                // We're good. Give the devices to the user.
+                for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
+                {
+                    var device = s_InitPairWithDevices[i];
+                    m_InputUser = InputUser.PerformPairingWithDevice(device, m_InputUser);
+                }
+            }
 
             if (!m_InputUser.valid)
                 m_InputUser = InputUser.CreateUserWithoutPairedDevices();
@@ -1017,7 +1052,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
             // Go through all control schemes and see if there is one usable with the device.
             // If so, switch to it.
-            var controlScheme = InputControlScheme.FindControlSchemeForControl(control, player.m_Actions.controlSchemes);
+            var controlScheme = InputControlScheme.FindControlSchemeForDevice(control.device, player.m_Actions.controlSchemes);
             if (controlScheme != null)
             {
                 // First remove the currently paired devices, then pair the device that was used,

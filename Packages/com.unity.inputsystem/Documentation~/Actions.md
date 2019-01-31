@@ -178,7 +178,7 @@ var action = new InputAction(
     binding: "<Gamepad>/**/<Button>",
     interactions: "passthrough");
 action.Enable();
-    
+
 action.performed +=
     ctx => Debug.Log($"Button {ctx.control} = {ctx.ReadValue<float>()}");
 

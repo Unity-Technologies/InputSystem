@@ -170,7 +170,7 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 if (string.IsNullOrEmpty(actionNameOrId))
-                    throw new ArgumentNullException("actionNameOrId");
+                    throw new ArgumentNullException(nameof(actionNameOrId));
                 return GetAction(actionNameOrId);
             }
         }

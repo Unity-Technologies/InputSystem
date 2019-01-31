@@ -107,6 +107,7 @@ This release contains a number of fairly significant changes. The focus has been
 
 ### Fixes
 
+- Fixed support for Unity 2019.1 where we landed a native API change.
 - `InputUser.UnpairDevicesAndRemoveUser()` corrupting device pairings of other InputUsers
 - Control picker in UI having no devices if list of supported devices is empty but not null
 - `IndexOutOfRangeException` when having multiple action maps in an asset (#359 and #358).
