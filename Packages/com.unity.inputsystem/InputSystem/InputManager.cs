@@ -1468,12 +1468,13 @@ namespace UnityEngine.Experimental.Input
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
             interactions.AddTypeRegistration("MultiTap", typeof(MultiTapInteraction));
+            interactions.AddTypeRegistration("Passthrough", typeof(PassthroughInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
-            composites.AddTypeRegistration("Axis", typeof(AxisComposite));
-            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));
+            composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
+            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
