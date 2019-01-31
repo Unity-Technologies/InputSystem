@@ -37,6 +37,10 @@ This release contains a number of fairly significant changes. The focus has been
         myAction.performed += MyCallback;
         myAction.cancelled += MyCallback;
       ```
+  * Alternatively, put `PassthroughInteraction` on an action. This restores the previous default behavior of actions.
+    ```
+        new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "passthrough");
+    ```
 - As part of the aforementioned change, the following interactions have been removed as they are no longer relevant:
   - `StickInteraction`: Can simply be removed from bindings. The new default behavior obsoletes the need for what `StickInteraction` did. Use `started` to know then the stick starts being actuated, `performed` to be updated on movements, and `cancelled` to know when the stick goes back into rest position.
   - `PressInteraction`: Can simply be removed from bindings. The default behavior with no interaction encompasses press detection. Use either `started` or `performed` to know when a button is pressed. There will no longer be a `performed` call on button release. To set a custom button press point, simply put an `AxisDeadzoneProcessor` on the binding.
@@ -75,6 +79,7 @@ This release contains a number of fairly significant changes. The focus has been
     * `NormalizeVector2Processor`
     * `NormalizeVector3Processor`
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
+- Added `PassthroughInteraction` to restore old behavior of actions where every value change would perform the action and `started` and `cancelled` were not used.
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 - `Mouse.forwardButton` and `Mouse.backButton`.
 - The input debugger now shows users along with their paired devices and actions. See the [documentation](Documentation~/UserManagement.md#debugging)

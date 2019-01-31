@@ -820,7 +820,7 @@ partial class CoreTests
 
     // This is another case of IInputStateCallbackReceiver making everything more complicated by deviating from
     // the common, simple code path. Basically, what this test here is trying to ensure is that we can send
-    // touch states to a Touchscreen and not have them rejected because of timestamp. It's easy to order the
+    // touch states to a Touchscreen and not have them rejected because of timestamps. It's easy to order the
     // events for a single touch correctly but ordering them for all touches would require backends to make
     // a sorting pass over all events before queueing them.
     [Test]
@@ -834,8 +834,8 @@ partial class CoreTests
         Assert.That(device is IInputStateCallbackReceiver,
             "Test assumes that Touchscreen implements IInputStateCallbackReceiver");
 
-        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.123f, 0.234f)}, 2);
-        InputSystem.QueueStateEvent(device, new TouchState {position = new Vector2(0.234f, 0.345f)}, 1);// Goes back in time.
+        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.123f, 0.234f) }, 2);
+        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.234f, 0.345f) }, 1);// Goes back in time.
         InputSystem.Update();
 
         Assert.That(device.lastUpdateTime, Is.EqualTo(2).Within(0.00001));

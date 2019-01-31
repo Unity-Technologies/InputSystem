@@ -2,6 +2,8 @@
 
 >NOTE: For information on how to install the new input system, please see [Installation](Installation.md).
 
+    ////TOO: add video here that provides quick start walkthrough
+
 ## Getting Input Directly From An Input Device
 
 The quickest way to get started in script is to just query state directly from input devices. For example, the following code grabs the gamepad last used by the player and reads out its current state:
@@ -32,6 +34,8 @@ public class MyPlayerScript : MonoBehaviour
 The same approach works for other types of devices, e.g. `Keyboard.current`, `Mouse.current`, `Touchscreen.current`, etc.
 
 # Getting Input Indirectly Through An Input Action
+
+    ////TODO: replace with PlayerInput&PlayerInputManager approach; show current workflows under "Alternative Workflows" after PlayerInput stuff
 
 Getting input directly from an input device is quick and convenient but requires a separate path for each type of device and also makes it hard to later change which control on the device leads to which action being taken by the game.
 

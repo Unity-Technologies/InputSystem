@@ -1400,6 +1400,30 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanLetControlChangesPassThroughInteractionSystemAsIs_UsingPassthroughInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "passthrough");
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+            action.Enable();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(3));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
+            Assert.That(actions[2].ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanAddActionsToMap()
     {
         var map = new InputActionMap();
