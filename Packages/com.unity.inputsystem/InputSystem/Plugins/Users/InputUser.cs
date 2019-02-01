@@ -7,9 +7,12 @@ using UnityEngine.Profiling;
 
 ////REVIEW: do we need to handle the case where devices are added to a user that are each associated with a different user account
 
+////REVIEW: how should we handle pairings of devices *not* called for by a control scheme? should that result in a failed match?
+
 ////TODO: option to bind to *all* devices instead of just the paired ones (bindToAllDevices)
 
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
+
 
 namespace UnityEngine.Experimental.Input.Plugins.Users
 {
@@ -87,7 +90,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
                 var userIndex = TryFindUserIndex(m_Id);
                 if (userIndex == -1)
-                    throw new InvalidOperationException(string.Format("User with ID {0} is no longer valid", m_Id));
+                    throw new InvalidOperationException($"User with ID {m_Id} is no longer valid");
 
                 return userIndex;
             }

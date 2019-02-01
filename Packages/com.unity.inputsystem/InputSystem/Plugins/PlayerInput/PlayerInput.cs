@@ -246,6 +246,36 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         }
 
         /// <summary>
+        /// Determines how the component notifies listeners about input actions and other input-related
+        /// events pertaining to the player.
+        /// </summary>
+        /// <remarks>
+        /// By default, the component will use <see cref="GameObject.SendMessage(string,object)"/> to send messages
+        /// to the <see cref="GameObject"/>. This can be changed by selecting a different <see cref="PlayerNotifications"/>
+        /// behavior.
+        /// </remarks>
+        /// <seealso cref="actionEvents"/>
+        /// <seealso cref="deviceLostEvent"/>
+        /// <seealso cref="deviceRegainedEvent"/>
+        public PlayerNotifications notificationBehavior
+        {
+            get => m_NotificationBehavior;
+            set
+            {
+                if (m_NotificationBehavior == value)
+                    return;
+
+                if (m_Enabled)
+                    UninitializeActions();
+
+                m_NotificationBehavior = value;
+
+                if (m_Enabled)
+                    InitializeActions();
+            }
+        }
+
+        /// <summary>
         /// List of events invoked in response to actions being triggered.
         /// </summary>
         /// <remarks>
@@ -276,10 +306,93 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// </remarks>
         public DeviceLostEvent deviceLostEvent
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get
+            {
+                if (m_DeviceLostEvent == null)
+                    m_DeviceLostEvent = new DeviceLostEvent();
+                return m_DeviceLostEvent;
+            }
         }
 
+        /// <summary>
+        /// Event that is triggered when the player recovers from device loss and is good to go again.
+        /// </summary>
+        /// <remarks>
+        /// This event is only used if <see cref="notificationBehavior"/> is set to
+        /// <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// </remarks>
+        public DeviceRegainedEvent deviceRegainedEvent
+        {
+            get
+            {
+                if (m_DeviceRegainedEvent == null)
+                    m_DeviceRegainedEvent = new DeviceRegainedEvent();
+                return m_DeviceRegainedEvent;
+            }
+        }
+
+        public event Action<InputAction.CallbackContext> onActionTriggered
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                m_ActionTriggeredCallbacks.AppendWithCapacity(value, 5);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = m_ActionTriggeredCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_ActionTriggeredCallbacks.RemoveAtWithCapacity(index);
+            }
+        }
+
+        public event Action<PlayerInput> onDeviceLost
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                m_DeviceLostCallbacks.AppendWithCapacity(value, 5);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = m_DeviceLostCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_DeviceLostCallbacks.RemoveAtWithCapacity(index);
+            }
+        }
+
+        public event Action<PlayerInput> onDeviceRegained
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                m_DeviceRegainedCallbacks.AppendWithCapacity(value, 5);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = m_DeviceRegainedCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_DeviceRegainedCallbacks.RemoveAtWithCapacity(index);
+            }
+        }
+
+        /// <summary>
+        /// The camera associated with the player.
+        /// </summary>
+        /// <remarks>
+        /// This is null by default.
+        ///
+        /// Associating a camera with a player is necessary when using split-screen.
+        /// </remarks>
         public new Camera camera
         {
             get => m_Camera;
@@ -294,24 +407,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         {
             get { return m_UIEventSystem; }
             set { throw new NotImplementedException(); }
-        }
-
-        public PlayerNotifications notificationBehavior
-        {
-            get => m_NotificationBehavior;
-            set
-            {
-                if (m_NotificationBehavior == value)
-                    return;
-
-                if (m_Enabled)
-                    UninitializeActions();
-
-                m_NotificationBehavior = value;
-
-                if (m_Enabled)
-                    InitializeActions();
-            }
         }
 
         /// <summary>
@@ -335,12 +430,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         }
 
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
-
-        public event Action<InputAction.CallbackContext> onActionTriggered
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
 
         public static event Action<PlayerInput> onAdded
         {
@@ -539,6 +628,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceLostCallbacks;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
+        [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
 
         internal static int s_AllActivePlayersCount;
         internal static PlayerInput[] s_AllActivePlayers;
@@ -1011,11 +1103,37 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 case PlayerNotifications.BroadcastMessages:
                     BroadcastMessage(DeviceLostMessage, this);
                     break;
+
+                case PlayerNotifications.InvokeUnityEvents:
+                    m_DeviceLostEvent?.Invoke(this);
+                    break;
+
+                case PlayerNotifications.InvokeCSharpEvents:
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceLostCallbacks, this, "onDeviceLost");
+                    break;
             }
         }
 
         private void HandleDeviceRegained()
         {
+            switch (m_NotificationBehavior)
+            {
+                case PlayerNotifications.SendMessages:
+                    SendMessage(DeviceRegainedMessage, this);
+                    break;
+
+                case PlayerNotifications.BroadcastMessages:
+                    BroadcastMessage(DeviceRegainedMessage, this);
+                    break;
+
+                case PlayerNotifications.InvokeUnityEvents:
+                    m_DeviceRegainedEvent?.Invoke(this);
+                    break;
+
+                case PlayerNotifications.InvokeCSharpEvents:
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceRegainedCallbacks, this, "onDeviceRegained");
+                    break;
+            }
         }
 
         private static void OnUserChange(InputUser user, InputUserChange change, InputDevice device)
@@ -1097,17 +1215,17 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         }
 
         [Serializable]
-        public class DeviceLostEvent : UnityEvent
+        public class DeviceLostEvent : UnityEvent<PlayerInput>
         {
         }
 
         [Serializable]
-        public class DeviceRegainedEvent : UnityEvent
+        public class DeviceRegainedEvent : UnityEvent<PlayerInput>
         {
         }
 
         [Serializable]
-        public class ControlSchemeChangeEvent : UnityEvent
+        public class ControlSchemeChangeEvent : UnityEvent<PlayerInput>
         {
         }
     }

@@ -480,25 +480,59 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveDeviceLostMessage()
+    [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerInputEventListener))]
+    [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerInputCSharpEventListener))]
+    public void PlayerInput_CanReceiveNotificationWhenDeviceIsLostAndRegained(PlayerNotifications notificationBehavior, Type listenerType)
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        // Pretend we have a native gamepad to get the test closer to the real thing.
+        var deviceId = runtime.ReportNewInputDevice<Gamepad>();
+        InputSystem.Update();
+        var gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
 
         var go = new GameObject();
-        var listener = go.AddComponent<MessageListener>();
+        go.SetActive(false);
+        IListener listener;
+        if (notificationBehavior == PlayerNotifications.BroadcastMessages)
+        {
+            var child = new GameObject();
+            child.transform.parent = go.transform;
+            listener = (IListener)child.AddComponent(listenerType);
+        }
+        else
+        {
+            listener = (IListener)go.AddComponent(listenerType);
+        }
         var playerInput = go.AddComponent<PlayerInput>();
 
-        playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.notificationBehavior = notificationBehavior;
         playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        go.SetActive(true);
 
         Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
 
-        InputSystem.RemoveDevice(gamepad);
+        runtime.ReportInputDeviceRemoved(gamepad);
+        InputSystem.Update();
 
         Assert.That(playerInput.devices, Is.Empty);
         Assert.That(playerInput.hasMissingRequiredDevices, Is.True);
         Assert.That(listener.messages,
             Is.EquivalentTo(new[] {new Message(PlayerInput.DeviceLostMessage, playerInput)}));
+
+        listener.messages.Clear();
+
+        deviceId = runtime.ReportNewInputDevice<Gamepad>();
+        InputSystem.Update();
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.SameAs(gamepad),
+            "Expected InputSystem to recover previous device instance");
+        gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] {gamepad}));
+        Assert.That(playerInput.hasMissingRequiredDevices, Is.False);
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[] {new Message(PlayerInput.DeviceRegainedMessage, playerInput)}));
     }
 
     ////TODO: should also make sure that we're only getting notifications of the specified type and not other types as well
@@ -1078,17 +1112,17 @@ internal class PlayerInputTests : InputTestFixture
             };
         }
 
-        public void OnFireEvent(InputAction.CallbackContext context)
+        private void OnFireEvent(InputAction.CallbackContext context)
         {
             messages.Add(new Message { name = "gameplay/fire " + context.phase, value = context.ReadValue<float>() });
         }
 
-        public void OnLookEvent(InputAction.CallbackContext context)
+        private void OnLookEvent(InputAction.CallbackContext context)
         {
             messages.Add(new Message { name = "gameplay/look " + context.phase, value = context.ReadValue<Vector2>() });
         }
 
-        public void OnMoveEvent(InputAction.CallbackContext context)
+        private void OnMoveEvent(InputAction.CallbackContext context)
         {
             messages.Add(new Message { name = "gameplay/move" + context.phase, value = context.ReadValue<Vector2>() });
         }
@@ -1155,16 +1189,53 @@ internal class PlayerInputTests : InputTestFixture
                 item.AddListener(OnAction);
 
             playerInput.deviceLostEvent.AddListener(OnDeviceLost);
+            playerInput.deviceRegainedEvent.AddListener(OnDeviceRegained);
         }
 
-        public void OnAction(InputAction.CallbackContext context)
+        private void OnAction(InputAction.CallbackContext context)
         {
-            messages.Add(new Message {name = context.action.ToString()});
+            messages.Add(new Message(context.action.ToString()));
         }
 
-        public void OnDeviceLost()
+        private void OnDeviceLost(PlayerInput player)
         {
-            messages.Add(new Message {name = "OnDeviceLost"});
+            messages.Add(new Message("OnDeviceLost", player));
+        }
+
+        private void OnDeviceRegained(PlayerInput player)
+        {
+            messages.Add(new Message("OnDeviceRegained", player));
+        }
+    }
+
+    private class PlayerInputCSharpEventListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
+
+        public void OnEnable()
+        {
+            var playerInput = GetComponent<PlayerInput>();
+            Debug.Assert(playerInput != null, "Must have PlayerInput component");
+
+
+            playerInput.onActionTriggered += OnAction;
+            playerInput.onDeviceLost += OnDeviceLost;
+            playerInput.onDeviceRegained += OnDeviceRegained;
+        }
+
+        private void OnAction(InputAction.CallbackContext context)
+        {
+            messages.Add(new Message(context.action.ToString()));
+        }
+
+        private void OnDeviceLost(PlayerInput player)
+        {
+            messages.Add(new Message("OnDeviceLost", player));
+        }
+
+        private void OnDeviceRegained(PlayerInput player)
+        {
+            messages.Add(new Message("OnDeviceRegained", player));
         }
     }
 
@@ -1181,12 +1252,12 @@ internal class PlayerInputTests : InputTestFixture
             manager.playerLeftEvent.AddListener(OnPlayerLeft);
         }
 
-        public void OnPlayerJoined(PlayerInput player)
+        private void OnPlayerJoined(PlayerInput player)
         {
             messages.Add(new Message("OnPlayerJoined", player));
         }
 
-        public void OnPlayerLeft(PlayerInput player)
+        private void OnPlayerLeft(PlayerInput player)
         {
             messages.Add(new Message("OnPlayerLeft", player));
         }
@@ -1205,12 +1276,12 @@ internal class PlayerInputTests : InputTestFixture
             manager.onPlayerLeft += OnPlayerLeft;
         }
 
-        public void OnPlayerJoined(PlayerInput player)
+        private void OnPlayerJoined(PlayerInput player)
         {
             messages.Add(new Message("OnPlayerJoined", player));
         }
 
-        public void OnPlayerLeft(PlayerInput player)
+        private void OnPlayerLeft(PlayerInput player)
         {
             messages.Add(new Message("OnPlayerLeft", player));
         }
