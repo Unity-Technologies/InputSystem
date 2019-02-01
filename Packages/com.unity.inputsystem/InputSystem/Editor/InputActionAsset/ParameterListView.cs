@@ -191,7 +191,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 {
                     if (parameter.isEnum)
                     {
-                        var enumValue = Enum.ToObject(parameter.field.GetType(), parameter.value.GetIntValue());
+                        var enumValue = Enum.ToObject(parameter.field.FieldType, parameter.value.GetIntValue());
                         parameter.field.SetValue(instance, enumValue);
                     }
                     else
