@@ -1127,6 +1127,131 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPerformPressInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Test all three press behaviors concurrently.
+        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
+
+        pressAction.Enable();
+        releaseAction.Enable();
+        pressAndReleaseAction.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonSouth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+
+            trace.Clear();
+
+            Release(gamepad.buttonSouth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Cancelled));
+
+            trace.Clear();
+
+            Press(gamepad.buttonSouth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformContinuousPressInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
+
+        pressAction.continuous = true;
+        releaseAction.continuous = true; // ReleaseOnly doesn't care about continuous.
+        pressAndReleaseAction.continuous = true;
+
+        pressAction.Enable();
+        releaseAction.Enable();
+        pressAndReleaseAction.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonSouth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+
+            trace.Clear();
+
+            InputSystem.Update();
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+
+            trace.Clear();
+
+            Release(gamepad.buttonSouth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Cancelled));
+
+            trace.Clear();
+
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldInteraction()
     {

@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(path))
                 return parent.path;
 
-            return string.Format("{0}/{1}", parent.path, path);
+            return $"{parent.path}/{path}";
         }
 
         /// <summary>

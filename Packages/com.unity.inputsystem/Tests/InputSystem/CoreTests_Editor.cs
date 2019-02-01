@@ -621,11 +621,23 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
+    private class TestInteractionWithValueType : IInputInteraction<float>
+    {
+        public void Process(ref InputInteractionContext context)
+        {
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_CanGetValueTypeOfInteraction()
     {
-        Assert.That(InputInteraction.GetValueType(typeof(HoldInteraction)), Is.SameAs(typeof(float)));
+        InputSystem.RegisterInteraction<TestInteractionWithValueType>();
+        Assert.That(InputInteraction.GetValueType(typeof(TestInteractionWithValueType)), Is.SameAs(typeof(float)));
     }
 
     [Test]

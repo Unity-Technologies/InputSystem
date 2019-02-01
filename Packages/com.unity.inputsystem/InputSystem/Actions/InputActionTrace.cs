@@ -99,6 +99,24 @@ namespace UnityEngine.Experimental.Input
 
         public int count => m_EventBuffer.eventCount;
 
+        public InputActionTrace()
+        {
+        }
+
+        public InputActionTrace(InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            SubscribeTo(action);
+        }
+
+        public InputActionTrace(InputActionMap actionMap)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException(nameof(actionMap));
+            SubscribeTo(actionMap);
+        }
+
         /// <summary>
         /// Record any action getting triggered anywhere.
         /// </summary>
