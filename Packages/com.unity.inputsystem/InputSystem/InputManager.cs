@@ -3269,7 +3269,7 @@ namespace UnityEngine.Experimental.Input
                         // to create a device with the same layout.
                         if (!deviceState.description.empty)
                         {
-                            device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
+                            device = AddDevice(deviceState.description, throwIfNoLayoutFound: false,
                                 deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
                         }
                         else
