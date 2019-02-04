@@ -1524,10 +1524,11 @@ namespace UnityEngine.Experimental.Input
         {
             if (s_RemoteConnection == null)
             {
-                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
                 #if UNITY_EDITOR
+                s_RemoteConnection = RemoteInputPlayerConnection.instance;
                 s_RemoteConnection.Bind(EditorConnection.instance, false);
                 #else
+                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
                 s_RemoteConnection.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
                 #endif
             }

@@ -1,6 +1,9 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UnityEngine.Experimental.Input
 {
@@ -13,7 +16,13 @@ namespace UnityEngine.Experimental.Input
     //       be a ScriptableObject as it will register every listeners as a persistent
     //       one.
     [Serializable]
-    internal class RemoteInputPlayerConnection : ScriptableObject, IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
+    internal class RemoteInputPlayerConnection :
+#if UNITY_EDITOR    
+        ScriptableSingleton<RemoteInputPlayerConnection>,
+#else
+        ScriptableObject,
+#endif
+             IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
     {
         public static readonly Guid kNewDeviceMsg = new Guid("fcd9651ded40425995dfa6aeb78f1f1c");
         public static readonly Guid kNewLayoutMsg = new Guid("fccfec2b7369466d88502a9dd38505f4");
@@ -163,7 +172,7 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
-        [NonSerialized] private IEditorPlayerConnection m_Connection;
+        [SerializeField] private IEditorPlayerConnection m_Connection;
         [NonSerialized] private Subscriber[] m_Subscribers;
         [SerializeField] private int[] m_ConnectedIds;
 
