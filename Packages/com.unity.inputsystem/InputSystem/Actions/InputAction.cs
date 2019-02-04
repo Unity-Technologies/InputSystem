@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should continuous actions *always* trigger as long as they are enabled? (even if no control is actuated)
+
 ////REVIEW: I think the action system as it is today offers too many ways to shoot yourself in the foot. It has
 ////        flexibility but at the same time has abundant opportunity for ending up with dysfunction. Common setups
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
@@ -118,6 +120,10 @@ namespace UnityEngine.Experimental.Input
             get => m_ExpectedControlLayout;
             set => m_ExpectedControlLayout = value;
         }
+
+        public string processors => m_Processors;
+
+        public string interactions => m_Interactions;
 
         /// <summary>
         /// The map the action belongs to.
@@ -363,20 +369,22 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string interactions = null, string expectedControlLayout = null)
+        public InputAction(string name = null, string binding = null, string interactions = null, string processors = null, string expectedControlLayout = null)
             : this(name)
         {
-            if (binding == null && interactions != null)
-                throw new ArgumentException("Cannot have interaction without binding", "interactions");
-
-            if (binding != null)
+            if (!string.IsNullOrEmpty(binding))
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, action = m_Name}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, processors = processors, action = m_Name}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
+            else
+            {
+                m_Interactions = interactions;
+                m_Processors = processors;
+            }
 
-            this.expectedControlLayout = expectedControlLayout;
+            m_ExpectedControlLayout = expectedControlLayout;
         }
 
         public override string ToString()
@@ -385,7 +393,7 @@ namespace UnityEngine.Experimental.Input
                 return "<Unnamed>";
 
             if (m_ActionMap != null && !isSingletonAction && !String.IsNullOrEmpty(m_ActionMap.name))
-                return String.Format("{0}/{1}", m_ActionMap.name, m_Name);
+                return $"{m_ActionMap.name}/{m_Name}";
 
             return m_Name;
         }
@@ -420,9 +428,11 @@ namespace UnityEngine.Experimental.Input
         // If you clone an action from a set, you get a singleton action in return.
         public InputAction Clone()
         {
-            var clone = new InputAction(name: m_Name);
-            clone.m_SingletonActionBindings = bindings.ToArray();
-            clone.m_BindingsCount = m_BindingsCount;
+            var clone = new InputAction(name: m_Name)
+            {
+                m_SingletonActionBindings = bindings.ToArray(),
+                m_BindingsCount = m_BindingsCount
+            };
             return clone;
         }
 
@@ -449,6 +459,8 @@ namespace UnityEngine.Experimental.Input
             + "without breaking references.")]
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
         [SerializeField] internal ActionFlags m_Flags;
+        [SerializeField] internal string m_Processors;
+        [SerializeField] internal string m_Interactions;
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
@@ -560,10 +572,10 @@ namespace UnityEngine.Experimental.Input
         {
             if (enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot modify bindings on action '{0}' while the action is enabled", this));
+                    $"Cannot modify bindings on action '{this}' while the action is enabled");
             if (GetOrCreateActionMap().enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot modify bindings on action '{0}' while its action map is enabled", this));
+                    $"Cannot modify bindings on action '{this}' while its action map is enabled");
         }
 
         /// <summary>
@@ -698,9 +710,7 @@ namespace UnityEngine.Experimental.Input
 
             public object ReadValueAsObject()
             {
-                if (m_State == null)
-                    return null;
-                return m_State.ReadValueAsObject(bindingIndex, controlIndex);
+                return m_State?.ReadValueAsObject(bindingIndex, controlIndex);
             }
 
             ////TODO: really read previous value, not value from last frame

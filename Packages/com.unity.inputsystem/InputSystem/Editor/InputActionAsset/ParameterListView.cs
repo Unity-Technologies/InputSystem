@@ -36,6 +36,9 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         /// <returns>An array of parameter values.</returns>
         public InputControlLayout.ParameterValue[] GetParameters()
         {
+            if (m_Parameters == null)
+                return null;
+
             // See if we have parameters that aren't at their default value.
             var countOfParametersNotAtDefaultValue = 0;
             for (var i = 0; i < m_Parameters.Length; ++i)

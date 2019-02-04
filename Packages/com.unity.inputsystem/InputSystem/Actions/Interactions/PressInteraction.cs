@@ -3,8 +3,6 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
 #endif
 
-////TODO: have ability to also observe release (separate from ReleaseInteraction)
-
 namespace UnityEngine.Experimental.Input.Interactions
 {
     /// <summary>
@@ -167,13 +165,13 @@ namespace UnityEngine.Experimental.Input.Interactions
 
         public override void OnGUI()
         {
-            m_PressPointSetting.OnGUI();
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
+            m_PressPointSetting.OnGUI();
         }
 
         private CustomOrDefaultSetting m_PressPointSetting;
 
-        private static readonly GUIContent s_PressBehaviorLabel = EditorGUIUtility.TrTextContent("Press Behavior",
+        private static readonly GUIContent s_PressBehaviorLabel = EditorGUIUtility.TrTextContent("Trigger Behavior",
             "Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
             + "cancelled on release.");

@@ -27,7 +27,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
-            string interactions = null, string groups = null, string expectedControlLayout = null)
+            string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
             if (map == null)
                 throw new ArgumentNullException(nameof(map));
@@ -41,8 +41,10 @@ namespace UnityEngine.Experimental.Input
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
 
             // Append action to array.
-            var action = new InputAction(name);
-            action.expectedControlLayout = expectedControlLayout;
+            var action = new InputAction(name)
+            {
+                expectedControlLayout = expectedControlLayout
+            };
             ArrayHelpers.Append(ref map.m_Actions, action);
             action.m_ActionMap = map;
 
@@ -50,13 +52,26 @@ namespace UnityEngine.Experimental.Input
 
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
-                action.AddBinding(binding, interactions: interactions, groups: groups);
+            {
+                action.AddBinding(binding, interactions: interactions, processors: processors, groups: groups);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(groups))
+                    throw new ArgumentException(
+                        $"No binding path was specified for action '{action}' but groups was specified ('{groups}'); cannot apply groups without binding",
+                        nameof(groups));
+
+                // If no binding has been supplied but there are interactions and processors, they go on the action itself.
+                action.m_Interactions = interactions;
+                action.m_Processors = processors;
+            }
 
             return action;
         }
 
         ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
-        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
+        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
@@ -65,6 +80,7 @@ namespace UnityEngine.Experimental.Input
             {
                 path = path,
                 interactions = interactions,
+                processors = processors,
                 groups = groups
             });
         }

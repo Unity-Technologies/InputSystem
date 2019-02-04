@@ -90,6 +90,9 @@ This release contains a number of fairly significant changes. The focus has been
 #### Actions:
 - Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \
   ![Continuous Action](Documentation~/Images/ContinuousAction.png)
+- Can now add interactions and processors directly to actions.
+  ![Action Properties](Documentation~/Images/ActionProperties.png)
+    * This is functionally equivalent to adding the respective processors and/or interactions to every binding on the action.
 - Values can now be read out as objects using `InputAction.CallbackContext.ReadValueAsObject()`.
     * Allocates GC memory. Should not be used during normal gameplay but is very useful for testing and debugging.
 - Added auto-save mode for .inputactions editor.

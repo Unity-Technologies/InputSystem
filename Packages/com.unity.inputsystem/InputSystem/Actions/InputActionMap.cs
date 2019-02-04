@@ -542,16 +542,14 @@ namespace UnityEngine.Experimental.Input
                 m_SingletonAction.m_BindingsStartIndex = 0;
                 m_SingletonAction.m_BindingsCount = m_Bindings.Length;
                 m_SingletonAction.m_ControlStartIndex = 0;
-                m_SingletonAction.m_ControlCount = m_State != null ? m_State.totalControlCount : 0;
+                m_SingletonAction.m_ControlCount = m_State?.totalControlCount ?? 0;
             }
             else
             {
                 // Go through all bindings and slice them out to individual actions.
 
                 Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
-                var mapIndices = m_State != null
-                    ? m_State.FetchMapIndices(this)
-                    : new InputActionMapState.ActionMapIndices();
+                var mapIndices = m_State?.FetchMapIndices(this) ?? new InputActionMapState.ActionMapIndices();
 
                 // Reset state on each action. Important if we have actions that are no longer
                 // referred to by bindings.
@@ -612,7 +610,7 @@ namespace UnityEngine.Experimental.Input
                     var sourceBindingToCopy = currentBindingIndex;
                     for (var i = 0; i < bindingCountForCurrentAction; ++i)
                     {
-                        // See if we've come across a binding that isn't belong to our currently looked at action.
+                        // See if we've come across a binding that doesn't belong to our currently looked at action.
                         if (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
                         {
                             // Yes, we have. Means the bindings for our actions are scattered in m_Bindings and
@@ -623,7 +621,7 @@ namespace UnityEngine.Experimental.Input
                             // over to it.
                             if (newBindingsArray == null)
                             {
-                                newBindingsArray = new InputBinding[mapIndices.bindingCount];
+                                newBindingsArray = new InputBinding[m_Bindings.Length];
                                 newBindingsArrayIndex = sourceBindingToCopy;
                                 Array.Copy(m_Bindings, 0, newBindingsArray, 0, sourceBindingToCopy);
                             }
@@ -634,7 +632,7 @@ namespace UnityEngine.Experimental.Input
                             do
                             {
                                 ++sourceBindingToCopy;
-                                Debug.Assert(sourceBindingToCopy < mapIndices.bindingCount);
+                                Debug.Assert(sourceBindingToCopy < m_Bindings.Length);
                             }
                             while (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
                         }
@@ -944,6 +942,8 @@ namespace UnityEngine.Experimental.Input
             public string id;
             public string expectedControlLayout;
             public bool continuous;
+            public string processors;
+            public string interactions;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.

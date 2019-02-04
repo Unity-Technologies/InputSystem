@@ -2176,7 +2176,61 @@ partial class CoreTests
         }
     }
 
-    class ConstantVector2TestProcessor : InputProcessor<Vector2>
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddInteractionsToActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction(interactions: "Tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(wasPerformed, Is.False);
+            Assert.That(ctx.interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(((TapInteraction)ctx.interaction).duration, Is.EqualTo(0.123).Within(0.00001));
+            wasPerformed = true;
+        };
+
+        Press(gamepad.buttonSouth, absoluteTime: 0);
+        Release(gamepad.buttonSouth, absoluteTime: 0.1);
+
+        Assert.That(wasPerformed, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddProcessorsToActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction(processors: "ConstantVector2Test");
+        action.AddBinding("<Gamepad>/leftStick");
+        action.Enable();
+
+        Vector2? receivedVector = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedVector, Is.Null);
+            receivedVector = ctx.ReadValue<Vector2>();
+        };
+
+        Set(gamepad.leftStick, Vector2.one);
+
+        Assert.That(receivedVector, Is.Not.Null);
+        Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
+    }
+
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class ConstantVector2TestProcessor : InputProcessor<Vector2>
     {
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
@@ -2192,7 +2246,7 @@ partial class CoreTests
 
         InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
-        action.AddBinding("/<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
+        action.AddBinding("<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();
 
         Vector2? receivedVector = null;
