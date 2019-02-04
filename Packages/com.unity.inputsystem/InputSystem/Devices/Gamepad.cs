@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: is the Lefty layout variant actually useful?
 
+////TODO: allow to be used for mouse simulation
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
