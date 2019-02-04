@@ -17,7 +17,12 @@ namespace UnityEngine.Experimental.Input
     //       one.
     [Serializable]
     internal class RemoteInputPlayerConnection :
-#if UNITY_EDITOR    
+#if UNITY_EDITOR
+        // In the editor, we need to make sure that we get the same instance after domain reloads.
+        // Otherwise, callbacks we have registered before the reload will no longer be valid, because
+        // the object instance they point to will not deserialize to a valid object. So we use a 
+        // ScriptableSingleton instance, which fullfills these requirements. In the player, we need to 
+        // use a simple ScriptableObject, as ScriptableSingleton is an editor-only class.
         ScriptableSingleton<RemoteInputPlayerConnection>,
 #else
         ScriptableObject,
