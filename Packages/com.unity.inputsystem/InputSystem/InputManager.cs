@@ -3271,6 +3271,10 @@ namespace UnityEngine.Experimental.Input
                         {
                             device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
                                 deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
+
+                            // Re-set the name to the stored name. Otherwise we lose the sorting of 
+                            // devices to remote players, which is encoded in the name.
+                            device.m_Name = new InternedString(deviceState.name);
                         }
                         else
                         {
