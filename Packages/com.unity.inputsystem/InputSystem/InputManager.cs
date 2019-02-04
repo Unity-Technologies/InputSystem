@@ -653,6 +653,7 @@ namespace UnityEngine.Experimental.Input
         ////FIXME: allowing the descripting to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
         {
+            Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
@@ -687,7 +688,7 @@ namespace UnityEngine.Experimental.Input
                     haveOverriddenLayoutName = true;
                 }
             }
-
+            Profiler.EndSample();
             return layoutName;
         }
 
@@ -1001,6 +1002,7 @@ namespace UnityEngine.Experimental.Input
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
+            Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
 
@@ -1017,12 +1019,13 @@ namespace UnityEngine.Experimental.Input
                     m_Runtime.DeviceCommand(deviceId, ref command);
                 }
 
+                Profiler.EndSample();
                 return null;
             }
 
             var device = AddDevice(layout, deviceId, description, deviceFlags);
             device.m_Description = description;
-
+            Profiler.EndSample();
             return device;
         }
 
@@ -1322,6 +1325,7 @@ namespace UnityEngine.Experimental.Input
 
         internal void Initialize(IInputRuntime runtime, InputSettings settings)
         {
+            Debug.Log("Initialize");
             Debug.Assert(settings != null);
 
             m_Settings = settings;
@@ -3247,6 +3251,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         internal void RestoreDevicesAfterDomainReload()
         {
+            Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
             Debug.Assert(m_SavedDeviceStates != null);
 
             // We don't want to re-resolve actions over and over while we're adding back
@@ -3343,6 +3348,7 @@ namespace UnityEngine.Experimental.Input
             {
                 m_SuppressReResolvingOfActions = false;
                 InputActionMapState.ReResolveAllEnabledActions();
+                Profiler.EndSample();
             }
         }
 
