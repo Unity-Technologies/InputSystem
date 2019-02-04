@@ -408,8 +408,12 @@ namespace UnityEngine.Experimental.Input.Editor
             Debug.Assert(((InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue &
                 InputBinding.Flags.Composite) != 0);
 
-            bindingProperty.FindPropertyRelative("m_Name").stringValue = ObjectNames.NicifyVariableName(compositeName);
-            bindingProperty.FindPropertyRelative("m_Path").stringValue = compositeName;
+            // Only change the name if the current name is still the default one.
+            var pathProperty = bindingProperty.FindPropertyRelative("m_Path");
+            var nameProperty = bindingProperty.FindPropertyRelative("m_Name");
+            if (nameProperty.stringValue == ObjectNames.NicifyVariableName(pathProperty.stringValue))
+                nameProperty.stringValue = ObjectNames.NicifyVariableName(compositeName);
+            pathProperty.stringValue = compositeName;
 
             // Adjust part bindings if we have information on the registered composite. If we don't have
             // a type, we don't know about the parts. In that case, leave part bindings untouched.

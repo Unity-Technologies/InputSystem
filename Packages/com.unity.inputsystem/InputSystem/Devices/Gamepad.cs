@@ -149,7 +149,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
+    /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
     [InputControlLayout(stateType = typeof(GamepadState))]
@@ -232,7 +232,7 @@ namespace UnityEngine.Experimental.Input
                     case GamepadButton.DpadLeft: return dpad.left;
                     case GamepadButton.DpadRight: return dpad.right;
                     default:
-                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
+                        throw new InvalidEnumArgumentException(nameof(button), (int)button, typeof(GamepadButton));
                 }
             }
         }
@@ -299,7 +299,7 @@ namespace UnityEngine.Experimental.Input
 
             // Remove from `all`.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
-            Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));
+            Debug.Assert(wasFound, $"Gamepad {this} seems to not have been added but is being removed");
             if (wasFound)
                 --s_GamepadCount;
         }

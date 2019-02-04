@@ -958,6 +958,8 @@ namespace UnityEngine.Experimental.Input
                     id = action.id.ToString(),
                     expectedControlLayout = action.m_ExpectedControlLayout,
                     continuous = action.continuous,
+                    processors = action.processors,
+                    interactions = action.interactions,
                 };
             }
         }
@@ -1024,7 +1026,7 @@ namespace UnityEngine.Experimental.Input
 
             public static WriteFileJson FromMaps(IEnumerable<InputActionMap> maps)
             {
-                var mapCount = Enumerable.Count(maps);
+                var mapCount = maps.Count();
                 if (mapCount == 0)
                     return new WriteFileJson();
 
@@ -1107,7 +1109,9 @@ namespace UnityEngine.Experimental.Input
                         m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
                             ? jsonAction.expectedControlLayout
                             : null,
-                        continuous = jsonAction.continuous
+                        continuous = jsonAction.continuous,
+                        m_Processors = jsonAction.processors,
+                        m_Interactions = jsonAction.interactions,
                     };
                     actionLists[mapIndex].Add(action);
 
@@ -1176,7 +1180,9 @@ namespace UnityEngine.Experimental.Input
                             m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
                                 ? jsonAction.expectedControlLayout
                                 : null,
-                            continuous = jsonAction.continuous
+                            continuous = jsonAction.continuous,
+                            m_Processors = jsonAction.processors,
+                            m_Interactions = jsonAction.interactions,
                         };
                         actionLists[mapIndex].Add(action);
 

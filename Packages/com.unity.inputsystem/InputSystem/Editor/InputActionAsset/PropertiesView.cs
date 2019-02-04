@@ -77,14 +77,12 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnProcessorsModified()
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
-            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
-            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_InteractionsChanged);
         }
 
