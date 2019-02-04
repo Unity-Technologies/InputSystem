@@ -7,6 +7,8 @@ using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ShortcutManagement;
 
+////TODO: Add "Revert" button
+
 ////REVIEW: should we listen for Unity project saves and save dirty .inputactions assets along with it?
 
 ////TODO: add helpers to very quickly set up certai common configs (e.g. "FPS Controls" in add-action context menu;
@@ -260,8 +262,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     // Grab the action for the binding and see if we have an expected control layout
                     // set on it. Pass that on to the control picking machinery.
-                    var isCompositeTreeItem = item is CompositeTreeItem;
-                    var actionItem = (isCompositeTreeItem ? item.parent.parent : item.parent) as ActionTreeItem;
+                    var isCompositePartBinding = item is CompositeTreeItem;
+                    var isCompositeBinding = item is CompositeGroupTreeItem;
+                    var actionItem = (isCompositePartBinding ? item.parent.parent : item.parent) as ActionTreeItem;
                     Debug.Assert(actionItem != null);
 
                     // Show properties for binding.
@@ -270,22 +273,41 @@ namespace UnityEngine.Experimental.Input.Editor
                             item.elementProperty,
                             change =>
                             {
-                                // If path changed, perform a full reload as it affects the action tree.
-                                // Otherwise just do a "soft" apply. This is important so as to not lose
-                                // edit state while editing parameters on interactions or processors.
-                                if (change == InputBindingPropertiesView.Change.PathChanged)
+                                if (change == InputBindingPropertiesView.k_CompositeTypeChanged)
+                                {
+                                    Debug.Assert(isCompositeBinding, "Binding is expected to be a composite");
+
+                                    // This is a pretty complex change. We basically tear out part of the binding tree
+                                    // and replace it with a different structure.
+                                    var actionMapRow = (ActionMapTreeItem)m_ActionMapsTree.GetSelectedRow();
+                                    Debug.Assert(actionMapRow != null);
+
+                                    var compositeName = m_BindingPropertyView.compositeType;
+                                    var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
+
+                                    InputActionSerializationHelpers.ChangeCompositeType(actionMapRow.bindingsProperty,
+                                        actionItem.bindingsStartIndex + item.index, compositeName, compositeType,
+                                        actionItem.actionName);
+
                                     ApplyAndReload();
+                                }
+                                else if (change == InputBindingPropertiesView.k_PathChanged)
+                                {
+                                    // If path changed, perform a full reload as it affects the action tree.
+                                    // Otherwise just do a "soft" apply. This is important so as to not lose
+                                    // edit state while editing parameters on interactions or processors.
+                                    ApplyAndReload();
+                                }
                                 else
+                                {
+                                    // Simple property change that doesn't affect the rest of the UI.
                                     Apply();
+                                }
                             },
                             m_PickerTreeViewState,
                             m_InputActionWindowToolbar,
-                            item.expectedControlLayout);
-
-                    // For composite groups, don't show the binding path and control scheme section,
-                    // but show composite parameters instead.
-                    if (item is CompositeGroupTreeItem)
-                        m_BindingPropertyView.isCompositeBinding = true;
+                            isCompositeBinding: isCompositeBinding,
+                            expectedControlLayout: item.expectedControlLayout);
                 }
 
                 if (item is ActionTreeItem actionItem1)
@@ -295,7 +317,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         new InputActionPropertiesView(
                             actionItem1.elementProperty,
                             // Apply without reload is enough here.
-                            Apply);
+                            change => Apply());
                 }
             }
         }
@@ -324,8 +346,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void Apply()
         {
+            m_ActionAssetManager.serializedObject.ApplyModifiedProperties();
+
             if (InputEditorUserSettings.autoSaveInputActionAssets)
+            {
                 m_ActionAssetManager.SaveChangesToAsset();
+            }
             else
             {
                 m_ActionAssetManager.SetAssetDirty();

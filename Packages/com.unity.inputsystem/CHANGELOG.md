@@ -93,6 +93,8 @@ This release contains a number of fairly significant changes. The focus has been
 - Can now add interactions and processors directly to actions.
   ![Action Properties](Documentation~/Images/ActionProperties.png)
     * This is functionally equivalent to adding the respective processors and/or interactions to every binding on the action.
+- Can now change the type of a composite retroactively.
+  ![Composite Properties](Documentation~/Images/CompositeProperties.png)
 - Values can now be read out as objects using `InputAction.CallbackContext.ReadValueAsObject()`.
     * Allocates GC memory. Should not be used during normal gameplay but is very useful for testing and debugging.
 - Added auto-save mode for .inputactions editor.
