@@ -434,12 +434,4 @@ namespace UnityEngine.Experimental.Input
 
         private Touch[] m_TouchPool;
     }
-
-    public class TouchSimulation
-    {
-        public static TouchSimulation instance
-        {
-            get { throw new NotImplementedException(); }
-        }
-    }
 }

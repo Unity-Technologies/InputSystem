@@ -23,7 +23,7 @@ internal class UserTests : InputTestFixture
     [Category("Users")]
     public void Users_DoesNotListenToUnpairedDeviceActivityByDefault()
     {
-        Assert.That(InputUser.listenForUnpairedDeviceActivity, Is.False);
+        Assert.That(InputUser.listenForUnpairedDeviceActivity, Is.Zero);
     }
 
     [Test]
@@ -793,7 +793,7 @@ internal class UserTests : InputTestFixture
             }
         ";
 
-        InputUser.listenForUnpairedDeviceActivity = true;
+        ++InputUser.listenForUnpairedDeviceActivity;
 
         var receivedControls = new List<InputControl>();
         InputUser.onUnpairedDeviceUsed +=
@@ -828,7 +828,7 @@ internal class UserTests : InputTestFixture
 
         // Unpair the device and turn off the feature to make sure we're not getting a notification.
         user.UnpairDevice(gamepad);
-        InputUser.listenForUnpairedDeviceActivity = false;
+        --InputUser.listenForUnpairedDeviceActivity;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
@@ -842,7 +842,7 @@ internal class UserTests : InputTestFixture
         //       then if we were to only send the first actuation we come across, it may be for an
         //       irrelevant control (e.g. sticks on gamepad).
 
-        InputUser.listenForUnpairedDeviceActivity = true;
+        ++InputUser.listenForUnpairedDeviceActivity;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.A));
         InputSystem.Update();
@@ -858,7 +858,7 @@ internal class UserTests : InputTestFixture
     [Category("Users")]
     public void Users_CanDetectUseOfUnpairedDevice_AndPairFromCallback()
     {
-        InputUser.listenForUnpairedDeviceActivity = true;
+        ++InputUser.listenForUnpairedDeviceActivity;
 
         var receivedControls = new List<InputControl>();
         InputUser.onUnpairedDeviceUsed +=

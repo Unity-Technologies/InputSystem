@@ -34,8 +34,8 @@ internal class XRTests : InputTestFixture
 
         Assert.That(createdDevice, Is.TypeOf(expectedType));
 
-        var generatedLayout = InputSystem.TryLoadLayout(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
-            deviceDescription.manufacturer, deviceDescription.product));
+        var generatedLayout = InputSystem.TryLoadLayout(
+            $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
@@ -76,8 +76,8 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = string.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
-            deviceDescription.manufacturer, deviceDescription.product);
+        var expectedLayoutName =
+            $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}";
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
 
@@ -94,7 +94,7 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = string.Format("{0}::{1}", XRUtilities.kXRInterfaceCurrent, deviceDescription.product);
+        var expectedLayoutName = $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.product}";
         Assert.AreEqual(expectedLayoutName, createdDevice.layout);
     }
 

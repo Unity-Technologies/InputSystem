@@ -668,7 +668,7 @@ public class DemoGame : MonoBehaviour
                 // Start listening for device activity on devices not currently paired to a user.
                 // This is how we detect when a player presses a button to join the game with a specific
                 // device.
-                InputUser.listenForUnpairedDeviceActivity = true;
+                ++InputUser.listenForUnpairedDeviceActivity;
 
                 ////TODO: show "Press button to join" text
                 break;
@@ -685,7 +685,7 @@ public class DemoGame : MonoBehaviour
                 // from devices currently assigned to the player. This is how we detect when the player
                 // is switching from one device to another (and potentially from one control scheme
                 // to another).
-                InputUser.listenForUnpairedDeviceActivity = true;
+                ++InputUser.listenForUnpairedDeviceActivity;
 
                 break;
             }
@@ -711,7 +711,7 @@ public class DemoGame : MonoBehaviour
         // Only in the lobby and in single-player games do we listen for device activity
         // on devices not currently paired to a user.
         if (newState != State.InLobby && newState != State.InSinglePlayerGame)
-            InputUser.listenForUnpairedDeviceActivity = false;
+            --InputUser.listenForUnpairedDeviceActivity;
 
         m_State = newState;
     }

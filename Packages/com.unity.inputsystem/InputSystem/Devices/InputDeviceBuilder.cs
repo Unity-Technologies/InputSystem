@@ -117,9 +117,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception(string.Format(
-                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                    typeof(TControl).Name, control.GetType().Name));
+                throw new Exception(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -130,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = TryGetControl(parent, path);
             if (control == null)
-                throw new Exception(string.Format("Cannot find input control '{0}'", parent.MakeChildPath(path)));
+                throw new Exception($"Cannot find input control '{parent.MakeChildPath(path)}'");
             return control;
         }
 

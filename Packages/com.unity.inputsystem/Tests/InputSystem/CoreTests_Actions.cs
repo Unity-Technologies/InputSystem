@@ -1127,6 +1127,131 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPerformPressInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Test all three press behaviors concurrently.
+        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
+
+        pressAction.Enable();
+        releaseAction.Enable();
+        pressAndReleaseAction.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonSouth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+
+            trace.Clear();
+
+            Release(gamepad.buttonSouth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Cancelled));
+
+            trace.Clear();
+
+            Press(gamepad.buttonSouth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformContinuousPressInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
+
+        pressAction.continuous = true;
+        releaseAction.continuous = true; // ReleaseOnly doesn't care about continuous.
+        pressAndReleaseAction.continuous = true;
+
+        pressAction.Enable();
+        releaseAction.Enable();
+        pressAndReleaseAction.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonSouth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+
+            trace.Clear();
+
+            InputSystem.Update();
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+
+            trace.Clear();
+
+            Release(gamepad.buttonSouth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Cancelled));
+
+            trace.Clear();
+
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldInteraction()
     {
@@ -1395,6 +1520,30 @@ partial class CoreTests
             Assert.That(actions[1].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[1].time, Is.EqualTo(7.75).Within(0.00001));
             Assert.That(actions[1].ReadValue<float>(), Is.Zero.Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLetControlChangesPassThroughInteractionSystemAsIs_UsingPassthroughInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "passthrough");
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+            action.Enable();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(3));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
+            Assert.That(actions[2].ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
         }
     }
 
@@ -2027,7 +2176,61 @@ partial class CoreTests
         }
     }
 
-    class ConstantVector2TestProcessor : InputProcessor<Vector2>
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddInteractionsToActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction(interactions: "Tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(wasPerformed, Is.False);
+            Assert.That(ctx.interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(((TapInteraction)ctx.interaction).duration, Is.EqualTo(0.123).Within(0.00001));
+            wasPerformed = true;
+        };
+
+        Press(gamepad.buttonSouth, absoluteTime: 0);
+        Release(gamepad.buttonSouth, absoluteTime: 0.1);
+
+        Assert.That(wasPerformed, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddProcessorsToActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction(processors: "ConstantVector2Test");
+        action.AddBinding("<Gamepad>/leftStick");
+        action.Enable();
+
+        Vector2? receivedVector = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedVector, Is.Null);
+            receivedVector = ctx.ReadValue<Vector2>();
+        };
+
+        Set(gamepad.leftStick, Vector2.one);
+
+        Assert.That(receivedVector, Is.Not.Null);
+        Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
+    }
+
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class ConstantVector2TestProcessor : InputProcessor<Vector2>
     {
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
@@ -2043,7 +2246,7 @@ partial class CoreTests
 
         InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
-        action.AddBinding("/<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
+        action.AddBinding("<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();
 
         Vector2? receivedVector = null;
@@ -2063,7 +2266,7 @@ partial class CoreTests
     }
 
     [Test]
-    [Category("Actions_CanAddScaleProcessor")]
+    [Category("Actions")]
     public void Actions_CanAddScaleProcessor()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2464,7 +2667,7 @@ partial class CoreTests
         }
     }
 
-    // Triggers (any analog axis really) may jitted. Make sure that we can perform a hold
+    // Triggers (any analog axis really) may jitter. Make sure that we can perform a hold
     // even if the control wiggles around.
     [Test]
     [Category("Actions")]
@@ -2500,7 +2703,6 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.456f);
 
             actions = trace.ToArray();
-            Debug.Log(string.Join(",\n", actions));//DBG
             Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[0].time, Is.EqualTo(0.6).Within(0.00001));
@@ -2989,6 +3191,17 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanLookUpMapInAssetById()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
+        Assert.That(asset.TryGetActionMap($"{{{map.id}}}"), Is.SameAs(map));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanLookUpActionInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -3412,13 +3625,13 @@ partial class CoreTests
         var mouse = InputSystem.AddDevice<Mouse>();
         var touch = InputSystem.AddDevice<Touchscreen>();
 
-        Assert.That(InputControlScheme.FindControlSchemeForControl(gamepad, new[] {scheme1, scheme2}),
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(gamepad, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme1));
-        Assert.That(InputControlScheme.FindControlSchemeForControl(keyboard, new[] {scheme1, scheme2}),
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(keyboard, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme2));
-        Assert.That(InputControlScheme.FindControlSchemeForControl(mouse, new[] {scheme1, scheme2}),
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(mouse, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme2));
-        Assert.That(InputControlScheme.FindControlSchemeForControl(touch, new[] {scheme1, scheme2}),
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(touch, new[] {scheme1, scheme2}),
             Is.Null);
     }
 

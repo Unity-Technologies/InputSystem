@@ -156,10 +156,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         // setup will throw.
         public uint sizeInBits;
 
-        internal uint alignedSizeInBytes
-        {
-            get { return (uint)((sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0)); }
-        }
+        internal uint alignedSizeInBytes => (uint)((sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0));
 
         public int ReadInt(void* statePtr)
         {
@@ -220,7 +217,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else
             {
-                throw new Exception(string.Format("State format '{0}' is not supported as integer format", format));
+                throw new Exception($"State format '{format}' is not supported as integer format");
             }
 
             return value;
@@ -252,11 +249,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 }
                 else if (sizeInBits != 31)
                 {
-                    float maxValue = (float)(1 << (int)sizeInBits);
-                    float rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
+                    var maxValue = (float)(1 << (int)sizeInBits);
+                    var rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
                     if (format == kTypeSBit)
                     {
-                        float unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
+                        var unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
                         value = Mathf.Clamp(unclampedValue, -1.0f, 1.0f);
                     }
                     else
@@ -301,7 +298,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else
             {
-                throw new Exception(string.Format("State format '{0}' is not supported as floating-point format", format));
+                throw new Exception($"State format '{format}' is not supported as floating-point format");
             }
 
             return value;
@@ -325,8 +322,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 }
                 else
                 {
-                    int maxValue = (1 << (int)sizeInBits) - 1;
-                    int intValue = (int)(value * maxValue);
+                    var maxValue = (1 << (int)sizeInBits) - 1;
+                    var intValue = (int)(value * maxValue);
                     MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
                 }
             }
@@ -356,7 +353,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else
             {
-                throw new Exception(string.Format("State format '{0}' is not supported as floating-point format", format));
+                throw new Exception($"State format '{format}' is not supported as floating-point format");
             }
         }
 
@@ -388,9 +385,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else
             {
-                throw new NotImplementedException(string.Format(
-                    "Writing primitive value of type '{0}' into state block with format '{1}'", value.valueType,
-                    format));
+                throw new NotImplementedException(
+                    $"Writing primitive value of type '{value.valueType}' into state block with format '{format}'");
             }
         }
 

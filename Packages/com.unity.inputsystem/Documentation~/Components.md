@@ -1,6 +1,8 @@
+    ////WIP
+
 # Components
 
-To simplify working with the new input system, the PlayerInput plugin provides a set of MonoBehaviour components and customized editors to streamline setup and handling of input in a game.
+To simplify working with input in Unity, the PlayerInput plugin provides a set of MonoBehaviour components and customized editors to streamline setup and handling of input in a game. These components are generally the quickest way to get up and running with input in Unity.
 
 ## `PlayerInput` Component
 
@@ -13,6 +15,8 @@ Each `PlayerInput` represents a separate player in the game. Multiple `PlayerInp
 ### Input Actions
 
 To receive input, each player needs an associated set of input actions.
+
+### Control Schemes
 
 ### UI Input
 
