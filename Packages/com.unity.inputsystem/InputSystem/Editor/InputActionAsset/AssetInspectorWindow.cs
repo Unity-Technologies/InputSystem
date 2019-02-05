@@ -670,19 +670,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     return false;
             }
 
+            ////REVIEW: It'd be great if the window got docked by default but the public EditorWindow API doesn't allow that
+            ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
+            ////        only way to get programmatic docking with the current API).
             // See if we have an existing editor window that has the asset open.
             var window = FindEditorFor(asset);
-            if (window != null)
-            {
-                window.Show();
-                window.Focus();
-            }
-            else
+            if (window == null)
             {
                 // No, so create a new window.
-                window = GetWindow<AssetInspectorWindow>(string.Empty, focus: true, desiredDockNextTo: typeof(SceneView));
+                window = CreateInstance<AssetInspectorWindow>();
                 window.SetAsset(asset);
             }
+            window.Show();
+            window.Focus();
 
             // If user clicked on an action inside the asset, focus on that action (if we can find it).
             if (actionToSelect != null && window.m_ActionMapsTree.SetSelection(mapToSelect))
