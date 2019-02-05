@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        internal void AddBinding(object propertyObj)
+        private void AddBinding(object propertyObj)
         {
             var property = (SerializedProperty)propertyObj;
             InputActionSerializationHelpers.AddBinding(property);
@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Tree.Reload();
         }
 
-        internal void OnAddCompositeBinding(object compositeAndProperty)
+        private void OnAddCompositeBinding(object compositeAndProperty)
         {
             var compositeName = ((KeyValuePair<string, SerializedProperty>)compositeAndProperty).Key;
             var property = ((KeyValuePair<string, SerializedProperty>)compositeAndProperty).Value;

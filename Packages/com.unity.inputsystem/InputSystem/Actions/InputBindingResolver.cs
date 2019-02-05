@@ -144,7 +144,7 @@ namespace UnityEngine.Experimental.Input
 
             // Allocate binding states.
             var bindingsInThisMap = map.m_Bindings;
-            var bindingCountInThisMap = bindingsInThisMap != null ? bindingsInThisMap.Length : 0;
+            var bindingCountInThisMap = bindingsInThisMap?.Length ?? 0;
             ArrayHelpers.GrowWithCapacity(ref bindingStates, ref totalBindingCount, bindingCountInThisMap);
 
             ////TODO: make sure composite objects get all the bindings they need
@@ -202,35 +202,59 @@ namespace UnityEngine.Experimental.Input
                             // Special-case for singleton actions that don't have names.
                             actionIndexInMap = 0;
                         }
+                        InputAction action = null;
+                        if (actionIndexInMap != InputActionMapState.kInvalidIndex)
+                            action = actionsInThisMap[actionIndexInMap];
 
                         // Skip binding if it doesn't match the binding mask on the action (might be empty).
-                        if (!isComposite && actionIndexInMap != InputActionMapState.kInvalidIndex)
-                        {
-                            var action = actionsInThisMap[actionIndexInMap];
-                            if (action.m_BindingMask != null && !action.m_BindingMask.Value.Matches(ref unresolvedBinding))
-                                continue;
-                        }
+                        if (!isComposite && action?.m_BindingMask != null && !action.m_BindingMask.Value.Matches(ref unresolvedBinding))
+                            continue;
 
                         // Instantiate processors.
-                        var firstProcessorIndex = 0;
+                        var firstProcessorIndex = InputActionMapState.kInvalidIndex;
                         var numProcessors = 0;
                         var processors = unresolvedBinding.effectiveProcessors;
                         if (!string.IsNullOrEmpty(processors))
                         {
+                            // Add processors from binding.
                             firstProcessorIndex = ResolveProcessors(processors);
-                            if (processors != null)
+                            if (firstProcessorIndex != InputActionMapState.kInvalidIndex)
                                 numProcessors = totalProcessorCount - firstProcessorIndex;
+                        }
+                        if (!string.IsNullOrEmpty(action.m_Processors))
+                        {
+                            // Add processors from action.
+                            var index = ResolveProcessors(action.m_Processors);
+                            if (index != InputActionMapState.kInvalidIndex)
+                            {
+                                if (firstProcessorIndex == InputActionMapState.kInvalidIndex)
+                                    firstProcessorIndex = index;
+                                numProcessors += totalProcessorCount - index;
+                            }
                         }
 
                         // Instantiate interactions.
-                        var firstInteractionIndex = 0;
+                        var firstInteractionIndex = InputActionMapState.kInvalidIndex;
                         var numInteractions = 0;
                         var interactions = unresolvedBinding.effectiveInteractions;
                         if (!string.IsNullOrEmpty(interactions))
                         {
+                            // Add interactions from binding.
                             firstInteractionIndex = ResolveInteractions(interactions);
-                            if (interactionStates != null)
+                            if (firstInteractionIndex != InputActionMapState.kInvalidIndex)
                                 numInteractions = totalInteractionCount - firstInteractionIndex;
+                        }
+
+                        if (!string.IsNullOrEmpty(action.m_Interactions))
+                        {
+                            // Add interactions from action.
+                            var index = ResolveInteractions(action.m_Interactions);
+                            if (index != InputActionMapState.kInvalidIndex)
+                            {
+                                if (firstInteractionIndex == InputActionMapState.kInvalidIndex)
+                                    firstInteractionIndex = index;
+                                numInteractions += totalInteractionCount - index;
+                            }
                         }
 
                         // If it's the start of a composite chain, create the composite.
@@ -409,10 +433,10 @@ namespace UnityEngine.Experimental.Input
             ////        moving the logic to a shared place.
             ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
 
-            var firstInteractionIndex = totalInteractionCount;
             if (!InputControlLayout.ParseNameAndParameterList(interactionString, ref m_Parameters))
-                return firstInteractionIndex;
+                return InputActionMapState.kInvalidIndex;
 
+            var firstInteractionIndex = totalInteractionCount;
             for (var i = 0; i < m_Parameters.Count; ++i)
             {
                 // Look up interaction.
@@ -445,10 +469,10 @@ namespace UnityEngine.Experimental.Input
 
         private int ResolveProcessors(string processorString)
         {
-            var firstProcessorIndex = totalProcessorCount;
             if (!InputControlLayout.ParseNameAndParameterList(processorString, ref m_Parameters))
-                return firstProcessorIndex;
+                return InputActionMapState.kInvalidIndex;
 
+            var firstProcessorIndex = totalProcessorCount;
             for (var i = 0; i < m_Parameters.Count; ++i)
             {
                 // Look up processor.
@@ -458,8 +482,7 @@ namespace UnityEngine.Experimental.Input
                         $"No processor with name '{m_Parameters[i].name}' (mentioned in '{processorString}') has been registered");
 
                 // Instantiate it.
-                var processor = Activator.CreateInstance(type) as InputProcessor;
-                if (processor == null)
+                if (!(Activator.CreateInstance(type) is InputProcessor processor))
                     throw new Exception(
                         $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' is not an InputProcessor");
 

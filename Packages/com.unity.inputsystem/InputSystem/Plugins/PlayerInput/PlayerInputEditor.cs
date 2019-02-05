@@ -7,10 +7,11 @@ using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Plugins.UI;
+using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
-
+#pragma warning disable 0414
 namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 {
     /// <summary>
@@ -25,17 +26,24 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         public void OnEnable()
         {
             InputActionImporter.onImport += Refresh;
+            InputUser.onChange += OnUserChange;
         }
 
-        public void OnDisable()
+        public void OnDestroy()
         {
             InputActionImporter.onImport -= Refresh;
+            InputUser.onChange -= OnUserChange;
         }
 
         private void Refresh()
         {
             ////FIXME: doesn't seem like we're picking up the results of the latest import
             m_ActionAssetInitialized = false;
+            Repaint();
+        }
+
+        private void OnUserChange(InputUser user, InputUserChange change, InputDevice device)
+        {
             Repaint();
         }
 
@@ -51,11 +59,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             EditorGUILayout.PropertyField(actionsProperty);
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
                 OnActionAssetChange();
+            ++EditorGUI.indentLevel;
             if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 0)
             {
                 // Default control scheme picker.
 
-                ++EditorGUI.indentLevel;
                 var selected = EditorGUILayout.Popup(m_DefaultControlSchemeText, m_SelectedDefaultControlScheme,
                     m_ControlSchemeOptions);
                 if (selected != m_SelectedDefaultControlScheme)
@@ -72,8 +80,32 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                     }
                     m_SelectedDefaultControlScheme = selected;
                 }
-                --EditorGUI.indentLevel;
             }
+            if (m_ActionMapOptions != null && m_ActionMapOptions.Length > 0)
+            {
+                // Default action map picker.
+
+                var selected = EditorGUILayout.Popup(m_DefaultActionMapText, m_SelectedDefaultActionMap,
+                    m_ActionMapOptions);
+                if (selected != m_SelectedDefaultActionMap)
+                {
+                    var defaultActionMapProperty = serializedObject.FindProperty("m_DefaultActionMap");
+                    if (selected == 0)
+                    {
+                        defaultActionMapProperty.stringValue = null;
+                    }
+                    else
+                    {
+                        // Use ID rather than name.
+                        var asset = (InputActionAsset)serializedObject.FindProperty("m_Actions").objectReferenceValue;
+                        var actionMap = asset.TryGetActionMap(m_ActionMapOptions[selected].text);
+                        if (actionMap != null)
+                            defaultActionMapProperty.stringValue = $"{{{actionMap.id}}}";
+                    }
+                    m_SelectedDefaultActionMap = selected;
+                }
+            }
+            --EditorGUI.indentLevel;
             DoHelpCreateAssetUI();
 
             // UI config section.
@@ -135,6 +167,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
             if (EditorGUI.EndChangeCheck())
                 serializedObject.ApplyModifiedProperties();
+
+            // Debug UI.
+            if (EditorApplication.isPlaying)
+                DoDebugUI();
         }
 
         private void DoHelpCreateAssetUI()
@@ -242,6 +278,28 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             EditorGUILayout.EndHorizontal();
         }
 
+        private void DoDebugUI()
+        {
+            var playerInput = (PlayerInput)target;
+
+            if (!playerInput.user.valid)
+                return;
+
+            ////TODO: show actions when they happen
+
+            var user = playerInput.user.index.ToString();
+            var controlScheme = playerInput.user.controlScheme?.name;
+            var devices = string.Join(", ", playerInput.user.pairedDevices);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField(m_DebugText, EditorStyles.boldLabel);
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.LabelField("User", user);
+            EditorGUILayout.LabelField("Control Scheme", controlScheme);
+            EditorGUILayout.LabelField("Devices", devices);
+            EditorGUI.EndDisabledGroup();
+        }
+
         private void OnNotificationBehaviorChange()
         {
             Debug.Assert(m_ActionAssetInitialized);
@@ -309,7 +367,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             if (asset == null)
             {
                 m_ControlSchemeOptions = null;
+                m_ActionMapOptions = null;
                 m_ActionNames = null;
+                m_SelectedDefaultActionMap = -1;
+                m_SelectedDefaultControlScheme = -1;
                 return;
             }
 
@@ -361,13 +422,34 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             for (var i = 0; i < controlSchemes.Count; ++i)
             {
                 var name = controlSchemes[i].name;
-                m_ControlSchemeOptions[i + 1] = new GUIContent(controlSchemes[i].name);
+                m_ControlSchemeOptions[i + 1] = new GUIContent(name);
+
                 if (selectedDefaultControlScheme != null && string.Compare(name, selectedDefaultControlScheme,
                     StringComparison.InvariantCultureIgnoreCase) == 0)
                     m_SelectedDefaultControlScheme = i + 1;
             }
             if (m_SelectedDefaultControlScheme <= 0)
                 playerInput.defaultControlScheme = null;
+
+            // Read out action maps.
+            var selectedDefaultActionMap = !string.IsNullOrEmpty(playerInput.defaultActionMap)
+                ? asset.TryGetActionMap(playerInput.defaultActionMap)
+                : null;
+            m_SelectedDefaultActionMap = 0;
+            var actionMaps = asset.actionMaps;
+            m_ActionMapOptions = new GUIContent[actionMaps.Count + 1];
+            m_ActionMapOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
+            ////TODO: sort alphabetically
+            for (var i = 0; i < actionMaps.Count; ++i)
+            {
+                var actionMap = actionMaps[i];
+                m_ActionMapOptions[i + 1] = new GUIContent(actionMap.name);
+
+                if (selectedDefaultActionMap != null && actionMap == selectedDefaultActionMap)
+                    m_SelectedDefaultActionMap = i + 1;
+            }
+            if (m_SelectedDefaultActionMap <= 0)
+                playerInput.defaultActionMap = null;
 
             serializedObject.Update();
         }
@@ -437,12 +519,16 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         [NonSerialized] private readonly GUIContent m_EventsGroupText = EditorGUIUtility.TrTextContent("Events");
         [NonSerialized] private readonly GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
         [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
+        [NonSerialized] private readonly GUIContent m_DefaultActionMapText = EditorGUIUtility.TrTextContent("Default Action Map");
+        [NonSerialized] private readonly GUIContent m_DebugText = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
         [NonSerialized] private GUIContent m_SendMessagesHelpText;
         [NonSerialized] private GUIContent[] m_ActionNames;
         [NonSerialized] private int m_SelectedDefaultControlScheme;
         [NonSerialized] private GUIContent[] m_ControlSchemeOptions;
+        [NonSerialized] private int m_SelectedDefaultActionMap;
+        [NonSerialized] private GUIContent[] m_ActionMapOptions;
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;

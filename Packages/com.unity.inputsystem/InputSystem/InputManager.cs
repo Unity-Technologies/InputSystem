@@ -17,6 +17,8 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Editor;
 #endif
 
+////TODO: make diagnostics available in dev players and give it a public API to enable them
+
 ////TODO: work towards InputManager having no direct knowledge of actions
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
@@ -973,7 +975,10 @@ namespace UnityEngine.Experimental.Input
             // Make sure that if the device ID is listed in m_AvailableDevices, the device
             // is no longer marked as removed.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
-                m_AvailableDevices[i].isRemoved = false;
+            {
+                if (m_AvailableDevices[i].deviceId == device.id)
+                    m_AvailableDevices[i].isRemoved = false;
+            }
 
             ////REVIEW: we may want to suppress this during the initial device discovery phase
             // Let actions re-resolve their paths.
@@ -1463,12 +1468,14 @@ namespace UnityEngine.Experimental.Input
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
             interactions.AddTypeRegistration("MultiTap", typeof(MultiTapInteraction));
+            interactions.AddTypeRegistration("Passthrough", typeof(PassthroughInteraction));
+            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
-            composites.AddTypeRegistration("Axis", typeof(AxisComposite));
-            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));
+            composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
+            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1602,9 +1609,7 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
             var internedName = new InternedString(name);
-            if (table.TryGetValue(internedName, out var type))
-                return type;
-            return null;
+            return table.TryGetValue(internedName, out var type) ? type : null;
         }
 
         // Maps a single control to an action interested in the control. If
@@ -1895,7 +1900,7 @@ namespace UnityEngine.Experimental.Input
                     var layout = TryFindMatchingControlLayout(ref description, deviceId);
                     if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                     {
-                        // Not support. Ignore device. Still will get added to m_AvailableDevices
+                        // Not supported. Ignore device. Still will get added to m_AvailableDevices
                         // list in finally clause below. If later the set of supported devices changes
                         // so that the device is now supported, ApplySettings() will pull it back out
                         // and create the device.
@@ -2453,16 +2458,6 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
-                        // Ignore the event if the last state update we received for the device was
-                        // newer than this state event is. We don't allow devices to go back in time.
-                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal)
-                        {
-                            #if UNITY_EDITOR
-                            m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
-                            #endif
-                            break;
-                        }
-
                         var deviceHasStateCallbacks = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
                             InputDevice.DeviceFlags.HasStateCallbacks;
                         IInputStateCallbackReceiver stateCallbacks = null;
@@ -2510,6 +2505,26 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
+                        // Ignore the event if the last state update we received for the device was
+                        // newer than this state event is. We don't allow devices to go back in time.
+                        //
+                        // NOTE: We make an exception here for devices that implement IInputStateCallbackReceiver (such
+                        //       as Touchscreen). For devices that dynamically incorporate state it can be hard ensuring
+                        //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
+                        //       that are generated in the backend and would require considerable work to ensure monotonically
+                        //       increasing timestamps across all such streams.
+                        //
+                        //       This exception isn't elegant. But then, the entire IInputStateCallbackReceiver thing
+                        //       is anything but elegant...
+                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
+                            !(deviceHasStateCallbacks && stateBlockOfDevice.format != receivedStateFormat))
+                        {
+                            #if UNITY_EDITOR
+                            m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
+                            #endif
+                            break;
+                        }
+
                         // If the state format doesn't match, see if the device knows what to do.
                         // If not, ignore the event.
                         if (stateBlockOfDevice.format != receivedStateFormat)
@@ -2527,8 +2542,7 @@ namespace UnityEngine.Experimental.Input
                             if (!canIncorporateUnrecognizedState)
                             {
                                 #if UNITY_EDITOR
-                                if (m_Diagnostics != null)
-                                    m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventReadPtr), device);
+                                m_Diagnostics?.OnEventFormatMismatch(new InputEventPtr(currentEventReadPtr), device);
                                 #endif
                                 break;
                             }
@@ -2684,7 +2698,8 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
+                        if (device.m_LastUpdateTimeInternal <= currentEventTimeInternal)
+                            device.m_LastUpdateTimeInternal = currentEventTimeInternal;
                         if (makeDeviceCurrent)
                             device.MakeCurrent();
 
@@ -2808,7 +2823,10 @@ namespace UnityEngine.Experimental.Input
 
             Profiler.EndSample();
 
+            ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
+            ////       mess in the event buffer
             InvokeAfterUpdateCallback(updateType);
+            ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)
@@ -2850,9 +2868,8 @@ namespace UnityEngine.Experimental.Input
                     break;
 
                 default:
-                    throw new NotSupportedException(string.Format(
-                        "Unrecognized update mode '{0}'; don't know which buffers to use for actions",
-                        m_Settings.updateMode));
+                    throw new NotSupportedException(
+                        $"Unrecognized update mode '{m_Settings.updateMode}'; don't know which buffers to use for actions");
             }
 
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);

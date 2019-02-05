@@ -46,9 +46,15 @@ The following terms and concepts are used through the input action system:
 |Action Map||
 |Action Asset||
 
-## Configuring Actions
+## Setting Up Actions
 
 There are three different workflows for setting up actions for your game.
+
+### Asset Workflow
+
+#### Using `UnityEvents`
+
+#### Using Interfaces
 
 ### Component Workflow
 
@@ -64,13 +70,6 @@ public MyBehaviour : MonoBehaviour
     public InputAction moveAction;
 }
 ```
-
-### Asset Workflow
-
-#### Using `UnityEvents`
-
-#### Using Interfaces
-
 ### Scripting Workflow
 
 Lastly, it is possible to create and set up input actions entirely in script.
@@ -145,11 +144,25 @@ Some of the interactions behave differently when the action they are associated 
 
 |Interaction|Started|Performed|Cancelled|
 |-----------|-------|---------|---------|
-|Hold|Control Actuated|Held for >= `duration`|
-|Hold (continuous)|Control Actuated|Held for >= `duration`; after that, every frame regardless of whether the bound control receives input in the frame or not.|
-|Tap|Control Actuated|Control Released within `duration` (defaults to `InputSettings.defaultTapTime`) seconds|Control Released before `duration` seconds|
-|SlowTap|Control Actuated|Control Released within `duration` (defaults to `InputSettings.defaultSlowTapTime`) seconds|Control Released before `duration` seconds|
-|DoubleTap|||
+|*Press* (PressOnly)| |Control crosses button press threshold; then will not perform again until button is first released again| |
+|*Press* (ReleaseOnly)| |Control goes back below button press threshold after crossing it| |
+|*Press* (PressAndRelease)| |Control crosses button press threshold|Control goes back below button threshold|
+|*Press* (PressOnly; continuous)| |Control crosses button press threshold; then any time the control changes value or at least every frame| |
+|*Press* (ReleaseOnly; continuous)| |No difference to non-continuous mode| |
+|*Press* (PressAndRelease; continuous)| |Control cross button press threshold; then any time the control changes value or at least every frame|Control goes back below button threshold|
+|*Hold*|Control Actuated|Held for >= `duration`|
+|*Hold* (continuous)|Control Actuated|Held for >= `duration`; after that, every frame regardless of whether the bound control receives input in the frame or not.|
+|*Tap*|Control Actuated|Control Released within `duration` (defaults to `InputSettings.defaultTapTime`) seconds|Control Released before `duration` seconds|
+|*SlowTap*|Control Actuated|Control Released within `duration` (defaults to `InputSettings.defaultSlowTapTime`) seconds|Control Released before `duration` seconds|
+|*MultiTap*|||
+|*Passthrough*| |On every value change of control| |
+|*Passthrough* (continuous)| |On every value change of control and additionally, if there is no value value change in a frame, performs with value from last frame| |
+
+### `Press`
+
+A `Press` interaction can be used to explicitly force button-like interaction.
+
+Note that the `Press` interaction operates on control actuation, not on control values directly. This means that the press threshold will be evaluated against the magnitude of the control actuation. This means that it is possible to use
 
 ### `Hold`
 
@@ -166,6 +179,32 @@ A `Hold` requires a control to be held for a set duration before the action is t
 ### `SlowTap`
 
 ### `DoubleTap`
+
+### `Passthrough`
+
+This interaction is designed to revert the start/performed/cancelled interaction model to a simple, direct passthrough model where every value change on any bound control of an action performs the action. This can be useful, for example, to use an action to simply listen for activity of any kind.
+
+```
+// Set up an action that fires any time any button on the gamepad changes value.
+var action = new InputAction(
+    binding: "<Gamepad>/**/<Button>",
+    interactions: "passthrough");
+action.Enable();
+
+action.performed +=
+    ctx => Debug.Log($"Button {ctx.control} = {ctx.ReadValue<float>()}");
+
+// Perform the action twice by actuating and then resetting the left trigger
+// on a newly created gamepad.
+var gamepad = InputSystem.AddDevice<Gamepad>();
+InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+InputSystem.QueueStateEvent(gamepad, new GamepadState());
+InputSystem.Update();
+```
+
+The `passthrough` interaction has no parameters.
+
+The `passthrough` interaction can be used on a `continuous` action. In this case, the action will perform not only on every value change but will also perform if none of the bound controls receive a new value in a given frame. The value received will be the current value of the control.
 
 ### Multiple Interactions On Same Binding
 

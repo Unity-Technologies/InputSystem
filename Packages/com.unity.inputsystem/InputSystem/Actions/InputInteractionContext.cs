@@ -174,6 +174,11 @@ namespace UnityEngine.Experimental.Input
             m_State.ChangePhaseOfInteraction(InputActionPhase.Cancelled, ref m_TriggerState);
         }
 
+        public void Waiting()
+        {
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Waiting, ref m_TriggerState);
+        }
+
         public void SetTimeout(float seconds)
         {
             m_State.StartTimeout(seconds, ref m_TriggerState);

@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Interactions
     /// Performs the action if the control is pressed and held for at least the
     /// set duration (which defaults to <see cref="InputSettings.defaultHoldTime"/>).
     /// </summary>
-    public class HoldInteraction : IInputInteraction<float>
+    public class HoldInteraction : IInputInteraction
     {
         /// <summary>
         /// Duration in seconds that the control must be pressed for the hold to register.

@@ -328,6 +328,8 @@ namespace UnityEngine.Experimental.Input
         [Flags]
         internal enum Flags
         {
+            None = 0,
+
             /// <summary>
             /// This and the next binding in the list combine such that both need to be
             /// triggered to trigger the associated action.

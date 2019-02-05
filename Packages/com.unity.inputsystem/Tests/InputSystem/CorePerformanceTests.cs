@@ -47,7 +47,7 @@ internal class CorePerformanceTests
         var totalTime = endTime - startTime;
 
         Assert.That(totalTime, Is.LessThan(0.01 / 1000.0));
-        Debug.Log(string.Format("{0}: {1}ms", MethodBase.GetCurrentMethod().Name, totalTime * 1000));
+        Debug.Log($"{MethodBase.GetCurrentMethod().Name}: {totalTime * 1000}ms");
     }
 
     #if UNITY_EDITOR

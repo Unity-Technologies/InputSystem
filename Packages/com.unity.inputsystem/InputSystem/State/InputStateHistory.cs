@@ -5,7 +5,7 @@ using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow correlating history to frames/updates
-
+#pragma warning disable 0649
 namespace UnityEngine.Experimental.Input
 {
     public class InputStateHistory : IDisposable, IEnumerable<InputStateHistory.Value>
@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Input
             Destroy();
         }
 
-        public IEnumerator<TValue> GetEnumerator()
+        public new IEnumerator<TValue> GetEnumerator()
         {
             throw new NotImplementedException();
         }
@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public struct Value<TValue>
+        public struct Value<Tvalue>
         {
         }
     }

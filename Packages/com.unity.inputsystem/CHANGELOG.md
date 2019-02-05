@@ -21,6 +21,8 @@ This release contains a number of fairly significant changes. The focus has been
 - `SensitivityProcessor` has been removed.
     * The approach needs rethinking. What `SensitivityProcessor` did caused more problems than it solved.
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
+- Events for devices that implement `IInputStateCallbacks` (such as `Touchscreen`) are allowed to go back in time. Avoids the problem of having to order events between multiple fingers correctly or seeing events getting rejected.
+- `PenState.Button` is now `PenButton`.
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.
@@ -36,15 +38,21 @@ This release contains a number of fairly significant changes. The focus has been
         myAction.performed += MyCallback;
         myAction.cancelled += MyCallback;
       ```
+  * Alternatively, put `PassthroughInteraction` on an action. This restores the previous default behavior of actions.
+    ```
+        new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "passthrough");
+    ```
 - As part of the aforementioned change, the following interactions have been removed as they are no longer relevant:
   - `StickInteraction`: Can simply be removed from bindings. The new default behavior obsoletes the need for what `StickInteraction` did. Use `started` to know then the stick starts being actuated, `performed` to be updated on movements, and `cancelled` to know when the stick goes back into rest position.
-  - `PressInteraction`: Can simply be removed from bindings. The default behavior with no interaction encompasses press detection. Use either `started` or `performed` to know when a button is pressed. There will no longer be a `performed` call on button release. To set a custom button press point, simply put an `AxisDeadzoneProcessor` on the binding.
   - `PressAndReleaseInteraction`: Can simply be removed from bindings. The default behavior with no interaction encompasses press and release detection. Use `started` to know then a button is pressed and `cancelled` to know when it is released. To set a custom button press point, simply put an `AxisDeadzoneProcessor` on the binding.
+- `PressInteraction` has been completely rewritten.
+  - Trigger behavior can be set through `behavior` parameter and now provides options for observing just presses (`PressOnly`), just releases (`ReleaseOnly`), or both presses and releases (`PressAndRelease`).
+  - Also, the interaction now operates on control actuation rather than reading out float values directly. This means that any control that supports magnitudes can be used.
+  - Also supports continuous mode now.
 - If bound controls are already actuated when an action is enabled, the action will now trigger in the next input update as if the control had just been moved from non-actuated to actuated state.
   - In other words, if e.g. you have a binding to the A button of the gamepad and the A button is already pressed when the action is first enabled, then the action associated with the A button will trigger as if the button had just been pressed. Previously, it required releasing and re-pressing the button first -- which, together with certain interactions, could lead to actions ending up in a confused state.
 - When an action is disabled, it will now cancel all ongoing interactions, if any (i.e. you will see `InputAction.cancelled` being called).
   - Note that unlike the above-mentioned callbacks that happen when an action starts out with a control already actuated, the cancellation callbacks happen __immediately__ rather than in the next input update.
-- Action editor now gets docked by default.
 - Action editor now closes when asset is deleted.
   - If there are unsaved changes, asks for confirmation first.
 - Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name.
@@ -74,15 +82,24 @@ This release contains a number of fairly significant changes. The focus has been
     * `NormalizeVector2Processor`
     * `NormalizeVector3Processor`
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
+- Added `PassthroughInteraction` to restore old behavior of actions where every value change would perform the action and `started` and `cancelled` were not used.
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 - `Mouse.forwardButton` and `Mouse.backButton`.
 - The input debugger now shows users along with their paired devices and actions. See the [documentation](Documentation~/UserManagement.md#debugging)
+- Added third and fourth barrel buttons on `Pen`.
 
 #### Actions:
 - Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \
   ![Continuous Action](Documentation~/Images/ContinuousAction.png)
+- Can now add interactions and processors directly to actions.
+  ![Action Properties](Documentation~/Images/ActionProperties.png)
+    * This is functionally equivalent to adding the respective processors and/or interactions to every binding on the action.
+- Can now change the type of a composite retroactively.
+  ![Composite Properties](Documentation~/Images/CompositeProperties.png)
 - Values can now be read out as objects using `InputAction.CallbackContext.ReadValueAsObject()`.
     * Allocates GC memory. Should not be used during normal gameplay but is very useful for testing and debugging.
+- Added auto-save mode for .inputactions editor.
+  ![Auto Save](Documentation~/Images/AutoSave.png)
 - Processors, interactions, and composites can now define their own parameter editor UIs by deriving from `InputParameterEditor`. This solves the problem of these elements not making it clear that the parameters usually have global defaults and do not need to be edited except if local overrides are necessary.
 - Can now set custom min and max values for axis composites.
     ```
@@ -99,11 +116,15 @@ This release contains a number of fairly significant changes. The focus has been
 
 ### Fixes
 
-- `InputUser.UnpairDevicesAndRemoveUser()` corrupting devices pairings of other InputUsers
+- Fixed support for Unity 2019.1 where we landed a native API change.
+- `InputUser.UnpairDevicesAndRemoveUser()` corrupting device pairings of other InputUsers
 - Control picker in UI having no devices if list of supported devices is empty but not null
 - `IndexOutOfRangeException` when having multiple action maps in an asset (#359 and #358).
 - Interactions timing out even if there was a pending event that would complete the interaction in time.
 - Action editor updates when asset is renamed or moved.
+- Exceptions when removing action in last position of action map.
+- Devices marked as unsupported in input settings getting added back on domain reload.
+- Fixed `Pen` causing exceptions and asserts.
 
 ## [0.1.2-preview] - 2018-12-19
 

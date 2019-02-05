@@ -10,7 +10,9 @@ Issues are expected at this point. However, feel free to report what you find he
 
 Please see [Installation](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/Installation.md).
 
-The latest version is: `0.1.2-preview`
+The latest version is: `0.1.2-preview`.
+
+Next version: `0.2-preview` (see [Roadmap](#roadmap)).
 
 ## Status
 
@@ -26,12 +28,15 @@ At this point, we try to focus package releases on specific problem areas. The f
 
 |Version|Focus|
 |-------|-----|
-|`0.1.3-preview`|- Actions<br>- PlayerInput<br>- XR bugs|
-|`0.1.4-preview`|- Touch<br>- Documentation|
-|`0.1.5-preview`|- Demo<br>- UI (Single- and Multi-Player)<br>- Documentation|
-|`0.1.6-preview`|- Debugger<br>- Documentation|
+|`0.2-preview`|- Actions<br>- PlayerInput<br>- XR bugs|
+|`0.3-preview`|- Touch<br>- Documentation<br>- Move to 2019.1|
+|`0.4-preview`|- Demo<br>- UI (Single- and Multi-Player)<br>- Documentation|
+|`0.5-preview`|- Rebinding UI<br>- Debugger<br>- Bugs<br>- Documentation|
+|`0.6-preview`|- Performance<br>- Bugs<br>- Documentation|
+|`1.0-preview`|- Shipping quality release|
+|`1.0`|- Verified, official Unity package<br>- Move to 2019.2|
 
-## Release Timeline
+## Timeline
 
 The planned development timeline for the new input system is as follows:
 

@@ -1167,6 +1167,10 @@ namespace UnityEngine.Experimental.Input
             ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
             ////      as the start of the phase
 
+            var phaseAfterPerformedOrCancelled = InputActionPhase.Waiting;
+            if (newPhase == InputActionPhase.Performed)
+                phaseAfterPerformedOrCancelled = phaseAfterPerformed;
+
             // Any time an interaction changes phase, we cancel all pending timeouts.
             if (interactionStates[interactionIndex].isTimerRunning)
                 StopTimeout(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex, trigger.interactionIndex);
@@ -1185,7 +1189,8 @@ namespace UnityEngine.Experimental.Input
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
                     // We're the first interaction to go to the start phase.
-                    ChangePhaseOfAction(newPhase, ref trigger);
+                    ChangePhaseOfAction(newPhase, ref trigger,
+                        phaseAfterPerformedOrCancelled: phaseAfterPerformedOrCancelled);
                 }
                 else if (newPhase == InputActionPhase.Cancelled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
@@ -1201,6 +1206,7 @@ namespace UnityEngine.Experimental.Input
                         var index = interactionStartIndex + i;
                         if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
                         {
+                            ////REVIEW: does this handle continuous mode correctly?
                             var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
@@ -1217,10 +1223,6 @@ namespace UnityEngine.Experimental.Input
                 }
                 else if (actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
-                    var phaseAfterPerformedOrCancelled = InputActionPhase.Waiting;
-                    if (newPhase == InputActionPhase.Performed)
-                        phaseAfterPerformedOrCancelled = phaseAfterPerformed;
-
                     // Any other phase change goes to action if we're the interaction driving
                     // the current phase.
                     ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCancelled);
@@ -1245,7 +1247,7 @@ namespace UnityEngine.Experimental.Input
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
-            if (newPhase == InputActionPhase.Performed)
+            if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
             {
                 interactionStates[interactionIndex].phase = phaseAfterPerformed;
             }
@@ -1312,6 +1314,13 @@ namespace UnityEngine.Experimental.Input
                     actionStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
 
                     // Remove from list of continuous actions, if necessary.
+                    if (actionStates[actionIndex].onContinuousList)
+                        RemoveContinuousAction(actionIndex);
+                    break;
+                }
+
+                case InputActionPhase.Waiting:
+                {
                     if (actionStates[actionIndex].onContinuousList)
                         RemoveContinuousAction(actionIndex);
                     break;
@@ -1674,7 +1683,7 @@ namespace UnityEngine.Experimental.Input
                 controlOfType = control as InputControl<TValue>;
                 if (controlOfType == null)
                     throw new InvalidOperationException(
-                        $"Cannot read value of type '{typeof(TValue).Name}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
+                        $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
 
                 value = controlOfType.ReadValue();
             }

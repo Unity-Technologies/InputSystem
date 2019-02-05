@@ -22,8 +22,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// <example>Examples: "HID", "XInput"</example>
         public string interfaceName
         {
-            get { return m_InterfaceName; }
-            set { m_InterfaceName = value; }
+            get => m_InterfaceName;
+            set => m_InterfaceName = value;
         }
 
         /// <summary>
@@ -36,8 +36,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </remarks>
         public string deviceClass
         {
-            get { return m_DeviceClass; }
-            set { m_DeviceClass = value; }
+            get => m_DeviceClass;
+            set => m_DeviceClass = value;
         }
 
         /// <summary>
@@ -45,8 +45,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </summary>
         public string manufacturer
         {
-            get { return m_Manufacturer; }
-            set { m_Manufacturer = value; }
+            get => m_Manufacturer;
+            set => m_Manufacturer = value;
         }
 
         /// <summary>
@@ -54,8 +54,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </summary>
         public string product
         {
-            get { return m_Product; }
-            set { m_Product = value; }
+            get => m_Product;
+            set => m_Product = value;
         }
 
         /// <summary>
@@ -63,14 +63,14 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </summary>
         public string serial
         {
-            get { return m_Serial; }
-            set { m_Serial = value; }
+            get => m_Serial;
+            set => m_Serial = value;
         }
 
         public string version
         {
-            get { return m_Version; }
-            set { m_Version = value; }
+            get => m_Version;
+            set => m_Version = value;
         }
 
         /// <summary>
@@ -88,23 +88,18 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </remarks>
         public string capabilities
         {
-            get { return m_Capabilities; }
-            set { m_Capabilities = value; }
+            get => m_Capabilities;
+            set => m_Capabilities = value;
         }
 
-        public bool empty
-        {
-            get
-            {
-                return string.IsNullOrEmpty(m_InterfaceName) &&
-                    string.IsNullOrEmpty(m_DeviceClass) &&
-                    string.IsNullOrEmpty(m_Manufacturer) &&
-                    string.IsNullOrEmpty(m_Product) &&
-                    string.IsNullOrEmpty(m_Serial) &&
-                    string.IsNullOrEmpty(m_Version) &&
-                    string.IsNullOrEmpty(m_Capabilities);
-            }
-        }
+        public bool empty =>
+            string.IsNullOrEmpty(m_InterfaceName) &&
+            string.IsNullOrEmpty(m_DeviceClass) &&
+            string.IsNullOrEmpty(m_Manufacturer) &&
+            string.IsNullOrEmpty(m_Product) &&
+            string.IsNullOrEmpty(m_Serial) &&
+            string.IsNullOrEmpty(m_Version) &&
+            string.IsNullOrEmpty(m_Capabilities);
 
         public override string ToString()
         {
@@ -115,15 +110,15 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (haveProduct && haveManufacturer)
             {
                 if (haveInterface)
-                    return string.Format("{0} {1} ({2})", manufacturer, product, interfaceName);
+                    return $"{manufacturer} {product} ({interfaceName})";
 
-                return string.Format("{0} {1}", manufacturer, product);
+                return $"{manufacturer} {product}";
             }
 
             if (haveProduct)
             {
                 if (haveInterface)
-                    return string.Format("{0} ({1})", product, interfaceName);
+                    return $"{product} ({interfaceName})";
 
                 return product;
             }
@@ -131,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (!string.IsNullOrEmpty(deviceClass))
             {
                 if (haveInterface)
-                    return string.Format("{0} ({1})", deviceClass, interfaceName);
+                    return $"{deviceClass} ({interfaceName})";
 
                 return deviceClass;
             }
@@ -148,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     caps = caps.Substring(0, kMaxCapabilitiesLength) + "...";
 
                 if (haveInterface)
-                    return string.Format("{0} ({1})", caps, interfaceName);
+                    return $"{caps} ({interfaceName})";
 
                 return caps;
             }

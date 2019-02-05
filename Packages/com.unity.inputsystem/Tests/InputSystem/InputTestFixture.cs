@@ -127,7 +127,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
+        // ReSharper disable once MemberCanBeProtected.Global
+        public static void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
             where TState : struct, IInputStateTypeInfo
         {
             // Update state.
@@ -137,8 +138,7 @@ namespace UnityEngine.Experimental.Input
             // Now verify that only the buttons we expect to be pressed are pressed.
             foreach (var control in device.allControls)
             {
-                var controlAsButton = control as ButtonControl;
-                if (controlAsButton == null)
+                if (!(control is ButtonControl controlAsButton))
                     continue;
 
                 var isInList = buttons.Contains(controlAsButton);
@@ -151,11 +151,13 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        // ReSharper disable once MemberCanBeProtected.Global
         public void Press(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
         {
             Set(button, 1, absoluteTime, timeOffset);
         }
 
+        // ReSharper disable once MemberCanBeProtected.Global
         public void Release(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
         {
             Set(button, 0, absoluteTime, timeOffset);
@@ -229,8 +231,7 @@ namespace UnityEngine.Experimental.Input
             // See if we have a button we can trigger.
             for (var i = 0; i < controls.Count; ++i)
             {
-                var button = controls[i] as ButtonControl;
-                if (button == null)
+                if (!(controls[i] is ButtonControl button))
                     continue;
 
                 // Press and release button.

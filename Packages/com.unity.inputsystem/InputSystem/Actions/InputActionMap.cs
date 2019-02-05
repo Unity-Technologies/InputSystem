@@ -170,7 +170,7 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 if (string.IsNullOrEmpty(actionNameOrId))
-                    throw new ArgumentNullException("actionNameOrId");
+                    throw new ArgumentNullException(nameof(actionNameOrId));
                 return GetAction(actionNameOrId);
             }
         }
@@ -542,16 +542,14 @@ namespace UnityEngine.Experimental.Input
                 m_SingletonAction.m_BindingsStartIndex = 0;
                 m_SingletonAction.m_BindingsCount = m_Bindings.Length;
                 m_SingletonAction.m_ControlStartIndex = 0;
-                m_SingletonAction.m_ControlCount = m_State != null ? m_State.totalControlCount : 0;
+                m_SingletonAction.m_ControlCount = m_State?.totalControlCount ?? 0;
             }
             else
             {
                 // Go through all bindings and slice them out to individual actions.
 
                 Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
-                var mapIndices = m_State != null
-                    ? m_State.FetchMapIndices(this)
-                    : new InputActionMapState.ActionMapIndices();
+                var mapIndices = m_State?.FetchMapIndices(this) ?? new InputActionMapState.ActionMapIndices();
 
                 // Reset state on each action. Important if we have actions that are no longer
                 // referred to by bindings.
@@ -612,7 +610,7 @@ namespace UnityEngine.Experimental.Input
                     var sourceBindingToCopy = currentBindingIndex;
                     for (var i = 0; i < bindingCountForCurrentAction; ++i)
                     {
-                        // See if we've come across a binding that isn't belong to our currently looked at action.
+                        // See if we've come across a binding that doesn't belong to our currently looked at action.
                         if (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
                         {
                             // Yes, we have. Means the bindings for our actions are scattered in m_Bindings and
@@ -623,7 +621,7 @@ namespace UnityEngine.Experimental.Input
                             // over to it.
                             if (newBindingsArray == null)
                             {
-                                newBindingsArray = new InputBinding[mapIndices.bindingCount];
+                                newBindingsArray = new InputBinding[m_Bindings.Length];
                                 newBindingsArrayIndex = sourceBindingToCopy;
                                 Array.Copy(m_Bindings, 0, newBindingsArray, 0, sourceBindingToCopy);
                             }
@@ -634,7 +632,7 @@ namespace UnityEngine.Experimental.Input
                             do
                             {
                                 ++sourceBindingToCopy;
-                                Debug.Assert(sourceBindingToCopy < mapIndices.bindingCount);
+                                Debug.Assert(sourceBindingToCopy < m_Bindings.Length);
                             }
                             while (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
                         }
@@ -944,6 +942,8 @@ namespace UnityEngine.Experimental.Input
             public string id;
             public string expectedControlLayout;
             public bool continuous;
+            public string processors;
+            public string interactions;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -958,6 +958,8 @@ namespace UnityEngine.Experimental.Input
                     id = action.id.ToString(),
                     expectedControlLayout = action.m_ExpectedControlLayout,
                     continuous = action.continuous,
+                    processors = action.processors,
+                    interactions = action.interactions,
                 };
             }
         }
@@ -1024,7 +1026,7 @@ namespace UnityEngine.Experimental.Input
 
             public static WriteFileJson FromMaps(IEnumerable<InputActionMap> maps)
             {
-                var mapCount = Enumerable.Count(maps);
+                var mapCount = maps.Count();
                 if (mapCount == 0)
                     return new WriteFileJson();
 
@@ -1053,13 +1055,13 @@ namespace UnityEngine.Experimental.Input
                 var bindingLists = new List<List<InputBinding>>();
 
                 // Process actions listed at toplevel.
-                var actionCount = actions != null ? actions.Length : 0;
+                var actionCount = actions?.Length ?? 0;
                 for (var i = 0; i < actionCount; ++i)
                 {
                     var jsonAction = actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
-                        throw new Exception(string.Format("Action number {0} has no name", i + 1));
+                        throw new Exception($"Action number {i + 1} has no name");
 
                     ////REVIEW: make sure all action names are unique?
 
@@ -1073,8 +1075,8 @@ namespace UnityEngine.Experimental.Input
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
-                            throw new Exception(string.Format(
-                                "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
+                            throw new Exception(
+                                $"Invalid action name '{jsonAction.name}' (missing action name after '/')");
                     }
 
                     // Try to find existing map.
@@ -1101,12 +1103,16 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Create action.
-                    var action = new InputAction(actionName);
-                    action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id;
-                    action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                        ? jsonAction.expectedControlLayout
-                        : null;
-                    action.continuous = jsonAction.continuous;
+                    var action = new InputAction(actionName)
+                    {
+                        m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
+                        m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                            ? jsonAction.expectedControlLayout
+                            : null,
+                        continuous = jsonAction.continuous,
+                        m_Processors = jsonAction.processors,
+                        m_Interactions = jsonAction.interactions,
+                    };
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -1124,14 +1130,14 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Process maps.
-                var mapCount = maps != null ? maps.Length : 0;
+                var mapCount = maps?.Length ?? 0;
                 for (var i = 0; i < mapCount; ++i)
                 {
                     var jsonMap = maps[i];
 
                     var mapName = jsonMap.name;
                     if (string.IsNullOrEmpty(mapName))
-                        throw new Exception(string.Format("Map number {0} has no name", i + 1));
+                        throw new Exception($"Map number {i + 1} has no name");
 
                     // Try to find existing map.
                     InputActionMap map = null;
@@ -1148,8 +1154,10 @@ namespace UnityEngine.Experimental.Input
                     // Create new map if we haven't seen it before.
                     if (map == null)
                     {
-                        map = new InputActionMap(mapName);
-                        map.m_Id = string.IsNullOrEmpty(jsonMap.id) ? null : jsonMap.id;
+                        map = new InputActionMap(mapName)
+                        {
+                            m_Id = string.IsNullOrEmpty(jsonMap.id) ? null : jsonMap.id
+                        };
                         mapIndex = mapList.Count;
                         mapList.Add(map);
                         actionLists.Add(new List<InputAction>());
@@ -1157,21 +1165,25 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Process actions in map.
-                    var actionCountInMap = jsonMap.actions != null ? jsonMap.actions.Length : 0;
+                    var actionCountInMap = jsonMap.actions?.Length ?? 0;
                     for (var n = 0; n < actionCountInMap; ++n)
                     {
                         var jsonAction = jsonMap.actions[n];
 
                         if (string.IsNullOrEmpty(jsonAction.name))
-                            throw new Exception(string.Format("Action number {0} in map '{1}' has no name", i + 1, mapName));
+                            throw new Exception($"Action number {i + 1} in map '{mapName}' has no name");
 
                         // Create action.
-                        var action = new InputAction(jsonAction.name);
-                        action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id;
-                        action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                            ? jsonAction.expectedControlLayout
-                            : null;
-                        action.continuous = jsonAction.continuous;
+                        var action = new InputAction(jsonAction.name)
+                        {
+                            m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
+                            m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                                ? jsonAction.expectedControlLayout
+                                : null,
+                            continuous = jsonAction.continuous,
+                            m_Processors = jsonAction.processors,
+                            m_Interactions = jsonAction.interactions,
+                        };
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.
@@ -1189,7 +1201,7 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Process bindings in map.
-                    var bindingCountInMap = jsonMap.bindings != null ? jsonMap.bindings.Length : 0;
+                    var bindingCountInMap = jsonMap.bindings?.Length ?? 0;
                     var bindingsForMap = bindingLists[mapIndex];
                     for (var n = 0; n < bindingCountInMap; ++n)
                     {
