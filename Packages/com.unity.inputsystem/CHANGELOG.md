@@ -22,6 +22,7 @@ This release contains a number of fairly significant changes. The focus has been
     * The approach needs rethinking. What `SensitivityProcessor` did caused more problems than it solved.
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
 - Events for devices that implement `IInputStateCallbacks` (such as `Touchscreen`) are allowed to go back in time. Avoids the problem of having to order events between multiple fingers correctly or seeing events getting rejected.
+- `PenState.Button` is now `PenButton`.
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.
@@ -86,6 +87,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 - `Mouse.forwardButton` and `Mouse.backButton`.
 - The input debugger now shows users along with their paired devices and actions. See the [documentation](Documentation~/UserManagement.md#debugging)
+- Added third and fourth barrel buttons on `Pen`.
 
 #### Actions:
 - Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \
@@ -123,6 +125,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Action editor updates when asset is renamed or moved.
 - Exceptions when removing action in last position of action map.
 - Devices marked as unsupported in input settings getting added back on domain reload.
+- Fixed `Pen` causing exceptions and asserts.
 
 ## [0.1.2-preview] - 2018-12-19
 
