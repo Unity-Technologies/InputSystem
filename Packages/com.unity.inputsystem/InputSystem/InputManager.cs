@@ -1325,7 +1325,6 @@ namespace UnityEngine.Experimental.Input
 
         internal void Initialize(IInputRuntime runtime, InputSettings settings)
         {
-            Debug.Log("Initialize");
             Debug.Assert(settings != null);
 
             m_Settings = settings;
