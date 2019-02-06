@@ -3,6 +3,9 @@ using UnityEngine.Experimental.Input.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Utilities;
+using System.Runtime.InteropServices;
+
 
 #if UNITY_EDITOR || UNITY_XBOXONE
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
@@ -125,6 +128,72 @@ internal class XInputTests : InputTestFixture
         AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle2), gamepad.paddle2);
         AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle3), gamepad.paddle3);
         AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle4), gamepad.paddle4);
+    }
+
+#endif
+
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+
+    // Going to simulate the report that comes from
+    // https://github.com/360Controller/360Controller/blob/master/360Controller/ControlStruct.h
+    [StructLayout(LayoutKind.Explicit)]
+    struct MICEXboxControllerForOSXState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte command;
+        [FieldOffset(1)] public byte size;
+        [FieldOffset(2)] public short buttons;
+        [FieldOffset(4)] public byte triggerLeft;
+        [FieldOffset(5)] public byte triggerRight;
+        [FieldOffset(6)] public short leftX;
+        [FieldOffset(8)] public short leftY;
+        [FieldOffset(10)] public short rightX;
+        [FieldOffset(12)] public short rightY;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('H', 'I', 'D');
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportXboxControllerOnOSX()
+    {
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "HID",
+            product = "Xbox One Wired Controller",
+            manufacturer = "Microsoft"
+        };
+
+        InputDevice device = null;
+        Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
+        var gamepad = (XInputController)device;
+        Assert.That(gamepad.name, Is.EqualTo("XInputControllerOSX"));
+
+        // Test right and down and that the layouts get inversion correct
+        InputSystem.QueueStateEvent(gamepad,
+            new MICEXboxControllerForOSXState
+            {
+                leftX = 32767,
+                leftY = 32767,
+            });
+
+        InputSystem.Update();
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+
+        // Test left and up and that the layouts get inversion correct
+        InputSystem.QueueStateEvent(gamepad,
+            new MICEXboxControllerForOSXState
+            {
+                leftX = -32767,
+                leftY = -32767,
+            });
+
+        InputSystem.Update();
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
     }
 
 #endif
