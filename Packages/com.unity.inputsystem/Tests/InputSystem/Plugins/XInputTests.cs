@@ -197,4 +197,65 @@ internal class XInputTests : InputTestFixture
     }
 
 #endif
+
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
+
+    // Going to simulate XINPUT_GAMEPAD
+    [StructLayout(LayoutKind.Explicit)]
+    struct XINPUT_GAMEPADState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public short buttons;
+        [FieldOffset(2)] public byte triggerLeft;
+        [FieldOffset(3)] public byte triggerRight;
+        [FieldOffset(4)] public short leftX;
+        [FieldOffset(6)] public short leftY;
+        [FieldOffset(8)] public short rightX;
+        [FieldOffset(10)] public short rightY;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('X', 'I', 'N', 'P');
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportXboxControllerOnWindows()
+    {
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "XInput",
+        };
+
+        InputDevice device = null;
+        Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
+        var gamepad = (XInputController)device;
+        Assert.That(gamepad.name, Is.EqualTo("XInputControllerWindows"));
+
+        // Test right and down and that the layouts get inversion correct
+        InputSystem.QueueStateEvent(gamepad,
+            new XINPUT_GAMEPADState
+            {
+                leftX = 32767,
+                leftY = -32767,
+            });
+
+        InputSystem.Update();
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+
+        // Test left and up and that the layouts get inversion correct
+        InputSystem.QueueStateEvent(gamepad,
+            new XINPUT_GAMEPADState
+            {
+                leftX = -32767,
+                leftY = 32767,
+            });
+
+        InputSystem.Update();
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+    }
+
+#endif
 }
