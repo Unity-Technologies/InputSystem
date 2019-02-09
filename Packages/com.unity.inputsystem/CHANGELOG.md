@@ -38,9 +38,9 @@ This release contains a number of fairly significant changes. The focus has been
         myAction.performed += MyCallback;
         myAction.cancelled += MyCallback;
       ```
-  * Alternatively, put `PassthroughInteraction` on an action. This restores the previous default behavior of actions.
+  * Alternatively, enable `passThrough` mode on an action. This effectively restores the previous default behavior of actions.
     ```
-        new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "passthrough");
+        new InputAction(binding: "<Gamepad>/leftTrigger") { passThrough = true };
     ```
 - As part of the aforementioned change, the following interactions have been removed as they are no longer relevant:
   - `StickInteraction`: Can simply be removed from bindings. The new default behavior obsoletes the need for what `StickInteraction` did. Use `started` to know then the stick starts being actuated, `performed` to be updated on movements, and `cancelled` to know when the stick goes back into rest position.
@@ -57,8 +57,8 @@ This release contains a number of fairly significant changes. The focus has been
   - If there are unsaved changes, asks for confirmation first.
 - Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name.
 - Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite.
-    - The old names can still be used and existing data will load as expected.
-    - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged.
+  - The old names can still be used and existing data will load as expected.
+  - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged.
 - `InputInteractionContext.controlHasDefaultValue` has been replaced with `InputInteractionContext.ControlIsActuated()`.
 - `InputActionChange.BindingsHaveChangedWhileEnabled` has been reworked and split in two:
     1. `InputActionChange.BoundControlsAboutToChange`: Bindings have been previously resolved but are about to be re-resolved.
@@ -82,15 +82,16 @@ This release contains a number of fairly significant changes. The focus has been
     * `NormalizeVector2Processor`
     * `NormalizeVector3Processor`
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
-- Added `PassthroughInteraction` to restore old behavior of actions where every value change would perform the action and `started` and `cancelled` were not used.
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 - `Mouse.forwardButton` and `Mouse.backButton`.
 - The input debugger now shows users along with their paired devices and actions. See the [documentation](Documentation~/UserManagement.md#debugging)
 - Added third and fourth barrel buttons on `Pen`.
 
 #### Actions:
-- Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \
+- Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. See the [documentation](Documentation~/Actions.md#continuous-actions) for details. \
   ![Continuous Action](Documentation~/Images/ContinuousAction.png)
+- Actions have a new pass-through mode. In this mode an action will bypass any checks on control actuation and let any input activity on the action directly flow through. See the [documentation](Documentation~/Actions.md#pass-through-actions) for details. \
+  ![Pass-Through Action](Documentation~/Images/PassThroughAction.png)
 - Can now add interactions and processors directly to actions.
   ![Action Properties](Documentation~/Images/ActionProperties.png)
     * This is functionally equivalent to adding the respective processors and/or interactions to every binding on the action.

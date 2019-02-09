@@ -942,6 +942,7 @@ namespace UnityEngine.Experimental.Input
             public string id;
             public string expectedControlLayout;
             public bool continuous;
+            public bool passThrough;
             public string processors;
             public string interactions;
 
@@ -958,6 +959,7 @@ namespace UnityEngine.Experimental.Input
                     id = action.id.ToString(),
                     expectedControlLayout = action.m_ExpectedControlLayout,
                     continuous = action.continuous,
+                    passThrough = action.passThrough,
                     processors = action.processors,
                     interactions = action.interactions,
                 };
@@ -1110,6 +1112,7 @@ namespace UnityEngine.Experimental.Input
                             ? jsonAction.expectedControlLayout
                             : null,
                         continuous = jsonAction.continuous,
+                        passThrough = jsonAction.passThrough,
                         m_Processors = jsonAction.processors,
                         m_Interactions = jsonAction.interactions,
                     };
@@ -1181,6 +1184,7 @@ namespace UnityEngine.Experimental.Input
                                 ? jsonAction.expectedControlLayout
                                 : null,
                             continuous = jsonAction.continuous,
+                            passThrough = jsonAction.passThrough,
                             m_Processors = jsonAction.processors,
                             m_Interactions = jsonAction.interactions,
                         };

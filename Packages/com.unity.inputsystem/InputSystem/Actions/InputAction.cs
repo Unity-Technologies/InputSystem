@@ -446,6 +446,7 @@ namespace UnityEngine.Experimental.Input
         {
             None = 0,
             Continuous = 1 << 1,
+            PassThrough = 1 << 2,
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
