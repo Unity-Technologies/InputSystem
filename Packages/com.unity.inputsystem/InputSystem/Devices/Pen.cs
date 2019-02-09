@@ -46,7 +46,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         [InputControl(name = "tip", layout = "Button", bit = (int)PenButton.Tip)]
         [InputControl(name = "eraser", layout = "Button", bit = (int)PenButton.Eraser)]
-        [InputControl(name = "button", bit = (int)PenButton.Tip, synthetic = true)]
+        [InputControl(name = "button", bit = (int)PenButton.Tip, synthetic = true, usage = "")]
         [InputControl(name = "inRange", layout = "Button", bit = (int)PenButton.InRange, synthetic = true)]
         [InputControl(name = "barrel1", layout = "Button", bit = (int)PenButton.BarrelFirst, alias = "barrelFirst", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         [InputControl(name = "barrel2", layout = "Button", bit = (int)PenButton.BarrelSecond, alias = "barrelSecond", usages = new[] { "SecondaryAction", "SecondaryTrigger" })]

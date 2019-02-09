@@ -2171,21 +2171,24 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanUseMouseAsPointer()
     {
-        var device = InputSystem.AddDevice<Mouse>();
+        var mouse = InputSystem.AddDevice<Mouse>();
 
-        InputSystem.QueueStateEvent(device,
+        InputSystem.QueueStateEvent(mouse,
             new MouseState
             {
                 position = new Vector2(0.123f, 0.456f),
             }.WithButton(MouseButton.Left));
         InputSystem.Update();
 
-        Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
-        Assert.That(device.button.isPressed, Is.True);
+        Assert.That(mouse.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(mouse.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(mouse.button.isPressed, Is.True);
         ////TODO: mouse phase should be driven by Mouse device automatically
-        Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(mouse.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
         ////TODO: pointer ID etc.
+
+        Assert.That(InputControlPath.TryFindControls(mouse, "*/{PrimaryAction}"), Is.EquivalentTo(new[] { mouse.leftButton }));
+        Assert.That(InputControlPath.TryFindControls(mouse, "*/{SecondaryAction}"), Is.EquivalentTo(new[] { mouse.rightButton }));
     }
 
     [Test]
