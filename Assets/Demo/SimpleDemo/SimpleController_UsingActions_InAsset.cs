@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 
 // Use action set asset instead of lose InputActions directly on component.
@@ -23,6 +24,13 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     private void Start()
     {
         m_Rigidbody = GetComponent<Rigidbody>();
+
+        ////FIXME: Solve this more elegantly. ATM, if we have both fixed and dynamic updates enabled, then
+        ////       we run into problems as actions will fire in updates while the actual processing of input
+        ////       happens in Update(). So, if we're looking at m_Look, for example, we will see mouse deltas
+        ////       on it but then also see the deltas get reset between updates meaning that most of the time
+        ////       Update() will end up with a zero m_Look vector.
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly;
     }
 
     void OnCollisionStay()
@@ -34,6 +42,8 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     {
         controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
+        controls.gameplay.move.cancelled += ctx => m_Move = Vector2.zero;
+        controls.gameplay.look.cancelled += ctx => m_Look = Vector2.zero;
 
         controls.gameplay.fire.performed +=
             ctx =>
@@ -101,6 +111,8 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     private void Look(Vector2 rotate)
     {
+        if (m_Look.magnitude > 0)
+            Debug.Log("Look Actuate");
         const float kClampAngle = 80.0f;
 
         m_Rotation.y += rotate.x * rotateSpeed * Time.deltaTime;
