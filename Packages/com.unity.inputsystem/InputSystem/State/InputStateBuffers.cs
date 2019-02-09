@@ -96,10 +96,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             // has its buffers swapped individually with SwapDeviceBuffers().
             public void** deviceToBufferMapping;
 
-            public bool valid
-            {
-                get { return deviceToBufferMapping != null; }
-            }
+            public bool valid => deviceToBufferMapping != null;
 
             public void SetFrontBuffer(int deviceIndex, void* ptr)
             {
@@ -382,7 +379,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             // Migrate every device that has allocated state blocks.
             var newDeviceCount = deviceCount;
-            var oldDeviceCount = oldDeviceIndices != null ? oldDeviceIndices.Length : newDeviceCount;
+            var oldDeviceCount = oldDeviceIndices?.Length ?? newDeviceCount;
             for (var i = 0; i < newDeviceCount && i < oldDeviceCount; ++i)
             {
                 var device = devices[i];
@@ -394,7 +391,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
                 ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
 
-                var oldDeviceIndex = oldDeviceIndices != null ? oldDeviceIndices[i] : i;
+                var oldDeviceIndex = oldDeviceIndices ? [i] ?? i;
                 var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
 
@@ -447,7 +444,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 var sizeOfDevice = devices[i].m_StateBlock.alignedSizeInBytes;
                 sizeOfDevice = NumberHelpers.AlignToMultiple(sizeOfDevice, 4);
                 if (sizeOfDevice == 0) // Shouldn't happen as we don't allow empty layouts but make sure we catch this if something slips through.
-                    throw new Exception(string.Format("Device '{0}' has a zero-size state buffer", devices[i]));
+                    throw new Exception($"Device '{devices[i]}' has a zero-size state buffer");
                 result[i] = sizeInBytes;
                 sizeInBytes += sizeOfDevice;
             }
