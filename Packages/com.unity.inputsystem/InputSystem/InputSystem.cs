@@ -1652,15 +1652,29 @@ namespace UnityEngine.Experimental.Input
             Update();
         }
 
-        internal static void OnPlayModeChange(PlayModeStateChange change)
+        private static InputSettings s_SavedSettings;
+
+        private static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
+                case PlayModeStateChange.ExitingEditMode:
+                    s_SavedSettings = ScriptableObject.Instantiate(settings);
+                    break;
+
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
+                ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
+                ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
-                    ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
-                    ////        InputDevices that have been created with AddDevice<> during play mode?
-                    DisableAllEnabledActions();
+
+                    // Nuke all InputActionMapStates. Releases their unmanaged memory.
+                    InputActionState.DestroyAllActionMapStates();
+
+                    // Restore settings.
+                    EditorUtility.CopySerializedIfDifferent(s_SavedSettings, settings);
+                    ScriptableObject.DestroyImmediate(s_SavedSettings);
+                    s_SavedSettings = null;
+                    settings.OnChange();
                     break;
             }
         }
