@@ -404,8 +404,10 @@ partial class CoreTests
         var action1 = asset.actionMaps[0].TryGetAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(3));
         Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "positive"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "negative"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "positive", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "negative", StringComparison.InvariantCultureIgnoreCase)));
         Assert.That(action1.bindings[0].isComposite, Is.True);
         Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
         Assert.That(action1.bindings[1].isComposite, Is.False);
@@ -428,16 +430,15 @@ partial class CoreTests
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
         // Add an axis composite with a positive and negative binding in place.
-        var compositeBinding =
-            InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis",
-                addPartBindings: false);
+        InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis",
+            addPartBindings: false);
         InputActionSerializationHelpers.AddBinding(action1Property, mapProperty, path: "<Gamepad>/buttonWest",
             name: "Negative", processors: "normalize", interactions: "tap", flags: InputBinding.Flags.PartOfComposite);
         InputActionSerializationHelpers.AddBinding(action1Property, mapProperty, path: "<Gamepad>/buttonEast",
             name: "Positive", processors: "clamp", interactions: "slowtap", flags: InputBinding.Flags.PartOfComposite);
 
         // Noise.
-        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty);
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty, path: "foobar");
 
         // Change to vector2 composite and make sure that we've added two more bindings, changed the names
         // of bindings accordingly, and preserved the existing binding paths and such.
@@ -448,12 +449,18 @@ partial class CoreTests
         var action1 = asset.actionMaps[0].GetAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(6)); // Composite + 4 parts + noise added above.
         Assert.That(action1.bindings[0].path, Is.EqualTo("Dpad"));
-        Assert.That(action1.bindings, Has.None.Matches((InputBinding x) => x.name == "positive"));
-        Assert.That(action1.bindings, Has.None.Matches((InputBinding x) => x.name == "negative"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "up"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "down"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "left"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "right"));
+        Assert.That(action1.bindings, Has.None.Matches((InputBinding x) =>
+            string.Equals(x.name, "positive", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.None.Matches((InputBinding x) =>
+            string.Equals(x.name, "negative", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "up", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "down", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "left", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "right", StringComparison.InvariantCultureIgnoreCase)));
         Assert.That(action1.bindings[0].isComposite, Is.True);
         Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
         Assert.That(action1.bindings[1].isComposite, Is.False);
@@ -476,6 +483,8 @@ partial class CoreTests
         Assert.That(action1.bindings[4].interactions, Is.Empty);
         Assert.That(action1.bindings[3].processors, Is.Empty);
         Assert.That(action1.bindings[4].processors, Is.Empty);
+        Assert.That(action1.bindings[5].path, Is.EqualTo("foobar"));
+        Assert.That(action1.bindings[5].name, Is.Empty);
     }
 
     [Test]

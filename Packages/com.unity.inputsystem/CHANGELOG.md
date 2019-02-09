@@ -53,6 +53,12 @@ This release contains a number of fairly significant changes. The focus has been
   - In other words, if e.g. you have a binding to the A button of the gamepad and the A button is already pressed when the action is first enabled, then the action associated with the A button will trigger as if the button had just been pressed. Previously, it required releasing and re-pressing the button first -- which, together with certain interactions, could lead to actions ending up in a confused state.
 - When an action is disabled, it will now cancel all ongoing interactions, if any (i.e. you will see `InputAction.cancelled` being called).
   - Note that unlike the above-mentioned callbacks that happen when an action starts out with a control already actuated, the cancellation callbacks happen __immediately__ rather than in the next input update.
+- Actions that at runtime are bound to multiple controls will now perform *conflict resolution*, if necessary.
+  - This applies only if an action actually receives multiple concurrent actuations from controls.
+  - When ambiguity is detected, the greatest amount of actuation on any of the controls gets to drive the action.
+  - In practice, this means that as long as any of the controls bound to an action is actuated, the action will keep going. This resolves ambiguities when an action has primary and secondary bindings, for examples, or when an action is bound to multiple different devices at the same time.
+  - Composite bindings count as single actuations regardless of how many controls participate in the composite.
+  - This behavior __can be bypassed__ by setting the action to be pass-through.
 - Action editor now closes when asset is deleted.
   - If there are unsaved changes, asks for confirmation first.
 - Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name.
@@ -63,6 +69,9 @@ This release contains a number of fairly significant changes. The focus has been
 - `InputActionChange.BindingsHaveChangedWhileEnabled` has been reworked and split in two:
     1. `InputActionChange.BoundControlsAboutToChange`: Bindings have been previously resolved but are about to be re-resolved.
     2. `InputActionChange.BoundControlsChanged`: Bindings have been resolved on one or more actions.
+- Actions internally now allocate unmanaged memory.
+  - Disposing should be taken care of automatically (though you can manually `Dispose` as well). If you see errors in the console log about unmanaged memory being leaked, please report the bug.
+  - All execution state except for C# heap objects for processors, interactions, and composites has been collapsed into a single block of unmanaged memory. Actions should now be able to re-resolve efficiently without allocating additional GC memory.
 
 ### Added
 
@@ -126,6 +135,10 @@ This release contains a number of fairly significant changes. The focus has been
 - Exceptions when removing action in last position of action map.
 - Devices marked as unsupported in input settings getting added back on domain reload.
 - Fixed `Pen` causing exceptions and asserts.
+
+### Known Issues
+
+- Input processing in edit mode on 2019.1 is sporadic rather than happening on every editor update.
 
 ## [0.1.2-preview] - 2018-12-19
 

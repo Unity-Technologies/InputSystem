@@ -365,8 +365,7 @@ namespace UnityEngine.Experimental.Input
         {
             var map = TryGetActionMap(id);
             if (map == null)
-                throw new KeyNotFoundException(string.Format("Could not find an action map with ID '{0}' in asset '{1}'",
-                    id, this));
+                throw new KeyNotFoundException($"Could not find an action map with ID '{id}' in asset '{this}'");
             return map;
         }
 
@@ -508,15 +507,24 @@ namespace UnityEngine.Experimental.Input
             return GetEnumerator();
         }
 
-        internal void ReResolveIfNecessary()
+        private void ReResolveIfNecessary()
         {
-            if (m_ActionMapState == null)
+            if (m_SharedStateForAllMaps == null)
                 return;
 
             Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
             // State is share between all action maps in the asset. Resolving bindings for the
             // first map will resolve them for all maps.
             m_ActionMaps[0].ResolveBindings();
+        }
+
+        private void OnDestroy()
+        {
+            if (m_SharedStateForAllMaps != null)
+            {
+                m_SharedStateForAllMaps.Dispose(); // Will clean up InputActionMap state.
+                m_SharedStateForAllMaps = null;
+            }
         }
 
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
@@ -528,12 +536,12 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Shared state for all action maps in the asset.
         /// </summary>
-        [NonSerialized] internal InputActionMapState m_ActionMapState;
+        [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] internal ReadOnlyArray<InputDevice>? m_Devices;
-        [NonSerialized] internal int m_DevicesCount;
-        [NonSerialized] internal InputDevice[] m_DevicesArray;
+        [NonSerialized] private ReadOnlyArray<InputDevice>? m_Devices;
+        [NonSerialized] private int m_DevicesCount;
+        [NonSerialized] private InputDevice[] m_DevicesArray;
 
         [Serializable]
         internal struct FileJson

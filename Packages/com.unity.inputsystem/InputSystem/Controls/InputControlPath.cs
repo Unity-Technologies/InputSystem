@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -340,6 +341,25 @@ namespace UnityEngine.Experimental.Input
             return TryFindControl<InputControl>(control, path, indexInPath);
         }
 
+        public static InputControl[] TryFindControls(InputControl control, string path, int indexInPath = 0)
+        {
+            var matches = new InputControlList<InputControl>(Allocator.Temp);
+            try
+            {
+                TryFindControls(control, path, indexInPath, ref matches);
+                return matches.ToArray();
+            }
+            finally
+            {
+                matches.Dispose();
+            }
+        }
+
+        public static int TryFindControls(InputControl control, string path, ref InputControlList<InputControl> matches, int indexInPath = 0)
+        {
+            return TryFindControls(control, path, indexInPath, ref matches);
+        }
+
         /// <summary>
         /// Return the first control that matches the given path.
         /// </summary>
@@ -383,7 +403,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// Does not allocate managed memory.
         /// </remarks>
-        internal static int TryFindControls<TControl>(InputControl control, string path, int indexInPath,
+        public static int TryFindControls<TControl>(InputControl control, string path, int indexInPath,
             ref InputControlList<TControl> matches)
             where TControl : InputControl
         {
@@ -728,8 +748,8 @@ namespace UnityEngine.Experimental.Input
 
         private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType)
         {
-            Debug.Assert(!string.IsNullOrEmpty(component));
-            Debug.Assert(!string.IsNullOrEmpty(path));
+            Debug.Assert(component != null, "Component string is null");
+            Debug.Assert(path != null, "Path is null");
 
             var nameLength = component.Length;
             var pathLength = path.Length;

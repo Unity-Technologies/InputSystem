@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputAction.performed"/>
     /// <seealso cref="InputAction.cancelled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable, ICloneable
+    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -267,33 +267,19 @@ namespace UnityEngine.Experimental.Input
 
         public void Dispose()
         {
+            // Nuke clones we made of InputActionMapStates.
+            for (var i = 0; i < m_ActionMapStateClones.length; ++i)
+                m_ActionMapStateClones[i].Dispose();
+
             m_EventBuffer.Dispose();
             m_ActionMapStates.Clear();
+            m_ActionMapStateClones.Clear();
 
             if (m_ActionChangeDelegate != null)
             {
                 InputSystem.onActionChange -= m_ActionChangeDelegate;
                 m_ActionChangeDelegate = null;
             }
-        }
-
-        public InputActionTrace Clone()
-        {
-            var trace = new InputActionTrace
-            {
-                m_EventBuffer = m_EventBuffer.Clone(),
-                m_ActionMapStates = m_ActionMapStates.Clone()
-            };
-
-            if (trace.count > 0)
-                trace.HookOnActionChange();
-
-            return trace;
-        }
-
-        object ICloneable.Clone()
-        {
-            return Clone();
         }
 
         public IEnumerator<ActionEventPtr> GetEnumerator()
@@ -311,7 +297,8 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<InputAction> m_SubscribedActions;
         private InlinedArray<InputActionMap> m_SubscribedActionMaps;
         private InputEventBuffer m_EventBuffer;
-        private InlinedArray<InputActionMapState> m_ActionMapStates;
+        private InlinedArray<InputActionState> m_ActionMapStates;
+        private InlinedArray<InputActionState> m_ActionMapStateClones;
         private Action<InputAction.CallbackContext> m_CallbackDelegate;
         private Action<object, InputActionChange> m_ActionChangeDelegate;
 
@@ -394,7 +381,9 @@ namespace UnityEngine.Experimental.Input
 
             // Yes, we are so make our own private copy of its current state.
             // NOTE: We do not put these local InputActionMapStates on the global list.
-            m_ActionMapStates[stateIndex] = state.Clone();
+            var clone = state.Clone();
+            m_ActionMapStateClones.Append(clone);
+            m_ActionMapStates[stateIndex] = clone;
         }
 
         /// <summary>
@@ -407,7 +396,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public unsafe struct ActionEventPtr
         {
-            internal InputActionMapState m_State;
+            internal InputActionState m_State;
             internal ActionEvent* m_Ptr;
 
             public InputAction action => m_State.GetActionOrNull(m_Ptr->bindingIndex);
@@ -421,7 +410,7 @@ namespace UnityEngine.Experimental.Input
                 get
                 {
                     var index = m_Ptr->interactionIndex;
-                    if (index == InputActionMapState.kInvalidIndex)
+                    if (index == InputActionState.kInvalidIndex)
                         return null;
 
                     return m_State.interactions[index];

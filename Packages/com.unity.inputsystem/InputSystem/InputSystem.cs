@@ -1330,8 +1330,8 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public static event Action<object, InputActionChange> onActionChange
         {
-            add => InputActionMapState.s_OnActionChange.Append(value);
-            remove => InputActionMapState.s_OnActionChange.Remove(value);
+            add => InputActionState.s_OnActionChange.Append(value);
+            remove => InputActionState.s_OnActionChange.Remove(value);
         }
 
         /// <summary>
@@ -1426,7 +1426,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.Disable"/>
         public static void DisableAllEnabledActions()
         {
-            InputActionMapState.DisableAllActions();
+            InputActionState.DisableAllActions();
         }
 
         /// <summary>
@@ -1456,8 +1456,8 @@ namespace UnityEngine.Experimental.Input
         public static int ListEnabledActions(List<InputAction> actions)
         {
             if (actions == null)
-                throw new ArgumentNullException("actions");
-            return InputActionMapState.FindAllEnabledActions(actions);
+                throw new ArgumentNullException(nameof(actions));
+            return InputActionState.FindAllEnabledActions(actions);
         }
 
         #endregion
@@ -1815,7 +1815,7 @@ namespace UnityEngine.Experimental.Input
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
 
-            InputActionMapState.ResetGlobals();
+            InputActionState.ResetGlobals();
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
@@ -1870,7 +1870,7 @@ namespace UnityEngine.Experimental.Input
             if (s_SavedStateStack == null)
                 s_SavedStateStack = new Stack<State>();
 
-            ////FIXME: does not preserve global state in InputActionMapState
+            ////FIXME: does not preserve global state in InputActionState
             ////TODO: preserve InputUser state
 
             s_SavedStateStack.Push(new State
