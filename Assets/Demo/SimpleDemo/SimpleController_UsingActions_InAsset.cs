@@ -25,7 +25,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     {
         m_Rigidbody = GetComponent<Rigidbody>();
 
-        ////FIXME: Solve this more elegantly. ATM, if we have both fixed and dynamic updates enabled, then
+        ////FIXME: Solve this properly. ATM, if we have both fixed and dynamic updates enabled, then
         ////       we run into problems as actions will fire in updates while the actual processing of input
         ////       happens in Update(). So, if we're looking at m_Look, for example, we will see mouse deltas
         ////       on it but then also see the deltas get reset between updates meaning that most of the time
@@ -111,8 +111,6 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     private void Look(Vector2 rotate)
     {
-        if (m_Look.magnitude > 0)
-            Debug.Log("Look Actuate");
         const float kClampAngle = 80.0f;
 
         m_Rotation.y += rotate.x * rotateSpeed * Time.deltaTime;

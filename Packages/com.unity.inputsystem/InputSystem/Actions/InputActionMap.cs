@@ -703,30 +703,6 @@ namespace UnityEngine.Experimental.Input
             m_ControlsForEachAction = null;
         }
 
-        ////FIXME: this needs to be able to handle the case where two maps share state and one is enabled and one isn't
-        internal void InvalidateResolvedData()
-        {
-            Debug.Assert(m_EnabledActionsCount == 0);
-
-            if (m_State == null)
-                return;
-
-            ////TODO: keep state instance around for re-use
-
-            if (m_Asset != null)
-            {
-                foreach (var map in m_Asset.m_ActionMaps)
-                    map.m_State = null;
-                m_Asset.m_SharedStateForAllMaps = null;
-            }
-            else
-            {
-                m_State = null;
-            }
-
-            ClearPerActionCachedBindingData();
-        }
-
         ////TODO: allow this; just disable temporarily
         internal void ThrowIfModifyingBindingsIsNotAllowed()
         {
