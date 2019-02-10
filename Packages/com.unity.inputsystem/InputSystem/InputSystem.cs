@@ -1652,14 +1652,12 @@ namespace UnityEngine.Experimental.Input
             Update();
         }
 
-        private static InputSettings s_SavedSettings;
-
         private static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
-                    s_SavedSettings = ScriptableObject.Instantiate(settings);
+                    s_SystemObject.settings = JsonUtility.ToJson(settings);
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
@@ -1671,10 +1669,13 @@ namespace UnityEngine.Experimental.Input
                     InputActionState.DestroyAllActionMapStates();
 
                     // Restore settings.
-                    EditorUtility.CopySerializedIfDifferent(s_SavedSettings, settings);
-                    ScriptableObject.DestroyImmediate(s_SavedSettings);
-                    s_SavedSettings = null;
-                    settings.OnChange();
+                    if (!string.IsNullOrEmpty(s_SystemObject.settings))
+                    {
+                        JsonUtility.FromJsonOverwrite(s_SystemObject.settings, settings);
+                        s_SystemObject.settings = null;
+                        settings.OnChange();
+                    }
+
                     break;
             }
         }
