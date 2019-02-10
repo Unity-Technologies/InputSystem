@@ -1974,7 +1974,7 @@ namespace UnityEngine.Experimental.Input
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
-                
+
             #if UNITY_EDITOR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
@@ -2202,7 +2202,7 @@ namespace UnityEngine.Experimental.Input
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
-            
+
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).

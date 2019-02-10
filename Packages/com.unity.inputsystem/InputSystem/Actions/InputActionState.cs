@@ -8,8 +8,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
-////TODO: add a serialized form of this and take it across domain reloads
-
 ////TODO: remove direct references to InputManager
 
 ////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)

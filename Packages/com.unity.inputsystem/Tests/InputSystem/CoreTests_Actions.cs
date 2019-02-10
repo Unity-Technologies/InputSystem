@@ -51,6 +51,58 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanTargetSameControlWithMultipleActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action1 = new InputAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = new InputAction("action2", binding: "<Gamepad>/buttonSouth");
+
+        var map = new InputActionMap("map");
+        var action3 = map.AddAction("action3", binding: "<Gamepad>/buttonSouth");
+        var action4 = map.AddAction("action4", binding: "<Gamepad>/buttonSouth");
+
+        action1.Enable();
+        action2.Enable();
+        map.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonSouth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(4 * 2));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Started).And.Property("action")
+                    .SameAs(action1).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Performed).And.Property("action")
+                    .SameAs(action1).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Started).And.Property("action")
+                    .SameAs(action2).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Performed).And.Property("action")
+                    .SameAs(action2).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Started).And.Property("action")
+                    .SameAs(action3).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Performed).And.Property("action")
+                    .SameAs(action3).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Started).And.Property("action")
+                    .SameAs(action4).And.Property("control").SameAs(gamepad.buttonSouth));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("phase").EqualTo(InputActionPhase.Performed).And.Property("action")
+                    .SameAs(action4).And.Property("control").SameAs(gamepad.buttonSouth));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_WhenSeveralBindingsResolveToSameControl_ThenWhatDoWeDoXXX()
     {
@@ -1031,7 +1083,8 @@ partial class CoreTests
     [Test]
     [Category("Actions")]
     [Property("TimesliceEvents", "Off")]
-    public void Actions_WithMultipleActuationsFromStateState_()
+    [Ignore("TODO")]
+    public void TODO_Actions_WithMultipleActuationsFromStateState_()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var action = new InputAction(binding: "<Mouse>/*button");
@@ -4455,6 +4508,54 @@ partial class CoreTests
         Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateComposite_WithPartsBeingOutOfOrder()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Axis")
+            .With("positive", "<keyboard>/f")
+            .With("negative", "<keyboard>/c")
+            .With("positive", "<gamepad>/leftTrigger")
+            .With("negative", "<gamepad>/rightTrigger");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftTrigger, 1);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(1));
+
+            trace.Clear();
+
+            Set(gamepad.rightTrigger, 1);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(-1));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(-1));
+        }
+    }
+
     private class LogInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)
@@ -4747,6 +4848,24 @@ partial class CoreTests
         Assert.That(action.bindings[0].overridePath, Is.Null);
         Assert.That(action.bindings[1].overridePath, Is.Null);
         Assert.That(action.bindings[2].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_CanTargetBindingByIndex()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Keyboard>/escape");
+        action.AddBinding("<Keyboard>/pause");
+        action.AddBinding("<Gamepad>/start");
+
+        action.ApplyBindingOverride(0, "<Keyboard>/u");
+        action.ApplyBindingOverride(2, "<Gamepad>/select");
+
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Keyboard>/u"));
+        Assert.That(action.bindings[1].overridePath, Is.Null);
+        Assert.That(action.bindings[2].overridePath, Is.EqualTo("<Gamepad>/select"));
     }
 
     [Test]

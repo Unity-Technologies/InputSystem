@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -149,7 +148,7 @@ namespace UnityEngine.Experimental.Input
             ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
             var currentCompositeBindingIndex = InputActionState.kInvalidIndex;
             var currentCompositeIndex = InputActionState.kInvalidIndex;
-            var currentCompositePartIndex = 0;
+            var currentCompositePartCount = 0;
             var currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
             InputAction currentCompositeAction = null;
             var bindingMaskOnThisMap = map.m_BindingMask;
@@ -179,6 +178,11 @@ namespace UnityEngine.Experimental.Input
                         bindingState->mapIndex = totalMapCount;
                         bindingState->compositeOrCompositeBindingIndex = InputActionState.kInvalidIndex;
                         bindingState->actionIndex = InputActionState.kInvalidIndex;
+
+                        // Make sure that if it's part of a composite, we are actually part of a composite.
+                        if (isPartOfComposite && currentCompositeBindingIndex == InputActionState.kInvalidIndex)
+                            throw new Exception(
+                                $"Binding '{unresolvedBinding}' is marked as being part of a composite but the preceding binding is not a composite");
 
                         // Skip binding if it is disabled (path is empty string).
                         var path = unresolvedBinding.effectivePath;
@@ -313,7 +317,7 @@ namespace UnityEngine.Experimental.Input
                         // off the current composite.
                         if (!isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex)
                         {
-                            currentCompositePartIndex = 0;
+                            currentCompositePartCount = 0;
                             currentCompositeBindingIndex = InputActionState.kInvalidIndex;
                             currentCompositeIndex = InputActionState.kInvalidIndex;
                             currentCompositeAction = null;
@@ -347,6 +351,7 @@ namespace UnityEngine.Experimental.Input
 
                         // If the binding is part of a composite, pass the resolved controls
                         // on to the composite.
+                        var partIndex = InputActionState.kInvalidIndex;
                         var actionIndexForBinding = InputActionState.kInvalidIndex;
                         if (isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex && numControls > 0)
                         {
@@ -354,11 +359,11 @@ namespace UnityEngine.Experimental.Input
                             // to bind to.
                             if (string.IsNullOrEmpty(unresolvedBinding.name))
                                 throw new Exception(
-                                    $"Binding with path '{path}' that is part of composite '{composites[currentCompositeIndex]}' is missing a name");
+                                    $"Binding '{unresolvedBinding}' that is part of composite '{composites[currentCompositeIndex]}' is missing a name");
 
-                            // Install the controls on the binding.
-                            BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
-                                ref currentCompositePartIndex);
+                            // Give a part index for the
+                            partIndex = AssignCompositePartIndex(composites[currentCompositeIndex], unresolvedBinding.name,
+                                ref currentCompositePartCount);
 
                             // Keep track of total number of controls bound in the composite.
                             bindingStatesPtr[currentCompositeBindingIndex].controlCount += numControls;
@@ -381,7 +386,7 @@ namespace UnityEngine.Experimental.Input
                             processorStartIndex = firstProcessorIndex,
                             processorCount = numProcessors,
                             isPartOfComposite = unresolvedBinding.isPartOfComposite,
-                            partIndex = currentCompositePartIndex,
+                            partIndex = partIndex,
                             actionIndex = actionIndexForBinding,
                             compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
@@ -634,9 +639,11 @@ namespace UnityEngine.Experimental.Input
             return instance;
         }
 
-        private static void BindControlInComposite(object composite, string name, ref int currentCompositePartIndex)
+        private static int AssignCompositePartIndex(object composite, string name, ref int currentCompositePartCount)
         {
             var type = composite.GetType();
+
+            ////REVIEW: check for [InputControl] attribute?
 
             ////TODO: allow this to be a property instead
             // Look up field.
@@ -654,14 +661,18 @@ namespace UnityEngine.Experimental.Input
                 throw new Exception(
                     $"Field '{name}' used as a parameter of binding composite '{composite}' must be of type 'int' but is of type '{type.Name}' instead");
 
+            ////REVIEW: this create garbage; need a better solution to get to zero garbage during re-resolving
             // See if we've already assigned a part index. This can happen if there are multiple bindings
             // for the same named slot on the composite (e.g. multiple "Negative" bindings on an axis composite).
-            var fieldValue = (int)field.GetValue(composite);
-            if (fieldValue == 0)
+            var partIndex = (int)field.GetValue(composite);
+            if (partIndex == 0)
             {
                 // No, not assigned yet. Create new part index.
-                field.SetValue(composite, ++currentCompositePartIndex);
+                partIndex = ++currentCompositePartCount;
+                field.SetValue(composite, partIndex);
             }
+
+            return partIndex;
         }
     }
 }

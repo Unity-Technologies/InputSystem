@@ -15,7 +15,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Removed Unity 2018.2 support code.
 - Removed .NET 3.5 support code.
 - Started using C# 7.
-- `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcess<TValue>` base classes.
+- `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcessor<TValue>` base classes.
 - `IInputBindingComposite` has been replaced with an `InputBindingComposite` base class and the `IInputBindingComposite<TValue>` interface has been merged with the `InputBindingComposite<TValue>` class which had already existed.
 - `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls.
 - `SensitivityProcessor` has been removed.
@@ -135,6 +135,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Exceptions when removing action in last position of action map.
 - Devices marked as unsupported in input settings getting added back on domain reload.
 - Fixed `Pen` causing exceptions and asserts.
+- Composites that assign multiple bindings to parts failing to set up properly when parts are assigned out of order (#410).
 
 ### Known Issues
 
