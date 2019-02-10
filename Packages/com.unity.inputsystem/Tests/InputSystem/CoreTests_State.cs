@@ -473,7 +473,17 @@ partial class CoreTests
         receivedUpdate = false;
         receivedUpdateType = null;
 
-        // Before render.
+        // Before render. Disabled by default. Add a device that needs before-render updates
+        // so that the update gets enabled.
+        const string kBeforeRenderDevice = @"
+            {
+                ""name"" : ""BeforeRenderGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+        InputSystem.RegisterLayout(kBeforeRenderDevice);
+        InputSystem.AddDevice("BeforeRenderGamepad");
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);

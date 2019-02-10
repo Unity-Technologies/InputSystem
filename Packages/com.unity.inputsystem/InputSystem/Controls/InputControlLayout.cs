@@ -865,7 +865,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 m_Controls = controlLayouts.ToArray(),
                 m_StateFormat = stateFormat,
-                m_Variants = variants
+                m_Variants = variants,
+                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
             };
 
             if (layoutAttribute?.commonUsages != null)
