@@ -516,8 +516,8 @@ namespace UnityEngine.Experimental.Input
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(data.layout,
-                        string.Format("Remote{0}::{1}", msg.participantId, data.name));
+                    device = receiver.m_LocalManager.AddDevice(data.layout);
+                    device.m_ParticipantId = msg.participantId;
                 }
                 catch (Exception exception)
                 {

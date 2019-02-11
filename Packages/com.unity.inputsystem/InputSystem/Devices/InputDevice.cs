@@ -39,6 +39,7 @@ namespace UnityEngine.Experimental.Input
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;
+        public const int kLocalParticipantId = 0;
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
@@ -264,6 +265,7 @@ namespace UnityEngine.Experimental.Input
         public InputDevice()
         {
             m_Id = kInvalidDeviceId;
+            m_ParticipantId = kLocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
         }
 
@@ -402,6 +404,7 @@ namespace UnityEngine.Experimental.Input
 
         internal DeviceFlags m_DeviceFlags;
         internal int m_Id;
+        internal int m_ParticipantId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 

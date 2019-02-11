@@ -341,7 +341,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     foreach (var player in EditorConnection.instance.ConnectedPlayers)
                     {
                         var playerNode = AddChild(remoteDevicesNode, player.name, ref id);
-                        AddDevices(playerNode, devices, ref id, "Remote" + player.playerId + InputControlLayout.kNamespaceQualifier);
+                        AddDevices(playerNode, devices, ref id, player.playerId);
                     }
                 }
                 else
@@ -424,23 +424,18 @@ namespace UnityEngine.Experimental.Input.Editor
                 return root;
             }
 
-            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, string namePrefix = null)
+            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.kLocalParticipantId)
             {
                 foreach (var device in devices)
                 {
-                    if (namePrefix != null)
-                    {
-                        if (!device.name.StartsWith(namePrefix))
-                            continue;
-                    }
-                    else if (device.name.Contains(InputControlLayout.kNamespaceQualifier))
-                        continue;
+                    if (device.m_ParticipantId != participantId)
+                        continue; 
 
                     var item = new DeviceItem
                     {
                         id = id++,
                         depth = parent.depth + 1,
-                        displayName = namePrefix != null ? device.name.Substring(namePrefix.Length) : device.name,
+                        displayName = device.name,
                         device = device,
                         icon = EditorInputControlLayoutCache.GetIconForLayout(device.layout),
                     };

@@ -3120,6 +3120,7 @@ namespace UnityEngine.Experimental.Input
             public string variants;
             public string[] usages;
             public int deviceId;
+            public int participantId;
             public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
@@ -3179,6 +3180,7 @@ namespace UnityEngine.Experimental.Input
                     layout = device.layout,
                     variants = device.variants,
                     deviceId = device.id,
+                    participantId = device.m_ParticipantId,
                     usages = usages,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
@@ -3271,10 +3273,7 @@ namespace UnityEngine.Experimental.Input
                         {
                             device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
                                 deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
-
-                            // Re-set the name to the stored name. Otherwise we lose the sorting of 
-                            // devices to remote players, which is encoded in the name.
-                            device.m_Name = new InternedString(deviceState.name);
+                            device.m_ParticipantId = deviceState.participantId;
                         }
                         else
                         {
