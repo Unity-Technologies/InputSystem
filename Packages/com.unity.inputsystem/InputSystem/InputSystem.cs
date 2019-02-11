@@ -1515,7 +1515,7 @@ namespace UnityEngine.Experimental.Input
             //       see any errors but the callbacks we register for will not trigger.
             EditorApplication.delayCall += SetUpRemotingInternal;
             #else
-            s_Remote = new InputRemoting(s_Manager, true);
+            s_Remote = new InputRemoting(s_Manager);
             SetUpRemotingInternal();
             #endif
         }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
@@ -214,11 +215,72 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+
+        void EnableRemoteDevices(bool enable = true)
+        {
+            foreach (var player in EditorConnection.instance.ConnectedPlayers)
+            { 
+                EditorConnection.instance.Send(enable ? RemoteInputPlayerConnection.kStartSendingMsg : RemoteInputPlayerConnection.kStopSendingMsg, new byte[0], player.playerId);
+                if (!enable)
+                    InputSystem.remoting.RemoveRemoteDevices(player.playerId);
+
+            }
+        }
+
+        private void DrawConnectionGUI()
+        {
+            if (GUILayout.Button("Remote Devices…", EditorStyles.toolbarDropDown))
+            {
+                GenericMenu menu = new GenericMenu();
+                var haveRemotes = InputSystem.devices.Any(x => x.remote);
+                if (EditorConnection.instance.ConnectedPlayers.Count > 0)
+                    menu.AddItem(new GUIContent("Show remote devices"), haveRemotes, () =>
+                    {
+                        EnableRemoteDevices(!haveRemotes);
+                    });
+                else
+                    menu.AddDisabledItem(new GUIContent("Show remote input devices"));
+
+                menu.AddSeparator("");
+
+                var availableProfilers = ProfilerDriver.GetAvailableProfilers();
+                foreach (var profiler in availableProfilers)
+                {
+                    bool enabled = ProfilerDriver.IsIdentifierConnectable(profiler);
+                    var profilerName = ProfilerDriver.GetConnectionIdentifier(profiler);
+                    bool isConnected = ProfilerDriver.connectedProfiler == profiler;
+                    if (enabled)
+                        menu.AddItem(new GUIContent(profilerName), isConnected, () => { 
+                            ProfilerDriver.connectedProfiler = profiler;
+                            EnableRemoteDevices();
+
+                        });
+                    else
+                        menu.AddDisabledItem(new GUIContent(profilerName));
+                }
+
+                foreach (var device in UnityEditor.Hardware.DevDeviceList.GetDevices())
+                {
+                    bool supportsPlayerConnection = (device.features & UnityEditor.Hardware.DevDeviceFeatures.PlayerConnection) != 0;
+                    if (!device.isConnected || !supportsPlayerConnection)
+                        continue;
+
+                    var url = "device://" + device.id;
+                    bool isConnected = ProfilerDriver.connectedProfiler == 0xFEEE && ProfilerDriver.directConnectionUrl == url;
+                    menu.AddItem(new GUIContent(device.name), isConnected, () => {
+                        ProfilerDriver.DirectURLConnect(url);
+                        EnableRemoteDevices();
+                    });
+                }
+
+                menu.ShowAsContext();
+            }
+        }
         private void DrawToolbarGUI()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button(Contents.optionsContent, EditorStyles.toolbarButton))
+            if (GUILayout.Button(Contents.optionsContent, EditorStyles.toolbarDropDown))
             {
                 var menu = new GenericMenu();
 
@@ -231,6 +293,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 menu.ShowAsContext();
             }
+
+            DrawConnectionGUI();
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();

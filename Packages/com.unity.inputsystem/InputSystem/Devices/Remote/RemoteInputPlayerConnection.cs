@@ -34,6 +34,8 @@ namespace UnityEngine.Experimental.Input
         public static readonly Guid kNewEventsMsg = new Guid("34d9b47f923142ff847c0d1f8b0554d9");
         public static readonly Guid kRemoveDeviceMsg = new Guid("e5e299b2d9e44255b8990bb71af8922d");
         public static readonly Guid kChangeUsagesMsg = new Guid("b9fe706dfc854d7ca109a5e38d7db730");
+        public static readonly Guid kStartSendingMsg = new Guid("0d58e99045904672b3ef34b8797d23cb");
+        public static readonly Guid kStopSendingMsg = new Guid("548716b2534a45369ab0c9323fc8b4a8");
 
         public void Bind(IEditorPlayerConnection connection, bool isConnected)
         {
@@ -57,6 +59,9 @@ namespace UnityEngine.Experimental.Input
             connection.Register(kNewEventsMsg, OnNewEvents);
             connection.Register(kRemoveDeviceMsg, OnRemoveDevice);
             connection.Register(kChangeUsagesMsg, OnChangeUsages);
+
+            connection.Register(kStartSendingMsg, OnStartSending);
+            connection.Register(kStopSendingMsg, OnStopSending);
 
             m_Connection = connection;
 
@@ -123,6 +128,16 @@ namespace UnityEngine.Experimental.Input
         private void OnChangeUsages(MessageEventArgs args)
         {
             SendToSubscribers(InputRemoting.MessageType.ChangeUsages, args);
+        }
+
+        private void OnStartSending(MessageEventArgs args)
+        {
+            SendToSubscribers(InputRemoting.MessageType.StartSending, args);
+        }
+
+        private void OnStopSending(MessageEventArgs args)
+        {
+            SendToSubscribers(InputRemoting.MessageType.StopSending, args);
         }
 
         private void SendToSubscribers(InputRemoting.MessageType type, MessageEventArgs args)
