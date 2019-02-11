@@ -177,6 +177,8 @@ internal class XInputTests : InputTestFixture
             {
                 leftX = 32767,
                 leftY = 32767,
+                rightX = 32767,
+                rightY = 32767,
             });
 
         InputSystem.Update();
@@ -189,6 +191,8 @@ internal class XInputTests : InputTestFixture
             {
                 leftX = -32767,
                 leftY = -32767,
+                rightX = -32767,
+                rightY = -32767,
             });
 
         InputSystem.Update();
@@ -236,25 +240,57 @@ internal class XInputTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad,
             new XINPUT_GAMEPADState
             {
+                triggerLeft = 255,
+                triggerRight = 255,
                 leftX = 32767,
                 leftY = -32767,
+                rightX = 32767,
+                rightY = -32767,
             });
 
         InputSystem.Update();
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
 
         // Test left and up and that the layouts get inversion correct
         InputSystem.QueueStateEvent(gamepad,
             new XINPUT_GAMEPADState
             {
+                triggerLeft = 255,
+                triggerRight = 255,
                 leftX = -32767,
                 leftY = 32767,
+                rightX = -32767,
+                rightY = 32767,
             });
 
         InputSystem.Update();
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 1 }, gamepad.dpad.up);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 2 }, gamepad.dpad.down);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 4 }, gamepad.dpad.left);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 8 }, gamepad.dpad.right);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 16 }, gamepad.startButton);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 32 }, gamepad.selectButton);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 64 }, gamepad.leftStickButton);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 128 }, gamepad.rightStickButton);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 256 }, gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 512 }, gamepad.rightShoulder);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 4096 }, gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 8192 }, gamepad.buttonEast);
+        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 16384 }, gamepad.buttonWest);
     }
 
 #endif
