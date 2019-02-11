@@ -463,7 +463,7 @@ namespace UnityEngine.Experimental.Input
                     var bindingStartIndexForAction = runningIndexInBindingIndices;
                     var bindingCountForAction = 0;
                     var numPossibleConcurrentActuations = 0;
-                    var haveCompositeBinding = false;
+
                     for (var n = 0; n < bindingCountInThisMap; ++n)
                     {
                         var bindingIndex = bindingStartIndex + n;

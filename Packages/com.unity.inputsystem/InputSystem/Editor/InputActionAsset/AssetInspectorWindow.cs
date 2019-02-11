@@ -718,7 +718,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Close();
         }
 
-        private class ProcessAssetModifications : AssetModificationProcessor
+        private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local

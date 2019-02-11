@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine.Experimental.Input.Utilities;
 
+#pragma warning disable 0649
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
