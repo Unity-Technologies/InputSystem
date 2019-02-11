@@ -26,11 +26,11 @@ namespace UnityEngine.Experimental.Input.Editor
         protected InspectorTree m_Tree;
         private InputActionCopyPasteUtility m_CopyPasteUtility;
 
-        protected GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        protected GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
-        protected GUIContent m_CompositeGUI = EditorGUIUtility.TrTextContent("Composite");
-        private GUIContent m_PlusIconContent = EditorGUIUtility.IconContent("Toolbar Plus");
-        private GUIContent m_MinusIconContent = EditorGUIUtility.IconContent("Toolbar Minus");
+        protected readonly GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        protected readonly GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
+        protected readonly GUIContent m_CompositeGUI = EditorGUIUtility.TrTextContent("Composite");
+        private readonly GUIContent m_PlusIconContent = EditorGUIUtility.IconContent("Toolbar Plus");
+        private readonly GUIContent m_MinusIconContent = EditorGUIUtility.IconContent("Toolbar Minus");
 
         protected InputDrawersBase()
         {

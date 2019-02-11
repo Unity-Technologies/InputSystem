@@ -349,6 +349,7 @@ namespace UnityEngine.Experimental.Input.Editor
             nameAndParameters.parameters = m_CompositeParameters.GetParameters();
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
+            m_PathProperty.serializedObject.ApplyModifiedProperties();
 
             OnPathChanged();
         }
@@ -356,11 +357,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnBindingGroupsChanged()
         {
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
+            m_GroupsProperty.serializedObject.ApplyModifiedProperties();
+
             onChange(k_GroupsChanged);
         }
 
         private void OnPathChanged()
         {
+            m_BindingProperty.serializedObject.ApplyModifiedProperties();
             onChange(k_PathChanged);
         }
 
@@ -373,6 +377,7 @@ namespace UnityEngine.Experimental.Input.Editor
             };
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
+            m_PathProperty.serializedObject.ApplyModifiedProperties();
             onChange(k_CompositeTypeChanged);
         }
 
