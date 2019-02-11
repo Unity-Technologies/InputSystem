@@ -175,6 +175,8 @@ internal class XInputTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad,
             new MICEXboxControllerForOSXState
             {
+                triggerLeft = 255,
+                triggerRight = 255,
                 leftX = 32767,
                 leftY = 32767,
                 rightX = 32767,
@@ -184,11 +186,15 @@ internal class XInputTests : InputTestFixture
         InputSystem.Update();
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
 
         // Test left and up and that the layouts get inversion correct
         InputSystem.QueueStateEvent(gamepad,
             new MICEXboxControllerForOSXState
             {
+                triggerLeft = 255,
+                triggerRight = 255,
                 leftX = -32767,
                 leftY = -32767,
                 rightX = -32767,
@@ -198,6 +204,22 @@ internal class XInputTests : InputTestFixture
         InputSystem.Update();
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 1 }, gamepad.dpad.up);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 2 }, gamepad.dpad.down);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 4 }, gamepad.dpad.left);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 8 }, gamepad.dpad.right);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 16 }, gamepad.startButton);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 32 }, gamepad.selectButton);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 64 }, gamepad.leftStickButton);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 128 }, gamepad.rightStickButton);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 256 }, gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 512 }, gamepad.rightShoulder);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 4096 }, gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 8192 }, gamepad.buttonEast);
+        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 16384 }, gamepad.buttonWest);
     }
 
 #endif
