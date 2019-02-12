@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: is the Lefty layout variant actually useful?
 
+////TODO: allow to be used for mouse simulation
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
@@ -22,10 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('G', 'P', 'A', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
 
         /// <summary>
         /// Button bit mask.
@@ -87,6 +86,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
 
+        public GamepadState(params GamepadButton[] buttons)
+            : this()
+        {
+            foreach (var button in buttons)
+            {
+                var bit = (uint)1 << (int)button;
+                this.buttons |= bit;
+            }
+        }
+
         public GamepadState WithButton(GamepadButton button, bool value = true)
         {
             var bit = (uint)1 << (int)button;
@@ -140,7 +149,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
+    /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
     [InputControlLayout(stateType = typeof(GamepadState))]
@@ -223,7 +232,7 @@ namespace UnityEngine.Experimental.Input
                     case GamepadButton.DpadLeft: return dpad.left;
                     case GamepadButton.DpadRight: return dpad.right;
                     default:
-                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
+                        throw new InvalidEnumArgumentException(nameof(button), (int)button, typeof(GamepadButton));
                 }
             }
         }
@@ -243,10 +252,7 @@ namespace UnityEngine.Experimental.Input
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
         /// </remarks>
-        public static ReadOnlyArray<Gamepad> all
-        {
-            get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
-        }
+        public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -293,7 +299,7 @@ namespace UnityEngine.Experimental.Input
 
             // Remove from `all`.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
-            Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));
+            Debug.Assert(wasFound, $"Gamepad {this} seems to not have been added but is being removed");
             if (wasFound)
                 --s_GamepadCount;
         }

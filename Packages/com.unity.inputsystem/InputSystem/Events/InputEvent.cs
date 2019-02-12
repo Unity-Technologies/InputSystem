@@ -31,8 +31,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         public FourCC type
         {
-            get { return m_Type; }
-            set { m_Type = value; }
+            get => m_Type;
+            set => m_Type = value;
         }
 
         /// <summary>
@@ -60,11 +60,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </example>
         public uint sizeInBytes
         {
-            get { return m_SizeInBytes; }
+            get => m_SizeInBytes;
             set
             {
                 if (value > ushort.MaxValue)
-                    throw new ArgumentException("Maximum event size is " + ushort.MaxValue, "value");
+                    throw new ArgumentException("Maximum event size is " + ushort.MaxValue, nameof(value));
                 m_SizeInBytes = (ushort)value;
             }
         }
@@ -77,8 +77,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         public int eventId
         {
-            get { return (int)(m_EventId & kIdMask); }
-            set { m_EventId = (uint)value | (m_EventId & ~kIdMask); }
+            get => (int)(m_EventId & kIdMask);
+            set => m_EventId = (uint)value | (m_EventId & ~kIdMask);
         }
 
         /// <summary>
@@ -93,8 +93,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <seealso cref="InputSystem.GetDeviceById"/>
         public int deviceId
         {
-            get { return m_DeviceId; }
-            set { m_DeviceId = (ushort)value; }
+            get => m_DeviceId;
+            set => m_DeviceId = (ushort)value;
         }
 
         /// <summary>
@@ -106,8 +106,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         public double time
         {
-            get { return m_Time - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
-            set { m_Time = value + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
+            get => m_Time - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+            set => m_Time = value + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
         }
 
         /// <summary>
@@ -120,8 +120,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         internal double internalTime
         {
-            get { return m_Time; }
-            set { m_Time = value; }
+            get => m_Time;
+            set => m_Time = value;
         }
 
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         //       when they go on the queue makes sense in itself, though, so this is fine.
         public bool handled
         {
-            get { return (m_EventId & kHandledMask) == kHandledMask; }
+            get => (m_EventId & kHandledMask) == kHandledMask;
             set
             {
                 if (value)
@@ -155,8 +155,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public override string ToString()
         {
-            return string.Format("id={0} type={1} device={2} size={3} time={4}",
-                eventId, type, deviceId, sizeInBytes, time);
+            return $"id={eventId} type={type} device={deviceId} size={sizeInBytes} time={time}";
         }
 
         /// <summary>
@@ -194,9 +193,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
 
             if (!buffer.Contains(nextPtr))
-                throw new InvalidOperationException(string.Format(
-                    "Event '{0}' is last event in given buffer with size {1}", new InputEventPtr(currentPtr),
-                    buffer.sizeInBytes));
+                throw new InvalidOperationException(
+                    $"Event '{new InputEventPtr(currentPtr)}' is last event in given buffer with size {buffer.sizeInBytes}");
 
             return nextPtr;
         }

@@ -45,8 +45,8 @@ public class ScriptCompilersTests
             var indexOfFirstColon = message.message.IndexOf(':');
             var indexOfSecondColon = message.message.IndexOf(':', indexOfFirstColon + 1);
             var messageTextWithoutFilenameLineAndMessageNumber = message.message.Substring(indexOfSecondColon + 2); // Skip space, too.
-            builder.Append(string.Format("{0}:{1}: {2}", Path.GetFileNameWithoutExtension(message.file), message.line,
-                messageTextWithoutFilenameLineAndMessageNumber));
+            builder.Append(
+                $"{Path.GetFileNameWithoutExtension(message.file)}:{message.line}: {messageTextWithoutFilenameLineAndMessageNumber}");
             builder.Append('\n');
         }
 
@@ -94,7 +94,7 @@ public class ScriptCompilersTests
 
         // Hopefully the churn on these mono library helpers is over, this is going to be a bit a pain to
         // always chase.
-#if UNITY_2018_3_OR_NEWER && !(UNITY_2019_1_OR_NEWER)
+#if UNITY_2018_3
         var scriptAssembly = new ScriptAssembly
         {
             Filename = AssetPath.GetFileName(outputAssemblyPath),
@@ -102,7 +102,7 @@ public class ScriptCompilersTests
         };
         references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language, true, scriptAssembly));
 #elif UNITY_2019_1_OR_NEWER
-        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, buildTarget, language));
+        references.AddRange(MonoLibraryHelpers.GetSystemLibraryReferences(apiCompatibilityLevel, language));
 #endif
 
         var sources = new List<string>();

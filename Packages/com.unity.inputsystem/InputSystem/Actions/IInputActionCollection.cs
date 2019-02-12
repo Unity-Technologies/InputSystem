@@ -4,8 +4,10 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// A collection of <see cref="InputAction">input actions</see>.
+    /// A collection of input actions (<see cref="InputAction"/>).
     /// </summary>
+    /// <seealso cref="InputActionMap"/>
+    /// <seealso cref="InputActionAsset"/>
     public interface IInputActionCollection : IEnumerable<InputAction>
     {
         /// <summary>

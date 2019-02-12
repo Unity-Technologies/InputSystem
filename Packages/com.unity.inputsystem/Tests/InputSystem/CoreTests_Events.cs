@@ -11,6 +11,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools.Constraints;
+using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
 
@@ -393,6 +394,29 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanGetAverageEventLag()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        runtime.advanceTimeEachDynamicUpdate = 0;
+        runtime.currentTime = 10;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A), 6);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)}, 1);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A), 10);
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.234f, 0.345f)}, 3);
+        InputSystem.Update();
+
+        var metrics = InputSystem.GetMetrics();
+
+        Assert.That(metrics.averageLagTimePerEvent, Is.EqualTo((9 + 7 + 4 + 0) / 4.0).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Events")]
     public unsafe void Events_CanInitializeStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -400,15 +424,12 @@ partial class CoreTests
         InputSystem.QueueStateEvent(mouse, new MouseState {delta = Vector2.one});
         InputSystem.Update();
 
-        InputEventPtr eventPtr;
-        using (var buffer = StateEvent.From(mouse, out eventPtr))
+        using (var buffer = StateEvent.From(mouse, out var eventPtr))
         {
-            float xVal;
-            float yVal;
-            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out xVal));
+            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out var xVal));
             Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
 
-            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out yVal));
+            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out var yVal));
             Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
@@ -797,6 +818,30 @@ partial class CoreTests
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.5f).Within(0.000001));
     }
 
+    // This is another case of IInputStateCallbackReceiver making everything more complicated by deviating from
+    // the common, simple code path. Basically, what this test here is trying to ensure is that we can send
+    // touch states to a Touchscreen and not have them rejected because of timestamps. It's easy to order the
+    // events for a single touch correctly but ordering them for all touches would require backends to make
+    // a sorting pass over all events before queueing them.
+    [Test]
+    [Category("Events")]
+    [Property("TimesliceEvents", "Off")]
+    public void Events_IfOldStateEventIsSentToDevice_IsIgnored_ExceptIfEventIsHandledByIInputStateCallbackReceiver()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        // Sanity check.
+        Assert.That(device is IInputStateCallbackReceiver,
+            "Test assumes that Touchscreen implements IInputStateCallbackReceiver");
+
+        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.123f, 0.234f) }, 2);
+        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.234f, 0.345f) }, 1);// Goes back in time.
+        InputSystem.Update();
+
+        Assert.That(device.lastUpdateTime, Is.EqualTo(2).Within(0.00001));
+        Assert.That(device.position.ReadValue(), Is.EqualTo(new Vector2(0.234f, 0.345f)).Using(Vector2EqualityComparer.Instance));
+    }
+
     private struct CustomNestedDeviceState : IInputStateTypeInfo
     {
         [InputControl(name = "button1", layout = "Button")]
@@ -966,8 +1011,7 @@ partial class CoreTests
 
         unsafe
         {
-            InputEventPtr eventPtr;
-            using (StateEvent.From(gamepad, out eventPtr))
+            using (StateEvent.From(gamepad, out var eventPtr))
             using (var buffer = new InputEventBuffer(eventPtr, 1))
             {
                 Assert.That(buffer.eventCount, Is.EqualTo(1));
@@ -990,8 +1034,7 @@ partial class CoreTests
 
         unsafe
         {
-            InputEventPtr eventPtr;
-            using (StateEvent.From(gamepad, out eventPtr))
+            using (StateEvent.From(gamepad, out var eventPtr))
             using (var buffer = new InputEventBuffer())
             {
                 // Write two events into buffer.

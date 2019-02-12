@@ -22,17 +22,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// concurrently from multiple threads. It is, however, safe to traverse the contents of an
     /// existing buffer from multiple threads as long as it is not mutated at the same time.
     /// </remarks>
-    public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable
+    public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable, ICloneable
     {
         public const long kBufferSizeUnknown = -1;
 
         /// <summary>
         /// Total number of events in the buffer.
         /// </summary>
-        public int eventCount
-        {
-            get { return m_EventCount; }
-        }
+        public int eventCount => m_EventCount;
 
         /// <summary>
         /// Size of the buffer in bytes.
@@ -43,10 +40,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Note that the size does not usually correspond to <see cref="eventCount"/> times <c>sizeof(InputEvent)</c>.
         /// <see cref="InputEvent">Input events</see> are variable in size.
         /// </remarks>
-        public long sizeInBytes
-        {
-            get { return m_SizeInBytes; }
-        }
+        public long sizeInBytes => m_SizeInBytes;
 
         /// <summary>
         /// Amount of unused bytes in the currently allocated buffer.
@@ -64,13 +58,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
                 return m_Buffer.Length;
             }
-            set { throw new NotImplementedException(); }
+            set => throw new NotImplementedException();
         }
 
         public NativeArray<byte> data
         {
-            get { return m_Buffer; }
-            set { throw new NotImplementedException(); }
+            get => m_Buffer;
+            set => throw new NotImplementedException();
         }
 
         public InputEventPtr bufferPtr
@@ -281,6 +275,25 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_WeOwnTheBuffer = false;
             m_SizeInBytes = 0;
             m_EventCount = 0;
+        }
+
+        public InputEventBuffer Clone()
+        {
+            var clone = new InputEventBuffer();
+            if (m_Buffer.IsCreated)
+            {
+                clone.m_Buffer = new NativeArray<byte>(m_Buffer.Length, Allocator.Persistent);
+                clone.m_Buffer.CopyFrom(m_Buffer);
+                clone.m_WeOwnTheBuffer = true;
+            }
+            clone.m_SizeInBytes = m_SizeInBytes;
+            clone.m_EventCount = m_EventCount;
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         private NativeArray<byte> m_Buffer;

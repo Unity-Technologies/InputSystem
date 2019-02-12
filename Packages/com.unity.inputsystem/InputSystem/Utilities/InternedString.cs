@@ -17,10 +17,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         private readonly string m_StringOriginalCase;
         private readonly string m_StringLowerCase;
 
-        public int length
-        {
-            get { return m_StringLowerCase != null ? m_StringLowerCase.Length : 0; }
-        }
+        public int length => m_StringLowerCase?.Length ?? 0;
 
         public InternedString(string text)
         {
@@ -49,11 +46,10 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public override bool Equals(object obj)
         {
-            if (obj is InternedString)
-                return Equals((InternedString)obj);
+            if (obj is InternedString other)
+                return Equals(other);
 
-            var str = obj as string;
-            if (str != null)
+            if (obj is string str)
             {
                 if (m_StringLowerCase == null)
                     return string.IsNullOrEmpty(str);
@@ -117,7 +113,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static implicit operator string(InternedString str)
         {
-            return str.m_StringOriginalCase;
+            return str.ToString();
         }
     }
 }

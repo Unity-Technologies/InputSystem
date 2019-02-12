@@ -4,15 +4,15 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
     /// A collection of utility functions for working with arrays.
     /// </summary>
+    /// <remarks>
+    /// The goal of this collection is to make it easy to use arrays directly rather than resorting to
+    /// <see cref="List{T}"/>.
+    /// </remarks>
     internal static class ArrayHelpers
     {
         public static int LengthSafe<TValue>(this TValue[] array)
@@ -117,14 +117,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             return true;
         }
 
-        public static int IndexOf<TValue>(TValue[] array, TValue value)
+        ////REVIEW: remove this to get rid of default equality comparer?
+        public static int IndexOf<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
         {
             if (array == null)
                 return -1;
 
-            var length = array.Length;
+            if (count < 0)
+                count = array.Length - startIndex;
             var comparer = EqualityComparer<TValue>.Default;
-            for (var i = 0; i < length; ++i)
+            for (var i = startIndex; i < startIndex + count; ++i)
                 if (comparer.Equals(array[i], value))
                     return i;
 
@@ -144,28 +146,37 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex = 0)
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int count = -1)
+            where TValue : class
+        {
+            return IndexOfReference(array, value, 0, count);
+        }
+
+        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex, int count)
             where TValue : class
         {
             if (array == null)
                 return -1;
 
-            var length = array.Length;
-            for (var i = startIndex; i < length; ++i)
+            if (count < 0)
+                count = array.Length - startIndex;
+            for (var i = startIndex; i < startIndex + count; ++i)
                 if (ReferenceEquals(array[i], value))
                     return i;
 
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, int count, TValue value)
-            where TValue : class
+        public static int IndexOfValue<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
+            where TValue : struct, IEquatable<TValue>
         {
             if (array == null)
                 return -1;
 
-            for (var i = 0; i < count; ++i)
-                if (ReferenceEquals(array[i], value))
+            if (count < 0)
+                count = array.Length - startIndex;
+            for (var i = startIndex; i < startIndex + count; ++i)
+                if (value.Equals(array[i]))
                     return i;
 
             return -1;
@@ -278,31 +289,31 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int count, TValues values, int capacityIncrement = 10)
+        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int length, TValues values, int capacityIncrement = 10)
             where TValues : IReadOnlyList<TValue>
         {
-            var num = values.Count;
+            var numToAdd = values.Count;
             if (array == null)
             {
-                var size = Math.Max(num, capacityIncrement);
+                var size = Math.Max(numToAdd, capacityIncrement);
                 array = new TValue[size];
-                for (var i = 0; i < num; ++i)
+                for (var i = 0; i < numToAdd; ++i)
                     array[i] = values[i];
-                count += num;
+                length += numToAdd;
                 return 0;
             }
 
             var capacity = array.Length;
-            if (capacity < count + num)
+            if (capacity < length + numToAdd)
             {
-                capacity += Math.Max(num, capacityIncrement);
+                capacity += Math.Max(length + numToAdd, capacityIncrement);
                 Array.Resize(ref array, capacity);
             }
 
-            var index = count;
-            for (var i = 0; i < num; ++i)
-                array[i] = values[i];
-            count += num;
+            var index = length;
+            for (var i = 0; i < numToAdd; ++i)
+                array[index + i] = values[i];
+            length += numToAdd;
 
             return index;
         }
@@ -512,7 +523,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 Array.Copy(array, index + 1, array, index, count - index - 1);
             }
 
-            array[count - 1] = default(TValue); // Tail has been moved down by one.
+            array[count - 1] = default; // Tail has been moved down by one.
             --count;
         }
 
@@ -693,12 +704,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static void EraseSliceWithCapacity<TValue>(ref TValue[] array, ref int length, int index, int count)
         {
+            // Move elements down.
             if (count < length)
-            {
-                Array.Copy(array, index + count, array, index, length - index - count);
-                for (var i = 0; i < count; ++i)
-                    array[length - i - 1] = default(TValue);
-            }
+                Array.Copy(array, index + count, array, index, count);
+
+            // Erase now vacant slots.
+            for (var i = 0; i < count; ++i)
+                array[length - i - 1] = default;
 
             length -= count;
         }

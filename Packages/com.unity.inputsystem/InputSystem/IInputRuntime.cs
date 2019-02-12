@@ -95,6 +95,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         Action<int, string> onDeviceDiscovered { set; }
 
+        /// <summary>
+        /// Set delegate to call when the application changes focus.
+        /// </summary>
+        /// <seealso cref="Application.onFocusChanged"/>
         Action<bool> onFocusChanged { set; }
 
         /// <summary>

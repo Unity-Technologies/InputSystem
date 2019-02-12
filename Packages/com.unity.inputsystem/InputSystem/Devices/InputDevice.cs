@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////TODO: runtime remapping of usages on a per-device basis
+
 ////TODO: finer-grained control over what devices deliver input while running in background
 ////      (e.g. get gamepad input but do *not* get mouse and keyboard input)
 
@@ -48,10 +50,7 @@ namespace UnityEngine.Experimental.Input
         /// The description of a device is unchanging over its lifetime and does not
         /// comprise data about a device's configuration (which is considered mutable).
         /// </remarks>
-        public InputDeviceDescription description
-        {
-            get { return m_Description; }
-        }
+        public InputDeviceDescription description => m_Description;
 
         ////REVIEW: this might be useful even at the control level
         /// <summary>
@@ -138,10 +137,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <seealso cref="InputSystem.AddDevice(InputDevice)"/>
         /// <seealso cref="InputSystem.devices"/>
-        public bool added
-        {
-            get { return m_DeviceIndex != kInvalidDeviceIndex; }
-        }
+        public bool added => m_DeviceIndex != kInvalidDeviceIndex;
 
         /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
@@ -149,10 +145,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <seealso cref="InputSystem.remoting"/>
         /// <seealso cref="InputRemoting"/>
-        public bool remote
-        {
-            get { return (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote; }
-        }
+        public bool remote => (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote;
 
         /// <summary>
         /// Whether the device comes from the <see cref="IInputRuntime">runtime</see>
@@ -167,10 +160,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <seealso cref="IInputRuntime"/>
         /// <seealso cref="IInputRuntime.onDeviceDiscovered"/>
-        public bool native
-        {
-            get { return (m_DeviceFlags & DeviceFlags.Native) == DeviceFlags.Native; }
-        }
+        public bool native => (m_DeviceFlags & DeviceFlags.Native) == DeviceFlags.Native;
 
         /// <summary>
         /// Whether the device requires an extra update before rendering.
@@ -184,10 +174,7 @@ namespace UnityEngine.Experimental.Input
         /// beginning of the frame will lead to a noticeable lag.
         /// </remarks>
         /// <seealso cref="InputUpdateType.BeforeRender"/>
-        public bool updateBeforeRender
-        {
-            get { return (m_DeviceFlags & DeviceFlags.UpdateBeforeRender) == DeviceFlags.UpdateBeforeRender; }
-        }
+        public bool updateBeforeRender => (m_DeviceFlags & DeviceFlags.UpdateBeforeRender) == DeviceFlags.UpdateBeforeRender;
 
         /// <summary>
         /// Unique numeric ID for the device.
@@ -199,10 +186,7 @@ namespace UnityEngine.Experimental.Input
         /// IDs are assigned by the input runtime.
         /// </remarks>
         /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
-        public int id
-        {
-            get { return m_Id; }
-        }
+        public int id => m_Id;
 
         /// <summary>
         /// Timestamp of last state event used to update the device.
@@ -211,10 +195,7 @@ namespace UnityEngine.Experimental.Input
         /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
         /// not cause lastUpdateTime to be changed.
         /// </remarks>
-        public double lastUpdateTime
-        {
-            get { return m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
-        }
+        public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         public bool wasUpdatedThisFrame
         {
@@ -250,15 +231,17 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: This violates the constraint of controls being required to not have reference types as value types.
-        public override Type valueType
-        {
-            get { return typeof(byte[]); }
-        }
+        public override Type valueType => typeof(byte[]);
 
-        public override int valueSizeInBytes
-        {
-            get { return (int)m_StateBlock.alignedSizeInBytes; }
-        }
+        public override int valueSizeInBytes => (int)m_StateBlock.alignedSizeInBytes;
+
+        /// <summary>
+        /// Return all input devices currently added to the system.
+        /// </summary>
+        /// <remarks>
+        /// This is equivalent to <see cref="InputSystem.devices"/>.
+        /// </remarks>
+        public static ReadOnlyArray<InputDevice> all => InputSystem.devices;
 
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
@@ -269,6 +252,11 @@ namespace UnityEngine.Experimental.Input
 
         ////REVIEW: Is making devices be byte[] values really all that useful? Seems better than returning nulls but
         ////        at the same time, seems questionable.
+
+        public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
+        {
+            throw new NotImplementedException();
+        }
 
         public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {

@@ -17,9 +17,9 @@ namespace UnityEngine.Experimental.Input
         public static InputActionMap AddActionMap(this InputActionAsset asset, string name)
         {
             if (asset == null)
-                throw new ArgumentNullException("asset");
+                throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             var map = new InputActionMap(name);
             asset.AddActionMap(map);
@@ -27,22 +27,24 @@ namespace UnityEngine.Experimental.Input
         }
 
         public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
-            string interactions = null, string groups = null, string expectedControlLayout = null)
+            string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
             if (map == null)
-                throw new ArgumentNullException("map");
+                throw new ArgumentNullException(nameof(map));
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Action must have name", "name");
+                throw new ArgumentException("Action must have name", nameof(name));
             if (map.enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot add action '{0}' to map '{1}' while it the map is enabled", name, map));
+                    $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
             if (map.TryGetAction(name) != null)
                 throw new InvalidOperationException(
-                    string.Format("Cannot add action with duplicate name '{0}' to set '{1}'", name, map.name));
+                    $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
 
             // Append action to array.
-            var action = new InputAction(name);
-            action.expectedControlLayout = expectedControlLayout;
+            var action = new InputAction(name)
+            {
+                expectedControlLayout = expectedControlLayout
+            };
             ArrayHelpers.Append(ref map.m_Actions, action);
             action.m_ActionMap = map;
 
@@ -50,21 +52,35 @@ namespace UnityEngine.Experimental.Input
 
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
-                action.AddBinding(binding, interactions: interactions, groups: groups);
+            {
+                action.AddBinding(binding, interactions: interactions, processors: processors, groups: groups);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(groups))
+                    throw new ArgumentException(
+                        $"No binding path was specified for action '{action}' but groups was specified ('{groups}'); cannot apply groups without binding",
+                        nameof(groups));
+
+                // If no binding has been supplied but there are interactions and processors, they go on the action itself.
+                action.m_Interactions = interactions;
+                action.m_Processors = processors;
+            }
 
             return action;
         }
 
         ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
-        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
+        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", "path");
+                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
 
             return AddBinding(action, new InputBinding
             {
                 path = path,
                 interactions = interactions,
+                processors = processors,
                 groups = groups
             });
         }
@@ -84,7 +100,7 @@ namespace UnityEngine.Experimental.Input
         public static BindingSyntax AddBinding(this InputAction action, InputControl control)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             return AddBinding(action, control.path);
         }
@@ -107,9 +123,9 @@ namespace UnityEngine.Experimental.Input
         public static BindingSyntax AddBinding(this InputAction action, InputBinding binding)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", "binding");
+                throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
             Debug.Assert(action.m_Name != null || action.isSingletonAction);
@@ -140,7 +156,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (action != null && action.actionMap != actionMap)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' is not part of action map '{1}'", action, actionMap), "action");
+                    $"Action '{action}' is not part of action map '{actionMap}'", nameof(action));
 
             if (action == null)
                 return AddBinding(actionMap, path: path, interactions: interactions, groups: groups);
@@ -155,15 +171,15 @@ namespace UnityEngine.Experimental.Input
             if (action == Guid.Empty)
                 return AddBinding(actionMap, path: path, interactions: interactions, groups: groups);
             return AddBinding(actionMap, path: path, interactions: interactions, groups: groups,
-                action: string.Format("{{{0}}}", action));
+                action: $"{{{action}}}");
         }
 
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", "binding");
+                throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindingIndex = AddBindingInternal(actionMap, binding);
@@ -173,9 +189,9 @@ namespace UnityEngine.Experimental.Input
         public static CompositeSyntax AddCompositeBinding(this InputAction action, string composite, string interactions = null)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(composite))
-                throw new ArgumentException("Composite name cannot be null or empty", "composite");
+                throw new ArgumentException("Composite name cannot be null or empty", nameof(composite));
 
             var actionMap = action.GetOrCreateActionMap();
             ////REVIEW: use 'name' instead of 'path' field here?
@@ -218,9 +234,9 @@ namespace UnityEngine.Experimental.Input
         public static void Rename(this InputAction action, string newName)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             if (string.IsNullOrEmpty(newName))
-                throw new ArgumentNullException("newName");
+                throw new ArgumentNullException(nameof(newName));
 
             if (action.name == newName)
                 return;
@@ -228,9 +244,8 @@ namespace UnityEngine.Experimental.Input
             // Make sure name isn't already taken in map.
             var actionMap = action.actionMap;
             if (actionMap != null && actionMap.TryGetAction(newName) != null)
-                throw new InvalidOperationException(string.Format(
-                    "Cannot rename '{0}' to '{1}' in map '{2}' as the map already contains an action with that name",
-                    action, newName, actionMap));
+                throw new InvalidOperationException(
+                    $"Cannot rename '{action}' to '{newName}' in map '{actionMap}' as the map already contains an action with that name");
 
             action.m_Name = newName;
         }
@@ -253,9 +268,9 @@ namespace UnityEngine.Experimental.Input
         public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
         {
             if (asset == null)
-                throw new ArgumentNullException("asset");
+                throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             var index = asset.controlSchemes.Count;
             asset.AddControlScheme(new InputControlScheme(name));
@@ -294,9 +309,9 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public struct BindingSyntax
         {
-            internal InputAction m_Action;
-            internal InputActionMap m_ActionMap;
-            internal int m_BindingIndex;
+            private readonly InputActionMap m_ActionMap;
+            private readonly InputAction m_Action;
+            internal readonly int m_BindingIndex;
 
             internal BindingSyntax(InputActionMap map, InputAction action, int bindingIndex)
             {
@@ -324,11 +339,10 @@ namespace UnityEngine.Experimental.Input
             public BindingSyntax WithGroup(string group)
             {
                 if (string.IsNullOrEmpty(group))
-                    throw new ArgumentException("Group name cannot be null or empty", "group");
+                    throw new ArgumentException("Group name cannot be null or empty", nameof(group));
                 if (group.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
-                        string.Format("Group name cannot contain separator character '{0}'",
-                            InputBinding.kSeparator), "group");
+                        $"Group name cannot contain separator character '{InputBinding.kSeparator}'", nameof(group));
 
                 return WithGroups(group);
             }
@@ -341,7 +355,7 @@ namespace UnityEngine.Experimental.Input
                 // Join with existing group, if any.
                 var currentGroups = m_ActionMap.m_Bindings[m_BindingIndex].groups;
                 if (!string.IsNullOrEmpty(currentGroups))
-                    groups = string.Join(InputBinding.kSeparatorString, new[] { currentGroups, groups });
+                    groups = string.Join(InputBinding.kSeparatorString, currentGroups, groups);
 
                 // Set groups on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].groups = groups;
@@ -353,11 +367,10 @@ namespace UnityEngine.Experimental.Input
             public BindingSyntax WithInteraction(string interaction)
             {
                 if (string.IsNullOrEmpty(interaction))
-                    throw new ArgumentException("Interaction cannot be null or empty", "group");
+                    throw new ArgumentException("Interaction cannot be null or empty", nameof(interaction));
                 if (interaction.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
-                        string.Format("Interaction string cannot contain separator character '{0}'",
-                            InputBinding.kSeparator), "interaction");
+                        $"Interaction string cannot contain separator character '{InputBinding.kSeparator}'", nameof(interaction));
 
                 return WithInteractions(interaction);
             }
@@ -370,7 +383,7 @@ namespace UnityEngine.Experimental.Input
                 // Join with existing interaction string, if any.
                 var currentInteractions = m_ActionMap.m_Bindings[m_BindingIndex].interactions;
                 if (!string.IsNullOrEmpty(currentInteractions))
-                    interactions = string.Join(InputBinding.kSeparatorString, new[] { currentInteractions, interactions });
+                    interactions = string.Join(InputBinding.kSeparatorString, currentInteractions, interactions);
 
                 // Set interactions on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].interactions = interactions;
@@ -382,10 +395,10 @@ namespace UnityEngine.Experimental.Input
             public BindingSyntax WithInteraction<TInteraction>()
                 where TInteraction : IInputInteraction
             {
-                var interactionName = InputControlProcessor.s_Processors.FindNameForType(typeof(TInteraction));
+                var interactionName = InputProcessor.s_Processors.FindNameForType(typeof(TInteraction));
                 if (interactionName.IsEmpty())
                     throw new ArgumentException(
-                        string.Format("Type '{0}' has not been registered as a processor", typeof(TInteraction)),
+                        $"Type '{typeof(TInteraction)}' has not been registered as a processor",
                         "TInteraction");
 
                 return WithInteraction(interactionName);
@@ -394,11 +407,10 @@ namespace UnityEngine.Experimental.Input
             public BindingSyntax WithProcessor(string processor)
             {
                 if (string.IsNullOrEmpty(processor))
-                    throw new ArgumentException("Processor cannot be null or empty", "group");
+                    throw new ArgumentException("Processor cannot be null or empty", nameof(processor));
                 if (processor.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
-                        string.Format("Interaction string cannot contain separator character '{0}'",
-                            InputBinding.kSeparator), "processor");
+                        $"Interaction string cannot contain separator character '{InputBinding.kSeparator}'", nameof(processor));
 
                 return WithProcessors(processor);
             }
@@ -411,7 +423,7 @@ namespace UnityEngine.Experimental.Input
                 // Join with existing processor string, if any.
                 var currentProcessors = m_ActionMap.m_Bindings[m_BindingIndex].processors;
                 if (!string.IsNullOrEmpty(currentProcessors))
-                    processors = string.Join(InputBinding.kSeparatorString, new[] { currentProcessors, processors });
+                    processors = string.Join(InputBinding.kSeparatorString, currentProcessors, processors);
 
                 // Set processors on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].processors = processors;
@@ -422,10 +434,10 @@ namespace UnityEngine.Experimental.Input
 
             public BindingSyntax WithProcessor<TProcessor>()
             {
-                var processorName = InputControlProcessor.s_Processors.FindNameForType(typeof(TProcessor));
+                var processorName = InputProcessor.s_Processors.FindNameForType(typeof(TProcessor));
                 if (processorName.IsEmpty())
                     throw new ArgumentException(
-                        string.Format("Type '{0}' has not been registered as a processor", typeof(TProcessor)),
+                        $"Type '{typeof(TProcessor)}' has not been registered as a processor",
                         "TProcessor");
 
                 return WithProcessor(processorName);
@@ -447,22 +459,19 @@ namespace UnityEngine.Experimental.Input
             public BindingSyntax Triggering(InputAction action)
             {
                 if (action == null)
-                    throw new ArgumentNullException("action");
+                    throw new ArgumentNullException(nameof(action));
                 m_ActionMap.m_Bindings[m_BindingIndex].action = action.name;
                 return this;
             }
 
-            public BindingSyntax And
-            {
-                get { throw new NotImplementedException(); }
-            }
+            public BindingSyntax And => throw new NotImplementedException();
         }
 
         public struct CompositeSyntax
         {
-            internal InputAction m_Action;
-            internal InputActionMap m_ActionMap;
-            internal int m_CompositeIndex;
+            private readonly InputAction m_Action;
+            private readonly InputActionMap m_ActionMap;
+            private int m_CompositeIndex;
 
             internal CompositeSyntax(InputActionMap map, InputAction action, int compositeIndex)
             {
@@ -492,8 +501,8 @@ namespace UnityEngine.Experimental.Input
 
         public struct ControlSchemeSyntax
         {
-            private InputActionAsset m_Asset;
-            private int m_ControlSchemeIndex;
+            private readonly InputActionAsset m_Asset;
+            private readonly int m_ControlSchemeIndex;
             private InputControlScheme m_ControlScheme;
 
             internal ControlSchemeSyntax(InputActionAsset asset, int index)
@@ -513,7 +522,7 @@ namespace UnityEngine.Experimental.Input
             public ControlSchemeSyntax BasedOn(string baseControlScheme)
             {
                 if (string.IsNullOrEmpty(baseControlScheme))
-                    throw new ArgumentNullException("baseControlScheme");
+                    throw new ArgumentNullException(nameof(baseControlScheme));
 
                 if (m_Asset == null)
                     m_ControlScheme.m_BaseSchemeName = baseControlScheme;
@@ -526,7 +535,7 @@ namespace UnityEngine.Experimental.Input
             public ControlSchemeSyntax WithBindingGroup(string bindingGroup)
             {
                 if (string.IsNullOrEmpty(bindingGroup))
-                    throw new ArgumentNullException("bindingGroup");
+                    throw new ArgumentNullException(nameof(bindingGroup));
 
                 if (m_Asset == null)
                     m_ControlScheme.m_BindingGroup = bindingGroup;
@@ -592,7 +601,7 @@ namespace UnityEngine.Experimental.Input
                 var layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice)).ToString();
                 if (string.IsNullOrEmpty(layoutName))
                     layoutName = typeof(TDevice).Name;
-                return string.Format("<{0}>", layoutName);
+                return $"<{layoutName}>";
             }
 
             public InputControlScheme Done()
@@ -605,7 +614,7 @@ namespace UnityEngine.Experimental.Input
             private void AddDeviceEntry(string controlPath, InputControlScheme.DeviceRequirement.Flags flags)
             {
                 if (string.IsNullOrEmpty(controlPath))
-                    throw new ArgumentNullException("controlPath");
+                    throw new ArgumentNullException(nameof(controlPath));
 
                 var scheme = m_Asset != null ? m_Asset.m_ControlSchemes[m_ControlSchemeIndex] : m_ControlScheme;
                 ArrayHelpers.Append(ref scheme.m_DeviceRequirements,

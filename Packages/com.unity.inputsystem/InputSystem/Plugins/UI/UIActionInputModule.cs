@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
+////REVIEW: should each of the actions be *lists* of actions?
+
 ////TODO: add ability to query which device was last used with any of the actions
 
 ////TODO: come up with an action response system that doesn't require hooking and unhooking all those delegates
@@ -20,20 +22,20 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public class UIActionInputModule : UIInputModule
     {
-        private static void SwapAction(ref InputActionProperty oldProperty, InputActionProperty newProperty, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
+        private static void SwapAction(ref InputActionProperty property, InputActionProperty newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
-            if (oldProperty != null)
+            if (property != null && actionsHooked)
             {
-                if (actionsHooked)
-                    oldProperty.action.performed -= actionCallback;
+                property.action.performed -= actionCallback;
+                property.action.cancelled -= actionCallback;
             }
 
-            oldProperty = newProperty;
+            property = newValue;
 
-            if (oldProperty != null)
+            if (newValue != null && actionsHooked)
             {
-                if (actionsHooked)
-                    oldProperty.action.performed += actionCallback;
+                property.action.performed += actionCallback;
+                property.action.cancelled += actionCallback;
             }
         }
 
@@ -57,62 +59,66 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             public InputActionProperty position
             {
-                get { return m_Position; }
-                set { SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback); }
+                get => m_Position;
+                set => SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback);
             }
 
             public InputActionProperty phase
             {
-                get { return m_Phase; }
-                set { SwapAction(ref m_Phase, value, m_ActionsHooked, actionCallback); }
+                get => m_Phase;
+                set => SwapAction(ref m_Phase, value, m_ActionsHooked, actionCallback);
             }
 
-            public bool actionsHooked
-            {
-                get { return m_ActionsHooked; }
-            }
+            public bool actionsHooked => m_ActionsHooked;
 
             public void HookActions()
             {
-                if (!m_ActionsHooked)
+                if (m_ActionsHooked)
+                    return;
+
+                m_ActionsHooked = true;
+
+                var positionAction = m_Position.action;
+                if (positionAction != null)
                 {
-                    m_ActionsHooked = true;
+                    positionAction.performed += actionCallback;
+                    positionAction.cancelled += actionCallback;
+                }
 
-                    var positionAction = m_Position.action;
-                    if (positionAction != null)
-                        positionAction.performed += actionCallback;
-
-                    var phaseAction = m_Phase.action;
-                    if (phaseAction != null)
-                        phaseAction.performed += actionCallback;
+                var phaseAction = m_Phase.action;
+                if (phaseAction != null)
+                {
+                    phaseAction.performed += actionCallback;
+                    phaseAction.cancelled += actionCallback;
                 }
             }
 
             public void UnhookActions()
             {
-                if (m_ActionsHooked)
+                if (!m_ActionsHooked)
+                    return;
+
+                m_ActionsHooked = false;
+
+                var positionAction = m_Position.action;
+                if (positionAction != null)
                 {
-                    if (!m_ActionsHooked)
-                    {
-                        m_ActionsHooked = false;
+                    positionAction.performed -= actionCallback;
+                    positionAction.cancelled -= actionCallback;
+                }
 
-                        var positionAction = m_Position.action;
-                        if (positionAction != null)
-                            positionAction.performed -= actionCallback;
-
-                        var phaseAction = m_Phase.action;
-                        if (phaseAction != null)
-                            phaseAction.performed -= actionCallback;
-                    }
+                var phaseAction = m_Phase.action;
+                if (phaseAction != null)
+                {
+                    phaseAction.performed -= actionCallback;
+                    phaseAction.cancelled -= actionCallback;
                 }
             }
 
             private bool m_ActionsHooked;
 
-            [SerializeField]
-            private InputActionProperty m_Position;
-            [SerializeField]
-            private InputActionProperty m_Phase;
+            [SerializeField] private InputActionProperty m_Position;
+            [SerializeField] private InputActionProperty m_Phase;
         }
 
         [Serializable]
@@ -136,78 +142,87 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             public InputActionProperty position
             {
-                get { return m_Position; }
-                set { SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback); }
+                get => m_Position;
+                set => SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback);
             }
 
             public InputActionProperty orientation
             {
-                get { return m_Orientation; }
-                set { SwapAction(ref m_Orientation, value, m_ActionsHooked, actionCallback); }
+                get => m_Orientation;
+                set => SwapAction(ref m_Orientation, value, m_ActionsHooked, actionCallback);
             }
 
             public InputActionProperty select
             {
-                get { return m_Select; }
-                set { SwapAction(ref m_Select, value, m_ActionsHooked, actionCallback); }
+                get => m_Select;
+                set => SwapAction(ref m_Select, value, m_ActionsHooked, actionCallback);
             }
 
-            public bool actionsHooked
-            {
-                get { return m_ActionsHooked; }
-            }
+            public bool actionsHooked => m_ActionsHooked;
 
             public void HookActions()
             {
-                if (!m_ActionsHooked)
+                if (m_ActionsHooked)
+                    return;
+
+                m_ActionsHooked = true;
+
+                var positionAction = m_Position.action;
+                if (positionAction != null)
                 {
-                    m_ActionsHooked = true;
+                    positionAction.performed += actionCallback;
+                    positionAction.cancelled += actionCallback;
+                }
 
-                    var positionAction = m_Position.action;
-                    if (positionAction != null)
-                        positionAction.performed += actionCallback;
+                var orientationAction = m_Orientation.action;
+                if (orientationAction != null)
+                {
+                    orientationAction.performed += actionCallback;
+                    orientationAction.cancelled += actionCallback;
+                }
 
-                    var orientationAction = m_Orientation.action;
-                    if (orientationAction != null)
-                        orientationAction.performed += actionCallback;
-
-                    var selectAction = m_Select.action;
-                    if (selectAction != null)
-                        selectAction.performed += actionCallback;
+                var selectAction = m_Select.action;
+                if (selectAction != null)
+                {
+                    selectAction.performed += actionCallback;
+                    selectAction.cancelled += actionCallback;
                 }
             }
 
             public void UnhookActions()
             {
-                if (m_ActionsHooked)
+                if (!m_ActionsHooked)
+                    return;
+
+                m_ActionsHooked = false;
+
+                var positionAction = m_Position.action;
+                if (positionAction != null)
                 {
-                    if (!m_ActionsHooked)
-                    {
-                        m_ActionsHooked = false;
+                    positionAction.performed -= actionCallback;
+                    positionAction.cancelled -= actionCallback;
+                }
 
-                        var positionAction = m_Position.action;
-                        if (positionAction != null)
-                            positionAction.performed -= actionCallback;
+                var orientationAction = m_Orientation.action;
+                if (orientationAction != null)
+                {
+                    orientationAction.performed -= actionCallback;
+                    orientationAction.cancelled -= actionCallback;
+                }
 
-                        var orientationAction = m_Orientation.action;
-                        if (orientationAction != null)
-                            orientationAction.performed -= actionCallback;
-
-                        var selectAction = m_Orientation.action;
-                        if (selectAction != null)
-                            selectAction.performed -= actionCallback;
-                    }
+                var selectAction = m_Orientation.action;
+                if (selectAction != null)
+                {
+                    selectAction.performed -= actionCallback;
+                    selectAction.cancelled -= actionCallback;
                 }
             }
 
             private bool m_ActionsHooked;
 
-            [SerializeField]
-            private InputActionProperty m_Position;
-            [SerializeField]
-            private InputActionProperty m_Orientation;
-            [SerializeField]
-            private InputActionProperty m_Select;
+            [SerializeField] private InputActionProperty m_Position;
+            [SerializeField] private InputActionProperty m_Orientation;
+            [SerializeField] private InputActionProperty m_Select;
         }
 
         /// <summary>
@@ -215,8 +230,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public bool sendEventsWhenInBackground
         {
-            get { return m_SendEventsWhenInBackground; }
-            set { m_SendEventsWhenInBackground = value; }
+            get => m_SendEventsWhenInBackground;
+            set => m_SendEventsWhenInBackground = value;
         }
 
         /// <summary>
@@ -225,8 +240,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty point
         {
-            get { return m_PointAction; }
-            set { SwapAction(ref m_PointAction, value, m_ActionsHooked, OnAction); }
+            get => m_PointAction;
+            set => SwapAction(ref m_PointAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -235,8 +250,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty move
         {
-            get { return m_MoveAction; }
-            set { SwapAction(ref m_MoveAction, value, m_ActionsHooked, OnAction); }
+            get => m_MoveAction;
+            set => SwapAction(ref m_MoveAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -245,8 +260,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty scrollWheel
         {
-            get { return m_ScrollWheelAction; }
-            set { SwapAction(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction); }
+            get => m_ScrollWheelAction;
+            set => SwapAction(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -255,8 +270,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty leftClick
         {
-            get { return m_LeftClickAction; }
-            set { SwapAction(ref m_LeftClickAction, value, m_ActionsHooked, OnAction); }
+            get => m_LeftClickAction;
+            set => SwapAction(ref m_LeftClickAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -265,8 +280,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty middleClick
         {
-            get { return m_MiddleClickAction; }
-            set { SwapAction(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction); }
+            get => m_MiddleClickAction;
+            set => SwapAction(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -275,8 +290,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty rightClick
         {
-            get { return m_RightClickAction; }
-            set { SwapAction(ref m_RightClickAction, value, m_ActionsHooked, OnAction); }
+            get => m_RightClickAction;
+            set => SwapAction(ref m_RightClickAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -285,8 +300,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty submit
         {
-            get { return m_SubmitAction; }
-            set { SwapAction(ref m_SubmitAction, value, m_ActionsHooked, OnAction); }
+            get => m_SubmitAction;
+            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
@@ -295,8 +310,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public InputActionProperty cancel
         {
-            get { return m_CancelAction; }
-            set { SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction); }
+            get => m_CancelAction;
+            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
         }
 
         protected override void Awake()
@@ -310,7 +325,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (m_Touches == null)
                 m_Touches = new List<TouchResponder>();
 
-            for (int i = 0; i < m_Touches.Count; i++)
+            for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
                 responder.state = new TouchModel(m_RollingPointerId++);
@@ -326,7 +341,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (m_TrackedDevices == null)
                 m_TrackedDevices = new List<TrackedDeviceResponder>();
 
-            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            for (var i = 0; i < m_TrackedDevices.Count; i++)
             {
                 var responder = m_TrackedDevices[i];
                 responder.state = new TrackedDeviceModel(m_RollingPointerId++);
@@ -441,61 +456,50 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public void EnableAllActions()
         {
             var pointAction = m_PointAction.action;
-            if (pointAction != null && !pointAction.enabled)
-                pointAction.Enable();
+            pointAction?.Enable();
 
             var leftClickAction = m_LeftClickAction.action;
-            if (leftClickAction != null && !leftClickAction.enabled)
-                leftClickAction.Enable();
+            leftClickAction?.Enable();
 
             var rightClickAction = m_RightClickAction.action;
-            if (rightClickAction != null && !rightClickAction.enabled)
-                rightClickAction.Enable();
+            rightClickAction?.Enable();
 
             var middleClickAction = m_MiddleClickAction.action;
-            if (middleClickAction != null && !middleClickAction.enabled)
-                middleClickAction.Enable();
+            middleClickAction?.Enable();
 
             var moveAction = m_MoveAction.action;
-            if (moveAction != null && !moveAction.enabled)
-                moveAction.Enable();
+            moveAction?.Enable();
 
             var submitAction = m_SubmitAction.action;
-            if (submitAction != null && !submitAction.enabled)
-                submitAction.Enable();
+            submitAction?.Enable();
 
             var cancelAction = m_CancelAction.action;
-            if (cancelAction != null && !cancelAction.enabled)
-                cancelAction.Enable();
+            cancelAction?.Enable();
 
-            for (int i = 0; i < m_Touches.Count; i++)
+            for (var i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
 
                 var positionAction = touch.position.action;
-                if (positionAction != null && !positionAction.enabled)
-                    positionAction.Enable();
+                positionAction?.Enable();
 
                 var phaseAction = touch.phase.action;
                 if (phaseAction != null && !phaseAction.enabled)
                     phaseAction.Enable();
             }
 
-            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            for (var i = 0; i < m_TrackedDevices.Count; i++)
             {
                 var trackedDevice = m_TrackedDevices[i];
 
                 var positionAction = trackedDevice.position.action;
-                if (positionAction != null && !positionAction.enabled)
-                    positionAction.Enable();
+                positionAction?.Enable();
 
                 var orientationAction = trackedDevice.orientation.action;
-                if (orientationAction != null && !orientationAction.enabled)
-                    orientationAction.Enable();
+                orientationAction?.Enable();
 
                 var selectAction = trackedDevice.select.action;
-                if (selectAction != null && !selectAction.enabled)
-                    selectAction.Enable();
+                selectAction?.Enable();
             }
         }
 
@@ -506,60 +510,49 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public void DisableAllActions()
         {
             var pointAction = m_PointAction.action;
-            if (pointAction != null && pointAction.enabled)
-                pointAction.Disable();
+            pointAction?.Disable();
 
             var leftClickAction = m_LeftClickAction.action;
-            if (leftClickAction != null && leftClickAction.enabled)
-                leftClickAction.Disable();
+            leftClickAction?.Disable();
 
             var rightClickAction = m_RightClickAction.action;
-            if (rightClickAction != null && rightClickAction.enabled)
-                rightClickAction.Disable();
+            rightClickAction?.Disable();
 
             var middleClickAction = m_MiddleClickAction.action;
-            if (middleClickAction != null && middleClickAction.enabled)
-                middleClickAction.Disable();
+            middleClickAction?.Disable();
 
             var moveAction = m_MoveAction.action;
-            if (moveAction != null && moveAction.enabled)
-                moveAction.Disable();
+            moveAction?.Disable();
 
             var submitAction = m_SubmitAction.action;
-            if (submitAction != null && submitAction.enabled)
-                submitAction.Disable();
+            submitAction?.Disable();
 
             var cancelAction = m_CancelAction.action;
-            if (cancelAction != null && cancelAction.enabled)
-                cancelAction.Disable();
+            cancelAction?.Disable();
 
-            for (int i = 0; i < m_Touches.Count; i++)
+            for (var i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
 
                 var positionAction = touch.position.action;
-                if (positionAction != null && positionAction.enabled)
-                    positionAction.Disable();
+                positionAction?.Disable();
 
                 var phaseAction = touch.phase.action;
-                if (phaseAction != null && phaseAction.enabled)
-                    phaseAction.Disable();
+                phaseAction?.Disable();
             }
 
-            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            for (var i = 0; i < m_TrackedDevices.Count; i++)
             {
                 var trackedDevice = m_TrackedDevices[i];
 
                 var positionAction = trackedDevice.position.action;
-                if (positionAction != null && positionAction.enabled)
-                    positionAction.Disable();
+                positionAction?.Disable();
 
                 var orientationAction = trackedDevice.orientation.action;
-                if (orientationAction != null && orientationAction.enabled)
-                    orientationAction.Disable();
+                orientationAction?.Disable();
 
                 var selectAction = trackedDevice.select.action;
-                if (selectAction != null && selectAction.enabled)
+                if (selectAction != null)
                     selectAction.Disable();
             }
         }
@@ -578,19 +571,19 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             else if (action == m_LeftClickAction)
             {
                 var buttonState = mouseState.leftButton;
-                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                buttonState.isDown = context.ReadValue<float>() > 0;
                 mouseState.leftButton = buttonState;
             }
             else if (action == m_RightClickAction)
             {
                 var buttonState = mouseState.rightButton;
-                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                buttonState.isDown = context.ReadValue<float>() > 0;
                 mouseState.rightButton = buttonState;
             }
             else if (action == m_MiddleClickAction)
             {
                 var buttonState = mouseState.middleButton;
-                buttonState.isDown = context.ReadValue<float>() != 0.0f;
+                buttonState.isDown = context.ReadValue<float>() > 0;
                 mouseState.middleButton = buttonState;
             }
             else if (action == m_MoveAction)
@@ -599,11 +592,11 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
             else if (action == m_SubmitAction)
             {
-                joystickState.submitButtonDown = context.ReadValue<float>() != 0.0f;
+                joystickState.submitButtonDown = context.ReadValue<float>() > 0;
             }
             else if (action == m_CancelAction)
             {
-                joystickState.cancelButtonDown = context.ReadValue<float>() != 0.0f;
+                joystickState.cancelButtonDown = context.ReadValue<float>() > 0;
             }
         }
 
@@ -644,7 +637,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 }
                 if (action == responder.select)
                 {
-                    responder.state.select = context.ReadValue<float>() != 0.0f;
+                    responder.state.select = context.ReadValue<float>() > 0;
                 }
 
                 m_TrackedDevices[deviceIndex] = responder;
@@ -664,10 +657,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
 
-                for (int i = 0; i < m_Touches.Count; i++)
+                for (var i = 0; i < m_Touches.Count; i++)
                     m_Touches[i].state.OnFrameFinished();
 
-                for (int i = 0; i < m_TrackedDevices.Count; i++)
+                for (var i = 0; i < m_TrackedDevices.Count; i++)
                     m_TrackedDevices[i].state.OnFrameFinished();
             }
             else
@@ -675,14 +668,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 ProcessJoystick(ref joystickState);
                 ProcessMouse(ref mouseState);
 
-                for (int i = 0; i < m_Touches.Count; i++)
+                for (var i = 0; i < m_Touches.Count; i++)
                 {
                     var responder = m_Touches[i];
                     ProcessTouch(ref responder.state);
                     m_Touches[i] = responder;
                 }
 
-                for (int i = 0; i < m_TrackedDevices.Count; i++)
+                for (var i = 0; i < m_TrackedDevices.Count; i++)
                 {
                     var responder = m_TrackedDevices[i];
                     ProcessTrackedDevice(ref responder.state);
@@ -697,44 +690,66 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 return;
 
             m_ActionsHooked = true;
+            if (m_OnActionDelegate == null)
+                m_OnActionDelegate = OnAction;
 
             var pointAction = m_PointAction.action;
             if (pointAction != null)
-                pointAction.performed += OnAction;
+            {
+                pointAction.performed += m_OnActionDelegate;
+                pointAction.cancelled += m_OnActionDelegate;
+            }
 
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
-                moveAction.performed += OnAction;
+            {
+                moveAction.performed += m_OnActionDelegate;
+                moveAction.cancelled += m_OnActionDelegate;
+            }
 
             var leftClickAction = m_LeftClickAction.action;
             if (leftClickAction != null)
-                leftClickAction.performed += OnAction;
+            {
+                leftClickAction.performed += m_OnActionDelegate;
+                leftClickAction.cancelled += m_OnActionDelegate;
+            }
 
             var rightClickAction = m_RightClickAction.action;
             if (rightClickAction != null)
-                rightClickAction.performed += OnAction;
+            {
+                rightClickAction.performed += m_OnActionDelegate;
+                rightClickAction.cancelled += m_OnActionDelegate;
+            }
 
             var middleClickAction = m_MiddleClickAction.action;
             if (middleClickAction != null)
-                middleClickAction.performed += OnAction;
+            {
+                middleClickAction.performed += m_OnActionDelegate;
+                middleClickAction.cancelled += m_OnActionDelegate;
+            }
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
-                submitAction.performed += OnAction;
+            {
+                submitAction.performed += m_OnActionDelegate;
+                submitAction.cancelled += m_OnActionDelegate;
+            }
 
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
-                cancelAction.performed += OnAction;
+            {
+                cancelAction.performed += m_OnActionDelegate;
+                cancelAction.cancelled += m_OnActionDelegate;
+            }
 
-            for (int i = 0; i < m_Touches.Count; i++)
+            for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
                 responder.HookActions();
                 m_Touches[i] = responder;
             }
 
-
-            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            for (var i = 0; i < m_TrackedDevices.Count; i++)
             {
                 var responder = m_TrackedDevices[i];
                 responder.HookActions();
@@ -751,40 +766,61 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             var pointAction = m_PointAction.action;
             if (pointAction != null)
-                pointAction.performed -= OnAction;
+            {
+                pointAction.performed -= m_OnActionDelegate;
+                pointAction.cancelled -= m_OnActionDelegate;
+            }
 
             var moveAction = m_MoveAction.action;
             if (moveAction != null)
-                moveAction.performed -= OnAction;
+            {
+                moveAction.performed -= m_OnActionDelegate;
+                moveAction.cancelled -= m_OnActionDelegate;
+            }
 
             var leftClickAction = m_LeftClickAction.action;
             if (leftClickAction != null)
-                leftClickAction.performed -= OnAction;
+            {
+                leftClickAction.performed -= m_OnActionDelegate;
+                leftClickAction.cancelled -= m_OnActionDelegate;
+            }
 
             var rightClickAction = m_RightClickAction.action;
             if (rightClickAction != null)
-                rightClickAction.performed -= OnAction;
+            {
+                rightClickAction.performed -= m_OnActionDelegate;
+                rightClickAction.cancelled -= m_OnActionDelegate;
+            }
 
             var middleClickAction = m_MiddleClickAction.action;
             if (middleClickAction != null)
-                middleClickAction.performed -= OnAction;
+            {
+                middleClickAction.performed -= m_OnActionDelegate;
+                middleClickAction.cancelled -= m_OnActionDelegate;
+            }
 
             var submitAction = m_SubmitAction.action;
             if (submitAction != null)
-                submitAction.performed -= OnAction;
+            {
+                submitAction.performed -= m_OnActionDelegate;
+                submitAction.cancelled -= m_OnActionDelegate;
+            }
 
             var cancelAction = m_CancelAction.action;
             if (cancelAction != null)
-                cancelAction.performed -= OnAction;
+            {
+                cancelAction.performed -= m_OnActionDelegate;
+                cancelAction.cancelled -= m_OnActionDelegate;
+            }
 
-            for (int i = 0; i < m_Touches.Count; i++)
+            for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
                 responder.UnhookActions();
                 m_Touches[i] = responder;
             }
 
-            for (int i = 0; i < m_TrackedDevices.Count; i++)
+            for (var i = 0; i < m_TrackedDevices.Count; i++)
             {
                 var responder = m_TrackedDevices[i];
                 responder.UnhookActions();
@@ -793,58 +829,41 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         [Tooltip("Enables UI events regardless of focus state.")]
-        [SerializeField]
-        private bool m_SendEventsWhenInBackground;
+        [SerializeField] private bool m_SendEventsWhenInBackground;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
         [Tooltip("Action that delivers a Vector2 of screen coordinates.")]
-        [SerializeField]
-        private InputActionProperty m_PointAction;
+        [SerializeField] private InputActionProperty m_PointAction;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
         [Tooltip("Action that delivers a relative motion Vector2 for navigation.")]
-        [SerializeField]
-        private InputActionProperty m_MoveAction;
+        [SerializeField] private InputActionProperty m_MoveAction;
 
         [Tooltip("Button action that represents a 'Submit' navigation action.")]
-        [SerializeField]
-        private InputActionProperty m_SubmitAction;
-
+        [SerializeField] private InputActionProperty m_SubmitAction;
         [Tooltip("Button action that represents a 'Cancel' navigation action.")]
-        [SerializeField]
-        private InputActionProperty m_CancelAction;
-
+        [SerializeField] private InputActionProperty m_CancelAction;
         [Tooltip("Button action that represents a left click.")]
-        [SerializeField]
-        private InputActionProperty m_LeftClickAction;
-
+        [SerializeField] private InputActionProperty m_LeftClickAction;
         [Tooltip("Button action that represents a middle click.")]
-        [SerializeField]
-        private InputActionProperty m_MiddleClickAction;
-
+        [SerializeField] private InputActionProperty m_MiddleClickAction;
         [Tooltip("Button action that represents a right click.")]
-        [SerializeField]
-        private InputActionProperty m_RightClickAction;
-
+        [SerializeField] private InputActionProperty m_RightClickAction;
         [Tooltip("Vector2 action that represents horizontal and vertical scrolling.")]
-        [SerializeField]
-        private InputActionProperty m_ScrollWheelAction;
-
-        [SerializeField]
-        private List<TouchResponder> m_Touches;
-
-        [SerializeField]
-        private List<TrackedDeviceResponder> m_TrackedDevices;
+        [SerializeField] private InputActionProperty m_ScrollWheelAction;
+        [SerializeField] private List<TouchResponder> m_Touches;
+        [SerializeField] private List<TrackedDeviceResponder> m_TrackedDevices;
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private bool m_ActionsEnabled;
+        [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
         [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;

@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="timesliceEvents"/>
         public UpdateMode updateMode
         {
-            get { return m_UpdateMode; }
+            get => m_UpdateMode;
             set
             {
                 if (m_UpdateMode == value)
@@ -99,7 +99,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="Application.focusChanged"/>
         public bool runInBackground
         {
-            get { return m_RunInBackground; }
+            get => m_RunInBackground;
             set
             {
                 if (m_RunInBackground == value)
@@ -119,7 +119,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public bool timesliceEvents
         {
-            get { return m_TimesliceEvents; }
+            get => m_TimesliceEvents;
             set
             {
                 if (m_TimesliceEvents == value)
@@ -146,7 +146,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="CompensateDirectionProcessor"/>
         public bool compensateForScreenOrientation
         {
-            get { return m_CompensateForScreenOrientation; }
+            get => m_CompensateForScreenOrientation;
             set
             {
                 if (m_CompensateForScreenOrientation == value)
@@ -156,10 +156,9 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-
         public bool filterNoiseOnCurrent
         {
-            get { return m_FilterNoiseOnCurrent; }
+            get => m_FilterNoiseOnCurrent;
             set
             {
                 if (m_FilterNoiseOnCurrent == value)
@@ -177,7 +176,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="AxisDeadzoneProcessor"/>
         public float defaultDeadzoneMin
         {
-            get { return m_DefaultDeadzoneMin; }
+            get => m_DefaultDeadzoneMin;
             set
             {
                 if (m_DefaultDeadzoneMin == value)
@@ -195,7 +194,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="AxisDeadzoneProcessor"/>
         public float defaultDeadzoneMax
         {
-            get { return m_DefaultDeadzoneMax; }
+            get => m_DefaultDeadzoneMax;
             set
             {
                 if (m_DefaultDeadzoneMax == value)
@@ -207,7 +206,7 @@ namespace UnityEngine.Experimental.Input
 
         public float defaultButtonPressPoint
         {
-            get { return m_DefaultButtonPressPoint; }
+            get => m_DefaultButtonPressPoint;
             set
             {
                 if (m_DefaultButtonPressPoint == value)
@@ -219,7 +218,7 @@ namespace UnityEngine.Experimental.Input
 
         public float defaultTapTime
         {
-            get { return m_DefaultTapTime; }
+            get => m_DefaultTapTime;
             set
             {
                 if (m_DefaultTapTime == value)
@@ -231,7 +230,7 @@ namespace UnityEngine.Experimental.Input
 
         public float defaultSlowTapTime
         {
-            get { return m_DefaultSlowTapTime; }
+            get => m_DefaultSlowTapTime;
             set
             {
                 if (m_DefaultSlowTapTime == value)
@@ -243,42 +242,12 @@ namespace UnityEngine.Experimental.Input
 
         public float defaultHoldTime
         {
-            get { return m_DefaultHoldTime; }
+            get => m_DefaultHoldTime;
             set
             {
                 if (m_DefaultHoldTime == value)
                     return;
                 m_DefaultHoldTime = value;
-                OnChange();
-            }
-        }
-
-        /// <summary>
-        /// Default mouse/pen/touch sensitivity for motion deltas. This only applies when using <see cref="SensitivityProcessor"/>.
-        /// </summary>
-        /// <remarks>
-        /// Pointer deltas flow into the system in pixel space. This means that the values are dependent on
-        /// resolution and are relatively large. Whereas a gamepad thumbstick axis will have normalized
-        /// values between [0..1], a pointer delta will easily be in the range of tens or even hundreds of pixels.
-        ///
-        /// Pointer sensitivity scaling allows to turn these pointer deltas into useful, partially resolution-independent
-        /// floating-point values.
-        ///
-        /// The value determines how much travel is generated on the delta for each percent of travel across the
-        /// window space. If, for example, the mouse moves 15 pixels on the X axis and -20 pixels on the Y axis,
-        /// and if the player window is 640x480 pixels and the sensitivity setting is 0.5, then the generated
-        /// pointer delta value will be (15/640*6, -20/480*6) = (0.14, -0.25).
-        /// </remarks>
-        /// <seealso cref="Pointer.delta"/>
-        /// <seealso cref="SensitivityProcessor"/>
-        public float defaultSensitivity
-        {
-            get { return m_DefaultSensitivity; }
-            set
-            {
-                if (m_DefaultSensitivity == value)
-                    return;
-                m_DefaultSensitivity = value;
                 OnChange();
             }
         }
@@ -307,7 +276,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputControlLayout"/>
         public ReadOnlyArray<string> supportedDevices
         {
-            get { return new ReadOnlyArray<string>(m_SupportedDevices); }
+            get => new ReadOnlyArray<string>(m_SupportedDevices);
             set
             {
                 // Detect if there was a change.
@@ -350,12 +319,11 @@ namespace UnityEngine.Experimental.Input
 
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
-        [SerializeField] private float m_DefaultButtonPressPoint = 0.15f;
+        [SerializeField] private float m_DefaultButtonPressPoint = 0.1f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         //[SerializeField] private float m_DefaultMultiTapMaximumDelay = 0.75f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
-        [SerializeField] private float m_DefaultSensitivity = 0.25f;
 
         #if UNITY_EDITOR
         [SerializeField] private bool m_LockInputToGameView;

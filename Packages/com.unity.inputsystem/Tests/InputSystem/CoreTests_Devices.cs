@@ -18,11 +18,33 @@ using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
+using Quaternion = UnityEngine.Quaternion;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 ////TODO: test that device re-creation doesn't lose flags and such
 
 partial class CoreTests
 {
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetAllDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(InputSystem.devices, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, keyboard, mouse }));
+        // Alternate getter.
+        Assert.That(InputDevice.all, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, keyboard, mouse }));
+
+        InputSystem.RemoveDevice(keyboard);
+
+        Assert.That(InputSystem.devices, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, mouse }));
+        Assert.That(InputDevice.all, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, mouse }));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayout()
@@ -423,6 +445,7 @@ partial class CoreTests
         Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));
     }
 
+    ////TODO: refine this behavior such that this only occurs if the given device is the first of its kind
     [Test]
     [Category("Devices")]
     public void Devices_AddingDevice_MakesItCurrent()
@@ -1890,8 +1913,7 @@ partial class CoreTests
         var deltaControl = (Vector2Control)device[controlName];
         Debug.Assert(deltaControl != null);
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             deltaControl.WriteValueIntoEvent(new Vector2(0.5f, 0.5f), stateEventPtr);
 
@@ -1915,8 +1937,7 @@ partial class CoreTests
         var deltaControl = (Vector2Control)device[controlName];
         Debug.Assert(deltaControl != null);
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(device, out stateEventPtr))
+        using (StateEvent.From(device, out var stateEventPtr))
         {
             deltaControl.WriteValueIntoEvent(new Vector2(0.5f, 0.5f), stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -2150,21 +2171,24 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanUseMouseAsPointer()
     {
-        var device = InputSystem.AddDevice<Mouse>();
+        var mouse = InputSystem.AddDevice<Mouse>();
 
-        InputSystem.QueueStateEvent(device,
+        InputSystem.QueueStateEvent(mouse,
             new MouseState
             {
                 position = new Vector2(0.123f, 0.456f),
             }.WithButton(MouseButton.Left));
         InputSystem.Update();
 
-        Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
-        Assert.That(device.button.isPressed, Is.True);
+        Assert.That(mouse.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(mouse.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(mouse.button.isPressed, Is.True);
         ////TODO: mouse phase should be driven by Mouse device automatically
-        Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(mouse.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
         ////TODO: pointer ID etc.
+
+        Assert.That(InputControlPath.TryFindControls(mouse, "*/{PrimaryAction}"), Is.EquivalentTo(new[] { mouse.leftButton }));
+        Assert.That(InputControlPath.TryFindControls(mouse, "*/{SecondaryAction}"), Is.EquivalentTo(new[] { mouse.rightButton }));
     }
 
     [Test]
@@ -2175,10 +2199,55 @@ partial class CoreTests
 
         Assert.That(pen.inRange.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        InputSystem.QueueStateEvent(pen, new PenState().WithButton(PenState.Button.InRange));
+        InputSystem.QueueStateEvent(pen, new PenState().WithButton(PenButton.InRange));
         InputSystem.Update();
 
         Assert.That(pen.inRange.ReadValue(), Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanUsePenAsPointer()
+    {
+        var pen = InputSystem.AddDevice<Pen>();
+
+        Assert.That(pen.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(pen.position.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(pen.delta.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(pen.pressure.ReadValue(), Is.Zero);
+        Assert.That(pen.button.isPressed, Is.False);
+        Assert.That(pen.tip.isPressed, Is.False);
+        Assert.That(pen.eraser.isPressed, Is.False);
+        Assert.That(pen.firstBarrelButton.isPressed, Is.False);
+        Assert.That(pen.secondBarrelButton.isPressed, Is.False);
+        Assert.That(pen.thirdBarrelButton.isPressed, Is.False);
+        Assert.That(pen.fourthBarrelButton.isPressed, Is.False);
+        Assert.That(pen.inRange.isPressed, Is.False);
+        Assert.That(pen.twist.ReadValue(), Is.Zero);
+        Assert.That(pen.tilt.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(pen, new PenState
+        {
+            position = new Vector2(0.123f, 0.234f),
+            delta = new Vector2(0.11f, 0.22f),
+            pressure = 0.345f,
+            twist = 0.456f,
+            tilt = new Vector2(0.567f, 0.678f),
+        });
+        InputSystem.Update();
+
+        Assert.That(pen.position.ReadValue(), Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(pen.delta.ReadValue(), Is.EqualTo(new Vector2(0.11f, 0.22f)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(pen.pressure.ReadValue(), Is.EqualTo(0.345).Within(0.00001));
+        Assert.That(pen.twist.ReadValue(), Is.EqualTo(0.456).Within(0.00001));
+        Assert.That(pen.tilt.ReadValue(), Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(Vector2EqualityComparer.Instance));
+
+        AssertButtonPress(pen, new PenState().WithButton(PenButton.Tip), pen.tip, pen.button);
+        AssertButtonPress(pen, new PenState().WithButton(PenButton.Eraser), pen.eraser);
+        AssertButtonPress(pen, new PenState().WithButton(PenButton.BarrelFirst), pen.firstBarrelButton);
+        AssertButtonPress(pen, new PenState().WithButton(PenButton.BarrelSecond), pen.secondBarrelButton);
+        AssertButtonPress(pen, new PenState().WithButton(PenButton.BarrelThird), pen.thirdBarrelButton);
+        AssertButtonPress(pen, new PenState().WithButton(PenButton.BarrelFourth), pen.fourthBarrelButton);
     }
 
     ////FIXME: this needs to be overhauled; functioning of Touchscreen as Pointer is currently broken
@@ -2901,8 +2970,7 @@ partial class CoreTests
         var value = new Vector3(0.123f, 0.456f, 0.789f);
         var directionControl = (Vector3Control)sensor[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(sensor, out stateEventPtr))
+        using (StateEvent.From(sensor, out var stateEventPtr))
         {
             directionControl.WriteValueIntoEvent(value, stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -2939,8 +3007,7 @@ partial class CoreTests
         var angles = new Vector3(11, 22, 33);
         var rotationControl = (QuaternionControl)sensor[controlName];
 
-        InputEventPtr stateEventPtr;
-        using (StateEvent.From(sensor, out stateEventPtr))
+        using (StateEvent.From(sensor, out var stateEventPtr))
         {
             rotationControl.WriteValueIntoEvent(Quaternion.Euler(angles), stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
@@ -3124,8 +3191,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_RemovingDeviceCleansUpUpdateCallback()
     {
-        InputSystem.RegisterLayout<CustomDeviceWithUpdate>();
-        var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
+        var device = InputSystem.AddDevice<CustomDeviceWithUpdate>();
         InputSystem.RemoveDevice(device);
 
         InputSystem.Update();
@@ -3388,7 +3454,8 @@ partial class CoreTests
         Assert.Fail();
     }
 
-#if UNITY_2019_1_OR_NEWER
+    #if UNITY_2019_1_OR_NEWER
+    // NOTE: The focus logic will also implicitly take care of cancelling and restarting actions.
     [Test]
     [Category("Devices")]
     public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
@@ -3449,7 +3516,7 @@ partial class CoreTests
         Assert.That(pointerDeviceReset, Is.True);
     }
 
-#endif
+    #endif
 
     [Test]
     [Category("Devices")]

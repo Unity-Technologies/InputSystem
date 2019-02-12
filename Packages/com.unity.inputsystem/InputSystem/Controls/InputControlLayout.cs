@@ -8,10 +8,6 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
 ////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
@@ -87,10 +83,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         public const string kSeparatorString = ",";
 
         private static InternedString s_DefaultVariant = new InternedString("Default");
-        public static InternedString DefaultVariant
-        {
-            get { return s_DefaultVariant; }
-        }
+        public static InternedString DefaultVariant => s_DefaultVariant;
 
         ////TODO: replace ParameterValue with PrimitiveValueOrArray
 
@@ -200,22 +193,19 @@ namespace UnityEngine.Experimental.Input.Layouts
                     switch (type)
                     {
                         case ParameterType.Boolean:
-                            bool result;
-                            if (bool.TryParse(value, out result))
+                            if (bool.TryParse(value, out var result))
                             {
                                 *(bool*)ptr = result;
                             }
                             break;
                         case ParameterType.Integer:
-                            int intResult;
-                            if (int.TryParse(value, out intResult))
+                            if (int.TryParse(value, out var intResult))
                             {
                                 *(int*)ptr = intResult;
                             }
                             break;
                         case ParameterType.Float:
-                            float floatResult;
-                            if (float.TryParse(value, out floatResult))
+                            if (float.TryParse(value, out var floatResult))
                             {
                                 *(float*)ptr = floatResult;
                             }
@@ -284,14 +274,14 @@ namespace UnityEngine.Experimental.Input.Layouts
                         case ParameterType.Boolean:
                             if (*(bool*)ptr)
                                 return name;
-                            return string.Format("{0}=false", name);
+                            return $"{name}=false";
                         case ParameterType.Integer:
                             var intValue = *(int*)ptr;
-                            return string.Format("{0}={1}", name, intValue);
+                            return $"{name}={intValue}";
                         case ParameterType.Float:
                             ////FIXME: this needs to be invariant culture
                             var floatValue = *(float*)ptr;
-                            return string.Format("{0}={1}", name, floatValue);
+                            return $"{name}={floatValue}";
                     }
                 }
 
@@ -312,7 +302,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 if (ReferenceEquals(null, obj))
                     return false;
-                return obj is ParameterValue && Equals((ParameterValue)obj);
+                return obj is ParameterValue parameterValue && Equals(parameterValue);
             }
 
             public override int GetHashCode()
@@ -350,7 +340,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 if (parameters.Count == 0)
                     return name;
                 var parameterString = string.Join(kSeparatorString, parameters.Select(x => x.ToString()).ToArray());
-                return string.Format("{0}({1})", name, parameterString);
+                return $"{name}({parameterString})";
             }
         }
 
@@ -424,10 +414,10 @@ namespace UnityEngine.Experimental.Input.Layouts
             // just the X axis control of the left stick directly from within a gamepad
             // layout instead of having to have a custom stick layout for the left stick
             // than in turn would have to make use of a custom axis layout for the X axis.
-            // Insted, you can just have a control layout with the name "leftStick/x".
+            // Instead, you can just have a control layout with the name "leftStick/x".
             public bool isModifyingChildControlByPath
             {
-                get { return (flags & Flags.IsModifyingChildControlByPath) == Flags.IsModifyingChildControlByPath; }
+                get => (flags & Flags.IsModifyingChildControlByPath) == Flags.IsModifyingChildControlByPath;
                 set
                 {
                     if (value)
@@ -439,7 +429,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             public bool isNoisy
             {
-                get { return (flags & Flags.IsNoisy) == Flags.IsNoisy; }
+                get => (flags & Flags.IsNoisy) == Flags.IsNoisy;
                 set
                 {
                     if (value)
@@ -459,7 +449,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             /// </remarks>
             public bool isSynthetic
             {
-                get { return (flags & Flags.IsSynthetic) == Flags.IsSynthetic; }
+                get => (flags & Flags.IsSynthetic) == Flags.IsSynthetic;
                 set
                 {
                     if (value)
@@ -471,7 +461,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             public bool isFirstDefinedInThisLayout
             {
-                get { return (flags & Flags.IsFirstDefinedInThisLayout) != 0; }
+                get => (flags & Flags.IsFirstDefinedInThisLayout) != 0;
                 set
                 {
                     if (value)
@@ -481,10 +471,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
             }
 
-            public bool isArray
-            {
-                get { return (arraySize != 0); }
-            }
+            public bool isArray => (arraySize != 0);
 
             /// <summary>
             /// For any property not set on this control layout, take the setting from <paramref name="other"/>.
@@ -578,67 +565,34 @@ namespace UnityEngine.Experimental.Input.Layouts
 
         // Unique name of the layout.
         // NOTE: Case-insensitive.
-        public InternedString name
-        {
-            get { return m_Name; }
-        }
+        public InternedString name => m_Name;
 
-        public Type type
-        {
-            get { return m_Type; }
-        }
+        public Type type => m_Type;
 
-        public InternedString variants
-        {
-            get { return m_Variants; }
-        }
+        public InternedString variants => m_Variants;
 
-        public FourCC stateFormat
-        {
-            get { return m_StateFormat; }
-        }
+        public FourCC stateFormat => m_StateFormat;
 
-        public IEnumerable<InternedString> baseLayouts
-        {
-            get { return m_BaseLayouts; }
-        }
+        public IEnumerable<InternedString> baseLayouts => m_BaseLayouts;
 
-        public IEnumerable<InternedString> appliedOverrides
-        {
-            get { return m_AppliedOverrides; }
-        }
+        public IEnumerable<InternedString> appliedOverrides => m_AppliedOverrides;
 
-        public ReadOnlyArray<InternedString> commonUsages
-        {
-            get { return new ReadOnlyArray<InternedString>(m_CommonUsages); }
-        }
+        public ReadOnlyArray<InternedString> commonUsages => new ReadOnlyArray<InternedString>(m_CommonUsages);
 
-        public ReadOnlyArray<ControlItem> controls
-        {
-            get { return new ReadOnlyArray<ControlItem>(m_Controls); }
-        }
+        public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
-        public bool updateBeforeRender
-        {
-            get { return m_UpdateBeforeRender.HasValue ? m_UpdateBeforeRender.Value : false; }
-        }
+        public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
 
-        public bool isDeviceLayout
-        {
-            get { return typeof(InputDevice).IsAssignableFrom(m_Type); }
-        }
+        public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
 
-        public bool isControlLayout
-        {
-            get { return !isDeviceLayout; }
-        }
+        public bool isControlLayout => !isDeviceLayout;
 
         public ControlItem this[string path]
         {
             get
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
 
                 if (m_Controls != null)
                 {
@@ -649,7 +603,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     }
                 }
 
-                throw new KeyNotFoundException(string.Format("Cannot find control '{0}' in layout '{1}'", path, name));
+                throw new KeyNotFoundException($"Cannot find control '{path}' in layout '{name}'");
             }
         }
 
@@ -683,10 +637,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             private int m_ControlCount;
             private ControlItem[] m_Controls;
 
-            public ReadOnlyArray<ControlItem> controls
-            {
-                get { return new ReadOnlyArray<ControlItem>(m_Controls, 0, m_ControlCount);}
-            }
+            public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls, 0, m_ControlCount);
 
             public struct ControlBuilder
             {
@@ -740,8 +691,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                     for (var i = 0; i < usages.Length; ++i)
                         if (usages[i].IsEmpty())
                             throw new ArgumentException(
-                                string.Format("Empty usage entry at index {0} for control '{1}' in layout '{2}'", i,
-                                    controls[index].name, builder.name), "usages");
+                                $"Empty usage entry at index {i} for control '{controls[index].name}' in layout '{builder.name}'",
+                                nameof(usages));
 
                     controls[index].usages = new ReadOnlyArray<InternedString>(usages);
                     return this;
@@ -910,12 +861,15 @@ namespace UnityEngine.Experimental.Input.Layouts
             ////TODO: make sure all paths are unique (only relevant for JSON layouts?)
 
             // Create layout object.
-            var layout = new InputControlLayout(name, type);
-            layout.m_Controls = controlLayouts.ToArray();
-            layout.m_StateFormat = stateFormat;
-            layout.m_Variants = variants;
+            var layout = new InputControlLayout(name, type)
+            {
+                m_Controls = controlLayouts.ToArray(),
+                m_StateFormat = stateFormat,
+                m_Variants = variants,
+                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
+            };
 
-            if (layoutAttribute != null && layoutAttribute.commonUsages != null)
+            if (layoutAttribute?.commonUsages != null)
                 layout.m_CommonUsages =
                     ArrayHelpers.Select(layoutAttribute.commonUsages, x => new InternedString(x));
 
@@ -939,9 +893,9 @@ namespace UnityEngine.Experimental.Input.Layouts
         ////        should the control layout alone determine the direction things are going in?
 
         private InternedString m_Name;
-        internal Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputDeviceBuilder.
-        internal InternedString m_Variants;
-        internal FourCC m_StateFormat;
+        private Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputDeviceBuilder.
+        private InternedString m_Variants;
+        private FourCC m_StateFormat;
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;
         internal InlinedArray<InternedString> m_BaseLayouts;
@@ -962,7 +916,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             AddControlItemsFromProperties(type, controlLayouts, layoutName);
         }
 
-        // Add ControlLayouts for every public property in the given type thas has
+        // Add ControlLayouts for every public property in the given type that has
         // InputControlAttribute applied to it or has an InputControl-derived value type.
         private static void AddControlItemsFromFields(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
@@ -970,7 +924,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             AddControlItemsFromMembers(fields, controlLayouts, layoutName);
         }
 
-        // Add ControlLayouts for every public property in the given type thas has
+        // Add ControlLayouts for every public property in the given type that has
         // InputControlAttribute applied to it or has an InputControl-derived value type.
         private static void AddControlItemsFromProperties(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
@@ -978,7 +932,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             AddControlItemsFromMembers(properties, controlLayouts, layoutName);
         }
 
-        // Add ControlLayouts for every member in the list thas has InputControlAttribute applied to it
+        // Add ControlLayouts for every member in the list that has InputControlAttribute applied to it
         // or has an InputControl-derived value type.
         private static void AddControlItemsFromMembers(MemberInfo[] members, List<ControlItem> controlItems, string layoutName)
         {
@@ -1065,18 +1019,18 @@ namespace UnityEngine.Experimental.Input.Layouts
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
             // Determine name.
-            var name = attribute != null ? attribute.name : null;
+            var name = attribute?.name;
             if (string.IsNullOrEmpty(name))
                 name = member.Name;
 
             var isModifyingChildControlByPath = name.IndexOf('/') != -1;
 
             // Determine display name.
-            var displayName = attribute != null ? attribute.displayName : null;
-            var shortDisplayName = attribute != null ? attribute.shortDisplayName : null;
+            var displayName = attribute?.displayName;
+            var shortDisplayName = attribute?.shortDisplayName;
 
             // Determine layout.
-            var layout = attribute != null ? attribute.layout : null;
+            var layout = attribute?.layout;
             if (string.IsNullOrEmpty(layout) && !isModifyingChildControlByPath &&
                 (!(member is FieldInfo) || member.GetCustomAttribute<FixedBufferAttribute>(false) == null)) // Ignore fixed buffer fields.
             {
@@ -1262,7 +1216,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 ++index;
             }
             if (index - nameStart == 0)
-                throw new Exception(string.Format("Expecting name at position {0} in '{1}'", nameStart, text));
+                throw new Exception($"Expecting name at position {nameStart} in '{text}'");
             var name = text.Substring(nameStart, index - nameStart);
 
             // Skip whitespace.
@@ -1276,8 +1230,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 ++index;
                 var closeParenIndex = text.IndexOf(')', index);
                 if (closeParenIndex == -1)
-                    throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
-                        text));
+                    throw new Exception($"Expecting ')' after '(' at position {index} in '{text}'");
 
                 var parameterString = text.Substring(index, closeParenIndex - index);
                 parameters = ParseParameters(parameterString);
@@ -1462,8 +1415,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // `thisControlTable` while removing corresponding control items from `baseControlTable`.
                 foreach (var pair in thisControlTable)
                 {
-                    ControlItem baseControlItem;
-                    if (baseControlTable.TryGetValue(pair.Key, out baseControlItem))
+                    if (baseControlTable.TryGetValue(pair.Key, out var baseControlItem))
                     {
                         var mergedLayout = pair.Value.Merge(baseControlItem);
                         controls.Add(mergedLayout);
@@ -1487,7 +1439,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                             {
                                 if (VariantsMatch(m_Variants.ToLower(), baseControlVariants[i]))
                                 {
-                                    var key = string.Format("{0}@{1}", pair.Key, baseControlVariants[i]);
+                                    var key = $"{pair.Key}@{baseControlVariants[i]}";
                                     if (baseControlTable.TryGetValue(key, out baseControlItem))
                                     {
                                         var mergedLayout = pair.Value.Merge(baseControlItem);
@@ -1503,7 +1455,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                             // Try each variants present in the base layout.
                             foreach (var variant in baseControlVariants)
                             {
-                                var key = string.Format("{0}@{1}", pair.Key, variant);
+                                var key = $"{pair.Key}@{variant}";
                                 if (baseControlTable.TryGetValue(key, out baseControlItem))
                                 {
                                     var mergedLayout = pair.Value.Merge(baseControlItem);
@@ -1593,18 +1545,16 @@ namespace UnityEngine.Experimental.Input.Layouts
                         var itemVariantArray = itemVariants.ToLower().Split(kSeparator);
                         foreach (var name in itemVariantArray)
                         {
-                            if (variants != null)
-                                variants.Add(name);
-                            key = string.Format("{0}@{1}", key, name);
+                            variants?.Add(name);
+                            key = $"{key}@{name}";
                             table[key] = controlItems[i];
                         }
 
                         continue;
                     }
 
-                    key = string.Format("{0}@{1}", key, itemVariants.ToLower());
-                    if (variants != null)
-                        variants.Add(itemVariants.ToLower());
+                    key = $"{key}@{itemVariants.ToLower()}";
+                    variants?.Add(itemVariants.ToLower());
                 }
                 table[key] = controlItems[i];
             }
@@ -1644,7 +1594,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var existing in controlLayouts)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
                     existing.variants == controlItem.variants)
-                    throw new Exception(string.Format("Duplicate control '{0}' in layout '{1}'", name, layoutName));
+                    throw new Exception($"Duplicate control '{name}' in layout '{layoutName}'");
         }
 
         internal static void ParseHeaderFieldsFromJson(string json, out InternedString name,
@@ -1707,24 +1657,24 @@ namespace UnityEngine.Experimental.Input.Layouts
                     type = Type.GetType(this.type, false);
                     if (type == null)
                     {
-                        Debug.Log(string.Format(
-                            "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
-                            this.type, name));
+                        Debug.Log(
+                            $"Cannot find type '{this.type}' used by layout '{name}'; falling back to using InputDevice");
                         type = typeof(InputDevice);
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
-                        throw new Exception(string.Format("'{0}' used by layout '{1}' is not an InputControl",
-                            this.type, name));
+                        throw new Exception($"'{this.type}' used by layout '{name}' is not an InputControl");
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
                     type = typeof(InputDevice);
 
                 // Create layout.
-                var layout = new InputControlLayout(name, type);
-                layout.m_DisplayName = displayName;
-                layout.m_Variants = new InternedString(variant);
+                var layout = new InputControlLayout(name, type)
+                {
+                    m_DisplayName = displayName,
+                    m_Variants = new InternedString(variant)
+                };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
 
@@ -1744,7 +1694,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     else if (beforeRenderLowerCase == "update")
                         layout.m_UpdateBeforeRender = true;
                     else
-                        throw new Exception(string.Format("Invalid beforeRender setting '{0}'", beforeRender));
+                        throw new Exception($"Invalid beforeRender setting '{beforeRender}'");
                 }
 
                 // Add common usages.
@@ -1758,7 +1708,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     foreach (var control in controls)
                     {
                         if (string.IsNullOrEmpty(control.name))
-                            throw new Exception(string.Format("Control with no name in layout '{0}", name));
+                            throw new Exception($"Control with no name in layout '{name}");
                         var controlLayout = control.ToLayout();
                         ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layout.name);
                         controlLayouts.Add(controlLayout);
@@ -1800,7 +1750,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string name;
             public string layout;
             public string variants;
-            public string usage; // Convenince to not have to create array for single usage.
+            public string usage; // Convenience to not have to create array for single usage.
             public string alias; // Same.
             public string useStateFrom;
             public uint offset;
@@ -2009,28 +1959,23 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // See if we have a string layout for it. These
                 // always take precedence over ones from type so that we can
                 // override what's in the code using data.
-                string json;
-                if (layoutStrings.TryGetValue(name, out json))
+                if (layoutStrings.TryGetValue(name, out var json))
                     return FromJson(json);
 
                 // No, but maybe we have a type layout for it.
-                Type type;
-                if (layoutTypes.TryGetValue(name, out type))
+                if (layoutTypes.TryGetValue(name, out var type))
                     return FromType(name, type);
 
                 // Finally, check builders. Always the last ones to get a shot at
                 // providing layouts.
-                BuilderInfo builder;
-                if (layoutBuilders.TryGetValue(name, out builder))
+                if (layoutBuilders.TryGetValue(name, out var builder))
                 {
                     var layoutObject = builder.method.Invoke(builder.instance, null);
                     if (layoutObject == null)
-                        throw new Exception(string.Format("Layout builder '{0}' returned null when invoked", name));
-                    var layout = layoutObject as InputControlLayout;
-                    if (layout == null)
-                        throw new Exception(string.Format(
-                            "Layout builder '{0}' returned '{1}' which is not an InputControlLayout", name,
-                            layoutObject));
+                        throw new Exception($"Layout builder '{name}' returned null when invoked");
+                    if (!(layoutObject is InputControlLayout layout))
+                        throw new Exception(
+                            $"Layout builder '{name}' returned '{layoutObject}' which is not an InputControlLayout");
                     return layout;
                 }
 
@@ -2059,8 +2004,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                         ////TODO: catch cycles
                         var baseLayout = TryLoadLayout(baseLayoutName, table);
                         if (baseLayout == null)
-                            throw new LayoutNotFoundException(string.Format(
-                                "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
+                            throw new LayoutNotFoundException(
+                                $"Cannot find base layout '{baseLayoutName}' of layout '{name}'");
                         layout.MergeLayout(baseLayout);
 
                         if (layout.m_BaseLayouts.length == 0)
@@ -2068,8 +2013,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     }
 
                     // If there's overrides for the layout, apply them now.
-                    InternedString[] overrides;
-                    if (layoutOverrides.TryGetValue(name, out overrides))
+                    if (layoutOverrides.TryGetValue(name, out var overrides))
                     {
                         for (var i = 0; i < overrides.Length; ++i)
                         {
@@ -2088,8 +2032,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             // Return name of layout at root of "extend" chain of given layout.
             public InternedString GetRootLayoutName(InternedString layoutName)
             {
-                InternedString baseLayout;
-                while (baseLayoutTable.TryGetValue(layoutName, out baseLayout))
+                while (baseLayoutTable.TryGetValue(layoutName, out var baseLayout))
                     layoutName = baseLayout;
                 return layoutName;
             }
@@ -2101,8 +2044,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Try layout strings.
                 while (layoutStrings.ContainsKey(layoutName))
                 {
-                    InternedString baseLayout;
-                    if (baseLayoutTable.TryGetValue(layoutName, out baseLayout))
+                    if (baseLayoutTable.TryGetValue(layoutName, out var baseLayout))
                     {
                         // Work our way up the inheritance chain.
                         layoutName = baseLayout;
@@ -2116,8 +2058,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
 
                 // Try layout types.
-                Type result;
-                layoutTypes.TryGetValue(layoutName, out result);
+                layoutTypes.TryGetValue(layoutName, out var result);
                 return result;
             }
 
@@ -2156,9 +2097,9 @@ namespace UnityEngine.Experimental.Input.Layouts
 
         internal class LayoutNotFoundException : Exception
         {
-            public string layout { get; private set; }
+            public string layout { get; }
             public LayoutNotFoundException(string name, string message = null)
-                : base(message ?? string.Format("Cannot find control layout '{0}'", name))
+                : base(message ?? $"Cannot find control layout '{name}'")
             {
                 layout = name;
             }
@@ -2179,8 +2120,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 var internedName = new InternedString(name);
 
                 // See if we have it cached.
-                InputControlLayout layout;
-                if (table != null && table.TryGetValue(internedName, out layout))
+                if (table != null && table.TryGetValue(internedName, out var layout))
                     return layout;
 
                 if (table == null)

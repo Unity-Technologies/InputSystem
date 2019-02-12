@@ -23,7 +23,23 @@ internal class UserTests : InputTestFixture
     [Category("Users")]
     public void Users_DoesNotListenToUnpairedDeviceActivityByDefault()
     {
-        Assert.That(InputUser.listenForUnpairedDeviceActivity, Is.False);
+        Assert.That(InputUser.listenForUnpairedDeviceActivity, Is.Zero);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanCreateUserWithoutPairingDevices()
+    {
+        var user = InputUser.CreateUserWithoutPairedDevices();
+
+        Assert.That(user.valid, Is.True);
+        Assert.That(InputUser.all, Is.EquivalentTo(new[] { user }));
+        Assert.That(user.pairedDevices, Is.Empty);
+
+        user.UnpairDevicesAndRemoveUser();
+
+        Assert.That(user.valid, Is.False);
+        Assert.That(InputUser.all, Is.Empty);
     }
 
     [Test]
@@ -687,7 +703,7 @@ internal class UserTests : InputTestFixture
 
         Assert.That(user1.pairedDevices, Is.EquivalentTo(new[] { gamepad1 }));
         Assert.That(actions.devices, Is.EquivalentTo(new[] { gamepad1 }));
-        Assert.That(user1.hasMissingDevices, Is.True);
+        Assert.That(user1.hasMissingRequiredDevices, Is.True);
         Assert.That(user1.controlSchemeMatch.isSuccessfulMatch, Is.False);
         Assert.That(user1.controlSchemeMatch[0].control, Is.SameAs(gamepad1));
         Assert.That(user1.controlSchemeMatch[1].control, Is.Null);
@@ -701,7 +717,7 @@ internal class UserTests : InputTestFixture
 
         Assert.That(user1.pairedDevices, Is.EquivalentTo(new[] { gamepad1, gamepad3 }));
         Assert.That(actions.devices, Is.EquivalentTo(new[] { gamepad1, gamepad3 }));
-        Assert.That(user1.hasMissingDevices, Is.False);
+        Assert.That(user1.hasMissingRequiredDevices, Is.False);
         Assert.That(user1.controlSchemeMatch.isSuccessfulMatch, Is.True);
         Assert.That(user1.controlSchemeMatch[0].control, Is.SameAs(gamepad1));
         Assert.That(user1.controlSchemeMatch[1].control, Is.SameAs(gamepad3));
@@ -728,7 +744,7 @@ internal class UserTests : InputTestFixture
         user.ActivateControlScheme(gamepadScheme);
 
         Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad1 }));
-        Assert.That(user.hasMissingDevices, Is.True);
+        Assert.That(user.hasMissingRequiredDevices, Is.True);
         Assert.That(user.controlSchemeMatch.isSuccessfulMatch, Is.False);
         Assert.That(user.controlSchemeMatch[0].control, Is.SameAs(gamepad1));
         Assert.That(user.controlSchemeMatch[1].control, Is.Null);
@@ -737,7 +753,7 @@ internal class UserTests : InputTestFixture
 
         Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad1, gamepad2 }));
         Assert.That(actions.devices, Is.EquivalentTo(new[] { gamepad1, gamepad2 }));
-        Assert.That(user.hasMissingDevices, Is.False);
+        Assert.That(user.hasMissingRequiredDevices, Is.False);
         Assert.That(user.controlSchemeMatch.isSuccessfulMatch, Is.True);
         Assert.That(user.controlSchemeMatch[0].control, Is.SameAs(gamepad1));
         Assert.That(user.controlSchemeMatch[1].control, Is.SameAs(gamepad2));
@@ -745,7 +761,7 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanFindUserThatPairedToSpecificDevice()
+    public void Users_CanFindUserPairedToSpecificDevice()
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
@@ -777,16 +793,11 @@ internal class UserTests : InputTestFixture
             }
         ";
 
-        InputUser.listenForUnpairedDeviceActivity = true;
+        ++InputUser.listenForUnpairedDeviceActivity;
 
-        InputControl receivedControl = null;
+        var receivedControls = new List<InputControl>();
         InputUser.onUnpairedDeviceUsed +=
-            control =>
-        {
-            Assert.That(control, Is.Not.Null);
-            Assert.That(receivedControl, Is.Null);
-            receivedControl = control;
-        };
+            control => { receivedControls.Add(control); };
 
         InputSystem.RegisterLayout(gamepadWithNoisyGyro);
         var gamepad = (Gamepad)InputSystem.AddDevice("GamepadWithNoisyGyro");
@@ -795,15 +806,15 @@ internal class UserTests : InputTestFixture
         InputSystem.QueueDeltaStateEvent((QuaternionControl)gamepad["gyro"], new Quaternion(1, 2, 3, 4));
         InputSystem.Update();
 
-        Assert.That(receivedControl, Is.Null);
+        Assert.That(receivedControls, Is.Empty);
 
         // Now send some real interaction.
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
 
-        Assert.That(receivedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(receivedControls, Is.EquivalentTo(new[] { gamepad.aButton }));
 
-        receivedControl = null;
+        receivedControls.Clear();
 
         // Now pair the device to a user and try the same thing again.
         var user = InputUser.PerformPairingWithDevice(gamepad);
@@ -811,23 +822,64 @@ internal class UserTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.B));
         InputSystem.Update();
 
-        Assert.That(receivedControl, Is.Null);
+        Assert.That(receivedControls, Is.Empty);
 
-        receivedControl = null;
+        receivedControls.Clear();
 
         // Unpair the device and turn off the feature to make sure we're not getting a notification.
         user.UnpairDevice(gamepad);
-        InputUser.listenForUnpairedDeviceActivity = false;
+        --InputUser.listenForUnpairedDeviceActivity;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
 
-        Assert.That(receivedControl, Is.Null);
+        Assert.That(receivedControls, Is.Empty);
+
+        // Turn it back on and actuate two controls on the gamepad. Make sure we get *both* actuations.
+        // NOTE: This is important for when use of an unpaired device only does something when certain
+        //       controls are used but doesn't do anything if others are used. For example, if the use
+        //       of unpaired devices is driving player joining logic but only button presses lead to joins,
+        //       then if we were to only send the first actuation we come across, it may be for an
+        //       irrelevant control (e.g. sticks on gamepad).
+
+        ++InputUser.listenForUnpairedDeviceActivity;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.A));
+        InputSystem.Update();
+
+        Assert.That(receivedControls, Has.Count.EqualTo(2));
+        Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.leftStick.x));
+        Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.aButton));
+    }
+
+    // Make sure that if we pair a device from InputUser.onUnpairedDeviceUsed, we don't get any further
+    // callbacks.
+    [Test]
+    [Category("Users")]
+    public void Users_CanDetectUseOfUnpairedDevice_AndPairFromCallback()
+    {
+        ++InputUser.listenForUnpairedDeviceActivity;
+
+        var receivedControls = new List<InputControl>();
+        InputUser.onUnpairedDeviceUsed +=
+            control =>
+        {
+            InputUser.PerformPairingWithDevice(control.device);
+            receivedControls.Add(control);
+        };
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(receivedControls, Has.Count.EqualTo(1));
+        Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.leftStick.x).Or.SameAs(gamepad.buttonSouth));
     }
 
     [Test]
     [Category("Users")]
-    public void Users_CanDetectLossOfAndRegainingDevice()
+    public void Users_CanDetectLossOfAndRegainingOfDevice()
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
@@ -850,13 +902,13 @@ internal class UserTests : InputTestFixture
         InputSystem.RemoveDevice(gamepad3);
 
         Assert.That(receivedChanges, Is.Empty);
-        Assert.That(user2.hasMissingDevices, Is.False);
+        Assert.That(user2.hasMissingRequiredDevices, Is.False);
         Assert.That(user2.lostDevices, Is.Empty);
         Assert.That(user2.controlSchemeMatch[0].control, Is.SameAs(gamepad2));
 
         InputSystem.RemoveDevice(gamepad2);
 
-        Assert.That(user2.hasMissingDevices, Is.True);
+        Assert.That(user2.hasMissingRequiredDevices, Is.True);
         Assert.That(user2.lostDevices, Is.EquivalentTo(new[] { gamepad2 }));
         Assert.That(user2.actions.devices, Is.Empty);
         Assert.That(user2.controlSchemeMatch[0].control, Is.Null);
@@ -871,7 +923,7 @@ internal class UserTests : InputTestFixture
         // Re-add the device.
         InputSystem.AddDevice(gamepad2);
 
-        Assert.That(user2.hasMissingDevices, Is.False);
+        Assert.That(user2.hasMissingRequiredDevices, Is.False);
         Assert.That(user2.lostDevices, Is.Empty);
         Assert.That(user2.actions.devices, Is.EquivalentTo(new[] { gamepad2 }));
         Assert.That(user2.controlSchemeMatch[0].control, Is.SameAs(gamepad2));

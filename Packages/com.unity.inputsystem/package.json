@@ -1,7 +1,7 @@
 {
 	"name": "com.unity.inputsystem",
 	"displayName": "Input System",
-	"version": "0.1.2-preview",
+	"version": "0.2.0-preview",
 	"unity": "2018.3",
 	"repository": {
 		"type": "git",

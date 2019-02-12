@@ -95,17 +95,42 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public static InputControlLayout TryGetLayout(string name)
+        public static InputControlLayout TryGetLayout(string layoutName)
         {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
             Refresh();
-            return s_Cache.FindOrLoadLayout(name);
+            return s_Cache.FindOrLoadLayout(layoutName);
         }
 
-        public static IEnumerable<InputDeviceMatcher> GetDeviceMatchers(string name)
+        public static Type GetValueType(string layoutName)
         {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
+            // Load layout.
+            var layout = TryGetLayout(layoutName);
+            if (layout == null)
+                return null;
+
+            // Grab type.
+            var type = layout.type;
+            Debug.Assert(type != null, "Layout should have associated type");
+            Debug.Assert(typeof(InputControl).IsAssignableFrom(type),
+                "Layout's associated type should be derived from InputControl");
+
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(type, typeof(InputControl<>), 0);
+        }
+
+        public static IEnumerable<InputDeviceMatcher> GetDeviceMatchers(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
             Refresh();
             InlinedArray<InputDeviceMatcher> matchers;
-            s_DeviceMatchers.TryGetValue(new InternedString(name), out matchers);
+            s_DeviceMatchers.TryGetValue(new InternedString(layoutName), out matchers);
             return matchers;
         }
 
@@ -118,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public static IEnumerable<OptionalControl> GetOptionalControlsForLayout(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
-                throw new ArgumentNullException("layoutName");
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
 
             Refresh();
 
@@ -175,8 +200,7 @@ namespace UnityEngine.Experimental.Input.Editor
         internal static void Clear()
         {
             s_LayoutRegistrationVersion = 0;
-            if (s_Cache.table != null)
-                s_Cache.table.Clear();
+            s_Cache.table?.Clear();
             s_Usages.Clear();
             s_ControlLayouts.Clear();
             s_DeviceLayouts.Clear();
@@ -186,7 +210,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // If our layout data is outdated, rescan all the layouts in the system.
-        internal static void Refresh()
+        private static void Refresh()
         {
             var manager = InputSystem.s_Manager;
             if (manager.m_LayoutRegistrationVersion == s_LayoutRegistrationVersion)

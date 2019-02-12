@@ -9,168 +9,81 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class InputBindingPropertiesView
+    internal class InputBindingPropertiesView : PropertiesView
     {
-        private static class Styles
-        {
-            public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
-            public static GUIStyle foldoutStyle = new GUIStyle("foldout");
+        public bool isInteractivelyPicking => m_RebindingOperation != null && m_RebindingOperation.started;
+        public string expectedControlLayout => m_ExpectedControlLayout;
 
-            static Styles()
+        public string compositeType
+        {
+            get
             {
-                var darkGreyBackgroundWithBorderTexture =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeBase.ResourcesPath + "foldoutBackground.png");
-                foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
-                foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
-                foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
+                if (!m_IsComposite)
+                    return null;
+                if (m_CompositeTypes == null)
+                    InitializeCompositeProperties();
+                return m_CompositeTypes[m_SelectedCompositeType];
             }
         }
 
-        private InteractionsReorderableReorderableList m_InteractionsList;
-        private ProcessorsReorderableReorderableList m_ProcessorsList;
-        private ParameterListView m_CompositeParameters;
+        public static FourCC k_GroupsChanged => new FourCC("GRPS");
+        public static FourCC k_PathChanged => new FourCC("PATH");
+        public static FourCC k_CompositeTypeChanged => new FourCC("COMP");
 
-        private SerializedProperty m_InteractionsProperty;
-        private SerializedProperty m_ProcessorsProperty;
-        private SerializedProperty m_GroupsProperty;
-        private SerializedProperty m_BindingProperty;
-        private SerializedProperty m_PathProperty;
-
-        private Action<Change> m_OnChange;
-        ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
-        ////        selected by the path property
-        private InputControlPickerState m_ControlPickerState;
-        private InputControlPickerDropdown m_InputControlPickerDropdown;
-        private bool m_GeneralFoldout = true;
-        private bool m_InteractionsFoldout = true;
-        private bool m_ProcessorsFoldout = true;
-
-        private static readonly GUIContent s_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
-        private static readonly GUIContent s_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
-        private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
-        private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
-        private static readonly GUIContent s_UseInSchemesGui = EditorGUIUtility.TrTextContent("Use in control scheme");
-
-        private bool m_ManualPathEditMode;
-        private ReadOnlyArray<InputControlScheme> m_ControlSchemes;
-        private List<string> m_BindingGroups;
-        private InputActionWindowToolbar m_Toolbar;
-        private string m_ExpectedControlLayout;
-        private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
-
-        public bool isCompositeBinding { get; set; }
-
-        public bool isInteractivelyPicking
-        {
-            get { return m_RebindingOperation != null && m_RebindingOperation.started; }
-        }
-
-        public string expectedControlLayout
-        {
-            get { return m_ExpectedControlLayout; }
-        }
-
-        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action<Change> onChange,
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action<FourCC> onChange,
                                           InputControlPickerState controlPickerState, InputActionWindowToolbar toolbar,
+                                          bool isCompositeBinding = false,
                                           string expectedControlLayout = null)
+            : base(isCompositeBinding ? "Composite" : "Binding", bindingProperty, onChange, expectedControlLayout)
         {
             m_ControlPickerState = controlPickerState;
             m_BindingProperty = bindingProperty;
-            m_OnChange = onChange;
-            m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
-            m_ProcessorsProperty = bindingProperty.FindPropertyRelative("m_Processors");
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
-            m_InteractionsList = new InteractionsReorderableReorderableList(m_InteractionsProperty, OnInteractionsModified);
-            m_ProcessorsList = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, OnProcessorsModified);
             m_Toolbar = toolbar;
             if (m_Toolbar != null)
                 m_ControlSchemes = toolbar.controlSchemes;
             m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
+            m_IsComposite = isCompositeBinding;
         }
 
         public void CancelInteractivePicking()
         {
-            if (m_RebindingOperation != null)
-                m_RebindingOperation.Cancel();
+            m_RebindingOperation?.Cancel();
         }
 
-        public void OnGUI()
+        protected override void DrawGeneralProperties()
         {
-            if (m_BindingProperty == null)
-                return;
+            if (m_IsComposite)
+            {
+                if (m_CompositeParameters == null)
+                    InitializeCompositeProperties();
 
-            EditorGUILayout.BeginVertical();
-            if (isCompositeBinding)
-                DrawCompositeParameters();
+                // Composite type dropdown.
+                var selectedCompositeType = EditorGUILayout.Popup(s_CompositeTypeLabel, m_SelectedCompositeType, m_CompositeTypeOptions);
+                if (selectedCompositeType != m_SelectedCompositeType)
+                {
+                    m_SelectedCompositeType = selectedCompositeType;
+                    OnCompositeTypeChanged();
+                }
+
+                // Composite parameters.
+                m_CompositeParameters.OnGUI();
+            }
             else
-                DrawPathPicker();
-            EditorGUILayout.Space();
-            DrawInteractionsPicker();
-            EditorGUILayout.Space();
-            DrawProcessorsPicker();
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndVertical();
-        }
-
-        private void DrawProcessorsPicker()
-        {
-            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
-
-            if (m_ProcessorsFoldout)
             {
-                EditorGUI.indentLevel++;
-                m_ProcessorsList.OnGUI();
-                EditorGUI.indentLevel--;
-            }
-        }
-
-        private void DrawInteractionsPicker()
-        {
-            m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
-
-            if (m_InteractionsFoldout)
-            {
-                EditorGUI.indentLevel++;
-                m_InteractionsList.OnGUI();
-                EditorGUI.indentLevel--;
-            }
-        }
-
-        private void DrawPathPicker()
-        {
-            m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
-
-            EditorGUI.indentLevel++;
-            if (m_GeneralFoldout)
-            {
+                // Path.
                 DrawBindingGUI(m_PathProperty, ref m_ManualPathEditMode, m_ControlPickerState,
                     () =>
                     {
                         m_ManualPathEditMode = false;
-                        OnPathModified();
+                        OnPathChanged();
                     });
 
+                // Control scheme matrix.
                 DrawUseInControlSchemes();
             }
-            EditorGUI.indentLevel--;
-        }
-
-        private void DrawCompositeParameters()
-        {
-            m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
-
-            EditorGUI.indentLevel++;
-            if (m_GeneralFoldout)
-            {
-                if (m_CompositeParameters == null)
-                    InitializeCompositeParameters();
-
-                m_CompositeParameters.OnGUI();
-            }
-            EditorGUI.indentLevel--;
         }
 
         private void DrawUseInControlSchemes()
@@ -179,7 +92,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField(s_UseInSchemesGui, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(s_UseInControlSchemesLAbel, EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical();
             foreach (var scheme in m_ControlSchemes)
             {
@@ -195,7 +108,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     {
                         m_BindingGroups.Remove(scheme.bindingGroup);
                     }
-                    OnBindingGroupsModified();
+                    OnBindingGroupsChanged();
                 }
             }
             EditorGUILayout.EndVertical();
@@ -212,7 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
             var labelRect = lineRect;
             labelRect.width = 60;
-            EditorGUI.LabelField(labelRect, s_BindingGui);
+            EditorGUI.LabelField(labelRect, s_PathLabel);
             lineRect.x += 65;
             lineRect.width -= 65;
 
@@ -381,26 +294,50 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InputControlPickerDropdown.Show(rect);
         }
 
-        private static bool DrawFoldout(GUIContent content, bool folded)
+        private void InitializeCompositeProperties()
         {
-            var bgRect = GUILayoutUtility.GetRect(s_ProcessorsContent, Styles.foldoutBackgroundStyle);
-            EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
-            return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
-        }
+            // Find name of current composite.
+            var path = m_PathProperty.stringValue;
+            var compositeNameAndParameters = InputControlLayout.ParseNameAndParameters(path);
+            var compositeName = compositeNameAndParameters.name;
+            var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
 
-        private void InitializeCompositeParameters()
-        {
+            // Collect all possible composite types.
+            var selectedCompositeIndex = -1;
+            var compositeTypeOptionsList = new List<GUIContent>();
+            var compositeTypeList = new List<string>();
+            var currentIndex = 0;
+            foreach (var composite in InputBindingComposite.s_Composites.internedNames.Where(x =>
+                !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
+            {
+                if (InputBindingComposite.s_Composites.LookupTypeRegistration(composite) == compositeType)
+                    selectedCompositeIndex = currentIndex;
+                var name = ObjectNames.NicifyVariableName(composite);
+                compositeTypeOptionsList.Add(new GUIContent(name));
+                compositeTypeList.Add(composite);
+                ++currentIndex;
+            }
+
+            // If the current composite type isn't a registered type, add it to the list as
+            // an extra option.
+            if (selectedCompositeIndex == -1)
+            {
+                selectedCompositeIndex = compositeTypeList.Count;
+                compositeTypeOptionsList.Add(new GUIContent(ObjectNames.NicifyVariableName(compositeName)));
+                compositeTypeList.Add(compositeName);
+            }
+
+            m_CompositeTypes = compositeTypeList.ToArray();
+            m_CompositeTypeOptions = compositeTypeOptionsList.ToArray();
+            m_SelectedCompositeType = selectedCompositeIndex;
+
+            // Initialize parameters.
             m_CompositeParameters = new ParameterListView
             {
                 onChange = OnCompositeParametersModified
             };
-
-            var path = m_PathProperty.stringValue;
-            var nameAndParameters = InputControlLayout.ParseNameAndParameters(path);
-
-            var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParameters.name);
             if (compositeType != null)
-                m_CompositeParameters.Initialize(compositeType, nameAndParameters.parameters);
+                m_CompositeParameters.Initialize(compositeType, compositeNameAndParameters.parameters);
         }
 
         private void OnCompositeParametersModified()
@@ -412,48 +349,64 @@ namespace UnityEngine.Experimental.Input.Editor
             nameAndParameters.parameters = m_CompositeParameters.GetParameters();
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
+            m_PathProperty.serializedObject.ApplyModifiedProperties();
 
-            OnPathModified();
+            OnPathChanged();
         }
 
-        private void OnProcessorsModified()
-        {
-            m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
-            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.ProcessorsChanged);
-        }
-
-        private void OnInteractionsModified()
-        {
-            m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
-            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.InteractionsChanged);
-        }
-
-        private void OnBindingGroupsModified()
+        private void OnBindingGroupsChanged()
         {
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.GroupsChanged);
+
+            onChange(k_GroupsChanged);
         }
 
-        private void OnPathModified()
+        private void OnPathChanged()
         {
             m_BindingProperty.serializedObject.ApplyModifiedProperties();
-            if (m_OnChange != null)
-                m_OnChange(Change.PathChanged);
+            onChange(k_PathChanged);
         }
 
-        public enum Change
+        private void OnCompositeTypeChanged()
         {
-            PathChanged,
-            GroupsChanged,
-            InteractionsChanged,
-            ProcessorsChanged,
+            var nameAndParameters = new InputControlLayout.NameAndParameters
+            {
+                name = m_CompositeTypes[m_SelectedCompositeType],
+                parameters = m_CompositeParameters.GetParameters()
+            };
+
+            m_PathProperty.stringValue = nameAndParameters.ToString();
+            m_PathProperty.serializedObject.ApplyModifiedProperties();
+            onChange(k_CompositeTypeChanged);
         }
+
+        private readonly bool m_IsComposite;
+        private ParameterListView m_CompositeParameters;
+        private int m_SelectedCompositeType;
+        private GUIContent[] m_CompositeTypeOptions;
+        private string[] m_CompositeTypes;
+
+        private readonly SerializedProperty m_GroupsProperty;
+        private readonly SerializedProperty m_BindingProperty;
+        private readonly SerializedProperty m_PathProperty;
+
+        ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
+        ////        selected by the path property
+        private readonly InputControlPickerState m_ControlPickerState;
+        private InputControlPickerDropdown m_InputControlPickerDropdown;
+
+        private static readonly GUIContent s_PathLabel = EditorGUIUtility.TrTextContent("Path", "Path of the controls that will be bound to the action at runtime.");
+        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Type",
+            "Type of composite. Allows changing the composite type retroactively. Doing so will modify the bindings that are part of the composite.");
+        private static readonly GUIContent s_UseInControlSchemesLAbel = EditorGUIUtility.TrTextContent("Use in control scheme");
+
+        private bool m_ManualPathEditMode;
+        private readonly ReadOnlyArray<InputControlScheme> m_ControlSchemes;
+        private readonly List<string> m_BindingGroups;
+        private readonly InputActionWindowToolbar m_Toolbar;
+        private readonly string m_ExpectedControlLayout;
+        private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
     }
 }
 #endif // UNITY_EDITOR

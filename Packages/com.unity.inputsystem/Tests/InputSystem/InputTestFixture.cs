@@ -32,14 +32,14 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterLayout<MyDevice>();
+    ///         InputSystem.RegisterLayout&lt;MyDevice&gt;();
     ///     }
     ///
     ///     [Test]
     ///     public void CanCreateMyDevice()
     ///     {
-    ///         InputSystem.AddDevice<MyDevice>();
-    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<MyDevice>());
+    ///         InputSystem.AddDevice&lt;MyDevice&gt;();
+    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf&lt;MyDevice&gt;());
     ///     }
     /// }
     /// </code>
@@ -127,7 +127,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
+        // ReSharper disable once MemberCanBeProtected.Global
+        public static void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
             where TState : struct, IInputStateTypeInfo
         {
             // Update state.
@@ -137,18 +138,29 @@ namespace UnityEngine.Experimental.Input
             // Now verify that only the buttons we expect to be pressed are pressed.
             foreach (var control in device.allControls)
             {
-                var controlAsButton = control as ButtonControl;
-                if (controlAsButton == null)
+                if (!(control is ButtonControl controlAsButton))
                     continue;
 
                 var isInList = buttons.Contains(controlAsButton);
                 if (!isInList)
                     Assert.That(controlAsButton.isPressed, Is.False,
-                        string.Format("Expected button {0} to NOT be pressed", controlAsButton));
+                        $"Expected button {controlAsButton} to NOT be pressed");
                 else
                     Assert.That(controlAsButton.isPressed, Is.True,
-                        string.Format("Expected button {0} to be pressed", controlAsButton));
+                        $"Expected button {controlAsButton} to be pressed");
             }
+        }
+
+        // ReSharper disable once MemberCanBeProtected.Global
+        public void Press(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Set(button, 1, absoluteTime, timeOffset);
+        }
+
+        // ReSharper disable once MemberCanBeProtected.Global
+        public void Release(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Set(button, 0, absoluteTime, timeOffset);
         }
 
         /// <summary>
@@ -164,18 +176,20 @@ namespace UnityEngine.Experimental.Input
         /// Set(gamepad.leftButton, 1);
         /// </code>
         /// </example>
-        public void Set<TValue>(InputControl<TValue> control, TValue state, double timeOffset = 0)
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double absoluteTime = -1, double timeOffset = 0)
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!control.device.added)
                 throw new ArgumentException(
-                    string.Format("Device of control '{0}' has not been added to the system", control), "control");
+                    $"Device of control '{control}' has not been added to the system", nameof(control));
 
-            InputEventPtr eventPtr;
-            using (StateEvent.From(control.device, out eventPtr))
+            using (StateEvent.From(control.device, out var eventPtr))
             {
+                ////REVIEW: should we by default take the time from the device here?
+                if (absoluteTime >= 0)
+                    eventPtr.time = absoluteTime;
                 eventPtr.time += timeOffset;
                 control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
@@ -204,22 +218,21 @@ namespace UnityEngine.Experimental.Input
         public void Trigger(InputAction action)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             if (!action.enabled)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' must be enabled in order to be able to trigger it", action), "action");
+                    $"Action '{action}' must be enabled in order to be able to trigger it", nameof(action));
 
             var controls = action.controls;
             if (controls.Count == 0)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' must be bound to controls in order to be able to trigger it", action), "action");
+                    $"Action '{action}' must be bound to controls in order to be able to trigger it", nameof(action));
 
             // See if we have a button we can trigger.
             for (var i = 0; i < controls.Count; ++i)
             {
-                var button = controls[i] as ButtonControl;
-                if (button == null)
+                if (!(controls[i] is ButtonControl button))
                     continue;
 
                 // Press and release button.

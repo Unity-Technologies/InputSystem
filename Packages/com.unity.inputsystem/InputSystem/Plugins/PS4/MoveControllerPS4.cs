@@ -16,10 +16,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct MoveControllerStatePS4 : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', '4', 'M', 'V'); }
-        }
+        public static FourCC kFormat => new FourCC('P', '4', 'M', 'V');
 
         public enum Button
         {
@@ -158,10 +155,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
 
         public Vector3Control gyro { get; private set; }
 
-        public static ReadOnlyArray<MoveControllerPS4> all
-        {
-            get { return new ReadOnlyArray<MoveControllerPS4>(s_Devices); }
-        }
+        public new static ReadOnlyArray<MoveControllerPS4> all => new ReadOnlyArray<MoveControllerPS4>(s_Devices);
 
         public Color lightSphereColor
         {
@@ -176,29 +170,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
             }
         }
 
-        public int slotIndex
-        {
-            get
-            {
-                return m_SlotId;
-            }
-        }
+        public int slotIndex => m_SlotId;
 
-        public int moveIndex
-        {
-            get
-            {
-                return m_MoveIndex;
-            }
-        }
+        public int moveIndex => m_MoveIndex;
 
-        public int ps4UserId
-        {
-            get
-            {
-                return m_PS4UserId;
-            }
-        }
+        public int ps4UserId => m_PS4UserId;
 
         public static MoveControllerPS4 GetBySlotIndex(int slotIndex, int moveIndex)
         {

@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <remarks>
     /// Action events capture fully processed values only.
     ///
-    /// This struct is internal as the data it stores requires having access to <see cref="InputActionMapState"/>.
+    /// This struct is internal as the data it stores requires having access to <see cref="InputActionState"/>.
     /// Public access is meant to go through <see cref="InputActionTrace"/> which provides a wrapper around
     /// action events in the form of <see cref="InputActionTrace.ActionEventPtr"/>.
     /// </remarks>
@@ -101,13 +101,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get
             {
                 if (m_InteractionIndex == ushort.MaxValue)
-                    return InputActionMapState.kInvalidIndex;
+                    return InputActionState.kInvalidIndex;
                 return m_InteractionIndex;
             }
             set
             {
-                Debug.Assert(value == InputActionMapState.kInvalidIndex || (value >= 0 && value < ushort.MaxValue));
-                if (value == InputActionMapState.kInvalidIndex)
+                Debug.Assert(value == InputActionState.kInvalidIndex || (value >= 0 && value < ushort.MaxValue));
+                if (value == InputActionState.kInvalidIndex)
                     m_InteractionIndex = ushort.MaxValue;
                 else
                 {

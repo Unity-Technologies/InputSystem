@@ -2,7 +2,11 @@
 
 # Devices
 
+Devices are the toplevel container for controls. Each device
+
 ## Controls
+
+### Paths
 
 ### Noisy Controls
 
@@ -25,6 +29,10 @@ Aside from a number of standardized fields, such as `product` and `manufacturer`
 ## Device Commands
 
 While input events deliver data coming __from__ a device, commands are used to communicate in the opposite direction, i.e. to talk back at the device. This can be used for retrieving information from the device, for triggering functions on the device (such as rumble effects), or for a variety of other needs.
+
+## Device State
+
+### History
 
 ## Working With Devices
 

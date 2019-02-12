@@ -6,10 +6,6 @@ using System.Text;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////REVIEW: allow associating control schemes with platforms, too?
 
 ////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
@@ -37,10 +33,7 @@ namespace UnityEngine.Experimental.Input
         /// May be empty or null except if the control scheme is part of an <see cref="InputActionAsset"/>.
         /// </remarks>
         /// <seealso cref="InputActionAsset.AddControlScheme"/>
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
         //problem: how do you do any subtractive operation? should we care?
         //problem: this won't allow resolving things on just an InputControlScheme itself; needs context
@@ -52,10 +45,7 @@ namespace UnityEngine.Experimental.Input
         /// scheme will also be enabled. At the same time, bindings act as overrides on
         /// bindings coming through from the base scheme.
         /// </remarks>
-        public string baseScheme
-        {
-            get { return m_BaseSchemeName; }
-        }
+        public string baseScheme => m_BaseSchemeName;
 
         /// <summary>
         /// Binding group that is associated with the control scheme.
@@ -66,8 +56,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string bindingGroup
         {
-            get { return m_BindingGroup; }
-            set { m_BindingGroup = value; }
+            get => m_BindingGroup;
+            set => m_BindingGroup = value;
         }
 
         /// <summary>
@@ -81,10 +71,7 @@ namespace UnityEngine.Experimental.Input
         /// and another requires "&lt;Gamepad&gt;, the same device can match both requirements as each one resolves to
         /// a different control.
         /// </remarks>
-        public ReadOnlyArray<DeviceRequirement> deviceRequirements
-        {
-            get { return new ReadOnlyArray<DeviceRequirement>(m_DeviceRequirements); }
-        }
+        public ReadOnlyArray<DeviceRequirement> deviceRequirements => new ReadOnlyArray<DeviceRequirement>(m_DeviceRequirements);
 
         public InputControlScheme(string name, string basedOn = null, IEnumerable<DeviceRequirement> devices = null)
         {
@@ -102,18 +89,30 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static InputControlScheme? FindControlSchemeForControl<TList>(InputDevice control, TList schemes)
+        public static InputControlScheme? FindControlSchemeForDevice<TList>(InputDevice device, TList schemes)
             where TList : IEnumerable<InputControlScheme>
         {
             foreach (var scheme in schemes)
-            {
-                var requirements = scheme.m_DeviceRequirements;
-                for (var i = 0; i < requirements.Length; ++i)
-                    if (InputControlPath.TryFindControl(control, requirements[i].controlPath) != null)
-                        return scheme;
-            }
+                if (scheme.SupportsDevice(device))
+                    return scheme;
 
             return null;
+        }
+
+        public bool SupportsDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            ////FIXME: this does not take AND and OR into account
+            for (var i = 0; i < m_DeviceRequirements.Length; ++i)
+            {
+                var control = InputControlPath.TryFindControl(device, m_DeviceRequirements[i].controlPath);
+                if (control != null)
+                    return true;
+            }
+
+            return false;
         }
 
         ////REVIEW: have mode where instead of matching only the first device that matches a requirement, we match as many
@@ -400,28 +399,19 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Whether the device requirements got successfully matched.
             /// </summary>
-            public bool isSuccessfulMatch
-            {
-                get { return m_Result != Result.MissingRequired; }
-            }
+            public bool isSuccessfulMatch => m_Result != Result.MissingRequired;
 
             /// <summary>
             /// Whether there are missing required devices.
             /// </summary>
             /// <seealso cref="DeviceRequirement.isOptional"/>
-            public bool hasMissingRequiredDevices
-            {
-                get { return m_Result == Result.MissingRequired; }
-            }
+            public bool hasMissingRequiredDevices => m_Result == Result.MissingRequired;
 
             /// <summary>
             /// Whether there are missing optional devices.
             /// </summary>
             /// <seealso cref="DeviceRequirement.isOptional"/>
-            public bool hasMissingOptionalDevices
-            {
-                get { return m_Result == Result.MissingOptional; }
-            }
+            public bool hasMissingOptionalDevices => m_Result == Result.MissingOptional;
 
             /// <summary>
             /// The devices that got picked from the available devices.
@@ -541,10 +531,7 @@ namespace UnityEngine.Experimental.Input
                 ///
                 /// If the match failed, this will be null.
                 /// </remarks>
-                public InputControl control
-                {
-                    get { return m_Controls[m_RequirementIndex]; }
-                }
+                public InputControl control => m_Controls[m_RequirementIndex];
 
                 /// <summary>
                 /// The device that got matched.
@@ -558,30 +545,21 @@ namespace UnityEngine.Experimental.Input
                     get
                     {
                         var control = this.control;
-                        return control == null ? null : control.device;
+                        return control?.device;
                     }
                 }
 
                 /// <summary>
                 /// Index of the requirement in <see cref="InputControlScheme.deviceRequirements"/>.
                 /// </summary>
-                public int requirementIndex
-                {
-                    get { return m_RequirementIndex; }
-                }
+                public int requirementIndex => m_RequirementIndex;
 
                 /// <summary>
                 /// The device requirement that got matched.
                 /// </summary>
-                public DeviceRequirement requirement
-                {
-                    get { return m_Requirements[m_RequirementIndex]; }
-                }
+                public DeviceRequirement requirement => m_Requirements[m_RequirementIndex];
 
-                public bool isOptional
-                {
-                    get { return requirement.isOptional; }
-                }
+                public bool isOptional => requirement.isOptional;
 
                 internal int m_RequirementIndex;
                 internal DeviceRequirement[] m_Requirements;
@@ -617,10 +595,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                object IEnumerator.Current
-                {
-                    get { return Current; }
-                }
+                object IEnumerator.Current => Current;
 
                 public void Dispose()
                 {
@@ -671,8 +646,8 @@ namespace UnityEngine.Experimental.Input
             /// </example>
             public string controlPath
             {
-                get { return m_ControlPath; }
-                set { m_ControlPath = value; }
+                get => m_ControlPath;
+                set => m_ControlPath = value;
             }
 
             /// <summary>
@@ -682,7 +657,7 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             public bool isOptional
             {
-                get { return (m_Flags & Flags.Optional) != 0;}
+                get => (m_Flags & Flags.Optional) != 0;
                 set
                 {
                     if (value)
@@ -704,8 +679,8 @@ namespace UnityEngine.Experimental.Input
             /// <seealso cref="isOR"/>
             public bool isAND
             {
-                get { return !isOR; }
-                set { isOR = !value; }
+                get => !isOR;
+                set => isOR = !value;
             }
 
             /// <summary>
@@ -726,7 +701,7 @@ namespace UnityEngine.Experimental.Input
             /// </remarks>
             public bool isOR
             {
-                get { return (m_Flags & Flags.Or) != 0;  }
+                get => (m_Flags & Flags.Or) != 0;
                 set
                 {
                     if (value)

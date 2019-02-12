@@ -1,14 +1,13 @@
 namespace UnityEngine.Experimental.Input.Interactions
 {
-    // Performs the action if the control is pressed and *released* within the set
-    // duration (which defaults to InputSystem.settings.defaultTapTime).
+    /// <summary>
+    /// Performs the action if the control is pressed and released within the set
+    /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>).
+    /// </summary>
     public class TapInteraction : IInputInteraction
     {
         public float duration;
-        public float durationOrDefault
-        {
-            get { return duration > 0.0 ? duration : InputSystem.settings.defaultTapTime; }
-        }
+        public float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
 
         private double m_TapStartTime;
 
@@ -22,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                 return;
             }
 
-            if (context.isWaiting && !context.controlHasDefaultValue)
+            if (context.isWaiting && context.ControlIsActuated())
             {
                 m_TapStartTime = context.time;
                 // Set timeout slightly after duration so that if tap comes in exactly at the expiration
@@ -32,13 +31,17 @@ namespace UnityEngine.Experimental.Input.Interactions
                 return;
             }
 
-            if (context.isStarted && context.controlHasDefaultValue)
+            if (context.isStarted && !context.ControlIsActuated())
             {
                 if (context.time - m_TapStartTime <= durationOrDefault)
-                    context.Performed();
+                {
+                    context.PerformedAndGoBackToWaiting();
+                }
                 else
+                {
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
                     context.Cancelled();
+                }
             }
         }
 

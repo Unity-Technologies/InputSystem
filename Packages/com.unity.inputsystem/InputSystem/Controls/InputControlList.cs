@@ -9,10 +9,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
 
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
@@ -31,7 +27,7 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// Requires the control setup in the system to not change while the list is being used. If devices are
-    /// removed from the system, the list will no be valid. Also, only works with controls of devices that
+    /// removed from the system, the list will no longer be valid. Also, only works with controls of devices that
     /// have been added to the system (meaning that it cannot be used with devices created by <see cref="InputDeviceBuilder"/>
     /// before they have been <see cref="InputSystem.AddDevice{InputDevice}">added</see>).
     ///
@@ -46,10 +42,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Number of controls in the list.
         /// </summary>
-        public int Count
-        {
-            get { return m_Count; }
-        }
+        public int Count => m_Count;
 
         /// <summary>
         /// Number of controls that can be added before more (unmanaged) memory has to be allocated.
@@ -66,7 +59,7 @@ namespace UnityEngine.Experimental.Input
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("Capacity cannot be negative", "value");
+                    throw new ArgumentException("Capacity cannot be negative", nameof(value));
 
                 if (value == 0)
                 {
@@ -82,10 +75,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Return the control at the given index.
@@ -103,7 +93,7 @@ namespace UnityEngine.Experimental.Input
             {
                 if (index < 0 || index >= m_Count)
                     throw new ArgumentOutOfRangeException(
-                        string.Format("Index {0} is out of range in list with {1} entries", index, m_Count), "index");
+                        nameof(index), $"Index {index} is out of range in list with {m_Count} entries");
 
                 return FromIndex(m_Indices[index]);
             }
@@ -111,7 +101,7 @@ namespace UnityEngine.Experimental.Input
             {
                 if (index < 0 || index >= m_Count)
                     throw new ArgumentOutOfRangeException(
-                        string.Format("Index {0} is out of range in list with {1} entries", index, m_Count), "index");
+                        nameof(index), $"Index {index} is out of range in list with {m_Count} entries");
 
                 m_Indices[index] = ToIndex(value);
             }
@@ -183,21 +173,15 @@ namespace UnityEngine.Experimental.Input
             if (count == 0)
                 return;
             if (sourceIndex + count > list.Count)
-                throw new ArgumentOutOfRangeException(string.Format(
-                    "Count of {0} elements starting at index {1} exceeds length of list of {2}", count, sourceIndex,
-                    list.Count), "count");
+                throw new ArgumentOutOfRangeException(
+                    $"Count of {count} elements starting at index {sourceIndex} exceeds length of list of {list.Count}", "count");
 
             // Make space in the list.
             if (Capacity < count)
                 Capacity = Math.Max(count, 10);
             if (destinationIndex < Count)
-                #if UNITY_2018_3_OR_NEWER
                 NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
-                Count - destinationIndex);
-                #else
-                Unity2018_2_Compatibility.Copy<ulong>(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
-                Count - destinationIndex);
-                #endif
+                    Count - destinationIndex);
 
             // Add elements.
             for (var i = 0; i < count; ++i)
@@ -219,13 +203,8 @@ namespace UnityEngine.Experimental.Input
             if (Capacity < count)
                 Capacity = Math.Max(count, 10);
             if (destinationIndex < Count)
-                #if UNITY_2018_3_OR_NEWER
                 NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
-                Count - destinationIndex);
-                #else
-                Unity2018_2_Compatibility.Copy<ulong>(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
-                Count - destinationIndex);
-                #endif
+                    Count - destinationIndex);
 
             // Add elements.
             foreach (var element in list)
@@ -260,7 +239,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (index < 0 || index >= m_Count)
                 throw new ArgumentException(
-                    string.Format("Index {0} is out of range in list with {1} elements", index, m_Count), "index");
+                    $"Index {index} is out of range in list with {m_Count} elements", nameof(index));
 
             ArrayHelpers.EraseAtWithCapacity(ref m_Indices, ref m_Count, index);
         }
@@ -303,9 +282,9 @@ namespace UnityEngine.Experimental.Input
         public void SwapElements(int index1, int index2)
         {
             if (index1 < 0 || index1 >= m_Count)
-                throw new ArgumentOutOfRangeException("index1");
+                throw new ArgumentOutOfRangeException(nameof(index1));
             if (index2 < 0 || index2 >= m_Count)
-                throw new ArgumentOutOfRangeException("index2");
+                throw new ArgumentOutOfRangeException(nameof(index2));
 
             m_Indices.SwapElements(index1, index2);
         }
@@ -314,9 +293,9 @@ namespace UnityEngine.Experimental.Input
             where TCompare : IComparer<TControl>
         {
             if (startIndex < 0 || startIndex >= Count)
-                throw new ArgumentOutOfRangeException("startIndex");
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
             if (startIndex + count >= Count)
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
 
             // Simple insertion sort.
             for (var i = 1; i < count; ++i)
@@ -379,7 +358,7 @@ namespace UnityEngine.Experimental.Input
 
         private int m_Count;
         private NativeArray<ulong> m_Indices;
-        private Allocator m_Allocator;
+        private readonly Allocator m_Allocator;
 
         private const ulong kInvalidIndex = 0xffffffffffffffff;
 
@@ -396,7 +375,7 @@ namespace UnityEngine.Experimental.Input
 
             // There is a known documented bug with the new Rosyln
             // compiler where it warns on casts with following line that
-            // was perfectly legaly in previous CSC compiler.
+            // was perfectly legal in previous CSC compiler.
             // Below is silly conversion to get rid of warning, or we can pragma
             // out the warning.
             //return ((ulong)deviceIndex << 32) | (ulong)controlIndex;
@@ -421,11 +400,11 @@ namespace UnityEngine.Experimental.Input
             return (TControl)device.m_ChildrenForEachControl[controlIndex - 1];
         }
 
-        public struct Enumerator : IEnumerator<TControl>
+        private struct Enumerator : IEnumerator<TControl>
         {
-            private ulong* m_Indices;
+            private readonly ulong* m_Indices;
+            private readonly int m_Count;
             private int m_Current;
-            private int m_Count;
 
             public Enumerator(InputControlList<TControl> list)
             {
@@ -457,10 +436,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
 
             public void Dispose()
             {
@@ -471,17 +447,14 @@ namespace UnityEngine.Experimental.Input
     internal struct InputControlListDebugView<TControl>
         where TControl : InputControl
     {
-        private TControl[] m_Controls;
+        private readonly TControl[] m_Controls;
 
         public InputControlListDebugView(InputControlList<TControl> list)
         {
             m_Controls = list.ToArray();
         }
 
-        public TControl[] controls
-        {
-            get { return m_Controls; }
-        }
+        public TControl[] controls => m_Controls;
     }
 
     public static class InputControlListExtensions
