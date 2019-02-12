@@ -2286,9 +2286,10 @@ namespace UnityEngine.Experimental.Input
             //       device, it depends on the producer of these events to queue them in correct order.
             //       Otherwise, once an event with a newer timestamp has been processed, events coming later
             //       in the buffer and having older timestamps will get rejected.
-            
-            var timesliceTime = m_Runtime.currentTime;
-            #if UNITY_2019_1_OR_NEWER
+
+            var currentTime = m_Runtime.currentTime;
+            var timesliceTime = currentTime;
+            #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
 
@@ -2304,7 +2305,7 @@ namespace UnityEngine.Experimental.Input
                     timesliceTime = InputUpdate.s_LastFixedUpdateTime + m_Runtime.fixedUpdateIntervalInSeconds;
                 InputUpdate.s_LastFixedUpdateTime = timesliceTime;
             }
-#endif
+            #endif
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
@@ -3349,19 +3350,3 @@ namespace UnityEngine.Experimental.Input
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD
     }
 }
-
-            }
-
-            // See if we're supposed to only take events up to a certain time.
-            // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
-            //       all events in the buffer each time. Note that if there are multiple events for the same
-            //       device, it depends on the producer of these events to queue them in correct order.
-            //       Otherwise, once an event with a newer timestamp has been processed, events coming later
-            //       in the buffer and having older timestamps will get rejected.
-
-            var currentTime = m_Runtime.currentTime;
-            var timesliceTime = currentTime;
-            #if UNITY_2019_2_OR_NEWER
-            #endif
-
-            // Early out if there's no events to process.
