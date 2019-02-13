@@ -6,20 +6,26 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow correlating history to frames/updates
 
+#pragma warning disable 0649
 namespace UnityEngine.Experimental.Input
 {
-    public class InputStateHistory : IDisposable, IEnumerable<InputStateHistory.Value>
+    public class InputHistory : IDisposable, IEnumerable<InputHistory.Value>
     {
         public const int kDefaultHistorySize = 100;
 
-        public InputStateHistory(string path)
+        public InputHistory(string path)
         {
         }
 
-        public InputStateHistory(InputControl control)
+        public InputHistory(InputControl control)
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
+        }
+
+        ~InputHistory()
+        {
+            Dispose();
         }
 
         public IntPtr GetStatePtr(int index)
@@ -79,25 +85,25 @@ namespace UnityEngine.Experimental.Input
     /// Records value changes of a given control over time.
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
-    public class InputStateHistory<TValue> : InputStateHistory, IReadOnlyList<TValue>
+    public class InputHistory<TValue> : InputHistory, IReadOnlyList<TValue>
         where TValue : struct
     {
-        public InputStateHistory(InputControl<TValue> control)
+        public InputHistory(InputControl<TValue> control)
             : base(control)
         {
         }
 
-        public InputStateHistory(string path)
+        public InputHistory(string path)
             : base(path)
         {
         }
 
-        ~InputStateHistory()
+        ~InputHistory()
         {
             Destroy();
         }
 
-        public IEnumerator<TValue> GetEnumerator()
+        public new IEnumerator<TValue> GetEnumerator()
         {
             throw new NotImplementedException();
         }
@@ -134,7 +140,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public struct Value<TValue>
+        public struct Value<Tvalue>
         {
         }
     }

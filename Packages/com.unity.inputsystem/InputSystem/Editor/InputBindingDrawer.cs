@@ -101,9 +101,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     ////TODO: would be nice to include layout name to print something like "Gamepad A Button" instead of "Gamepad A" (or whatever)
 
                     if (!string.IsNullOrEmpty(deviceUsage))
-                        text = string.Format("{0} {1} {2}", deviceUsage, device, control);
+                        text = $"{deviceUsage} {device} {control}";
                     else
-                        text = string.Format("{0} {1}", device, control);
+                        text = $"{device} {control}";
                 }
             }
 
@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var interactionList = InputControlLayout.ParseNameAndParameterList(interactions);
                 var interactionString = string.Join(" OR ", interactionList.Select(x => x.name).ToArray());
-                text = string.Format("{0} {1}", interactionString, text);
+                text = $"{interactionString} {text}";
             }
 
             ////TODO: this looks ugly and not very obvious; find a better way

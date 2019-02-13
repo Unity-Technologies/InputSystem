@@ -14,9 +14,10 @@ namespace UnityEngine.Experimental.Input.Processors
     public class ScaleVector2Processor : InputProcessor<Vector2>
     {
         [Tooltip("Scale factor to multiple the incoming Vector2's X component by.")]
-        public float x;
+        public float x = 1;
+
         [Tooltip("Scale factor to multiple the incoming Vector2's Y component by.")]
-        public float y;
+        public float y = 1;
 
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {

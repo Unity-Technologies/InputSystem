@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
@@ -31,7 +30,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true)]
+        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true, usage = "")]
         [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
         [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
@@ -183,45 +182,5 @@ namespace UnityEngine.Experimental.Input
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
         }
-    }
-
-    //can we have a structure for doing those different simulation parts in a controlled fashion?
-
-    /// <summary>
-    /// Simulate mouse input from touch or gamepad input.
-    /// </summary>
-    public class MouseSimulation
-    {
-        /// <summary>
-        /// Whether to translate touch input into mouse input.
-        /// </summary>
-        public bool useTouchInput
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        /// <summary>
-        /// Whether to translate gamepad and joystick input into mouse input.
-        /// </summary>
-        public bool useControllerInput
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public static MouseSimulation instance => throw new NotImplementedException();
-
-        public void Enable()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Disable()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Mouse m_Mouse;
     }
 }

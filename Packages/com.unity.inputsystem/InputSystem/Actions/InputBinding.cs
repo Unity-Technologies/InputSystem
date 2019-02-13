@@ -3,13 +3,15 @@ using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add a redirectPath separate from overridePath
-
-////REVIEW: should bindings have unique IDs, too? maybe instead of "name"?
+////REVIEW: should bindings have unique IDs, too?
 
 ////REVIEW: do we really need overridable processors and interactions?
 
-////REVIEW: do we really need "name"?
+// Downsides to the current approach:
+// - Being able to address entire batches of controls through a single control is awesome. Especially
+//   when combining it type-kind of queries (e.g. "<MyDevice>/<Button>"). However, it complicates things
+//   in quite a few areas. There's quite a few bits in InputActionState that could be simplified if a
+//   binding simply maps to a control.
 
 namespace UnityEngine.Experimental.Input
 {
@@ -328,6 +330,8 @@ namespace UnityEngine.Experimental.Input
         [Flags]
         internal enum Flags
         {
+            None = 0,
+
             /// <summary>
             /// This and the next binding in the list combine such that both need to be
             /// triggered to trigger the associated action.

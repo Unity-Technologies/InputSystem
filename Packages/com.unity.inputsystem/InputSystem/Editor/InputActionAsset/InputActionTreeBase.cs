@@ -92,10 +92,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (!HasSelection())
                 return;
-            if (OnSelectionChanged != null)
-            {
-                OnSelectionChanged();
-            }
+            OnSelectionChanged?.Invoke();
         }
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
@@ -162,8 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // We try to predict the indentation
             var indent = (args.item.depth + 2) * 6 + 10;
-            var item = (args.item as ActionTreeViewItem);
-            if (item != null)
+            if (args.item is ActionTreeViewItem item)
             {
                 item.OnGUI(args.rowRect, args.selected, args.focused, indent);
             }

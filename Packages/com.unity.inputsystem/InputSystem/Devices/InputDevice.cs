@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////TODO: runtime remapping of usages on a per-device basis
+
 ////TODO: finer-grained control over what devices deliver input while running in background
 ////      (e.g. get gamepad input but do *not* get mouse and keyboard input)
 

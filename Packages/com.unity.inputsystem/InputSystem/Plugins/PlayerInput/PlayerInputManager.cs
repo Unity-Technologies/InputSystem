@@ -2,6 +2,7 @@ using System;
 using UnityEngine.Events;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.UI;
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
@@ -23,9 +24,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public const string PlayerLeftMessage = "OnPlayerLeft";
         public const string PlayerJoinFailedMessage = "OnPlayerJoinFailed";
         public const string SplitScreenSetupChanged = "OnSplitScreenSetupChanged";
-
-        public PlayerJoinedEvent playerJoined;
-        public PlayerLeftEvent playerLeft;
 
         /// <summary>
         /// If enabled, each player will automatically be assigned
@@ -126,10 +124,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             set { throw new NotImplementedException(); }
         }
 
-        public int playerCount
-        {
-            get { return PlayerInput.s_AllActivePlayersCount; }
-        }
+        public int playerCount => PlayerInput.s_AllActivePlayersCount;
 
         /// <summary>
         /// Maximum number of players allowed concurrently in the game.
@@ -142,8 +137,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// </remarks>
         public int maxPlayerCount
         {
-            get { return m_MaxPlayerCount; }
+            get => m_MaxPlayerCount;
             set { throw new NotImplementedException(); }
+        }
+
+        public bool joiningEnabled
+        {
+            get => m_AllowJoining;
         }
 
         public PlayerJoinBehavior joinBehavior
@@ -190,6 +190,62 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             set => m_NotificationBehavior = value;
         }
 
+        public PlayerJoinedEvent playerJoinedEvent
+        {
+            get
+            {
+                if (m_PlayerJoinedEvent == null)
+                    m_PlayerJoinedEvent = new PlayerJoinedEvent();
+                return m_PlayerJoinedEvent;
+            }
+        }
+
+        public PlayerLeftEvent playerLeftEvent
+        {
+            get
+            {
+                if (m_PlayerLeftEvent == null)
+                    m_PlayerLeftEvent = new PlayerLeftEvent();
+                return m_PlayerLeftEvent;
+            }
+        }
+
+        public event Action<PlayerInput> onPlayerJoined
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                m_PlayerJoinedCallbacks.AppendWithCapacity(value, 4);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = m_PlayerJoinedCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_PlayerJoinedCallbacks.RemoveAtWithCapacity(index);
+            }
+        }
+
+        public event Action<PlayerInput> onPlayerLeft
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                m_PlayerLeftCallbacks.AppendWithCapacity(value, 4);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = m_PlayerLeftCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_PlayerLeftCallbacks.RemoveAtWithCapacity(index);
+            }
+        }
+
         public GameObject playerPrefab
         {
             get => m_PlayerPrefab;
@@ -230,8 +286,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                             m_UnpairedDeviceUsedDelegate = OnUnpairedDeviceUsed;
                         InputUser.onUnpairedDeviceUsed += m_UnpairedDeviceUsedDelegate;
                         m_UnpairedDeviceUsedDelegateHooked = true;
+                        ++InputUser.listenForUnpairedDeviceActivity;
                     }
-                    InputUser.listenForUnpairedDeviceActivity = true;
                     break;
 
                 case PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered:
@@ -264,11 +320,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             switch (m_JoinBehavior)
             {
                 case PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed:
-                    InputUser.listenForUnpairedDeviceActivity = false;
                     if (m_UnpairedDeviceUsedDelegateHooked)
                     {
                         InputUser.onUnpairedDeviceUsed -= m_UnpairedDeviceUsedDelegate;
                         m_UnpairedDeviceUsedDelegateHooked = false;
+                        --InputUser.listenForUnpairedDeviceActivity;
                     }
                     break;
 
@@ -368,6 +424,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
         [NonSerialized] private Action<InputControl> m_UnpairedDeviceUsedDelegate;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
         internal static string[] messages => new[]
         {
@@ -413,8 +471,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             if (m_JoinBehavior == PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed)
             {
                 // Make sure it's a button that was actuated.
-                var button = control as ButtonControl;
-                if (button == null)
+                if (!(control is ButtonControl))
                     return;
 
                 // Make sure it's a device that is usable by the player's actions. We don't want
@@ -429,7 +486,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         private void OnEnable()
         {
             if (instance == null)
+            {
                 instance = this;
+            }
             else
             {
                 Debug.LogWarning("Multiple PlayerInputManagers in the game. There should only be one PlayerInputManager", this);
@@ -520,9 +579,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 // Assign split-screen area based on m_SplitScreenRect.
                 var column = splitScreenIndex % numDivisionsX;
                 var row = splitScreenIndex / numDivisionsX;
-                var rect = new Rect();
-                rect.width = m_SplitScreenRect.width / numDivisionsX;
-                rect.height = m_SplitScreenRect.height / numDivisionsY;
+                var rect = new Rect
+                {
+                    width = m_SplitScreenRect.width / numDivisionsX,
+                    height = m_SplitScreenRect.height / numDivisionsY
+                };
                 rect.x = m_SplitScreenRect.x + column * rect.width;
                 // Y is bottom-to-top but we fill from top down.
                 rect.y = m_SplitScreenRect.y + m_SplitScreenRect.height - (row + 1) * rect.height;
@@ -573,7 +634,12 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                     break;
 
                 case PlayerNotifications.InvokeUnityEvents:
-                    throw new NotImplementedException();
+                    m_PlayerJoinedEvent?.Invoke(player);
+                    break;
+
+                case PlayerNotifications.InvokeCSharpEvents:
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_PlayerJoinedCallbacks, player, "onPlayerJoined");
+                    break;
             }
         }
 
@@ -598,17 +664,22 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                     break;
 
                 case PlayerNotifications.InvokeUnityEvents:
-                    throw new NotImplementedException();
+                    m_PlayerLeftEvent?.Invoke(player);
+                    break;
+
+                case PlayerNotifications.InvokeCSharpEvents:
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_PlayerLeftCallbacks, player, "onPlayerLeft");
+                    break;
             }
         }
 
         [Serializable]
-        public class PlayerJoinedEvent : UnityEvent<GameObject>
+        public class PlayerJoinedEvent : UnityEvent<PlayerInput>
         {
         }
 
         [Serializable]
-        public class PlayerLeftEvent : UnityEvent<GameObject>
+        public class PlayerLeftEvent : UnityEvent<PlayerInput>
         {
         }
     }

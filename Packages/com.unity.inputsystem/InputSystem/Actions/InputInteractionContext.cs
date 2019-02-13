@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input
 
         public bool timerHasExpired
         {
-            get => (m_Flags & Flags.TimerHasExpired) == Flags.TimerHasExpired;
+            get => (m_Flags & Flags.TimerHasExpired) != 0;
             internal set
             {
                 if (value)
@@ -56,14 +56,7 @@ namespace UnityEngine.Experimental.Input
         /// In continuous mode, an action, while triggered, is expected to be performed even if there is
         /// no associated input in a given frame.
         /// </remarks>
-        public bool continuous
-        {
-            get
-            {
-                var actionIndex = m_State.bindingStates[m_TriggerState.bindingIndex].actionIndex;
-                return m_State.actionStates[actionIndex].continuous;
-            }
-        }
+        public bool continuous => m_TriggerState.continuous;
 
         /// <summary>
         /// True if the interaction is waiting for input
@@ -92,22 +85,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputControlExtensions.IsActuated"/>
         public bool ControlIsActuated(float threshold = 0)
         {
-            // If we're looking at the default threshold, see if we've already checked for control
-            // actuation and avoid doing it more than once.
-            if (threshold <= 0 && (m_Flags & Flags.ControlIsActuatedInitialized) != 0)
-                return (m_Flags & Flags.ControlIsActuated) != 0;
-
-            var isActuated = m_State.IsActuated(bindingIndex, controlIndex, threshold);
-
-            // Remember the result if we checked with default threshold.
-            if (threshold <= 0)
-            {
-                if (isActuated)
-                    m_Flags |= Flags.ControlIsActuated;
-                m_Flags |= Flags.ControlIsActuatedInitialized;
-            }
-
-            return isActuated;
+            return m_State.IsActuated(ref m_TriggerState, threshold);
         }
 
         /// <summary>
@@ -174,6 +152,11 @@ namespace UnityEngine.Experimental.Input
             m_State.ChangePhaseOfInteraction(InputActionPhase.Cancelled, ref m_TriggerState);
         }
 
+        public void Waiting()
+        {
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Waiting, ref m_TriggerState);
+        }
+
         public void SetTimeout(float seconds)
         {
             m_State.StartTimeout(seconds, ref m_TriggerState);
@@ -185,9 +168,9 @@ namespace UnityEngine.Experimental.Input
             return m_State.ReadValue<TValue>(m_TriggerState.bindingIndex, m_TriggerState.controlIndex);
         }
 
-        internal InputActionMapState m_State;
+        internal InputActionState m_State;
         internal Flags m_Flags;
-        internal InputActionMapState.TriggerState m_TriggerState;
+        internal InputActionState.TriggerState m_TriggerState;
 
         internal int mapIndex => m_TriggerState.mapIndex;
 
@@ -200,9 +183,7 @@ namespace UnityEngine.Experimental.Input
         [Flags]
         internal enum Flags
         {
-            ControlIsActuated = 1 << 0,
-            ControlIsActuatedInitialized = 1 << 1,
-            TimerHasExpired = 1 << 4,
+            TimerHasExpired = 1 << 1
         }
     }
 }

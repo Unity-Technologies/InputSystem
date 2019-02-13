@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static bool lockInputToGameView
         {
-            get { return s_Settings.lockInputToGameView; }
+            get => s_Settings.lockInputToGameView;
             set
             {
                 if (s_Settings.lockInputToGameView == value)
@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input.Editor
         /// </remarks>
         public static bool addDevicesNotSupportedByProject
         {
-            get { return s_Settings.addDevicesNotSupportedByProject;}
+            get => s_Settings.addDevicesNotSupportedByProject;
             set
             {
                 if (s_Settings.addDevicesNotSupportedByProject == value)
@@ -53,11 +53,31 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        /// <summary>
+        /// If this is true, then instead of having an explicit save button in the .inputactions asset editor,
+        /// any changes will be saved automatically and immediately.
+        /// </summary>
+        /// <remarks>
+        /// Disabled by default.
+        /// </remarks>
+        public static bool autoSaveInputActionAssets
+        {
+            get => s_Settings.autoSaveInputActionAssets;
+            set
+            {
+                if (s_Settings.autoSaveInputActionAssets == value)
+                    return;
+                s_Settings.autoSaveInputActionAssets = value;
+                OnChange();
+            }
+        }
+
         [Serializable]
         internal struct SerializedState
         {
             public bool lockInputToGameView;
             public bool addDevicesNotSupportedByProject;
+            public bool autoSaveInputActionAssets;
         }
 
         internal static SerializedState s_Settings;

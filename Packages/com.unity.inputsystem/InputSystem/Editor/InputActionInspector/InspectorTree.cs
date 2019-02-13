@@ -14,8 +14,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static InspectorTree CreateFromActionProperty(Action applyAction, SerializedProperty actionProperty)
         {
-            var treeView = new InspectorTree(applyAction, new TreeViewState());
-            treeView.m_ActionSerializedProperty = actionProperty;
+            var treeView = new InspectorTree(applyAction, new TreeViewState())
+            {
+                m_ActionSerializedProperty = actionProperty
+            };
             treeView.Reload();
             treeView.ExpandAll();
             return treeView;
@@ -23,27 +25,26 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static InspectorTree CreateFromActionMapProperty(Action applyAction, SerializedProperty actionMapProperty)
         {
-            var treeView = new InspectorTree(applyAction, new TreeViewState());
-            treeView.m_ActionMapSerializedProperty = actionMapProperty;
+            var treeView = new InspectorTree(applyAction, new TreeViewState())
+            {
+                m_ActionMapSerializedProperty = actionMapProperty
+            };
             treeView.Reload();
             treeView.ExpandAll();
             return treeView;
         }
 
-        static bool OnFoldoutDraw(Rect position, bool expandedState, GUIStyle style)
+        private static bool OnFoldoutDraw(Rect position, bool expandedState, GUIStyle style)
         {
             var indent = (int)(position.x / 15);
             position.x = 6 * indent + 8;
             return EditorGUI.Foldout(position, expandedState, GUIContent.none, style);
         }
 
-        protected InspectorTree(Action applyAction, TreeViewState state)
+        private InspectorTree(Action applyAction, TreeViewState state)
             : base(applyAction, state)
         {
-            ////REVIEW: good enough like this for 2018.2?
-            #if UNITY_2018_3_OR_NEWER
             foldoutOverride += OnFoldoutDraw;
-            #endif
             Reload();
         }
 
@@ -57,9 +58,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 return BuildFromActionSerializedProperty();
             }
-            var dummyRoot = new TreeViewItem();
-            dummyRoot.children = new List<TreeViewItem>();
-            dummyRoot.depth = -1;
+
+            var dummyRoot = new TreeViewItem {children = new List<TreeViewItem>(), depth = -1};
             return dummyRoot;
         }
 
@@ -81,23 +81,27 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var bindingsArrayProperty = m_ActionSerializedProperty.FindPropertyRelative("m_SingletonActionBindings");
             var actionName = m_ActionSerializedProperty.FindPropertyRelative("m_Name").stringValue;
-            var actionItem = new ActionTreeItem(null, m_ActionSerializedProperty, 0);
-            actionItem.children = new List<TreeViewItem>();
-            actionItem.depth = -1;
+            var actionItem = new ActionTreeItem(null, m_ActionSerializedProperty, 0)
+            {
+                children = new List<TreeViewItem>(),
+                depth = -1
+            };
             ParseBindings(actionItem, "", actionName, bindingsArrayProperty, 0);
             return actionItem;
         }
 
         private TreeViewItem BuildFromActionMapSerializedProperty()
         {
-            var actionMapItem = new ActionMapTreeItem(m_ActionMapSerializedProperty, 0);
-            actionMapItem.depth = -1;
-            actionMapItem.children = new List<TreeViewItem>();
+            var actionMapItem = new ActionMapTreeItem(m_ActionMapSerializedProperty, 0)
+            {
+                depth = -1,
+                children = new List<TreeViewItem>()
+            };
             ParseActionMap(actionMapItem, m_ActionMapSerializedProperty, 0);
             return actionMapItem;
         }
 
-        protected void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, int depth)
+        private void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, int depth)
         {
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
@@ -112,36 +116,32 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
 
-            var actionItem = new ActionTreeItem(actionMapProperty, actionProperty, index);
-            actionItem.depth = depth;
+            var actionItem = new ActionTreeItem(actionMapProperty, actionProperty, index) {depth = depth};
             var actionName = actionItem.actionName;
 
             ParseBindings(actionItem, actionMapName, actionName, bindingsArrayProperty, depth + 1);
             parentTreeItem.AddChild(actionItem);
         }
 
-        protected void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
+        private void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
         {
             var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
             CompositeGroupTreeItem compositeGroupTreeItem = null;
             for (var j = 0; j < bindingsCount; j++)
             {
                 var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
-                var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j);
-                bindingsItem.depth = depth;
+                var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j) {depth = depth};
                 if (bindingsItem.isComposite)
                 {
-                    compositeGroupTreeItem = new CompositeGroupTreeItem(actionMapName, bindingProperty, j);
-                    compositeGroupTreeItem.depth = depth;
+                    compositeGroupTreeItem =
+                        new CompositeGroupTreeItem(actionMapName, bindingProperty, j) {depth = depth};
                     parent.AddChild(compositeGroupTreeItem);
                     continue;
                 }
                 if (bindingsItem.isPartOfComposite)
                 {
-                    var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j);
-                    compositeItem.depth = depth + 1;
-                    if (compositeGroupTreeItem != null)
-                        compositeGroupTreeItem.AddChild(compositeItem);
+                    var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j) {depth = depth + 1};
+                    compositeGroupTreeItem?.AddChild(compositeItem);
                     continue;
                 }
                 compositeGroupTreeItem = null;
@@ -166,11 +166,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            var item = args.item as ActionTreeViewItem;
-            if (item == null)
+            if (!(args.item is ActionTreeViewItem))
                 return;
 
-            var bindingItem = (args.item as ActionTreeViewItem);
+            var bindingItem = (ActionTreeViewItem)args.item;
 
             // We try to predict the indentation
             var indent = (args.item.depth + 2) * 6 + 10;

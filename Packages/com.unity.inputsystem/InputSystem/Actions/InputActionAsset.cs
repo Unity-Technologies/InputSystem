@@ -149,7 +149,7 @@ namespace UnityEngine.Experimental.Input
         public void LoadFromJson(string json)
         {
             if (string.IsNullOrEmpty(json))
-                throw new ArgumentNullException("json");
+                throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<FileJson>(json);
             parsedJson.ToAsset(this);
@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input
         public static InputActionAsset FromJson(string json)
         {
             if (string.IsNullOrEmpty(json))
-                throw new ArgumentNullException("json");
+                throw new ArgumentNullException(nameof(json));
 
             var asset = CreateInstance<InputActionAsset>();
             asset.LoadFromJson(json);
@@ -212,7 +212,7 @@ namespace UnityEngine.Experimental.Input
         public InputAction FindAction(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             if (m_ActionMaps == null)
                 return null;
@@ -269,17 +269,16 @@ namespace UnityEngine.Experimental.Input
         public void AddActionMap(InputActionMap map)
         {
             if (map == null)
-                throw new ArgumentNullException("map");
+                throw new ArgumentNullException(nameof(map));
             if (string.IsNullOrEmpty(map.name))
                 throw new InvalidOperationException("Maps added to an input action asset must be named");
             if (map.asset != null)
-                throw new InvalidOperationException(string.Format(
-                    "Cannot add map '{0}' to asset '{1}' as it has already been added to asset '{2}'", map, this,
-                    map.asset));
+                throw new InvalidOperationException(
+                    $"Cannot add map '{map}' to asset '{this}' as it has already been added to asset '{map.asset}'");
             ////REVIEW: some of the rules here seem stupid; just replace?
             if (TryGetActionMap(map.name) != null)
                 throw new InvalidOperationException(
-                    string.Format("An action map called '{0}' already exists in the asset", map.name));
+                    $"An action map called '{map.name}' already exists in the asset");
 
             ArrayHelpers.Append(ref m_ActionMaps, map);
             map.m_Asset = this;
@@ -288,7 +287,7 @@ namespace UnityEngine.Experimental.Input
         public void RemoveActionMap(InputActionMap map)
         {
             if (map == null)
-                throw new ArgumentNullException("map");
+                throw new ArgumentNullException(nameof(map));
 
             // Ignore if not part of this asset.
             if (map.m_Asset != this)
@@ -301,7 +300,7 @@ namespace UnityEngine.Experimental.Input
         public void RemoveActionMap(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             var map = TryGetActionMap(name);
             if (map != null)
@@ -311,16 +310,29 @@ namespace UnityEngine.Experimental.Input
         public InputActionMap TryGetActionMap(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
+                throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
             if (m_ActionMaps == null)
                 return null;
 
-            for (var i = 0; i < m_ActionMaps.Length; ++i)
+            if (name.Length > 1 && name[0] == '{' && name[name.Length - 1] == '}')
             {
-                var map = m_ActionMaps[i];
-                if (string.Compare(name, map.name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                    return map;
+                var idLength = name.Length - 2;
+                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                {
+                    var map = m_ActionMaps[i];
+                    if (string.Compare(name, 1, map.m_Id, 0, idLength, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return map;
+                }
+            }
+            else
+            {
+                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                {
+                    var map = m_ActionMaps[i];
+                    if (string.Compare(name, map.name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return map;
+                }
             }
 
             return null;
@@ -345,8 +357,7 @@ namespace UnityEngine.Experimental.Input
         {
             var map = TryGetActionMap(name);
             if (map == null)
-                throw new KeyNotFoundException(string.Format("Could not find an action map called '{0}' in asset '{1}'",
-                    name, this));
+                throw new KeyNotFoundException($"Could not find an action map called '{name}' in asset '{this}'");
             return map;
         }
 
@@ -354,8 +365,7 @@ namespace UnityEngine.Experimental.Input
         {
             var map = TryGetActionMap(id);
             if (map == null)
-                throw new KeyNotFoundException(string.Format("Could not find an action map with ID '{0}' in asset '{1}'",
-                    id, this));
+                throw new KeyNotFoundException($"Could not find an action map with ID '{id}' in asset '{this}'");
             return map;
         }
 
@@ -378,10 +388,10 @@ namespace UnityEngine.Experimental.Input
         public void AddControlScheme(InputControlScheme controlScheme)
         {
             if (string.IsNullOrEmpty(controlScheme.name))
-                throw new ArgumentException("Cannot add control scheme without name to asset " + name);
+                throw new ArgumentException("Cannot add control scheme without name to asset " + name, nameof(controlScheme));
             if (TryGetControlScheme(controlScheme.name) != null)
-                throw new InvalidOperationException(string.Format("Asset '{0}' already contains a control scheme called '{1}'",
-                    name, controlScheme.name));
+                throw new InvalidOperationException(
+                    $"Asset '{name}' already contains a control scheme called '{controlScheme.name}'");
 
             ArrayHelpers.Append(ref m_ControlSchemes, controlScheme);
         }
@@ -389,7 +399,7 @@ namespace UnityEngine.Experimental.Input
         public int TryGetControlSchemeIndex(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             if (m_ControlSchemes == null)
                 return -1;
@@ -405,7 +415,7 @@ namespace UnityEngine.Experimental.Input
         {
             var index = TryGetControlSchemeIndex(name);
             if (index == -1)
-                throw new Exception(string.Format("No control scheme called '{0}' in '{1}'", name, this.name));
+                throw new Exception($"No control scheme called '{name}' in '{this.name}'");
             return index;
         }
 
@@ -421,7 +431,7 @@ namespace UnityEngine.Experimental.Input
         public void RemoveControlScheme(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             ArrayHelpers.EraseAt(ref m_ControlSchemes, GetControlSchemeIndex(name));
         }
@@ -497,15 +507,24 @@ namespace UnityEngine.Experimental.Input
             return GetEnumerator();
         }
 
-        internal void ReResolveIfNecessary()
+        private void ReResolveIfNecessary()
         {
-            if (m_ActionMapState == null)
+            if (m_SharedStateForAllMaps == null)
                 return;
 
             Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
             // State is share between all action maps in the asset. Resolving bindings for the
             // first map will resolve them for all maps.
             m_ActionMaps[0].ResolveBindings();
+        }
+
+        private void OnDestroy()
+        {
+            if (m_SharedStateForAllMaps != null)
+            {
+                m_SharedStateForAllMaps.Dispose(); // Will clean up InputActionMap state.
+                m_SharedStateForAllMaps = null;
+            }
         }
 
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
@@ -517,12 +536,12 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Shared state for all action maps in the asset.
         /// </summary>
-        [NonSerialized] internal InputActionMapState m_ActionMapState;
+        [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] internal ReadOnlyArray<InputDevice>? m_Devices;
-        [NonSerialized] internal int m_DevicesCount;
-        [NonSerialized] internal InputDevice[] m_DevicesArray;
+        [NonSerialized] private ReadOnlyArray<InputDevice>? m_Devices;
+        [NonSerialized] private int m_DevicesCount;
+        [NonSerialized] private InputDevice[] m_DevicesArray;
 
         [Serializable]
         internal struct FileJson
