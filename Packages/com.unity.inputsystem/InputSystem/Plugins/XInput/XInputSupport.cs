@@ -1,6 +1,7 @@
 ////TODO: add support for Windows.Gaming.Input.Gamepad (including the trigger motors)
 
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel.UnityEngine.Experimental.Input.Plugins.XInput;
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
@@ -20,49 +21,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
                     .WithDeviceClass("XboxOneGamepad")
                     .WithInterface("Xbox"));
 #endif
-
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
-            // XInput controllers on Windows.
-            // State layout is XINPUT_GAMEPAD.
-            // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx
-            InputSystem.RegisterLayout(@"{
-""name"" : ""XInputControllerWindows"",
-""extend"" : ""XInputController"",
-""format"" : ""XINP"",
-""device"" : { ""interface"" : ""XInput"" },
-""controls"" : [
-    { ""name"" : ""dpad"", ""offset"" : 0, ""bit"" : 0 },
-    { ""name"" : ""dpad/up"", ""offset"" : 0, ""bit"" : 0 },
-    { ""name"" : ""dpad/down"", ""offset"" : 0, ""bit"" : 1 },
-    { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 2 },
-    { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 3 },
-    { ""name"" : ""start"", ""offset"" : 0, ""bit"" : 4 },
-    { ""name"" : ""select"", ""offset"" : 0, ""bit"" : 5 },
-    { ""name"" : ""leftStickPress"", ""offset"" : 0, ""bit"" : 6 },
-    { ""name"" : ""rightStickPress"", ""offset"" : 0, ""bit"" : 7 },
-    { ""name"" : ""leftShoulder"", ""offset"" : 0, ""bit"" : 8 },
-    { ""name"" : ""rightShoulder"", ""offset"" : 0, ""bit"" : 9 },
-    { ""name"" : ""buttonSouth"", ""offset"" : 0, ""bit"" : 12 },
-    { ""name"" : ""buttonEast"", ""offset"" : 0, ""bit"" : 13 },
-    { ""name"" : ""buttonWest"", ""offset"" : 0, ""bit"" : 14 },
-    { ""name"" : ""buttonNorth"", ""offset"" : 0, ""bit"" : 15 },
-    { ""name"" : ""leftTrigger"", ""offset"" : 2, ""format"" : ""BYTE"" },
-    { ""name"" : ""rightTrigger"", ""offset"" : 3, ""format"" : ""BYTE"" },
-    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"", ""processors"" : ""stickDeadzone(min=0.150,max=0.925)"" },
-    { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
-    { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""leftStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
-    { ""name"" : ""leftStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""leftStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"", ""processors"" : ""stickDeadzone(min=0.150,max=0.925)"" },
-    { ""name"" : ""rightStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
-    { ""name"" : ""rightStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""rightStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""rightStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
-    { ""name"" : ""rightStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""rightStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" }
-] }");
+            InputSystem.RegisterLayout<XInputControllerWindows>(
+                matches: new InputDeviceMatcher().WithInterface("XInput"));
 #endif
 
             ////TODO: it would be totally rad if instead of going to JSON in code here,
