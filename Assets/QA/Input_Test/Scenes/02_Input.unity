@@ -3372,6 +3372,8 @@ MonoBehaviour:
     m_ExpectedControlLayout: 
     m_Id: 
     m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
       m_Path: 
@@ -3392,6 +3394,8 @@ MonoBehaviour:
     m_ExpectedControlLayout: 
     m_Id: 
     m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
       m_Path: 
@@ -3412,6 +3416,8 @@ MonoBehaviour:
     m_ExpectedControlLayout: 
     m_Id: 
     m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
       m_Path: 
@@ -3432,12 +3438,16 @@ MonoBehaviour:
     m_ExpectedControlLayout: 
     m_Id: 
     m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   m_switchToPenAction:
     m_Name: Switch To Pen
     m_ExpectedControlLayout: 
     m_Id: 
     m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
       m_Path: 
@@ -3458,6 +3468,8 @@ MonoBehaviour:
     m_ExpectedControlLayout: 
     m_Id: 
     m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
       m_Path: 
@@ -30879,7 +30891,7 @@ ParticleSystem:
 --- !u!199 &1313082308
 ParticleSystemRenderer:
   serializedVersion: 6
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 199592775431698500, guid: b177080d5905d4a48aa3f0f2c0dfd8a0,
     type: 2}
   m_PrefabInstance: {fileID: 0}
@@ -32350,7 +32362,7 @@ PrefabInstance:
     - target: {fileID: 224409481164657272, guid: a15cf75bdf668dd4da1daa2fdce92bcd,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.000007749949
+      value: 0.0000015389805
       objectReference: {fileID: 0}
     - target: {fileID: 224691175363965744, guid: a15cf75bdf668dd4da1daa2fdce92bcd,
         type: 3}
