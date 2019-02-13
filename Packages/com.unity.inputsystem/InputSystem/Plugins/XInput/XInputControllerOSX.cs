@@ -1,18 +1,33 @@
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+
 namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 {
-    // IMPORTANT: State layout is XINPUT_GAMEPAD
+    // Xbox one controller on OSX. State layout can be found here:
+    // https://github.com/360Controller/360Controller/blob/master/360Controller/ControlStruct.h
+    // struct InputReport
+    // {
+    //     byte command;
+    //     byte size;
+    //     short buttons;
+    //     byte triggerLeft;
+    //     byte triggerRight;
+    //     short leftX;
+    //     short leftY;
+    //     short rightX;
+    //     short rightY;
+    // }
+    // Report size is 14 bytes. First two bytes are header information for the report.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct XInputControllerWindowsState : IInputStateTypeInfo
+    public struct XInputControllerOSXState : IInputStateTypeInfo
     {
         public static FourCC kFormat
         {
-            get { return new FourCC('X', 'I', 'N', 'P'); }
+            get { return new FourCC('H', 'I', 'D'); }
         }
 
         public enum Button
@@ -49,40 +64,40 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [InputControl(name = "buttonWest", bit = (uint)Button.X, displayName = "X")]
         [InputControl(name = "buttonNorth", bit = (uint)Button.Y, displayName = "Y")]
 
-        [FieldOffset(0)]
+        [FieldOffset(2)]
         public uint buttons;
 
         [InputControl(name = "leftTrigger", format = "BYTE")]
-        [FieldOffset(2)] public byte leftTrigger;
+        [FieldOffset(4)] public byte leftTrigger;
         [InputControl(name = "rightTrigger", format = "BYTE")]
-        [FieldOffset(3)] public byte rightTrigger;
+        [FieldOffset(5)] public byte rightTrigger;
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
-        [InputControl(name = "leftStick/x", offset = 0, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "leftStick/left", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "leftStick/right", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "leftStick/y", offset = 2, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [FieldOffset(4)] public short leftStickX;
-        [FieldOffset(6)] public short leftStickY;
+        [InputControl(name = "leftStick/x", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "leftStick/y", offset = 2, format = "SHRT", parameters = "invert")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=true")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=false")]
+        [FieldOffset(6)] public short leftStickX;
+        [FieldOffset(8)] public short leftStickY;
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VC2S")]
-        [InputControl(name = "rightStick/x", offset = 0, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "rightStick/left", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "rightStick/right", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "rightStick/y", offset = 2, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [FieldOffset(8)] public short rightStickX;
-        [FieldOffset(10)] public short rightStickY;
+        [InputControl(name = "rightStick/x", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "SHRT", parameters = "")]
+        [InputControl(name = "rightStick/y", offset = 2, format = "SHRT", parameters = "invert")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=true")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=false")]
+        [FieldOffset(10)] public short rightStickX;
+        [FieldOffset(12)] public short rightStickY;
 
         public FourCC GetFormat()
         {
             return kFormat;
         }
 
-        public XInputControllerWindowsState WithButton(Button button)
+        public XInputControllerOSXState WithButton(Button button)
         {
             buttons |= (uint)1 << (int)button;
             return this;
@@ -92,9 +107,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputControlLayout(stateType = typeof(XInputControllerWindowsState))]
-    public class XInputControllerWindows : XInputController
+    [InputControlLayout(stateType = typeof(XInputControllerOSXState))]
+    public class XInputControllerOSX : XInputController
     {
     }
 }
-#endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
+#endif // UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
