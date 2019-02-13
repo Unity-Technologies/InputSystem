@@ -5,8 +5,6 @@ using UnityEngine;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel.UnityEngine.Experimental.Input.Plugins.XInput;
-
 
 #if UNITY_EDITOR || UNITY_XBOXONE
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;

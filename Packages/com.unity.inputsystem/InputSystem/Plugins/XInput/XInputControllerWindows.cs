@@ -87,13 +87,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
             return this;
         }
     }
+}
 
-    namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.Experimental.Input.Plugins.XInput
+{
+    [InputControlLayout(stateType = typeof(XInputControllerWindowsState))]
+    public class XInputControllerWindows : XInputController
     {
-        [InputControlLayout(stateType = typeof(XInputControllerWindowsState))]
-        public class XInputControllerWindows : XInputController
-        {
-        }
     }
 }
 #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
