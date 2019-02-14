@@ -39,6 +39,19 @@ namespace UnityEngine.Experimental.Input.Editor
             FieldInfo result = null;
             foreach (var component in pathComponents)
             {
+                // Handle arrays. They are followed by "Array" and "data[N]" elements.
+                if (result != null && currentSerializableType.IsArray)
+                {
+                    if (component == "Array")
+                        continue;
+
+                    if (component.StartsWith("data["))
+                    {
+                        currentSerializableType = currentSerializableType.GetElementType();
+                        continue;
+                    }
+                }
+
                 result = currentSerializableType.GetField(component,
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);
                 if (result == null)

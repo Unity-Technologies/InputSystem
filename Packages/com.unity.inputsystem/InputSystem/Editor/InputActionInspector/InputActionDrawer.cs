@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -11,25 +12,27 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var menu = new GenericMenu();
             menu.AddItem(m_BindingGUI, false, AddBinding, property);
-            foreach (var composite in InputBindingComposite.s_Composites.names)
+            foreach (var composite in InputBindingComposite.s_Composites.internedNames.Where(x =>
+                !InputBindingComposite.s_Composites.aliases.Contains(x)))
             {
-                menu.AddItem(new GUIContent(m_CompositeGUI.text + "/" + composite), false, OnAddCompositeBinding, new List<object>(){composite, property});
+                menu.AddItem(new GUIContent(m_CompositeGUI.text + "/" + composite), false, OnAddCompositeBinding,
+                    new KeyValuePair<string, SerializedProperty>(composite, property));
             }
             menu.ShowAsContext();
         }
 
-        internal void AddBinding(object propertyObj)
+        private void AddBinding(object propertyObj)
         {
             var property = (SerializedProperty)propertyObj;
-            InputActionSerializationHelpers.AddBinding(property, null);
+            InputActionSerializationHelpers.AddBinding(property);
             property.serializedObject.ApplyModifiedProperties();
             m_Tree.Reload();
         }
 
-        internal void OnAddCompositeBinding(object paramList)
+        private void OnAddCompositeBinding(object compositeAndProperty)
         {
-            var compositeName = (string)((List<object>)paramList)[0];
-            var property = (SerializedProperty)((List<object>)paramList)[1];
+            var compositeName = ((KeyValuePair<string, SerializedProperty>)compositeAndProperty).Key;
+            var property = ((KeyValuePair<string, SerializedProperty>)compositeAndProperty).Value;
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
             InputActionSerializationHelpers.AddCompositeBinding(property, null, compositeName, compositeType);
             property.serializedObject.ApplyModifiedProperties();

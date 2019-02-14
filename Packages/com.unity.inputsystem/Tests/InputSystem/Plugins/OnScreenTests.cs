@@ -37,7 +37,7 @@ internal class OnScreenTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(stick.control.ReadValueAsObject(),
-            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
+            Is.EqualTo(stickControl.ProcessValue(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
                 .Using(Vector2EqualityComparer.Instance));
 
         Assert.That(stickObject.transform.position.x, Is.GreaterThan(0.0f));

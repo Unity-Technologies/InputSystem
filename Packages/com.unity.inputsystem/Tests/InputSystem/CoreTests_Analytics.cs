@@ -3,6 +3,7 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -34,7 +35,8 @@ partial class CoreTests
         // The test fixture has already initialized the input system.
         // Create a new manager to test registration.
         var manager = new InputManager();
-        manager.Initialize(runtime);
+        var settings = ScriptableObject.CreateInstance<InputSettings>();
+        manager.Initialize(runtime, settings);
 
         Assert.That(receivedNames,
             Is.EquivalentTo(new[]

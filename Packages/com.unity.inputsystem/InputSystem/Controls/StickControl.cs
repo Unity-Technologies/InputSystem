@@ -24,6 +24,8 @@ namespace UnityEngine.Experimental.Input.Controls
         // on the device. This aids in interactive picking by making sure that if we have to decide between,
         // say, leftStick/x and leftStick/left, leftStick/x wins out.
 
+        ////REVIEW: up/down/left/right should probably prohibit being written to
+
         /// <summary>
         /// A synthetic button representing the upper half of the stick's Y axis.
         /// </summary>

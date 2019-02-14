@@ -7,17 +7,18 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: gyro and accelerometer support
+////TODO: Haptics support (!!)
+
+////REVIEW: The Switch controller can be used to point at things; can we somehow help leverage that?
 
 namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for Switch NPad controllers.
     /// </summary>
-    /// <rem
     /// <seealso href="http://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/~/joy-con-controller-diagram"/>
     [StructLayout(LayoutKind.Explicit, Size = 60)]
-    public unsafe struct NPadInputState : IInputStateTypeInfo
+    public struct NPadInputState : IInputStateTypeInfo
     {
         public FourCC GetFormat()
         {
@@ -62,9 +63,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(48)]
         public Vector3 angularVelocity;
 
-        public float leftTrigger { get { return ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f; } }
+        public float leftTrigger => ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f;
 
-        public float rightTrigger { get { return ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f; } }
+        public float rightTrigger => ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f;
 
         public enum Button
         {
@@ -119,7 +120,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NPadStatusReport : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'S'); } }
+        public static FourCC Type => new FourCC('N', 'P', 'D', 'S');
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 24;
 
@@ -160,7 +161,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NPadControllerSupportCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'U'); } }
+        public static FourCC Type => new FourCC('N', 'P', 'D', 'U');
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 8;
 
@@ -199,7 +200,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("NSUI"); } }
+        public static FourCC Type => new FourCC("NSUI");
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
@@ -218,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("NSOR"); } }
+        public static FourCC Type => new FourCC("NSOR");
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
 
         [FieldOffset(0)]
@@ -241,7 +242,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("SXST"); } }
+        public static FourCC Type => new FourCC("SXST");
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
@@ -260,7 +261,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("SXSP"); } }
+        public static FourCC Type => new FourCC("SXSP");
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
@@ -317,14 +318,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             Invalid = 0xFF,
         }
 
+        //orientation matters for stick axes!!!!
+
+        //there's a touchpad and 90% of games don't support it
+
+        //each person could play with a different style
         [Flags]
-        public enum NpadStyle : int
+        public enum NpadStyle
         {
-            FullKey = (1 << 0),
-            Handheld = (1 << 1),
-            JoyDual = (1 << 2),
-            JoyLeft = (1 << 3),
-            JoyRight = (1 << 4),
+            FullKey = 1 << 0,//separate;or pro controller;only one accel
+            Handheld = 1 << 1,//docked to switch
+            JoyDual = 1 << 2,//separate; one accel per joycon
+            JoyLeft = 1 << 3,//just one; orientation matters
+            JoyRight = 1 << 4,//just one; orientation matters
         }
 
         public struct JoyConColor
@@ -391,9 +397,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
 
             if (ExecuteCommand(ref command) > 0)
             {
-                m_NpadId = (NpadId)command.npadId;
-                m_Orientation = (Orientation)command.orientation;
-                m_StyleMask = (NpadStyle)command.styleMask;
+                m_NpadId = command.npadId;
+                m_Orientation = command.orientation;
+                m_StyleMask = command.styleMask;
                 ReadNNColorIntoJoyConColor(ref m_LeftControllerColor, command.colorLeftMain, command.colorLeftSub);
                 ReadNNColorIntoJoyConColor(ref m_RightControllerColor, command.colorRightMain, command.colorRightSub);
             }

@@ -148,7 +148,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
                 for (var i = 0; i < pressedKeys.Length; ++i)
                 {
-                    MemoryHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
+                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)pressedKeys[i], true);
                 }
             }
         }
@@ -740,6 +740,21 @@ namespace UnityEngine.Experimental.Input
 
                 throw new ArgumentException("key");
             }
+        }
+
+        public static Keyboard current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

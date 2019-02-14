@@ -14,6 +14,7 @@ public class ArrowHighlight : MonoBehaviour
     private bool isMouseMove = false;
     private bool isPlaying = false;
 
+    // Use this for initialization
     void Start()
     {
         sp_render = GetComponent<SpriteRenderer>();

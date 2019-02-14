@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.UI;
 
 public class ButtonControlActionStatus : MonoBehaviour
@@ -18,15 +20,41 @@ public class ButtonControlActionStatus : MonoBehaviour
 
     void OnEnable()
     {
-        buttonTouchAction.Enable();
         buttonTouchAction.performed += UpdateTouchStatus;
         buttonTouchAction.started += UpdateTouchStatus;
         buttonTouchAction.cancelled += UpdateTouchStatus;
+        buttonTouchAction.Enable();
 
-        buttonPressAction.Enable();
+        ReadOnlyArray<InputControl> controls = buttonTouchAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            ButtonControl control = controls[i] as ButtonControl;
+            if (control != null)
+                m_isTouched = control.isPressed;
+            else
+            {
+                Debug.LogWarningFormat(this, "ButtonControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(ButtonControl).FullName, controls[i].GetType().FullName, controls[i].name);
+            }
+        }
+
         buttonPressAction.performed += UpdatePressStatus;
         buttonPressAction.started += UpdatePressStatus;
         buttonPressAction.cancelled += UpdatePressStatus;
+        buttonPressAction.Enable();
+
+        controls = buttonPressAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            ButtonControl control = controls[i] as ButtonControl;
+            if (control != null)
+                m_isPressed = control.isPressed;
+            else
+            {
+                Debug.LogWarningFormat(this, "ButtonControlActionStatus expects bindings of type {1}, but found {1} binding named {2}.", typeof(ButtonControl).FullName, controls[i].GetType().FullName, controls[i].name);
+            }
+        }
+
+        ApplyStatusColor();
     }
 
     void OnDisable()
@@ -44,14 +72,22 @@ public class ButtonControlActionStatus : MonoBehaviour
 
     private void UpdatePressStatus(InputAction.CallbackContext context)
     {
-        m_isPressed = ((ButtonControl)(context.control)).isPressed;
-        ApplyStatusColor();
+        ButtonControl control = context.control as ButtonControl;
+        if (control != null)
+        {
+            m_isPressed = control.isPressed;
+            ApplyStatusColor();
+        }
     }
 
     private void UpdateTouchStatus(InputAction.CallbackContext context)
     {
-        m_isTouched = ((ButtonControl)(context.control)).isPressed;
-        ApplyStatusColor();
+        ButtonControl buttonControl = context.control as ButtonControl;
+        if (buttonControl != null)
+        {
+            m_isTouched = buttonControl.isPressed;
+            ApplyStatusColor();
+        }
     }
 
     private void ApplyStatusColor()

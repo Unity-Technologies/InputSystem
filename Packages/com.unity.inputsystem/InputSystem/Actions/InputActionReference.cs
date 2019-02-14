@@ -23,10 +23,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The asset that the referenced action is part of.
         /// </summary>
-        public InputActionAsset asset
-        {
-            get { return m_Asset; }
-        }
+        public InputActionAsset asset => m_Asset;
 
         /// <summary>
         /// The action that the reference resolves to.
@@ -54,13 +51,12 @@ namespace UnityEngine.Experimental.Input
         public void Set(InputAction action)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             var map = action.actionMap;
             if (map == null || map.asset == null)
-                throw new InvalidOperationException(string.Format(
-                    "Action '{0}' must be part of an InputActionAsset in order to be able to create an InputActionReference for it",
-                    action));
+                throw new InvalidOperationException(
+                    $"Action '{action}' must be part of an InputActionAsset in order to be able to create an InputActionReference for it");
 
             SetInternal(map.asset, action);
         }
@@ -68,11 +64,11 @@ namespace UnityEngine.Experimental.Input
         public void Set(InputActionAsset asset, string mapName, string actionName)
         {
             if (asset == null)
-                throw new ArgumentNullException("asset");
+                throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(mapName))
-                throw new ArgumentNullException("mapName");
+                throw new ArgumentNullException(nameof(mapName));
             if (string.IsNullOrEmpty(actionName))
-                throw new ArgumentNullException("actionName");
+                throw new ArgumentNullException(nameof(actionName));
 
             var actionMap = asset.GetActionMap(mapName);
             var action = actionMap.GetAction(actionName);
@@ -85,7 +81,7 @@ namespace UnityEngine.Experimental.Input
             var actionMap = action.actionMap;
             if (!asset.actionMaps.Contains(actionMap))
                 throw new ArgumentException(
-                    string.Format("Action '{0}' is not contained in asset '{1}'", action, asset));
+                    $"Action '{action}' is not contained in asset '{asset}'", nameof(action));
 
             m_Asset = asset;
             m_ActionMapId = actionMap.id.ToString();
@@ -99,12 +95,12 @@ namespace UnityEngine.Experimental.Input
             try
             {
                 var action = this.action;
-                return string.Format("{0}:{1}/{2}", m_Asset.name, action.actionMap.name, action.name);
+                return $"{m_Asset.name}:{action.actionMap.name}/{action.name}";
             }
             catch
             {
                 if (m_Asset != null)
-                    return string.Format("{0}:{1}/{2}", m_Asset.name, m_ActionMapId, m_ActionId);
+                    return $"{m_Asset.name}:{m_ActionMapId}/{m_ActionId}";
             }
 
             return base.ToString();

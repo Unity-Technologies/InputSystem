@@ -200,6 +200,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         public ButtonControl paddle3 { get; private set; }
         public ButtonControl paddle4 { get; private set; }
 
+        public new static XboxOneGamepad current { get; set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
@@ -258,6 +266,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             base.OnRemoved();
 
             ArrayHelpers.Erase(ref s_Devices, this);
+            if (current == this)
+                current = null;
         }
 
         private void UpdatePadSettings()

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: this or the layout system needs to detect when the format isn't supported by the control
@@ -13,15 +12,15 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
-        public override unsafe int ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             return *(int*)valuePtr;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, int value)
+        public override unsafe void WriteValueIntoState(int value, void* statePtr)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             *(int*)valuePtr = value;
         }
     }

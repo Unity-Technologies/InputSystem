@@ -53,6 +53,21 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         public QuaternionControl orientation { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
+        public new static DualShockGamepad current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);

@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine.Experimental.Input.Utilities;
 
+#pragma warning disable 0649
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -19,18 +20,23 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private const int kVersion = 4;
 
-        [SerializeField] internal bool m_GenerateWrapperCode;
-        [SerializeField] internal string m_WrapperCodePath;
-        [SerializeField] internal string m_WrapperClassName;
-        [SerializeField] internal string m_WrapperCodeNamespace;
-        [SerializeField] internal bool m_GenerateActionEvents;
-        [SerializeField] internal bool m_GenerateInterfaces;
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap.png";
+        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action.png";
+        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap.png";
+
+        [SerializeField] private bool m_GenerateWrapperCode;
+        [SerializeField] private string m_WrapperCodePath;
+        [SerializeField] private string m_WrapperClassName;
+        [SerializeField] private string m_WrapperCodeNamespace;
+        [SerializeField] private bool m_GenerateActionEvents;
+        [SerializeField] private bool m_GenerateInterfaces;
 
         // Actions and maps coming in from JSON may not have IDs assigned to them. However,
         // once imported, we want them to have stable IDs. So we do the same thing that Unity's
         // model importer does and remember the GUID<->name correlations used in the file.
-        [SerializeField] internal RememberedGuid[] m_ActionGuids;
-        [SerializeField] internal RememberedGuid[] m_ActionMapGuids;
+        [SerializeField] private RememberedGuid[] m_ActionGuids;
+        [SerializeField] private RememberedGuid[] m_ActionMapGuids;
 
         [Serializable]
         internal struct RememberedGuid
@@ -39,8 +45,19 @@ namespace UnityEngine.Experimental.Input.Editor
             public string guid;
         }
 
+        private static InlinedArray<Action> s_OnImportCallbacks;
+
+        public static event Action onImport
+        {
+            add => s_OnImportCallbacks.Append(value);
+            remove => s_OnImportCallbacks.Remove(value);
+        }
+
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            foreach (var callback in s_OnImportCallbacks)
+                callback();
+
             ////REVIEW: need to check with version control here?
             // Read file.
             string text;
@@ -50,8 +67,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             catch (Exception exception)
             {
-                ctx.LogImportError(string.Format("Could read file '{0}' ({1})",
-                    ctx.assetPath, exception));
+                ctx.LogImportError($"Could not read file '{ctx.assetPath}' ({exception})");
                 return;
             }
 
@@ -66,13 +82,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             catch (Exception exception)
             {
-                ctx.LogImportError(string.Format("Could not parse input actions in JSON format from '{0}' ({1})",
-                    ctx.assetPath, exception));
+                ctx.LogImportError($"Could not parse input actions in JSON format from '{ctx.assetPath}' ({exception})");
                 DestroyImmediate(asset);
                 return;
             }
 
-            ctx.AddObjectToAsset("<root>", asset);
+            // Load icons.
+            ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
+            var isDarkSkin = EditorGUIUtility.isProSkin;
+            var assetIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kAssetIconDark : kAssetIcon);
+            var actionIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kActionIconDark : kActionIcon);
+
+            // Add asset.
+            ctx.AddObjectToAsset("<root>", asset, assetIcon);
             ctx.SetMainObject(asset);
 
             // Make sure every map and every action has a stable ID assigned to it.
@@ -109,7 +131,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 foreach (var action in map.actions)
                 {
-                    var actionName = string.Format("{0}/{1}", map.name, action.name);
+                    var actionName = $"{map.name}/{action.name}";
                     if (action.idDontGenerate == Guid.Empty)
                     {
                         // Generate and remember GUID.
@@ -152,10 +174,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
                     var objectName = action.name;
                     if (haveSetName)
-                        objectName = string.Format("{0}/{1}", map.name, action.name);
+                        objectName = $"{map.name}/{action.name}";
 
                     actionReference.name = objectName;
-                    ctx.AddObjectToAsset(objectName, actionReference);
+                    ctx.AddObjectToAsset(objectName, actionReference, actionIcon);
                 }
             }
 

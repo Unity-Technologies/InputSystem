@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -16,10 +14,43 @@ namespace UnityEngine.Experimental.Input.Utilities
                 case "Mouse": return "Mice";
                 case "mouse": return "mice";
                 case "Axis": return "Axes";
-                case "axis": return "axis";
+                case "axis": return "axes";
             }
 
             return str + 's';
+        }
+
+        public static string NicifyMemorySize(long numBytes)
+        {
+            // Gigabytes.
+            if (numBytes > 1024 * 1024 * 1024)
+            {
+                var gb = numBytes / (1024 * 1024 * 1024);
+                var remainder = (numBytes % (1024 * 1024 * 1024)) / 1.0f;
+
+                return string.Format("{0} GB", gb + remainder);
+            }
+
+            // Megabytes.
+            if (numBytes > 1024 * 1024)
+            {
+                var mb = numBytes / (1024 * 1024);
+                var remainder = (numBytes % (1024 * 1024)) / 1.0f;
+
+                return string.Format("{0} MB", mb + remainder);
+            }
+
+            // Kilobytes.
+            if (numBytes > 1024)
+            {
+                var kb = numBytes / 1024;
+                var remainder = (numBytes % 1024) / 1.0f;
+
+                return string.Format("{0} KB", kb + remainder);
+            }
+
+            // Bytes.
+            return string.Format("{0} Bytes", numBytes);
         }
 
         public static int CountOccurrences(this string str, char ch)
@@ -236,13 +267,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         ////TODO: this should use UTF-8 and not UTF-16
 
-        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize)
+        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters)
         {
             uint offset = 0;
-            return WriteStringToBuffer(text, buffer, bufferSize, ref offset);
+            return WriteStringToBuffer(text, buffer, bufferSizeInCharacters, ref offset);
         }
 
-        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize, ref uint offset)
+        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
                 throw new ArgumentNullException("buffer");
@@ -252,7 +283,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 throw new ArgumentException(string.Format("String exceeds max size of {0} characters", ushort.MaxValue), "text");
 
             var endOffset = offset + sizeof(char) * length + sizeof(int);
-            if (endOffset > bufferSize)
+            if (endOffset > bufferSizeInCharacters)
                 return false;
 
             var ptr = ((byte*)buffer) + offset;

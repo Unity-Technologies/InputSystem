@@ -10,9 +10,11 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
@@ -20,7 +22,6 @@ using UnityEngine.TestTools;
 partial class CoreTests
 {
     [Serializable]
-
     struct PackageJson
     {
         public string version;
@@ -40,7 +41,7 @@ partial class CoreTests
         var version = new Version(versionString);
 
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
-        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Major));
+        Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Minor));
         Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
     }
 
@@ -148,36 +149,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
-    {
-        InputNoiseFilter filter = new InputNoiseFilter
-        {
-            elements = new InputNoiseFilter.FilterElement[]
-            {
-                new InputNoiseFilter.FilterElement
-                {
-                    controlIndex = 0,
-                    type = InputNoiseFilter.ElementType.EntireControl
-                }
-            }
-        };
-
-        var device = InputSystem.AddDevice<Gamepad>();
-        device.userInteractionFilter = filter;
-
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
-
-        var newDevice = InputSystem.devices.First(x => x is Gamepad);
-
-        Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
-        Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
-        Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
-        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(InputNoiseFilter.ElementType.EntireControl));
-    }
-
-    [Test]
-    [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
     {
@@ -236,7 +207,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
     {
-        InputConfiguration.LockInputToGame = true;
+        InputEditorUserSettings.lockInputToGameView = true;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -249,7 +220,7 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
 
     [Test]
@@ -321,7 +292,7 @@ partial class CoreTests
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
-        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("New action"));
         Assert.That(asset.actionMaps[0].actions[2].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
@@ -418,7 +389,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_InputAsset_CanAddCompositeBinding()
     {
-        var map = new InputActionMap("set");
+        var map = new InputActionMap("map");
         map.AddAction(name: "action1");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
@@ -433,14 +404,87 @@ partial class CoreTests
         var action1 = asset.actionMaps[0].TryGetAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(3));
         Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "positive"));
-        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "negative"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "positive", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "negative", StringComparison.InvariantCultureIgnoreCase)));
         Assert.That(action1.bindings[0].isComposite, Is.True);
         Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
         Assert.That(action1.bindings[1].isComposite, Is.False);
         Assert.That(action1.bindings[1].isPartOfComposite, Is.True);
         Assert.That(action1.bindings[2].isComposite, Is.False);
         Assert.That(action1.bindings[2].isPartOfComposite, Is.True);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanChangeCompositeType()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction(name: "action1");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        // Add an axis composite with a positive and negative binding in place.
+        InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis",
+            addPartBindings: false);
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty, path: "<Gamepad>/buttonWest",
+            name: "Negative", processors: "normalize", interactions: "tap", flags: InputBinding.Flags.PartOfComposite);
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty, path: "<Gamepad>/buttonEast",
+            name: "Positive", processors: "clamp", interactions: "slowtap", flags: InputBinding.Flags.PartOfComposite);
+
+        // Noise.
+        InputActionSerializationHelpers.AddBinding(action1Property, mapProperty, path: "foobar");
+
+        // Change to vector2 composite and make sure that we've added two more bindings, changed the names
+        // of bindings accordingly, and preserved the existing binding paths and such.
+        InputActionSerializationHelpers.ChangeCompositeType(mapProperty.FindPropertyRelative("m_Bindings"), 0, "Dpad",
+            typeof(Vector2Composite), "action1");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        var action1 = asset.actionMaps[0].GetAction("action1");
+        Assert.That(action1.bindings, Has.Count.EqualTo(6)); // Composite + 4 parts + noise added above.
+        Assert.That(action1.bindings[0].path, Is.EqualTo("Dpad"));
+        Assert.That(action1.bindings, Has.None.Matches((InputBinding x) =>
+            string.Equals(x.name, "positive", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.None.Matches((InputBinding x) =>
+            string.Equals(x.name, "negative", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "up", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "down", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "left", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
+            string.Equals(x.name, "right", StringComparison.InvariantCultureIgnoreCase)));
+        Assert.That(action1.bindings[0].isComposite, Is.True);
+        Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
+        Assert.That(action1.bindings[1].isComposite, Is.False);
+        Assert.That(action1.bindings[1].isPartOfComposite, Is.True);
+        Assert.That(action1.bindings[2].isComposite, Is.False);
+        Assert.That(action1.bindings[2].isPartOfComposite, Is.True);
+        Assert.That(action1.bindings[3].isComposite, Is.False);
+        Assert.That(action1.bindings[3].isPartOfComposite, Is.True);
+        Assert.That(action1.bindings[4].isComposite, Is.False);
+        Assert.That(action1.bindings[4].isPartOfComposite, Is.True);
+        Assert.That(action1.bindings[1].path, Is.EqualTo("<Gamepad>/buttonWest"));
+        Assert.That(action1.bindings[2].path, Is.EqualTo("<Gamepad>/buttonEast"));
+        Assert.That(action1.bindings[1].interactions, Is.EqualTo("tap"));
+        Assert.That(action1.bindings[2].interactions, Is.EqualTo("slowtap"));
+        Assert.That(action1.bindings[1].processors, Is.EqualTo("normalize"));
+        Assert.That(action1.bindings[2].processors, Is.EqualTo("clamp"));
+        Assert.That(action1.bindings[3].path, Is.Empty);
+        Assert.That(action1.bindings[4].path, Is.Empty);
+        Assert.That(action1.bindings[3].interactions, Is.Empty);
+        Assert.That(action1.bindings[4].interactions, Is.Empty);
+        Assert.That(action1.bindings[3].processors, Is.Empty);
+        Assert.That(action1.bindings[4].processors, Is.Empty);
+        Assert.That(action1.bindings[5].path, Is.EqualTo("foobar"));
+        Assert.That(action1.bindings[5].name, Is.Empty);
     }
 
     [Test]
@@ -513,6 +557,28 @@ partial class CoreTests
         Assert.That(code, Contains.Substring("class NewControls4"));
         Assert.That(code, Contains.Substring("public InputAction @action"));
         Assert.That(code, Contains.Substring("public InputAction @_1thing"));
+    }
+
+    // Can take any given registered layout and generate a cross-platform C# struct for it
+    // that collects all the control values from both proper and optional controls (based on
+    // all derived layouts).
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_CanGenerateStateStructForLayout()
+    {
+        Assert.Fail();
+    }
+
+    // Can take any given registered layout and generate a piece of code that takes as input
+    // memory in the state format of the layout and generates as output state in the cross-platform
+    // C# struct format.
+    [Test]
+    [Category("Editor")]
+    [Ignore("TODO")]
+    public void TODO_Editor_CanGenerateStateStructConversionCodeForLayout()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -596,52 +662,63 @@ partial class CoreTests
         Assert.That(map2.name, Is.EqualTo("mapB"));
     }
 
-    // We don't want the game code's update mask affect editor code and vice versa.
     [Test]
     [Category("Editor")]
-    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode()
+    [Ignore("TODO")]
+    public void TODO_Editor_SettingsModifiedInPlayMode_AreRestoredWhenReEnteringEditMode()
     {
-        InputSystem.updateMask = InputUpdateType.Dynamic;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
-
-        InputSystem.updateMask = InputUpdateType.Dynamic;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode_ButPreservesBeforeRenderState()
-    {
-        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
-
-        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
-
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
-
-        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+        Assert.Fail();
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
-        InputSystem.updateMask = InputUpdateType.Dynamic;
+        Assert.That(runtime.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+    }
 
-        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfLayout()
+    {
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Axis"), Is.SameAs(typeof(float)));
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Button"), Is.SameAs(typeof(float)));
+        Assert.That(EditorInputControlLayoutCache.GetValueType("Stick"), Is.SameAs(typeof(Vector2)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfProcessor()
+    {
+        Assert.That(InputProcessor.GetValueTypeFromType(typeof(StickDeadzoneProcessor)), Is.SameAs(typeof(Vector2)));
+        Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
+    }
+
+    private class TestInteractionWithValueType : IInputInteraction<float>
+    {
+        public void Process(ref InputInteractionContext context)
+        {
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetValueTypeOfInteraction()
+    {
+        InputSystem.RegisterInteraction<TestInteractionWithValueType>();
+        Assert.That(InputInteraction.GetValueType(typeof(TestInteractionWithValueType)), Is.SameAs(typeof(float)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGetParameterEditorFromInteractionType()
+    {
+        Assert.That(InputParameterEditor.LookupEditorForType(typeof(HoldInteraction)),
+            Is.SameAs(typeof(HoldInteractionEditor)));
     }
 
     [Test]
@@ -719,6 +796,25 @@ partial class CoreTests
         Assert.That(optionalControlsForFirstDerived[0].layout, Is.EqualTo(new InternedString("Vector2")));
 
         Assert.That(optionalControlsForSecondDerived, Is.Empty);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanIconsForLayouts()
+    {
+        const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+        var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
+
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Axis"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Axis.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Key"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("DualShockGamepad"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Gamepad.png")));
+        Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Pen"),
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Pen.png")));
     }
 
     private class TestEditorWindow : EditorWindow
