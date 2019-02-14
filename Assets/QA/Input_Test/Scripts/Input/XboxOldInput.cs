@@ -157,7 +157,7 @@ public class XboxTrigger : AnalogButton
         if (is_first)
         {
             is_first = false;
-            return IsPressed(inputValue);
+            return base.IsPressed(inputValue);
         }
         else
         {

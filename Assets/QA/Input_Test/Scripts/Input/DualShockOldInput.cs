@@ -43,29 +43,32 @@ public class DualShockOldInput : GamepadOldInput
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Right"), "Axis 7", 0f, 1f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Up"), "Axis 8", 0f, 1f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Down"), "Axis 8", -1f, 0f, isDpad: true));
-        m_dualShockTriggers.Add(new DualShockTrigger(m_buttonContainer.Find("LeftTriggerButton"), "Axis 4", -1f, 1f));
-        m_dualShockTriggers.Add(new DualShockTrigger(m_buttonContainer.Find("RightTriggerButton"), "Axis 5", -1f, 1f));
+        m_dualShockTriggers.Add(new DualShockTrigger(m_buttonContainer.Find("LeftTriggerButton"), "Axis 4"));
+        m_dualShockTriggers.Add(new DualShockTrigger(m_buttonContainer.Find("RightTriggerButton"), "Axis 5"));
 
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
-        button_map.Add("Button16", "A");
-        button_map.Add("Button17", "B");
-        button_map.Add("Button18", "X");
-        button_map.Add("Button19", "Y");
-        button_map.Add("Button13", "LeftShoulder");
-        button_map.Add("Button14", "RightShoulder");
-        button_map.Add("Button10", "Select");
+        button_map.Add("Button0", "Square");
+        button_map.Add("Button1", "Cross");
+        button_map.Add("Button2", "Circle");
+        button_map.Add("Button3", "Triangle");
+        button_map.Add("Button4", "LeftShoulder");
+        button_map.Add("Button5", "RightShoulder");
+        //button_map.Add("Button6", "LeftTrigger");
+        //button_map.Add("Button7", "RightTrigger");
+        button_map.Add("Button8", "Select");
         button_map.Add("Button9", "Start");
-        button_map.Add("Button11", "LeftStick/Stick - Input Manager");
-        button_map.Add("Button12", "RightStick/Stick - Input Manager");
-        button_map.Add("Button5", "Dpad/Up");
-        button_map.Add("Button6", "Dpad/Down");
-        button_map.Add("Button7", "Dpad/Left");
-        button_map.Add("Button8", "Dpad/Right");
-        button_map.Add("Button15", "Xbox");
+        button_map.Add("Button10", "LeftStick/Stick - Input Manager");
+        button_map.Add("Button11", "RightStick/Stick - Input Manager");
+        button_map.Add("Button12", "SystemButton");
+        button_map.Add("Button13", "TouchpadButton");
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("LeftStick/Stick - Input Manager"), "Axis 1", "Axis 2", posText: m_leftStickText, isYReversed: true));
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick/Stick - Input Manager"), "Axis 3", "Axis 4", posText: m_rightStickText, isYReversed: true));
-        xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("LeftTrigger"), "Axis 5"));
-        xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("RightTrigger"), "Axis 6"));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Left"), "Axis 7", -1f, 0f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Right"), "Axis 7", 0f, 1f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Down"), "Axis 8", 0f, 1f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Up"), "Axis 8", -1f, 0f, isDpad: true));
+        m_dualShockTriggers.Add(new DualShockTrigger(m_buttonContainer.Find("LeftTriggerButton"), "Axis 5"));
+        m_dualShockTriggers.Add(new DualShockTrigger(m_buttonContainer.Find("RightTriggerButton"), "Axis 6"));
 
 #elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || UNITY_STANDALONE_LINUX_API
         button_map.Add("Button0", "A");
@@ -147,18 +150,31 @@ public class DualShockOldInput : GamepadOldInput
 }
 
 // This is for DualShock controller triggers
-// When the triggers is inactive, the value is -1. The range is [-1, 1]
+// The trigger starts at 0 until it is first used. Then the range is [-1, 1].
 public class DualShockTrigger : AnalogButton
 {
-    public DualShockTrigger(Transform btn, string axisName, float minValue = -1, float maxValue = 1, float deadzn = 0.1f, bool isDpad = false) : base (btn, axisName, minValue, maxValue, deadzn, isDpad)
-    {       
-    }
-    
+    private bool is_first = true;
+
+    public DualShockTrigger(Transform trigger, string axisName) : base(trigger, axisName) { }
+
     public override bool IsPressed(float inputValue)
     {
-        if (inputValue > min_input_value + deadzone && inputValue <= max_input_value)
-            return true;
+        if (is_first)
+        {
+            if (inputValue == 0f)
+                return false;
+            else
+            {
+                is_first = false;
+                return IsPressed(inputValue);
+            }
+        }
         else
-            return false;
+        {
+            if (inputValue > deadzone - 1)
+                return true;
+            else
+                return false;
+        }
     }
 }

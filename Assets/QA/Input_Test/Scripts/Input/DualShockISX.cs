@@ -9,9 +9,16 @@ public class DualShockISX : GamepadISX
     public Text m_leftStickText;
     public Text m_rightStickText;
 
+    //private InputAction m_discreteButtonAction;
+
     // Start is called before the first frame update
     void Start()
     {
+        //m_discreteButtonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<discreteButton>");
+        //m_discreteButtonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
+        //m_discreteButtonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
+        //m_discreteButtonAction.Enable();
+
         m_buttonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
         m_buttonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
