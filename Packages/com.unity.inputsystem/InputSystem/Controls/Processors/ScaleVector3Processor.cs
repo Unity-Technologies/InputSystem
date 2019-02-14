@@ -5,9 +5,9 @@ namespace UnityEngine.Experimental.Input.Processors
     /// </summary>
     public class ScaleVector3Processor : InputProcessor<Vector3>
     {
-        public float x;
-        public float y;
-        public float z;
+        public float x = 1;
+        public float y = 1;
+        public float z = 1;
 
         public override Vector3 Process(Vector3 value, InputControl<Vector3> control)
         {

@@ -90,6 +90,16 @@ moveAction.AddCompositeBinding("Dpad")
 
 ## Bindings
 
+### Composite Bindings
+
+Sometimes it is desirable to have several controls act in unison to mimick a different type of control. The most common example of this is using the W, A, S, and D keys on the keyboard to form a 2D vector control equivalent to mouse deltas or gamepad sticks. Another example is using two keys to form a 1D axis equivalent to a mouse scroll axis.
+
+This effect can be achieved through "composite bindings", i.e. bindings that made up of other bindings. Composites themselves do not bind directly to controls but rather source values from other bindings that do and synthesize input on the fly from those values.
+
+>NOTE: Actions set on bindings that are part of composites are ignored. The composite as a whole can trigger an action. Individual parts of the composite cannot.
+
+### Conflict Resolution
+
 ## Control Schemes
 
 ## Continuous Actions
@@ -99,6 +109,10 @@ By default, actions will trigger only in response to input events. This means th
 ![Continuous Action](Images/ContinuousAction.png)
 
 When continuous mode is enabled, an action that goes into `Performed` phase will stay in the phase until it is `Cancelled`. Also, while in the `Performed` phase, an action in continuous mode will be `Performed` in a frame even if there is no input. The value returned by `ReadValue` will be the value of the control that was last used with the action.
+
+## Pass-Through Actions
+
+    ////TODO
 
 ## Phases
 
@@ -305,14 +319,22 @@ trace.Dispose();
 
 Once recorded, a trace can be safely read from multiple threads as long as it is not concurrently being written to and as long as the action setup (i.e. the configuration data accessed by the trace) is not concurrently being changed on the main thread.
 
-### Rebinding Actions
+## Rebinding Actions
 
-### Debugging Actions
+## Extending Actions
 
-#### Action Processing
+### Writing Custom Processors
+
+### Writing Custom Interactions
+
+### Writing Custom Composites
+
+## Debugging Actions
+
+### Action Processing
 
     TODO: go into detail about where and when actions are processed; also stuff like getting cancelled outside of input updates
 
-### Using Actions with Multiple Players
+## Using Actions with Multiple Players
 
 It is possible to use the same action definitions for multiple local players. This setup is useful in a local co-op games, for example.

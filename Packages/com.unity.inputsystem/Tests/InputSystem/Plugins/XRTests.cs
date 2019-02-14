@@ -354,11 +354,11 @@ internal class XRTests : InputTestFixture
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 
-    [InputControlLayout]
-    public class TestHMD : InputDevice
+    [InputControlLayout(beforeRender = true)]
+    private class TestHMD : InputDevice
     {
-        public QuaternionControl quaternion { get; set; }
-        public Vector3Control vector3 { get; set; }
+        public QuaternionControl quaternion { get; private set; }
+        public Vector3Control vector3 { get; private set; }
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
@@ -371,12 +371,11 @@ internal class XRTests : InputTestFixture
     [Category("Components")]
     public void Components_CanUpdateGameObjectTransformThroughTrackedPoseDriver()
     {
-        var testpos = new Vector3(1.0f, 2.0f, 3.0f);
-        var testrot = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+        var position = new Vector3(1.0f, 2.0f, 3.0f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
 
         var go = new GameObject();
-        var tpd1 = go.AddComponent<TrackedPoseDriver>();
-        var tpd = tpd1;
+        var tpd = go.AddComponent<TrackedPoseDriver>();
         var device = InputSystem.AddDevice<TestHMD>();
 
         using (StateEvent.From(device, out var stateEvent))
@@ -397,21 +396,21 @@ internal class XRTests : InputTestFixture
             tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
 
-            device.quaternion.WriteValueIntoEvent(testrot, stateEvent);
-            device.vector3.WriteValueIntoEvent(testpos, stateEvent);
+            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
+            device.vector3.WriteValueIntoEvent(position, stateEvent);
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
+            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
+            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
 
             var go2 = tpd.gameObject;
             go2.transform.position = Vector3.zero;
             go2.transform.rotation = new Quaternion(0, 0, 0, 0);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
+            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
+            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
 
             // update only
             var go3 = tpd.gameObject;
@@ -422,17 +421,16 @@ internal class XRTests : InputTestFixture
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
+            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
+            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
 
-            GameObject go4 = tpd.gameObject;
+            var go4 = tpd.gameObject;
             go4.transform.position = Vector3.zero;
             go4.transform.rotation = new Quaternion(0, 0, 0, 0);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
-
+            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
+            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
 
             // check the rot/pos case also Update AND Render.
             tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
@@ -443,8 +441,8 @@ internal class XRTests : InputTestFixture
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(testpos));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(testrot));
+            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
+            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
 
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
             var go6 = tpd.gameObject;
@@ -452,8 +450,8 @@ internal class XRTests : InputTestFixture
             go6.transform.rotation = new Quaternion(0, 0, 0, 0);
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(testpos));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(testrot));
+            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
+            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
         }
     }
 

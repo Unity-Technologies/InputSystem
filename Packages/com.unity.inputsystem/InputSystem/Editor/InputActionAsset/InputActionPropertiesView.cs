@@ -6,6 +6,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
+    /// <summary>
+    /// Right-most pane in action editor when action is selected. Shows properties of action.
+    /// </summary>
     internal class InputActionPropertiesView : PropertiesView
     {
         public static FourCC k_PropertiesChanged = new FourCC("PROP");
@@ -21,14 +24,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_SelectedControlType == -1)
                 m_SelectedControlType = 0;
 
-            m_ActionTypeLabel =
-                EditorGUIUtility.TrTextContent("Type", m_ExpectedControlLayoutProperty.tooltip);
+            if (s_TypeLabel == null)
+                s_TypeLabel = EditorGUIUtility.TrTextContent("Type", m_ExpectedControlLayoutProperty.tooltip);
         }
 
         protected override void DrawGeneralProperties()
         {
             EditorGUI.BeginChangeCheck();
-            m_SelectedControlType = EditorGUILayout.Popup(m_ActionTypeLabel, m_SelectedControlType, m_ControlTypeList);
+            m_SelectedControlType = EditorGUILayout.Popup(s_TypeLabel, m_SelectedControlType, m_ControlTypeList);
             if (EditorGUI.EndChangeCheck())
             {
                 if (m_SelectedControlType == 0)
@@ -40,13 +43,19 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var flags = (InputAction.ActionFlags)m_FlagsProperty.intValue;
             var isContinuousOld = (flags & InputAction.ActionFlags.Continuous) != 0;
-            var isContinuousNew = EditorGUILayout.Toggle(s_ContinuousLabel, isContinuousOld);
+            var isPassThroughOld = (flags & InputAction.ActionFlags.PassThrough) != 0;
 
-            if (isContinuousOld != isContinuousNew)
+            var isContinuousNew = EditorGUILayout.Toggle(s_ContinuousLabel, isContinuousOld);
+            var isPassThroughNew = EditorGUILayout.Toggle(s_PassThroughLabel, isPassThroughOld);
+
+            if (isContinuousOld != isContinuousNew || isPassThroughOld != isPassThroughNew)
             {
                 flags = InputAction.ActionFlags.None;
+
                 if (isContinuousNew)
                     flags |= InputAction.ActionFlags.Continuous;
+                if (isPassThroughNew)
+                    flags |= InputAction.ActionFlags.PassThrough;
 
                 m_FlagsProperty.intValue = (int)flags;
                 m_FlagsProperty.serializedObject.ApplyModifiedProperties();
@@ -79,9 +88,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private string m_ExpectedControlLayout;
         private readonly string[] m_ControlTypeList;
         private int m_SelectedControlType;
-        private readonly GUIContent m_ActionTypeLabel;
 
-        private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous");
+        private static GUIContent s_TypeLabel;
+        private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous",
+            "If enabled, the action will trigger every update while controls are actuated even if the controls do not change value.");
+        private static readonly GUIContent s_PassThroughLabel = EditorGUIUtility.TrTextContent("Pass Through",
+            "If enabled, the action will not gate value changes on controls but will instead perform for every value change on any bound control. " +
+            "This is especially useful when binding multiple controls concurrently and not wanting the action to single out any one of multiple " +
+            "concurrent inputs.");
     }
 }
 #endif // UNITY_EDITOR

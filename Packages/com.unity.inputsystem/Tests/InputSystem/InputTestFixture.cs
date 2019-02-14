@@ -187,6 +187,7 @@ namespace UnityEngine.Experimental.Input
 
             using (StateEvent.From(control.device, out var eventPtr))
             {
+                ////REVIEW: should we by default take the time from the device here?
                 if (absoluteTime >= 0)
                     eventPtr.time = absoluteTime;
                 eventPtr.time += timeOffset;

@@ -113,7 +113,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static implicit operator string(InternedString str)
         {
-            return str.m_StringOriginalCase;
+            return str.ToString();
         }
     }
 }

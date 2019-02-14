@@ -309,9 +309,9 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public struct BindingSyntax
         {
-            internal InputAction m_Action;
-            internal InputActionMap m_ActionMap;
-            internal int m_BindingIndex;
+            private readonly InputActionMap m_ActionMap;
+            private readonly InputAction m_Action;
+            internal readonly int m_BindingIndex;
 
             internal BindingSyntax(InputActionMap map, InputAction action, int bindingIndex)
             {
@@ -469,9 +469,9 @@ namespace UnityEngine.Experimental.Input
 
         public struct CompositeSyntax
         {
-            internal InputAction m_Action;
-            internal InputActionMap m_ActionMap;
-            internal int m_CompositeIndex;
+            private readonly InputAction m_Action;
+            private readonly InputActionMap m_ActionMap;
+            private int m_CompositeIndex;
 
             internal CompositeSyntax(InputActionMap map, InputAction action, int compositeIndex)
             {
@@ -501,8 +501,8 @@ namespace UnityEngine.Experimental.Input
 
         public struct ControlSchemeSyntax
         {
-            private InputActionAsset m_Asset;
-            private int m_ControlSchemeIndex;
+            private readonly InputActionAsset m_Asset;
+            private readonly int m_ControlSchemeIndex;
             private InputControlScheme m_ControlScheme;
 
             internal ControlSchemeSyntax(InputActionAsset asset, int index)

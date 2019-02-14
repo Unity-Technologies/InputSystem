@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputBindingComposite{TValue}.ReadValue(ref InputBindingCompositeContext)"/>
     public struct InputBindingCompositeContext
     {
-        internal InputActionMapState m_State;
+        internal InputActionState m_State;
         internal int m_BindingIndex;
 
         public TValue ReadValue<TValue>(int partNumber)

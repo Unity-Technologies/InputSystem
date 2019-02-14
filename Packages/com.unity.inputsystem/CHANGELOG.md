@@ -4,7 +4,7 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.1.3-preview] (Teuton) - ????
+## [0.2.0-preview] - 2019-02-12
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
 
@@ -15,7 +15,7 @@ This release contains a number of fairly significant changes. The focus has been
 - Removed Unity 2018.2 support code.
 - Removed .NET 3.5 support code.
 - Started using C# 7.
-- `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcess<TValue>` base classes.
+- `IInputControlProcessor<TValue>` has been replaced with `InputProcessor` and `InputProcessor<TValue>` base classes.
 - `IInputBindingComposite` has been replaced with an `InputBindingComposite` base class and the `IInputBindingComposite<TValue>` interface has been merged with the `InputBindingComposite<TValue>` class which had already existed.
 - `InputUser.onUnpairedDeviceUser` will now notify for each actuated control until the device is paired or there are no more actuated controls.
 - `SensitivityProcessor` has been removed.
@@ -38,9 +38,9 @@ This release contains a number of fairly significant changes. The focus has been
         myAction.performed += MyCallback;
         myAction.cancelled += MyCallback;
       ```
-  * Alternatively, put `PassthroughInteraction` on an action. This restores the previous default behavior of actions.
+  * Alternatively, enable `passThrough` mode on an action. This effectively restores the previous default behavior of actions.
     ```
-        new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "passthrough");
+        new InputAction(binding: "<Gamepad>/leftTrigger") { passThrough = true };
     ```
 - As part of the aforementioned change, the following interactions have been removed as they are no longer relevant:
   - `StickInteraction`: Can simply be removed from bindings. The new default behavior obsoletes the need for what `StickInteraction` did. Use `started` to know then the stick starts being actuated, `performed` to be updated on movements, and `cancelled` to know when the stick goes back into rest position.
@@ -53,16 +53,25 @@ This release contains a number of fairly significant changes. The focus has been
   - In other words, if e.g. you have a binding to the A button of the gamepad and the A button is already pressed when the action is first enabled, then the action associated with the A button will trigger as if the button had just been pressed. Previously, it required releasing and re-pressing the button first -- which, together with certain interactions, could lead to actions ending up in a confused state.
 - When an action is disabled, it will now cancel all ongoing interactions, if any (i.e. you will see `InputAction.cancelled` being called).
   - Note that unlike the above-mentioned callbacks that happen when an action starts out with a control already actuated, the cancellation callbacks happen __immediately__ rather than in the next input update.
+- Actions that at runtime are bound to multiple controls will now perform *conflict resolution*, if necessary.
+  - This applies only if an action actually receives multiple concurrent actuations from controls.
+  - When ambiguity is detected, the greatest amount of actuation on any of the controls gets to drive the action.
+  - In practice, this means that as long as any of the controls bound to an action is actuated, the action will keep going. This resolves ambiguities when an action has primary and secondary bindings, for examples, or when an action is bound to multiple different devices at the same time.
+  - Composite bindings count as single actuations regardless of how many controls participate in the composite.
+  - This behavior __can be bypassed__ by setting the action to be pass-through.
 - Action editor now closes when asset is deleted.
   - If there are unsaved changes, asks for confirmation first.
 - Interactions and processors in the UI are now filtered based on the type of the action (if set) and sorted by name.
 - Renamed "Axis" and "Dpad" composites to "1D Axis" and "2D Vector" composite.
-    - The old names can still be used and existing data will load as expected.
-    - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged.
+  - The old names can still be used and existing data will load as expected.
+  - `DpadComposite` got renamed to `Vector2Composite`; `AxisComposite` is unchanged.
 - `InputInteractionContext.controlHasDefaultValue` has been replaced with `InputInteractionContext.ControlIsActuated()`.
 - `InputActionChange.BindingsHaveChangedWhileEnabled` has been reworked and split in two:
     1. `InputActionChange.BoundControlsAboutToChange`: Bindings have been previously resolved but are about to be re-resolved.
     2. `InputActionChange.BoundControlsChanged`: Bindings have been resolved on one or more actions.
+- Actions internally now allocate unmanaged memory.
+  - Disposing should be taken care of automatically (though you can manually `Dispose` as well). If you see errors in the console log about unmanaged memory being leaked, please report the bug.
+  - All execution state except for C# heap objects for processors, interactions, and composites has been collapsed into a single block of unmanaged memory. Actions should now be able to re-resolve efficiently without allocating additional GC memory.
 
 ### Added
 
@@ -82,15 +91,16 @@ This release contains a number of fairly significant changes. The focus has been
     * `NormalizeVector2Processor`
     * `NormalizeVector3Processor`
 - Added `MultiTapInteraction`. Can be used to listen for double-taps and the like.
-- Added `PassthroughInteraction` to restore old behavior of actions where every value change would perform the action and `started` and `cancelled` were not used.
 - Can get total and average event lag times through `InputMetrics.totalEventLagTime` and `InputMetrics.averageEventLagTime`.
 - `Mouse.forwardButton` and `Mouse.backButton`.
 - The input debugger now shows users along with their paired devices and actions. See the [documentation](Documentation~/UserManagement.md#debugging)
 - Added third and fourth barrel buttons on `Pen`.
 
 #### Actions:
-- Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. \
+- Actions have a new continuous mode that will cause the action to trigger continuously even if there is no input. See the [documentation](Documentation~/Actions.md#continuous-actions) for details. \
   ![Continuous Action](Documentation~/Images/ContinuousAction.png)
+- Actions have a new pass-through mode. In this mode an action will bypass any checks on control actuation and let any input activity on the action directly flow through. See the [documentation](Documentation~/Actions.md#pass-through-actions) for details. \
+  ![Pass-Through Action](Documentation~/Images/PassThroughAction.png)
 - Can now add interactions and processors directly to actions.
   ![Action Properties](Documentation~/Images/ActionProperties.png)
     * This is functionally equivalent to adding the respective processors and/or interactions to every binding on the action.
@@ -125,6 +135,11 @@ This release contains a number of fairly significant changes. The focus has been
 - Exceptions when removing action in last position of action map.
 - Devices marked as unsupported in input settings getting added back on domain reload.
 - Fixed `Pen` causing exceptions and asserts.
+- Composites that assign multiple bindings to parts failing to set up properly when parts are assigned out of order (#410).
+
+### Known Issues
+
+- Input processing in edit mode on 2019.1 is sporadic rather than happening on every editor update.
 
 ## [0.1.2-preview] - 2018-12-19
 

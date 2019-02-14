@@ -26,5 +26,13 @@ namespace UnityEngine.Experimental.Input.Layouts
         public string[] commonUsages;
 
         public string variants;
+
+        public bool? updateBeforeRender;
+
+        public bool beforeRender
+        {
+            get => updateBeforeRender.Value;
+            set => updateBeforeRender = value;
+        }
     }
 }

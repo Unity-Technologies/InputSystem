@@ -142,7 +142,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             if (matchCount > 0)
-                actionMap.InvalidateResolvedData();
+                actionMap.LazyResolveBindings();
 
             return matchCount;
         }
@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
-            actionMap.InvalidateResolvedData();
+            actionMap.LazyResolveBindings();
         }
 
         public static void RemoveBindingOverride(this InputAction action, InputBinding bindingOverride)
@@ -210,7 +210,7 @@ namespace UnityEngine.Experimental.Input
                 bindings[i].overrideInteractions = null;
             }
 
-            actionMap.InvalidateResolvedData();
+            actionMap.LazyResolveBindings();
         }
 
         public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)

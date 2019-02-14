@@ -12,8 +12,8 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public static int GetBindingCount(SerializedProperty bindingArrayProperty, string actionName)
         {
-            Debug.Assert(bindingArrayProperty != null);
-            Debug.Assert(bindingArrayProperty.isArray);
+            Debug.Assert(bindingArrayProperty != null, "Binding array property is null");
+            Debug.Assert(bindingArrayProperty.isArray, "Binding array property is not an array");
 
             var bindingCount = bindingArrayProperty.arraySize;
             var bindingCountForAction = 0;
@@ -218,6 +218,7 @@ namespace UnityEngine.Experimental.Input.Editor
             newBindingProperty.FindPropertyRelative("m_Processors").stringValue = processors;
             newBindingProperty.FindPropertyRelative("m_Flags").intValue = (int)flags;
             newBindingProperty.FindPropertyRelative("m_Action").stringValue = actionName;
+            newBindingProperty.FindPropertyRelative("m_Name").stringValue = name;
 
             ////FIXME: this likely leaves m_Bindings in the map for singleton actions unsync'd in some cases
 
@@ -389,7 +390,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
 
                     var partProperty = AddBinding(actionProperty, actionMapProperty, groups);
-                    partProperty.FindPropertyRelative("m_Name").stringValue = field.Name;
+                    partProperty.FindPropertyRelative("m_Name").stringValue = ObjectNames.NicifyVariableName(field.Name);
                     partProperty.FindPropertyRelative("m_Flags").intValue = (int)InputBinding.Flags.PartOfComposite;
                 }
             }
@@ -448,7 +449,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
 
                     // Initialize.
-                    partProperty.FindPropertyRelative("m_Name").stringValue = field.Name;
+                    partProperty.FindPropertyRelative("m_Name").stringValue = ObjectNames.NicifyVariableName(field.Name);
                     partProperty.FindPropertyRelative("m_Action").stringValue = actionName;
                     ++partIndex;
                 }

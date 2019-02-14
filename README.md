@@ -32,7 +32,7 @@ At this point, we try to focus package releases on specific problem areas. The f
 |`0.3-preview`|- Touch<br>- Documentation<br>- Move to 2019.1|
 |`0.4-preview`|- Demo<br>- UI (Single- and Multi-Player)<br>- Documentation|
 |`0.5-preview`|- Rebinding UI<br>- Debugger<br>- Bugs<br>- Documentation|
-|`0.6-preview`|- Performance<br>- Bugs<br>- Documentation|
+|`0.6-preview`|- Performance<br>- Fixed Update<br>- Bugs<br>- Documentation|
 |`1.0-preview`|- Shipping quality release|
 |`1.0`|- Verified, official Unity package<br>- Move to 2019.2|
 

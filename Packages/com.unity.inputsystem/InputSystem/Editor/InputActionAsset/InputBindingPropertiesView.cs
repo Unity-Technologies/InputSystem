@@ -349,6 +349,7 @@ namespace UnityEngine.Experimental.Input.Editor
             nameAndParameters.parameters = m_CompositeParameters.GetParameters();
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
+            m_PathProperty.serializedObject.ApplyModifiedProperties();
 
             OnPathChanged();
         }
@@ -356,11 +357,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnBindingGroupsChanged()
         {
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
+            m_GroupsProperty.serializedObject.ApplyModifiedProperties();
+
             onChange(k_GroupsChanged);
         }
 
         private void OnPathChanged()
         {
+            m_BindingProperty.serializedObject.ApplyModifiedProperties();
             onChange(k_PathChanged);
         }
 
@@ -373,6 +377,7 @@ namespace UnityEngine.Experimental.Input.Editor
             };
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
+            m_PathProperty.serializedObject.ApplyModifiedProperties();
             onChange(k_CompositeTypeChanged);
         }
 
@@ -392,7 +397,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputControlPickerDropdown m_InputControlPickerDropdown;
 
         private static readonly GUIContent s_PathLabel = EditorGUIUtility.TrTextContent("Path", "Path of the controls that will be bound to the action at runtime.");
-        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Type", "Type of composite.");
+        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Type",
+            "Type of composite. Allows changing the composite type retroactively. Doing so will modify the bindings that are part of the composite.");
         private static readonly GUIContent s_UseInControlSchemesLAbel = EditorGUIUtility.TrTextContent("Use in control scheme");
 
         private bool m_ManualPathEditMode;
