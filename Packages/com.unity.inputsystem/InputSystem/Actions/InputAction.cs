@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should continuous actions *always* trigger as long as they are enabled? (even if no control is actuated)
+
 ////REVIEW: I think the action system as it is today offers too many ways to shoot yourself in the foot. It has
 ////        flexibility but at the same time has abundant opportunity for ending up with dysfunction. Common setups
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
@@ -60,7 +62,7 @@ namespace UnityEngine.Experimental.Input
     /// Actions are not supported in edit mode.
     /// </remarks>
     [Serializable]
-    public class InputAction : ICloneable
+    public class InputAction : ICloneable, IDisposable
         ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
     {
         /// <summary>
@@ -118,6 +120,10 @@ namespace UnityEngine.Experimental.Input
             get => m_ExpectedControlLayout;
             set => m_ExpectedControlLayout = value;
         }
+
+        public string processors => m_Processors;
+
+        public string interactions => m_Interactions;
 
         /// <summary>
         /// The map the action belongs to.
@@ -236,6 +242,36 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// If enabled, the action will not gate any control changes but will instead pass through
+        /// any change on any of the bound controls as is.
+        /// </summary>
+        /// <remarks>
+        /// This behavior is useful for actions that are not meant to model any kind of interaction but
+        /// should rather just listen for input of any kind. By default, an action will be driven based
+        /// on the amount of actuation on the bound controls. Any control with the highest amount of
+        /// actuation gets to drive an action. This can be undesirable. For example, an action may
+        /// want to listen for any kind of activity on any of the bound controls. In this case, set
+        /// this property to true.
+        ///
+        /// This behavior is disabled by default.
+        /// </remarks>
+        public bool passThrough
+        {
+            get => (m_Flags & ActionFlags.PassThrough) != 0;
+            set
+            {
+                if (enabled)
+                    throw new InvalidOperationException(
+                        $"Cannot change the 'passThrough' flag of action '{this} while the action is enabled");
+
+                if (value)
+                    m_Flags |= ActionFlags.PassThrough;
+                else
+                    m_Flags &= ~ActionFlags.PassThrough;
+            }
+        }
+
+        /// <summary>
         /// The current phase of the action.
         /// </summary>
         /// <remarks>
@@ -252,10 +288,10 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                if (m_ActionIndex == InputActionState.kInvalidIndex)
                     return null;
                 var controlIndex = currentState.controlIndex;
-                if (controlIndex == InputActionMapState.kInvalidIndex)
+                if (controlIndex == InputActionState.kInvalidIndex)
                     return null;
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
@@ -276,14 +312,14 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public InputBinding lastTriggerBinding
+        public unsafe InputBinding lastTriggerBinding
         {
             get
             {
-                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                if (m_ActionIndex == InputActionState.kInvalidIndex)
                     return default;
                 var bindingIndex = currentState.bindingIndex;
-                if (bindingIndex == InputActionMapState.kInvalidIndex)
+                if (bindingIndex == InputActionState.kInvalidIndex)
                     return default;
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
@@ -296,10 +332,10 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                if (m_ActionIndex == InputActionState.kInvalidIndex)
                     return null;
                 var interactionIndex = currentState.interactionIndex;
-                if (interactionIndex == InputActionMapState.kInvalidIndex)
+                if (interactionIndex == InputActionState.kInvalidIndex)
                     return null;
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
@@ -363,20 +399,27 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string interactions = null, string expectedControlLayout = null)
+        public InputAction(string name = null, string binding = null, string interactions = null, string processors = null, string expectedControlLayout = null)
             : this(name)
         {
-            if (binding == null && interactions != null)
-                throw new ArgumentException("Cannot have interaction without binding", "interactions");
-
-            if (binding != null)
+            if (!string.IsNullOrEmpty(binding))
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, action = m_Name}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, processors = processors, action = m_Name}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
+            else
+            {
+                m_Interactions = interactions;
+                m_Processors = processors;
+            }
 
-            this.expectedControlLayout = expectedControlLayout;
+            m_ExpectedControlLayout = expectedControlLayout;
+        }
+
+        public void Dispose()
+        {
+            m_ActionMap?.m_State?.Dispose();
         }
 
         public override string ToString()
@@ -385,7 +428,7 @@ namespace UnityEngine.Experimental.Input
                 return "<Unnamed>";
 
             if (m_ActionMap != null && !isSingletonAction && !String.IsNullOrEmpty(m_ActionMap.name))
-                return String.Format("{0}/{1}", m_ActionMap.name, m_Name);
+                return $"{m_ActionMap.name}/{m_Name}";
 
             return m_Name;
         }
@@ -404,7 +447,6 @@ namespace UnityEngine.Experimental.Input
 
             // Go live.
             map.m_State.EnableSingleAction(this);
-            ++map.m_EnabledActionsCount;
         }
 
         public void Disable()
@@ -413,16 +455,17 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             m_ActionMap.m_State.DisableSingleAction(this);
-            --m_ActionMap.m_EnabledActionsCount;
         }
 
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
         // If you clone an action from a set, you get a singleton action in return.
         public InputAction Clone()
         {
-            var clone = new InputAction(name: m_Name);
-            clone.m_SingletonActionBindings = bindings.ToArray();
-            clone.m_BindingsCount = m_BindingsCount;
+            var clone = new InputAction(name: m_Name)
+            {
+                m_SingletonActionBindings = bindings.ToArray(),
+                m_BindingsCount = m_BindingsCount
+            };
             return clone;
         }
 
@@ -436,6 +479,7 @@ namespace UnityEngine.Experimental.Input
         {
             None = 0,
             Continuous = 1 << 1,
+            PassThrough = 1 << 2,
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
@@ -449,6 +493,8 @@ namespace UnityEngine.Experimental.Input
             + "without breaking references.")]
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
         [SerializeField] internal ActionFlags m_Flags;
+        [SerializeField] internal string m_Processors;
+        [SerializeField] internal string m_Interactions;
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
@@ -462,14 +508,14 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
-        /// Index of the action in the <see cref="InputActionMapState"/> associated with the
+        /// Index of the action in the <see cref="InputActionState"/> associated with the
         /// action's <see cref="InputActionMap"/>.
         /// </summary>
         /// <remarks>
         /// This is not necessarily the same as the index of the action in its map.
         /// </remarks>
         /// <seealso cref="actionMap"/>
-        [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
+        [NonSerialized] internal int m_ActionIndex = InputActionState.kInvalidIndex;
 
         /// <summary>
         /// The action map that owns the action.
@@ -485,23 +531,6 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
-        /// Whether the action needs individual re-enabling after we've resolved bindings.
-        /// </summary>
-        /// <remarks>
-        /// When we resolve bindings (<see cref="InputActionMap.ResolveBindings"/>), we lose all execution
-        /// state. This includes the trigger state (<see cref="InputActionMapState.TriggerState"/>) for
-        /// actions which in turn loses the data for <see cref="enabled"/>.
-        ///
-        /// So, once we've resolved bindings, we do not know anymore which actions were enabled before.
-        /// We temporarily store this state in here.
-        ///
-        /// Note that we only need to do so when we come across an action map that has some but not all
-        /// of its actions enabled. If all actions were enabled before (<see cref="InputActionMap.m_EnabledActionsCount"/>),
-        /// then we can simply go and enable all actions in bulk after.
-        /// </remarks>
-        [NonSerialized] internal bool m_NeedsReEnabling;
-
-        /// <summary>
         /// Whether the action is a loose action created in code (e.g. as a property on a component).
         /// </summary>
         /// <remarks>
@@ -511,12 +540,12 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         internal bool isSingletonAction => m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this);
 
-        private InputActionMapState.TriggerState currentState
+        private InputActionState.TriggerState currentState
         {
             get
             {
-                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
-                    return new InputActionMapState.TriggerState();
+                if (m_ActionIndex == InputActionState.kInvalidIndex)
+                    return new InputActionState.TriggerState();
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
                 return m_ActionMap.m_State.FetchActionState(this);
@@ -560,10 +589,10 @@ namespace UnityEngine.Experimental.Input
         {
             if (enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot modify bindings on action '{0}' while the action is enabled", this));
+                    $"Cannot modify bindings on action '{this}' while the action is enabled");
             if (GetOrCreateActionMap().enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot modify bindings on action '{0}' while its action map is enabled", this));
+                    $"Cannot modify bindings on action '{this}' while its action map is enabled");
         }
 
         /// <summary>
@@ -575,15 +604,15 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputActionMap.actionTriggered"/>
         public struct CallbackContext
         {
-            internal InputActionMapState m_State;
+            internal InputActionState m_State;
             internal int m_ActionIndex;
 
             internal int actionIndex => m_ActionIndex;
-            internal int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
-            internal int controlIndex => m_State.actionStates[actionIndex].controlIndex;
-            internal int interactionIndex => m_State.actionStates[actionIndex].interactionIndex;
+            internal unsafe int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
+            internal unsafe int controlIndex => m_State.actionStates[actionIndex].controlIndex;
+            internal unsafe int interactionIndex => m_State.actionStates[actionIndex].interactionIndex;
 
-            public InputActionPhase phase
+            public unsafe InputActionPhase phase
             {
                 get
                 {
@@ -624,7 +653,7 @@ namespace UnityEngine.Experimental.Input
                     if (m_State == null)
                         return null;
                     var index = interactionIndex;
-                    if (index == InputActionMapState.kInvalidIndex)
+                    if (index == InputActionState.kInvalidIndex)
                         return null;
                     return m_State.interactions[index];
                 }
@@ -637,7 +666,7 @@ namespace UnityEngine.Experimental.Input
             /// This is usually determined by the timestamp of the input event that activated a control
             /// bound to the action.
             /// </remarks>
-            public double time
+            public unsafe double time
             {
                 get
                 {
@@ -654,7 +683,7 @@ namespace UnityEngine.Experimental.Input
             /// This is only relevant for actions that go through distinct a <see cref="InputActionPhase.Started"/>
             /// cycle as driven by <see cref="IInputInteraction">interactions</see>.
             /// </remarks>
-            public double startTime
+            public unsafe double startTime
             {
                 get
                 {
@@ -698,9 +727,7 @@ namespace UnityEngine.Experimental.Input
 
             public object ReadValueAsObject()
             {
-                if (m_State == null)
-                    return null;
-                return m_State.ReadValueAsObject(bindingIndex, controlIndex);
+                return m_State?.ReadValueAsObject(bindingIndex, controlIndex);
             }
 
             ////TODO: really read previous value, not value from last frame

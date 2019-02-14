@@ -226,27 +226,25 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 case "Copy":
                     HandleCopyEvent();
-                    Event.current.Use();
                     break;
                 case "Paste":
                     HandlePasteEvent();
-                    Event.current.Use();
                     break;
                 case "Cut":
                     HandleCopyEvent();
                     DeleteSelectedRows();
-                    Event.current.Use();
                     break;
                 case "Duplicate":
                     HandleCopyEvent();
                     HandlePasteEvent();
-                    Event.current.Use();
                     break;
                 case "Delete":
                     DeleteSelectedRows();
-                    Event.current.Use();
                     break;
+                default:
+                    return;
             }
+            Event.current.Use();
         }
 
         private void DeleteSelectedRows()
@@ -254,7 +252,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var rows = GetSelectedRows().ToArray();
             var rowTypes = rows.Select(r => r.GetType()).Distinct().ToList();
             // Don't allow to delete different types at once because it's hard to handle.
-            if (rowTypes.Count() > 1)
+            if (rowTypes.Count > 1)
             {
                 EditorApplication.Beep();
                 return;
@@ -263,7 +261,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Remove composite bindings
             foreach (var compositeGroup in FindRowsToDeleteOfType<CompositeGroupTreeItem>(rows))
             {
-                var action = (compositeGroup.parent as ActionTreeItem);
+                var action = compositeGroup.parent as ActionTreeItem;
                 for (var i = compositeGroup.children.Count - 1; i >= 0; i--)
                 {
                     var composite = (CompositeTreeItem)compositeGroup.children[i];
@@ -301,7 +299,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 actionMap.DeleteAction(actionRow.index);
             }
 
-            //Remove action maps
+            // Remove action maps
             foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
             {
                 if (m_SerializedObject == null)
@@ -361,7 +359,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return m_ActionMapsTree.GetSelectedRows();
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())
                 return m_ActionsTree.GetSelectedRows();
-            return null;
+            return Enumerable.Empty<ActionTreeViewItem>();
         }
 
         private ActionTreeItem GetSelectedAction()
@@ -397,7 +395,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionMapsTree.SetSelection(new int[0]);
             if (m_ActionsTree != null && m_ActionsTree.HasFocus())
                 m_ActionsTree.SetSelection(new int[0]);
-            ;
         }
 
         private void BeginRename()

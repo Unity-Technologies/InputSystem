@@ -1,8 +1,6 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add way for interactions to advertise the layouts they work with
-
 ////TODO: add way for parameters on interactions and processors to be driven from global value source that is NOT InputSettings
 ////      (ATM it's very hard to e.g. have a scale value on gamepad stick bindings which is determined dynamically from player
 ////      settings in the game)

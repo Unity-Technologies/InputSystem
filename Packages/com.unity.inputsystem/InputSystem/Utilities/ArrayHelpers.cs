@@ -289,31 +289,31 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int count, TValues values, int capacityIncrement = 10)
+        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int length, TValues values, int capacityIncrement = 10)
             where TValues : IReadOnlyList<TValue>
         {
-            var num = values.Count;
+            var numToAdd = values.Count;
             if (array == null)
             {
-                var size = Math.Max(num, capacityIncrement);
+                var size = Math.Max(numToAdd, capacityIncrement);
                 array = new TValue[size];
-                for (var i = 0; i < num; ++i)
+                for (var i = 0; i < numToAdd; ++i)
                     array[i] = values[i];
-                count += num;
+                length += numToAdd;
                 return 0;
             }
 
             var capacity = array.Length;
-            if (capacity < count + num)
+            if (capacity < length + numToAdd)
             {
-                capacity += Math.Max(num, capacityIncrement);
+                capacity += Math.Max(length + numToAdd, capacityIncrement);
                 Array.Resize(ref array, capacity);
             }
 
-            var index = count;
-            for (var i = 0; i < num; ++i)
-                array[i] = values[i];
-            count += num;
+            var index = length;
+            for (var i = 0; i < numToAdd; ++i)
+                array[index + i] = values[i];
+            length += numToAdd;
 
             return index;
         }
@@ -704,12 +704,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static void EraseSliceWithCapacity<TValue>(ref TValue[] array, ref int length, int index, int count)
         {
+            // Move elements down.
             if (count < length)
-            {
-                Array.Copy(array, index + count, array, index, length - index - count);
-                for (var i = 0; i < count; ++i)
-                    array[length - i - 1] = default(TValue);
-            }
+                Array.Copy(array, index + count, array, index, count);
+
+            // Erase now vacant slots.
+            for (var i = 0; i < count; ++i)
+                array[length - i - 1] = default;
 
             length -= count;
         }

@@ -45,8 +45,8 @@ public class ScriptCompilersTests
             var indexOfFirstColon = message.message.IndexOf(':');
             var indexOfSecondColon = message.message.IndexOf(':', indexOfFirstColon + 1);
             var messageTextWithoutFilenameLineAndMessageNumber = message.message.Substring(indexOfSecondColon + 2); // Skip space, too.
-            builder.Append(string.Format("{0}:{1}: {2}", Path.GetFileNameWithoutExtension(message.file), message.line,
-                messageTextWithoutFilenameLineAndMessageNumber));
+            builder.Append(
+                $"{Path.GetFileNameWithoutExtension(message.file)}:{message.line}: {messageTextWithoutFilenameLineAndMessageNumber}");
             builder.Append('\n');
         }
 

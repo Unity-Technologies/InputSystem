@@ -1,12 +1,15 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.ShortcutManagement;
+
+////TODO: Add "Revert" button
+
+////REVIEW: should we listen for Unity project saves and save dirty .inputactions assets along with it?
 
 ////TODO: add helpers to very quickly set up certai common configs (e.g. "FPS Controls" in add-action context menu;
 ////      "WASD Control" in add-binding context menu)
@@ -97,14 +100,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
             Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ActionAssetManager == null)
-            {
                 return;
-            }
 
             // Initialize after assembly reload
             m_ActionAssetManager.InitializeObjectReferences();
             m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
-            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, Apply);
+            m_InputActionWindowToolbar.SetReferences(m_ActionAssetManager, ApplyAndReload);
             m_InputActionWindowToolbar.RebuildData();
             m_ContextMenu.SetReferences(this, m_ActionAssetManager, m_InputActionWindowToolbar);
 
@@ -147,7 +148,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
             m_ActionAssetManager.InitializeObjectReferences();
-            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, Apply);
+            m_InputActionWindowToolbar = new InputActionWindowToolbar(m_ActionAssetManager, ApplyAndReload);
             m_ContextMenu = new ActionInspectorContextMenu(this, m_ActionAssetManager, m_InputActionWindowToolbar);
             InitializeTrees();
 
@@ -170,11 +171,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void InitializeTrees()
         {
-            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(Apply, m_ActionAssetManager.serializedObject, ref m_ActionMapsTreeState);
+            m_ActionMapsTree = ActionMapsTree.CreateFromSerializedObject(ApplyAndReload, m_ActionAssetManager.serializedObject, ref m_ActionMapsTreeState);
             m_ActionMapsTree.OnSelectionChanged = OnActionMapSelection;
             m_ActionMapsTree.OnContextClick = m_ContextMenu.OnActionMapContextClick;
 
-            m_ActionsTree = ActionsTree.CreateFromSerializedObject(Apply, ref m_ActionsTreeState);
+            m_ActionsTree = ActionsTree.CreateFromSerializedObject(ApplyAndReload, ref m_ActionsTreeState);
             m_ActionsTree.OnSelectionChanged = OnActionSelection;
             m_ActionsTree.OnContextClick = m_ContextMenu.OnActionsContextClick;
             m_ActionsTree.OnRowGUI = OnActionRowGUI;
@@ -199,7 +200,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ActionsTree.SetDeviceFilter(m_InputActionWindowToolbar.selectedDevice);
 
-            m_CopyPasteUtility = new InputActionCopyPasteUtility(Apply, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
+            m_CopyPasteUtility = new InputActionCopyPasteUtility(ApplyAndReload, m_ActionMapsTree, m_ActionsTree, m_ActionAssetManager.serializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new InputControlPickerState();
         }
@@ -210,7 +211,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             m_ActionAssetManager.LoadImportedObjectFromGuid();
-            EditorApplication.delayCall += Apply;
+            EditorApplication.delayCall += ApplyAndReload;
             // Since the Undo.undoRedoPerformed callback is global, the callback will be called for any undo/redo action
             // We need to make sure we dirty the state only in case of changes to the asset.
             EditorApplication.delayCall += m_ActionAssetManager.UpdateAssetDirtyState;
@@ -261,8 +262,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     // Grab the action for the binding and see if we have an expected control layout
                     // set on it. Pass that on to the control picking machinery.
-                    var isCompositeTreeItem = item is CompositeTreeItem;
-                    var actionItem = (isCompositeTreeItem ? item.parent.parent : item.parent) as ActionTreeItem;
+                    var isCompositePartBinding = item is CompositeTreeItem;
+                    var isCompositeBinding = item is CompositeGroupTreeItem;
+                    var actionItem = (isCompositePartBinding ? item.parent.parent : item.parent) as ActionTreeItem;
                     Debug.Assert(actionItem != null);
 
                     // Show properties for binding.
@@ -271,16 +273,41 @@ namespace UnityEngine.Experimental.Input.Editor
                             item.elementProperty,
                             change =>
                             {
-                                Apply();
+                                if (change == InputBindingPropertiesView.k_CompositeTypeChanged)
+                                {
+                                    Debug.Assert(isCompositeBinding, "Binding is expected to be a composite");
+
+                                    // This is a pretty complex change. We basically tear out part of the binding tree
+                                    // and replace it with a different structure.
+                                    var actionMapRow = (ActionMapTreeItem)m_ActionMapsTree.GetSelectedRow();
+                                    Debug.Assert(actionMapRow != null);
+
+                                    var compositeName = m_BindingPropertyView.compositeType;
+                                    var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
+
+                                    InputActionSerializationHelpers.ChangeCompositeType(actionMapRow.bindingsProperty,
+                                        actionItem.bindingsStartIndex + item.index, compositeName, compositeType,
+                                        actionItem.actionName);
+
+                                    ApplyAndReload();
+                                }
+                                else if (change == InputBindingPropertiesView.k_PathChanged)
+                                {
+                                    // If path changed, perform a full reload as it affects the action tree.
+                                    // Otherwise just do a "soft" apply. This is important so as to not lose
+                                    // edit state while editing parameters on interactions or processors.
+                                    ApplyAndReload();
+                                }
+                                else
+                                {
+                                    // Simple property change that doesn't affect the rest of the UI.
+                                    Apply();
+                                }
                             },
                             m_PickerTreeViewState,
                             m_InputActionWindowToolbar,
-                            item.expectedControlLayout);
-
-                    // For composite groups, don't show the binding path and control scheme section,
-                    // but show composite parameters instead.
-                    if (item is CompositeGroupTreeItem)
-                        m_BindingPropertyView.isCompositeBinding = true;
+                            isCompositeBinding: isCompositeBinding,
+                            expectedControlLayout: item.expectedControlLayout);
                 }
 
                 if (item is ActionTreeItem actionItem1)
@@ -289,18 +316,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_ActionPropertyView =
                         new InputActionPropertiesView(
                             actionItem1.elementProperty,
-                            Apply);
+                            // Apply without reload is enough here.
+                            change => Apply());
                 }
             }
         }
 
-        internal void Apply()
+        internal void ApplyAndReload()
         {
-            m_ActionAssetManager.SetAssetDirty();
-            titleContent = m_DirtyTitle;
-            m_ActionAssetManager.ApplyChanges();
+            Apply();
+
             m_ActionMapsTree.Reload();
             m_InputActionWindowToolbar.RebuildData();
+
             var selectedActionMap = m_ActionMapsTree.GetSelectedActionMap();
             if (selectedActionMap != null)
             {
@@ -310,7 +338,27 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ActionsTree.actionMapProperty = null;
             }
+
             m_ActionsTree.Reload();
+
+            LoadPropertiesForSelection();
+        }
+
+        private void Apply()
+        {
+            m_ActionAssetManager.serializedObject.ApplyModifiedProperties();
+
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+            {
+                m_ActionAssetManager.SaveChangesToAsset();
+            }
+            else
+            {
+                m_ActionAssetManager.SetAssetDirty();
+                titleContent = m_DirtyTitle;
+            }
+
+            m_ActionAssetManager.ApplyChanges();
         }
 
         private void OnGUI()
@@ -326,12 +374,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.BeginVertical();
-            // Toolbar.
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_InputActionWindowToolbar.OnGUI();
-            GUILayout.Space(5);
-            EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
 
             var isPickingInteractively = m_BindingPropertyView != null && m_BindingPropertyView.isInteractivelyPicking;
@@ -627,19 +670,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     return false;
             }
 
+            ////REVIEW: It'd be great if the window got docked by default but the public EditorWindow API doesn't allow that
+            ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
+            ////        only way to get programmatic docking with the current API).
             // See if we have an existing editor window that has the asset open.
             var window = FindEditorFor(asset);
-            if (window != null)
-            {
-                window.Show();
-                window.Focus();
-            }
-            else
+            if (window == null)
             {
                 // No, so create a new window.
-                window = GetWindow<AssetInspectorWindow>(string.Empty, focus: true, desiredDockNextTo: typeof(SceneView));
+                window = CreateInstance<AssetInspectorWindow>();
                 window.SetAsset(asset);
             }
+            window.Show();
+            window.Focus();
 
             // If user clicked on an action inside the asset, focus on that action (if we can find it).
             if (actionToSelect != null && window.m_ActionMapsTree.SetSelection(mapToSelect))
@@ -675,7 +718,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Close();
         }
 
-        private class ProcessAssetModifications : AssetModificationProcessor
+        private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local

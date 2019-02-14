@@ -1,12 +1,11 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
-
-////REVIEW: can we collects tooltips from the fields we're looking at?
 
 ////REVIEW: For some of the parameters (like SlowTap.duration) it is confusing to see any value at all while not yet having
 ////        entered a value and seeing a value that doesn't seem to make sense (0 in this case means "no value, use default").
@@ -36,6 +35,9 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         /// <returns>An array of parameter values.</returns>
         public InputControlLayout.ParameterValue[] GetParameters()
         {
+            if (m_Parameters == null)
+                return null;
+
             // See if we have parameters that aren't at their default value.
             var countOfParametersNotAtDefaultValue = 0;
             for (var i = 0; i < m_Parameters.Length; ++i)
@@ -141,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 else if (fieldType.IsEnum)
                 {
                     parameter.value.type = InputControlLayout.ParameterType.Integer;
-                    parameter.enumNames = Enum.GetNames(fieldType);
+                    parameter.enumNames = Enum.GetNames(fieldType).Select(x => new GUIContent(x)).ToArray();
 
                     ////REVIEW: this probably falls apart if multiple members have the same value
                     var list = new List<int>();
@@ -191,7 +193,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 {
                     if (parameter.isEnum)
                     {
-                        var enumValue = Enum.ToObject(parameter.field.GetType(), parameter.value.GetIntValue());
+                        var enumValue = Enum.ToObject(parameter.field.FieldType, parameter.value.GetIntValue());
                         parameter.field.SetValue(instance, enumValue);
                     }
                     else
@@ -219,6 +221,22 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             else
             {
                 m_ParameterEditor = null;
+
+                // Create parameter labels.
+                m_ParameterLabels = new GUIContent[m_Parameters.Length];
+                for (var i = 0; i < m_Parameters.Length; ++i)
+                {
+                    // Look up tooltip from field.
+                    var tooltip = string.Empty;
+                    var field = m_Parameters[i].field;
+                    var tooltipAttribute = field.GetCustomAttribute<TooltipAttribute>();
+                    if (tooltipAttribute != null)
+                        tooltip = tooltipAttribute.tooltip;
+
+                    // Create label.
+                    var niceName = ObjectNames.NicifyVariableName(m_Parameters[i].value.name);
+                    m_ParameterLabels[i] = new GUIContent(niceName, tooltip);
+                }
             }
         }
 
@@ -249,7 +267,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             for (var i = 0; i < m_Parameters.Length; i++)
             {
                 var parameter = m_Parameters[i];
-                var label = ObjectNames.NicifyVariableName(parameter.value.name);
+                var label = m_ParameterLabels[i];
 
                 EditorGUI.BeginChangeCheck();
 
@@ -340,13 +358,14 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         private InputParameterEditor m_ParameterEditor;
         private EditableParameterValue[] m_Parameters;
+        private GUIContent[] m_ParameterLabels;
 
-        public struct EditableParameterValue
+        private struct EditableParameterValue
         {
             public InputControlLayout.ParameterValue value;
             public InputControlLayout.ParameterValue? defaultValue;
             public int[] enumValues;
-            public string[] enumNames;
+            public GUIContent[] enumNames;
             public FieldInfo field;
 
             public bool isEnum => enumValues != null;

@@ -17,6 +17,8 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Editor;
 #endif
 
+////TODO: make diagnostics available in dev players and give it a public API to enable them
+
 ////TODO: work towards InputManager having no direct knowledge of actions
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
@@ -973,12 +975,14 @@ namespace UnityEngine.Experimental.Input
             // Make sure that if the device ID is listed in m_AvailableDevices, the device
             // is no longer marked as removed.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
-                m_AvailableDevices[i].isRemoved = false;
+            {
+                if (m_AvailableDevices[i].deviceId == device.id)
+                    m_AvailableDevices[i].isRemoved = false;
+            }
 
             ////REVIEW: we may want to suppress this during the initial device discovery phase
             // Let actions re-resolve their paths.
-            if (!m_SuppressReResolvingOfActions)
-                InputActionMapState.ReResolveAllEnabledActions();
+            InputActionState.OnDeviceChange(device, InputDeviceChange.Added);
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
@@ -1098,8 +1102,7 @@ namespace UnityEngine.Experimental.Input
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
             // by actions to uninstall state monitors will get ignored.
-            if (!m_SuppressReResolvingOfActions)
-                InputActionMapState.ReResolveAllEnabledActions();
+            InputActionState.OnDeviceChange(device, InputDeviceChange.Removed);
 
             // Kill before update callback, if applicable.
             if (device is IInputUpdateCallbackReceiver beforeUpdateCallbackReceiver)
@@ -1463,12 +1466,13 @@ namespace UnityEngine.Experimental.Input
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
             interactions.AddTypeRegistration("MultiTap", typeof(MultiTapInteraction));
+            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
-            composites.AddTypeRegistration("Axis", typeof(AxisComposite));
-            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));
+            composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
+            composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1570,7 +1574,6 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
-        private bool m_SuppressReResolvingOfActions;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
@@ -1602,9 +1605,7 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
             var internedName = new InternedString(name);
-            if (table.TryGetValue(internedName, out var type))
-                return type;
-            return null;
+            return table.TryGetValue(internedName, out var type) ? type : null;
         }
 
         // Maps a single control to an action interested in the control. If
@@ -1895,7 +1896,7 @@ namespace UnityEngine.Experimental.Input
                     var layout = TryFindMatchingControlLayout(ref description, deviceId);
                     if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                     {
-                        // Not support. Ignore device. Still will get added to m_AvailableDevices
+                        // Not supported. Ignore device. Still will get added to m_AvailableDevices
                         // list in finally clause below. If later the set of supported devices changes
                         // so that the device is now supported, ApplySettings() will pull it back out
                         // and create the device.
@@ -1970,6 +1971,10 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
+            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
+            if ((updateType & m_UpdateMask) == 0)
+                return;
+
             #if UNITY_EDITOR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
@@ -2194,6 +2199,10 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
+            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
+            if ((updateType & m_UpdateMask) == 0)
+                return;
+
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
@@ -2453,16 +2462,6 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
-                        // Ignore the event if the last state update we received for the device was
-                        // newer than this state event is. We don't allow devices to go back in time.
-                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal)
-                        {
-                            #if UNITY_EDITOR
-                            m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
-                            #endif
-                            break;
-                        }
-
                         var deviceHasStateCallbacks = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
                             InputDevice.DeviceFlags.HasStateCallbacks;
                         IInputStateCallbackReceiver stateCallbacks = null;
@@ -2510,6 +2509,26 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
+                        // Ignore the event if the last state update we received for the device was
+                        // newer than this state event is. We don't allow devices to go back in time.
+                        //
+                        // NOTE: We make an exception here for devices that implement IInputStateCallbackReceiver (such
+                        //       as Touchscreen). For devices that dynamically incorporate state it can be hard ensuring
+                        //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
+                        //       that are generated in the backend and would require considerable work to ensure monotonically
+                        //       increasing timestamps across all such streams.
+                        //
+                        //       This exception isn't elegant. But then, the entire IInputStateCallbackReceiver thing
+                        //       is anything but elegant...
+                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
+                            !(deviceHasStateCallbacks && stateBlockOfDevice.format != receivedStateFormat))
+                        {
+                            #if UNITY_EDITOR
+                            m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
+                            #endif
+                            break;
+                        }
+
                         // If the state format doesn't match, see if the device knows what to do.
                         // If not, ignore the event.
                         if (stateBlockOfDevice.format != receivedStateFormat)
@@ -2527,8 +2546,7 @@ namespace UnityEngine.Experimental.Input
                             if (!canIncorporateUnrecognizedState)
                             {
                                 #if UNITY_EDITOR
-                                if (m_Diagnostics != null)
-                                    m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventReadPtr), device);
+                                m_Diagnostics?.OnEventFormatMismatch(new InputEventPtr(currentEventReadPtr), device);
                                 #endif
                                 break;
                             }
@@ -2684,7 +2702,8 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
+                        if (device.m_LastUpdateTimeInternal <= currentEventTimeInternal)
+                            device.m_LastUpdateTimeInternal = currentEventTimeInternal;
                         if (makeDeviceCurrent)
                             device.MakeCurrent();
 
@@ -2808,7 +2827,10 @@ namespace UnityEngine.Experimental.Input
 
             Profiler.EndSample();
 
+            ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
+            ////       mess in the event buffer
             InvokeAfterUpdateCallback(updateType);
+            ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)
@@ -2850,9 +2872,8 @@ namespace UnityEngine.Experimental.Input
                     break;
 
                 default:
-                    throw new NotSupportedException(string.Format(
-                        "Unrecognized update mode '{0}'; don't know which buffers to use for actions",
-                        m_Settings.updateMode));
+                    throw new NotSupportedException(
+                        $"Unrecognized update mode '{m_Settings.updateMode}'; don't know which buffers to use for actions");
             }
 
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
@@ -3242,99 +3263,88 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(m_SavedDeviceStates != null);
 
-            // We don't want to re-resolve actions over and over while we're adding back
-            // device. Suppress it and then do a final resolve at the end.
-            m_SuppressReResolvingOfActions = true;
-            try
+            var deviceCount = m_SavedDeviceStates.Length;
+            for (var i = 0; i < deviceCount; ++i)
             {
-                var deviceCount = m_SavedDeviceStates.Length;
-                for (var i = 0; i < deviceCount; ++i)
-                {
-                    var deviceState = m_SavedDeviceStates[i];
+                var deviceState = m_SavedDeviceStates[i];
 
-                    InputDevice device;
+                InputDevice device;
+                try
+                {
+                    // If the device has a description, we have it go through the normal matching
+                    // process so that it comes out as whatever corresponds to the current layout
+                    // registration state (which may be different from before the domain reload).
+                    // Only if it's a device added with AddDevice(string) directly do we just try
+                    // to create a device with the same layout.
+                    if (!deviceState.description.empty)
+                    {
+                        device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
+                            deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
+                    }
+                    else
+                    {
+                        // See if we still have the layout that the device used. Might have
+                        // come from a type that was removed in the meantime. If so, just
+                        // don't re-add the device.
+                        var layout = new InternedString(deviceState.layout);
+                        if (!m_Layouts.HasLayout(layout))
+                        {
+                            Debug.Log(
+                                $"Removing input device '{deviceState.name}' with layout '{deviceState.layout}' which has been removed");
+                            continue;
+                        }
+
+                        device = AddDevice(layout, deviceState.deviceId,
+                            deviceFlags: deviceState.flags,
+                            variants: new InternedString(deviceState.variants));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(
+                        $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
+                    Debug.LogException(exception);
+                    continue;
+                }
+
+                // Usages and the user interaction filter can be set on an API level so manually restore them.
+                deviceState.RestoreUsagesOnDevice(device);
+            }
+
+            // See if we can make sense of an available device now that we couldn't make sense of
+            // before. This can be the case if there's new layout information that wasn't available
+            // before.
+            m_AvailableDevices = m_SavedAvailableDevices;
+            m_AvailableDeviceCount = m_SavedAvailableDevices.Length;
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
+            {
+                var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
+                if (device != null)
+                    continue;
+
+                if (m_AvailableDevices[i].isRemoved)
+                    continue;
+
+                var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
+                    m_AvailableDevices[i].deviceId);
+                if (!layout.IsEmpty())
+                {
                     try
                     {
-                        // If the device has a description, we have it go through the normal matching
-                        // process so that it comes out as whatever corresponds to the current layout
-                        // registration state (which may be different from before the domain reload).
-                        // Only if it's a device added with AddDevice(string) directly do we just try
-                        // to create a device with the same layout.
-                        if (!deviceState.description.empty)
-                        {
-                            device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
-                                deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
-                        }
-                        else
-                        {
-                            // See if we still have the layout that the device used. Might have
-                            // come from a type that was removed in the meantime. If so, just
-                            // don't re-add the device.
-                            var layout = new InternedString(deviceState.layout);
-                            if (!m_Layouts.HasLayout(layout))
-                            {
-                                Debug.Log(
-                                    $"Removing input device '{deviceState.name}' with layout '{deviceState.layout}' which has been removed");
-                                continue;
-                            }
-
-                            device = AddDevice(layout, deviceState.deviceId,
-                                deviceFlags: deviceState.flags,
-                                variants: new InternedString(deviceState.variants));
-                        }
+                        AddDevice(layout, m_AvailableDevices[i].deviceId,
+                            deviceDescription: m_AvailableDevices[i].description,
+                            deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                     }
-                    catch (Exception exception)
+                    catch (Exception)
                     {
-                        Debug.LogError(
-                            $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
-                        Debug.LogException(exception);
-                        continue;
-                    }
-
-                    // Usages and the user interaction filter can be set on an API level so manually restore them.
-                    deviceState.RestoreUsagesOnDevice(device);
-                }
-
-                // See if we can make sense of an available device now that we couldn't make sense of
-                // before. This can be the case if there's new layout information that wasn't available
-                // before.
-                m_AvailableDevices = m_SavedAvailableDevices;
-                m_AvailableDeviceCount = m_SavedAvailableDevices.Length;
-                for (var i = 0; i < m_AvailableDeviceCount; ++i)
-                {
-                    var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
-                    if (device != null)
-                        continue;
-
-                    if (m_AvailableDevices[i].isRemoved)
-                        continue;
-
-                    var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
-                        m_AvailableDevices[i].deviceId);
-                    if (!layout.IsEmpty())
-                    {
-                        try
-                        {
-                            AddDevice(layout, m_AvailableDevices[i].deviceId,
-                                deviceDescription: m_AvailableDevices[i].description,
-                                deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
-                        }
-                        catch (Exception)
-                        {
-                            // Just ignore. Simply means we still can't really turn the device into something useful.
-                        }
+                        // Just ignore. Simply means we still can't really turn the device into something useful.
                     }
                 }
+            }
 
-                // Done. Discard saved arrays.
-                m_SavedDeviceStates = null;
-                m_SavedAvailableDevices = null;
-            }
-            finally
-            {
-                m_SuppressReResolvingOfActions = false;
-                InputActionMapState.ReResolveAllEnabledActions();
-            }
+            // Done. Discard saved arrays.
+            m_SavedDeviceStates = null;
+            m_SavedAvailableDevices = null;
         }
 
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD

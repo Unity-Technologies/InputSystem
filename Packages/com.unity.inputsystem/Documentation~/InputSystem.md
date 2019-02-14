@@ -8,7 +8,7 @@ This is the manual for Unity's new input system.
 * [Quick Start Guide](QuickStartGuide.md)
     * [How Do I...?](HowDoI.md)
     * [Migrate from Old Input System](Migration.md)
-* [GameObject Support](PlayerInput.md)
+* [GameObject Support](Components.md)
 * [UI Support](UISupport.md)
 * [Use In Editor UI](UseInEditor.md)
 * [Settings](Settings.md)

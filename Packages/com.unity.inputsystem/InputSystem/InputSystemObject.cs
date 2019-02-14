@@ -12,6 +12,7 @@ namespace UnityEngine.Experimental.Input
     {
         [SerializeField] public InputSystem.State systemState;
         [SerializeField] public bool newInputBackendsCheckedAsEnabled;
+        [SerializeField] public string settings;
 
         public void OnBeforeSerialize()
         {

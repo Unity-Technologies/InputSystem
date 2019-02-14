@@ -473,7 +473,17 @@ partial class CoreTests
         receivedUpdate = false;
         receivedUpdateType = null;
 
-        // Before render.
+        // Before render. Disabled by default. Add a device that needs before-render updates
+        // so that the update gets enabled.
+        const string kBeforeRenderDevice = @"
+            {
+                ""name"" : ""BeforeRenderGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+        InputSystem.RegisterLayout(kBeforeRenderDevice);
+        InputSystem.AddDevice("BeforeRenderGamepad");
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
@@ -895,17 +905,17 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
+    // InputHistory helps creating traces of input over time. This is useful, for example, to track
     // the motion curve of a tracking device over time.
     [Test]
     [Category("State")]
     [Ignore("TODO")]
-    public void TODO_State_CanRecordHistoryOfState()
+    public void TODO_State_CanRecordHistory()
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        using (var history = new InputStateHistory<Vector2>("<Gamepad>/*stick"))
+        using (var history = new InputHistory<Vector2>("<Gamepad>/*stick"))
         {
             Assert.That(history.controls,
                 Is.EquivalentTo(

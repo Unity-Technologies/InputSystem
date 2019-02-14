@@ -31,10 +31,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private ActionsTree(Action applyAction, TreeViewState state)
             : base(applyAction, state)
         {
-            ////REVIEW: good enough like this for 2018.2?
-            #if UNITY_2018_3_OR_NEWER
             foldoutOverride += OnFoldoutDraw;
-            #endif
             Reload();
         }
 
@@ -68,9 +65,10 @@ namespace UnityEngine.Experimental.Input.Editor
             var root = new TreeViewItem
             {
                 id = 0,
-                depth = -1
+                depth = -1,
+                children = new List<TreeViewItem>()
             };
-            root.children = new List<TreeViewItem>();
+
             if (actionMapProperty != null)
             {
                 ParseActionMap(root, actionMapProperty, 0);
@@ -96,42 +94,38 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index, int depth)
+        private static void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index, int depth)
         {
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
 
-            var actionItem = new ActionTreeItem(actionMapProperty, actionProperty, index);
-            actionItem.depth = depth;
+            var actionItem = new ActionTreeItem(actionMapProperty, actionProperty, index) {depth = depth};
             var actionName = actionItem.actionName;
 
             ParseBindings(actionItem, actionMapName, actionName, bindingsArrayProperty, depth + 1);
             parentTreeItem.AddChild(actionItem);
         }
 
-        private void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
+        private static void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
         {
             var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
             CompositeGroupTreeItem compositeGroupTreeItem = null;
             for (var j = 0; j < bindingsCount; j++)
             {
                 var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
-                var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j);
-                bindingsItem.depth = depth;
+                var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j) {depth = depth};
                 if (bindingsItem.isComposite)
                 {
-                    compositeGroupTreeItem = new CompositeGroupTreeItem(actionMapName, bindingProperty, j);
-                    compositeGroupTreeItem.depth = depth;
+                    compositeGroupTreeItem =
+                        new CompositeGroupTreeItem(actionMapName, bindingProperty, j) {depth = depth};
                     parent.AddChild(compositeGroupTreeItem);
                     continue;
                 }
                 if (bindingsItem.isPartOfComposite)
                 {
-                    var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j);
-                    compositeItem.depth = depth + 1;
-                    if (compositeGroupTreeItem != null)
-                        compositeGroupTreeItem.AddChild(compositeItem);
+                    var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j) {depth = depth + 1};
+                    compositeGroupTreeItem?.AddChild(compositeItem);
                     continue;
                 }
                 compositeGroupTreeItem = null;
@@ -188,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // Return true is the child node should be removed from the parent
-        private bool FilterResults(TreeViewItem item, Func<TreeViewItem, bool> filterMatch)
+        private static bool FilterResults(TreeViewItem item, Func<TreeViewItem, bool> filterMatch)
         {
             if (item.hasChildren)
             {
@@ -235,8 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item is CompositeGroupTreeItem)
                 return !FilterResults(item, MatchGroupFilter);
 
-            var binding = item as BindingTreeItem;
-            if (binding != null)
+            if (item is BindingTreeItem binding)
             {
                 if (string.IsNullOrEmpty(binding.path))
                     return true;
@@ -256,8 +249,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item is CompositeGroupTreeItem)
                 return !FilterResults(item, MatchDeviceFilter);
 
-            var binding = item as BindingTreeItem;
-            if (binding != null)
+            if (item is BindingTreeItem binding)
             {
                 if (string.IsNullOrEmpty(binding.path))
                     return true;
@@ -269,8 +261,7 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override void RowGUI(RowGUIArgs args)
         {
             base.RowGUI(args);
-            if (OnRowGUI != null)
-                OnRowGUI(args.item, args.rowRect);
+            OnRowGUI?.Invoke(args.item, args.rowRect);
         }
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
@@ -278,7 +269,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (args.dragAndDropPosition != DragAndDropPosition.BetweenItems)
                 return DragAndDropVisualMode.None;
 
-            var id = Int32.Parse(DragAndDrop.paths.First());
+            var id = int.Parse(DragAndDrop.paths.First());
             var item = FindItem(id, rootItem);
             var row = (ActionTreeViewItem)item;
 
@@ -319,11 +310,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void MoveBinding(DragAndDropArgs args, ActionTreeViewItem row)
         {
-            TreeViewItem item;
             var compositeChildrenCount = 0;
             for (var i = 0; i < args.insertAtIndex; i++)
             {
-                item = args.parentItem.children[i];
+                var item = args.parentItem.children[i];
                 if (item.hasChildren)
                 {
                     compositeChildrenCount += item.children.Count;
@@ -365,7 +355,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public void SelectNewBindingRow(ActionTreeItem actionLine)
         {
             // Since the tree is rebuilt, we need to find action line with matching id of the current tree
-            ActionTreeItem action = (ActionTreeItem)FindItem(actionLine.id, rootItem);
+            var action = (ActionTreeItem)FindItem(actionLine.id, rootItem);
             var newRow = action.children.Last();
             if (newRow.hasChildren)
                 newRow = newRow.children.First();

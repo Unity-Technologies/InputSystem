@@ -195,7 +195,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InputEditorUserSettings.lockInputToGameView = !InputEditorUserSettings.lockInputToGameView;
         }
 
-        private void ToggleAddDeviesNotSupportedByProject()
+        private void ToggleAddDevicesNotSupportedByProject()
         {
             InputEditorUserSettings.addDevicesNotSupportedByProject =
                 !InputEditorUserSettings.addDevicesNotSupportedByProject;
@@ -224,7 +224,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var menu = new GenericMenu();
 
                 menu.AddItem(Contents.addDevicesNotSupportedByProjectContent, InputEditorUserSettings.addDevicesNotSupportedByProject,
-                    ToggleAddDeviesNotSupportedByProject);
+                    ToggleAddDevicesNotSupportedByProject);
                 menu.AddItem(Contents.diagnosticsModeContent, InputSystem.s_Manager.m_Diagnostics != null,
                     ToggleDiagnosticMode);
                 menu.AddItem(Contents.lockInputToGameViewContent, InputEditorUserSettings.lockInputToGameView,
@@ -673,7 +673,23 @@ namespace UnityEngine.Experimental.Input.Editor
             private void AddEnabledActions(TreeViewItem parent, ref int id)
             {
                 foreach (var action in m_EnabledActions)
-                    AddActionItem(parent, action, ref id);
+                {
+                    // If we have users, find out if the action is owned by a user. If so, don't display
+                    // it separately.
+                    var isOwnedByUser = false;
+                    foreach (var user in InputUser.all)
+                    {
+                        var userActions = user.actions;
+                        if (userActions != null && userActions.Contains(action))
+                        {
+                            isOwnedByUser = true;
+                            break;
+                        }
+                    }
+
+                    if (!isOwnedByUser)
+                        AddActionItem(parent, action, ref id);
+                }
 
                 parent.children?.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.CurrentCultureIgnoreCase));
             }

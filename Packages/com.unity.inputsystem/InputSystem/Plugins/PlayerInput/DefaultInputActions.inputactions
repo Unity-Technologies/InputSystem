@@ -41,7 +41,7 @@
                     "modifiers": ""
                 },
                 {
-                    "name": "Dpad",
+                    "name": "WASD",
                     "path": "Dpad",
                     "interactions": "",
                     "processors": "",
@@ -101,7 +101,7 @@
                     "modifiers": ""
                 },
                 {
-                    "name": "Dpad",
+                    "name": "Arrows",
                     "path": "Dpad",
                     "interactions": "",
                     "processors": "",

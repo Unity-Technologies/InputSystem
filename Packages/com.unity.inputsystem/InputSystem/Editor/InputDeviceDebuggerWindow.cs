@@ -22,7 +22,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add toggle to that switches to displaying raw control values
 
-////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputStateHistory)
+////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputHistory)
 
 ////TODO: show default states of controls
 

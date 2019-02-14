@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 ////REVIEW: finding this kind of stuff should probably have better support globally on the asset; e.g. some
                 ////        notification that pops up and allows fixing all occurrences in one click
                 // Find out if we still support this option and indicate it in the list, if we don't.
-                if (m_ListOptions.LookupTypeRegistration(new InternedString(name)) == null)
+                if (m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name)) == null)
                     name += " (Obsolete)";
 
                 m_ListItems.Add(name);

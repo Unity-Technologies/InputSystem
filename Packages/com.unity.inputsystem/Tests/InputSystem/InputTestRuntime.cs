@@ -246,6 +246,20 @@ namespace UnityEngine.Experimental.Input
                 userHandle, userName, userId);
         }
 
+        public unsafe void ReportInputDeviceRemoved(int deviceId)
+        {
+            var removeEvent = DeviceRemoveEvent.Create(deviceId);
+            var removeEventPtr = UnsafeUtility.AddressOf(ref removeEvent);
+            QueueEvent(new IntPtr(removeEventPtr));
+        }
+
+        public void ReportInputDeviceRemoved(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            ReportInputDeviceRemoved(device.id);
+        }
+
         public void AssociateInputDeviceWithUser(int deviceId, ulong userHandle, string userName = null, string userId = null)
         {
             var existingIndex = -1;
