@@ -5,15 +5,14 @@ TextureImporter:
     21300000: DualShock_Bar2
     21300002: DualShock
     21300004: DualShock_Half_Button
-    21300006: DualShock_3
-    21300008: DualShock_Bar1
-    21300010: DualShock_Triangle
-    21300012: DualShock_Circle
-    21300014: DualShock_Square
-    21300016: DualShock_Cross
-    21300018: DualShock_Button0
-    21300020: DualShock_Button1
-    21300022: DualShock_Button2
+    21300006: DualShock_Bar1
+    21300008: DualShock_Triangle
+    21300010: DualShock_Circle
+    21300012: DualShock_Square
+    21300014: DualShock_Cross
+    21300016: DualShock_Button0
+    21300018: DualShock_Button1
+    21300020: DualShock_Button2
   externalObjects: {}
   serializedVersion: 9
   mipmaps:

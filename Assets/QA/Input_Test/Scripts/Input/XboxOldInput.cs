@@ -16,7 +16,7 @@ public class XboxOldInput : GamepadOldInput
     public Text m_rightStickText;
 
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
-    private Color m_stickButtonColor = new Color(0.4f, 0.4f, 0.55f, 1f);    // The default color for Stick when it is NOT pressed.
+    private readonly Color m_stickButtonColor = new Color(0.4f, 0.4f, 0.55f, 1f);    // The default color for Stick when it is NOT pressed.
 
     // Use this for initialization
     void Start()
@@ -35,8 +35,8 @@ public class XboxOldInput : GamepadOldInput
         button_map.Add("Button9", "RightStick/Stick - Input Manager");
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("LeftStick/Stick - Input Manager"), "Axis 1", "Axis 2", posText: m_leftStickText, isYReversed: true));
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick/Stick - Input Manager"), "Axis 4", "Axis 5", posText: m_rightStickText, isYReversed: true));
-        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("LeftTrigger"), "Axis 3", 0f, 1f));
-        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("RightTrigger"), "Axis 3", -1f, 0f));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("LeftTrigger"), "Axis 3", -1f, 0f));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("RightTrigger"), "Axis 3", 0f, 1f));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Left"), "Axis 6", -1f, 0f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Right"), "Axis 6", 0f, 1f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Up"), "Axis 7", 0f, 1f, isDpad: true));
@@ -62,6 +62,7 @@ public class XboxOldInput : GamepadOldInput
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick/Stick - Input Manager"), "Axis 3", "Axis 4", posText: m_rightStickText, isYReversed: true));
         xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("LeftTrigger"), "Axis 5"));
         xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("RightTrigger"), "Axis 6"));
+
 #elif UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || UNITY_STANDALONE_LINUX_API
         button_map.Add("Button0", "A");
         button_map.Add("Button1", "B");
