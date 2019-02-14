@@ -64,6 +64,10 @@ public class GamepadISX : MonoBehaviour
             button = GetInputTransform(FirstLetterToUpper(buttonName), dpadName: dpadName);
         }
 
+        if (button == null)
+            return;
+
+        Debug.Log(control.ReadValue().ToString());
         if (control.ReadValue() > 0)
             StartHighlight(button);
         else
