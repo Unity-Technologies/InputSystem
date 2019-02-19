@@ -4,6 +4,13 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.x.x-preview] - XXXX-XX-XX
+
+### Fixes
+- InputActions editor: Fixed warnings in Console when using InputActions editor
+- InputActions editor: Fixed Assert when generating C# class and make sure it gets imported correctly
+- InputActions editor: Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+
 ## [0.2.0-preview] - 2019-02-12
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
