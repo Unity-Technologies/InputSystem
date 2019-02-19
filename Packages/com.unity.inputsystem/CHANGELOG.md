@@ -21,6 +21,7 @@ This release contains a number of fairly significant changes. The focus has been
 - `SensitivityProcessor` has been removed.
     * The approach needs rethinking. What `SensitivityProcessor` did caused more problems than it solved.
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
+- Removed TouchPositionTransformProcessor, was used only by Android, the position transformation will occur in native backend in 2019.x
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.
