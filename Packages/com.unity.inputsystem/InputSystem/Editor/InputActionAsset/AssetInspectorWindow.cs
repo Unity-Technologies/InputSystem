@@ -558,6 +558,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_BindingPropertyView.CancelInteractivePicking();
                 Repaint();
             }
+
+            // Eat key events to supress the editor from passing them to the OS 
+            // (causing beeps or menu commands being triggered).
+            if (Event.current.isKey)
+                Event.current.Use();            
         }
 
         public static void RefreshAllOnAssetReimport()
