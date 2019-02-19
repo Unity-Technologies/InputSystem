@@ -90,7 +90,7 @@ partial class CoreTests
     [Category("Remote")]
     public void Remote_SettingUsageOnDevice_WillSendChangeToRemotes()
     {
-        var gamepad = InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var remote = new FakeRemote())
         {
             var remoteGamepad = (Gamepad)remote.manager.devices[0];
@@ -141,7 +141,7 @@ partial class CoreTests
 
         fakeEditorConnection.Send(RemoteInputPlayerConnection.kStartSendingMsg, null);
 
-        var device = InputSystem.AddDevice("Gamepad");
+        var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
         InputSystem.RemoveDevice(device);
@@ -149,7 +149,7 @@ partial class CoreTests
         fakeEditorConnection.Send(RemoteInputPlayerConnection.kStopSendingMsg, null);
 
         // We should not obseve any messages for these, as we stopped sending!
-        device = InputSystem.AddDevice("Gamepad");
+        device = InputSystem.AddDevice<Gamepad>();
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
         InputSystem.RemoveDevice(device);

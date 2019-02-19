@@ -230,7 +230,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (GUILayout.Button("Remote Devices…", EditorStyles.toolbarDropDown))
             {
-                GenericMenu menu = new GenericMenu();
+                var menu = new GenericMenu();
                 var haveRemotes = InputSystem.devices.Any(x => x.remote);
                 if (EditorConnection.instance.ConnectedPlayers.Count > 0)
                     menu.AddItem(new GUIContent("Show remote devices"), haveRemotes, () =>
