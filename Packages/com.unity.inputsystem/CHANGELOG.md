@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Editor beeping or triggering menu commands when binding keys interactively.
+- "Add Action" button being active and triggering exceptions when no action map had been added yet.
 
 ## [0.2.0-preview] - 2019-02-12
 

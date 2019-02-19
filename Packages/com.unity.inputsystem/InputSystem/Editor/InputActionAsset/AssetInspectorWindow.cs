@@ -471,13 +471,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             labelRect.x = labelRect.x + labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
             labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
+            using (new EditorGUI.DisabledScope(m_ActionMapsTree.GetSelectedRow() == null))
             {
-                m_ContextMenu.OnAddAction();
-                m_ContextMenu.OnAddBinding(m_ActionsTree.GetSelectedAction());
-                m_ActionsTree.SelectNewActionRow();
+                if (GUI.Button(labelRect, m_AddActionIconGUI, GUIStyle.none))
+                {
+                    m_ContextMenu.OnAddAction();
+                    m_ContextMenu.OnAddBinding(m_ActionsTree.GetSelectedAction());
+                    m_ActionsTree.SelectNewActionRow();
+                }
             }
-
             // Draw border rect
             EditorGUI.LabelField(columnRect, GUIContent.none, Styles.propertiesBackground);
             // Compensate for the border rect
