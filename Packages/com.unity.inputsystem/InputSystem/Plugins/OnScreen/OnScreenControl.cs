@@ -105,8 +105,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                 }
 
                 // Create event buffer.
-                InputEventPtr eventPtr;
-                var buffer = StateEvent.From(device, out eventPtr, Allocator.Persistent);
+                var buffer = StateEvent.From(device, out var eventPtr, Allocator.Persistent);
 
                 // Add to list.
                 deviceInfoIndex = s_OnScreenDevices.Append(new OnScreenDeviceInfo

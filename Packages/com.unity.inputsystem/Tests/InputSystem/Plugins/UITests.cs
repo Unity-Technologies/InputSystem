@@ -30,9 +30,9 @@ internal class UITests : InputTestFixture
     // Set up a UIActionInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI
     // from activity on input devices.
-    TestObjects CreateScene()
+    private static TestObjects CreateScene()
     {
-        TestObjects objects = new TestObjects();
+        var objects = new TestObjects();
 
         // Set up GameObject with EventSystem.
         var systemObject = new GameObject("System");
@@ -147,8 +147,8 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check basic down/up
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = (ushort)(1 << (int)MouseButton.Left) });
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = (ushort)0 });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Left });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 0 });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -161,7 +161,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check down and drag
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = (ushort)(1 << (int)MouseButton.Right) });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Right });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -196,7 +196,7 @@ internal class UITests : InputTestFixture
         rightChildReceiver.Reset();
 
         // Release button
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 200), buttons = (ushort)0 });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 200), buttons = 0 });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -277,7 +277,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check Submit
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = (uint)(1 << (int)GamepadButton.South) });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.South });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -287,7 +287,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check Cancel
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = (uint)(1 << (int)GamepadButton.East) });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.East });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -389,8 +389,7 @@ internal class UITests : InputTestFixture
         // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
 
-        InputEventPtr stateEvent;
-        using (StateEvent.From(trackedDevice, out stateEvent))
+        using (StateEvent.From(trackedDevice, out var stateEvent))
         {
             // Reset to Defaults
             trackedDevice.position.WriteValueIntoEvent(Vector3.zero, stateEvent);
@@ -674,6 +673,13 @@ internal class UITests : InputTestFixture
             {
                 this.type = type;
                 this.data = data;
+            }
+
+            public override string ToString()
+            {
+                var dataString = data.ToString();
+                dataString = dataString.Replace("\n", "\n\t");
+                return $"{type}[\n\t{dataString}]";
             }
         }
 

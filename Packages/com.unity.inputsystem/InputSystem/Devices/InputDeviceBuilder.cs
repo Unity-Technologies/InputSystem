@@ -117,9 +117,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception(string.Format(
-                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                    typeof(TControl).Name, control.GetType().Name));
+                throw new Exception(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -130,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = TryGetControl(parent, path);
             if (control == null)
-                throw new Exception(string.Format("Cannot find input control '{0}'", parent.MakeChildPath(path)));
+                throw new Exception($"Cannot find input control '{parent.MakeChildPath(path)}'");
             return control;
         }
 
@@ -860,7 +859,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             for (var n = 0; n < processorCount; ++n)
             {
                 var name = controlItem.processors[n].name;
-                var type = InputControlProcessor.s_Processors.LookupTypeRegistration(name);
+                var type = InputProcessor.s_Processors.LookupTypeRegistration(name);
                 if (type == null)
                     throw new Exception(
                         string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,

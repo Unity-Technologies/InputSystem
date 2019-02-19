@@ -36,12 +36,12 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         protected override TypeTable GetOptions()
         {
-            return InputControlProcessor.s_Processors;
+            return InputProcessor.s_Processors;
         }
 
         protected override Type GetValueType(Type type)
         {
-            return InputControlProcessor.GetValueType(type);
+            return InputProcessor.GetValueTypeFromType(type);
         }
     }
 
@@ -59,7 +59,17 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_ExpectedControlLayout = expectedControlLayout;
 
             foreach (var nameAndParams in m_ParametersForEachListItem)
-                m_ListItems.Add(ObjectNames.NicifyVariableName(nameAndParams.name));
+            {
+                var name = ObjectNames.NicifyVariableName(nameAndParams.name);
+
+                ////REVIEW: finding this kind of stuff should probably have better support globally on the asset; e.g. some
+                ////        notification that pops up and allows fixing all occurrences in one click
+                // Find out if we still support this option and indicate it in the list, if we don't.
+                if (m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name)) == null)
+                    name += " (Obsolete)";
+
+                m_ListItems.Add(name);
+            }
 
             m_ListView = new ReorderableList(m_ListItems, typeof(string))
             {
@@ -147,7 +157,6 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
             var typeName = m_ParametersForEachListItem[index].name;
             var rowType =  m_ListOptions.LookupTypeRegistration(typeName);
-            Debug.Assert(rowType != null);
 
             m_EditableParametersForSelectedItem.Initialize(rowType, m_ParametersForEachListItem[index].parameters);
         }

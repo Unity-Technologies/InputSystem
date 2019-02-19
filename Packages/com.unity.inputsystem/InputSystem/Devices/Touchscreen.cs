@@ -35,12 +35,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public const int kSizeInBytes = 36;
 
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'O', 'U', 'C'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
         [InputControl(layout = "Integer")][FieldOffset(0)] public int touchId;
+        ////TODO: kill the processor here
         [InputControl(processors = "TouchPositionTransform")][FieldOffset(4)] public Vector2 position;
         [InputControl][FieldOffset(12)] public Vector2 delta;
         [InputControl(layout = "Axis")][FieldOffset(20)] public float pressure;
@@ -51,8 +49,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public PointerPhase phase
         {
-            get { return (PointerPhase)phaseId; }
-            set { phaseId = (ushort)value; }
+            get => (PointerPhase)phaseId;
+            set => phaseId = (ushort)value;
         }
 
         public FourCC GetFormat()
@@ -61,9 +59,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
 
-    public class TouchPositionTransformProcessor : IInputControlProcessor<Vector2>
+    ////FIXME: this thing should go; the Android player should do this in the backend
+    public class TouchPositionTransformProcessor : InputProcessor<Vector2>
     {
-        public Vector2 Process(Vector2 value, InputControl control)
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
 #if UNITY_EDITOR
             return value;
@@ -89,10 +88,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'S', 'C', 'R'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
 
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.
@@ -159,10 +155,7 @@ namespace UnityEngine.Experimental.Input
     [InputControlLayout(stateType = typeof(TouchscreenState))]
     public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
-        public TouchControl primaryTouch
-        {
-            get { return allTouchControls[0]; }
-        }
+        public TouchControl primaryTouch => allTouchControls[0];
 
         /// <summary>
         /// Array of currently active touches.
@@ -400,50 +393,5 @@ namespace UnityEngine.Experimental.Input
     public class Touch
     {
         private List<TouchState> m_History;
-    }
-
-    /// <summary>
-    /// Helper to make tracking of touches easier.
-    /// </summary>
-    /// <remarks>
-    /// This class obsoletes the need to manually track touches by ID and provides
-    /// various helpers such as making history data of touches available.
-    /// </remarks>
-    public class TouchManager
-    {
-        /// <summary>
-        /// The amount of history kept for each single touch.
-        /// </summary>
-        /// <remarks>
-        /// By default, this is zero meaning that no history information is kept for
-        /// touches. Setting this to <c>Int32.maxValue</c> will cause all history from
-        /// the beginning to the end of a touch being kept.
-        /// </remarks>
-        public int maxHistoryLengthPerTouch
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public Action<Touch> onTouch
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public static TouchManager instance
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        private Touch[] m_TouchPool;
-    }
-
-    public class TouchSimulation
-    {
-        public static TouchSimulation instance
-        {
-            get { throw new NotImplementedException(); }
-        }
     }
 }

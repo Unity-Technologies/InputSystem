@@ -8,9 +8,13 @@ using System.Linq;
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
-    /// Helper to avoid array allocations if there's only a single value in the
-    /// array.
+    /// Helper to avoid array allocations if there's only a single value in the array.
     /// </summary>
+    /// <remarks>
+    /// Also, once more than one entry is necessary, allows treating the extra array as having capacity.
+    /// This means that, for example, 5 or 10 entries can be allocated in batch rather than growing an
+    /// array one by one.
+    /// </remarks>
     /// <typeparam name="TValue">Element type for the array.</typeparam>
     internal struct InlinedArray<TValue> : IEnumerable<TValue>
     {
@@ -81,25 +85,26 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void Clear()
         {
             length = 0;
-            firstValue = default(TValue);
+            firstValue = default;
             additionalValues = null;
         }
 
         public void ClearWithCapacity()
         {
-            length = 0;
-            firstValue = default(TValue);
+            firstValue = default;
             for (var i = 0; i < length - 1; ++i)
-                additionalValues[i] = default(TValue);
+                additionalValues[i] = default;
+            length = 0;
         }
 
+        ////REVIEW: This is inconsistent with ArrayHelpers.Clone() which also clones elements
         public InlinedArray<TValue> Clone()
         {
             return new InlinedArray<TValue>
             {
                 length = length,
                 firstValue = firstValue,
-                additionalValues = additionalValues != null ? (TValue[])additionalValues.Clone() : null
+                additionalValues = additionalValues != null ? ArrayHelpers.Copy(additionalValues) : null
             };
         }
 
@@ -109,13 +114,13 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (size < length)
             {
                 for (var i = size; i < length; ++i)
-                    this[i] = default(TValue);
+                    this[i] = default;
             }
 
             length = size;
 
             if (size > 1 && (additionalValues == null || additionalValues.Length < size - 1))
-                additionalValues = new TValue[size - 1];
+                Array.Resize(ref additionalValues, size - 1);
         }
 
         public TValue[] ToArray()
@@ -220,10 +225,43 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
+        public void RemoveAtWithCapacity(int index)
+        {
+            if (index < 0 || index >= length)
+                throw new IndexOutOfRangeException(nameof(index));
+
+            if (index == 0)
+            {
+                if (length == 1)
+                {
+                    firstValue = default;
+                }
+                else if (length == 2)
+                {
+                    firstValue = additionalValues[0];
+                    additionalValues[0] = default;
+                }
+                else
+                {
+                    Debug.Assert(length > 2);
+                    firstValue = additionalValues[0];
+                    var numAdditional = length - 1;
+                    ArrayHelpers.EraseAtWithCapacity(ref additionalValues, ref numAdditional, 0);
+                }
+            }
+            else
+            {
+                var numAdditional = length - 1;
+                ArrayHelpers.EraseAtWithCapacity(ref additionalValues, ref numAdditional, index - 1);
+            }
+
+            --length;
+        }
+
         public void RemoveAt(int index)
         {
             if (index < 0 || index >= length)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
@@ -282,18 +320,18 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void RemoveAtByMovingTailWithCapacity(int index)
         {
             if (index < 0 || index >= length)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
-                if (additionalValues != null)
+                if (length > 1)
                 {
                     firstValue = additionalValues[length - 1];
-                    additionalValues[length - 1] = default(TValue);
+                    additionalValues[length - 1] = default;
                 }
                 else
                 {
-                    firstValue = default(TValue);
+                    firstValue = default;
                 }
             }
             else
@@ -367,15 +405,8 @@ namespace UnityEngine.Experimental.Input.Utilities
                 index = -1;
             }
 
-            public TValue Current
-            {
-                get { return array[index]; }
-            }
-
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            public TValue Current => array[index];
+            object IEnumerator.Current => Current;
 
             public void Dispose()
             {
@@ -385,14 +416,20 @@ namespace UnityEngine.Experimental.Input.Utilities
 
     internal static class InputArrayExtensions
     {
-        public static bool ContainsReference<TValue>(this InlinedArray<TValue> array, TValue value)
+        public static int IndexOfReference<TValue>(this InlinedArray<TValue> array, TValue value)
             where TValue : class
         {
             for (var i = 0; i < array.length; ++i)
                 if (ReferenceEquals(array[i], value))
-                    return true;
+                    return i;
 
-            return false;
+            return -1;
+        }
+
+        public static bool ContainsReference<TValue>(this InlinedArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            return IndexOfReference(array, value) != -1;
         }
     }
 }

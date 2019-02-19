@@ -546,15 +546,14 @@ namespace UnityEngine.Experimental.Input
                 InputDevice device;
                 try
                 {
+                    ////REVIEW: this gives remote devices names the same way that local devices receive them; should we make remote status visible in the name?
                     device = receiver.m_LocalManager.AddDevice(data.layout);
                     device.m_ParticipantId = msg.participantId;
                 }
                 catch (Exception exception)
                 {
-                    Debug.Log(
-                        string.Format(
-                            "Could not create remote device '{0}' with layout '{1}' locally (exception: {2})",
-                            data.description, data.layout, exception));
+                    Debug.LogError(
+                        $"Could not create remote device '{data.description}' with layout '{data.layout}' locally (exception: {exception})");
                     return;
                 }
                 device.m_Description = data.description;

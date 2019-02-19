@@ -9,24 +9,40 @@
                     "name": "fire",
                     "id": "1077f913-a9f9-41b1-acb3-b9ee0adbc744",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
+                    "passThrough": false,
+                    "processors": "",
+                    "interactions": "",
                     "bindings": []
                 },
                 {
                     "name": "move",
                     "id": "50fd2809-3aa3-4a90-988e-1facf6773553",
                     "expectedControlLayout": "Stick",
+                    "continuous": false,
+                    "passThrough": false,
+                    "processors": "",
+                    "interactions": "",
                     "bindings": []
                 },
                 {
                     "name": "look",
                     "id": "c60e0974-d140-4597-a40e-9862193067e9",
                     "expectedControlLayout": "Vector2",
+                    "continuous": false,
+                    "passThrough": false,
+                    "processors": "",
+                    "interactions": "",
                     "bindings": []
                 },
                 {
                     "name": "jump",
                     "id": "6890847e-f99c-43ac-a79d-0787d911a0a1",
                     "expectedControlLayout": "Button",
+                    "continuous": false,
+                    "passThrough": false,
+                    "processors": "",
+                    "interactions": "",
                     "bindings": []
                 }
             ],
@@ -155,7 +171,7 @@
                     "name": "",
                     "path": "<Pointer>/delta",
                     "interactions": "",
-                    "processors": "",
+                    "processors": "ScaleVector2(x=2,y=2)",
                     "groups": "",
                     "action": "look",
                     "chainWithPrevious": false,
@@ -201,5 +217,6 @@
                 }
             ]
         }
-    ]
+    ],
+    "controlSchemes": []
 }

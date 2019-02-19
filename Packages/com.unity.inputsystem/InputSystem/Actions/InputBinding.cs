@@ -3,13 +3,15 @@ using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add a redirectPath separate from overridePath
-
-////REVIEW: should bindings have unique IDs, too? maybe instead of "name"?
+////REVIEW: should bindings have unique IDs, too?
 
 ////REVIEW: do we really need overridable processors and interactions?
 
-////REVIEW: do we really need "name"?
+// Downsides to the current approach:
+// - Being able to address entire batches of controls through a single control is awesome. Especially
+//   when combining it type-kind of queries (e.g. "<MyDevice>/<Button>"). However, it complicates things
+//   in quite a few areas. There's quite a few bits in InputActionState that could be simplified if a
+//   binding simply maps to a control.
 
 namespace UnityEngine.Experimental.Input
 {
@@ -45,8 +47,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string name
         {
-            get { return m_Name; }
-            set { m_Name = value; }
+            get => m_Name;
+            set => m_Name = value;
         }
 
         /// <summary>
@@ -63,8 +65,8 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public string path
         {
-            get { return m_Path; }
-            set { m_Path = value; }
+            get => m_Path;
+            set => m_Path = value;
         }
 
         /// <summary>
@@ -76,8 +78,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string overridePath
         {
-            get { return m_OverridePath; }
-            set { m_OverridePath = value; }
+            get => m_OverridePath;
+            set => m_OverridePath = value;
         }
 
         /// <summary>
@@ -90,14 +92,14 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public string interactions
         {
-            get { return m_Interactions; }
-            set { m_Interactions = value; }
+            get => m_Interactions;
+            set => m_Interactions = value;
         }
 
         public string overrideInteractions
         {
-            get { return m_OverrideInteractions; }
-            set { m_OverrideInteractions = value; }
+            get => m_OverrideInteractions;
+            set => m_OverrideInteractions = value;
         }
 
         /// <summary>
@@ -108,14 +110,14 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string processors
         {
-            get { return m_Processors; }
-            set { m_Processors = value; }
+            get => m_Processors;
+            set => m_Processors = value;
         }
 
         public string overrideProcessors
         {
-            get { return m_OverrideProcessors; }
-            set { m_OverrideProcessors = value; }
+            get => m_OverrideProcessors;
+            set => m_OverrideProcessors = value;
         }
 
         // Optional group name. This can be used, for example, to divide bindings into
@@ -140,8 +142,8 @@ namespace UnityEngine.Experimental.Input
         //       mark up every single use of the interaction ...
         public string groups
         {
-            get { return m_Groups; }
-            set { m_Groups = value; }
+            get => m_Groups;
+            set => m_Groups = value;
         }
 
         /// <summary>
@@ -155,8 +157,52 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string action
         {
-            get { return m_Action; }
-            set { m_Action = value; }
+            get => m_Action;
+            set => m_Action = value;
+        }
+
+        public bool chainWithPrevious
+        {
+            get => (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine;
+            set
+            {
+                if (value)
+                    m_Flags |= Flags.ThisAndPreviousCombine;
+                else
+                    m_Flags &= ~Flags.ThisAndPreviousCombine;
+            }
+        }
+
+        public bool isComposite
+        {
+            get => (m_Flags & Flags.Composite) == Flags.Composite;
+            set
+            {
+                if (value)
+                    m_Flags |= Flags.Composite;
+                else
+                    m_Flags &= ~Flags.Composite;
+            }
+        }
+
+        public bool isPartOfComposite
+        {
+            get => (m_Flags & Flags.PartOfComposite) == Flags.PartOfComposite;
+            set
+            {
+                if (value)
+                    m_Flags |= Flags.PartOfComposite;
+                else
+                    m_Flags &= ~Flags.PartOfComposite;
+            }
+        }
+
+        public static InputBinding MaskByGroup(string group)
+        {
+            if (string.IsNullOrEmpty(group))
+                throw new ArgumentNullException(nameof(group));
+
+            return new InputBinding {groups = group};
         }
 
         [SerializeField] private string m_Name;
@@ -171,65 +217,15 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
 
-        internal string effectivePath
-        {
-            get { return overridePath ?? path; }
-        }
+        internal string effectivePath => overridePath ?? path;
 
-        internal string effectiveInteractions
-        {
-            get { return overrideInteractions ?? interactions; }
-        }
+        internal string effectiveInteractions => overrideInteractions ?? interactions;
 
-        internal string effectiveProcessors
-        {
-            get { return overrideProcessors ?? processors; }
-        }
+        internal string effectiveProcessors => overrideProcessors ?? processors;
 
-        public bool chainWithPrevious
-        {
-            get { return (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine; }
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.ThisAndPreviousCombine;
-                else
-                    m_Flags &= ~Flags.ThisAndPreviousCombine;
-            }
-        }
-
-        public bool isComposite
-        {
-            get { return (m_Flags & Flags.Composite) == Flags.Composite; }
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.Composite;
-                else
-                    m_Flags &= ~Flags.Composite;
-            }
-        }
-
-        public bool isPartOfComposite
-        {
-            get { return (m_Flags & Flags.PartOfComposite) == Flags.PartOfComposite; }
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.PartOfComposite;
-                else
-                    m_Flags &= ~Flags.PartOfComposite;
-            }
-        }
-
-        internal bool isEmpty
-        {
-            get
-            {
-                return string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
-                    string.IsNullOrEmpty(groups);
-            }
-        }
+        internal bool isEmpty =>
+            string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
+            string.IsNullOrEmpty(groups);
 
         public bool Equals(InputBinding other)
         {
@@ -275,26 +271,24 @@ namespace UnityEngine.Experimental.Input
         {
             var builder = new StringBuilder();
 
+            // Add action.
+            if (!string.IsNullOrEmpty(action))
+            {
+                builder.Append(action);
+                builder.Append(':');
+            }
+
             // Add path.
-            builder.Append('<');
             var path = effectivePath;
             if (!string.IsNullOrEmpty(path))
                 builder.Append(path);
-            builder.Append('>');
 
             // Add groups.
             if (!string.IsNullOrEmpty(groups))
             {
-                builder.Append('(');
+                builder.Append('[');
                 builder.Append(groups);
-                builder.Append(')');
-            }
-
-            // Add actions.
-            if (!string.IsNullOrEmpty(action))
-            {
-                builder.Append(':');
-                builder.Append(action);
+                builder.Append(']');
             }
 
             return builder.ToString();
@@ -336,6 +330,8 @@ namespace UnityEngine.Experimental.Input
         [Flags]
         internal enum Flags
         {
+            None = 0,
+
             /// <summary>
             /// This and the next binding in the list combine such that both need to be
             /// triggered to trigger the associated action.

@@ -226,7 +226,7 @@ public class DemoPlayerController : MonoBehaviour, IGameplayActions
     /// </remarks>
     public InputControlScheme? SelectControlSchemeBasedOnDevice(InputDevice device)
     {
-        return InputControlScheme.FindControlSchemeForControl(device, controls.asset.controlSchemes);
+        return InputControlScheme.FindControlSchemeForDevice(device, controls.asset.controlSchemes);
     }
 
     public void OnMove(InputAction.CallbackContext context)

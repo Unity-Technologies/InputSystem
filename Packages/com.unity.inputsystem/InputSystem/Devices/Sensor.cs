@@ -89,45 +89,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
-
-    public class CompensateDirectionProcessor : IInputControlProcessor<Vector3>
-    {
-        public virtual Vector3 Process(Vector3 value, InputControl control)
-        {
-            if (!InputSystem.settings.compensateForScreenOrientation)
-                return value;
-
-            var rotation = Quaternion.identity;
-            switch (InputRuntime.s_Instance.screenOrientation)
-            {
-                case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
-                case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
-                case ScreenOrientation.LandscapeRight: rotation = Quaternion.Euler(0, 0, 270); break;
-            }
-            return rotation * value;
-        }
-    }
-
-    public class CompensateRotationProcessor : IInputControlProcessor<Quaternion>
-    {
-        public virtual Quaternion Process(Quaternion value, InputControl control)
-        {
-            if (!InputSystem.settings.compensateForScreenOrientation)
-                return value;
-
-            const float kSqrtOfTwo = 1.4142135623731f;
-            var q = Quaternion.identity;
-
-            switch (InputRuntime.s_Instance.screenOrientation)
-            {
-                case ScreenOrientation.PortraitUpsideDown: q = new Quaternion(0.0f, 0.0f, 1.0f /*sin(pi/2)*/, 0.0f /*cos(pi/2)*/); break;
-                case ScreenOrientation.LandscapeLeft:      q = new Quaternion(0.0f, 0.0f, kSqrtOfTwo * 0.5f /*sin(pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(pi/4)*/); break;
-                case ScreenOrientation.LandscapeRight:     q = new Quaternion(0.0f, 0.0f, -kSqrtOfTwo * 0.5f /*sin(3pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(3pi/4)*/); break;
-            }
-
-            return value * q;
-        }
-    }
 }
 
 namespace UnityEngine.Experimental.Input
@@ -141,7 +102,7 @@ namespace UnityEngine.Experimental.Input
                 var command = QuerySamplingFrequencyCommand.Create();
                 if (ExecuteCommand(ref command) >= 0)
                     return command.frequency;
-                throw new NotSupportedException(string.Format("Device '{0}' does not support querying sampling frequency", this));
+                throw new NotSupportedException($"Device '{this}' does not support querying sampling frequency");
             }
             set
             {

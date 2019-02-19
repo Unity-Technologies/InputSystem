@@ -166,8 +166,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
     internal class ActionTreeItem : ActionTreeViewItem
     {
-        private SerializedProperty m_ActionMapProperty;
-        private string m_ExpectedControlLayout;
+        private readonly SerializedProperty m_ActionMapProperty;
+        private readonly string m_ExpectedControlLayout;
 
         public int bindingsStartIndex { get; }
         public int bindingsCount { get; }
@@ -322,13 +322,13 @@ namespace UnityEngine.Experimental.Input.Editor
             id = GetIdForName(name);
         }
 
-        private string m_ActionMapName;
-        public bool isComposite { get; private set; }
-        public bool isPartOfComposite { get; private set; }
-        public string path { get; private set; }
-        public string groups { get; private set; }
-        public string action { get; private set; }
-        public string name { get; private set; }
+        private readonly string m_ActionMapName;
+        public bool isComposite { get; }
+        public bool isPartOfComposite { get; }
+        public string path { get; }
+        public string groups { get; }
+        public string action { get; }
+        public string name { get; }
 
         public override bool isDraggable => true;
 
@@ -339,8 +339,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Find the action we're under and return its expected control layout.
                 for (var item = parent; item != null; item = item.parent)
                 {
-                    var actionItem = item as ActionTreeItem;
-                    if (actionItem != null)
+                    if (item is ActionTreeItem actionItem)
                         return actionItem.expectedControlLayout;
                 }
                 return string.Empty;

@@ -2,6 +2,8 @@ using UnityEngine.Experimental.Input.Interactions;
 
 ////REVIEW: this goes beyond just actions; is there a better name? just InputPhase?
 
+////REVIEW: what about opening up phases completely to interactions and allow them to come up with whatever custom phases?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

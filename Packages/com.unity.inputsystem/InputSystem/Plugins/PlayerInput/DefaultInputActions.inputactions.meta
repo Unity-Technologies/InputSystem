@@ -10,6 +10,7 @@ ScriptedImporter:
     11400010: UI/Cancel
     11400012: UI/Point
     11400014: UI/Click
+    11400016: Player/Fire
   externalObjects: {}
   userData: 
   assetBundleName: 

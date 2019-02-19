@@ -100,17 +100,17 @@ namespace UnityEngine.Experimental.Input.Editor
             if (actionLine == null)
                 return;
             actionLine.AddCompositeBinding(compositeName, m_Toolbar.selectedControlSchemeBindingGroup);
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
         internal void OnAddBinding(object actionLineObj)
         {
-            var actionLine = actionLineObj as ActionTreeItem;
-            if (actionLine == null)
+            if (!(actionLineObj is ActionTreeItem actionLine))
                 return;
+
             actionLine.AddBinding(m_Toolbar.selectedControlSchemeBindingGroup);
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionsTree.SelectNewBindingRow(actionLine);
         }
 
@@ -120,14 +120,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (actionMapLine == null)
                 return;
             actionMapLine.AddAction();
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionsTree.SelectNewActionRow();
         }
 
         public void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_ActionAssetManager.serializedObject);
-            m_AssetInspectorWindow.Apply();
+            m_AssetInspectorWindow.ApplyAndReload();
             m_AssetInspectorWindow.m_ActionMapsTree.SelectNewActionMapRow();
         }
 
@@ -136,8 +136,8 @@ namespace UnityEngine.Experimental.Input.Editor
             TreeViewItem selectedRow = m_ActionsTree.GetSelectedRow();
             do
             {
-                if (selectedRow is ActionTreeItem)
-                    return (ActionTreeItem)selectedRow;
+                if (selectedRow is ActionTreeItem row)
+                    return row;
                 selectedRow = selectedRow.parent;
             }
             while (selectedRow.parent != null);
@@ -152,8 +152,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 return null;
             do
             {
-                if (selectedRow is ActionMapTreeItem)
-                    return (ActionMapTreeItem)selectedRow;
+                if (selectedRow is ActionMapTreeItem row)
+                    return row;
                 selectedRow = selectedRow.parent;
             }
             while (selectedRow.parent != null);

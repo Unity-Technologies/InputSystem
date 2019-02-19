@@ -29,10 +29,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Total number of events in the buffer.
         /// </summary>
-        public int eventCount
-        {
-            get { return m_EventCount; }
-        }
+        public int eventCount => m_EventCount;
 
         /// <summary>
         /// Size of the buffer in bytes.
@@ -43,10 +40,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Note that the size does not usually correspond to <see cref="eventCount"/> times <c>sizeof(InputEvent)</c>.
         /// <see cref="InputEvent">Input events</see> are variable in size.
         /// </remarks>
-        public long sizeInBytes
-        {
-            get { return m_SizeInBytes; }
-        }
+        public long sizeInBytes => m_SizeInBytes;
 
         /// <summary>
         /// Amount of unused bytes in the currently allocated buffer.
@@ -64,13 +58,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
                 return m_Buffer.Length;
             }
-            set { throw new NotImplementedException(); }
+            set => throw new NotImplementedException();
         }
 
         public NativeArray<byte> data
         {
-            get { return m_Buffer; }
-            set { throw new NotImplementedException(); }
+            get => m_Buffer;
+            set => throw new NotImplementedException();
         }
 
         public InputEventPtr bufferPtr

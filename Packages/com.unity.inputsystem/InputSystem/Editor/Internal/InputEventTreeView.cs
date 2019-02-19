@@ -263,17 +263,17 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (eventPtr.IsA<DeltaStateEvent>())
                     {
                         var deltaEventPtr = DeltaStateEvent.From(eventPtr);
-                        GUI.Label(cellRect, string.Format("Format={0}, Offset={1}", deltaEventPtr->stateFormat, deltaEventPtr->stateOffset));
+                        GUI.Label(cellRect, $"Format={deltaEventPtr->stateFormat}, Offset={deltaEventPtr->stateOffset}");
                     }
                     else if (eventPtr.IsA<StateEvent>())
                     {
                         var stateEventPtr = StateEvent.From(eventPtr);
-                        GUI.Label(cellRect, string.Format("Format={0}", stateEventPtr->stateFormat));
+                        GUI.Label(cellRect, $"Format={stateEventPtr->stateFormat}");
                     }
                     else if (eventPtr.IsA<TextEvent>())
                     {
                         var textEventPtr = TextEvent.From(eventPtr);
-                        GUI.Label(cellRect, string.Format("Character='{0}'", (char)textEventPtr->character));
+                        GUI.Label(cellRect, $"Character='{(char) textEventPtr->character}'");
                     }
                     break;
             }

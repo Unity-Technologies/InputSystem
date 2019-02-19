@@ -107,7 +107,7 @@ partial class CoreTests
     public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
     {
 #if UNITY_EDITOR
-        // In the editor, RemoteInputPlayerConnection is a scriptable singleton. Creating multiple instances of it 
+        // In the editor, RemoteInputPlayerConnection is a scriptable singleton. Creating multiple instances of it
         // will cause an error message - but will work nevertheless, so we expect that error to let us run the test.
         UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
 #endif
@@ -163,7 +163,7 @@ partial class CoreTests
         Assert.That(observerEditor.messages[2].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
         Assert.That(observerEditor.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
         Assert.That(observerEditor.messages[4].type, Is.EqualTo(InputRemoting.MessageType.Disconnect));
-        
+
         Assert.That(observerPlayer.messages, Has.Count.EqualTo(3));
         Assert.That(observerPlayer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
         Assert.That(observerPlayer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.StartSending));
