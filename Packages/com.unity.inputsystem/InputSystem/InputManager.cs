@@ -673,6 +673,7 @@ namespace UnityEngine.Experimental.Input
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
         {
+            Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
@@ -707,7 +708,7 @@ namespace UnityEngine.Experimental.Input
                     haveOverriddenLayoutName = true;
                 }
             }
-
+            Profiler.EndSample();
             return layoutName;
         }
 
@@ -1021,6 +1022,7 @@ namespace UnityEngine.Experimental.Input
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
+            Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
 
@@ -1037,12 +1039,13 @@ namespace UnityEngine.Experimental.Input
                     m_Runtime.DeviceCommand(deviceId, ref command);
                 }
 
+                Profiler.EndSample();
                 return null;
             }
 
             var device = AddDevice(layout, deviceId, description, deviceFlags);
             device.m_Description = description;
-
+            Profiler.EndSample();
             return device;
         }
 
@@ -3262,6 +3265,7 @@ namespace UnityEngine.Experimental.Input
         internal void RestoreDevicesAfterDomainReload()
         {
             Debug.Assert(m_SavedDeviceStates != null);
+            Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
 
             var deviceCount = m_SavedDeviceStates.Length;
             for (var i = 0; i < deviceCount; ++i)
@@ -3345,6 +3349,8 @@ namespace UnityEngine.Experimental.Input
             // Done. Discard saved arrays.
             m_SavedDeviceStates = null;
             m_SavedAvailableDevices = null;
+            
+            Profiler.EndSample();
         }
 
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD
