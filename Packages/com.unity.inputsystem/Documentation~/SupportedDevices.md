@@ -52,6 +52,8 @@ The following devices are supported in a way that does not require recognition o
 
 >NOTE: There is no rumble support currently on WebGL.
 
+>NOTE: WebGL does __NOT__ support running both the old and the new input system in parallel.
+
 The new input system supports the "Standard Gamepad" mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). We do not yet support gamepads that are surfaced by the browser without a mapping.
 
 The following browser&OS combinations are known to support the "Standard Gamepad" mapping.

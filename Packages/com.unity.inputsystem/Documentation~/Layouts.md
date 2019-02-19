@@ -4,7 +4,9 @@
 
 # Layouts
 
-"Layouts" are the central mechanism by which the input system learns about types of input devices and input controls. Each layout describes the composition of a specific control or device. By matching the description of a device to a layout, the input system is able to create the correct type of device and interpret the incoming input data correctly.
+A layout describes a memory format and the controls to build to read and write data to/from memory in the given format.
+
+Layouts are the central mechanism by which the input system learns about types of input devices and input controls. Each layout represents a specific composition of input controls. By matching the description of a device to a layout, the input system is able to create the correct type of device and interpret the incoming input data correctly.
 
 The set of currently understood layouts can be browsed from the input debugger.
 

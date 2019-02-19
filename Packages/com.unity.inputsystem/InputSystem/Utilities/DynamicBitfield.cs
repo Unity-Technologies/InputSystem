@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
@@ -14,8 +13,8 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     internal struct DynamicBitfield
     {
-        internal InlinedArray<ulong> array;
-        internal int length;
+        public InlinedArray<ulong> array;
+        public int length;
 
         public void SetLength(int newLength)
         {

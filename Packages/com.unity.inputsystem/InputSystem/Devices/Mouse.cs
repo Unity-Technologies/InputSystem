@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
@@ -14,10 +13,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct MouseState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('M', 'O', 'U', 'S'); }
-        }
+        public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
 
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
@@ -34,10 +30,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true)]
+        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true, usage = "")]
         [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
         [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
+        [InputControl(name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usages = new[] { "Forward" }, displayName = "Forward")]
+        [InputControl(name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usages = new[] { "Back" }, displayName = "Back")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
@@ -117,6 +115,10 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public ButtonControl rightButton { get; private set; }
 
+        public ButtonControl forwardButton { get; private set; }
+
+        public ButtonControl backButton { get; private set; }
+
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
         /// connected to the system.
@@ -157,6 +159,8 @@ namespace UnityEngine.Experimental.Input
             leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
             middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
             rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
+            forwardButton = builder.GetControl<ButtonControl>(this, "forwardButton");
+            backButton = builder.GetControl<ButtonControl>(this, "backButton");
             base.FinishSetup(builder);
         }
 
@@ -178,48 +182,5 @@ namespace UnityEngine.Experimental.Input
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
         }
-    }
-
-    //can we have a structure for doing those different simulation parts in a controlled fashion?
-
-    /// <summary>
-    /// Simulate mouse input from touch or gamepad input.
-    /// </summary>
-    public class MouseSimulation
-    {
-        /// <summary>
-        /// Whether to translate touch input into mouse input.
-        /// </summary>
-        public bool useTouchInput
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        /// <summary>
-        /// Whether to translate gamepad and joystick input into mouse input.
-        /// </summary>
-        public bool useControllerInput
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public static MouseSimulation instance
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public void Enable()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Disable()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Mouse m_Mouse;
     }
 }

@@ -168,6 +168,31 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanDetermineWhetherControlIsActuated()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState
+            {
+                leftStick = new Vector2(0.01f, 0.02f),
+                rightStick = new Vector2(0.4f, 0.5f),
+                rightTrigger = 0.123f
+            }.WithButton(
+                GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.IsActuated(), Is.False);
+        Assert.That(gamepad.rightStick.IsActuated(), Is.True);
+        Assert.That(gamepad.buttonSouth.IsActuated(), Is.True);
+        Assert.That(gamepad.buttonNorth.IsActuated(), Is.False);
+        Assert.That(gamepad.rightTrigger.IsActuated(), Is.True);
+        Assert.That(gamepad.rightTrigger.IsActuated(0.2f), Is.False);
+        Assert.That(gamepad.rightTrigger.IsActuated(0.123f), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanHaveStickDeadzones()
     {
         const string json = @"
@@ -201,7 +226,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.leftStick.ReadValue(),
-            Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f), device.leftStick)));
+            Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f))));
     }
 
     [Test]
@@ -236,7 +261,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.leftTrigger.ReadValue(),
-            Is.EqualTo(processor.Process(0.5f, device.leftTrigger)));
+            Is.EqualTo(processor.Process(0.5f)));
     }
 
     [Test]
@@ -312,7 +337,7 @@ partial class CoreTests
 
         Assert.That(gamepad.rightStick.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
         Assert.That(gamepad.leftStick.EvaluateMagnitude(),
-            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f), gamepad.leftStick).magnitude).Within(0.00001));
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f)).magnitude).Within(0.00001));
         Assert.That(gamepad.buttonNorth.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
         Assert.That(gamepad.buttonSouth.EvaluateMagnitude(), Is.EqualTo(1).Within(0.00001));
         Assert.That(gamepad.leftTrigger.EvaluateMagnitude(), Is.EqualTo(0.5).Within(0.00001));
@@ -362,8 +387,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(layout);
         var device = InputSystem.AddDevice("TestDevice");
 
-        InputEventPtr eventPtr;
-        using (StateEvent.From(device, out eventPtr))
+        using (StateEvent.From(device, out var eventPtr))
         {
             Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
 
@@ -395,7 +419,7 @@ partial class CoreTests
         var tempBufferSize = (int)gamepad.stateBlock.alignedSizeInBytes;
         using (var tempBuffer = new NativeArray<byte>(tempBufferSize, Allocator.Temp))
         {
-            var tempBufferPtr = (byte*)NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(tempBuffer);
+            var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
 
             // The device is the first in the system so is guaranteed to start of offset 0 which
             // means we don't need to adjust the pointer here.
@@ -420,7 +444,7 @@ partial class CoreTests
         var tempBufferSize = (int)gamepad.stateBlock.alignedSizeInBytes;
         using (var tempBuffer = new NativeArray<byte>(tempBufferSize, Allocator.Temp))
         {
-            var tempBufferPtr = (byte*)NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(tempBuffer);
+            var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
 
             // The device is the first in the system so is guaranteed to start of offset 0 which
             // means we don't need to adjust the pointer here.

@@ -1,14 +1,27 @@
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Processors;
 
 namespace UnityEngine.Experimental.Input.Composites
 {
     /// <summary>
-    /// A single [-1..1] axis value computed from a "negative" and a "positive" button.
+    /// A single axis value computed from a "negative" and a "positive" button.
     /// </summary>
     /// <remarks>
     /// This composite allows to arrange any arbitrary two buttons from a device in an
     /// axis configuration such that one button pushes in one direction and the other
     /// pushes in the opposite direction.
+    ///
+    /// The limits of the axis are determined by <see cref="minValue"/> and <see cref="maxValue"/>.
+    /// By default, they are set to <c>[-1..1]</c>. The values can be set as parameters.
+    ///
+    /// <example>
+    /// <code>
+    /// var action = new InputAction();
+    /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+    ///     .With("Negative", "&lt;Keyboard&gt;/a")
+    ///     .With("Positive", "&lt;Keyboard&gt;/d");
+    /// </code>
+    /// </example>
     ///
     /// If both buttons are pressed at the same time, the behavior depends on <see cref="whichSideWins"/>.
     /// By default, neither side will win (<see cref="WhichSideWins.Neither"/>) and the result
@@ -29,18 +42,53 @@ namespace UnityEngine.Experimental.Input.Composites
         /// <summary>
         /// Binding for the button that controls the positive direction of the axis.
         /// </summary>
-        [InputControl(layout = "Button")] public int negative;
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int negative = 0;
 
         /// <summary>
         /// Binding for the button that controls the negative direction of the axis.
         /// </summary>
-        [InputControl(layout = "Button")] public int positive;
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int positive = 0;
+
+        /// <summary>
+        /// The lower bound that the axis is limited to. -1 by default.
+        /// </summary>
+        /// <remarks>
+        /// This value corresponds to the full actuation of the control(s) bound to <see cref="negative"/>.
+        /// </remarks>
+        /// <seealso cref="maxValue"/>
+        /// <seealso cref="negative"/>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [Tooltip("Value to return when the negative side is fully actuated.")]
+        public float minValue = -1;
+
+        /// <summary>
+        /// The upper bound that the axis is limited to. 1 by default.
+        /// </summary>
+        /// <remarks>
+        /// This value corresponds to the full actuation of the control(s) bound to <see cref="positive"/>.
+        /// </remarks>
+        /// <seealso cref="minValue"/>
+        /// <seealso cref="positive"/>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [Tooltip("Value to return when the positive side is fully actuated.")]
+        public float maxValue = 1;
 
         /// <summary>
         /// If both the <see cref="positive"/> and <see cref="negative"/> button are actuated, this
         /// determines which value is returned from the composite.
         /// </summary>
-        public WhichSideWins whichSideWins;
+        [Tooltip("If both the positive and negative side are actuated, decides what value to return. 'Neither' (default) means that " +
+            "the resulting value is the midpoint between min and max. 'Positive' means that max will be returned. 'Negative' means that " +
+            "min will be returned.")]
+        public WhichSideWins whichSideWins = WhichSideWins.Neither;
+
+        public float midPoint => (maxValue + minValue) / 2;
 
         ////TODO: add parameters to control ramp up&down
 
@@ -49,6 +97,9 @@ namespace UnityEngine.Experimental.Input.Composites
         {
             var negativeValue = context.ReadValue<float>(negative);
             var positiveValue = context.ReadValue<float>(positive);
+
+            ////TODO: take partial actuation into account (e.g. amount of actuation of gamepad trigger should result in partial actuation of axis)
+            ////REVIEW: should this respect press points?
 
             var negativeIsPressed = negativeValue > 0;
             var positiveIsPressed = positiveValue > 0;
@@ -64,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Composites
                         return positiveValue;
 
                     case WhichSideWins.Neither:
-                        return 0;
+                        return midPoint;
                 }
             }
 
@@ -72,6 +123,20 @@ namespace UnityEngine.Experimental.Input.Composites
                 return -negativeValue;
 
             return positiveValue;
+        }
+
+        /// <inheritdoc />
+        public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            var value = ReadValue(ref context);
+            if (value < midPoint)
+            {
+                value = Mathf.Abs(value - midPoint);
+                return NormalizeProcessor.Normalize(value, 0, Mathf.Abs(minValue), 0);
+            }
+
+            value = Mathf.Abs(value - midPoint);
+            return NormalizeProcessor.Normalize(value, 0, Mathf.Abs(maxValue), 0);
         }
 
         /// <summary>

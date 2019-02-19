@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 
+////REVIEW: should EvaluateMagnitude() be called EvaluateActuation() or something similar?
+
 ////REVIEW: as soon as we gain the ability to have blittable type constraints, InputControl<TValue> should be constrained such
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
@@ -48,8 +50,6 @@ namespace UnityEngine.Experimental.Input
     /// identifies both where the control stores its state as well as the format it stores it in.
     /// </remarks>
     /// <seealso cref="InputDevice"/>
-    /// \todo Add ability to get and to set configuration on a control (probably just key/value pairs)
-    /// \todo Remove the distinction between input and output controls; allow every InputControl to write values
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public abstract class InputControl
     {
@@ -69,10 +69,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <seealso cref="path"/>
         /// <seealso cref="aliases"/>
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
         ////TODO: protect against empty strings
         /// <summary>
@@ -107,7 +104,7 @@ namespace UnityEngine.Experimental.Input
             // This is not public as a domain reload will wipe the change. This should really
             // come from the control itself *if* the control wants to have a custom display name
             // not driven by its layout.
-            protected set { m_DisplayName = value; }
+            protected set => m_DisplayName = value;
         }
 
         /// <summary>
@@ -135,7 +132,7 @@ namespace UnityEngine.Experimental.Input
                     return m_ShortDisplayNameFromLayout;
                 return null;
             }
-            protected set { m_ShortDisplayName = value; }
+            protected set => m_ShortDisplayName = value;
         }
 
         /// <summary>
@@ -165,10 +162,7 @@ namespace UnityEngine.Experimental.Input
         /// we only create layout instances during device creation and treat them
         /// as temporaries in general so as to not waste heap space during normal operation.
         /// </remarks>
-        public string layout
-        {
-            get { return m_Layout; }
-        }
+        public string layout => m_Layout;
 
         /// <summary>
         /// Semicolon-separated list of variants of the control layout or "default".
@@ -176,10 +170,7 @@ namespace UnityEngine.Experimental.Input
         /// <example>
         /// "Lefty" when using the "Lefty" gamepad layout.
         /// </example>
-        public string variants
-        {
-            get { return m_Variants; }
-        }
+        public string variants => m_Variants;
 
         /// <summary>
         /// The device that this control is a part of.
@@ -188,19 +179,13 @@ namespace UnityEngine.Experimental.Input
         /// This is the root of the control hiearchy. For the device at the root, this
         /// will point to itself.
         /// </remarks>
-        public InputDevice device
-        {
-            get { return m_Device; }
-        }
+        public InputDevice device => m_Device;
 
         /// <summary>
         /// The immediate parent of the control or null if the control has no parent
         /// (which, once fully constructed) will only be the case for InputDevices).
         /// </summary>
-        public InputControl parent
-        {
-            get { return m_Parent; }
-        }
+        public InputControl parent => m_Parent;
 
         /// <summary>
         /// List of immediate children.
@@ -208,32 +193,20 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// Does not allocate.
         /// </remarks>
-        public ReadOnlyArray<InputControl> children
-        {
-            get { return m_ChildrenReadOnly; }
-        }
+        public ReadOnlyArray<InputControl> children => m_ChildrenReadOnly;
 
         // List of uses for this control. Gives meaning to the control such that you can, for example,
         // find a button on a device to use as the "back" button regardless of what it is named. The "back"
         // button is also an example of why there are multiple possible usages of a button as a use may
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
-        public ReadOnlyArray<InternedString> usages
-        {
-            get { return m_UsagesReadOnly; }
-        }
+        public ReadOnlyArray<InternedString> usages => m_UsagesReadOnly;
 
         // List of alternate names for the control.
-        public ReadOnlyArray<InternedString> aliases
-        {
-            get { return m_AliasesReadOnly; }
-        }
+        public ReadOnlyArray<InternedString> aliases => m_AliasesReadOnly;
 
         // Information about where the control stores its state.
-        public InputStateBlock stateBlock
-        {
-            get { return m_StateBlock; }
-        }
+        public InputStateBlock stateBlock => m_StateBlock;
 
         /// <summary>
         /// Whether the control is considered noisy.
@@ -252,7 +225,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputControlAttribute.noisy"/>
         public bool noisy
         {
-            get { return (m_ControlFlags & ControlFlags.IsNoisy) != 0; }
+            get => (m_ControlFlags & ControlFlags.IsNoisy) != 0;
             internal set
             {
                 if (value)
@@ -277,7 +250,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputControlAttribute.synthetic"/>
         public bool synthetic
         {
-            get { return (m_ControlFlags & ControlFlags.IsSynthetic) != 0; }
+            get => (m_ControlFlags & ControlFlags.IsSynthetic) != 0;
             internal set
             {
                 if (value)
@@ -311,7 +284,7 @@ namespace UnityEngine.Experimental.Input
                 var control = InputControlPath.TryFindChild(this, path);
                 if (control == null)
                     throw new IndexOutOfRangeException(
-                        string.Format("Cannot find control '{0}' as child of '{1}'", path, this));
+                        $"Cannot find control '{path}' as child of '{this}'");
                 return control;
             }
         }
@@ -336,7 +309,7 @@ namespace UnityEngine.Experimental.Input
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Format("{0}:{1}", layout, path);
+            return $"{layout}:{path}";
         }
 
         private string DebuggerDisplay()
@@ -348,7 +321,7 @@ namespace UnityEngine.Experimental.Input
             // ReadValueAsObject might throw. Revert to just ToString() in that case.
             try
             {
-                return string.Format("{0}:{1}={2}", layout, path, this.ReadValueAsObject());
+                return $"{layout}:{path}={this.ReadValueAsObject()}";
             }
             catch (Exception)
             {
@@ -389,6 +362,8 @@ namespace UnityEngine.Experimental.Input
         {
             return -1;
         }
+
+        public abstract unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize);
 
         /// <summary>
         /// Read the control's final, processed value from the given state and return the value as an object.
@@ -434,7 +409,7 @@ namespace UnityEngine.Experimental.Input
         public virtual unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
         {
             throw new NotSupportedException(
-                string.Format("Control '{0}' does not support writing", this));
+                $"Control '{this}' does not support writing");
         }
 
         /// <summary>
@@ -454,7 +429,7 @@ namespace UnityEngine.Experimental.Input
         public virtual unsafe void WriteValueFromObjectIntoState(object value, void* statePtr)
         {
             throw new NotSupportedException(
-                string.Format("Control '{0}' does not support writing", this));
+                $"Control '{this}' does not support writing");
         }
 
         /// <summary>
@@ -519,7 +494,7 @@ namespace UnityEngine.Experimental.Input
         public InputControl TryGetChildControl(string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
 
             return InputControlPath.TryFindChild(this, path);
         }
@@ -556,23 +531,13 @@ namespace UnityEngine.Experimental.Input
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
-        protected internal unsafe void* currentStatePtr
-        {
-            get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
-        }
-        protected internal unsafe void* previousFrameStatePtr
-        {
-            get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
-        }
-        protected internal unsafe void* defaultStatePtr
-        {
-            get { return InputStateBuffers.s_DefaultStateBuffer; }
-        }
+        protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
 
-        protected internal unsafe void* noiseMaskPtr
-        {
-            get { return InputStateBuffers.s_NoiseMaskBuffer; }
-        }
+        protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex());
+
+        protected internal unsafe void* defaultStatePtr => InputStateBuffers.s_DefaultStateBuffer;
+
+        protected internal unsafe void* noiseMaskPtr => InputStateBuffers.s_NoiseMaskBuffer;
 
         /// <summary>
         /// The offset of this control's state relative to its device root.
@@ -637,10 +602,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        internal bool hasDefaultValue
-        {
-            get { return !m_DefaultValue.isEmpty; }
-        }
+        internal bool hasDefaultValue => !m_DefaultValue.isEmpty;
 
         // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().
@@ -656,7 +618,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (this is InputDevice)
                 return path;
-            return string.Format("{0}/{1}", this.path, path);
+            return $"{this.path}/{path}";
         }
 
         internal void BakeOffsetIntoStateBlockRecursive(uint offset)
@@ -671,8 +633,8 @@ namespace UnityEngine.Experimental.Input
         {
             var deviceIndex = m_Device.m_DeviceIndex;
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new InvalidOperationException(string.Format(
-                    "Cannot query value of control '{0}' before '{1}' has been added to system!", path, device.name));
+                throw new InvalidOperationException(
+                    $"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
             return deviceIndex;
         }
 
@@ -694,15 +656,9 @@ namespace UnityEngine.Experimental.Input
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
-        public override Type valueType
-        {
-            get { return typeof(TValue); }
-        }
+        public override Type valueType => typeof(TValue);
 
-        public override int valueSizeInBytes
-        {
-            get { return UnsafeUtility.SizeOf<TValue>(); }
-        }
+        public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
         /// <summary>
         /// Get the control's current value as read from <see cref="InputControl.currentStatePtr"/>
@@ -752,7 +708,7 @@ namespace UnityEngine.Experimental.Input
         public unsafe TValue ReadValueFromState(void* statePtr)
         {
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
             return ProcessValue(ReadUnprocessedValueFromState(statePtr));
         }
 
@@ -776,14 +732,14 @@ namespace UnityEngine.Experimental.Input
         public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
             if (bufferPtr == null)
-                throw new ArgumentNullException("bufferPtr");
+                throw new ArgumentNullException(nameof(bufferPtr));
 
             var numBytes = UnsafeUtility.SizeOf<TValue>();
             if (bufferSize < numBytes)
                 throw new ArgumentException(
-                    string.Format("bufferSize={0} < sizeof(TValue)={1}", bufferSize, numBytes), "bufferSize");
+                    $"bufferSize={bufferSize} < sizeof(TValue)={numBytes}", nameof(bufferSize));
 
             var value = ReadValueFromState(statePtr);
             var valuePtr = UnsafeUtility.AddressOf(ref value);
@@ -794,14 +750,14 @@ namespace UnityEngine.Experimental.Input
         public override unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
         {
             if (bufferPtr == null)
-                throw new ArgumentNullException("bufferPtr");
+                throw new ArgumentNullException(nameof(bufferPtr));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             var numBytes = UnsafeUtility.SizeOf<TValue>();
             if (bufferSize < numBytes)
                 throw new ArgumentException(
-                    string.Format("bufferSize={0} < sizeof(TValue)={1}", bufferSize, numBytes), "bufferSize");
+                    $"bufferSize={bufferSize} < sizeof(TValue)={numBytes}", nameof(bufferSize));
 
             // C# won't let us use a pointer to a generically defined type. Work
             // around this by using UnsafeUtility.
@@ -816,9 +772,9 @@ namespace UnityEngine.Experimental.Input
         public override unsafe void WriteValueFromObjectIntoState(object value, void* statePtr)
         {
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
             if (value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             // If value is not of expected type, try to convert.
             if (!(value is TValue))
@@ -833,7 +789,26 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: should we be able to even tell from layouts which controls support writing and which don't?
 
             throw new NotSupportedException(
-                string.Format("Control '{0}' does not support writing", this));
+                $"Control '{this}' does not support writing");
+        }
+
+        /// <inheritdoc />
+        public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
+        {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
+
+            var valueSize = UnsafeUtility.SizeOf<TValue>();
+            if (bufferSize < valueSize)
+                throw new ArgumentException(
+                    $"Expecting buffer of at least {valueSize} bytes for value of type {typeof(TValue).Name} but got buffer of only {bufferSize} bytes instead",
+                    nameof(bufferSize));
+
+            var value = default(TValue);
+            var valuePtr = UnsafeUtility.AddressOf(ref value);
+            UnsafeUtility.MemCpy(valuePtr, buffer, valueSize);
+
+            return value;
         }
 
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
@@ -864,21 +839,21 @@ namespace UnityEngine.Experimental.Input
             return value;
         }
 
-        internal InlinedArray<IInputControlProcessor<TValue>> m_ProcessorStack;
+        internal InlinedArray<InputProcessor<TValue>> m_ProcessorStack;
 
         // Only layouts are allowed to modify the processor stack.
-        internal void AddProcessor(IInputControlProcessor<TValue> processor)
+        internal void AddProcessor(InputProcessor<TValue> processor)
         {
             m_ProcessorStack.Append(processor);
         }
 
-        internal void RemoveProcessor(IInputControlProcessor<TValue> processor)
+        internal void RemoveProcessor(InputProcessor<TValue> processor)
         {
             m_ProcessorStack.Remove(processor);
         }
 
         internal TProcessor TryGetProcessor<TProcessor>()
-            where TProcessor : IInputControlProcessor<TValue>
+            where TProcessor : InputProcessor<TValue>
         {
             if (m_ProcessorStack.length > 0)
             {
@@ -889,26 +864,23 @@ namespace UnityEngine.Experimental.Input
                         if (m_ProcessorStack.additionalValues[i] is TProcessor)
                             return (TProcessor)m_ProcessorStack.additionalValues[i];
             }
-            return default(TProcessor);
+            return default;
         }
 
         internal override void AddProcessor(object processor)
         {
-            var processorOfType = processor as IInputControlProcessor<TValue>;
+            var processorOfType = processor as InputProcessor<TValue>;
             if (processorOfType == null)
-                throw new Exception(string.Format("Cannot add processor of type '{0}' to control of type '{1}'",
-                    processor.GetType().Name, GetType().Name));
+                throw new Exception(
+                    $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
             m_ProcessorStack.Append(processorOfType);
         }
 
         internal override void ClearProcessors()
         {
-            m_ProcessorStack = new InlinedArray<IInputControlProcessor<TValue>>();
+            m_ProcessorStack = new InlinedArray<InputProcessor<TValue>>();
         }
 
-        internal IInputControlProcessor<TValue>[] processors
-        {
-            get { return m_ProcessorStack.ToArray(); }
-        }
+        internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
     }
 }

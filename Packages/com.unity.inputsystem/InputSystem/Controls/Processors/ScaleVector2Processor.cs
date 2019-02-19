@@ -11,14 +11,15 @@ namespace UnityEngine.Experimental.Input.Processors
     /// </code>
     /// </example>
     /// </remarks>
-    public class ScaleVector2Processor : IInputControlProcessor<Vector2>
+    public class ScaleVector2Processor : InputProcessor<Vector2>
     {
         [Tooltip("Scale factor to multiple the incoming Vector2's X component by.")]
-        public float x;
-        [Tooltip("Scale factor to multiple the incoming Vector2's Y component by.")]
-        public float y;
+        public float x = 1;
 
-        public Vector2 Process(Vector2 value, InputControl control)
+        [Tooltip("Scale factor to multiple the incoming Vector2's Y component by.")]
+        public float y = 1;
+
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
             return new Vector2(value.x * x, value.y * y);
         }

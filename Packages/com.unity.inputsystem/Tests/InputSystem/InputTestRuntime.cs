@@ -47,15 +47,12 @@ namespace UnityEngine.Experimental.Input
                     m_NewDeviceDiscoveries.Clear();
                 }
 
-                if (onBeforeUpdate != null)
-                {
-                    onBeforeUpdate(type);
-                }
+                onBeforeUpdate?.Invoke(type);
 
                 // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
                 // don't get bumped into the following update.
                 if (type == InputUpdateType.Dynamic)
-                    currentTime += m_AdvanceTimeEachDynamicUpdate;
+                    currentTime += advanceTimeEachDynamicUpdate;
 
                 if (onUpdate != null)
                 {
@@ -202,10 +199,17 @@ namespace UnityEngine.Experimental.Input
 
         public void InvokeFocusChanged(bool newFocusState)
         {
-            if (onFocusChanged != null)
-            {
-                onFocusChanged.Invoke(newFocusState);
-            }
+            onFocusChanged?.Invoke(newFocusState);
+        }
+
+        public void FocusLost()
+        {
+            InvokeFocusChanged(false);
+        }
+
+        public void FocusGained()
+        {
+            InvokeFocusChanged(true);
         }
 
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
@@ -240,6 +244,20 @@ namespace UnityEngine.Experimental.Input
             return ReportNewInputDevice(
                 new InputDeviceDescription {deviceClass = typeof(TDevice).Name, interfaceName = "Test"}, deviceId,
                 userHandle, userName, userId);
+        }
+
+        public unsafe void ReportInputDeviceRemoved(int deviceId)
+        {
+            var removeEvent = DeviceRemoveEvent.Create(deviceId);
+            var removeEventPtr = UnsafeUtility.AddressOf(ref removeEvent);
+            QueueEvent(new IntPtr(removeEventPtr));
+        }
+
+        public void ReportInputDeviceRemoved(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            ReportInputDeviceRemoved(device.id);
         }
 
         public void AssociateInputDeviceWithUser(int deviceId, ulong userHandle, string userName = null, string userId = null)
@@ -304,29 +322,13 @@ namespace UnityEngine.Experimental.Input
         public InputUpdateType updateMask { get; set; }
         public int frameCount { get; set; }
 
-        public double advanceTimeEachDynamicUpdate
-        {
-            get { return m_AdvanceTimeEachDynamicUpdate; }
-            set { m_AdvanceTimeEachDynamicUpdate = value; }
-        }
+        public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
-        public double fixedUpdateIntervalInSeconds
-        {
-            get { return m_FixedUpdateIntervalInSeconds; }
-            set { m_FixedUpdateIntervalInSeconds = value; }
-        }
+        public double fixedUpdateIntervalInSeconds { get; set; } = 1.0 / 30;
 
-        public ScreenOrientation screenOrientation
-        {
-            set { m_ScreenOrientation = value; }
-            get { return m_ScreenOrientation; }
-        }
+        public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
-        public Vector2 screenSize
-        {
-            set { m_ScreenSize = value; }
-            get { return m_ScreenSize; }
-        }
+        public Vector2 screenSize { set; get; } = new Vector2(Screen.width, Screen.height);
 
         public List<PairedUser> userAccountPairings
         {
@@ -346,7 +348,7 @@ namespace UnityEngine.Experimental.Input
 
         public double currentTimeOffsetToRealtimeSinceStartup
         {
-            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            get => m_CurrentTimeOffsetToRealtimeSinceStartup;
             set
             {
                 m_CurrentTimeOffsetToRealtimeSinceStartup = value;
@@ -361,13 +363,9 @@ namespace UnityEngine.Experimental.Input
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
-        internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
+        private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
-        private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
-        private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
-        private double m_FixedUpdateIntervalInSeconds = 1.0 / 30;
-        private double m_AdvanceTimeEachDynamicUpdate = 1.0 / 60;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 
@@ -376,14 +374,12 @@ namespace UnityEngine.Experimental.Input
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
-            if (onRegisterAnalyticsEvent != null)
-                onRegisterAnalyticsEvent(name, maxPerHour, maxPropertiesPerEvent);
+            onRegisterAnalyticsEvent?.Invoke(name, maxPerHour, maxPropertiesPerEvent);
         }
 
         public void SendAnalyticsEvent(string name, object data)
         {
-            if (onSendAnalyticsEvent != null)
-                onSendAnalyticsEvent(name, data);
+            onSendAnalyticsEvent?.Invoke(name, data);
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR

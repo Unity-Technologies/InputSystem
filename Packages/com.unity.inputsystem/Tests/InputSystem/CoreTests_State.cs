@@ -473,7 +473,17 @@ partial class CoreTests
         receivedUpdate = false;
         receivedUpdateType = null;
 
-        // Before render.
+        // Before render. Disabled by default. Add a device that needs before-render updates
+        // so that the update gets enabled.
+        const string kBeforeRenderDevice = @"
+            {
+                ""name"" : ""BeforeRenderGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+        InputSystem.RegisterLayout(kBeforeRenderDevice);
+        InputSystem.AddDevice("BeforeRenderGamepad");
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
@@ -755,8 +765,8 @@ partial class CoreTests
         receivedTimerIndex = null;
         receivedTime = null;
 
-        // Add timeout and obsolete it by state change. Then advance past timeout time
-        // and make sure we *don't* get a notification.
+        // Add timeout and perform a state change. Then advance past timeout time
+        // and make sure we *DO* get a notification.
         InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
@@ -765,10 +775,15 @@ partial class CoreTests
         Assert.That(monitorFired);
         Assert.That(!timeoutFired);
 
+        monitorFired = false;
+
         runtime.currentTime += 2;
         InputSystem.Update();
 
-        Assert.That(!timeoutFired);
+        Assert.That(!monitorFired);
+        Assert.That(timeoutFired);
+
+        timeoutFired = false;
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.
@@ -890,24 +905,29 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
+    // InputHistory helps creating traces of input over time. This is useful, for example, to track
     // the motion curve of a tracking device over time.
     [Test]
     [Category("State")]
     [Ignore("TODO")]
-    public void TODO_State_CanRecordHistoryOfState()
+    public void TODO_State_CanRecordHistory()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        //have to record raw, unprocessed state; deadzone processor will break asserts below, though
-        using (var history = new InputStateHistory<Vector2>(gamepad.leftStick))
+        using (var history = new InputHistory<Vector2>("<Gamepad>/*stick"))
         {
+            Assert.That(history.controls,
+                Is.EquivalentTo(
+                    new[] {gamepad1.leftStick, gamepad1.rightStick, gamepad2.leftStick, gamepad2.rightStick}));
+
             history.Enable();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightStick = new Vector2(0.321f, 0.432f)});
             InputSystem.Update();
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
             InputSystem.Update();
 
             Assert.That(history.Count, Is.EqualTo(3));

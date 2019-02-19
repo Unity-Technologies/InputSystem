@@ -31,10 +31,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         {
             m_Array = array;
             m_StartIndex = 0;
-            if (array != null)
-                m_Length = array.Length;
-            else
-                m_Length = 0;
+            m_Length = array?.Length ?? 0;
         }
 
         /// <summary>
@@ -66,7 +63,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public int IndexOf(Predicate<TValue> predicate)
         {
             if (predicate == null)
-                throw new ArgumentNullException("predicate");
+                throw new ArgumentNullException(nameof(predicate));
 
             for (var i = 0; i < m_Length; ++i)
                 if (predicate(m_Array[m_StartIndex + i]))
@@ -93,10 +90,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         /// <summary>
         /// Number of elements in the array.
         /// </summary>
-        public int Count
-        {
-            get { return m_Length; }
-        }
+        public int Count => m_Length;
 
         /// <summary>
         /// Return the element at the given index.
@@ -120,10 +114,10 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         internal class Enumerator<T> : IEnumerator<T>
         {
-            private T[] m_Array;
+            private readonly T[] m_Array;
+            private readonly int m_IndexStart;
+            private readonly int m_IndexEnd;
             private int m_Index;
-            private int m_IndexStart;
-            private int m_IndexEnd;
 
             public Enumerator(T[] array, int index, int length)
             {
@@ -159,10 +153,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 

@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input
         public static void ApplyBindingOverride(this InputAction action, string newPath, string group = null, string path = null)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             ApplyBindingOverride(action, new InputBinding {overridePath = newPath, groups = group, path = path});
         }
@@ -57,7 +57,7 @@ namespace UnityEngine.Experimental.Input
         public static void ApplyBindingOverride(this InputAction action, InputBinding bindingOverride)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             bindingOverride.action = action.name;
             var actionMap = action.GetOrCreateActionMap();
@@ -67,7 +67,7 @@ namespace UnityEngine.Experimental.Input
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, InputBinding bindingOverride)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             // We don't want to hit InputAction.bindings here as this requires setting up per-action
             // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input
 
             var actionMap = action.GetOrCreateActionMap();
             var bindingsInMap = actionMap.m_Bindings;
-            var bindingCountInMap = bindingsInMap != null ? bindingsInMap.Length : 0;
+            var bindingCountInMap = bindingsInMap?.Length ?? 0;
             var actionName = action.name;
 
             var currentBindingIndexOnAction = -1;
@@ -97,14 +97,13 @@ namespace UnityEngine.Experimental.Input
             }
 
             throw new ArgumentOutOfRangeException(
-                string.Format("Binding index {0} is out of range for action '{1}' with {2} bindings", bindingIndex,
-                    action, currentBindingIndexOnAction), "bindingIndex");
+                $"Binding index {bindingIndex} is out of range for action '{action}' with {currentBindingIndexOnAction} bindings", "bindingIndex");
         }
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", "path");
+                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
             ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
 
@@ -121,7 +120,7 @@ namespace UnityEngine.Experimental.Input
         public static int ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindings = actionMap.m_Bindings;
@@ -143,7 +142,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             if (matchCount > 0)
-                actionMap.InvalidateResolvedData();
+                actionMap.LazyResolveBindings();
 
             return matchCount;
         }
@@ -151,22 +150,21 @@ namespace UnityEngine.Experimental.Input
         public static void ApplyBindingOverride(this InputActionMap actionMap, int bindingIndex, InputBinding bindingOverride)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
-            var bindingsCount = actionMap.m_Bindings != null ? actionMap.m_Bindings.Length : 0;
+                throw new ArgumentNullException(nameof(actionMap));
+            var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
                 throw new ArgumentOutOfRangeException(
-                    string.Format("Cannot apply override to binding at index {0} in map '{1}' with only {2} bindings",
-                        bindingIndex, actionMap, bindingsCount), "bindingIndex");
+                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings", "bindingIndex");
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
-            actionMap.InvalidateResolvedData();
+            actionMap.LazyResolveBindings();
         }
 
         public static void RemoveBindingOverride(this InputAction action, InputBinding bindingOverride)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
             bindingOverride.overridePath = null;
@@ -179,7 +177,7 @@ namespace UnityEngine.Experimental.Input
         private static void RemoveBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             bindingOverride.overridePath = null;
@@ -193,7 +191,7 @@ namespace UnityEngine.Experimental.Input
         public static void RemoveAllBindingOverrides(this InputAction action)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
             var actionName = action.name;
@@ -212,7 +210,7 @@ namespace UnityEngine.Experimental.Input
                 bindings[i].overrideInteractions = null;
             }
 
-            actionMap.InvalidateResolvedData();
+            actionMap.LazyResolveBindings();
         }
 
         public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
@@ -232,7 +230,7 @@ namespace UnityEngine.Experimental.Input
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -242,7 +240,7 @@ namespace UnityEngine.Experimental.Input
         public static void RemoveBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -258,7 +256,7 @@ namespace UnityEngine.Experimental.Input
         public static void RemoveAllBindingOverrides(this InputActionMap actionMap)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             if (actionMap.m_Bindings == null)
@@ -307,9 +305,9 @@ namespace UnityEngine.Experimental.Input
         public static int ApplyBindingOverridesOnMatchingControls(this InputAction action, InputControl control)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             var bindings = action.bindings;
             var bindingsCount = bindings.Count;
@@ -331,9 +329,9 @@ namespace UnityEngine.Experimental.Input
         public static int ApplyBindingOverridesOnMatchingControls(this InputActionMap actionMap, InputControl control)
         {
             if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
+                throw new ArgumentNullException(nameof(actionMap));
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             var actions = actionMap.actions;
             var actionCount = actions.Count;
@@ -362,9 +360,9 @@ namespace UnityEngine.Experimental.Input
         /// information registered in the system which means that layouts may have to be loaded. These will be
         /// cached for as long as the rebind operation is not disposed of.
         ///
-        /// A rebind operation may take several frames to complete. ...
+        /// A rebind operation may take several frames to complete. TODO
         ///
-        /// Note that not all types of controls make sense to perform interactive rebinding on. For example,
+        /// Note that not all types of controls make sense to perform interactive rebinding on. For example, TODO
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public class RebindingOperation : IDisposable
@@ -375,10 +373,7 @@ namespace UnityEngine.Experimental.Input
             /// The action that rebinding is being performed on.
             /// </summary>
             /// <seealso cref="WithAction"/>
-            public InputAction action
-            {
-                get { return m_ActionToRebind; }
-            }
+            public InputAction action => m_ActionToRebind;
 
             /// <summary>
             /// Optional mask to determine which bindings to apply overrides to.
@@ -386,10 +381,7 @@ namespace UnityEngine.Experimental.Input
             /// <remarks>
             /// If this is not null, all bindings that match this mask will have overrides applied to them.
             /// </remarks>
-            public InputBinding? bindingMask
-            {
-                get { return m_BindingMask; }
-            }
+            public InputBinding? bindingMask => m_BindingMask;
 
             ////REVIEW: exposing this as InputControlList is very misleading as users will not get an error when modifying the list;
             ////        however, exposing through an interface will lead to boxing...
@@ -402,20 +394,14 @@ namespace UnityEngine.Experimental.Input
             /// </remarks>
             /// <seealso cref="AddCandidate"/>
             /// <seealso cref="RemoveCandidate"/>
-            public InputControlList<InputControl> candidates
-            {
-                get { return m_Candidates; }
-            }
+            public InputControlList<InputControl> candidates => m_Candidates;
 
             /// <summary>
             /// The matching score for each control in <see cref="candidates"/>.
             /// </summary>
             /// <remarks>
             /// </remarks>
-            public ReadWriteArray<float> scores
-            {
-                get { return new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count); }
-            }
+            public ReadWriteArray<float> scores => new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count);
 
             public InputControl selectedControl
             {
@@ -428,29 +414,20 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public bool started
-            {
-                get { return (m_Flags & Flags.Started) != 0; }
-            }
+            public bool started => (m_Flags & Flags.Started) != 0;
 
-            public bool completed
-            {
-                get { return (m_Flags & Flags.Completed) != 0; }
-            }
+            public bool completed => (m_Flags & Flags.Completed) != 0;
 
-            public bool cancelled
-            {
-                get { return (m_Flags & Flags.Cancelled) != 0; }
-            }
+            public bool cancelled => (m_Flags & Flags.Cancelled) != 0;
 
             public RebindingOperation WithAction(InputAction action)
             {
                 ThrowIfRebindInProgress();
 
                 if (action == null)
-                    throw new ArgumentNullException("action");
+                    throw new ArgumentNullException(nameof(action));
                 if (action.enabled)
-                    throw new InvalidOperationException(string.Format("Cannot rebind action '{0}' while it is enabled", action));
+                    throw new InvalidOperationException($"Cannot rebind action '{action}' while it is enabled");
 
                 m_ActionToRebind = action;
 
@@ -465,7 +442,7 @@ namespace UnityEngine.Experimental.Input
 
             public RebindingOperation WithCancelAction(InputAction action)
             {
-                return this;
+                throw new NotImplementedException();
             }
 
             public RebindingOperation WithCancellingThrough(string binding)
@@ -488,7 +465,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithExpectedControlType(Type type)
             {
                 if (type != null && !typeof(InputControl).IsAssignableFrom(type))
-                    throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+                    throw new ArgumentException($"Type '{type.Name}' is not an InputControl", "type");
                 m_ControlType = type;
                 return this;
             }
@@ -499,6 +476,7 @@ namespace UnityEngine.Experimental.Input
                 return WithExpectedControlType(typeof(TControl));
             }
 
+            ////TODO: allow targeting bindings by name (i.e. be able to say WithTargetBinding("Left"))
             public RebindingOperation WithTargetBinding(int bindingIndex)
             {
                 m_TargetBindingIndex = bindingIndex;
@@ -527,8 +505,8 @@ namespace UnityEngine.Experimental.Input
             /// even interested in what particular brand of device the user is rebinding to but rather want to just bind based
             /// on the device's broad category.
             ///
-            /// For example, if you user has a DualShock controller and performs an interactive rebind, we usually do not want
-            /// to generate override paths that reflect which out of how many ...
+            /// For example, if the user has a DualShock controller and performs an interactive rebind, we usually do not want
+            /// to generate override paths that reflect TODO
             /// </remarks>
             /// <seealso cref="InputBinding.overridePath"/>
             public RebindingOperation WithoutGeneralizingPathOfSelectedControl()
@@ -557,8 +535,8 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
                 if (magnitude < 0)
-                    throw new ArgumentException(string.Format("Magnitude has to be positive but was {0}", magnitude),
-                        "magnitude");
+                    throw new ArgumentException($"Magnitude has to be positive but was {magnitude}",
+                        nameof(magnitude));
                 m_MagnitudeThreshold = magnitude;
                 return this;
             }
@@ -578,7 +556,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_IncludePathCount; ++i)
                     if (string.Compare(m_IncludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return this;
@@ -595,7 +573,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithControlsExcluding(string path)
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_ExcludePathCount; ++i)
                     if (string.Compare(m_ExcludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return this;
@@ -654,9 +632,7 @@ namespace UnityEngine.Experimental.Input
                 // Make sure our configuration is sound.
                 if (m_ActionToRebind != null && m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
                     throw new InvalidOperationException(
-                        string.Format(
-                            "Action '{0}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()",
-                            action));
+                        $"Action '{action}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()");
                 if (m_ActionToRebind == null && m_OnApplyBinding == null)
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
@@ -694,7 +670,7 @@ namespace UnityEngine.Experimental.Input
             public void AddCandidate(InputControl control, float score)
             {
                 if (control == null)
-                    throw new ArgumentNullException("control");
+                    throw new ArgumentNullException(nameof(control));
 
                 // If it's already added, update score.
                 var index = m_Candidates.IndexOf(control);
@@ -716,7 +692,7 @@ namespace UnityEngine.Experimental.Input
             public void RemoveCandidate(InputControl control)
             {
                 if (control == null)
-                    throw new ArgumentNullException("control");
+                    throw new ArgumentNullException(nameof(control));
 
                 var index = m_Candidates.IndexOf(control);
                 if (index == -1)
@@ -1013,9 +989,8 @@ namespace UnityEngine.Experimental.Input
                             if (m_TargetBindingIndex >= 0)
                             {
                                 if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
-                                    throw new Exception(string.Format(
-                                        "Target binding index {0} out of range for action '{1}' with {2} bindings",
-                                        m_TargetBindingIndex, m_ActionToRebind, m_ActionToRebind.bindings.Count));
+                                    throw new Exception(
+                                        $"Target binding index {m_TargetBindingIndex} out of range for action '{m_ActionToRebind}' with {m_ActionToRebind.bindings.Count} bindings");
 
                                 m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);
                             }
@@ -1035,8 +1010,7 @@ namespace UnityEngine.Experimental.Input
 
                 // Complete.
                 m_Flags |= Flags.Completed;
-                if (m_OnComplete != null)
-                    m_OnComplete(this);
+                m_OnComplete?.Invoke(this);
 
                 Reset();
             }
@@ -1045,8 +1019,7 @@ namespace UnityEngine.Experimental.Input
             {
                 m_Flags |= Flags.Cancelled;
 
-                if (m_OnCancel != null)
-                    m_OnCancel(this);
+                m_OnCancel?.Invoke(this);
 
                 Reset();
             }

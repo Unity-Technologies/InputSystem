@@ -2,6 +2,8 @@ using System;
 
 ////REVIEW: this (and the generated C# wrappers) really should be a struct but we can't inherit :/
 
+////REVIEW: add helpers to automatically enable/disable?
+
 ////TODO: nuke Clone()
 
 namespace UnityEngine.Experimental.Input
@@ -21,8 +23,8 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public InputActionAsset asset
         {
-            get { return m_Asset; }
-            protected set { m_Asset = value; }
+            get => m_Asset;
+            protected set => m_Asset = value;
         }
 
         public InputActionAssetReference()
@@ -36,16 +38,16 @@ namespace UnityEngine.Experimental.Input
 
         public void Enable()
         {
-            var sets = asset.actionMaps;
-            for (var i = 0; i < sets.Count; ++i)
-                sets[i].Enable();
+            var maps = asset.actionMaps;
+            for (var i = 0; i < maps.Count; ++i)
+                maps[i].Enable();
         }
 
         public void Disable()
         {
-            var sets = asset.actionMaps;
-            for (var i = 0; i < sets.Count; ++i)
-                sets[i].Disable();
+            var maps = asset.actionMaps;
+            for (var i = 0; i < maps.Count; ++i)
+                maps[i].Disable();
         }
 
         /// <summary>

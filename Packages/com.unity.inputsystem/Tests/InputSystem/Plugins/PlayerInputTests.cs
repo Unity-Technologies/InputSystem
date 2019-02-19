@@ -1,20 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEditor.VersionControl;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.PlayerInput;
-using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.SceneManagement;
-using UnityEngine.TestTools;
-using UnityEngine.TestTools.Utils;
-using UnityEngine.UI;
+using UnityEngine.Experimental.Input.Processors;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 
@@ -99,6 +92,25 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CanInstantiatePlayer_WithSpecificDevice_AndAutomaticallyChooseControlScheme()
+    {
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        prefab.AddComponent<PlayerInput>();
+        prefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+
+        InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var instance = PlayerInput.Instantiate(prefab, pairWithDevices: new InputDevice[] { keyboard, mouse });
+
+        Assert.That(instance.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(instance.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanGetAllPlayers()
     {
         Assert.That(PlayerInput.all, Is.Empty);
@@ -171,19 +183,6 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_AutomaticallyEnablesFirstActionMapInAsset()
-    {
-        var go = new GameObject();
-        var playerInput = go.AddComponent<PlayerInput>();
-
-        playerInput.actions = InputActionAsset.FromJson(kActions);
-
-        Assert.That(playerInput.actions.actionMaps[0].enabled, Is.True);
-        Assert.That(playerInput.actions.actionMaps[1].enabled, Is.False);
-    }
-
-    [Test]
-    [Category("PlayerInput")]
     public void PlayerInput_AssigningNewActionsToPlayer_DisablesExistingActions()
     {
         var go = new GameObject();
@@ -192,6 +191,7 @@ internal class PlayerInputTests : InputTestFixture
         var actions1 = InputActionAsset.FromJson(kActions);
         var actions2 = InputActionAsset.FromJson(kActions);
 
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = actions1;
 
         Assert.That(actions1.actionMaps[0].enabled, Is.True);
@@ -281,6 +281,85 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.user.pairedDevices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
     }
 
+    // If PlayerInputManager has joining disabled (or does not even exist) and there is
+    // only a single PlayerInput, then automatic control scheme switching is enabled and the
+    // player can freely switch from device to device as long as a device is supported by
+    // the actions on the player.
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        Press(gamepad.buttonSouth);
+        InputSystem.Update(); // For initial state check.
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSetDefaultActionMap()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "Other";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
+        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSwitchActionsWithMessage()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.True);
+        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.False);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 0.234f)}));
+
+        listener.messages.Clear();
+
+        go.SendMessage("SwitchActions", "other");
+
+        // Need update to see initial state check.
+        InputSystem.Update();
+
+        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
+        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
+    }
+
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_PlayerIndex_IsAssignedAutomatically()
@@ -330,11 +409,53 @@ internal class PlayerInputTests : InputTestFixture
         var playerInput = go.AddComponent<PlayerInput>();
 
         playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
         Press(gamepad.buttonSouth);
 
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+
+        listener.messages.Clear();
+
+        // 'Fire' is not a continuous action. Unlike with continuous actions, PlayerInput should not
+        // send a message on button release (i.e. when the action cancels).
+        Release(gamepad.buttonSouth);
+
+        Assert.That(listener.messages, Is.Empty);
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCancelled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+
+        playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[]
+            {
+                new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+            }));
+
+        listener.messages.Clear();
+
+        Set(gamepad.leftStick, Vector2.zero);
+
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[]
+            {
+                new Message("OnMove", Vector2.zero)
+            }));
     }
 
     [Test]
@@ -347,48 +468,102 @@ internal class PlayerInputTests : InputTestFixture
         var listener = go.AddComponent<MessageListener>();
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
+        playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
         listener.SetUpEvents(playerInput);
 
         Press(gamepad.buttonSouth);
 
         Assert.That(listener.messages,
-            Is.EquivalentTo(new[] {new Message("gameplay/fire", 1f)}));
+            Is.EquivalentTo(new[] {new Message("gameplay/fire Started", 1f), new Message("gameplay/fire Performed", 1f)}));
     }
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveDeviceLostMessage()
+    [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerInputEventListener))]
+    [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerInputCSharpEventListener))]
+    public void PlayerInput_CanReceiveNotificationWhenDeviceIsLostAndRegained(PlayerNotifications notificationBehavior, Type listenerType)
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        // Pretend we have a native gamepad to get the test closer to the real thing.
+        var deviceId = runtime.ReportNewInputDevice<Gamepad>();
+        InputSystem.Update();
+        var gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
 
         var go = new GameObject();
-        var listener = go.AddComponent<MessageListener>();
+        go.SetActive(false);
+        IListener listener;
+        if (notificationBehavior == PlayerNotifications.BroadcastMessages)
+        {
+            var child = new GameObject();
+            child.transform.parent = go.transform;
+            listener = (IListener)child.AddComponent(listenerType);
+        }
+        else
+        {
+            listener = (IListener)go.AddComponent(listenerType);
+        }
         var playerInput = go.AddComponent<PlayerInput>();
 
-        playerInput.notificationBehavior = PlayerNotifications.SendMessages;
+        playerInput.notificationBehavior = notificationBehavior;
         playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        go.SetActive(true);
 
         Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
 
-        InputSystem.RemoveDevice(gamepad);
+        runtime.ReportInputDeviceRemoved(gamepad);
+        InputSystem.Update();
 
         Assert.That(playerInput.devices, Is.Empty);
         Assert.That(playerInput.hasMissingRequiredDevices, Is.True);
         Assert.That(listener.messages,
             Is.EquivalentTo(new[] {new Message(PlayerInput.DeviceLostMessage, playerInput)}));
+
+        listener.messages.Clear();
+
+        deviceId = runtime.ReportNewInputDevice<Gamepad>();
+        InputSystem.Update();
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.SameAs(gamepad),
+            "Expected InputSystem to recover previous device instance");
+        gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] {gamepad}));
+        Assert.That(playerInput.hasMissingRequiredDevices, Is.False);
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[] {new Message(PlayerInput.DeviceRegainedMessage, playerInput)}));
     }
 
+    ////TODO: should also make sure that we're only getting notifications of the specified type and not other types as well
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveJoinMessagesThroughPlayerManager()
+    [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerManagerEventListener))]
+    [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerManagerCSharpEventListener))]
+    public void PlayerInput_CanReceiveNotificationWhenPlayerJoinsOrLeaves(PlayerNotifications notificationBehavior, Type listenerType)
     {
         var go1 = new GameObject();
         var playerInput1 = go1.AddComponent<PlayerInput>();
 
         var manager = new GameObject();
-        var listener = manager.AddComponent<MessageListener>();
-        manager.AddComponent<PlayerInputManager>();
+        manager.SetActive(false); // Delay OnEnable() until we have all components.
+        IListener listener;
+        if (notificationBehavior == PlayerNotifications.BroadcastMessages)
+        {
+            // Put listener on child object to make sure we get a broadcast.
+            var child = new GameObject();
+            child.transform.parent = manager.transform;
+            listener = (IListener)child.AddComponent(listenerType);
+        }
+        else
+        {
+            listener = (IListener)manager.AddComponent(listenerType);
+        }
+        var managerComponent = manager.AddComponent<PlayerInputManager>();
+        managerComponent.notificationBehavior = notificationBehavior;
+        manager.SetActive(true);
 
         // Should get join message for player who had already joined.
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnPlayerJoined", playerInput1)}));
@@ -407,6 +582,12 @@ internal class PlayerInputTests : InputTestFixture
                 new Message("OnPlayerJoined", playerInput2),
                 new Message("OnPlayerJoined", playerInput3)
             }));
+
+        listener.messages.Clear();
+
+        Object.DestroyImmediate(go1);
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnPlayerLeft", playerInput1)}));
     }
 
     [Test]
@@ -806,11 +987,12 @@ internal class PlayerInputTests : InputTestFixture
                     ""name"" : ""gameplay"",
                     ""actions"" : [
                         { ""name"" : ""fire"" },
-                        { ""name"" : ""look"" },
-                        { ""name"" : ""move"" }
+                        { ""name"" : ""look"", ""continuous"" : true },
+                        { ""name"" : ""move"", ""continuous"" : true }
                     ],
                     ""bindings"" : [
                         { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+                        { ""path"" : ""<Gamepad>/leftTrigger"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""<Gamepad>/leftStick"", ""action"" : ""move"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""<Gamepad>/rightStick"", ""action"" : ""look"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""dpad"", ""action"" : ""move"", ""groups"" : ""Gamepad"", ""isComposite"" : true },
@@ -833,10 +1015,10 @@ internal class PlayerInputTests : InputTestFixture
                 {
                     ""name"" : ""other"",
                     ""actions"" : [
-                        { ""name"" : ""action"" }
+                        { ""name"" : ""otherAction"" }
                     ],
                     ""bindings"" : [
-                        { ""path"" : ""<Gamepad>/leftTrigger"", ""action"" : ""action"", ""groups"" : ""Gamepad"" }
+                        { ""path"" : ""<Gamepad>/leftTrigger"", ""action"" : ""otherAction"", ""groups"" : ""Gamepad"" }
                     ]
                 }
             ],
@@ -899,9 +1081,14 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
-    private class MessageListener : MonoBehaviour
+    private interface IListener
     {
-        public List<Message> messages = new List<Message>();
+        List<Message> messages { get; }
+    }
+
+    private class MessageListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
 
         public void SetUpEvents(PlayerInput player)
         {
@@ -925,19 +1112,19 @@ internal class PlayerInputTests : InputTestFixture
             };
         }
 
-        public void OnFireEvent(InputAction.CallbackContext context)
+        private void OnFireEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message { name = "gameplay/fire", value = context.ReadValue<float>() });
+            messages.Add(new Message { name = "gameplay/fire " + context.phase, value = context.ReadValue<float>() });
         }
 
-        public void OnLookEvent(InputAction.CallbackContext context)
+        private void OnLookEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message { name = "gameplay/look", value = context.ReadValue<Vector2>() });
+            messages.Add(new Message { name = "gameplay/look " + context.phase, value = context.ReadValue<Vector2>() });
         }
 
-        public void OnMoveEvent(InputAction.CallbackContext context)
+        private void OnMoveEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message { name = "gameplay/move", value = context.ReadValue<Vector2>() });
+            messages.Add(new Message { name = "gameplay/move" + context.phase, value = context.ReadValue<Vector2>() });
         }
 
         // ReSharper disable once UnusedMember.Local
@@ -959,9 +1146,14 @@ internal class PlayerInputTests : InputTestFixture
         }
 
         // ReSharper disable once UnusedMember.Local
+        public void OnOtherAction(InputValue value)
+        {
+            messages.Add(new Message { name = "OnOtherAction", value = value.Get<float>() });
+        }
+
+        // ReSharper disable once UnusedMember.Local
         public void OnDeviceLost(PlayerInput player)
         {
-            Debug.Log("OnDeviceLost");
             messages.Add(new Message { name = "OnDeviceLost", value = player});
         }
 
@@ -984,9 +1176,9 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
-    private class EventListener : MonoBehaviour
+    private class PlayerInputEventListener : MonoBehaviour, IListener
     {
-        public List<Message> messages = new List<Message>();
+        public List<Message> messages { get; } = new List<Message>();
 
         public void OnEnable()
         {
@@ -997,16 +1189,101 @@ internal class PlayerInputTests : InputTestFixture
                 item.AddListener(OnAction);
 
             playerInput.deviceLostEvent.AddListener(OnDeviceLost);
+            playerInput.deviceRegainedEvent.AddListener(OnDeviceRegained);
         }
 
-        public void OnAction(InputAction.CallbackContext context)
+        private void OnAction(InputAction.CallbackContext context)
         {
-            messages.Add(new Message {name = context.action.ToString()});
+            messages.Add(new Message(context.action.ToString()));
         }
 
-        public void OnDeviceLost()
+        private void OnDeviceLost(PlayerInput player)
         {
-            messages.Add(new Message {name = "OnDeviceLost"});
+            messages.Add(new Message("OnDeviceLost", player));
+        }
+
+        private void OnDeviceRegained(PlayerInput player)
+        {
+            messages.Add(new Message("OnDeviceRegained", player));
+        }
+    }
+
+    private class PlayerInputCSharpEventListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
+
+        public void OnEnable()
+        {
+            var playerInput = GetComponent<PlayerInput>();
+            Debug.Assert(playerInput != null, "Must have PlayerInput component");
+
+
+            playerInput.onActionTriggered += OnAction;
+            playerInput.onDeviceLost += OnDeviceLost;
+            playerInput.onDeviceRegained += OnDeviceRegained;
+        }
+
+        private void OnAction(InputAction.CallbackContext context)
+        {
+            messages.Add(new Message(context.action.ToString()));
+        }
+
+        private void OnDeviceLost(PlayerInput player)
+        {
+            messages.Add(new Message("OnDeviceLost", player));
+        }
+
+        private void OnDeviceRegained(PlayerInput player)
+        {
+            messages.Add(new Message("OnDeviceRegained", player));
+        }
+    }
+
+    private class PlayerManagerEventListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
+
+        public void OnEnable()
+        {
+            var manager = GetComponent<PlayerInputManager>();
+            Debug.Assert(manager != null, "Must have PlayerInputManager component");
+
+            manager.playerJoinedEvent.AddListener(OnPlayerJoined);
+            manager.playerLeftEvent.AddListener(OnPlayerLeft);
+        }
+
+        private void OnPlayerJoined(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerJoined", player));
+        }
+
+        private void OnPlayerLeft(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerLeft", player));
+        }
+    }
+
+    private class PlayerManagerCSharpEventListener : MonoBehaviour, IListener
+    {
+        public List<Message> messages { get; } = new List<Message>();
+
+        public void OnEnable()
+        {
+            var manager = GetComponent<PlayerInputManager>();
+            Debug.Assert(manager != null, "Must have PlayerInputManager component");
+
+            manager.onPlayerJoined += OnPlayerJoined;
+            manager.onPlayerLeft += OnPlayerLeft;
+        }
+
+        private void OnPlayerJoined(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerJoined", player));
+        }
+
+        private void OnPlayerLeft(PlayerInput player)
+        {
+            messages.Add(new Message("OnPlayerLeft", player));
         }
     }
 }

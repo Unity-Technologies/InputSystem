@@ -1,7 +1,9 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add way for interactions to advertise the layouts they work with
+////TODO: add way for parameters on interactions and processors to be driven from global value source that is NOT InputSettings
+////      (ATM it's very hard to e.g. have a scale value on gamepad stick bindings which is determined dynamically from player
+////      settings in the game)
 
 ////REVIEW: what about putting an instance of one of these on every resolved control instead of sharing it between all controls resolved from a binding?
 
@@ -20,7 +22,8 @@ namespace UnityEngine.Experimental.Input
     /// this and also implement logic that signals cancellations (which the default logic never
     /// triggers).
     ///
-    /// Interactions can be stateful and mutate state over time.
+    /// Interactions can be stateful and mutate state over time. In fact, interactions will usually
+    /// represent miniature state machines driven directly by input.
     /// </remarks>
     public interface IInputInteraction
     {
