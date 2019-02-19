@@ -472,6 +472,13 @@ namespace UnityEngine.Experimental.Input.Editor
                     return false;
             }
 
+            if (!filePath.ToLower().StartsWith("assets/"))
+                filePath = Path.Combine("Assets", filePath);
+
+            var dir = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
             // Write.
             File.WriteAllText(filePath, code);
             return true;
