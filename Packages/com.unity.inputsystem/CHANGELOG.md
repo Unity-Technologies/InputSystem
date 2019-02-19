@@ -6,12 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Changed
+
+- The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
+
 ### Fixed
 
 - Editor beeping or triggering menu commands when binding keys interactively.
 - "Add Action" button being active and triggering exceptions when no action map had been added yet.
 - Input Debugger: Make remote connections still work after domain reloads
-- Input Debugger: Add UI to connect to remote devices and to enable/disable remote input debugging.
 
 ## [0.2.0-preview] - 2019-02-12
 
