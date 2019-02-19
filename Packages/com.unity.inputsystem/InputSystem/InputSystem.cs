@@ -1572,6 +1572,7 @@ namespace UnityEngine.Experimental.Input
 
         private static void InitializeInEditor()
         {
+            Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
             Reset();
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -1650,6 +1651,7 @@ namespace UnityEngine.Experimental.Input
             // Send an initial Update so that user methods such as Start and Awake
             // can access the input devices.
             Update();
+            Profiling.Profiler.EndSample();
         }
 
         private static void OnPlayModeChange(PlayModeStateChange change)
@@ -1784,6 +1786,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
+            Profiling.Profiler.BeginSample("InputSystem.Reset");
             #if UNITY_EDITOR
 
             // Some devices keep globals. Get rid of them by pretending the devices
@@ -1816,6 +1819,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             InputUser.ResetGlobals();
+            Profiling.Profiler.EndSample();
         }
 
         /// <summary>
