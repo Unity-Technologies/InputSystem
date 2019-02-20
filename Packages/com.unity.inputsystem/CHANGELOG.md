@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Editor beeping or triggering menu commands when binding keys interactively.
 - "Add Action" button being active and triggering exceptions when no action map had been added yet.
-- Input Debugger: Make remote connections still work after domain reloads
+- Remote connections in input debugger now remain connected across domain reloads.
+- Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
 
 ## [0.2.0-preview] - 2019-02-12
 
