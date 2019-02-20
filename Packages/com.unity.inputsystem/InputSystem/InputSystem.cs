@@ -1497,14 +1497,14 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(s_Manager != null);
 
-            s_Remote = new InputRemoting(s_Manager);
-
             #if UNITY_EDITOR
+            s_Remote = new InputRemoting(s_Manager);
             // NOTE: We use delayCall as our initial startup will run in editor initialization before
             //       PlayerConnection is itself ready. If we call Bind() directly here, we won't
             //       see any errors but the callbacks we register for will not trigger.
             EditorApplication.delayCall += SetUpRemotingInternal;
             #else
+            s_Remote = new InputRemoting(s_Manager);
             SetUpRemotingInternal();
             #endif
         }
@@ -1513,10 +1513,11 @@ namespace UnityEngine.Experimental.Input
         {
             if (s_RemoteConnection == null)
             {
-                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
                 #if UNITY_EDITOR
+                s_RemoteConnection = RemoteInputPlayerConnection.instance;
                 s_RemoteConnection.Bind(EditorConnection.instance, false);
                 #else
+                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
                 s_RemoteConnection.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
                 #endif
             }
@@ -1572,6 +1573,7 @@ namespace UnityEngine.Experimental.Input
 
         private static void InitializeInEditor()
         {
+            Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
             Reset();
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -1650,6 +1652,7 @@ namespace UnityEngine.Experimental.Input
             // Send an initial Update so that user methods such as Start and Awake
             // can access the input devices.
             Update();
+            Profiling.Profiler.EndSample();
         }
 
         private static void OnPlayModeChange(PlayModeStateChange change)
@@ -1784,6 +1787,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
+            Profiling.Profiler.BeginSample("InputSystem.Reset");
             #if UNITY_EDITOR
 
             // Some devices keep globals. Get rid of them by pretending the devices
@@ -1816,6 +1820,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             InputUser.ResetGlobals();
+            Profiling.Profiler.EndSample();
         }
 
         /// <summary>
