@@ -17,6 +17,8 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
+
             // Button to pop up window to edit the asset.
             if (GUILayout.Button("Edit asset"))
                 AssetInspectorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
@@ -64,6 +66,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUILayout.PropertyField(generateActionEventsProperty, m_GenerateActionEventsLabel);
                 EditorGUILayout.PropertyField(generateInterfacesProperty);
             }
+
+            // Using ApplyRevertGUI requires calling Update and ApplyModifiedProperties around the serializedObject,
+            // and will print warning messages otherwise (see warning message in ApplyRevertGUI implementation).
+            serializedObject.ApplyModifiedProperties();
 
             ApplyRevertGUI();
         }
