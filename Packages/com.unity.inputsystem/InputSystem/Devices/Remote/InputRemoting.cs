@@ -53,6 +53,8 @@ namespace UnityEngine.Experimental.Input
             RemoveDevice,
             RemoveLayout,
             ChangeUsages,
+            StartSending,
+            StopSending,
         }
 
         /// <summary>
@@ -154,6 +156,12 @@ namespace UnityEngine.Experimental.Input
                     break;
                 case MessageType.RemoveDevice:
                     RemoveDeviceMsg.Process(this, msg);
+                    break;
+                case MessageType.StartSending:
+                    StartSendingMsg.Process(this, msg);
+                    break;
+                case MessageType.StopSending:
+                    StopSendingMsg.Process(this, msg);
                     break;
             }
         }
@@ -365,29 +373,51 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        private static class StartSendingMsg
+        {
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                receiver.StartSending();
+            }
+        }
+
+        private static class StopSendingMsg
+        {
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                receiver.StopSending();
+            }
+        }
+
+        public void RemoveRemoteDevices(int participantId)
+        {
+            var senderIndex = FindOrCreateSenderRecord(participantId);
+
+            // Remove devices added by remote.
+            var devices = m_Senders[senderIndex].devices;
+            if (devices != null)
+            {
+                foreach (var remoteDevice in devices)
+                {
+                    var device = m_LocalManager.TryGetDeviceById(remoteDevice.localId);
+                    if (device != null)
+                        m_LocalManager.RemoveDevice(device);
+                }
+            }
+
+            ////TODO: remove layouts added by remote
+
+            ArrayHelpers.EraseAt(ref m_Senders, senderIndex);
+        }
+
         private static class DisconnectMsg
         {
             public static void Process(InputRemoting receiver, Message msg)
             {
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
+                Debug.Log("DisconnectMsg.Process");
 
-                // Remove devices added by remote.
-                var devices = receiver.m_Senders[senderIndex].devices;
-                if (devices != null)
-                {
-                    foreach (var remoteDevice in devices)
-                    {
-                        var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
-                        if (device != null)
-                            receiver.m_LocalManager.RemoveDevice(device);
-                    }
-                }
-
-                ////TODO: remove layouts added by remote
-
-                ArrayHelpers.EraseAt(ref receiver.m_Senders, senderIndex);
-
-                ////TODO: stop sending if last remote disconnects and StartSendingOnConnect is active
+                receiver.RemoveRemoteDevices(msg.participantId);
+                receiver.StopSending();
             }
         }
 
@@ -516,8 +546,9 @@ namespace UnityEngine.Experimental.Input
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(data.layout,
-                        $"Remote{msg.participantId}::{data.name}");
+                    ////REVIEW: this gives remote devices names the same way that local devices receive them; should we make remote status visible in the name?
+                    device = receiver.m_LocalManager.AddDevice(data.layout);
+                    device.m_ParticipantId = msg.participantId;
                 }
                 catch (Exception exception)
                 {

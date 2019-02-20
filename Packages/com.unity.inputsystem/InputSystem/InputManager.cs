@@ -3137,16 +3137,20 @@ namespace UnityEngine.Experimental.Input
             public string variants;
             public string[] usages;
             public int deviceId;
+            public int participantId;
             public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
-            public void RestoreUsagesOnDevice(InputDevice device)
+            public void Restore(InputDevice device)
             {
-                if (usages == null || usages.Length == 0)
-                    return;
-                var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
-                device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
-                device.UpdateUsageArraysOnControls();
+                if (usages.LengthSafe() > 0)
+                {
+                    var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
+                    device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
+                    device.UpdateUsageArraysOnControls();
+                }
+
+                device.m_ParticipantId = participantId;
             }
         }
 
@@ -3196,6 +3200,7 @@ namespace UnityEngine.Experimental.Input
                     layout = device.layout,
                     variants = device.variants,
                     deviceId = device.id,
+                    participantId = device.m_ParticipantId,
                     usages = usages,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
@@ -3311,8 +3316,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
                 }
 
-                // Usages and the user interaction filter can be set on an API level so manually restore them.
-                deviceState.RestoreUsagesOnDevice(device);
+                deviceState.Restore(device);
             }
 
             // See if we can make sense of an available device now that we couldn't make sense of
@@ -3349,7 +3353,7 @@ namespace UnityEngine.Experimental.Input
             // Done. Discard saved arrays.
             m_SavedDeviceStates = null;
             m_SavedAvailableDevices = null;
-            
+
             Profiler.EndSample();
         }
 
