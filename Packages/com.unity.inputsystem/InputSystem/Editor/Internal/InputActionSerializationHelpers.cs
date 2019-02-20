@@ -137,6 +137,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var actionName = FindUniqueName(actionsArrayProperty, parameters["m_Name"]);
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
             return actionProperty;
         }
 

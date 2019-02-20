@@ -673,6 +673,7 @@ namespace UnityEngine.Experimental.Input
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
         {
+            Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
@@ -707,7 +708,7 @@ namespace UnityEngine.Experimental.Input
                     haveOverriddenLayoutName = true;
                 }
             }
-
+            Profiler.EndSample();
             return layoutName;
         }
 
@@ -1021,6 +1022,7 @@ namespace UnityEngine.Experimental.Input
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
+            Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
 
@@ -1037,12 +1039,13 @@ namespace UnityEngine.Experimental.Input
                     m_Runtime.DeviceCommand(deviceId, ref command);
                 }
 
+                Profiler.EndSample();
                 return null;
             }
 
             var device = AddDevice(layout, deviceId, description, deviceFlags);
             device.m_Description = description;
-
+            Profiler.EndSample();
             return device;
         }
 
@@ -3134,16 +3137,20 @@ namespace UnityEngine.Experimental.Input
             public string variants;
             public string[] usages;
             public int deviceId;
+            public int participantId;
             public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
-            public void RestoreUsagesOnDevice(InputDevice device)
+            public void Restore(InputDevice device)
             {
-                if (usages == null || usages.Length == 0)
-                    return;
-                var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
-                device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
-                device.UpdateUsageArraysOnControls();
+                if (usages.LengthSafe() > 0)
+                {
+                    var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
+                    device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
+                    device.UpdateUsageArraysOnControls();
+                }
+
+                device.m_ParticipantId = participantId;
             }
         }
 
@@ -3193,6 +3200,7 @@ namespace UnityEngine.Experimental.Input
                     layout = device.layout,
                     variants = device.variants,
                     deviceId = device.id,
+                    participantId = device.m_ParticipantId,
                     usages = usages,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
@@ -3262,6 +3270,7 @@ namespace UnityEngine.Experimental.Input
         internal void RestoreDevicesAfterDomainReload()
         {
             Debug.Assert(m_SavedDeviceStates != null);
+            Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
 
             var deviceCount = m_SavedDeviceStates.Length;
             for (var i = 0; i < deviceCount; ++i)
@@ -3307,8 +3316,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
                 }
 
-                // Usages and the user interaction filter can be set on an API level so manually restore them.
-                deviceState.RestoreUsagesOnDevice(device);
+                deviceState.Restore(device);
             }
 
             // See if we can make sense of an available device now that we couldn't make sense of
@@ -3345,6 +3353,8 @@ namespace UnityEngine.Experimental.Input
             // Done. Discard saved arrays.
             m_SavedDeviceStates = null;
             m_SavedAvailableDevices = null;
+
+            Profiler.EndSample();
         }
 
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD

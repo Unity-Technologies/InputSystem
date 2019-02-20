@@ -247,7 +247,7 @@ public class AnalogButton
     }
 
     // Decide if the button is "pressed" based on the input value
-    public bool IsPressed(float inputValue)
+    public virtual bool IsPressed(float inputValue)
     {
         if (Mathf.Abs(inputValue) > deadzone && inputValue >= min_input_value && inputValue <= max_input_value)
             return true;
