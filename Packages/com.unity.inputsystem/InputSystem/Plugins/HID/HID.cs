@@ -151,9 +151,13 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
                     hidDeviceDescriptor.productId);
 
-                deviceMatcher.WithCapability("productId", hidDeviceDescriptor.productId);
-                deviceMatcher.WithCapability("vendorId", hidDeviceDescriptor.vendorId);
+                deviceMatcher = deviceMatcher
+                    .WithCapability("productId", hidDeviceDescriptor.productId)
+                    .WithCapability("vendorId", hidDeviceDescriptor.vendorId);
             }
+            deviceMatcher = deviceMatcher
+                .WithCapability("usage", hidDeviceDescriptor.usage)
+                .WithCapability("usagePage", hidDeviceDescriptor.usagePage);
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
