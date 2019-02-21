@@ -216,5 +216,68 @@ internal class SwitchTests : InputTestFixture
 
         Assert.That(receivedCommand.HasValue, Is.True);
     }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanSetNPadVibrationMotorValues()
+    {
+        var controller = InputSystem.AddDevice<NPad>();
+
+        NPadDeviceIOCTLOutputCommand? receivedCommand = null;
+        unsafe
+        {
+            runtime.SetDeviceCommandCallback(controller.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == NPadDeviceIOCTLOutputCommand.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((NPadDeviceIOCTLOutputCommand*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+        controller.SetMotorSpeeds(0.1234f, 0.5678f);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0xFF));
+        Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
+        Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(NPadDeviceIOCTLOutputCommand.kDefaultFrequencyLow));
+        Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.5678f));
+        Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(NPadDeviceIOCTLOutputCommand.kDefaultFrequencyHigh));
+
+        receivedCommand = null;
+        controller.SetMotorSpeeds(0.1234f, 56.78f, 0.9012f, 345.6f);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0xFF));
+        Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
+        Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(56.78f));
+        Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
+        Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(345.6f));
+
+        receivedCommand = null;
+        controller.SetMotorSpeedLeft(0.1234f, 56.78f, 0.9012f, 345.6f);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0x02));
+        Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
+        Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(56.78f));
+        Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
+        Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(345.6f));
+
+        receivedCommand = null;
+        controller.SetMotorSpeedRight(0.1234f, 56.78f, 0.9012f, 345.6f);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0x04));
+        Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
+        Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(56.78f));
+        Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
+        Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(345.6f));
+    }
 }
 #endif
