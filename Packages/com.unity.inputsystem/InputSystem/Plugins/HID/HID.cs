@@ -139,17 +139,18 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // We go with the string versions if we have them and with the numeric versions if we don't.
             string layoutName;
             var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
+            var usageName = hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop ? ((GenericDesktop)hidDeviceDescriptor.usage).ToString() : hidDeviceDescriptor.usagePage.ToString();
             if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
             {
-                layoutName = string.Format("{0}::{1} {2}", kHIDNamespace, description.manufacturer, description.product);
+                layoutName = string.Format("{0}::{1} {2} {3}", kHIDNamespace, description.manufacturer, description.product, usageName);
             }
             else
             {
                 // Sanity check to make sure we really have the data we expect.
                 if (hidDeviceDescriptor.vendorId == 0)
                     return null;
-                layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
-                    hidDeviceDescriptor.productId);
+                layoutName = string.Format("{0}::{1:X}-{2:X} {3}", kHIDNamespace, hidDeviceDescriptor.vendorId,
+                    hidDeviceDescriptor.productId, usageName);
 
                 deviceMatcher = deviceMatcher
                     .WithCapability("productId", hidDeviceDescriptor.productId)
