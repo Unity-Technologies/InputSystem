@@ -4,18 +4,10 @@ using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.Linux
 {
-    static class DeviceInterfaces
-    {
-        /// <summary>
-        /// The current interface code sent with devices to identify as Linux SDL devices.
-        /// </summary>
-        public const string kXRInterfaceCurrent = "SDL";
-    }
-
     // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
 #pragma warning disable 0649
 
-    enum JoystickFeatureType
+    public enum JoystickFeatureType
     {
         Invalid = 0,
         Axis,
@@ -26,28 +18,84 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         Max
     }
 
+    public enum SDLAxisUsage
+    {
+        Unknown = 0,
+        X,
+        Y,
+        Z,
+        RotateX,
+        RotateY,
+        RotateZ,
+        Throttle,
+        Rudder,
+        Wheel,
+        Gas,
+        Break,
+        Hat0X,
+        Hat0Y,
+        Hat1X,
+        Hat1Y,
+        Hat2X,
+        Hat2Y,
+        Hat3X,
+        Hat3Y,
+
+        Count
+    }
+
+    public enum SDLButtonUsage
+    {
+        Unknown = 0,
+        Trigger,
+        Thumb,
+        Thumb2,
+        Top,
+        Top2,
+        Pinkie,
+        Base,
+        Base2,
+        Base3,
+        Base4,
+        Base5,
+        Base6,
+        Dead,
+        
+        A,
+        B,
+        X,
+        Y,
+        Z,
+        TriggerLeft,
+        TriggerRight,
+        TriggerLeft2,
+        TriggerRight2,
+        Select,
+        Start,
+        Mode,
+        ThumbLeft,
+        ThumbRight,
+
+        Count     
+    }
+
+    [Serializable]
     struct SDLFeatureDescriptor
     {
-        public string name;
         public JoystickFeatureType featureType;
+        public int usageHint;
         public int size;
         public int offset;
         public int bit;
         public Int32 min;
         public Int32 max;
-        public Int32 fuzz;
-        public Int32 flat;
     }
 
     //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
     [Serializable]
     class SDLDeviceDescriptor
     {
-        public string product;
-        public string manufacturer;
-        public string version;
-        public string guid;
-        public List<SDLFeatureDescriptor> inputFeatures;
+        public List<SDLFeatureDescriptor> controls;
 
         internal string ToJson()
         {
@@ -66,6 +114,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
     /// </summary>
     public static class SDLSupport
     {
+        /// <summary>
+        /// The current interface code sent with devices to identify as Linux SDL devices.
+        /// </summary>
+        public const string kXRInterfaceCurrent = "Linux";
+
+        public static string GetAxisNameFromUsage(SDLAxisUsage usage)
+        {
+            return Enum.GetName(typeof(SDLAxisUsage), usage);
+        }
+
+        public static string GetButtonNameFromUsage(SDLButtonUsage usage)
+        {
+            return Enum.GetName(typeof(SDLButtonUsage), usage);
+        }
+
         /// <summary>
         /// Registers all initial templates and the generalized layout builder with the InputSystem.
         /// </summary>

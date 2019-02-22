@@ -13,9 +13,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         [SerializeField]
         string parentLayout;
         [SerializeField]
-        string interfaceName;
-        [SerializeField]
         SDLDeviceDescriptor descriptor;
+
+
 
         static string SanitizeName(string originalName)
         {
@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
-            if (description.interfaceName != DeviceInterfaces.kXRInterfaceCurrent)
+            if (description.interfaceName != SDLSupport.kXRInterfaceCurrent)
             {
                 return null;
             }
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
 
             if (string.IsNullOrEmpty(matchedLayout))
             {
-                matchedLayout = "Joystick";
+                //matchedLayout = "Joystick";
             }
 
             string layoutName = null;
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
 
-            var layout = new SDLLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
+            var layout = new SDLLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
             
             return layoutName;
@@ -93,33 +93,44 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 extendsLayout = parentLayout
             };
 
-            foreach (var feature in descriptor.inputFeatures)
+            foreach (var feature in descriptor.controls)
             {
                 switch (feature.featureType)
                 {
                     case JoystickFeatureType.Axis:
                         {
-
+                            SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
+                            string featureName = SDLSupport.GetAxisNameFromUsage(usage);
+                            builder.AddControl(featureName)
+                            .WithLayout("Analog")
+                            .WithByteOffset((uint)feature.offset)
+                            .WithFormat(InputStateBlock.kTypeInt);
                         }
                         break;
                     case JoystickFeatureType.Ball:
                         {
-
+                            //TODO
                         }
                         break;
                     case JoystickFeatureType.Button:
                         {
-
+                            SDLButtonUsage usage = (SDLButtonUsage)feature.usageHint;
+                            string featureName = SDLSupport.GetButtonNameFromUsage(usage);
+                            builder.AddControl(featureName)
+                            .WithLayout("Button")
+                            .WithByteOffset((uint)feature.offset)
+                            .WithBitOffset((uint)feature.bit)
+                            .WithFormat(InputStateBlock.kTypeBit);
                         }
                         break;
                     case JoystickFeatureType.Hat:
                         {
-
+                            //TODO
                         }
                         break;
                     default:
                         {
-                            throw new NotImplementedException(String.Format("SDLLayoutBuilder.Build: Trying to build an SDL device with an unknown feature named {0} of type {1}.", feature.name, feature.featureType));
+                            throw new NotImplementedException(String.Format("SDLLayoutBuilder.Build: Trying to build an SDL device with an unknown feature of type {0}.", feature.featureType));
                         }
 
                 }
