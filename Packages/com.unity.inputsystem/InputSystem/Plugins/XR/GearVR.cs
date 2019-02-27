@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Layouts;
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     [InputControlLayout]
-    public class GearVRSimpleHMD : XRHMD
+    public class OculusStandaloneHMDBase : XRHMD
     {
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -58,8 +58,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
+    public class OculusGo : OculusStandaloneHMDBase
+    {}
+
     [InputControlLayout]
-    public class GearVRExtendedHMD : GearVRSimpleHMD
+    public class OculusStandaloneHMDExtended : OculusStandaloneHMDBase
     {
         public ButtonControl back { get; private set; }
         public Vector2Control touchpad { get; private set; }
@@ -72,6 +75,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             touchpad = builder.GetControl<Vector2Control>("touchpad");
         }
     }
+
+    public class GearVR : OculusStandaloneHMDExtended
+    {}
 
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
