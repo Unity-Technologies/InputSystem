@@ -22,6 +22,7 @@ Actions:
 - Fixed warnings in Console when using InputActions editor.
 - Fixed assert when generating C# class and make sure it gets imported correctly.
 - Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Allow binding dpad controls to actions of type "Vector2".
 
 ## [0.2.0-preview] - 2019-02-12
 

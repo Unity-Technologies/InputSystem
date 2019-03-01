@@ -1,11 +1,15 @@
 using UnityEngine;
 using UnityEngine.TestTools;
 using NUnit.Framework;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.Controls;
 
 public class AssetEditorTests
 {
@@ -195,4 +199,27 @@ public class AssetEditorTests
         var e = new Event {keyCode = KeyCode.Escape, type = EventType.KeyDown};
         picker.m_WindowInstance.SendEvent(e);
     }
+
+    void CollectControlTypesFromChildren(AdvancedDropdownItem item, List<Type> controlTypes)
+    {
+        foreach (var child in item.children)
+            CollectControlTypesFromChildren(child, controlTypes);
+
+        var type = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(item.name));
+        if (type != null)
+            controlTypes.Add(type);
+    }
+
+    [Test]
+    public void PickerAllowsAssigningDpadControlToVector2Action()
+    {
+        var picker = new InputControlPickerDropdown(new AdvancedDropdownState(), path => { });
+        picker.SetExpectedControlLayoutFilter("Vector2");
+        picker.Show(Rect.zero);
+
+        var controlTypes = new List<Type>();
+        CollectControlTypesFromChildren(picker.m_DataSource.mainTree, controlTypes);
+        Assert.That(controlTypes.Any(x => x.IsAssignableFrom(typeof(DpadControl))));
+    }
+
 }
