@@ -219,16 +219,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SetExpectedControlLayoutFilter(string expectedControlLayout)
         {
-            switch (expectedControlLayout)
-            {
-                // Special case for Vector2, where we use the InputControl<Vector2> base type, to match both DpadControl and Vector2Control
-                case "Vector2":
-                    m_ExpectedControlLayoutFilterType = typeof(InputControl<Vector2>);
-                    break;
-                default:
-                    m_ExpectedControlLayoutFilterType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout));
-                    break;
-            }
+            m_ExpectedControlLayoutFilterType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout));
         }
 
         public enum Mode

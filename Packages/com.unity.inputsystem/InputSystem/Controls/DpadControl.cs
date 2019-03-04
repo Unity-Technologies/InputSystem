@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
-    public class DpadControl : InputControl<Vector2>
+    public class DpadControl : Vector2Control
     {
         public enum ButtonBits
         {
@@ -24,6 +24,9 @@ namespace UnityEngine.Experimental.Input.Controls
             Left,
             Right,
         }
+
+        [InputControl(name = "x", layout = "DpadAxis")]
+        [InputControl(name = "y", layout = "DpadAxis")]
 
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
