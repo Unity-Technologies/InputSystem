@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Remote connections in input debugger now remain connected across domain reloads.
 - Don't incorrectly create non-functioning devices if a physical device implements multiple incompatible logical HID devices (such as the MacBook keyboard/touch pad and touch bar).
+- Sort events in input debugger window by id rather then by timestamp.
 
 Actions:
 - Editor beeping or triggering menu commands when binding keys interactively.
