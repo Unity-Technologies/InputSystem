@@ -79,8 +79,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
             
-            Debug.Log(String.Format("Linux Device Found: Product: [{0}], Manufacturer: [{1}], Caps: [{2}]", description.product, description.manufacturer, description.capabilities));
-
             var layout = new SDLLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
             
@@ -122,14 +120,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                     .WithLayout("Axis")
                     .WithByteOffset(0)
                     .WithSizeInBits((uint)xElement.size * 8)
-                    .WithParameters("scale,scaleFactor=65538.01467");
+                    .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538.01467");
 
                 builder.AddControl(stickName + "/y")
                     .WithFormat(InputStateBlock.kTypeInt)
                     .WithLayout("Axis")
                     .WithByteOffset((uint)4)
                     .WithSizeInBits((uint)xElement.size * 8)
-                    .WithParameters("scale,scaleFactor=65538.01467,invert");
+                    .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538.01467,invert");
 
                 //Need to handle Up/Down/Left/Right
                 builder.AddControl(stickName + "/up")
@@ -142,14 +140,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 builder.AddControl(stickName + "/down")
                     .WithFormat(InputStateBlock.kTypeInt)
                     .WithLayout("Button")
-                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467")
-                    .WithByteOffset((uint)4)
-                    .WithSizeInBits((uint)yElement.size * 8);
-
-                builder.AddControl(stickName + "/down-inverted")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Button")
-                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467,invert")
+                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467,invert=false")
                     .WithByteOffset((uint)4)
                     .WithSizeInBits((uint)yElement.size * 8);
 
@@ -170,7 +161,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
 
             foreach (var feature in descriptor.controls)
             {
-                Debug.Log(String.Format("Processing Feature: Type: [{0}], [{1}]", feature.featureType, feature.usageHint));
                 switch (feature.featureType)
                 {
                     case JoystickFeatureType.Axis:

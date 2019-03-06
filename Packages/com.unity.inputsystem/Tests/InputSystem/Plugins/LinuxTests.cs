@@ -219,6 +219,89 @@ internal class LinuxTests : InputTestFixture
 
         Assert.That(triggerControl.isPressed, Is.False);
 
+        
+
+    }
+
+    [Test]
+    public void State_LinuxJoystickStickAxesReportProperValues()
+    {
+        runtime.ReportNewInputDevice(TestSDLJoystick.descriptorString);
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var device = InputSystem.devices[0];
+
+        ButtonControl leftButton = device["stick/left"] as ButtonControl;
+        ButtonControl rightButton = device["stick/right"] as ButtonControl;
+        AxisControl xAxis = device["stick/x"] as AxisControl;
+        ButtonControl downButton = device["stick/down"] as ButtonControl;
+        ButtonControl upButton = device["stick/up"] as ButtonControl;
+        AxisControl yAxis = device["stick/y"] as AxisControl;
+
+        TestSDLJoystick joystickState = new TestSDLJoystick();
+
+        InputSystem.QueueStateEvent(device, joystickState);
+        InputSystem.Update();
+
+        joystickState.yAxis = short.MaxValue;
+        joystickState.xAxis = short.MaxValue;
+
+        InputSystem.QueueStateEvent(device, joystickState);
+        InputSystem.Update();
+
+        float leftValue = leftButton.ReadValue();
+        float rightValue = rightButton.ReadValue();
+        float xValue = xAxis.ReadValue();
+        float downValue = downButton.ReadValue();
+        float upValue = upButton.ReadValue();
+        float yValue = yAxis.ReadValue();
+        Assert.That(downValue, Is.EqualTo(1.0f));
+        Assert.That(upValue, Is.EqualTo(0.0f));
+        Assert.That(yValue, Is.EqualTo(-1.0f));
+        Assert.That(leftValue, Is.EqualTo(0.0f));
+        Assert.That(rightValue, Is.EqualTo(1.0f));
+        Assert.That(xValue, Is.EqualTo(1.0f));
+
+        joystickState.yAxis = short.MinValue;
+        joystickState.xAxis = short.MinValue;
+
+        InputSystem.QueueStateEvent(device, joystickState);
+        InputSystem.Update();
+
+        leftValue = leftButton.ReadValue();
+        rightValue = rightButton.ReadValue();
+        xValue = xAxis.ReadValue();
+        downValue = downButton.ReadValue();
+        upValue = upButton.ReadValue();
+        yValue = yAxis.ReadValue();
+        Assert.That(downValue, Is.EqualTo(0.0f));
+        Assert.That(upValue, Is.EqualTo(1.0f));
+        Assert.That(yValue, Is.EqualTo(1.0f));
+        Assert.That(leftValue, Is.EqualTo(1.0f));
+        Assert.That(rightValue, Is.EqualTo(0.0f));
+        Assert.That(xValue, Is.EqualTo(-1.0f));
+
+        joystickState.yAxis = 0;
+        joystickState.xAxis = 0;
+
+        InputSystem.QueueStateEvent(device, joystickState);
+        InputSystem.Update();
+
+        leftValue = leftButton.ReadValue();
+        rightValue = rightButton.ReadValue();
+        xValue = xAxis.ReadValue();
+        downValue = downButton.ReadValue();
+        upValue = upButton.ReadValue();
+        yValue = yAxis.ReadValue();
+        Assert.That(downValue, Is.EqualTo(0.0f));
+        Assert.That(upValue, Is.EqualTo(0.0f));
+        Assert.That(yValue, Is.EqualTo(0.0f));
+        Assert.That(leftValue, Is.EqualTo(0.0f));
+        Assert.That(rightValue, Is.EqualTo(0.0f));
+        Assert.That(xValue, Is.EqualTo(0.0f));
+
     }
 }
 #endif //UNITY_EDITOR || UNITY_STANDALONE // UNITY_STANDALONE_LINUX
