@@ -25,8 +25,11 @@ namespace UnityEngine.Experimental.Input.Controls
             Right,
         }
 
-        [InputControl(name = "x", layout = "DpadAxis")]
-        [InputControl(name = "y", layout = "DpadAxis")]
+        // The DpadAxisControl has it's own logic to read state from the parent dpad.
+        // The useStateFrom argument here is not actually used by that. The only reason
+        // it is set up here is to avoid any state bytes being reserved for the DpadAxisControl.
+        [InputControl(name = "x", layout = "DpadAxis", useStateFrom = "right")]
+        [InputControl(name = "y", layout = "DpadAxis", useStateFrom = "up")]
 
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
