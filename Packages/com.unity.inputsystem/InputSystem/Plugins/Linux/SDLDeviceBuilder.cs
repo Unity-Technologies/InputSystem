@@ -78,6 +78,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
             {
                 layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
+            
+            Debug.Log(String.Format("Linux Device Found: Product: [{0}], Manufacturer: [{1}], Caps: [{2}]", description.product, description.manufacturer, description.capabilities));
 
             var layout = new SDLLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
@@ -168,6 +170,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
 
             foreach (var feature in descriptor.controls)
             {
+                Debug.Log(String.Format("Processing Feature: Type: [{0}], [{1}]", feature.featureType, feature.usageHint));
                 switch (feature.featureType)
                 {
                     case JoystickFeatureType.Axis:

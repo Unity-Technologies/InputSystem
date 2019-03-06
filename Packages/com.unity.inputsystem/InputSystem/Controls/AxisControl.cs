@@ -28,7 +28,6 @@ namespace UnityEngine.Experimental.Input.Controls
         public float normalizeMin;
         public float normalizeMax;
         public float normalizeZero;
-
         public bool scale;
         public float scaleFactor;
 
