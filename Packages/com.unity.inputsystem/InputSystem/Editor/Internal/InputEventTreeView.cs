@@ -196,11 +196,11 @@ namespace UnityEngine.Experimental.Input.Editor
             Array.Sort(m_Events,
                 (a, b) =>
                 {
-                    var aTime = a.time;
-                    var bTime = b.time;
-                    if (aTime > bTime)
+                    var aId = a.id;
+                    var bId = b.id;
+                    if (aId > bId)
                         return -1;
-                    if (bTime > aTime)
+                    if (aId < bId)
                         return 1;
                     return 0;
                 });
