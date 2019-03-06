@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
 
@@ -233,18 +234,39 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 #if UNITY_ANALYTICS || UNITY_EDITOR
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        struct AnalyticsEventInfo
         {
-            const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
-            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #else
-            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif
+            public bool registered;
+            public int maxPerHour, maxPropertiesPerEvent;
+        }
+        Dictionary<string, AnalyticsEventInfo> m_RegisteredEvents = new Dictionary<string, AnalyticsEventInfo>();
+
+        public void RegisterAnalyticsEvent(string name, int _maxPerHour, int _maxPropertiesPerEvent)
+        {
+            m_RegisteredEvents[name] = new AnalyticsEventInfo
+            {
+                registered = false,
+                maxPerHour = _maxPerHour,
+                maxPropertiesPerEvent = _maxPropertiesPerEvent
+            };
         }
 
         public void SendAnalyticsEvent(string name, object data)
         {
+            var registeredEvent = m_RegisteredEvents[name];
+            if (registeredEvent.registered == false)
+            {
+                const string vendorKey = "unity.input";
+            #if UNITY_EDITOR
+                EditorAnalytics.RegisterEventWithLimit(name, registeredEvent.maxPerHour, registeredEvent.maxPropertiesPerEvent, vendorKey);
+            #else
+                Analytics.Analytics.RegisterEvent(name, registeredEvent.maxPerHour, registeredEvent.maxPropertiesPerEvent, vendorKey);
+            #endif
+                m_RegisteredEvents[name] = new AnalyticsEventInfo
+                {
+                    registered = true
+                };
+            }
             #if UNITY_EDITOR
             EditorAnalytics.SendEventWithLimit(name, data);
             #else
