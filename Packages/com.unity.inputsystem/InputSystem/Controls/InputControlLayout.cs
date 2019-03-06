@@ -1243,7 +1243,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             return new NameAndParameters {name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters)};
         }
 
-        internal static ParameterValue[] ParseParameters(string parameterString)
+        private static ParameterValue[] ParseParameters(string parameterString)
         {
             parameterString = parameterString.Trim();
             if (string.IsNullOrEmpty(parameterString))
