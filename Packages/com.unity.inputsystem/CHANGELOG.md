@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Don't incorrectly create non-functioning devices if a physical device implements multiple incompatible logical HID devices (such as the MacBook keyboard/touch pad and touch bar).
 - Removed non-functioning sort triangles in event list in Input Debugger device windows.
 - Sort events in input debugger window by id rather then by timestamp.
+- Input device icons in input debugger window now render in appropriate resolution on retina displays.
 
 Actions:
 - Editor beeping or triggering menu commands when binding keys interactively.
