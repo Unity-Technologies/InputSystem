@@ -1855,6 +1855,63 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_ParseParameters_EmptyStringReturnsNull()
+    {
+        var parameters = InputControlLayout.ParseParameters("");
+        Assert.AreEqual(null, parameters, "Empty string should generate null parameters");
+    }
+
+    void Layouts_ParseParameters_GenericWorks<T>(T[] expectedValues, InputControlLayout.ParameterType parameterType, string input) where T : unmanaged
+    {
+        var parameters = InputControlLayout.ParseParameters(input);
+        Assert.AreEqual(expectedValues.Length, parameters.Length, "Number of parameters does not match.");
+        unsafe
+        {
+            for (int i = 0; i < expectedValues.Length; i++)
+            {
+                var p = parameters[i];
+                Assert.AreEqual(parameterType, p.type, $"Unexpected type in parameter {i}");
+                Assert.AreEqual($"p{i}", p.name, $"Unexpected name in parameter {i}");
+                Assert.AreEqual(expectedValues[i], *(T*)p.value, $"Unexpected value in parameter {i}");
+            }
+        }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ParseParameters_BoolsWorks()
+    {
+        Layouts_ParseParameters_GenericWorks(
+            new bool[] { true, false, true, false },
+            InputControlLayout.ParameterType.Boolean,
+            "p0=true,p1=false,p2=TRUE,p3=False"
+        );
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ParseParameters_IntWorks()
+    {
+        Layouts_ParseParameters_GenericWorks(
+            new int[] { 0, 0, 1234, -5678, 0 },
+            InputControlLayout.ParameterType.Integer,
+            "p0=0,p1=-0,p2=1234,p3=-5678,p4=12345678901234567890"
+        );
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ParseParameters_FloatWorks()
+    {
+        Layouts_ParseParameters_GenericWorks(
+            new float[] { 0, 0, 0.1234f, -0.5678f, 1e10f, -2e-10f, 0, float.PositiveInfinity, float.NegativeInfinity },
+            InputControlLayout.ParameterType.Float,
+            "p0=0.0,p1=-0.0,p2=0.1234,p3=-0.5678,p4=1e10,p5=-2E-10,p6=1e100,p7=Infinity,p8=-Infinity"
+        );
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_SettingVariantOnLayout_MergesAwayNonMatchingControlInformationFromBaseLayouts()
     {
         const string jsonBase = @"
