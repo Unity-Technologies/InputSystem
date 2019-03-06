@@ -93,6 +93,79 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 extendsLayout = parentLayout
             };
 
+            var xElement = descriptor.controls.Find(feature => feature.featureType == JoystickFeatureType.Axis && feature.usageHint == 1); // ABS_X
+            var yElement = descriptor.controls.Find(feature => feature.featureType == JoystickFeatureType.Axis && feature.usageHint == 2); // ABS_Y
+
+            if (xElement.usageHint == 1 && yElement.usageHint == 2)
+            {
+                int byteOffset;
+                if (xElement.offset <= yElement.offset)
+                {
+                    byteOffset = xElement.offset;
+                }
+                else
+                {
+                    byteOffset = yElement.offset;
+                }
+
+                var stickName = "Stick";
+                var control = builder.AddControl(stickName)
+                    .WithLayout("Stick")
+                    .WithByteOffset((uint)byteOffset)
+                    .WithSizeInBits((uint)xElement.size * 8)
+                    .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
+
+                builder.AddControl(stickName + "/x")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Axis")
+                    .WithByteOffset(0)
+                    .WithSizeInBits((uint)xElement.size * 8)
+                    .WithParameters("scale,scaleFactor=65538.01467");
+
+                builder.AddControl(stickName + "/y")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Axis")
+                    .WithByteOffset((uint)4)
+                    .WithSizeInBits((uint)xElement.size * 8)
+                    .WithParameters("scale,scaleFactor=65538.01467,invert");
+
+                //Need to handle Up/Down/Left/Right
+                builder.AddControl(stickName + "/up")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Button")
+                    .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538.01467,invert")
+                    .WithByteOffset((uint)4)
+                    .WithSizeInBits((uint)yElement.size * 8);
+
+                builder.AddControl(stickName + "/down")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Button")
+                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467")
+                    .WithByteOffset((uint)4)
+                    .WithSizeInBits((uint)yElement.size * 8);
+
+                builder.AddControl(stickName + "/down-inverted")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Button")
+                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467,invert")
+                    .WithByteOffset((uint)4)
+                    .WithSizeInBits((uint)yElement.size * 8);
+
+                builder.AddControl(stickName + "/left")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Button")
+                    .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538.01467,invert")
+                    .WithByteOffset((uint)0)
+                    .WithSizeInBits((uint)xElement.size * 8);
+
+                builder.AddControl(stickName + "/right")
+                    .WithFormat(InputStateBlock.kTypeInt)
+                    .WithLayout("Button")
+                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467")
+                    .WithByteOffset((uint)0)
+                    .WithSizeInBits((uint)xElement.size * 8);
+            }
+
             foreach (var feature in descriptor.controls)
             {
                 switch (feature.featureType)
@@ -104,7 +177,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                             builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset((uint)feature.offset)
-                            .WithFormat(InputStateBlock.kTypeInt);
+                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538.01467");
                         }
                         break;
                     case JoystickFeatureType.Ball:
@@ -116,11 +190,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                         {
                             SDLButtonUsage usage = (SDLButtonUsage)feature.usageHint;
                             string featureName = SDLSupport.GetButtonNameFromUsage(usage);
-                            builder.AddControl(featureName)
-                            .WithLayout("Button")
-                            .WithByteOffset((uint)feature.offset)
-                            .WithBitOffset((uint)feature.bit)
-                            .WithFormat(InputStateBlock.kTypeBit);
+                            if (featureName != null)
+                            {
+                                builder.AddControl(featureName)
+                                .WithLayout("Button")
+                                .WithByteOffset((uint)feature.offset)
+                                .WithBitOffset((uint)feature.bit)
+                                .WithFormat(InputStateBlock.kTypeBit);
+                            }
                         }
                         break;
                     case JoystickFeatureType.Hat:
