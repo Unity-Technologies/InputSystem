@@ -143,6 +143,7 @@ namespace UnityEngine.Experimental.Input
             if (memory.isAllocated)
                 newMemory.CopyDataFrom(memory);
 
+
             ////TODO: make sure composite objects get all the bindings they need
             ////TODO: handle case where we have bindings resolving to the same control
             ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
@@ -161,9 +162,11 @@ namespace UnityEngine.Experimental.Input
             // we're done resolving.
             try
             {
-                var bindingStatesPtr = newMemory.bindingStates;
                 for (var n = 0; n < bindingCountInThisMap; ++n)
                 {
+                    var bindingStatesPtr = newMemory.bindingStates;
+     
+
                     ref var unresolvedBinding = ref bindingsInThisMap[n];
                     var bindingIndex = bindingStartIndex + n;
                     var isComposite = unresolvedBinding.isComposite;
@@ -366,6 +369,7 @@ namespace UnityEngine.Experimental.Input
                                 ref currentCompositePartCount);
 
                             // Keep track of total number of controls bound in the composite.
+          
                             bindingStatesPtr[currentCompositeBindingIndex].controlCount += numControls;
 
                             // Force action index on part binding to be same as that of composite.
@@ -438,6 +442,8 @@ namespace UnityEngine.Experimental.Input
                 // Set up control to binding index mapping.
                 for (var i = 0; i < bindingCountInThisMap; ++i)
                 {
+                    var bindingStatesPtr = newMemory.bindingStates;
+       
                     var bindingState = &bindingStatesPtr[bindingStartIndex + i];
                     var numControls = bindingState->controlCount;
                     var startIndex = bindingState->controlStartIndex;
