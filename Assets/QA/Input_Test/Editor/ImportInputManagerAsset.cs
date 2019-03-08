@@ -1,4 +1,4 @@
-﻿//using System.IO;
+//using System.IO;
 using System;
 using UnityEditor;
 using UnityEditor.Presets;
@@ -19,7 +19,7 @@ public class ImportInputManagerAsset
             Debug.LogWarning("Current mode is for Input Test.");
             return;
         }
-        
+
         Preset defaultPreset = new Preset(m_inputManAsset);
         AssetDatabase.CreateAsset(defaultPreset, "Assets/QA/Input_Test/Editor/default.preset");
         m_inputTestPreset.ApplyTo(m_inputManAsset);
@@ -45,7 +45,6 @@ public class ImportInputManagerAsset
         {
             Debug.LogWarning("Current mode is for Demo.");
         }
-       
     }
 
     static ImportInputManagerAsset()
@@ -79,7 +78,7 @@ public class ImportInputManagerAsset
     //static void RevertToDefaultInputAsset()
     //{
     //    File.Copy(m_defaultAssetFile, m_inputAssetFile, true);
-    //    File.Delete(m_defaultAssetFile);        
+    //    File.Delete(m_defaultAssetFile);
 
     //    //FileUtil.ReplaceFile("Assets/QA/Input_Test/Editor/default_InputManager.asset", "ProjectSettings/InputManager.asset");
     //    //FileUtil.DeleteFileOrDirectory("Assets/QA/Input_Test/Editor/default_InputManager.asset");
