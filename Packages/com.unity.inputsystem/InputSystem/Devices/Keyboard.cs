@@ -597,8 +597,8 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 var index = (int)key;
-                if (index <= 0 || index > m_Keys.Length)
-                    throw new ArgumentException("key");
+                if (index <= 0 || index >= m_Keys.Length)
+                    throw new ArgumentOutOfRangeException(nameof(key));
                 return m_Keys[(int)key];
             }
         }
@@ -618,13 +618,12 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        KeyControl[] m_Keys;
+        private KeyControl[] m_Keys;
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             var keyStrings = new[]
             {
-                null,
                 "space",
                 "enter",
                 "tab",
@@ -737,12 +736,15 @@ namespace UnityEngine.Experimental.Input
                 "oem5",
             };
             m_Keys = new KeyControl[keyStrings.Length];
-            for (int i = 1; i < keyStrings.Length; i++)
+            for (var i = 1; i < keyStrings.Length; i++)
             {
-                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i]);
+                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i-1]);
+
+                ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
+                ////        and it just seems somewhat dirty to jam the data into the control here
                 m_Keys[i].keyCode = (Key)i;
             }
-            Debug.Assert(keyStrings[(int)Key.OEM5] == "oem5");
+            Debug.Assert(keyStrings[((int)Key.OEM5) - 1] == "oem5", "keyString array layout doe not match Key enum layout");
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");
             imeSelected = builder.GetControl<ButtonControl>("IMESelected");
 
