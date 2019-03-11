@@ -145,13 +145,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double fixedUpdateIntervalInSeconds { get; }
 
         /// <summary>
-        /// Mask that determines which input updates are executed by the runtime.
+        /// Flag which tells runtime whether to process input events when in the background.
         /// </summary>
         /// <remarks>
-        /// This can be used to turn off unneeded updates (like fixed updates) or turn on updates
-        /// that are disabled by default (like before-render updates).
+        /// This can be used to turn on or off event processing for background windows.
         /// </remarks>
-        InputUpdateType updateMask { set; }
+        bool runInBackground { set; }
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }

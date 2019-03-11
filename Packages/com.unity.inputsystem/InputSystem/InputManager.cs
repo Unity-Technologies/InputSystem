@@ -111,19 +111,15 @@ namespace UnityEngine.Experimental.Input
             get => m_UpdateMask;
             set
             {
-                if (m_UpdateMask == value)
-                    return;
-
                 // In editor, we don't allow disabling editor updates.
                 #if UNITY_EDITOR
                 value |= InputUpdateType.Editor;
                 #endif
 
+                if (m_UpdateMask == value)
+                    return;
+                    
                 m_UpdateMask = value;
-
-                // Tell runtime.
-                if (m_Runtime != null)
-                    m_Runtime.updateMask = m_UpdateMask;
 
                 // Recreate state buffers.
                 if (m_DevicesCount > 0)
@@ -1495,9 +1491,9 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onFocusChanged = OnFocusChanged;
-            m_Runtime.updateMask = updateMask;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
+            m_Runtime.runInBackground = m_Settings.runInBackground;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2109,8 +2105,7 @@ namespace UnityEngine.Experimental.Input
                 default:
                     throw new NotImplementedException("Input update mode: " + m_Settings.updateMode);
             }
-            if (m_Settings.runInBackground)
-                newUpdateMask |= (InputUpdateType)(1 << 31);
+
             #if UNITY_EDITOR
             // In the editor, we force editor updates to be on even if InputEditorUserSettings.lockInputToGameView is
             // on as otherwise we'll end up accumulating events in edit mode without anyone flushing the
@@ -2118,6 +2113,8 @@ namespace UnityEngine.Experimental.Input
             newUpdateMask |= InputUpdateType.Editor;
             #endif
             updateMask = newUpdateMask;
+
+            m_Runtime.runInBackground = m_Settings.runInBackground;
 
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)

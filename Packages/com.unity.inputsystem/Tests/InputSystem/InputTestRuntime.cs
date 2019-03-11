@@ -320,7 +320,7 @@ namespace UnityEngine.Experimental.Input
         public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
-        public InputUpdateType updateMask { get; set; }
+        public bool shouldRunInBackground { get; set; }
         public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;

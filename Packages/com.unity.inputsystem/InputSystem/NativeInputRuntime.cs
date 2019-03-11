@@ -219,9 +219,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
 
-        public InputUpdateType updateMask
+        public bool shouldRunInBackground
         {
-            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
+            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)(value ? 1 << 31 : 0));
         }
 
         private Action m_ShutdownMethod;
