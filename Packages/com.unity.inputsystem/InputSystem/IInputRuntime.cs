@@ -83,6 +83,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         Action<InputUpdateType> onBeforeUpdate { set; }
 
+        Func<InputUpdateType, bool> onShouldRunUpdate { set; }
+
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
         /// </summary>

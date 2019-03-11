@@ -314,6 +314,7 @@ namespace UnityEngine.Experimental.Input
 
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
+        public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onFocusChanged { get; set; }

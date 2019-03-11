@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
+using UnityEditor;
 #endif
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
@@ -1381,6 +1382,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
                     InputRuntime.s_Instance = null;
@@ -1486,6 +1488,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
             }
 
             m_Runtime = runtime;
@@ -1493,6 +1496,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onFocusChanged = OnFocusChanged;
             m_Runtime.updateMask = updateMask;
+            m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
@@ -2182,6 +2186,31 @@ namespace UnityEngine.Experimental.Input
                 if (!InputSystem.TrySyncDevice(device))
                     InputSystem.TryResetDevice(device);
             }
+        }
+
+        private bool ShouldRunUpdate(InputUpdateType updateType)
+        {
+            switch (updateType)
+            {
+                case InputUpdateType.BeforeRender:
+                case InputUpdateType.Dynamic:
+                case InputUpdateType.Fixed:
+                    // Note: When Touchscreen Keyboard is active, Unity application looses focus, thus none of input is being processed
+                    //       Force input updating while keyboard is show
+                    //       In the future, hopefully we'll have TouchscreenKeyboard integrated in thew new input system directly
+                    //       Thus with removal of KeyboardOnScreen, KeyboardOnScreen::IsVisible() check should go away
+                    if (!(m_Settings.runInBackground || TouchScreenKeyboard.visible) && !Application.isFocused)
+                        return false;
+                    break;
+#if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
+                    if (Application.isPlaying && !EditorApplication.isPaused && (Application.isFocused || m_Settings.runInBackground))
+                        return false;
+                    break;
+#endif
+            }
+            return (updateType & m_UpdateMask) != 0;
         }
 
         /// <summary>

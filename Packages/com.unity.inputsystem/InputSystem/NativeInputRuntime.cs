@@ -151,6 +151,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        public Func<InputUpdateType, bool> onShouldRunUpdate
+        {
+            set
+            {
+                // This is stupid but the enum prevents us from jacking the delegate in directly.
+                // This means we get a double dispatch here :(
+                if (value != null)
+                    NativeInputSystem.onShouldRunUpdate = updateType => value((InputUpdateType)updateType);
+                else
+                    NativeInputSystem.onShouldRunUpdate = null;
+            }
+        }
+
         public Action<int, string> onDeviceDiscovered
         {
             set => NativeInputSystem.onDeviceDiscovered = value;
