@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// A chunk of memory signaling a data transfer in the input system.
     /// </summary>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
@@ -120,6 +120,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get => m_Event.time;
             set => m_Event.time = value;
+        }
+
+        static InputEvent()
+        {
+            unsafe
+            {
+                Debug.Assert(kBaseEventSize == sizeof(NativeInputEvent), "kBaseEventSize sizemust match NativeInputEvent struct size.");
+            }
         }
 
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
