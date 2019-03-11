@@ -30,6 +30,10 @@ Actions:
 - Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
 - Fixed some memory instabilities with the Actions.
 
+## [0.2.1-preview] - 2019-03-11
+### Changed
+ - NativeUpdateCallback API update to match Unity 2018.3.8f1
+
 ## [0.2.0-preview] - 2019-02-12
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
