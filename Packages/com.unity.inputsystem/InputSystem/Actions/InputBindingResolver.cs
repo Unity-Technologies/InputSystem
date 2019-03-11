@@ -161,9 +161,9 @@ namespace UnityEngine.Experimental.Input
             // we're done resolving.
             try
             {
-                var bindingStatesPtr = newMemory.bindingStates;
                 for (var n = 0; n < bindingCountInThisMap; ++n)
                 {
+                    var bindingStatesPtr = newMemory.bindingStates;
                     ref var unresolvedBinding = ref bindingsInThisMap[n];
                     var bindingIndex = bindingStartIndex + n;
                     var isComposite = unresolvedBinding.isComposite;
@@ -438,6 +438,7 @@ namespace UnityEngine.Experimental.Input
                 // Set up control to binding index mapping.
                 for (var i = 0; i < bindingCountInThisMap; ++i)
                 {
+                    var bindingStatesPtr = newMemory.bindingStates;
                     var bindingState = &bindingStatesPtr[bindingStartIndex + i];
                     var numControls = bindingState->controlCount;
                     var startIndex = bindingState->controlStartIndex;

@@ -25,6 +25,7 @@ Actions:
 - Fixed warnings in Console when using InputActions editor.
 - Fixed assert when generating C# class and make sure it gets imported correctly.
 - Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Fixed some memory instabilities with the Actions.
 
 ## [0.2.0-preview] - 2019-02-12
 
