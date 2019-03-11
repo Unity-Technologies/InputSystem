@@ -98,7 +98,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                             eventBufferPtr->sizeInBytes = 0;
                         }
                     };
-                    #elif UNITY_2019_1
+                    #elif UNITY_2018_3_OR_NEWER
                     // 2019.1 has the native API change but we need to fix the code in InputManager first
                     // before we can fully migrate to the new update code. For now, just manually reset
                     // the buffer here every time.
