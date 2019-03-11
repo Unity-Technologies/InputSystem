@@ -15,8 +15,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         [SerializeField]
         SDLDeviceDescriptor descriptor;
 
-
-
         static string SanitizeName(string originalName)
         {
             int stringLength = originalName.Length;
@@ -85,6 +83,167 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
             return layoutName;
         }
 
+        internal bool IsAxisX(SDLFeatureDescriptor feature)
+        {
+            return feature.featureType == JoystickFeatureType.Axis
+                && feature.usageHint == (int)SDLAxisUsage.X;
+        }
+
+        internal bool IsAxisY(SDLFeatureDescriptor feature)
+        {
+            return feature.featureType == JoystickFeatureType.Axis
+                && feature.usageHint == (int)SDLAxisUsage.Y;
+        }
+
+        internal void BuildStickFeature(ref InputControlLayout.Builder builder, SDLFeatureDescriptor xFeature, SDLFeatureDescriptor yFeature)
+        {
+            int byteOffset;
+            if (xFeature.offset <= yFeature.offset)
+            {
+                byteOffset = xFeature.offset;
+            }
+            else
+            {
+                byteOffset = yFeature.offset;
+            }
+
+            var stickName = "Stick";
+            var control = builder.AddControl(stickName)
+                .WithLayout("Stick")
+                .WithByteOffset((uint)byteOffset)
+                .WithSizeInBits((uint)xFeature.size * 8)
+                .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
+
+            builder.AddControl(stickName + "/x")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Axis")
+                .WithByteOffset(0)
+                .WithSizeInBits((uint)xFeature.size * 8)
+                .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538");
+
+            builder.AddControl(stickName + "/y")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Axis")
+                .WithByteOffset((uint)4)
+                .WithSizeInBits((uint)xFeature.size * 8)
+                .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538,invert");
+
+            //Need to handle Up/Down/Left/Right
+            builder.AddControl(stickName + "/up")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert")
+                .WithByteOffset((uint)4)
+                .WithSizeInBits((uint)yFeature.size * 8);
+
+            builder.AddControl(stickName + "/down")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538,invert=false")
+                .WithByteOffset((uint)4)
+                .WithSizeInBits((uint)yFeature.size * 8);
+
+            builder.AddControl(stickName + "/left")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert")
+                .WithByteOffset((uint)0)
+                .WithSizeInBits((uint)xFeature.size * 8);
+
+            builder.AddControl(stickName + "/right")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538")
+                .WithByteOffset((uint)0)
+                .WithSizeInBits((uint)xFeature.size * 8);
+        }
+
+        internal bool IsHatX(SDLFeatureDescriptor feature)
+        {
+            return feature.featureType == JoystickFeatureType.Hat
+                && (feature.usageHint == (int)SDLAxisUsage.Hat0X
+                ||  feature.usageHint == (int)SDLAxisUsage.Hat1X
+                ||  feature.usageHint == (int)SDLAxisUsage.Hat2X
+                ||  feature.usageHint == (int)SDLAxisUsage.Hat3X);
+        }
+
+        internal bool IsHatY(SDLFeatureDescriptor feature)
+        {
+            return feature.featureType == JoystickFeatureType.Hat
+                && (feature.usageHint == (int)SDLAxisUsage.Hat0Y
+                ||  feature.usageHint == (int)SDLAxisUsage.Hat1Y
+                ||  feature.usageHint == (int)SDLAxisUsage.Hat2Y
+                ||  feature.usageHint == (int)SDLAxisUsage.Hat3Y);
+        }
+
+        internal bool IsHatAxis(SDLFeatureDescriptor feature)
+        {
+            return feature.featureType == JoystickFeatureType.Hat
+                && (feature.usageHint >= (int)SDLAxisUsage.Hat0X && feature.usageHint <= (int)SDLAxisUsage.Hat3Y);
+        }
+
+        internal int HatNumber(SDLFeatureDescriptor feature)
+        {
+            Debug.Assert(feature.featureType == JoystickFeatureType.Hat);
+            return 1 + ((int)feature.usageHint - (int)SDLAxisUsage.Hat0X) / 2;
+        }
+
+        internal void BuildHatFeature(ref InputControlLayout.Builder builder, SDLFeatureDescriptor xFeature, SDLFeatureDescriptor yFeature)
+        {
+            string xFeatureName = SDLSupport.GetAxisNameFromUsage((SDLAxisUsage)xFeature.usageHint);
+            string yFeatureName = SDLSupport.GetAxisNameFromUsage((SDLAxisUsage)yFeature.usageHint);
+            var hat = HatNumber(xFeature);
+            var hatName = (hat > 1) ? $"Hat{hat}" : "Hat";
+
+            var control = builder.AddControl(hatName)
+                .WithLayout("Dpad")
+                .WithByteOffset((uint)xFeature.offset)
+                .WithSizeInBits((uint)xFeature.size * 8)
+                .WithUsages(new InternedString[] { CommonUsages.Hatswitch });
+
+            builder.AddControl(hatName + "/up")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=0,invert")
+                .WithByteOffset(4)
+                .WithSizeInBits((uint)yFeature.size * 8);
+
+            builder.AddControl(hatName + "/down")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
+                .WithByteOffset(4)
+                .WithSizeInBits((uint)yFeature.size * 8);
+
+            builder.AddControl(hatName + "/left")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=0,invert")
+                .WithByteOffset(0)
+                .WithSizeInBits((uint)xFeature.size * 8);
+
+            builder.AddControl(hatName + "/right")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Button")
+                .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
+                .WithByteOffset(0)
+                .WithSizeInBits((uint)xFeature.size * 8);
+
+            builder.AddControl(hatName + "/x")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Analog")
+                .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
+                .WithByteOffset(0)
+                .WithSizeInBits((uint)xFeature.size * 8);
+
+            builder.AddControl(hatName + "/y")
+                .WithFormat(InputStateBlock.kTypeInt)
+                .WithLayout("Analog")
+                .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=1,invert")
+                .WithByteOffset(4)
+                .WithSizeInBits((uint)yFeature.size * 8);
+        }
+
         internal InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
@@ -93,90 +252,37 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 extendsLayout = parentLayout
             };
 
-            var xElement = descriptor.controls.Find(feature => feature.featureType == JoystickFeatureType.Axis && feature.usageHint == 1); // ABS_X
-            var yElement = descriptor.controls.Find(feature => feature.featureType == JoystickFeatureType.Axis && feature.usageHint == 2); // ABS_Y
-
-            if (xElement.usageHint == 1 && yElement.usageHint == 2)
+            for (var i = 0; i < descriptor.controls.Count; i++)
             {
-                int byteOffset;
-                if (xElement.offset <= yElement.offset)
-                {
-                    byteOffset = xElement.offset;
-                }
-                else
-                {
-                    byteOffset = yElement.offset;
-                }
-
-                var stickName = "Stick";
-                var control = builder.AddControl(stickName)
-                    .WithLayout("Stick")
-                    .WithByteOffset((uint)byteOffset)
-                    .WithSizeInBits((uint)xElement.size * 8)
-                    .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
-
-                builder.AddControl(stickName + "/x")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Axis")
-                    .WithByteOffset(0)
-                    .WithSizeInBits((uint)xElement.size * 8)
-                    .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538.01467");
-
-                builder.AddControl(stickName + "/y")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Axis")
-                    .WithByteOffset((uint)4)
-                    .WithSizeInBits((uint)xElement.size * 8)
-                    .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538.01467,invert");
-
-                //Need to handle Up/Down/Left/Right
-                builder.AddControl(stickName + "/up")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Button")
-                    .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538.01467,invert")
-                    .WithByteOffset((uint)4)
-                    .WithSizeInBits((uint)yElement.size * 8);
-
-                builder.AddControl(stickName + "/down")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Button")
-                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467,invert=false")
-                    .WithByteOffset((uint)4)
-                    .WithSizeInBits((uint)yElement.size * 8);
-
-                builder.AddControl(stickName + "/left")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Button")
-                    .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538.01467,invert")
-                    .WithByteOffset((uint)0)
-                    .WithSizeInBits((uint)xElement.size * 8);
-
-                builder.AddControl(stickName + "/right")
-                    .WithFormat(InputStateBlock.kTypeInt)
-                    .WithLayout("Button")
-                    .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538.01467")
-                    .WithByteOffset((uint)0)
-                    .WithSizeInBits((uint)xElement.size * 8);
-            }
-
-            foreach (var feature in descriptor.controls)
-            {
+                SDLFeatureDescriptor feature = descriptor.controls[i];
                 switch (feature.featureType)
                 {
                     case JoystickFeatureType.Axis:
                         {
                             SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
                             string featureName = SDLSupport.GetAxisNameFromUsage(usage);
+                            string parameters = "scale,scaleFactor=65538,clamp,clampMin=-1,clampMax=1";
+
+                            if (IsAxisX(feature) && i+1 < descriptor.controls.Count)
+                            {
+                                SDLFeatureDescriptor nextFeature = descriptor.controls[i+1];
+                                if (IsAxisY(nextFeature))
+                                    BuildStickFeature(ref builder, feature, nextFeature);
+                            }
+
+                            if (IsAxisY(feature))
+                                parameters += ",invert";
+
                             builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset((uint)feature.offset)
                             .WithFormat(InputStateBlock.kTypeInt)
-                            .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538.01467");
+                            .WithParameters(parameters);
                         }
                         break;
                     case JoystickFeatureType.Ball:
                         {
-                            //TODO
+                            //TODO  
                         }
                         break;
                     case JoystickFeatureType.Button:
@@ -195,7 +301,25 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                         break;
                     case JoystickFeatureType.Hat:
                         {
-                            //TODO
+                            SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
+                            string featureName = SDLSupport.GetAxisNameFromUsage(usage);
+                            string parameters = "scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=1";
+
+                            if (i+1 < descriptor.controls.Count)
+                            {
+                                SDLFeatureDescriptor nextFeature = descriptor.controls[i+1];
+                                if (IsHatY(nextFeature) && HatNumber(feature) == HatNumber(nextFeature))
+                                    BuildHatFeature(ref builder, feature, nextFeature);
+                            }
+
+                            if (IsHatY(feature))
+                                parameters += ",invert";
+
+                            builder.AddControl(featureName)
+                            .WithLayout("Analog")
+                            .WithByteOffset((uint)feature.offset)
+                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithParameters(parameters);
                         }
                         break;
                     default:

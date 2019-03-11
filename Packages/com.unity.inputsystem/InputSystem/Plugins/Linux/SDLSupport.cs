@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         Rudder,
         Wheel,
         Gas,
-        Break,
+        Brake,
         Hat0X,
         Hat0Y,
         Hat1X,
