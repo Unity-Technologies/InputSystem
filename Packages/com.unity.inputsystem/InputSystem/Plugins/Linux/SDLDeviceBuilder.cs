@@ -176,12 +176,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 ||  feature.usageHint == (int)SDLAxisUsage.Hat3Y);
         }
 
-        internal bool IsHatAxis(SDLFeatureDescriptor feature)
-        {
-            return feature.featureType == JoystickFeatureType.Hat
-                && (feature.usageHint >= (int)SDLAxisUsage.Hat0X && feature.usageHint <= (int)SDLAxisUsage.Hat3Y);
-        }
-
         internal int HatNumber(SDLFeatureDescriptor feature)
         {
             Debug.Assert(feature.featureType == JoystickFeatureType.Hat);
