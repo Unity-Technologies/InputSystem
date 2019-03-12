@@ -9,8 +9,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: make interactive pick button optional
-
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>

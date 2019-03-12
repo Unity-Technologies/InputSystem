@@ -425,12 +425,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
         {
-            Debug.Assert(args.draggedItemIDs.Count == 1);
-            var item = FindItem(args.draggedItemIDs.First(), rootItem);
             DragAndDrop.PrepareStartDrag();
             DragAndDrop.SetGenericData("itemIDs", args.draggedItemIDs.ToArray());
             DragAndDrop.SetGenericData("tree", this);
-            DragAndDrop.StartDrag(item.displayName);
+            DragAndDrop.StartDrag(string.Join(",", args.draggedItemIDs.Select(id => FindItem(id, rootItem).displayName)));
         }
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
@@ -1269,7 +1267,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private int m_SerializedObjectDirtyCount;
 
         private static readonly GUIContent s_AddBindingLabel = EditorGUIUtility.TrTextContent("Add Binding");
-        private static readonly GUIContent s_AddActionMapLabel = EditorGUIUtility.TrTextContent("Add Action Map");
         private static readonly GUIContent s_AddActionLabel = EditorGUIUtility.TrTextContent("Add Action");
         private static readonly GUIContent s_PlusBindingIcon = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Binding");
         private static readonly GUIContent s_PlusActionIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");

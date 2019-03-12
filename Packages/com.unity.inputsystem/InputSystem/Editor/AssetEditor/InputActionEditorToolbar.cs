@@ -7,8 +7,6 @@ using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine.Experimental.Input.Utilities;
 
-//switch to using SerializedProperties so that modifying control schemes is visible in undo
-
 ////TODO: better method for creating display names than InputControlPath.TryGetDeviceLayout
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -26,18 +24,6 @@ namespace UnityEngine.Experimental.Input.Editor
     [Serializable]
     internal class InputActionEditorToolbar
     {
-        public void SelectControlScheme(string name)
-        {
-            // Look up index.
-            var index = ArrayHelpers.IndexOf(m_ControlSchemes,
-                x => x.name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
-            if (index == -1)
-                throw new ArgumentException($"No control scheme named '{name}'",
-                    nameof(name));
-
-            SelectControlScheme(index);
-        }
-
         public void OnGUI()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);

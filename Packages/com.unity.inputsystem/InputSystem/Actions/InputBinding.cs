@@ -231,6 +231,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private string m_OverridePath;
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
+        ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
         [NonSerialized] private Guid m_Guid;
 
         internal string effectivePath => overridePath ?? path;

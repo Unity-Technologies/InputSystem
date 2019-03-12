@@ -18,18 +18,6 @@ namespace UnityEngine.Experimental.Input.Editor
     /// </summary>
     internal class InputBindingPropertiesView : PropertiesViewBase
     {
-        public string compositeType
-        {
-            get
-            {
-                if (!m_IsComposite)
-                    return null;
-                if (m_CompositeTypes == null)
-                    InitializeCompositeProperties();
-                return m_CompositeTypes[m_SelectedCompositeType];
-            }
-        }
-
         public static FourCC k_GroupsChanged => new FourCC("GRPS");
         public static FourCC k_PathChanged => new FourCC("PATH");
         public static FourCC k_CompositeTypeChanged => new FourCC("COMP");
