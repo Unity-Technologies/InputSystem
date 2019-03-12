@@ -22,8 +22,8 @@ platforms:
     flavor: {{ platform.flavor}}
   commands:
     - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
-    - upm-ci package pack --package-path Packages
-    - upm-ci package test --unity-version {{ editor.version }}
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
   triggers:
     branches:
       only:
@@ -31,32 +31,6 @@ platforms:
   artifacts:
     UTR_Output.zip:
       paths:
-        - "utr_output/**/*"
+        - "upm-ci~/test-results/**/*"
 {% endfor %}
 {% endfor %}
-
-run_preview_verified_staging:
-  name: Preview and Verified Packages to Staging
-  agent:
-    type: Unity::VM
-    image: package-ci/win10:latest
-    flavor: m1.large
-    name: Runner
-  commands:
-    - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
-    - upm-ci package pack
-    - upm-ci package publish --registry staging
-  triggers:
-    tags:
-      only:
-        - /^(v|V)[0-9].[0-9].[0-9]/
-  artifacts:
-    Package.zip:
-      paths:
-        - "automation/package/*.tgz"
-  dependencies:
-  {% for editor in editors %}
-  {% for platform in platforms %}
-    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
-  {% endfor %}  
-  {% endfor %}
