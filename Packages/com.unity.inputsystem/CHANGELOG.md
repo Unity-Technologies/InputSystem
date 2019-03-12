@@ -3,13 +3,36 @@ All notable changes to the input system package will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+## [0.2.1-preview] - 2019-03-11
+### Changed
+ - NativeUpdateCallback API update to match Unity 2018.3.8f1
 
 ## [0.3-preview] - TBD
 
+### Changed
+
+- The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
+
 ### Fixed
 
+- Remote connections in input debugger now remain connected across domain reloads.
+- Don't incorrectly create non-functioning devices if a physical device implements multiple incompatible logical HID devices (such as the MacBook keyboard/touch pad and touch bar).
+- Removed non-functioning sort triangles in event list in Input Debugger device windows.
+- Sort events in input debugger window by id rather then by timestamp.
+- Input device icons in input debugger window now render in appropriate resolution on retina displays.
+
+Actions:
 - Editor beeping or triggering menu commands when binding keys interactively.
+- Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
 - "Add Action" button being active and triggering exceptions when no action map had been added yet.
+- Fixed warnings in Console when using InputActions editor.
+- Fixed assert when generating C# class and make sure it gets imported correctly.
+- Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Fixed some memory instabilities with the Actions.
+
+## [0.2.1-preview] - 2019-03-11
+### Changed
+ - NativeUpdateCallback API update to match Unity 2018.3.8f1
 
 ## [0.2.0-preview] - 2019-02-12
 

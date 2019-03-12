@@ -202,10 +202,20 @@ namespace UnityEngine.Experimental.Input.Editor
                     generateInterfaces = m_GenerateInterfaces,
                 };
 
+                if (!wrapperFilePath.ToLower().StartsWith("assets/"))
+                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+
+                var dir = Path.GetDirectoryName(wrapperFilePath);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
                 if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, asset.controlSchemes, options))
                 {
-                    // Inform database that we modified a source asset *during* import.
-                    AssetDatabase.ImportAsset(wrapperFilePath);
+                    // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
+                    // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
+                    // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
+                    // changed/added script, and trigger a new import.
+                    EditorApplication.delayCall += AssetDatabase.Refresh;
                 }
             }
 

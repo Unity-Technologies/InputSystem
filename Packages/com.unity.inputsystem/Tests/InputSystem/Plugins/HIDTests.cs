@@ -356,6 +356,47 @@ internal class HIDTests : InputTestFixture
         Assert.That(device.hidDescriptor.elements.Length, Is.EqualTo(1));
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_HIDDevicesDifferingOnlyByUsageGetSeparateLayouts()
+    {
+        var hidDescriptor1 = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            productId = 1234,
+            vendorId = 5678,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+            }
+        };
+
+        var hidDescriptor2 = hidDescriptor1;
+        hidDescriptor2.usage = (int)HID.GenericDesktop.Gamepad;
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = hidDescriptor1.ToJson()
+            }.ToJson());
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = hidDescriptor2.ToJson()
+            }.ToJson());
+        InputSystem.Update();
+
+        Assert.AreEqual(InputSystem.devices.Count(), 2);
+        Assert.AreNotEqual(InputSystem.devices[0].layout, InputSystem.devices[1].layout);
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     struct SimpleAxisState : IInputStateTypeInfo
     {

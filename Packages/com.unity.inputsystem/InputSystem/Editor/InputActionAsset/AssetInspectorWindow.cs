@@ -561,10 +561,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 Repaint();
             }
 
-            // Eat key events to supress the editor from passing them to the OS 
+            // Eat key events to supress the editor from passing them to the OS
             // (causing beeps or menu commands being triggered).
             if (Event.current.isKey)
-                Event.current.Use();            
+                Event.current.Use();
         }
 
         public static void RefreshAllOnAssetReimport()
