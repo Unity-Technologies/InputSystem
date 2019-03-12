@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         Invalid = 0,
         Axis,
         Ball,
-        Button, 
+        Button,
         Hat,
 
         Max
@@ -60,7 +60,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         Base5,
         Base6,
         Dead,
-        
+
         A,
         B,
         X,
@@ -76,7 +76,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         ThumbLeft,
         ThumbRight,
 
-        Count     
+        Count
     }
 
     [Serializable]

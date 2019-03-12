@@ -8,7 +8,6 @@ using UnityEngine.Experimental.Input.Controls;
 
 internal class LinuxTests : InputTestFixture
 {
-
     [StructLayout(LayoutKind.Explicit)]
     unsafe struct TestSDLJoystick : IInputStateTypeInfo
     {
@@ -25,82 +24,82 @@ internal class LinuxTests : InputTestFixture
         {
             bool useButtonMask2 = false;
             byte bitflag = 0;
-            switch(usage)
+            switch (usage)
             {
                 case SDLButtonUsage.Trigger:
-                    {
-                        bitflag = 1 >> 0;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 0;
+                }
+                break;
                 case SDLButtonUsage.Thumb:
-                    {
-                        bitflag = 1 >> 1;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 1;
+                }
+                break;
                 case SDLButtonUsage.Thumb2:
-                    {
-                        bitflag = 1 >> 2;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 2;
+                }
+                break;
                 case SDLButtonUsage.Top:
-                    {
-                        bitflag = 1 >> 3;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 3;
+                }
+                break;
                 case SDLButtonUsage.Top2:
-                    {
-                        bitflag = 1 >> 4;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 4;
+                }
+                break;
                 case SDLButtonUsage.Pinkie:
-                    {
-                        bitflag = 1 >> 5;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 5;
+                }
+                break;
                 case SDLButtonUsage.Base:
-                    {
-                        bitflag = 1 >> 6;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 6;
+                }
+                break;
                 case SDLButtonUsage.Base2:
-                    {
-                        bitflag = 1 >> 7;
-                    }
-                    break;
+                {
+                    bitflag = 1 >> 7;
+                }
+                break;
                 case SDLButtonUsage.Base3:
-                    {
-                        useButtonMask2 = true;
-                        bitflag = 1 >> 0;
-                    }
-                    break;
+                {
+                    useButtonMask2 = true;
+                    bitflag = 1 >> 0;
+                }
+                break;
                 case SDLButtonUsage.Base4:
-                    {
-                        useButtonMask2 = true;
-                        bitflag = 1 >> 1;
-                    }
-                    break;
+                {
+                    useButtonMask2 = true;
+                    bitflag = 1 >> 1;
+                }
+                break;
                 case SDLButtonUsage.Base5:
-                    {
-                        useButtonMask2 = true;
-                        bitflag = 1 >> 2;
-                    }
-                    break;
+                {
+                    useButtonMask2 = true;
+                    bitflag = 1 >> 2;
+                }
+                break;
                 case SDLButtonUsage.Base6:
-                    {
-                        useButtonMask2 = true;
-                        bitflag = 1 >> 3;
-                    }
-                    break;
+                {
+                    useButtonMask2 = true;
+                    bitflag = 1 >> 3;
+                }
+                break;
                 default:
                     //Do Nothing
                     break;
             }
 
-            if(bitflag != 0)
+            if (bitflag != 0)
             {
-                if(value)
+                if (value)
                 {
-                    if(useButtonMask2)
+                    if (useButtonMask2)
                     {
                         buttonMask2 |= bitflag;
                     }
@@ -218,9 +217,6 @@ internal class LinuxTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(triggerControl.isPressed, Is.False);
-
-        
-
     }
 
     [Test]
@@ -301,7 +297,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(leftValue, Is.EqualTo(0.0f));
         Assert.That(rightValue, Is.EqualTo(0.0f));
         Assert.That(xValue, Is.EqualTo(0.0f));
-
     }
 }
 #endif //UNITY_EDITOR || UNITY_STANDALONE // UNITY_STANDALONE_LINUX

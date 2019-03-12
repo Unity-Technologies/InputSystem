@@ -295,7 +295,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
                 ////REVIEW: Same problem here as with 'short'
                 value = *(sbyte*)valuePtr / 128.0f;
-            } 
+            }
             else if (format == kTypeInt)
             {
                 Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");

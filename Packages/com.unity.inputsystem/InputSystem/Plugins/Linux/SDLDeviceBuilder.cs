@@ -76,10 +76,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
             {
                 layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
-            
+
             var layout = new SDLLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
-            
+
             return layoutName;
         }
 
@@ -162,18 +162,18 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         {
             return feature.featureType == JoystickFeatureType.Hat
                 && (feature.usageHint == (int)SDLAxisUsage.Hat0X
-                ||  feature.usageHint == (int)SDLAxisUsage.Hat1X
-                ||  feature.usageHint == (int)SDLAxisUsage.Hat2X
-                ||  feature.usageHint == (int)SDLAxisUsage.Hat3X);
+                    ||  feature.usageHint == (int)SDLAxisUsage.Hat1X
+                    ||  feature.usageHint == (int)SDLAxisUsage.Hat2X
+                    ||  feature.usageHint == (int)SDLAxisUsage.Hat3X);
         }
 
         internal bool IsHatY(SDLFeatureDescriptor feature)
         {
             return feature.featureType == JoystickFeatureType.Hat
                 && (feature.usageHint == (int)SDLAxisUsage.Hat0Y
-                ||  feature.usageHint == (int)SDLAxisUsage.Hat1Y
-                ||  feature.usageHint == (int)SDLAxisUsage.Hat2Y
-                ||  feature.usageHint == (int)SDLAxisUsage.Hat3Y);
+                    ||  feature.usageHint == (int)SDLAxisUsage.Hat1Y
+                    ||  feature.usageHint == (int)SDLAxisUsage.Hat2Y
+                    ||  feature.usageHint == (int)SDLAxisUsage.Hat3Y);
         }
 
         internal int HatNumber(SDLFeatureDescriptor feature)
@@ -252,75 +252,74 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 switch (feature.featureType)
                 {
                     case JoystickFeatureType.Axis:
+                    {
+                        SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
+                        string featureName = SDLSupport.GetAxisNameFromUsage(usage);
+                        string parameters = "scale,scaleFactor=65538,clamp,clampMin=-1,clampMax=1";
+
+                        if (IsAxisX(feature) && i + 1 < descriptor.controls.Count)
                         {
-                            SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
-                            string featureName = SDLSupport.GetAxisNameFromUsage(usage);
-                            string parameters = "scale,scaleFactor=65538,clamp,clampMin=-1,clampMax=1";
+                            SDLFeatureDescriptor nextFeature = descriptor.controls[i + 1];
+                            if (IsAxisY(nextFeature))
+                                BuildStickFeature(ref builder, feature, nextFeature);
+                        }
 
-                            if (IsAxisX(feature) && i+1 < descriptor.controls.Count)
-                            {
-                                SDLFeatureDescriptor nextFeature = descriptor.controls[i+1];
-                                if (IsAxisY(nextFeature))
-                                    BuildStickFeature(ref builder, feature, nextFeature);
-                            }
+                        if (IsAxisY(feature))
+                            parameters += ",invert";
 
-                            if (IsAxisY(feature))
-                                parameters += ",invert";
-
-                            builder.AddControl(featureName)
+                        builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset((uint)feature.offset)
                             .WithFormat(InputStateBlock.kTypeInt)
                             .WithParameters(parameters);
-                        }
-                        break;
+                    }
+                    break;
                     case JoystickFeatureType.Ball:
-                        {
-                            //TODO  
-                        }
-                        break;
+                    {
+                        //TODO
+                    }
+                    break;
                     case JoystickFeatureType.Button:
+                    {
+                        SDLButtonUsage usage = (SDLButtonUsage)feature.usageHint;
+                        string featureName = SDLSupport.GetButtonNameFromUsage(usage);
+                        if (featureName != null)
                         {
-                            SDLButtonUsage usage = (SDLButtonUsage)feature.usageHint;
-                            string featureName = SDLSupport.GetButtonNameFromUsage(usage);
-                            if (featureName != null)
-                            {
-                                builder.AddControl(featureName)
+                            builder.AddControl(featureName)
                                 .WithLayout("Button")
                                 .WithByteOffset((uint)feature.offset)
                                 .WithBitOffset((uint)feature.bit)
                                 .WithFormat(InputStateBlock.kTypeBit);
-                            }
                         }
-                        break;
+                    }
+                    break;
                     case JoystickFeatureType.Hat:
+                    {
+                        SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
+                        string featureName = SDLSupport.GetAxisNameFromUsage(usage);
+                        string parameters = "scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=1";
+
+                        if (i + 1 < descriptor.controls.Count)
                         {
-                            SDLAxisUsage usage = (SDLAxisUsage)feature.usageHint;
-                            string featureName = SDLSupport.GetAxisNameFromUsage(usage);
-                            string parameters = "scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=1";
+                            SDLFeatureDescriptor nextFeature = descriptor.controls[i + 1];
+                            if (IsHatY(nextFeature) && HatNumber(feature) == HatNumber(nextFeature))
+                                BuildHatFeature(ref builder, feature, nextFeature);
+                        }
 
-                            if (i+1 < descriptor.controls.Count)
-                            {
-                                SDLFeatureDescriptor nextFeature = descriptor.controls[i+1];
-                                if (IsHatY(nextFeature) && HatNumber(feature) == HatNumber(nextFeature))
-                                    BuildHatFeature(ref builder, feature, nextFeature);
-                            }
+                        if (IsHatY(feature))
+                            parameters += ",invert";
 
-                            if (IsHatY(feature))
-                                parameters += ",invert";
-
-                            builder.AddControl(featureName)
+                        builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset((uint)feature.offset)
                             .WithFormat(InputStateBlock.kTypeInt)
                             .WithParameters(parameters);
-                        }
-                        break;
+                    }
+                    break;
                     default:
-                        {
-                            throw new NotImplementedException(String.Format("SDLLayoutBuilder.Build: Trying to build an SDL device with an unknown feature of type {0}.", feature.featureType));
-                        }
-
+                    {
+                        throw new NotImplementedException(String.Format("SDLLayoutBuilder.Build: Trying to build an SDL device with an unknown feature of type {0}.", feature.featureType));
+                    }
                 }
             }
 

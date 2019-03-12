@@ -738,7 +738,7 @@ namespace UnityEngine.Experimental.Input
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 1; i < keyStrings.Length; i++)
             {
-                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i-1]);
+                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i - 1]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
