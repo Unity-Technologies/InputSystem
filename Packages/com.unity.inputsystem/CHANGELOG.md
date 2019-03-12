@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 #### Actions
 
-- Bindings have GUIDs now like actions and maps already did. This allows to persistently and unique identify individual bindings.
+- Bindings have GUIDs now like actions and maps already did. This allows to persistently and uniquely identify individual bindings.
 - Replaced UI overlay while rebinding interactively with cancellable progress bar. Interactive rebinding now cancels automatically after 4 seconds without suitable input.
 - Bindings that are not assigned to any control scheme are now visible when a particular control scheme is selected.
   * Bindings not assigned to any control scheme are active in *ALL* control schemes.

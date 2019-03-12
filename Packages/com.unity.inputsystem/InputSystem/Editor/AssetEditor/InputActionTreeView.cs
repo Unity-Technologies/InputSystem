@@ -418,8 +418,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         #region Drag&Drop
 
-        ////TODO: support operations such as (copy)dragging actions between maps and bindings between actions
-
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
             return true;
@@ -475,7 +473,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // change when just moving items around.
                 if (isMove)
                 {
-                    // Don't use DeleteData() as that will record as a separate operation.
+                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
                     foreach (var item in items)
                         item.DeleteData();
                 }
@@ -846,7 +844,6 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.AddItem(s_DuplicateLabel, false, () =>
             {
                 CopySelectedItemsToClipboard();
-                ////REVIEW: would be nice for duplicate to insert right after the current selection
                 PasteDataFromClipboard();
             });
             menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
@@ -1175,9 +1172,9 @@ namespace UnityEngine.Experimental.Input.Editor
         // We could just Reload() the tree all the time but TreeView.Reload() itself forces a repaint and
         // this will thus easily lead to infinite repaints.
         //
-        // So, what we do is make use of the built-in dirty count we can get Unity objects. If the count
+        // So, what we do is make use of the built-in dirty count we can get for Unity objects. If the count
         // changes and it wasn't caused by us, we reload the tree. Means we still reload unnecessarily if
-        // some other property on the component changes but at least we don't reload all the time.
+        // some other property on a component changes but at least we don't reload all the time.
         //
         // A positive side-effect is that we will catch *any* change to the SerializedObject, not just
         // undo/redo and we can do so without having to hook into Undo.undoRedoPerformed anywhere.
@@ -1327,7 +1324,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     case Type.ByName:
                     {
-                        // NOTE: Compound items have names (and part bindings in a way, too) but we don't filter on them.
+                        // NOTE: Composite items have names (and part bindings in a way, too) but we don't filter on them.
                         if (item is ActionMapTreeItem || item is ActionTreeItem)
                         {
                             var matchesSelf = item.displayName.Contains(text, StringComparison.InvariantCultureIgnoreCase);

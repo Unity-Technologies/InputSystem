@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             }
 
             // We also need to match the devices usage. This is because some physical devices may report multiple
-            // logical devices with different, incompatible properties (this is the case for the MacBook keyboard/mouse 
+            // logical devices with different, incompatible properties (this is the case for the MacBook keyboard/mouse
             // and touch bar devices). These devices will then match by vendor/product ids, but get different usages.
             // Incorrectly matching them would generate garbage devices and errors on domain reload.
             deviceMatcher = deviceMatcher

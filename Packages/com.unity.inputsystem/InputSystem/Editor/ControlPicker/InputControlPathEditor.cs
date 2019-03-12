@@ -245,6 +245,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var percentage = (InputRuntime.s_Instance.currentTime - m_RebindingOperation.startTime) /
                 m_RebindingOperation.timeout;
 
+            ////TODO: mention action/target here
             if (EditorUtility.DisplayCancelableProgressBar(title, "Actuate control to bind to.", (float)percentage))
                 m_RebindingOperation.Cancel();
             m_NeedToClearProgressBar = true;

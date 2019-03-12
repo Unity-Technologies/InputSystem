@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var idPropertyString = idProperty.stringValue;
             if (string.IsNullOrEmpty(idPropertyString))
             {
-                // This is somewhat questionable but we can't operate if we don't have IDs on the tree.
+                // This is somewhat questionable but we can't operate if we don't have IDs on the data used in the tree.
                 // Rather than requiring users of the tree to set this up consistently, we assign IDs
                 // on the fly, if necessary.
                 guid = Guid.NewGuid();
@@ -133,10 +133,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     $"Action map must be part of InputActionAsset but is in {assetObject.targetObject} instead");
 
             InputActionSerializationHelpers.DeleteActionMap(assetObject, guid);
-
-            // When we delete an entry from an array of action maps, the SerializedProperties
-            // of all action map items following the one we deleted will now have incorrect array
-            // indices. Account for that
         }
 
         public override bool AcceptsDrop(ActionTreeItemBase item)
@@ -310,7 +306,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 : actionMapProperty.FindPropertyRelative("m_Bindings");
 
             var bindingsCountInMap = bindingsArrayProperty.arraySize;
-            var bindingCountForAction = 0;
             var currentComposite = (CompositeBindingTreeItem)null;
             for (var i = 0; i < bindingsCountInMap; ++i)
             {
@@ -471,7 +466,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return false;
         }
 
-        public static CompositeBindingTreeItem AddTo(TreeViewItem parent, SerializedProperty bindingProperty)
+        public new static CompositeBindingTreeItem AddTo(TreeViewItem parent, SerializedProperty bindingProperty)
         {
             var item = new CompositeBindingTreeItem(bindingProperty);
 
@@ -515,7 +510,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private string m_ExpectedControlLayout;
 
-        public static PartOfCompositeBindingTreeItem AddTo(TreeViewItem parent, SerializedProperty bindingProperty)
+        public new static PartOfCompositeBindingTreeItem AddTo(TreeViewItem parent, SerializedProperty bindingProperty)
         {
             var item = new PartOfCompositeBindingTreeItem(bindingProperty);
 
