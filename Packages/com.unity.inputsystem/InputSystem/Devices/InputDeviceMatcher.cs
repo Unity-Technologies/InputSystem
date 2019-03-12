@@ -20,10 +20,7 @@ namespace UnityEngine.Experimental.Input.Layouts
     {
         private KeyValuePair<InternedString, object>[] m_Patterns;
 
-        public bool empty
-        {
-            get { return m_Patterns == null; }
-        }
+        public bool empty => m_Patterns == null;
 
         public IEnumerable<KeyValuePair<string, object>> patterns
         {
@@ -71,8 +68,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         public InputDeviceMatcher With(InternedString key, object value)
         {
             // If it's a string, check whether it's a regex.
-            var str = value as string;
-            if (str != null)
+            if (value is string str)
             {
                 var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch));
                 if (mayBeRegex)
@@ -145,7 +141,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     if (string.IsNullOrEmpty(deviceDescription.capabilities))
                         return 0;
 
-                    var graph = new JsonGraph(deviceDescription.capabilities);
+                    var graph = new JsonParser(deviceDescription.capabilities);
                     if (!graph.NavigateToProperty(key.ToString()) ||
                         !graph.CurrentPropertyHasValueEqualTo(pattern))
                         return 0;
@@ -160,16 +156,14 @@ namespace UnityEngine.Experimental.Input.Layouts
             return numPatterns * scorePerProperty;
         }
 
-        private bool MatchSingleProperty(object pattern, string value)
+        private static bool MatchSingleProperty(object pattern, string value)
         {
             // String match.
-            var str = pattern as string;
-            if (str != null)
+            if (pattern is string str)
                 return string.Compare(str, value, StringComparison.InvariantCultureIgnoreCase) == 0;
 
             // Regex match.
-            var regex = pattern as Regex;
-            if (regex != null)
+            if (pattern is Regex regex)
                 return regex.IsMatch(value);
 
             return false;
@@ -231,9 +225,9 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var pattern in m_Patterns)
             {
                 if (result.Length > 0)
-                    result += string.Format(",{0}={1}", pattern.Key, pattern.Value);
+                    result += $",{pattern.Key}={pattern.Value}";
                 else
-                    result += string.Format("{0}={1}", pattern.Key, pattern.Value);
+                    result += $"{pattern.Key}={pattern.Value}";
             }
 
             return result;
@@ -277,7 +271,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             if (ReferenceEquals(null, obj))
                 return false;
-            return obj is InputDeviceMatcher && Equals((InputDeviceMatcher)obj);
+            return obj is InputDeviceMatcher matcher && Equals(matcher);
         }
 
         public static bool operator==(InputDeviceMatcher left, InputDeviceMatcher right)
@@ -295,32 +289,21 @@ namespace UnityEngine.Experimental.Input.Layouts
             return (m_Patterns != null ? m_Patterns.GetHashCode() : 0);
         }
 
-        public static InternedString InterfaceKey
-        {
-            get { return kInterfaceKey; }
-        }
-        public static InternedString DeviceClassKey
-        {
-            get { return kDeviceClassKey; }
-        }
-        public static InternedString ManufacturerKey
-        {
-            get { return kManufacturerKey; }
-        }
-        public static InternedString ProductKey
-        {
-            get { return kProductKey; }
-        }
-        public static InternedString VersionKey
-        {
-            get { return kVersionKey; }
-        }
+        public static InternedString InterfaceKey => kInterfaceKey;
 
-        private static InternedString kInterfaceKey = new InternedString("interface");
-        private static InternedString kDeviceClassKey = new InternedString("deviceClass");
-        private static InternedString kManufacturerKey = new InternedString("manufacturer");
-        private static InternedString kProductKey = new InternedString("product");
-        private static InternedString kVersionKey = new InternedString("version");
+        public static InternedString DeviceClassKey => kDeviceClassKey;
+
+        public static InternedString ManufacturerKey => kManufacturerKey;
+
+        public static InternedString ProductKey => kProductKey;
+
+        public static InternedString VersionKey => kVersionKey;
+
+        private static readonly InternedString kInterfaceKey = new InternedString("interface");
+        private static readonly InternedString kDeviceClassKey = new InternedString("deviceClass");
+        private static readonly InternedString kManufacturerKey = new InternedString("manufacturer");
+        private static readonly InternedString kProductKey = new InternedString("product");
+        private static readonly InternedString kVersionKey = new InternedString("version");
 
         [Serializable]
         internal struct MatcherJson

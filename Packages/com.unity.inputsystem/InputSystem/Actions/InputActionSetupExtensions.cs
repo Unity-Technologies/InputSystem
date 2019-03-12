@@ -22,6 +22,7 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException(nameof(name));
 
             var map = new InputActionMap(name);
+            map.GenerateId();
             asset.AddActionMap(map);
             return map;
         }
@@ -45,6 +46,7 @@ namespace UnityEngine.Experimental.Input
             {
                 expectedControlLayout = expectedControlLayout
             };
+            action.GenerateId();
             ArrayHelpers.Append(ref map.m_Actions, action);
             action.m_ActionMap = map;
 
@@ -203,6 +205,10 @@ namespace UnityEngine.Experimental.Input
         private static int AddBindingInternal(InputActionMap map, InputBinding binding)
         {
             Debug.Assert(map != null);
+
+            // Make sure the binding has an ID.
+            if (string.IsNullOrEmpty(binding.m_Id))
+                binding.GenerateId();
 
             // Append to bindings in set.
             var bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);

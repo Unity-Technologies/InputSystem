@@ -6,21 +6,59 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+>NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
+
+### Added
+
+- Support gamepad vibration on Switch.
+
+#### Actions
+
+- Added ability to change which part of a composite a binding that is part of the composite is assigned to.
+  * Part bindings can now be freely duplicated or copy-pasted. This allows having multiple bindings for "up", for example. Changing part assignments retroactively allows to freely edit the composite makeup.
+- Can now drag&drop multiple items as well as drop items onto others (equivalent to cut&paste). Holding ALT copies data instead of moving it.
+- Edits to control schemes are now undoable.
+- Control schemes are now sorted alphabetically.
+- Can now search by binding group (control scheme) or devices directly from search box.
+  * `g:Gamepad` filters bindings to those in the "Gamepad" group.
+  * `d:Gamepad` filters bindings to those from Gamepad-compatible devices.
+
 ### Changed
 
 - The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
+
+#### Actions
+
+- Bindings have GUIDs now like actions and maps already did. This allows to persistently and unique identify individual bindings.
+- Replaced UI overlay while rebinding interactively with cancellable progress bar. Interactive rebinding now cancels automatically after 4 seconds without suitable input.
+- Bindings that are not assigned to any control scheme are now visible when a particular control scheme is selected.
+  * Bindings not assigned to any control scheme are active in *ALL* control schemes.
+  * The change makes this visible in the UI now.
+  * When a specific control scheme is selected, these bindings are affixed with `{GLOBAL}` for added visibility.
+- When filtering by devices from a control scheme, the filtering now takes layout inheritance into account. So, a binding to a control on `Pointer` will now be shown when the filter is `Mouse`.
+- The public control picker API has been revised.
+  * The simplest way to add control picker UI to a control path is to add an `InputControlAttribute` to the field.
+    ```
+    // In the inspector, shows full UI to select a control interactively
+    // (including interactive picking through device input).
+    [InputControl(layout = "Button")]
+    private string buttonControlPath;
+    ```
 
 ### Fixed
 
 - Remote connections in input debugger now remain connected across domain reloads.
 
-Actions:
-- Editor beeping or triggering menu commands when binding keys interactively.
+#### Actions
+
 - Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
 - "Add Action" button being active and triggering exceptions when no action map had been added yet.
-- Fixed warnings in Console when using InputActions editor.
 - Fixed assert when generating C# class and make sure it gets imported correctly.
 - Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Fixed old name of action appearing underneath rename overlay.
+- Fixed inspector UIs for on-screen controls throwing exceptions and being non-functional.
+- Fixed deleting multiple items at same time in action editor leading to wrong items being deleted.
+- Fixed copy-pasting actions not preserving action properties other than name.
 
 ## [0.2.0-preview] - 2019-02-12
 

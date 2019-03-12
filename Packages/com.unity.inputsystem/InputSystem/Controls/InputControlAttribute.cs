@@ -1,20 +1,36 @@
 using System;
+using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.LowLevel;
+
+#if UNITY_EDITOR
+using UnityEngine.Experimental.Input.Editor;
+#endif
 
 namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
-    /// Mark a data member in a state struct as being an input control.
+    /// Mark a field or property as representing/identifying an input control in some form.
     /// </summary>
     /// <remarks>
-    /// The system will scan the state for those and automatically construct InputControl instances
-    /// from them.
+    /// This attribute is used in different places for different purposes.
     ///
-    /// If applied to a field, set ups an actual instance of InputControl. If applied to a property,
-    /// modifies the InputControl instances *inside* the control the property references.
+    /// When creating input control layouts (<see cref="InputControlLayout"/>) in C#, applying the
+    /// attribute to fields in a state struct (<see cref="IInputStateTypeInfo"/>, or <see cref="GamepadState"/>
+    /// for an example) or to properties in an input device (<see cref="InputDevice"/>), will cause an
+    /// <see cref="InputControl"/> to be created from the field or property at runtime. The attribute
+    /// can be applied multiple times to create multiple input controls (e.g. when having an int field
+    /// that represents a bitfield where each bit is a separate button).
+    ///
+    /// Another use is for marking <c>string</c> type fields that represent input control paths. Applying
+    /// the attribute to them will cause them to automatically use <see cref="InputControlPathDrawer"/>
+    /// when edited in inspectors.
+    ///
+    /// Finally, the attribute is also used in composite bindings (<see cref="InputBindingComposite"/>)
+    /// to mark fields that reference parts of the composite. An example for this is <see cref="AxisComposite.negative"/>.
     /// </remarks>
+    /// <seealso cref="InputControlLayout"/>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-    public class InputControlAttribute : Attribute
+    public class InputControlAttribute : PropertyAttribute
     {
         public string layout;
         public string variants;

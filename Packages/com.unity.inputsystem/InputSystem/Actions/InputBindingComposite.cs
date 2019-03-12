@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
@@ -67,6 +68,23 @@ namespace UnityEngine.Experimental.Input
 
             var attribute = field.GetCustomAttribute<InputControlAttribute>(false);
             return attribute?.layout;
+        }
+
+        internal static IEnumerable<string> GetPartNames(string composite)
+        {
+            if (string.IsNullOrEmpty(composite))
+                throw new ArgumentNullException(nameof(composite));
+
+            var compositeType = s_Composites.LookupTypeRegistration(composite);
+            if (compositeType == null)
+                yield break;
+
+            foreach (var field in compositeType.GetFields(BindingFlags.Instance | BindingFlags.Public))
+            {
+                var controlAttribute = field.GetCustomAttribute<InputControlAttribute>();
+                if (controlAttribute != null)
+                    yield return field.Name;
+            }
         }
     }
 

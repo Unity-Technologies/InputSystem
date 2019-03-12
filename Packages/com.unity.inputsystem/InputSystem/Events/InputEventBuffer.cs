@@ -98,9 +98,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEventBuffer(NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1)
         {
             if (eventCount > 0 && !buffer.IsCreated)
-                throw new ArgumentException("buffer has no data but eventCount is > 0", "eventCount");
+                throw new ArgumentException("buffer has no data but eventCount is > 0", nameof(eventCount));
             if (sizeInBytes > buffer.Length)
-                throw new ArgumentOutOfRangeException("sizeInBytes");
+                throw new ArgumentOutOfRangeException(nameof(sizeInBytes));
 
             m_Buffer = buffer;
             m_WeOwnTheBuffer = false;
@@ -122,7 +122,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public void AppendEvent(InputEvent* eventPtr, int capacityIncrementInBytes = 2048)
         {
             if (eventPtr == null)
-                throw new ArgumentNullException("eventPtr");
+                throw new ArgumentNullException(nameof(eventPtr));
 
             // Allocate space.
             var eventSizeInBytes = eventPtr->sizeInBytes;
@@ -136,9 +136,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             if (sizeInBytes < InputEvent.kBaseEventSize)
                 throw new ArgumentException(
-                    string.Format("sizeInBytes must be >= sizeof(InputEvent) == {0} (was {1})",
-                        InputEvent.kBaseEventSize, sizeInBytes),
-                    "sizeInBytes");
+                    $"sizeInBytes must be >= sizeof(InputEvent) == {InputEvent.kBaseEventSize} (was {sizeInBytes})",
+                    nameof(sizeInBytes));
 
             var alignedSizeInBytes = NumberHelpers.AlignToMultiple(sizeInBytes, InputEvent.kAlignment);
 
@@ -301,12 +300,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         private int m_EventCount;
         private bool m_WeOwnTheBuffer; ////FIXME: what we really want is access to NativeArray's allocator label
 
-        internal struct Enumerator : IEnumerator<InputEventPtr>
+        private struct Enumerator : IEnumerator<InputEventPtr>
         {
-            private InputEvent* m_Buffer;
+            private readonly InputEvent* m_Buffer;
+            private readonly int m_EventCount;
             private InputEvent* m_CurrentEvent;
             private int m_CurrentIndex;
-            private int m_EventCount;
 
             public Enumerator(InputEventBuffer buffer)
             {

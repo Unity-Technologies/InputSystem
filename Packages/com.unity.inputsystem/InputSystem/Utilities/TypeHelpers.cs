@@ -1,11 +1,15 @@
 using System;
-using System.Linq;
 using System.Reflection;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class TypeHelpers
     {
+        public static TObject As<TObject>(this System.Object obj)
+        {
+            return (TObject)obj;
+        }
+
         public static Type GetValueType(MemberInfo member)
         {
             var field = member as FieldInfo;
