@@ -1908,17 +1908,19 @@ partial class CoreTests
     {
         const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
         var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
+        int scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+        var scalePostFix = scale > 1 ? $"@{scale}x" : "";
 
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button" + scalePostFix + ".png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Axis"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Axis.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Axis" + scalePostFix + ".png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Key"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Button" + scalePostFix + ".png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("DualShockGamepad"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Gamepad.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Gamepad" + scalePostFix + ".png")));
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Pen"),
-            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Pen.png")));
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Pen" + scalePostFix + ".png")));
     }
 
     private class TestEditorWindow : EditorWindow

@@ -7,7 +7,6 @@ Work-in-progress documentation can be found [here](https://github.com/Unity-Tech
 Issues are expected at this point. However, feel free to report what you find here on GitHub.
 
 ## How to Use This In Your Own Project
-
 Please see [Installation](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/Installation.md).
 
 The latest version is: `0.1.2-preview`.

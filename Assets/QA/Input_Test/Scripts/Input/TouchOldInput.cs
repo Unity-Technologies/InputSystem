@@ -17,6 +17,7 @@ public class TouchOldInput : MonoBehaviour
 
     // The old input manager does not support touch input for Standalone build, even when the device does.
 #if !UNITY_STANDALONE
+    // Use this for initialization
     void Start()
     {
         if (!Input.touchSupported)
@@ -26,6 +27,7 @@ public class TouchOldInput : MonoBehaviour
             ShowMessage("Touch Pressue is not supported.");
     }
 
+    // Update is called once per frame
     void Update()
     {
         if (Input.touchCount > 0)

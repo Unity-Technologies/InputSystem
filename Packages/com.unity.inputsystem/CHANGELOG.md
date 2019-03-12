@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Remote connections in input debugger now remain connected across domain reloads.
+- Don't incorrectly create non-functioning devices if a physical device implements multiple incompatible logical HID devices (such as the MacBook keyboard/touch pad and touch bar).
+- Removed non-functioning sort triangles in event list in Input Debugger device windows.
+- Sort events in input debugger window by id rather then by timestamp.
+- Input device icons in input debugger window now render in appropriate resolution on retina displays.
 
 #### Actions
 
@@ -59,6 +63,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed inspector UIs for on-screen controls throwing exceptions and being non-functional.
 - Fixed deleting multiple items at same time in action editor leading to wrong items being deleted.
 - Fixed copy-pasting actions not preserving action properties other than name.
+- Fixed memory corruptions coming from binding resolution of actions.
+
+## [0.2.1-preview] - 2019-03-11
+
+### Changed
+
+ - NativeUpdateCallback API update to match Unity 2018.3.8f1
 
 ## [0.2.0-preview] - 2019-02-12
 

@@ -148,7 +148,6 @@ namespace UnityEngine.Experimental.Input.Editor
             return list;
         }
 
-        ////TODO: support different resolutions
         public static Texture2D GetIconForLayout(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
@@ -164,7 +163,9 @@ namespace UnityEngine.Experimental.Input.Editor
             // No, so see if we have an icon on disk for exactly the layout
             // we're looking at (i.e. with the same name).
             var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-            var path = Path.Combine(kIconPath, skinPrefix + layoutName + ".png");
+            int scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+            var scalePostFix = scale > 1 ? $"@{scale}x" : "";
+            var path = Path.Combine(kIconPath, skinPrefix + layoutName + scalePostFix + ".png");
             icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (icon != null)
                 return icon;
