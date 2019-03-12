@@ -29,6 +29,7 @@ Actions:
 - Fixed assert when generating C# class and make sure it gets imported correctly.
 - Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
 - Fixed some memory instabilities with the Actions.
+- Made Vector2 composite actions respect the press points of button controls used to compose the value.
 
 ## [0.2.1-preview] - 2019-03-11
 ### Changed
