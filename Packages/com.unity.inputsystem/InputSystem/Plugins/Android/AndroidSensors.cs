@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         StepDetector = 18,
         StepCounter = 19,
         GeomagneticRotationVector = 20,
-        HeartRate = 21,                           
+        HeartRate = 21,
         Pose6DOF = 28,
         StationaryDetect = 29,
         MotionDetect = 30,
