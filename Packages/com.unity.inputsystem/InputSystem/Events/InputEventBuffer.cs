@@ -78,9 +78,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             : this()
         {
             if (eventPtr == null && eventCount != 0)
-                throw new ArgumentException("eventPtr is NULL but eventCount is != 0", "eventCount");
+                throw new ArgumentException("eventPtr is NULL but eventCount is != 0", nameof(eventCount));
             if (capacityInBytes != 0 && capacityInBytes < sizeInBytes)
-                throw new ArgumentException(string.Format("capacity({0}) cannot be smaller than size({1})", capacityInBytes, sizeInBytes), "capacityInBytes");
+                throw new ArgumentException($"capacity({capacityInBytes}) cannot be smaller than size({sizeInBytes})",
+                    nameof(capacityInBytes));
 
             if (eventPtr != null)
             {

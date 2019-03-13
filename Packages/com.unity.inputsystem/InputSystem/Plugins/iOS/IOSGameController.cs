@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         B,
         Start,
         Select
-        
+
         // Note: If you'll add an element here, be sure to update kMaxButtons const below
     };
 
@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         LeftStickY,
         RightStickX,
         RightStickY
-        
+
         // Note: If you'll add an element here, be sure to update kMaxAxis const below
     };
 
@@ -43,8 +43,8 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
     public unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
-        public const int kMaxButtons = (int) iOSButton.Select + 1;
-        public const int kMaxAxis = (int) iOSAxis.RightStickY + 1;
+        public const int kMaxButtons = (int)iOSButton.Select + 1;
+        public const int kMaxAxis = (int)iOSAxis.RightStickY + 1;
 
         [InputControl(name = "dpad")]
         [InputControl(name = "dpad/up", bit = (uint)iOSButton.DpadUp)]
