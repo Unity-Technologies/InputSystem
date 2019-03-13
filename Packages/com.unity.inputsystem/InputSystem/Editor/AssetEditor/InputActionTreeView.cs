@@ -150,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
-            // When filtering by binding group, we tag bindings that are not in any binding group as "(GLOBAL)".
+            // When filtering by binding group, we tag bindings that are not in any binding group as "{GLOBAL}".
             // This helps when having a specific control scheme selected, to also see the bindings that are active
             // in that control scheme by virtue of not being associated with *any* specific control scheme.
             if (item is BindingTreeItem bindingItem &&
@@ -297,18 +297,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (FindItem(id, rootItem) is ActionTreeItemBase item)
                     yield return item;
-            }
-        }
-
-        public IEnumerable<int> GetSelectionWithChildrenFilteredOut()
-        {
-            var selection = GetSelection();
-            foreach (var id in selection)
-            {
-                var item = FindItem(id, rootItem);
-                if (selection.Any(x => FindItem(id, rootItem)?.IsParentOf(item) == true))
-                    continue;
-                yield return id;
             }
         }
 
@@ -676,8 +664,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void PasteBlocks(string transmission, InsertLocation location, bool assignNewIDs, List<string> newItemPropertyPaths)
         {
-            Debug.Assert(location.item != null, "Drop location must be set");
-
             var blocks = transmission.Split(new[] {k_EndOfTransmissionBlock},
                 StringSplitOptions.RemoveEmptyEntries);
             if (blocks.Length < 1)
@@ -736,7 +722,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (tag == k_ActionTag)
                 {
-                    // We don't support pasting separately actions into action maps in the same paste operations so
+                    // We don't support pasting actions separately into action maps in the same paste operations so
                     // there must be an ActionMapTreeItem in the hierarchy we pasted into.
                     var actionMapItem = location.item.TryFindItemInHierarchy<ActionMapTreeItem>();
                     Debug.Assert(actionMapItem != null, "Cannot find ActionMapTreeItem in hierarchy of pasted action");
