@@ -41,7 +41,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DrawSchemeSelection()
         {
-            var buttonGUI = new GUIContent(selectedControlScheme?.name ?? "No Control Scheme");
+            var buttonGUI = m_ControlSchemes.LengthSafe() > 0
+                ? new GUIContent(selectedControlScheme?.name ?? "All Control Schemes")
+                : new GUIContent("No Control Schemes");
+
             var buttonRect = GUILayoutUtility.GetRect(buttonGUI, EditorStyles.toolbarPopup, GUILayout.MinWidth(k_MinimumButtonWidth));
 
             if (GUI.Button(buttonRect, buttonGUI, EditorStyles.toolbarPopup))
@@ -49,20 +52,21 @@ namespace UnityEngine.Experimental.Input.Editor
                 buttonRect = new Rect(EditorGUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y)), Vector2.zero);
                 var menu = new GenericMenu();
 
-                // Add entries to select control scheme.
-                menu.AddItem(s_NoControlSchemeLabel, m_SelectedControlSchemeIndex == -1, OnControlSchemeSelected, null);
+                // Add entries to select control scheme, if we have some.
                 if (m_ControlSchemes.LengthSafe() > 0)
                 {
+                    menu.AddItem(s_AllControlSchemes, m_SelectedControlSchemeIndex == -1, OnControlSchemeSelected, null);
                     var selectedControlSchemeName = m_SelectedControlSchemeIndex == -1
                         ? null : m_ControlSchemes[m_SelectedControlSchemeIndex].name;
                     foreach (var controlScheme in m_ControlSchemes.OrderBy(x => x.name))
                         menu.AddItem(new GUIContent(controlScheme.name),
                             controlScheme.name == selectedControlSchemeName, OnControlSchemeSelected,
                             controlScheme.name);
+
+                    menu.AddSeparator(string.Empty);
                 }
 
                 // Add entries to add/edit/duplicate/delete control schemes.
-                menu.AddSeparator(string.Empty);
                 menu.AddItem(s_AddControlSchemeLabel, false, OnAddControlScheme, buttonRect);
                 if (m_SelectedControlSchemeIndex >= 0)
                 {
@@ -317,7 +321,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private GUIContent[] m_SelectedSchemeDeviceRequirementNames;
         private SearchField m_SearchField;
 
-        private static readonly GUIContent s_NoControlSchemeLabel = EditorGUIUtility.TrTextContent("No Control Scheme");
+        private static readonly GUIContent s_AllControlSchemes = EditorGUIUtility.TrTextContent("All Control Schemes");
         private static readonly GUIContent s_AddControlSchemeLabel = new GUIContent("Add Control Scheme...");
         private static readonly GUIContent s_EditControlSchemeLabel = EditorGUIUtility.TrTextContent("Edit Control Scheme...");
         private static readonly GUIContent s_DuplicateControlSchemeLabel = EditorGUIUtility.TrTextContent("Duplicate Control Scheme...");
