@@ -11,19 +11,11 @@ namespace UnityEngine.Experimental.Input
     internal static class InputAnalytics
     {
         public const string kEventStartup = "input_startup";
-        public const string kEventFirstUserInteraction = "input_first_user_interaction";
         public const string kEventShutdown = "input_shutdown";
 
         public static void Initialize(InputManager manager)
         {
-            var runtime = manager.m_Runtime;
-            Debug.Assert(runtime != null);
-
-            // Register our analytics events. We want all of them to be pretty low volume.
-            // All of them are per session. kEventStartup can even be per installation.
-            runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
-            runtime.RegisterAnalyticsEvent(kEventFirstUserInteraction, 10, 100);
-            runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
+            Debug.Assert(manager.m_Runtime != null);
         }
 
         public static void OnStartup(InputManager manager)
@@ -68,6 +60,7 @@ namespace UnityEngine.Experimental.Input
             data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
             #endif
 
+            manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
@@ -88,6 +81,7 @@ namespace UnityEngine.Experimental.Input
                 total_event_processing_time = (float)metrics.totalEventProcessingTime,
             };
 
+            manager.m_Runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
         }
 
