@@ -2559,8 +2559,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
+    public void Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
     {
         // On iOS and probably Android, when you're touching the screen with two fingers. Touches with different ids can come in different order.
         // Here's an example, in what order OS sends us touches
