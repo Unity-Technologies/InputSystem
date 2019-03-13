@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('H', 'I', 'D', 'O'); }}
+        public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         public const int kReportId = 5;

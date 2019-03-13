@@ -3,6 +3,8 @@ using Unity.Collections;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add "#name" notation (or something like that) that looks up by *displayName* rather than name
+
 ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
 ////TODO: allow stuff like "/gamepad/**/<button>"
 ////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
@@ -97,6 +99,21 @@ namespace UnityEngine.Experimental.Input
                 return path;
 
             return result;
+        }
+
+        public static string TryGetDeviceUsage(string path)
+        {
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+
+            var parser = new PathParser(path);
+            if (!parser.MoveToNextComponent())
+                return null;
+
+            if (parser.current.usage.length > 0)
+                return parser.current.usage.ToString();
+
+            return null;
         }
 
         /// <summary>

@@ -138,14 +138,14 @@ partial class CoreTests
     public void Analytics_InEditor_StartupEventTransmitsBackendEnabledStatus()
     {
         // Save current player settings so we can restore them.
-        var oldEnabled = EditorPlayerSettings.oldSystemBackendsEnabled;
-        var newEnabled = EditorPlayerSettings.newSystemBackendsEnabled;
+        var oldEnabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
+        var newEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
 
         try
         {
             // Enable new and disable old.
-            EditorPlayerSettings.newSystemBackendsEnabled = true;
-            EditorPlayerSettings.oldSystemBackendsEnabled = false;
+            EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+            EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
 
             object receivedData = null;
             runtime.onSendAnalyticsEvent =
@@ -163,8 +163,8 @@ partial class CoreTests
         }
         finally
         {
-            EditorPlayerSettings.oldSystemBackendsEnabled = oldEnabled;
-            EditorPlayerSettings.newSystemBackendsEnabled = newEnabled;
+            EditorPlayerSettingHelpers.oldSystemBackendsEnabled = oldEnabled;
+            EditorPlayerSettingHelpers.newSystemBackendsEnabled = newEnabled;
         }
     }
 

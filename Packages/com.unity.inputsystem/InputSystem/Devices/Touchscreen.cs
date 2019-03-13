@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         [InputControl(layout = "Integer")][FieldOffset(0)] public int touchId;
         ////TODO: kill the processor here
-        [InputControl(processors = "TouchPositionTransform")][FieldOffset(4)] public Vector2 position;
+        [InputControl][FieldOffset(4)] public Vector2 position;
         [InputControl][FieldOffset(12)] public Vector2 delta;
         [InputControl(layout = "Axis")][FieldOffset(20)] public float pressure;
         [InputControl][FieldOffset(24)] public Vector2 radius;
@@ -58,22 +58,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
-
-    ////FIXME: this thing should go; the Android player should do this in the backend
-    public class TouchPositionTransformProcessor : InputProcessor<Vector2>
-    {
-        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
-        {
-#if UNITY_EDITOR
-            return value;
-#elif PLATFORM_ANDROID
-            return new Vector2(value.x, InputRuntime.s_Instance.screenSize.y - value.y);
-#else
-            return value;
-#endif
-        }
-    }
-
 
     /// <summary>
     /// Default state layout for touch devices.
@@ -253,7 +237,7 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: find a better way to manage memory allocation for touches
         ////      (we really don't want to crawl through the entire state here like we do now;
-        ////      whatever the solution, it'll likely be complicated by fixed vs dymamic updates)
+        ////      whatever the solution, it'll likely be complicated by fixed vs dynamic updates)
 
         ////TODO: primary touch handling
 

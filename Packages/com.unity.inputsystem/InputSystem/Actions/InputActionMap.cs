@@ -56,8 +56,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (m_Id == null)
                     {
-                        m_Guid = Guid.NewGuid();
-                        m_Id = m_Guid.ToString();
+                        GenerateId();
                     }
                     else
                     {
@@ -711,6 +710,12 @@ namespace UnityEngine.Experimental.Input
                     $"Cannot modify bindings on action map '{this}' while the map is enabled");
         }
 
+        internal void GenerateId()
+        {
+            m_Guid = Guid.NewGuid();
+            m_Id = m_Guid.ToString();
+        }
+
         /// <summary>
         /// Resolve bindings right away if we have to. Otherwise defer it to when we next need
         /// the bindings.
@@ -894,6 +899,7 @@ namespace UnityEngine.Experimental.Input
         public struct BindingJson
         {
             public string name;
+            public string id;
             public string path;
             public string interactions;
             public string processors;
@@ -912,6 +918,7 @@ namespace UnityEngine.Experimental.Input
                 return new InputBinding
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
+                    m_Id = string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString() : id,
                     path = string.IsNullOrEmpty(path) ? null : path,
                     action = string.IsNullOrEmpty(action) ? null : action,
                     interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
@@ -928,6 +935,7 @@ namespace UnityEngine.Experimental.Input
                 return new BindingJson
                 {
                     name = binding.name,
+                    id = string.IsNullOrEmpty(binding.m_Id) ? Guid.NewGuid().ToString() : binding.m_Id,
                     path = binding.path,
                     action = binding.action,
                     interactions = binding.interactions,

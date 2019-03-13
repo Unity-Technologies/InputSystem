@@ -1638,14 +1638,14 @@ namespace UnityEngine.Experimental.Input
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettings.newSystemBackendsEnabled)
+                !EditorPlayerSettingHelpers.newSystemBackendsEnabled)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
                     "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
-                    EditorPlayerSettings.newSystemBackendsEnabled = true;
+                    EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 

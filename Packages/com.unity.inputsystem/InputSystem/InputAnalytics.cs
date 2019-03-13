@@ -64,8 +64,8 @@ namespace UnityEngine.Experimental.Input
             data.unrecognized_devices = deviceList.ToArray();
 
             #if UNITY_EDITOR
-            data.new_enabled = EditorPlayerSettings.newSystemBackendsEnabled;
-            data.old_enabled = EditorPlayerSettings.oldSystemBackendsEnabled;
+            data.new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
+            data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
             #endif
 
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     string product;
                     if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
-                        product = string.Format("{0} {1}", description.manufacturer, description.product);
+                        product = $"{description.manufacturer} {description.product}";
                     else if (!string.IsNullOrEmpty(description.product))
                         product = description.product;
                     else
