@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Must be an event carrying state.
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be state or delta event", "eventPtr");
+                throw new ArgumentException("Event must be state or delta event", nameof(eventPtr));
 
             // Get state data.
             void* dataPtr;
@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////TODO: support dumping multiple state side-by-side when comparing
-        public void DrawHexDump()
+        private void DrawHexDump()
         {
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 

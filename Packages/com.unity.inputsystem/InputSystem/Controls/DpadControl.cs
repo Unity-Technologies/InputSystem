@@ -17,14 +17,6 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </remarks>
     public class DpadControl : InputControl<Vector2>
     {
-        public enum ButtonBits
-        {
-            Up,
-            Down,
-            Left,
-            Right,
-        }
-
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
         /// </summary>
@@ -109,6 +101,14 @@ namespace UnityEngine.Experimental.Input.Controls
             }
 
             return result;
+        }
+
+        internal enum ButtonBits
+        {
+            Up,
+            Down,
+            Left,
+            Right,
         }
     }
 }

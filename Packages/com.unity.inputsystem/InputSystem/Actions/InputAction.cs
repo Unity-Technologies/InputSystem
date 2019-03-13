@@ -559,13 +559,18 @@ namespace UnityEngine.Experimental.Input
 
             if (string.IsNullOrEmpty(m_Id))
             {
-                m_Guid = Guid.NewGuid();
-                m_Id = m_Guid.ToString();
+                GenerateId();
             }
             else
             {
                 m_Guid = new Guid(m_Id);
             }
+        }
+
+        internal void GenerateId()
+        {
+            m_Guid = Guid.NewGuid();
+            m_Id = m_Guid.ToString();
         }
 
         internal InputActionMap GetOrCreateActionMap()
