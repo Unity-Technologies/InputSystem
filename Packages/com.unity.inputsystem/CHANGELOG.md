@@ -53,6 +53,7 @@ This release contains a number of fairly significant changes. The focus has been
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
 - Events for devices that implement `IInputStateCallbacks` (such as `Touchscreen`) are allowed to go back in time. Avoids the problem of having to order events between multiple fingers correctly or seeing events getting rejected.
 - `PenState.Button` is now `PenButton`.
+- Removed TouchPositionTransformProcessor, was used only by Android, the position transformation will occur in native backend in 2019.x
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.
