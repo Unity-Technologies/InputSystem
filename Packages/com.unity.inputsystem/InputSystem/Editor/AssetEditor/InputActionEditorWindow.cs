@@ -633,6 +633,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         #if UNITY_2019_1_OR_NEWER
+        ////TODO: show shortcuts in tooltips
         ////FIXME: the shortcuts seem to have focus problems; often requires clicking away and then back to the window
         [Shortcut("Input Action Editor/Save", typeof(InputActionEditorWindow), KeyCode.S, ShortcutModifiers.Alt)]
         private static void SaveShortcut(ShortcutArguments arguments)

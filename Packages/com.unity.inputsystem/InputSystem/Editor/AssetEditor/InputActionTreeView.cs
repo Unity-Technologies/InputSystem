@@ -468,7 +468,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var assignNewIDs = !(isMove && sourceTree == this);
 
                 // Determine where we are moving/copying the data.
-                var target = args.parentItem as ActionTreeItemBase;
+                var target = (args.parentItem ?? rootItem) as ActionTreeItemBase;
                 int? childIndex = null;
                 if (args.dragAndDropPosition == DragAndDropPosition.BetweenItems)
                     childIndex = args.insertAtIndex;
@@ -497,42 +497,52 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void HandleCopyPasteCommandEvent(Event uiEvent)
         {
-            var validate = uiEvent.type == EventType.ValidateCommand;
-            if (!validate && uiEvent.type != EventType.ExecuteCommand)
-                return;
-
-            switch (uiEvent.commandName)
+            if (uiEvent.type == EventType.ValidateCommand)
             {
-                case k_CopyCommand:
-                    if (!validate)
-                        CopySelectedItemsToClipboard();
-                    break;
-                case k_PasteCommand:
-                    if (!validate)
-                        PasteDataFromClipboard();
-                    break;
-                case k_CutCommand:
-                    if (!validate)
-                    {
-                        CopySelectedItemsToClipboard();
-                        DeleteDataOfSelectedItems();
-                    }
-                    break;
-                case k_DuplicateCommand:
-                    if (!validate)
-                    {
-                        CopySelectedItemsToClipboard();
-                        PasteDataFromClipboard();
-                    }
-                    break;
-                case k_DeleteCommand:
-                    if (!validate)
-                        DeleteDataOfSelectedItems();
-                    break;
-                default:
-                    return;
+                switch (uiEvent.commandName)
+                {
+                    case k_CopyCommand:
+                    case k_CutCommand:
+                    case k_DuplicateCommand:
+                    case k_DeleteCommand:
+                        if (HasSelection())
+                            uiEvent.Use();
+                        break;
+
+                    case k_PasteCommand:
+                        var systemCopyBuffer = EditorGUIUtility.systemCopyBuffer;
+                        if (systemCopyBuffer != null && systemCopyBuffer.StartsWith(k_CopyPasteMarker))
+                            uiEvent.Use();
+                        break;
+                }
             }
-            uiEvent.Use();
+            else if (uiEvent.type == EventType.ExecuteCommand)
+            {
+                switch (uiEvent.commandName)
+                {
+                    case k_CopyCommand:
+                        CopySelectedItemsToClipboard();
+                        break;
+                    case k_PasteCommand:
+                        PasteDataFromClipboard();
+                        break;
+                    case k_CutCommand:
+                        CopySelectedItemsToClipboard();
+                        DeleteDataOfSelectedItems();
+                        break;
+                    case k_DuplicateCommand:
+                        var buffer = new StringBuilder();
+                        CopySelectedItems(buffer);
+                        PasteData(buffer.ToString());
+                        break;
+                    case k_DeleteCommand:
+                        DeleteDataOfSelectedItems();
+                        break;
+                    default:
+                        return;
+                }
+                uiEvent.Use();
+            }
         }
 
         internal const string k_CopyPasteMarker = "INPUTASSET ";
@@ -548,8 +558,13 @@ namespace UnityEngine.Experimental.Input.Editor
         public void CopySelectedItemsToClipboard()
         {
             var copyBuffer = new StringBuilder();
-            CopyItems(GetSelectedItemsWithChildrenFilteredOut(), copyBuffer);
+            CopySelectedItems(copyBuffer);
             EditorGUIUtility.systemCopyBuffer = copyBuffer.ToString();
+        }
+
+        private void CopySelectedItems(StringBuilder buffer)
+        {
+            CopyItems(GetSelectedItemsWithChildrenFilteredOut(), buffer);
         }
 
         public static void CopyItems(IEnumerable<ActionTreeItemBase> items, StringBuilder buffer)
@@ -615,7 +630,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void PasteDataFromClipboard()
         {
-            var copyBufferString = EditorGUIUtility.systemCopyBuffer;
+            PasteData(EditorGUIUtility.systemCopyBuffer);
+        }
+
+        private void PasteData(string copyBufferString)
+        {
             if (!copyBufferString.StartsWith(k_CopyPasteMarker))
                 return;
 
@@ -664,6 +683,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void PasteBlocks(string transmission, InsertLocation location, bool assignNewIDs, List<string> newItemPropertyPaths)
         {
+            Debug.Assert(location.item != null, "Should have drop target");
+
             var blocks = transmission.Split(new[] {k_EndOfTransmissionBlock},
                 StringSplitOptions.RemoveEmptyEntries);
             if (blocks.Length < 1)
