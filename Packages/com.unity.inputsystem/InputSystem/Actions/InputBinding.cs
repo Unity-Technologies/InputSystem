@@ -3,8 +3,6 @@ using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: should bindings have unique IDs, too?
-
 ////REVIEW: do we really need overridable processors and interactions?
 
 // Downsides to the current approach:
@@ -49,6 +47,16 @@ namespace UnityEngine.Experimental.Input
         {
             get => m_Name;
             set => m_Name = value;
+        }
+
+        public Guid id
+        {
+            get
+            {
+                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
+                    m_Guid = new Guid(m_Id);
+                return m_Guid;
+            }
         }
 
         /// <summary>
@@ -197,6 +205,12 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public void GenerateId()
+        {
+            m_Guid = Guid.NewGuid();
+            m_Id = m_Guid.ToString();
+        }
+
         public static InputBinding MaskByGroup(string group)
         {
             if (string.IsNullOrEmpty(group))
@@ -206,6 +220,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         [SerializeField] private string m_Name;
+        [SerializeField] internal string m_Id;
         [SerializeField] private string m_Path;
         [SerializeField] private string m_Interactions;
         [SerializeField] private string m_Processors;
@@ -216,11 +231,11 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private string m_OverridePath;
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
+        ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
+        [NonSerialized] private Guid m_Guid;
 
         internal string effectivePath => overridePath ?? path;
-
         internal string effectiveInteractions => overrideInteractions ?? interactions;
-
         internal string effectiveProcessors => overrideProcessors ?? processors;
 
         internal bool isEmpty =>

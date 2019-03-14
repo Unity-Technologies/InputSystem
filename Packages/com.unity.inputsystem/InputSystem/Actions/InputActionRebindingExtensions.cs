@@ -420,6 +420,10 @@ namespace UnityEngine.Experimental.Input
 
             public bool cancelled => (m_Flags & Flags.Cancelled) != 0;
 
+            public double startTime => m_StartTime;
+
+            public float timeout => m_Timeout;
+
             public RebindingOperation WithAction(InputAction action)
             {
                 ThrowIfRebindInProgress();
@@ -581,6 +585,12 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
+            public RebindingOperation WithTimeout(float timeInSeconds)
+            {
+                m_Timeout = timeInSeconds;
+                return this;
+            }
+
             public RebindingOperation OnComplete(Action<RebindingOperation> callback)
             {
                 m_OnComplete = callback;
@@ -637,7 +647,9 @@ namespace UnityEngine.Experimental.Input
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
-                if (m_WaitSecondsAfterMatch > 0)
+                m_StartTime = InputRuntime.s_Instance.currentTime;
+
+                if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
                     HookOnAfterUpdate();
                     m_LastMatchTime = -1;
@@ -934,6 +946,15 @@ namespace UnityEngine.Experimental.Input
 
             private void OnAfterUpdate(InputUpdateType updateType)
             {
+                // If we don't have a match yet but we have a timeout and have expired it,
+                // cancel the operation.
+                if (m_LastMatchTime < 0 && m_Timeout > 0 &&
+                    InputRuntime.s_Instance.currentTime - m_StartTime > m_Timeout)
+                {
+                    Cancel();
+                    return;
+                }
+
                 // Sanity check to make sure we're actually waiting for completion.
                 if (m_WaitSecondsAfterMatch <= 0)
                     return;
@@ -1029,6 +1050,7 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.Started;
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
+                m_StartTime = -1;
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
@@ -1116,6 +1138,8 @@ namespace UnityEngine.Experimental.Input
             private float m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
             private float[] m_Scores; // Scores for the controls in m_Candidates.
             private double m_LastMatchTime; // Last input event time we discovered a better match.
+            private double m_StartTime;
+            private float m_Timeout;
             private float m_WaitSecondsAfterMatch;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;

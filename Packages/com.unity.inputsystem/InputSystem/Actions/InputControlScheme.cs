@@ -35,6 +35,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputActionAsset.AddControlScheme"/>
         public string name => m_Name;
 
+        ////REVIEW: is this actually functional? if not, kill
         //problem: how do you do any subtractive operation? should we care?
         //problem: this won't allow resolving things on just an InputControlScheme itself; needs context
         /// <summary>
@@ -778,6 +779,7 @@ namespace UnityEngine.Experimental.Input
         internal struct SchemeJson
         {
             public string name;
+            ////TODO: nuke 'basedOn'
             public string basedOn;
             public string bindingGroup;
             public DeviceJson[] devices;

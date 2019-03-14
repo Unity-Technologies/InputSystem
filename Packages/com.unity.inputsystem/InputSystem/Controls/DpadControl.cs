@@ -17,14 +17,6 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </remarks>
     public class DpadControl : Vector2Control
     {
-        public enum ButtonBits
-        {
-            Up,
-            Down,
-            Left,
-            Right,
-        }
-
         // The DpadAxisControl has it's own logic to read state from the parent dpad.
         // The useStateFrom argument here is not actually used by that. The only reason
         // it is set up here is to avoid any state bytes being reserved for the DpadAxisControl.
@@ -115,6 +107,14 @@ namespace UnityEngine.Experimental.Input.Controls
             }
 
             return result;
+        }
+
+        internal enum ButtonBits
+        {
+            Up,
+            Down,
+            Left,
+            Right,
         }
     }
 }
