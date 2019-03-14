@@ -562,7 +562,7 @@ internal class HIDTests : InputTestFixture
     // direct control over the naming.
     [Test]
     [Category("Devices")]
-    public void Devices_HIDsWithoutProductName_AreNamedByTheirVendorAndProductID()
+    public void Devices_HIDsWithoutProductName_AreNamedByTheirVendorAndProductIDAndUsageName()
     {
         var hidDescriptor = new HID.HIDDeviceDescriptor
         {
@@ -586,7 +586,7 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
 
         var device = (HID)InputSystem.devices.First(x => x is HID);
-        Assert.That(device.name, Is.EqualTo("1234-5678"));
+        Assert.That(device.name, Is.EqualTo("1234-5678 MultiAxisController"));
     }
 
     [Test]
