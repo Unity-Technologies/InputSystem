@@ -93,12 +93,13 @@ namespace UnityEngine.Experimental.Input.Interactions
                             if (isActuated)
                                 context.PerformedAndStayPerformed();
                             else
-                                context.Cancelled();
+                            {
+                                context.PerformedAndGoBackToWaiting();
+                                context.Waiting();
+                            }
                         }
                         else if (!isActuated)
-                        {
-                            context.Cancelled();
-                        }
+                            context.PerformedAndGoBackToWaiting();
 
                         m_WaitingForRelease = isActuated;
                     }
