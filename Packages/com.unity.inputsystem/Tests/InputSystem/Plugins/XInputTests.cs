@@ -163,8 +163,18 @@ internal class XInputTests : InputTestFixture
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+        Assert.That(gamepad.rightStick.right.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1));
 
