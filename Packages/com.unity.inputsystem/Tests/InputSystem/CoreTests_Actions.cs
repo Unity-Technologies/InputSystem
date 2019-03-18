@@ -1557,7 +1557,7 @@ partial class CoreTests
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Cancelled));
+                    .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
 
@@ -1631,7 +1631,7 @@ partial class CoreTests
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Cancelled));
+                    .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
 
