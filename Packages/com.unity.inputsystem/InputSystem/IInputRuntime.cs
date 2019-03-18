@@ -150,7 +150,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <remarks>
         /// This can be used to turn on or off event processing for background windows.
         /// </remarks>
-        bool runInBackground { set; }
+        bool shouldRunInBackground { set; }
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }

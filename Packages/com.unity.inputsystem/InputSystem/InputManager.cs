@@ -1493,7 +1493,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.onFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
-            m_Runtime.runInBackground = m_Settings.runInBackground;
+            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2114,7 +2114,7 @@ namespace UnityEngine.Experimental.Input
             #endif
             updateMask = newUpdateMask;
 
-            m_Runtime.runInBackground = m_Settings.runInBackground;
+            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
