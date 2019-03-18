@@ -17,7 +17,7 @@ public class DemoControls : InputActionAssetReference
     {
     }
 
-    private bool m_Initialized;
+    [NonSerialized] private bool m_Initialized;
     private void Initialize()
     {
         // gameplay

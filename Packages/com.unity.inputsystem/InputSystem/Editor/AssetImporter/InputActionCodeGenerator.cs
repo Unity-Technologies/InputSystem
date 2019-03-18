@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.EndBlock();
 
             // Initialize method.
-            writer.WriteLine("private bool m_Initialized;");
+            writer.WriteLine("[NonSerialized] private bool m_Initialized;");
             writer.WriteLine("private void Initialize()");
             writer.BeginBlock();
             foreach (var set in maps)

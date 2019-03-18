@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed deleting multiple items at same time in action editor leading to wrong items being deleted.
 - Fixed copy-pasting actions not preserving action properties other than name.
 - Fixed memory corruptions coming from binding resolution of actions.
+- InputActionAssetReferences in ScriptableObjects will continue to work after domain reloads in the editor.
 
 ## [0.2.1-preview] - 2019-03-11
 
