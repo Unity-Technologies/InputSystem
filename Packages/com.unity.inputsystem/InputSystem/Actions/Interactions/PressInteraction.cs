@@ -93,10 +93,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                             if (isActuated)
                                 context.PerformedAndStayPerformed();
                             else
-                            {
                                 context.PerformedAndGoBackToWaiting();
-                                context.Waiting();
-                            }
                         }
                         else if (!isActuated)
                             context.PerformedAndGoBackToWaiting();
