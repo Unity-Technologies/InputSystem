@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.3-preview] - TBD
 
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
+>NOTE: The minimum version requirement for the new input system has been bumped
+       to 2019.1
 
 ### Added
 
