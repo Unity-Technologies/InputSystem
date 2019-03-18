@@ -1319,15 +1319,15 @@ namespace UnityEngine.Experimental.Input.Layouts
                     parameter.type = ParameterType.Boolean;
                     *(bool*)parameter.value = false;
                 }
-                else if (value.IndexOf('.') != -1)
+                else if (value.IndexOf('.') != -1 || value.IndexOf("e", StringComparison.InvariantCultureIgnoreCase) != -1 || value.IndexOf("Infinity") != -1)
                 {
                     parameter.type = ParameterType.Float;
-                    *(float*)parameter.value = float.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
+                    float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out *(float*)parameter.value);
                 }
                 else
                 {
                     parameter.type = ParameterType.Integer;
-                    *(int*)parameter.value = int.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
+                    int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture.NumberFormat, out *(int*)parameter.value);
                 }
             }
 

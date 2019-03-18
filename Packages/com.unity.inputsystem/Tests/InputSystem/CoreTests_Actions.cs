@@ -1557,7 +1557,7 @@ partial class CoreTests
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Cancelled));
+                    .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
 
@@ -1631,7 +1631,7 @@ partial class CoreTests
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Cancelled));
+                    .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
 
@@ -2273,7 +2273,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddMultipleBindings()
+    public void Actions_CanAddBindingsToActions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(name: "test");
@@ -2287,6 +2287,19 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_BindingsHaveUniqueIDs()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Gamepad>/leftStick");
+
+        Assert.That(action.bindings[0].m_Id, Is.Not.Null.And.Not.Empty);
+        Assert.That(action.bindings[1].m_Id, Is.Not.Null.And.Not.Empty);
     }
 
     [Test]

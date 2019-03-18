@@ -1425,6 +1425,7 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
+            RegisterControlLayout("DpadAxis", typeof(DpadControl.DpadAxisControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
             RegisterControlLayout("Touch", typeof(TouchControl));
 
@@ -1458,7 +1459,6 @@ namespace UnityEngine.Experimental.Input
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
-            processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
             #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
