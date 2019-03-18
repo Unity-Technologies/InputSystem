@@ -77,8 +77,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [InputControl(name = "leftStick/left", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "leftStick/right", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "leftStick/y", offset = 2, format = "SHRT", parameters = "invert")]
-        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=true")]
-        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=false")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=0,invert=true")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=0,clampMax=1,invert=false")]
         [FieldOffset(6)] public short leftStickX;
         [FieldOffset(8)] public short leftStickY;
 
@@ -87,8 +87,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [InputControl(name = "rightStick/left", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "rightStick/right", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "rightStick/y", offset = 2, format = "SHRT", parameters = "invert")]
-        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=true")]
-        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=1,invert=false")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=0,invert=true")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=0,clampMax=1,invert=false")]
         [FieldOffset(10)] public short rightStickX;
         [FieldOffset(12)] public short rightStickY;
 
