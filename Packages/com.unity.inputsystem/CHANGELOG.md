@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - "Add Action" button being active and triggering exceptions when no action map had been added yet.
 - Fixed assert when generating C# class and make sure it gets imported correctly.
 - Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Allow binding dpad controls to actions of type "Vector2".
 - Fixed old name of action appearing underneath rename overlay.
 - Fixed inspector UIs for on-screen controls throwing exceptions and being non-functional.
 - Fixed deleting multiple items at same time in action editor leading to wrong items being deleted.

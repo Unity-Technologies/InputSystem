@@ -703,6 +703,8 @@ partial class CoreTests
         Assert.That(dpad.right.isPressed, Is.False);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.down.isPressed, Is.False);
+        Assert.AreEqual(dpad.x.ReadValueAsObject(), -1.0f);
+        Assert.AreEqual(dpad.y.ReadValueAsObject(), 0.0f);
 
         InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(8));
         InputSystem.Update();
@@ -711,6 +713,8 @@ partial class CoreTests
         Assert.That(dpad.down.isPressed, Is.True);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.right.isPressed, Is.False);
+        Assert.AreEqual(dpad.x.ReadValueAsObject(), -0.707107f);
+        Assert.AreEqual(dpad.y.ReadValueAsObject(), -0.707107f);
     }
 
     [Test]
