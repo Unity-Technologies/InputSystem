@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public static FourCC k_PropertiesChanged = new FourCC("PROP");
 
         public InputActionPropertiesView(SerializedProperty actionProperty, Action<FourCC> onChange = null)
-            : base("Action", actionProperty, onChange)
+            : base("Action", actionProperty, onChange, actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue)
         {
             m_ExpectedControlLayoutProperty = actionProperty.FindPropertyRelative("m_ExpectedControlLayout");
             m_FlagsProperty = actionProperty.FindPropertyRelative("m_Flags");
