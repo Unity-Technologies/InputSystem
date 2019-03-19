@@ -2584,6 +2584,33 @@ partial class CoreTests
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_IncompatibleProcessorIsIgnored()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction(processors: "ConstantVector2Test");
+        action.AddBinding("<Gamepad>/leftStick/x");
+        action.Enable();
+
+        float? receivedFloat = null;
+        action.performed +=
+            ctx =>
+            {
+                Assert.That(receivedFloat, Is.Null);
+                // ConstantVector2TestProcessor processes Vector2s. It would throw an exception when 
+                // trying to use it reading a float if not ignored.
+                receivedFloat = ctx.ReadValue<float>();
+            };
+
+        Set(gamepad.leftStick, Vector2.one);
+
+        Assert.That(receivedFloat, Is.Not.Null);
+        Assert.That(receivedFloat.Value, Is.EqualTo(1).Within(0.00001));
+    }
+
     // ReSharper disable once ClassNeverInstantiated.Local
     private class ConstantVector2TestProcessor : InputProcessor<Vector2>
     {
