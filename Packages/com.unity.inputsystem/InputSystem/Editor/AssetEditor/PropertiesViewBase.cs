@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsProperty = bindingOrAction.FindPropertyRelative("m_Interactions");
             m_ProcessorsProperty = bindingOrAction.FindPropertyRelative("m_Processors");
 
-            m_InteractionsList = new InteractionsListView(m_InteractionsProperty, OnInteractionsModified, expectedControlLayout);
+            m_InteractionsList = new InteractionsListView(m_InteractionsProperty, OnInteractionsModified, null);
             m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
 
             m_OnChange = onChange;
