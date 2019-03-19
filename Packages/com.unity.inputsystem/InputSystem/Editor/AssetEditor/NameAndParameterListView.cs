@@ -146,7 +146,14 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             var listRect = GUILayoutUtility.GetRect(200, m_ListView.GetHeight());
             listRect = EditorGUI.IndentedRect(listRect);
             m_ListView.DoList(listRect);
-            m_EditableParametersForSelectedItem.OnGUI();
+            if (m_EditableParametersForSelectedItem.hasUIToShow)
+            {
+                var label = $"Parameters for {ObjectNames.NicifyVariableName(m_ParametersForEachListItem[m_ListView.index].name)}";
+                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+                m_EditableParametersForSelectedItem.OnGUI();
+                EditorGUI.indentLevel--;
+            }
         }
 
         public string ToSerializableString()
