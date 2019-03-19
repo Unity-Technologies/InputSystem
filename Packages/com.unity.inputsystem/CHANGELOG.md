@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     [InputControl(layout = "Button")]
     private string buttonControlPath;
     ```
+- Processors of incompatible types will now be ignored instead of throwing an exception.
 
 ### Fixed
 
