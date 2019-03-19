@@ -28,6 +28,9 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_ParametersForEachListItem = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue)
                 ?? new InputControlLayout.NameAndParameters[0];
             m_ExpectedControlLayout = expectedControlLayout;
+            Type expectedValueType = null;
+            if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
+                expectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
 
             foreach (var nameAndParams in m_ParametersForEachListItem)
             {
@@ -36,8 +39,15 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 ////REVIEW: finding this kind of stuff should probably have better support globally on the asset; e.g. some
                 ////        notification that pops up and allows fixing all occurrences in one click
                 // Find out if we still support this option and indicate it in the list, if we don't.
-                if (m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name)) == null)
+                var type = m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name));
+                if (type == null)
                     name += " (Obsolete)";
+                else if (expectedValueType != null)
+                {
+                    var valueType = GetValueType(type);
+                    if (!expectedValueType.IsAssignableFrom(valueType))
+                        name += " (Ignored)";
+                }
 
                 m_ListItems.Add(name);
             }
@@ -47,10 +57,6 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 headerHeight = 3,
                 onAddDropdownCallback = (rect, list) =>
                 {
-                    Type expectedValueType = null;
-                    if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
-                        expectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
-
                     // Add only original names to the menu and not aliases.
                     var menu = new GenericMenu();
                     foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
