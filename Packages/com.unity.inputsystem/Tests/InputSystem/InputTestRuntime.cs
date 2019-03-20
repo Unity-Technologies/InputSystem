@@ -314,12 +314,13 @@ namespace UnityEngine.Experimental.Input
 
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
+        public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
-        public InputUpdateType updateMask { get; set; }
+        public bool shouldRunInBackground { get; set; }
         public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;

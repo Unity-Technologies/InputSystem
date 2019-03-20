@@ -1192,7 +1192,7 @@ namespace UnityEngine.Experimental.Input.Editor
             onSerializedObjectModified?.Invoke();
         }
 
-        private void UpdateSerializedObjectDirtyCount()
+        public void UpdateSerializedObjectDirtyCount()
         {
             m_SerializedObjectDirtyCount = EditorUtility.GetDirtyCount(serializedObject.targetObject);
         }

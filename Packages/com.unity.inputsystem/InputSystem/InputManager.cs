@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
+using UnityEditor;
 #endif
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
@@ -110,19 +111,15 @@ namespace UnityEngine.Experimental.Input
             get => m_UpdateMask;
             set
             {
-                if (m_UpdateMask == value)
-                    return;
-
                 // In editor, we don't allow disabling editor updates.
                 #if UNITY_EDITOR
                 value |= InputUpdateType.Editor;
                 #endif
 
+                if (m_UpdateMask == value)
+                    return;
+                    
                 m_UpdateMask = value;
-
-                // Tell runtime.
-                if (m_Runtime != null)
-                    m_Runtime.updateMask = m_UpdateMask;
 
                 // Recreate state buffers.
                 if (m_DevicesCount > 0)
@@ -1381,6 +1378,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
                     InputRuntime.s_Instance = null;
@@ -1404,6 +1402,7 @@ namespace UnityEngine.Experimental.Input
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
+            m_HasFocus = Application.isFocused;
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
@@ -1486,14 +1485,16 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onFocusChanged = OnFocusChanged;
-            m_Runtime.updateMask = updateMask;
+            m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
+            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1577,6 +1578,7 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
+        private bool m_HasFocus;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
@@ -2105,8 +2107,7 @@ namespace UnityEngine.Experimental.Input
                 default:
                     throw new NotImplementedException("Input update mode: " + m_Settings.updateMode);
             }
-            if (m_Settings.runInBackground)
-                newUpdateMask |= (InputUpdateType)(1 << 31);
+
             #if UNITY_EDITOR
             // In the editor, we force editor updates to be on even if InputEditorUserSettings.lockInputToGameView is
             // on as otherwise we'll end up accumulating events in edit mode without anyone flushing the
@@ -2114,6 +2115,8 @@ namespace UnityEngine.Experimental.Input
             newUpdateMask |= InputUpdateType.Editor;
             #endif
             updateMask = newUpdateMask;
+
+            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
@@ -2175,6 +2178,7 @@ namespace UnityEngine.Experimental.Input
 
         private void OnFocusChanged(bool focus)
         {
+            m_HasFocus = focus;
             var deviceCount = m_DevicesCount;
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -2182,6 +2186,31 @@ namespace UnityEngine.Experimental.Input
                 if (!InputSystem.TrySyncDevice(device))
                     InputSystem.TryResetDevice(device);
             }
+        }
+
+        private bool ShouldRunUpdate(InputUpdateType updateType)
+        {
+            switch (updateType)
+            {
+                case InputUpdateType.BeforeRender:
+                case InputUpdateType.Dynamic:
+                case InputUpdateType.Fixed:
+                    // Note: When Touchscreen Keyboard is active, Unity application looses focus, thus none of input is being processed
+                    //       Force input updating while keyboard is show
+                    //       In the future, hopefully we'll have TouchscreenKeyboard integrated in thew new input system directly
+                    //       Thus with removal of KeyboardOnScreen, KeyboardOnScreen::IsVisible() check should go away
+                    if (!(m_Settings.runInBackground || TouchScreenKeyboard.visible) && !m_HasFocus)
+                        return false;
+                    break;
+#if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
+                    if (Application.isPlaying && !EditorApplication.isPaused && (m_HasFocus || m_Settings.runInBackground))
+                        return false;
+                    break;
+#endif
+            }
+            return (updateType & m_UpdateMask) != 0;
         }
 
         /// <summary>
@@ -3233,7 +3262,7 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             m_DeviceSetupVersion = state.deviceSetupVersion + 1;
-            m_UpdateMask = state.updateMask;
+            updateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 

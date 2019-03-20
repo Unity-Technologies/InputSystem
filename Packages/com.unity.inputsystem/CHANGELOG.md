@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     [InputControl(layout = "Button")]
     private string buttonControlPath;
     ```
+- Processors of incompatible types will now be ignored instead of throwing an exception.
 
 ### Fixed
 
@@ -57,7 +58,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
 - Input device icons in input debugger window now render in appropriate resolution on retina displays.
 - Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
-
+- `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
+	
 #### Actions
 
 - Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
@@ -71,6 +73,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed copy-pasting actions not preserving action properties other than name.
 - Fixed memory corruptions coming from binding resolution of actions.
 - InputActionAssetReferences in ScriptableObjects will continue to work after domain reloads in the editor.
+- Fixed `startTime` and `duration` properties of action callbacks.
 
 ## [0.2.1-preview] - 2019-03-11
 

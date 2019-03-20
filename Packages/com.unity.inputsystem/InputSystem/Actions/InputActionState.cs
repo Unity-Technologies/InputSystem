@@ -2021,7 +2021,11 @@ namespace UnityEngine.Experimental.Input
             {
                 var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
                 for (var i = 0; i < processorCount; ++i)
-                    value = ((InputProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
+                {
+                    var processor = processors[processorStartIndex + i] as InputProcessor<TValue>;
+                    if (processor != null)
+                        value = processor.Process(value, controlOfType);
+                }
             }
 
             return value;
