@@ -3233,7 +3233,7 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             m_DeviceSetupVersion = state.deviceSetupVersion + 1;
-            m_UpdateMask = state.updateMask;
+            updateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 

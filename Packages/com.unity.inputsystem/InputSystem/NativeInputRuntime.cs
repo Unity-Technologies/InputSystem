@@ -36,6 +36,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
             }
+            if ((updateType & InputUpdateType.Manual) == InputUpdateType.Manual)
+            {
+                NativeInputSystem.Update((NativeInputUpdateType)InputUpdateType.Manual);
+            }
 
             #if UNITY_EDITOR
             if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
