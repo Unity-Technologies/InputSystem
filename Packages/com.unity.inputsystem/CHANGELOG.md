@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
 - Input device icons in input debugger window now render in appropriate resolution on retina displays.
 - Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
+- `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
 	
 #### Actions
 
