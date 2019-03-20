@@ -2598,12 +2598,12 @@ partial class CoreTests
         float? receivedFloat = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedFloat, Is.Null);
-                // ConstantVector2TestProcessor processes Vector2s. It would throw an exception when 
-                // trying to use it reading a float if not ignored.
-                receivedFloat = ctx.ReadValue<float>();
-            };
+        {
+            Assert.That(receivedFloat, Is.Null);
+            // ConstantVector2TestProcessor processes Vector2s. It would throw an exception when
+            // trying to use it reading a float if not ignored.
+            receivedFloat = ctx.ReadValue<float>();
+        };
 
         Set(gamepad.leftStick, Vector2.one);
 

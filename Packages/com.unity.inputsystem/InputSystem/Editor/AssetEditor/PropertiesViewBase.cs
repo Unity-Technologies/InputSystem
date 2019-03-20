@@ -4,6 +4,8 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Editor.Lists;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: show parameters for selected interaction or processor inline in list rather than separately underneath list
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>

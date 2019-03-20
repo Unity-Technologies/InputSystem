@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 if (value > ushort.MaxValue)
                     throw new ArgumentException("Maximum event size is " + ushort.MaxValue, nameof(value));
-               m_Event.sizeInBytes = (ushort)value;
+                m_Event.sizeInBytes = (ushort)value;
             }
         }
 

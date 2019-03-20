@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Support gamepad vibration on Switch.
+- Added support for Joysticks on Linux.
 
 #### Actions
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
 - "Press and Release" interactions will now invoke the `performed` callback on both press and release (instead of invoking `performed` and `cancel`, which was inconsistent with other behaviors).
+- `Joystick.axes` and `Joystick.buttons` have been removed.
 
 #### Actions
 
@@ -56,7 +58,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
 - Input device icons in input debugger window now render in appropriate resolution on retina displays.
 - Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
-	
+
 #### Actions
 
 - Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
