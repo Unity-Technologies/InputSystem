@@ -694,7 +694,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (m_State == null)
                         return 0;
-                    return m_State.interactionStates[actionIndex].startTime;
+                    return m_State.actionStates[actionIndex].startTime;
                 }
             }
 
