@@ -76,7 +76,6 @@ partial class CoreTests
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Events")]
     [Ignore("TODO")]
@@ -93,8 +92,6 @@ partial class CoreTests
         ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
         Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
     }
-
-    #endif
 
     [Test]
     [Category("Events")]

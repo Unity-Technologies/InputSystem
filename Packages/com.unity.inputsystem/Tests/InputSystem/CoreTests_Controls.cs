@@ -9,15 +9,11 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-
-#if UNITY_2018_3_OR_NEWER
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-#endif
 
 partial class CoreTests
 {
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Controls")]
     [Ignore("TODO")]
@@ -38,8 +34,6 @@ partial class CoreTests
             list.Dispose();
         }
     }
-
-    #endif
 
     [Test]
     [Category("Controls")]

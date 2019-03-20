@@ -3236,7 +3236,6 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Devices")]
     [Ignore("TODO")]
@@ -3265,8 +3264,6 @@ partial class CoreTests
             InputSystem.Update();
         }, Is.Not.AllocatingGCMemory());
     }
-
-    #endif
 
     [Test]
     [Category("Devices")]
