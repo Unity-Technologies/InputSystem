@@ -3,11 +3,8 @@ All notable changes to the input system package will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
-## [0.2.1-preview] - 2019-03-11
-### Changed
- - NativeUpdateCallback API update to match Unity 2018.3.8f1
 
-## [0.2.5-preview] - 2019-03-20
+## [0.2.6-preview] - 2019-03-20
 
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
 >NOTE: The minimum version requirement for the new input system has been bumped
