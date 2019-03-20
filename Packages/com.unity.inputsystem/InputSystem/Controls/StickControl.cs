@@ -43,12 +43,12 @@ namespace UnityEngine.Experimental.Input.Controls
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            base.FinishSetup(builder);
+
             up = builder.GetControl<ButtonControl>(this, "up");
             down = builder.GetControl<ButtonControl>(this, "down");
             left = builder.GetControl<ButtonControl>(this, "left");
             right = builder.GetControl<ButtonControl>(this, "right");
-
-            base.FinishSetup(builder);
         }
     }
 }

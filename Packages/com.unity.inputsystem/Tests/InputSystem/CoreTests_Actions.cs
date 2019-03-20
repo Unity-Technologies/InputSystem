@@ -1557,7 +1557,7 @@ partial class CoreTests
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Cancelled));
+                    .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
 
@@ -1631,7 +1631,7 @@ partial class CoreTests
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Cancelled));
+                    .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
 
@@ -2273,7 +2273,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddMultipleBindings()
+    public void Actions_CanAddBindingsToActions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(name: "test");
@@ -2287,6 +2287,19 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_BindingsHaveUniqueIDs()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Gamepad>/leftStick");
+
+        Assert.That(action.bindings[0].m_Id, Is.Not.Null.And.Not.Empty);
+        Assert.That(action.bindings[1].m_Id, Is.Not.Null.And.Not.Empty);
     }
 
     [Test]
@@ -2569,6 +2582,33 @@ partial class CoreTests
         Assert.That(receivedVector, Is.Not.Null);
         Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_IncompatibleProcessorIsIgnored()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction(processors: "ConstantVector2Test");
+        action.AddBinding("<Gamepad>/leftStick/x");
+        action.Enable();
+
+        float? receivedFloat = null;
+        action.performed +=
+            ctx =>
+            {
+                Assert.That(receivedFloat, Is.Null);
+                // ConstantVector2TestProcessor processes Vector2s. It would throw an exception when 
+                // trying to use it reading a float if not ignored.
+                receivedFloat = ctx.ReadValue<float>();
+            };
+
+        Set(gamepad.leftStick, Vector2.one);
+
+        Assert.That(receivedFloat, Is.Not.Null);
+        Assert.That(receivedFloat.Value, Is.EqualTo(1).Within(0.00001));
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -3566,13 +3606,11 @@ partial class CoreTests
         Assert.That(asset.FindAction($"{{{action3.id.ToString()}}}"), Is.SameAs(action3));
 
         // Shouldn't allocate.
-        #if UNITY_2018_3_OR_NEWER
         var map1action1 = "map1/action1";
         Assert.That(() =>
         {
             asset.FindAction(map1action1);
         }, Is.Not.AllocatingGCMemory());
-        #endif
     }
 
     [Test]
@@ -3919,7 +3957,6 @@ partial class CoreTests
         }
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -3944,8 +3981,6 @@ partial class CoreTests
             }, Is.Not.AllocatingGCMemory());
         }
     }
-
-    #endif
 
     [Test]
     [Category("Actions")]

@@ -559,13 +559,18 @@ namespace UnityEngine.Experimental.Input
 
             if (string.IsNullOrEmpty(m_Id))
             {
-                m_Guid = Guid.NewGuid();
-                m_Id = m_Guid.ToString();
+                GenerateId();
             }
             else
             {
                 m_Guid = new Guid(m_Id);
             }
+        }
+
+        internal void GenerateId()
+        {
+            m_Guid = Guid.NewGuid();
+            m_Id = m_Guid.ToString();
         }
 
         internal InputActionMap GetOrCreateActionMap()
@@ -689,7 +694,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (m_State == null)
                         return 0;
-                    return m_State.interactionStates[actionIndex].startTime;
+                    return m_State.actionStates[actionIndex].startTime;
                 }
             }
 

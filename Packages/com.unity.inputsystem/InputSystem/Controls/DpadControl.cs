@@ -15,15 +15,35 @@ namespace UnityEngine.Experimental.Input.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
-    public class DpadControl : InputControl<Vector2>
+    public class DpadControl : Vector2Control
     {
-        public enum ButtonBits
+        internal class DpadAxisControl : AxisControl
         {
-            Up,
-            Down,
-            Left,
-            Right,
+            public int component;
+
+            protected override void FinishSetup(InputDeviceBuilder builder)
+            {
+                base.FinishSetup(builder);
+                component = name == "x" ? 0 : 1;
+
+                // Set the state block to be the parent's state block. We don't use that to read
+                // the axis directly (we call the parent control to do that), but we need to set
+                // it up the actions know to monitor this memory for changes to the control.
+                m_StateBlock = m_Parent.m_StateBlock;
+            }
+
+            public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
+            {
+                var value = (m_Parent as DpadControl).ReadUnprocessedValueFromState(statePtr);
+                return value[component];
+            }
         }
+
+        // The DpadAxisControl has it's own logic to read state from the parent dpad.
+        // The useStateFrom argument here is not actually used by that. The only reason
+        // it is set up here is to avoid any state bytes being reserved for the DpadAxisControl.
+        [InputControl(name = "x", layout = "DpadAxis", useStateFrom = "right")]
+        [InputControl(name = "y", layout = "DpadAxis", useStateFrom = "up")]
 
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
@@ -109,6 +129,14 @@ namespace UnityEngine.Experimental.Input.Controls
             }
 
             return result;
+        }
+
+        internal enum ButtonBits
+        {
+            Up,
+            Down,
+            Left,
+            Right,
         }
     }
 }

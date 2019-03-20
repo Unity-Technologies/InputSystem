@@ -5,14 +5,11 @@ namespace UnityEngine.Experimental.Input.Utilities
     // Work with substrings without actually allocating strings.
     internal struct Substring : IComparable<Substring>, IEquatable<Substring>
     {
-        internal string m_String;
-        internal int m_Index;
-        internal int m_Length;
+        private readonly string m_String;
+        private readonly int m_Index;
+        private readonly int m_Length;
 
-        public bool isEmpty
-        {
-            get { return m_Length == 0; }
-        }
+        public bool isEmpty => m_Length == 0;
 
         public Substring(string str)
         {
@@ -45,11 +42,10 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public override bool Equals(object obj)
         {
-            if (obj is Substring)
-                return Equals((Substring)obj);
+            if (obj is Substring other)
+                return Equals(other);
 
-            var str = obj as string;
-            if (str != null)
+            if (obj is string str)
                 return Equals(str);
 
             return false;
@@ -58,9 +54,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public bool Equals(string other)
         {
             if (string.IsNullOrEmpty(other))
-            {
                 return m_Length == 0;
-            }
 
             if (other.Length != m_Length)
                 return false;
@@ -159,15 +153,9 @@ namespace UnityEngine.Experimental.Input.Utilities
             return new Substring(s);
         }
 
-        public int length
-        {
-            get { return m_Length; }
-        }
+        public int length => m_Length;
 
-        public int index
-        {
-            get { return m_Index; }
-        }
+        public int index => m_Index;
 
         public char this[int index]
         {

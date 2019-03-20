@@ -6,7 +6,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Runtime.InteropServices;
 
-
 #if UNITY_EDITOR || UNITY_XBOXONE
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 #endif
@@ -134,185 +133,138 @@ internal class XInputTests : InputTestFixture
 
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 
-    // Going to simulate the report that comes from
-    // https://github.com/360Controller/360Controller/blob/master/360Controller/ControlStruct.h
-    [StructLayout(LayoutKind.Explicit)]
-    struct MICEXboxControllerForOSXState : IInputStateTypeInfo
-    {
-        [FieldOffset(0)] public byte command;
-        [FieldOffset(1)] public byte size;
-        [FieldOffset(2)] public short buttons;
-        [FieldOffset(4)] public byte triggerLeft;
-        [FieldOffset(5)] public byte triggerRight;
-        [FieldOffset(6)] public short leftX;
-        [FieldOffset(8)] public short leftY;
-        [FieldOffset(10)] public short rightX;
-        [FieldOffset(12)] public short rightY;
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('H', 'I', 'D');
-        }
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxControllerOnOSX()
     {
-        var description = new InputDeviceDescription
+        var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "HID",
             product = "Xbox One Wired Controller",
             manufacturer = "Microsoft"
-        };
+        });
 
-        InputDevice device = null;
-        Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
-        var gamepad = (XInputController)device;
-        Assert.That(gamepad.name, Is.EqualTo("XInputControllerOSX"));
+        Assert.That(device, Is.AssignableTo<XInputController>());
+        Assert.That(device, Is.AssignableTo<XInputControllerOSX>());
+        var gamepad = (XInputControllerOSX)device;
 
-        // Test right and down and that the layouts get inversion correct
         InputSystem.QueueStateEvent(gamepad,
-            new MICEXboxControllerForOSXState
+            new XInputControllerOSXState
             {
-                triggerLeft = 255,
-                triggerRight = 255,
-                leftX = 32767,
-                leftY = 32767,
-                rightX = 32767,
-                rightY = 32767,
+                leftStickX = 32767,
+                leftStickY = -32767,
+                rightStickX = 32767,
+                rightStickY = -32767,
+                leftTrigger = 255,
+                rightTrigger = 255,
             });
 
         InputSystem.Update();
+
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-
-        // Test left and up and that the layouts get inversion correct
-        InputSystem.QueueStateEvent(gamepad,
-            new MICEXboxControllerForOSXState
-            {
-                triggerLeft = 255,
-                triggerRight = 255,
-                leftX = -32767,
-                leftY = -32767,
-                rightX = -32767,
-                rightY = -32767,
-            });
-
-        InputSystem.Update();
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.001));
 
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 1 }, gamepad.dpad.up);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 2 }, gamepad.dpad.down);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 4 }, gamepad.dpad.left);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 8 }, gamepad.dpad.right);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 16 }, gamepad.startButton);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 32 }, gamepad.selectButton);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 64 }, gamepad.leftStickButton);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 128 }, gamepad.rightStickButton);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 256 }, gamepad.leftShoulder);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 512 }, gamepad.rightShoulder);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 4096 }, gamepad.buttonSouth);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 8192 }, gamepad.buttonEast);
-        AssertButtonPress(gamepad, new MICEXboxControllerForOSXState { buttons = 16384 }, gamepad.buttonWest);
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.up.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+        Assert.That(gamepad.rightStick.right.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.rightStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.001));
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1));
+
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.A), gamepad.aButton);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.A), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.B), gamepad.bButton);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.B), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.X), gamepad.xButton);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.X), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Y), gamepad.yButton);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Y), gamepad.buttonNorth);
+
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.DPadDown), gamepad.dpad.down);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.DPadUp), gamepad.dpad.up);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.DPadLeft), gamepad.dpad.left);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.DPadRight), gamepad.dpad.right);
+
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.LeftThumbstickPress), gamepad.leftStickButton);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.RightThumbstickPress), gamepad.rightStickButton);
+
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.LeftShoulder), gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.RightShoulder), gamepad.rightShoulder);
+
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Start), gamepad.menu);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Start), gamepad.startButton);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.view);
+        AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.selectButton);
     }
 
 #endif
 
+
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
-
-    // Going to simulate XINPUT_GAMEPAD
-    [StructLayout(LayoutKind.Explicit)]
-    struct XINPUT_GAMEPADState : IInputStateTypeInfo
-    {
-        [FieldOffset(0)] public short buttons;
-        [FieldOffset(2)] public byte triggerLeft;
-        [FieldOffset(3)] public byte triggerRight;
-        [FieldOffset(4)] public short leftX;
-        [FieldOffset(6)] public short leftY;
-        [FieldOffset(8)] public short rightX;
-        [FieldOffset(10)] public short rightY;
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'I', 'N', 'P');
-        }
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxControllerOnWindows()
     {
-        var description = new InputDeviceDescription
+        var device = InputSystem.AddDevice(new InputDeviceDescription
         {
-            interfaceName = "XInput",
-        };
+            interfaceName = "XInput"
+        });
 
-        InputDevice device = null;
-        Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
-        var gamepad = (XInputController)device;
-        Assert.That(gamepad.name, Is.EqualTo("XInputControllerWindows"));
+        Assert.That(device, Is.AssignableTo<XInputController>());
+        Assert.That(device, Is.AssignableTo<XInputControllerWindows>());
+        var gamepad = (XInputControllerWindows)device;
 
-        // Test right and down and that the layouts get inversion correct
         InputSystem.QueueStateEvent(gamepad,
-            new XINPUT_GAMEPADState
+            new XInputControllerWindowsState
             {
-                triggerLeft = 255,
-                triggerRight = 255,
-                leftX = 32767,
-                leftY = -32767,
-                rightX = 32767,
-                rightY = -32767,
+                leftStickX = 32767,
+                leftStickY = 32767,
+                rightStickX = 32767,
+                rightStickY = 32767,
+                leftTrigger = 255,
+                rightTrigger = 255,
             });
 
         InputSystem.Update();
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
-
-        // Test left and up and that the layouts get inversion correct
-        InputSystem.QueueStateEvent(gamepad,
-            new XINPUT_GAMEPADState
-            {
-                triggerLeft = 255,
-                triggerRight = 255,
-                leftX = -32767,
-                leftY = 32767,
-                rightX = -32767,
-                rightY = 32767,
-            });
-
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
-        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(-0.9999).Within(0.001));
         Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1));
 
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 1 }, gamepad.dpad.up);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 2 }, gamepad.dpad.down);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 4 }, gamepad.dpad.left);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 8 }, gamepad.dpad.right);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 16 }, gamepad.startButton);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 32 }, gamepad.selectButton);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 64 }, gamepad.leftStickButton);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 128 }, gamepad.rightStickButton);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 256 }, gamepad.leftShoulder);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 512 }, gamepad.rightShoulder);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 4096 }, gamepad.buttonSouth);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 8192 }, gamepad.buttonEast);
-        AssertButtonPress(gamepad, new XINPUT_GAMEPADState { buttons = 16384 }, gamepad.buttonWest);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.A), gamepad.aButton);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.A), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.B), gamepad.bButton);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.B), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.X), gamepad.xButton);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.X), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.Y), gamepad.yButton);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.Y), gamepad.buttonNorth);
+
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.DPadDown), gamepad.dpad.down);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.DPadUp), gamepad.dpad.up);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.DPadLeft), gamepad.dpad.left);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.DPadRight), gamepad.dpad.right);
+
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.LeftThumbstickPress), gamepad.leftStickButton);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.RightThumbstickPress), gamepad.rightStickButton);
+
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.LeftShoulder), gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.RightShoulder), gamepad.rightShoulder);
+
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.Start), gamepad.menu);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.Start), gamepad.startButton);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.Select), gamepad.view);
+        AssertButtonPress(gamepad, new XInputControllerWindowsState().WithButton(XInputControllerWindowsState.Button.Select), gamepad.selectButton);
     }
 
 #endif

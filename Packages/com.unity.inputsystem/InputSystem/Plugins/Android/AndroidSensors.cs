@@ -17,8 +17,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         Gyroscope = 4,
         Light = 5,
         Pressure = 6,
-        Proximity = 8,
         Temperature = 7,            // Was deprecated in API 14 https://developer.android.com/reference/android/hardware/Sensor#TYPE_TEMPERATURE
+        Proximity = 8,
         Gravity = 9,
         LinearAcceleration = 10,
         RotationVector = 11,
@@ -32,6 +32,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         StepCounter = 19,
         GeomagneticRotationVector = 20,
         HeartRate = 21,
+        Pose6DOF = 28,
+        StationaryDetect = 29,
+        MotionDetect = 30,
+        HeartBeat = 31,
+        LowLatencyOffBodyDetect = 34,
+        AccelerometerUncalibrated = 35,
     }
 
     [Serializable]

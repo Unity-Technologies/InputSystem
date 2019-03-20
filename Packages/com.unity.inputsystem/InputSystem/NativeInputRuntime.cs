@@ -36,6 +36,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
             }
+            if ((updateType & InputUpdateType.Manual) == InputUpdateType.Manual)
+            {
+                NativeInputSystem.Update((NativeInputUpdateType)InputUpdateType.Manual);
+            }
 
             #if UNITY_EDITOR
             if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
@@ -144,6 +148,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        public Func<InputUpdateType, bool> onShouldRunUpdate
+        {
+            set
+            {
+                // This is stupid but the enum prevents us from jacking the delegate in directly.
+                // This means we get a double dispatch here :(
+                if (value != null)
+                    NativeInputSystem.onShouldRunUpdate = updateType => value((InputUpdateType)updateType);
+                else
+                    NativeInputSystem.onShouldRunUpdate = null;
+            }
+        }
+
         public Action<int, string> onDeviceDiscovered
         {
             set => NativeInputSystem.onDeviceDiscovered = value;
@@ -199,9 +216,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
 
-        public InputUpdateType updateMask
+        public bool shouldRunInBackground
         {
-            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
+            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)(value ? 1 << 31 : 0));
         }
 
         private Action m_ShutdownMethod;

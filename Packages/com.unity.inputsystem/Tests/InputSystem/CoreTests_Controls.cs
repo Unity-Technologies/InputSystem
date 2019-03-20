@@ -9,15 +9,11 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-
-#if UNITY_2018_3_OR_NEWER
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-#endif
 
 partial class CoreTests
 {
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Controls")]
     [Ignore("TODO")]
@@ -38,8 +34,6 @@ partial class CoreTests
             list.Dispose();
         }
     }
-
-    #endif
 
     [Test]
     [Category("Controls")]
@@ -703,6 +697,8 @@ partial class CoreTests
         Assert.That(dpad.right.isPressed, Is.False);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.down.isPressed, Is.False);
+        Assert.AreEqual(dpad.x.ReadValueAsObject(), -1.0f);
+        Assert.AreEqual(dpad.y.ReadValueAsObject(), 0.0f);
 
         InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(8));
         InputSystem.Update();
@@ -711,6 +707,8 @@ partial class CoreTests
         Assert.That(dpad.down.isPressed, Is.True);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.right.isPressed, Is.False);
+        Assert.AreEqual(dpad.x.ReadValueAsObject(), -0.707107f);
+        Assert.AreEqual(dpad.y.ReadValueAsObject(), -0.707107f);
     }
 
     [Test]

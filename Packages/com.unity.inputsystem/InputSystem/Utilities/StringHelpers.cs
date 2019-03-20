@@ -7,8 +7,43 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class StringHelpers
     {
+        public static string Escape(this string str)
+        {
+            if (str == null)
+                return null;
+
+            var builder = new StringBuilder();
+            foreach (var ch in str)
+            {
+                if (ch == '"')
+                    builder.Append("\\\"");
+                else if (ch == '\\')
+                    builder.Append("\\\\");
+                else if (ch == '\n')
+                    builder.Append("\\n");
+                else if (ch == '\r')
+                    builder.Append("\\r");
+                else if (ch == '\t')
+                    builder.Append("\\t");
+                else
+                    builder.Append(ch);
+            }
+            return builder.ToString();
+        }
+
+        public static bool Contains(this string str, string text, StringComparison comparison)
+        {
+            if (str == null)
+                return false;
+
+            return str.IndexOf(text, comparison) != -1;
+        }
+
         public static string GetPlural(this string str)
         {
+            if (str == null)
+                throw new ArgumentNullException(nameof(str));
+
             switch (str)
             {
                 case "Mouse": return "Mice";
@@ -28,7 +63,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var gb = numBytes / (1024 * 1024 * 1024);
                 var remainder = (numBytes % (1024 * 1024 * 1024)) / 1.0f;
 
-                return string.Format("{0} GB", gb + remainder);
+                return $"{gb + remainder} GB";
             }
 
             // Megabytes.
@@ -37,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var mb = numBytes / (1024 * 1024);
                 var remainder = (numBytes % (1024 * 1024)) / 1.0f;
 
-                return string.Format("{0} MB", mb + remainder);
+                return $"{mb + remainder} MB";
             }
 
             // Kilobytes.
@@ -46,11 +81,11 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var kb = numBytes / 1024;
                 var remainder = (numBytes % 1024) / 1.0f;
 
-                return string.Format("{0} KB", kb + remainder);
+                return $"{kb + remainder} KB";
             }
 
             // Bytes.
-            return string.Format("{0} Bytes", numBytes);
+            return $"{numBytes} Bytes";
         }
 
         public static int CountOccurrences(this string str, char ch)
@@ -147,10 +182,29 @@ namespace UnityEngine.Experimental.Input.Utilities
         public static string MakeUniqueName<TExisting>(string baseName, IEnumerable<TExisting> existingSet,
             Func<TExisting, string> getNameFunc)
         {
+            if (getNameFunc == null)
+                throw new ArgumentNullException(nameof(getNameFunc));
+
+            if (existingSet == null)
+                return baseName;
+
             var name = baseName;
             var nameLowerCase = name.ToLower();
             var nameIsUnique = false;
             var namesTried = 1;
+
+            // If the name ends in digits, start counting from the given number.
+            if (baseName.Length > 0)
+            {
+                var lastDigit = baseName.Length;
+                while (lastDigit > 0 && char.IsDigit(baseName[lastDigit - 1]))
+                    --lastDigit;
+                if (lastDigit != baseName.Length)
+                {
+                    namesTried = int.Parse(baseName.Substring(lastDigit)) + 1;
+                    baseName = baseName.Substring(0, lastDigit);
+                }
+            }
 
             // Find unique name.
             while (!nameIsUnique)
@@ -161,7 +215,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     var existingName = getNameFunc(existing);
                     if (existingName.ToLower() == nameLowerCase)
                     {
-                        name = string.Format("{0}{1}", baseName, namesTried);
+                        name = $"{baseName}{namesTried}";
                         nameLowerCase = name.ToLower();
                         nameIsUnique = false;
                         ++namesTried;
@@ -178,9 +232,9 @@ namespace UnityEngine.Experimental.Input.Utilities
             char separator)
         {
             if (firstList == null)
-                throw new ArgumentNullException("firstList");
+                throw new ArgumentNullException(nameof(firstList));
             if (secondList == null)
-                throw new ArgumentNullException("secondList");
+                throw new ArgumentNullException(nameof(secondList));
 
             // Go element by element through firstList and try to find a matching
             // element in secondList.

@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
  - NativeUpdateCallback API update to match Unity 2018.3.8f1
 
+## [0.2.5-preview] - 2019-03-20
+
+>NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
+>NOTE: The minimum version requirement for the new input system has been bumped
+       to 2019.1
+
+### Added
+
+- Support gamepad vibration on Switch.
+
+#### Actions
+
+- Added ability to change which part of a composite a binding that is part of the composite is assigned to.
+  * Part bindings can now be freely duplicated or copy-pasted. This allows having multiple bindings for "up", for example. Changing part assignments retroactively allows to freely edit the composite makeup.
+- Can now drag&drop multiple items as well as drop items onto others (equivalent to cut&paste). Holding ALT copies data instead of moving it.
+- Edits to control schemes are now undoable.
+- Control schemes are now sorted alphabetically.
+- Can now search by binding group (control scheme) or devices directly from search box.
+  * `g:Gamepad` filters bindings to those in the "Gamepad" group.
+  * `d:Gamepad` filters bindings to those from Gamepad-compatible devices.
+
+### Changed
+
+- The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
+- "Press and Release" interactions will now invoke the `performed` callback on both press and release (instead of invoking `performed` and `cancel`, which was inconsistent with other behaviors).
+
+#### Actions
+
+- Bindings have GUIDs now like actions and maps already did. This allows to persistently and uniquely identify individual bindings.
+- Replaced UI overlay while rebinding interactively with cancellable progress bar. Interactive rebinding now cancels automatically after 4 seconds without suitable input.
+- Bindings that are not assigned to any control scheme are now visible when a particular control scheme is selected.
+  * Bindings not assigned to any control scheme are active in *ALL* control schemes.
+  * The change makes this visible in the UI now.
+  * When a specific control scheme is selected, these bindings are affixed with `{GLOBAL}` for added visibility.
+- When filtering by devices from a control scheme, the filtering now takes layout inheritance into account. So, a binding to a control on `Pointer` will now be shown when the filter is `Mouse`.
+- The public control picker API has been revised.
+  * The simplest way to add control picker UI to a control path is to add an `InputControlAttribute` to the field.
+    ```
+    // In the inspector, shows full UI to select a control interactively
+    // (including interactive picking through device input).
+    [InputControl(layout = "Button")]
+    private string buttonControlPath;
+    ```
+- Processors of incompatible types will now be ignored instead of throwing an exception.
+
+### Fixed
+
+- Remote connections in input debugger now remain connected across domain reloads.
+- Don't incorrectly create non-functioning devices if a physical device implements multiple incompatible logical HID devices (such as the MacBook keyboard/touch pad and touch bar).
+- Removed non-functioning sort triangles in event list in Input Debugger device windows.
+- Sort events in input debugger window by id rather then by timestamp.
+- Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
+- Input device icons in input debugger window now render in appropriate resolution on retina displays.
+- Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
+- `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
+	
+#### Actions
+
+- Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
+- "Add Action" button being active and triggering exceptions when no action map had been added yet.
+- Fixed assert when generating C# class and make sure it gets imported correctly.
+- Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Allow binding dpad controls to actions of type "Vector2".
+- Fixed old name of action appearing underneath rename overlay.
+- Fixed inspector UIs for on-screen controls throwing exceptions and being non-functional.
+- Fixed deleting multiple items at same time in action editor leading to wrong items being deleted.
+- Fixed copy-pasting actions not preserving action properties other than name.
+- Fixed memory corruptions coming from binding resolution of actions.
+- InputActionAssetReferences in ScriptableObjects will continue to work after domain reloads in the editor.
+- Fixed `startTime` and `duration` properties of action callbacks.
+
+## [0.2.1-preview] - 2019-03-11
+
+### Changed
+
+ - NativeUpdateCallback API update to match Unity 2018.3.8f1
+
 ## [0.2.0-preview] - 2019-02-12
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
@@ -26,6 +103,7 @@ This release contains a number of fairly significant changes. The focus has been
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
 - Events for devices that implement `IInputStateCallbacks` (such as `Touchscreen`) are allowed to go back in time. Avoids the problem of having to order events between multiple fingers correctly or seeing events getting rejected.
 - `PenState.Button` is now `PenButton`.
+- Removed TouchPositionTransformProcessor, was used only by Android, the position transformation will occur in native backend in 2019.x
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.

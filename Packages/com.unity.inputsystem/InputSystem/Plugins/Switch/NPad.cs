@@ -276,6 +276,55 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
             };
         }
     }
+    /// <summary>
+    /// Switch output report sent as command to backend.
+    /// </summary>
+    // IMPORTANT: Struct must match the NpadDeviceIOCTLOutputReport in native
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct NPadDeviceIOCTLOutputCommand : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('N', 'P', 'G', 'O'); } }
+
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 20;
+        public const float kDefaultFrequencyLow = 160.0f;
+        public const float kDefaultFrequencyHigh = 320.0f;
+
+        public enum NPadRumblePostion : byte
+        {
+            Left = 0x02,
+            Right = 0x04,
+            All = 0xFF,
+            None = 0x00,
+        }
+
+        [FieldOffset(0)] public InputDeviceCommand baseCommand;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
+        public byte positionFlags;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
+        public float amplitudeLow;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
+        public float frequencyLow;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
+        public float amplitudeHigh;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
+        public float frequencyHigh;
+
+        public FourCC GetTypeStatic() { return Type; }
+
+        public static NPadDeviceIOCTLOutputCommand Create()
+        {
+            return new NPadDeviceIOCTLOutputCommand()
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                positionFlags = (byte)NPadRumblePostion.None,
+                amplitudeLow = 0,
+                frequencyLow = kDefaultFrequencyLow,
+                amplitudeHigh = 0,
+                frequencyHigh = kDefaultFrequencyHigh
+            };
+        }
+    }
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.Switch
@@ -285,7 +334,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// </summary>
     /// <seealso cref="NPadInputState"/>
     [InputControlLayout(stateType = typeof(NPadInputState))]
-    public class NPad : Gamepad
+    public class NPad : Gamepad, INPadRumble
     {
         public ButtonControl leftSL { get; private set; }
         public ButtonControl leftSR { get; private set; }
@@ -389,6 +438,46 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         private JoyConColor m_LeftControllerColor;
         private JoyConColor m_RightControllerColor;
 
+
+        private struct NPadRumbleValues
+        {
+            public float? amplitudeLow;
+            public float? frequencyLow;
+            public float? amplitudeHigh;
+            public float? frequencyHigh;
+
+            public bool HasValues
+            {
+                get { return amplitudeLow.HasValue && frequencyLow.HasValue && amplitudeHigh.HasValue && frequencyHigh.HasValue; }
+            }
+
+            public void SetRumbleValues(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+            {
+                amplitudeLow = Mathf.Clamp01(lowAmplitude);
+                frequencyLow = lowFrequency;
+                amplitudeHigh = Mathf.Clamp01(highAmplitude);
+                frequencyHigh = highFrequency;
+            }
+
+            public void Reset()
+            {
+                amplitudeLow = null;
+                frequencyLow = null;
+                amplitudeHigh = null;
+                frequencyLow = null;
+            }
+
+            public void ApplyRumbleValues(ref NPadDeviceIOCTLOutputCommand cmd)
+            {
+                cmd.amplitudeLow = (float)amplitudeLow;
+                cmd.frequencyLow = (float)frequencyLow;
+                cmd.amplitudeHigh = (float)amplitudeHigh;
+                cmd.frequencyHigh = (float)frequencyHigh;
+            }
+        }
+        private NPadRumbleValues m_leftRumbleValues;
+        private NPadRumbleValues m_rightRumbleValues;
+
         protected override void RefreshConfiguration()
         {
             base.RefreshConfiguration();
@@ -450,6 +539,110 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         private static Color32 ConvertNNColorToColor32(int color)
         {
             return new Color32((byte)(color & 0xFF), (byte)((color >> 8) & 0xFF), (byte)((color >> 16) & 0xFF), (byte)((color >> 24) & 0xFF));
+        }
+
+        public override void PauseHaptics()
+        {
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            ExecuteCommand(ref cmd);
+        }
+
+        public override void ResetHaptics()
+        {
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            ExecuteCommand(ref cmd);
+            m_leftRumbleValues.Reset();
+            m_rightRumbleValues.Reset();
+        }
+
+        public override void ResumeHaptics()
+        {
+            if (m_leftRumbleValues.Equals(m_rightRumbleValues) && m_leftRumbleValues.HasValues)
+            {
+                var cmd = NPadDeviceIOCTLOutputCommand.Create();
+                cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+                m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+                ExecuteCommand(ref cmd);
+            }
+            else
+            {
+                if (m_leftRumbleValues.HasValues)
+                {
+                    var cmd = NPadDeviceIOCTLOutputCommand.Create();
+                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+                    m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+                    ExecuteCommand(ref cmd);
+                }
+                if (m_rightRumbleValues.HasValues)
+                {
+                    var cmd = NPadDeviceIOCTLOutputCommand.Create();
+                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+                    m_rightRumbleValues.ApplyRumbleValues(ref cmd);
+                    ExecuteCommand(ref cmd);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set rummble intensity for all low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowFrequency">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration intensity, 0..1 range</param>
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
+        {
+            SetMotorSpeeds(lowFrequency, NPadDeviceIOCTLOutputCommand.kDefaultFrequencyLow, highFrequency, NPadDeviceIOCTLOutputCommand.kDefaultFrequencyHigh);
+        }
+
+        /// <summary>
+        /// Set the intensity and vibration frequency for all low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowAmplitude">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="lowFrequency">Low frequency motor's vibration frequency in Hz</param>
+        /// <param name="highAmplitude">High frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration frequency in Hz</param>
+        public void SetMotorSpeeds(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+        {
+            m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+            m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+            m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+            ExecuteCommand(ref cmd);
+        }
+
+        /// <summary>
+        /// Set the intensity and vibration frequency for the left low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowAmplitude">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="lowFrequency">Low frequency motor's vibration frequency in Hz</param>
+        /// <param name="highAmplitude">High frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration frequency in Hz</param>
+        public void SetMotorSpeedLeft(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+        {
+            m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+            m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+            ExecuteCommand(ref cmd);
+        }
+
+        /// <summary>
+        /// Set the intensity and vibration frequency for the right low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowAmplitude">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="lowFrequency">Low frequency motor's vibration frequency in Hz</param>
+        /// <param name="highAmplitude">High frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration frequency in Hz</param>
+        public void SetMotorSpeedRight(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+        {
+            m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+            m_rightRumbleValues.ApplyRumbleValues(ref cmd);
+            ExecuteCommand(ref cmd);
         }
     }
 }

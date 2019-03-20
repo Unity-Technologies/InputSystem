@@ -530,11 +530,11 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(deviceJson);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
 
         InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
     }
 
     [Test]
@@ -554,15 +554,15 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("CustomGamepad");
         var device2 = InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device1);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device2);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
     private class TestDeviceReceivingAddAndRemoveNotification : Mouse
@@ -2559,6 +2559,43 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
+    {
+        // On iOS and probably Android, when you're touching the screen with two fingers. Touches with different ids can come in different order.
+        // Here's an example, in what order OS sends us touches
+        // NewInput: Touch Moved 2227.000000 x 1214.000000, id = 5, time = 24.478610
+        // NewInput: Touch Moved 1828.000000 x 1156.000000, id = 6, time = 24.478610
+        // NewInput: Touch Moved 2227.000000 x 1290.000000, id = 5, time = 24.494703
+        // NewInput: Touch Moved 1818.000000 x 1231.000000, id = 6, time = 24.494702
+        //
+        // Notice, last event has lower timestamp than previous events, but these are two different touches so they shouldn't affect each other.
+        // Sadly currently there's a bug in managed side, where Input System will ignore events with lower timestamp than previous event
+
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(1, 2)
+            },
+            1.0);
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+            {
+                phase = PointerPhase.Began,
+                touchId = 5,
+                position = new Vector2(3, 4)
+            },
+            0.9);
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_TouchDeltasAreComputedAutomatically()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
@@ -3199,7 +3236,6 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Devices")]
     [Ignore("TODO")]
@@ -3228,8 +3264,6 @@ partial class CoreTests
             InputSystem.Update();
         }, Is.Not.AllocatingGCMemory());
     }
-
-    #endif
 
     [Test]
     [Category("Devices")]
