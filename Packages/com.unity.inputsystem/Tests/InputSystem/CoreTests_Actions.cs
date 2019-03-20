@@ -3579,13 +3579,11 @@ partial class CoreTests
         Assert.That(asset.FindAction($"{{{action3.id.ToString()}}}"), Is.SameAs(action3));
 
         // Shouldn't allocate.
-        #if UNITY_2018_3_OR_NEWER
         var map1action1 = "map1/action1";
         Assert.That(() =>
         {
             asset.FindAction(map1action1);
         }, Is.Not.AllocatingGCMemory());
-        #endif
     }
 
     [Test]
@@ -3932,7 +3930,6 @@ partial class CoreTests
         }
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -3957,8 +3954,6 @@ partial class CoreTests
             }, Is.Not.AllocatingGCMemory());
         }
     }
-
-    #endif
 
     [Test]
     [Category("Actions")]
