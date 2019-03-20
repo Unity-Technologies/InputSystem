@@ -28,9 +28,13 @@ namespace UnityEngine.Experimental.Input.Controls
         public float normalizeMin;
         public float normalizeMax;
         public float normalizeZero;
+        public bool scale;
+        public float scaleFactor;
 
         protected float Preprocess(float value)
         {
+            if (scale)
+                value *= scaleFactor;
             if (clampToConstant)
             {
                 if (value < clampMin || value > clampMax)

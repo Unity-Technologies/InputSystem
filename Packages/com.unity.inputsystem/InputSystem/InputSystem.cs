@@ -1768,6 +1768,10 @@ namespace UnityEngine.Experimental.Input
             Plugins.XR.XRSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
+            Plugins.Linux.SDLSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
             Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
