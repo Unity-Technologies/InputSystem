@@ -237,10 +237,6 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.True);
     }
 
-#if UNITY_EDITOR
-    // Test that changing focus enables or disables input processing, depending on the value of the
-    // runInBackground setting. Can only be effectively tested in the editor, because we don't have
-    // a generic means of setting player focuse (in the editor we can focus or unfocus the game window).
     public enum Events_ShouldRunUpdate_TracksFocus_Mode
     {
         RunInBackground, DontRunInBackground
@@ -261,19 +257,18 @@ partial class CoreTests
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
         Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Editor));
 
-        UnityEditor.EditorApplication.ExecuteMenuItem("Window/General/Scene");
+        runtime.onFocusChanged.Invoke(false);
 
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic), Is.EqualTo(runInBackground));
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed), Is.EqualTo(runInBackground));
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Editor), Is.EqualTo(!runInBackground));
 
-        UnityEditor.EditorApplication.ExecuteMenuItem("Window/General/Game");
+        runtime.onFocusChanged.Invoke(true);
 
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
         Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
         Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Editor));
     }
-#endif
 
     [Test]
     [Category("Events")]
