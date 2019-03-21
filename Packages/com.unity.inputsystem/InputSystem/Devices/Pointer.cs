@@ -146,7 +146,6 @@ namespace UnityEngine.Experimental.Input
         public AxisControl twist { get; private set; }
 
         public IntegerControl pointerId { get; private set; }
-        ////TODO: find a way which gives values as PointerPhase instead of as int
         public PointerPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }////TODO: kill this
 

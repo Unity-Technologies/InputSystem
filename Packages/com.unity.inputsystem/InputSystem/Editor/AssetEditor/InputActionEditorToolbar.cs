@@ -238,6 +238,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 MakeUniqueControlSchemeName);
         }
 
+        ////REVIEW: renaming a control scheme should probably update the binding group (also on all bindings)
         private void OnEditSelectedControlScheme(object position)
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");

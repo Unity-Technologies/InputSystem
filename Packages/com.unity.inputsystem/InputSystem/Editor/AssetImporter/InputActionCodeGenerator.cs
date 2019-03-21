@@ -22,6 +22,8 @@ using UnityEditor;
 
 ////TODO: make capitalization consistent in the generated code
 
+////REVIEW: allow putting *all* of the data from the inputactions asset into the generated class?
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>

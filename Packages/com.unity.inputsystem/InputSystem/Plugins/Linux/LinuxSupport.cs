@@ -1,6 +1,5 @@
+#if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using System;
-using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.Linux
 {
@@ -80,22 +79,22 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
     }
 
     [Serializable]
-    struct SDLFeatureDescriptor
+    internal struct SDLFeatureDescriptor
     {
         public JoystickFeatureType featureType;
         public int usageHint;
         public int size;
         public int offset;
         public int bit;
-        public Int32 min;
-        public Int32 max;
+        public int min;
+        public int max;
     }
 
     //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
     [Serializable]
-    class SDLDeviceDescriptor
+    internal class SDLDeviceDescriptor
     {
-        public List<SDLFeatureDescriptor> controls;
+        public SDLFeatureDescriptor[] controls;
 
         internal string ToJson()
         {
@@ -107,17 +106,18 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
             return JsonUtility.FromJson<SDLDeviceDescriptor>(json);
         }
     }
+
 #pragma warning restore 0649
 
     /// <summary>
     /// A small helper class to aid in initializing and registering SDL devices and layout builders.
     /// </summary>
-    public static class SDLSupport
+    public static class LinuxSupport
     {
         /// <summary>
         /// The current interface code sent with devices to identify as Linux SDL devices.
         /// </summary>
-        public const string kXRInterfaceCurrent = "Linux";
+        public const string kInterfaceName = "Linux";
 
         public static string GetAxisNameFromUsage(SDLAxisUsage usage)
         {
@@ -138,3 +138,4 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
         }
     }
 }
+#endif // UNITY_EDITOR || UNITY_STANDALONE_LINUX

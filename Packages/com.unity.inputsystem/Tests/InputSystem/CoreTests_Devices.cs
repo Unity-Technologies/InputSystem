@@ -1842,11 +1842,8 @@ partial class CoreTests
         Assert.That(Joystick.current, Is.SameAs(device));
 
         var joystick = (Joystick)device;
-
-        Assert.That(joystick.axes, Has.Count.EqualTo(4)); // Includes stick.
-        Assert.That(joystick.buttons, Has.Count.EqualTo(3)); // Includes trigger.
-        Assert.That(joystick.trigger.name, Is.EqualTo("trigger"));
-        Assert.That(joystick.stick.name, Is.EqualTo("stick"));
+        Assert.That(joystick.stick, Is.Not.Null);
+        Assert.That(joystick.trigger, Is.Not.Null);
     }
 
     // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the

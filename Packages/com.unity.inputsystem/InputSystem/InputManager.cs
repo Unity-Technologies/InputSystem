@@ -359,6 +359,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
+            ////FIXME: this is no longer necessary; kill it
             // If we have an instance, make sure it is [Serializable].
             if (instance != null)
             {
@@ -1887,6 +1888,10 @@ namespace UnityEngine.Experimental.Input
 
         private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
+            // Make sure we're not adding to m_AvailableDevices before we restored what we
+            // had before a domain reload.
+            RestoreDevicesAfterDomainReloadIfNecessary();
+
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
@@ -1974,16 +1979,21 @@ namespace UnityEngine.Experimental.Input
             m_NativeBeforeUpdateHooked = true;
         }
 
+        private void RestoreDevicesAfterDomainReloadIfNecessary()
+        {
+            #if UNITY_EDITOR
+            if (m_SavedDeviceStates != null)
+                RestoreDevicesAfterDomainReload();
+            #endif
+        }
+
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
 
-            #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
-                RestoreDevicesAfterDomainReload();
-            #endif
+            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
@@ -2240,10 +2250,7 @@ namespace UnityEngine.Experimental.Input
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
-            #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
-                RestoreDevicesAfterDomainReload();
-            #endif
+            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
