@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Support gamepad vibration on Switch.
+- Support for Bluetooth Xbox One controllers on macOS.
 
 #### Actions
 
