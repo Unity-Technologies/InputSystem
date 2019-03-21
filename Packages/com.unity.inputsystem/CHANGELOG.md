@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Added
+
+- Support for Bluetooth Xbox One controllers on macOS.
+
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
@@ -19,7 +23,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Support gamepad vibration on Switch.
-- Support for Bluetooth Xbox One controllers on macOS.
 - Added support for Joysticks on Linux.
 
 #### Actions
