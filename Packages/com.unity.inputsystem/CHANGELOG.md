@@ -6,12 +6,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Changed
+
+- `Joystick.axes` and `Joystick.buttons` have been removed.
+
+## [0.2.5-preview] - 2019-03-20
+
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
+>NOTE: The minimum version requirement for the new input system has been bumped
+       to 2019.1
 
 ### Added
 
 - Support gamepad vibration on Switch.
 - Support for Bluetooth Xbox One controllers on macOS.
+- Added support for Joysticks on Linux.
 
 #### Actions
 
@@ -57,7 +66,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
 - Input device icons in input debugger window now render in appropriate resolution on retina displays.
 - Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
-	
+- `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
+
 #### Actions
 
 - Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.

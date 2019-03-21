@@ -395,6 +395,8 @@ namespace UnityEngine.Experimental.Input
 
         #region Processors
 
+        ////TODO: rename to RegisterProcessor
+
         /// <summary>
         /// Register an <see cref="InputProcessor{TValue}"/> with the system.
         /// </summary>
@@ -960,7 +962,7 @@ namespace UnityEngine.Experimental.Input
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
             if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new ArgumentException(message: string.Format("Device for control '{0}' has not been added to system"), nameof(control));
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"), nameof(control));
 
             s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
@@ -1218,6 +1220,8 @@ namespace UnityEngine.Experimental.Input
             var inputEvent = TextEvent.Create(device.id, character, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
+
+        ////REVIEW: this should run the "natural" update according to what's configured in the input systems (e.g. manual if manual is chosen there)
 
         public static void Update()
         {
@@ -1769,7 +1773,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
-            Plugins.Linux.SDLSupport.Initialize();
+            Plugins.Linux.LinuxSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
