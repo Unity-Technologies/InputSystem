@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Changed
+
+- `Joystick.axes` and `Joystick.buttons` have been removed.
+
+## [0.2.5-preview] - 2019-03-20
+
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
+>NOTE: The minimum version requirement for the new input system has been bumped
+       to 2019.1
 
 ### Added
 
@@ -28,7 +36,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
 - "Press and Release" interactions will now invoke the `performed` callback on both press and release (instead of invoking `performed` and `cancel`, which was inconsistent with other behaviors).
-- `Joystick.axes` and `Joystick.buttons` have been removed.
 
 #### Actions
 
@@ -58,6 +65,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
 - Input device icons in input debugger window now render in appropriate resolution on retina displays.
 - Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
+- `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
 
 #### Actions
 
@@ -72,6 +80,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed copy-pasting actions not preserving action properties other than name.
 - Fixed memory corruptions coming from binding resolution of actions.
 - InputActionAssetReferences in ScriptableObjects will continue to work after domain reloads in the editor.
+- Fixed `startTime` and `duration` properties of action callbacks.
 
 ## [0.2.1-preview] - 2019-03-11
 
