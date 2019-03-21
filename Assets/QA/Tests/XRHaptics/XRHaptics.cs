@@ -8,20 +8,28 @@ public class XRHaptics : MonoBehaviour
 {
     public Image leftHapticDetected;
     public Image leftTryingToRumble;
+    public Image leftTryingToRumbleHalf;
     public Image rightHapticDetected;
     public Image rightTryingToRumble;
+    public Image rightTryingToRumbleHalf;
 
     public float m_RumblePeriod = 1f;
-    public float m_Amplitude = 1f;
 
-    private bool m_LeftHandRumbling = false;
+    private RumbleState state;
     private float m_Timer = 0f;
+
+    private enum RumbleState
+    {
+        Left,
+        LeftHalf,
+        Right,
+        RightHalf
+    }
 
     public void Update()
     {
         var leftHandController = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
         leftHapticDetected.color = leftHandController != null ? Color.red : Color.white;
-
         var rightHandController = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
         rightHapticDetected.color = rightHandController != null ? Color.red : Color.white;
 
@@ -36,23 +44,49 @@ public class XRHaptics : MonoBehaviour
         if (m_Timer >= m_RumblePeriod)
         {
             m_Timer -= m_RumblePeriod;
-            m_LeftHandRumbling = !m_LeftHandRumbling;
 
-            var controller = InputSystem.GetDevice<XRControllerWithRumble>(m_LeftHandRumbling ? CommonUsages.LeftHand : CommonUsages.RightHand);
-            Image controllerRumbleImage = m_LeftHandRumbling ? leftTryingToRumble : rightTryingToRumble;
+            XRControllerWithRumble controller;
 
-            if (controller != null)
+            switch (state)
             {
-                controller.SendImpulse(1f, m_RumblePeriod);
-                controllerRumbleImage.color = Color.red;
+                case RumbleState.Left:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
+                    controller.SendImpulse(1f, m_RumblePeriod);
+                    leftTryingToRumble.color = Color.red;
+                    leftTryingToRumbleHalf.color = Color.white;
+                    rightTryingToRumble.color = Color.white;
+                    rightTryingToRumbleHalf.color = Color.white;
+                    state = RumbleState.LeftHalf;
+                    break;
+                case RumbleState.LeftHalf:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
+                    controller.SendImpulse(0.5f, m_RumblePeriod);
+                    
+                    leftTryingToRumble.color = Color.white;
+                    leftTryingToRumbleHalf.color = Color.red;
+                    rightTryingToRumble.color = Color.white;
+                    rightTryingToRumbleHalf.color = Color.white;
+                    state = RumbleState.Right;
+                    break;
+                case RumbleState.Right:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
+                    controller.SendImpulse(1f, m_RumblePeriod);
+                    leftTryingToRumble.color = Color.white;
+                    leftTryingToRumbleHalf.color = Color.white;
+                    rightTryingToRumble.color = Color.red;
+                    rightTryingToRumbleHalf.color = Color.white;
+                    state = RumbleState.RightHalf;
+                    break;
+                case RumbleState.RightHalf:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
+                    controller.SendImpulse(0.5f, m_RumblePeriod);
+                    leftTryingToRumble.color = Color.white;
+                    leftTryingToRumbleHalf.color = Color.white;
+                    rightTryingToRumble.color = Color.white;
+                    rightTryingToRumbleHalf.color = Color.red;
+                    state = RumbleState.Left;
+                    break;
             }
-            else
-            {
-                controllerRumbleImage.color = Color.white;
-            }
-
-            Image otherControllerImage = m_LeftHandRumbling ? rightTryingToRumble : leftTryingToRumble;
-            otherControllerImage.color = Color.white;
         }
     }
 }
