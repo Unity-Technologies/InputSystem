@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: make sure that we *present* and *read* floating point according to locale in the UI but store locale-neutral
+
 ////REVIEW: For some of the parameters (like SlowTap.duration) it is confusing to see any value at all while not yet having
 ////        entered a value and seeing a value that doesn't seem to make sense (0 in this case means "no value, use default").
 ////        Can we do this better? Maybe display "<default>" as text while the control is at default value?

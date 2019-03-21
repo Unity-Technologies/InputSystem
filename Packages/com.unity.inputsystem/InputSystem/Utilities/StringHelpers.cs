@@ -110,6 +110,36 @@ namespace UnityEngine.Experimental.Input.Utilities
             return count;
         }
 
+        public static IEnumerable<Substring> Tokenize(this string str)
+        {
+            var pos = 0;
+            var length = str.Length;
+
+            while (pos < length)
+            {
+                while (pos < length && char.IsWhiteSpace(str[pos]))
+                    ++pos;
+
+                if (str[pos] == '"')
+                {
+                    ++pos;
+                    var endPos = pos;
+                    while (endPos < length && str[endPos] != '\"')
+                        ++endPos;
+                    yield return new Substring(str, pos, endPos - pos);
+                    pos = endPos + 1;
+                }
+                else
+                {
+                    var endPos = pos;
+                    while (endPos < length && !char.IsWhiteSpace(str[endPos]))
+                        ++endPos;
+                    yield return new Substring(str, pos, endPos - pos);
+                    pos = endPos;
+                }
+            }
+        }
+
         public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
         {
             if (string.IsNullOrEmpty(str))

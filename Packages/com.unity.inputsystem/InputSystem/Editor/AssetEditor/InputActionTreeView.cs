@@ -1418,14 +1418,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     return null;
 
                 var list = new List<FilterCriterion>();
-                foreach (var substring in criteria.Split(char.IsWhiteSpace))
+                foreach (var substring in criteria.Tokenize())
                 {
                     if (substring.StartsWith(k_DeviceLayoutTag))
-                        list.Add(ByDeviceLayout(substring.Substring(2)));
+                        list.Add(ByDeviceLayout(substring.Substr(2)));
                     else if (substring.StartsWith(k_BindingGroupTag))
-                        list.Add(ByBindingGroup(substring.Substring(2)));
+                        list.Add(ByBindingGroup(substring.Substr(2)));
                     else
-                        list.Add(ByName(substring));
+                        list.Add(ByName(substring.ToString()));
                 }
 
                 return list;

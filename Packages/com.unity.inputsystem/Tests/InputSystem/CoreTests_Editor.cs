@@ -1316,6 +1316,31 @@ partial class CoreTests
         }
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanHaveWhitespaceInSearchFilter()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map");
+        var action = map1.AddAction("action");
+        action.AddBinding("<Gamepad>/buttonNorth", groups: "Other");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Binding Group With Spaces");
+
+        using (var so = new SerializedObject(asset))
+        {
+            var tree = new InputActionTreeView(so)
+            {
+                onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+            };
+
+            tree.SetItemSearchFilterAndReload("\"g:Binding Group With Spaces\"");
+
+            Assert.That(tree["map"].children, Has.Count.EqualTo(1));
+            Assert.That(tree["map/action"].children, Has.Count.EqualTo(1));
+            Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        }
+    }
+
     // Bindings that have no associated binding group (i.e. aren't part of any control scheme), will not be constrained
     // by a binding mask. Means they will be active regardless of which binding group / control scheme is chosen. To
     // make this more visible in the tree, we display those items as "{GLOBAL}" when filtering by binding group.

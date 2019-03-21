@@ -17,10 +17,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct DualShockGamepadStatePS4 : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', '4', 'G', 'P'); }
-        }
+        public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
         public enum Button
         {
