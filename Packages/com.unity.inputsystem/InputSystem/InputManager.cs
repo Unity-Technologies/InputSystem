@@ -1403,7 +1403,6 @@ namespace UnityEngine.Experimental.Input
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
-            m_HasFocus = Application.isFocused;
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
@@ -1495,7 +1494,6 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.onFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
-            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1579,7 +1577,6 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
-        private bool m_HasFocus;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
@@ -2125,9 +2122,7 @@ namespace UnityEngine.Experimental.Input
             newUpdateMask |= InputUpdateType.Editor;
             #endif
             updateMask = newUpdateMask;
-
-            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
-
+            
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
 
@@ -2188,7 +2183,6 @@ namespace UnityEngine.Experimental.Input
 
         private void OnFocusChanged(bool focus)
         {
-            m_HasFocus = focus;
             var deviceCount = m_DevicesCount;
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -2200,26 +2194,11 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
-            switch (updateType)
-            {
-                case InputUpdateType.BeforeRender:
-                case InputUpdateType.Dynamic:
-                case InputUpdateType.Fixed:
-                    // Note: When Touchscreen Keyboard is active, Unity application looses focus, thus none of input is being processed
-                    //       Force input updating while keyboard is show
-                    //       In the future, hopefully we'll have TouchscreenKeyboard integrated in thew new input system directly
-                    //       Thus with removal of KeyboardOnScreen, KeyboardOnScreen::IsVisible() check should go away
-                    if (!(m_Settings.runInBackground || TouchScreenKeyboard.visible) && !m_HasFocus)
-                        return false;
-                    break;
 #if UNITY_EDITOR
-                case InputUpdateType.Editor:
-                    // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
-                    if (Application.isPlaying && !EditorApplication.isPaused && (m_HasFocus || m_Settings.runInBackground))
-                        return false;
-                    break;
+            // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
+            if (updateType == InputUpdateType.Editor && Application.isPlaying && !EditorApplication.isPaused)
+                return false;
 #endif
-            }
             return (updateType & m_UpdateMask) != 0;
         }
 
