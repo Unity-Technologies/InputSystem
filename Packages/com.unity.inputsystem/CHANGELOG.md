@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Added
+
+- Support for Bluetooth Xbox One controllers on macOS.
+
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
@@ -14,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
 
-## [0.2.5-preview] - 2019-03-20
+## [0.2.6-preview] - 2019-03-20
 
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
 >NOTE: The minimum version requirement for the new input system has been bumped

@@ -166,7 +166,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 157157}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -246,7 +245,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 23160523}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -326,7 +324,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 23573264}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -401,7 +398,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 76319037}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -482,7 +478,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 92725928}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: d8e0c773fb7747e45aa579988881f0f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -490,6 +485,9 @@ MonoBehaviour:
     m_Name: Integer
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 1405952645}
 --- !u!1 &97008435
@@ -587,7 +585,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 98191456}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -663,7 +660,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 112696932}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -671,6 +667,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 2047929769}
 --- !u!1 &149126086
@@ -719,7 +718,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 149126086}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -799,7 +797,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 151387039}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -882,7 +879,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 153422665}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -957,7 +953,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 176942118}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1032,7 +1027,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 178656685}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1107,7 +1101,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 186286993}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1187,7 +1180,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 186927055}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1306,7 +1298,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 210670481}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1381,7 +1372,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 216644145}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1462,7 +1452,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 233203665}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1470,8 +1459,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/deviceVelocity
       m_Interactions: 
       m_Processors: 
@@ -1527,7 +1520,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 252353009}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1654,7 +1646,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 267376729}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1662,8 +1653,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/devicePosition
       m_Interactions: 
       m_Processors: 
@@ -1754,7 +1749,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 275630732}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1762,11 +1756,17 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 2073528961}
 --- !u!1 &277257947
@@ -1815,7 +1815,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 277257947}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1872,7 +1871,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 279862104}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 1301386320, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1890,7 +1888,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 279862104}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 1980459831, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1994,7 +1991,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 304362757}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2106,7 +2102,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 315319289}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2114,8 +2109,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/secondaryButton
       m_Interactions: 
       m_Processors: 
@@ -2126,8 +2125,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/secondaryTouched
       m_Interactions: 
       m_Processors: 
@@ -2181,7 +2184,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 316052477}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2261,7 +2263,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 324160516}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2336,7 +2337,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 338336418}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2416,7 +2416,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 355060381}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2497,7 +2496,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 388026637}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2505,8 +2503,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/gripPressed
       m_Interactions: 
       m_Processors: 
@@ -2517,6 +2519,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 969087349}
 --- !u!1 &392423653
@@ -2567,7 +2572,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 392423653}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2657,7 +2661,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 394234193}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2738,7 +2741,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 394396501}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2746,8 +2748,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/isTracked
       m_Interactions: 
       m_Processors: 
@@ -2758,6 +2764,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 324160518}
 --- !u!1 &410487169
@@ -2806,7 +2815,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 410487169}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2924,7 +2932,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 420524345}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3014,7 +3021,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 421623494}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3094,7 +3100,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 434991699}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3277,7 +3282,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 448087737}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3357,7 +3361,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 460030986}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3382,7 +3385,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Not Implemented
+  m_Text: System Reserved
 --- !u!222 &460030989
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3437,7 +3440,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 468623206}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3520,7 +3522,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 469894015}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3595,7 +3596,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 487194256}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3676,7 +3676,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 500660219}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3684,8 +3683,12 @@ MonoBehaviour:
     m_Name: Axis
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/trigger
       m_Interactions: 
       m_Processors: 
@@ -3740,7 +3743,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 509033313}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3748,8 +3750,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusHMD>/centerEyePosition
       m_Interactions: 
       m_Processors: 
@@ -3839,7 +3845,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 527323463}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3919,7 +3924,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 531690152}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3999,7 +4003,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 533238373}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4074,7 +4077,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 549445188}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4155,7 +4157,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 554403521}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4163,8 +4164,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/primaryButton
       m_Interactions: 
       m_Processors: 
@@ -4175,8 +4180,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/primaryTouched
       m_Interactions: 
       m_Processors: 
@@ -4230,7 +4239,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 554787234}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4311,7 +4319,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 559090992}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4319,8 +4326,12 @@ MonoBehaviour:
     m_Name: Axis
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/trigger
       m_Interactions: 
       m_Processors: 
@@ -4375,7 +4386,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 563158345}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4383,6 +4393,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 76319039}
 --- !u!1 &577463490
@@ -4431,7 +4444,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 577463490}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4511,7 +4523,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 582361727}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4586,7 +4597,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 587466530}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4661,7 +4671,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 620830169}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4777,7 +4786,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 633194994}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4857,7 +4865,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 650269202}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4970,7 +4977,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 668168873}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4978,6 +4984,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 1832450938}
 --- !u!1 &671895804
@@ -5026,7 +5035,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 671895804}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5144,17 +5152,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 709200741}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: f15e9c8175aea5044be410f9ae44c1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   vector2Action:
     m_Name: Vector 2
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: f74115e8-7eeb-4685-a3af-b4a5c9a94dee
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <OculusTouchController>/thumbstick
+      m_Id: 52ad5609-664f-467c-be1e-0bec6a9e634a
+      m_Path: <OculusTouchController>{LeftHand}/thumbstick
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -5250,7 +5261,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 734572590}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5333,7 +5343,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 736836512}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5341,8 +5350,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/deviceAngularAcceleration
       m_Interactions: 
       m_Processors: 
@@ -5396,7 +5409,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 743859430}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5478,7 +5490,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 746266000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5568,7 +5579,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 754708001}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5644,7 +5654,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 764659984}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5652,8 +5661,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/deviceAngularVelocity
       m_Interactions: 
       m_Processors: 
@@ -5707,7 +5720,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 770602966}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5788,7 +5800,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 786629654}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5796,8 +5807,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/deviceAngularVelocity
       m_Interactions: 
       m_Processors: 
@@ -5851,7 +5866,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 795193518}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5931,7 +5945,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 795582973}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6011,7 +6024,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 805372307}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6130,7 +6142,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 816572191}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6210,7 +6221,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 821363206}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6293,7 +6303,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 822734490}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6368,7 +6377,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 841356414}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6444,7 +6452,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 848530308}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6452,8 +6459,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/deviceAngularAcceleration
       m_Interactions: 
       m_Processors: 
@@ -6507,7 +6518,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 869467545}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6582,7 +6592,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 869579134}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6657,7 +6666,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 870890913}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6737,7 +6745,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 885557290}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6817,7 +6824,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 890023464}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6897,7 +6903,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 894690673}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6977,7 +6982,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 895208561}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7057,7 +7061,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 905691355}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7138,7 +7141,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 908967666}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7146,11 +7148,17 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 1183801693}
 --- !u!1 &912645954
@@ -7235,7 +7243,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 950283880}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7352,7 +7359,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 967967416}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7360,8 +7366,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/indexTouched
       m_Interactions: 
       m_Processors: 
@@ -7372,8 +7382,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/indexNearTouched
       m_Interactions: 
       m_Processors: 
@@ -7427,7 +7441,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 968144206}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7507,7 +7520,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 968586721}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7582,7 +7594,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 969087347}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7658,7 +7669,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 977667762}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7666,8 +7676,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/start
       m_Interactions: 
       m_Processors: 
@@ -7678,6 +7692,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 1222575153}
 --- !u!1 &981197692
@@ -7727,7 +7744,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 981197692}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7735,8 +7751,12 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/deviceRotation
       m_Interactions: 
       m_Processors: 
@@ -7790,7 +7810,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 983123575}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7870,7 +7889,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 983357345}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7945,7 +7963,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1004209108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8022,7 +8039,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1016796324}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8097,7 +8113,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1020180920}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8210,7 +8225,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1046052075}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8286,7 +8300,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1057046408}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8294,8 +8307,12 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/deviceRotation
       m_Interactions: 
       m_Processors: 
@@ -8350,7 +8367,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1057477901}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8358,8 +8374,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/secondaryButton
       m_Interactions: 
       m_Processors: 
@@ -8370,8 +8390,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/secondaryTouched
       m_Interactions: 
       m_Processors: 
@@ -8425,7 +8449,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1062562892}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8500,7 +8523,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1064110838}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8581,19 +8603,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 1070315397}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 7573e1b8-e96f-4780-8b93-c6db9a2d2503
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 5a0e2293-4966-4860-9c6d-72dd52c3ed80
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 2123797872}
 --- !u!1 &1073219553
@@ -8642,7 +8669,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1073219553}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8722,7 +8748,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1077542753}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8802,7 +8827,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1079997760}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -8886,7 +8910,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1080963224}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9012,7 +9035,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1093650741}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9123,7 +9145,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1099111986}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9204,7 +9225,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1124086391}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9212,8 +9232,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/thumbrestTouched
       m_Interactions: 
       m_Processors: 
@@ -9224,8 +9248,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/thumbNearTouched
       m_Interactions: 
       m_Processors: 
@@ -9279,7 +9307,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1139948394}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9354,7 +9381,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1141360589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9435,7 +9461,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1142817233}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9443,8 +9468,12 @@ MonoBehaviour:
     m_Name: Axis
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/grip
       m_Interactions: 
       m_Processors: 
@@ -9499,7 +9528,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1144269143}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9507,8 +9535,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/thumbrestTouched
       m_Interactions: 
       m_Processors: 
@@ -9519,8 +9551,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/thumbNearTouched
       m_Interactions: 
       m_Processors: 
@@ -9574,7 +9610,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1146979573}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9650,7 +9685,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1155222556}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9658,11 +9692,17 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 1180882956}
 --- !u!1 &1161499115
@@ -9712,7 +9752,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1161499115}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9720,8 +9759,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/isTracked
       m_Interactions: 
       m_Processors: 
@@ -9732,6 +9775,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 2030432490}
 --- !u!1 &1165355387
@@ -9780,7 +9826,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1165355387}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9860,7 +9905,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1173331735}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9916,7 +9960,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1178896024}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 1077351063, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -9936,7 +9979,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1178896024}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -619905303, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10039,7 +10081,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1180882954}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10114,7 +10155,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1183801691}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10189,7 +10229,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1190590510}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10269,7 +10308,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1204662268}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10344,7 +10382,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1222575151}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10419,7 +10456,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1230681411}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10494,7 +10530,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1237443924}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10574,7 +10609,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1249485522}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10655,7 +10689,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1262839480}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10663,8 +10696,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/deviceVelocity
       m_Interactions: 
       m_Processors: 
@@ -10718,7 +10755,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1270376426}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10794,7 +10830,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1277594721}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10802,6 +10837,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 421623496}
 --- !u!1 &1282581081
@@ -10851,7 +10889,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1282581081}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: d8e0c773fb7747e45aa579988881f0f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -10859,8 +10896,12 @@ MonoBehaviour:
     m_Name: Integer
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/trackingState
       m_Interactions: 
       m_Processors: 
@@ -10916,7 +10957,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1284618398}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11006,7 +11046,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1295250821}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11086,7 +11125,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1299731724}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11167,7 +11205,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1303854307}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11175,8 +11212,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/primaryButton
       m_Interactions: 
       m_Processors: 
@@ -11187,8 +11228,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/primaryTouched
       m_Interactions: 
       m_Processors: 
@@ -11397,7 +11442,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1352296541}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11472,7 +11516,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1353709091}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11552,7 +11595,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1355986366}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11671,7 +11713,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1369462487}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11753,7 +11794,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1385977954}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11843,7 +11883,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1387854347}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -11918,7 +11957,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1390742832}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12035,7 +12073,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1395529967}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: d8e0c773fb7747e45aa579988881f0f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12043,8 +12080,12 @@ MonoBehaviour:
     m_Name: Integer
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/trackingState
       m_Interactions: 
       m_Processors: 
@@ -12099,15 +12140,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 1402865137}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
-    m_SingletonActionBindings: []
+    m_Id: 9ba06c83-d74f-45a1-9cd4-491ca04cff4e
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 7c9c3ed8-1727-44ee-9bc3-873a62bf791f
+      m_Path: <OculusTouchController>{RightHand}/indexNearTouched
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Axis
+      m_Flags: 0
   statusSlider: {fileID: 1604550851}
 --- !u!1 &1405952643
 GameObject:
@@ -12155,7 +12206,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1405952643}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12235,7 +12285,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1417582383}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12315,7 +12364,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1419215191}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12390,7 +12438,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1422969348}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12470,7 +12517,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1425588286}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12551,7 +12597,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1434744044}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12559,8 +12604,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/deviceAcceleration
       m_Interactions: 
       m_Processors: 
@@ -12614,7 +12663,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1445771530}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12692,7 +12740,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1474603372}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12770,7 +12817,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1479274459}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12845,7 +12891,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1486231852}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -12925,7 +12970,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1493438907}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13001,7 +13045,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1500244994}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13009,8 +13052,12 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusHMD>/centerEyeRotation
       m_Interactions: 
       m_Processors: 
@@ -13064,7 +13111,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1508968364}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13139,7 +13185,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1511796011}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13214,7 +13259,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1514783920}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13295,15 +13339,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 1552049531}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
-    m_SingletonActionBindings: []
+    m_Id: f81c5d35-4232-4bb2-9a88-c61e7a76da73
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 6ae6247d-2e04-4029-95c8-edf196158db2
+      m_Path: <OculusTouchController>{LeftHand}/thumbNearTouched
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Axis
+      m_Flags: 0
   statusSlider: {fileID: 1080963226}
 --- !u!1 &1569319131
 GameObject:
@@ -13351,7 +13405,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1569319131}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13426,7 +13479,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1572597925}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13501,7 +13553,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1586091784}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13581,7 +13632,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1599590713}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13663,7 +13713,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1604550849}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13754,7 +13803,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1622384328}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13762,11 +13810,17 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 983357347}
 --- !u!1 &1625197798
@@ -13817,7 +13871,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1625197798}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -13902,6 +13955,24 @@ Light:
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -13909,12 +13980,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1631735060
@@ -13979,7 +14053,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1632131995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14070,15 +14143,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 1651830786}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
-    m_SingletonActionBindings: []
+    m_Id: f40c36dc-8691-490e-b9d6-bb3f135a4dc4
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 092843b6-b212-4aaf-bc12-9563ef168986
+      m_Path: <OculusTouchController>{RightHand}/thumbNearTouched
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Axis
+      m_Flags: 0
   statusSlider: {fileID: 1900188049}
 --- !u!1 &1651932551
 GameObject:
@@ -14126,7 +14209,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1651932551}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14202,7 +14284,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1654346912}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14210,8 +14291,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/deviceAcceleration
       m_Interactions: 
       m_Processors: 
@@ -14266,7 +14351,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1658128731}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14274,6 +14358,9 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 795193520}
 --- !u!1 &1658402541
@@ -14364,7 +14451,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1660725451}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14439,7 +14525,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1676084939}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14521,7 +14606,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1690002001}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14596,7 +14680,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1703018613}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14713,15 +14796,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 1710129072}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
-    m_SingletonActionBindings: []
+    m_Id: 81bd211a-a24d-431d-a6f9-c84c897d7fa3
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 192b7fa3-042b-4379-b6b4-18a78b44f411
+      m_Path: <OculusTouchController>{LeftHand}/indexNearTouched
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Axis
+      m_Flags: 0
   statusSlider: {fileID: 392423655}
 --- !u!1 &1721804759
 GameObject:
@@ -14770,7 +14863,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1721804759}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14778,11 +14870,17 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 304362759}
 --- !u!1 &1722547108
@@ -14831,7 +14929,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1722547108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14906,7 +15003,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1734179932}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -14986,7 +15082,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1736129527}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15097,7 +15192,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1777776138}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15173,7 +15267,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1785365721}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15181,6 +15274,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 1514783922}
 --- !u!1 &1785657968
@@ -15229,7 +15325,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1785657968}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15310,7 +15405,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1786174558}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15318,8 +15412,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/thumbstickClicked
       m_Interactions: 
       m_Processors: 
@@ -15330,8 +15428,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/thumbstickTouched
       m_Interactions: 
       m_Processors: 
@@ -15387,7 +15489,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1790091602}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15462,7 +15563,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1791834483}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15537,7 +15637,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1814525857}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15614,7 +15713,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1821858242}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15689,7 +15787,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1832450936}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15769,7 +15866,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1836723014}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15848,7 +15944,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1840715260}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -15925,7 +16020,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1840855810}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16015,7 +16109,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1842769036}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16096,7 +16189,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852894978}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16104,8 +16196,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/indexTouched
       m_Interactions: 
       m_Processors: 
@@ -16116,8 +16212,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/indexNearTouched
       m_Interactions: 
       m_Processors: 
@@ -16171,7 +16271,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1860169648}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16252,7 +16351,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1871040712}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 27e988efb4645b64480f3009af24b870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16260,8 +16358,12 @@ MonoBehaviour:
     m_Name: Axis
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/grip
       m_Interactions: 
       m_Processors: 
@@ -16315,7 +16417,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1872811700}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16395,7 +16496,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1883930751}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16471,7 +16571,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1888361720}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16479,8 +16578,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/thumbstickClicked
       m_Interactions: 
       m_Processors: 
@@ -16491,8 +16594,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/thumbstickTouched
       m_Interactions: 
       m_Processors: 
@@ -16547,7 +16654,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1890697993}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16555,11 +16661,17 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 1139948396}
 --- !u!1 &1893525878
@@ -16611,7 +16723,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1893525878}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16687,7 +16798,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1894220652}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16695,8 +16805,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/gripPressed
       m_Interactions: 
       m_Processors: 
@@ -16707,6 +16821,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 2054271157}
 --- !u!1 &1900188047
@@ -16757,7 +16874,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1900188047}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16847,7 +16963,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1917739185}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -16963,7 +17078,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1933772068}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17043,7 +17157,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1937444099}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17123,7 +17236,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1950288956}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17198,7 +17310,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1955060434}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17273,7 +17384,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1971798354}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17348,7 +17458,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1978521060}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17428,7 +17537,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1997756721}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17510,7 +17618,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1999497880}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17585,7 +17692,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2009342835}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17696,7 +17802,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2030432488}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17773,7 +17878,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2034786405}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: f15e9c8175aea5044be410f9ae44c1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17781,8 +17885,12 @@ MonoBehaviour:
     m_Name: Vector 2
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{RightHand}/thumbstick
       m_Interactions: 
       m_Processors: 
@@ -17837,7 +17945,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2042678827}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -17917,7 +18024,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2047929767}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18000,7 +18106,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2048573232}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18075,7 +18180,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2049427172}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18155,7 +18259,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2054271155}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18231,7 +18334,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2058824255}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18239,8 +18341,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <OculusTouchController>{LeftHand}/devicePosition
       m_Interactions: 
       m_Processors: 
@@ -18377,7 +18483,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2072963067}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18452,7 +18557,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2073528959}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18527,7 +18631,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2075349397}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18607,7 +18710,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2080630116}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18687,7 +18789,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2085891670}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18767,7 +18868,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2087492147}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18847,7 +18947,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2088620765}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18922,7 +19021,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2107157631}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -18997,7 +19095,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2123797870}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -19072,7 +19169,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2133367572}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
