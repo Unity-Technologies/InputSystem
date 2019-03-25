@@ -648,12 +648,6 @@ partial class CoreTests
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
 
-        // This should go back to false when we inputEvent goes on the queue.
-        // The way the behavior is implemented is a side-effect of how we store
-        // the handled flag as a bit on the event ID -- which will get set by
-        // native on an event when it is queued.
-        inputEvent.baseEvent.handled = true;
-
         InputSystem.QueueEvent(ref inputEvent);
 
         InputSystem.Update();
