@@ -530,11 +530,11 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(deviceJson);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
 
         InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
     }
 
     [Test]
@@ -554,15 +554,15 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("CustomGamepad");
         var device2 = InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device1);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device2);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
     private class TestDeviceReceivingAddAndRemoveNotification : Mouse
@@ -1842,11 +1842,8 @@ partial class CoreTests
         Assert.That(Joystick.current, Is.SameAs(device));
 
         var joystick = (Joystick)device;
-
-        Assert.That(joystick.axes, Has.Count.EqualTo(4)); // Includes stick.
-        Assert.That(joystick.buttons, Has.Count.EqualTo(3)); // Includes trigger.
-        Assert.That(joystick.trigger.name, Is.EqualTo("trigger"));
-        Assert.That(joystick.stick.name, Is.EqualTo("stick"));
+        Assert.That(joystick.stick, Is.Not.Null);
+        Assert.That(joystick.trigger, Is.Not.Null);
     }
 
     // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
@@ -3236,7 +3233,6 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Devices")]
     [Ignore("TODO")]
@@ -3265,8 +3261,6 @@ partial class CoreTests
             InputSystem.Update();
         }, Is.Not.AllocatingGCMemory());
     }
-
-    #endif
 
     [Test]
     [Category("Devices")]

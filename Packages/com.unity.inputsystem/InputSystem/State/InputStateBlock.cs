@@ -296,6 +296,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 ////REVIEW: Same problem here as with 'short'
                 value = *(sbyte*)valuePtr / 128.0f;
             }
+            else if (format == kTypeInt)
+            {
+                Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
+                value = *(Int32*)valuePtr / 2147483647.0f;
+            }
+            else if (format == kTypeUInt)
+            {
+                Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
+                value = *(UInt32*)valuePtr / 4294967295.0f;
+            }
             else
             {
                 throw new Exception($"State format '{format}' is not supported as floating-point format");

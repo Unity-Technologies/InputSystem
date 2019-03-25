@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 if (value > ushort.MaxValue)
                     throw new ArgumentException("Maximum event size is " + ushort.MaxValue, nameof(value));
-               m_Event.sizeInBytes = (ushort)value;
+                m_Event.sizeInBytes = (ushort)value;
             }
         }
 
@@ -76,7 +76,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public int eventId
         {
             get => (int)(m_Event.eventId & kIdMask);
-            set => m_Event.eventId = (int)(value | (m_Event.eventId & ~kIdMask));
+            set => m_Event.eventId = (int)(value | (int)(m_Event.eventId & ~kIdMask));
         }
 
         /// <summary>

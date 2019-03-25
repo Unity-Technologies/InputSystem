@@ -29,6 +29,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         /// </summary>
         public Action onChange { get; set; }
 
+        public bool hasUIToShow => (m_Parameters != null && m_Parameters.Length > 0) || m_ParameterEditor != null;
+
         /// <summary>
         /// Get the current parameter values according to the editor state.
         /// </summary>

@@ -505,6 +505,10 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ActionAssetManager.ApplyChanges();
 
+            // Update dirty count, otherwise ReloadIfSerializedObjectHasBeenChanged will trigger a full ApplyAndReloadTrees
+            m_ActionMapsTree.UpdateSerializedObjectDirtyCount();
+            m_ActionsTree.UpdateSerializedObjectDirtyCount();
+
             // If auto-save is active, immediately flush out the changes to disk. Otherwise just
             // put us into dirty state.
             if (InputEditorUserSettings.autoSaveInputActionAssets)
