@@ -26,14 +26,6 @@ public class SimpleControls
         m_gameplay_jump.AddBinding("<Keyboard>/space");
         m_gameplay_jump.AddBinding("<Gamepad>/buttonNorth");
     }
-    private void Uninitialize()
-    {
-        m_gameplay = null;
-        m_gameplay_fire = null;
-        m_gameplay_move = null;
-        m_gameplay_look = null;
-        m_gameplay_jump = null;
-    }
     public void Enable()
     {
         m_gameplay.Enable();

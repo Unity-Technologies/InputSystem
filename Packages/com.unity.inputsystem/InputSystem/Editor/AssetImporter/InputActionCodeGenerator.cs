@@ -159,39 +159,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             writer.EndBlock();
 
-            // Uninitialize method.
-            writer.WriteLine("private void Uninitialize()");
-            writer.BeginBlock();
-            foreach (var map in maps)
-            {
-                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
-
-                if (options.generateInterfaces)
-                {
-                    var mapTypeName = CSharpCodeHelpers.MakeTypeName(map.name, "Actions");
-                    writer.WriteLine($"if (m_{mapTypeName}CallbackInterface != null)");
-                    writer.BeginBlock();
-                    writer.WriteLine($"{mapName}.SetCallbacks(null);");
-                    writer.EndBlock();
-                }
-
-                writer.WriteLine($"m_{mapName} = null;");
-
-                foreach (var action in map.actions)
-                {
-                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"m_{mapName}_{actionName} = null;");
-
-                    if (options.generateEvents)
-                    {
-                        WriteActionEventInitializer(mapName, actionName, InputActionPhase.Started, writer, removeCallback: true);
-                        WriteActionEventInitializer(mapName, actionName, InputActionPhase.Performed, writer, removeCallback: true);
-                        WriteActionEventInitializer(mapName, actionName, InputActionPhase.Cancelled, writer, removeCallback: true);
-                    }
-                }
-            }
-            writer.EndBlock();
-
             writer.WriteLine("public void Enable()");
 			writer.BeginBlock();
             foreach (var set in maps)
