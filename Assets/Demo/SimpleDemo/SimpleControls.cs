@@ -5,30 +5,27 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 
 
-[Serializable]
-public class SimpleControls : InputActionAssetReference
+public class SimpleControls
 {
     public SimpleControls()
     {
-    }
-
-    public SimpleControls(InputActionAsset asset)
-        : base(asset)
-    {
-    }
-
-    private bool m_Initialized;
-    private void Initialize()
-    {
         // gameplay
-        m_gameplay = asset.GetActionMap("gameplay");
-        m_gameplay_fire = m_gameplay.GetAction("fire");
-        m_gameplay_move = m_gameplay.GetAction("move");
-        m_gameplay_look = m_gameplay.GetAction("look");
-        m_gameplay_jump = m_gameplay.GetAction("jump");
-        m_Initialized = true;
+        m_gameplay = new InputActionMap("gameplay");
+        m_gameplay_fire = m_gameplay.AddAction("fire");
+        m_gameplay_fire.AddBinding("*/{PrimaryAction}", interactions: "Tap,SlowTap");
+        m_gameplay_fire.AddBinding("<SteamDemoController>/fire");
+        m_gameplay_move = m_gameplay.AddAction("move");
+        m_gameplay_move.AddBinding("<Gamepad>/leftStick");
+        m_gameplay_move.AddCompositeBinding("Dpad").With("up", "<Keyboard>/w").With("down", "<Keyboard>/s").With("left", "<Keyboard>/a").With("right", "<Keyboard>/d");
+        m_gameplay_move.AddBinding("<SteamDemoController>/move");
+        m_gameplay_look = m_gameplay.AddAction("look");
+        m_gameplay_look.AddBinding("<Gamepad>/rightStick");
+        m_gameplay_look.AddBinding("<Pointer>/delta").WithProcessor("ScaleVector2(x=2,y=2)");
+        m_gameplay_look.AddBinding("<SteamDemoController>/look");
+        m_gameplay_jump = m_gameplay.AddAction("jump");
+        m_gameplay_jump.AddBinding("<Keyboard>/space");
+        m_gameplay_jump.AddBinding("<Gamepad>/buttonNorth");
     }
-
     private void Uninitialize()
     {
         m_gameplay = null;
@@ -36,21 +33,15 @@ public class SimpleControls : InputActionAssetReference
         m_gameplay_move = null;
         m_gameplay_look = null;
         m_gameplay_jump = null;
-        m_Initialized = false;
     }
-
-    public void SetAsset(InputActionAsset newAsset)
+    public void Enable()
     {
-        if (newAsset == asset) return;
-        if (m_Initialized) Uninitialize();
-        asset = newAsset;
+        m_gameplay.Enable();
     }
-
-    public override void MakePrivateCopyOfActions()
+    public void Disable()
     {
-        SetAsset(ScriptableObject.Instantiate(asset));
+        m_gameplay.Disable();
     }
-
     // gameplay
     private InputActionMap m_gameplay;
     private InputAction m_gameplay_fire;
@@ -76,7 +67,6 @@ public class SimpleControls : InputActionAssetReference
     {
         get
         {
-            if (!m_Initialized) Initialize();
             return new GameplayActions(this);
         }
     }

@@ -12,7 +12,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     public float jumpForce = 2.0f;
     public GameObject projectile;
 
-    public SimpleControls controls;
+    private SimpleControls controls = new SimpleControls();
 
     private Vector2 m_Move;
     private Vector2 m_Look;

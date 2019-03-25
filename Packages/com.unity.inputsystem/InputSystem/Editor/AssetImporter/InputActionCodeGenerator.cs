@@ -90,38 +90,65 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Begin class.
-            writer.WriteLine("[Serializable]");
-            writer.WriteLine($"public class {options.className} : InputActionAssetReference");
+            writer.WriteLine($"public class {options.className}");
             writer.BeginBlock();
 
             // Default constructor.
             writer.WriteLine($"public {options.className}()");
             writer.BeginBlock();
-            writer.EndBlock();
-
-            // Explicit constructor.
-            writer.WriteLine($"public {options.className}(InputActionAsset asset)");
-            ++writer.indentLevel;
-            writer.WriteLine(": base(asset)");
-            --writer.indentLevel;
-            writer.BeginBlock();
-            writer.EndBlock();
-
-            // Initialize method.
-            writer.WriteLine("[NonSerialized] private bool m_Initialized;");
-            writer.WriteLine("private void Initialize()");
-            writer.BeginBlock();
             foreach (var set in maps)
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine($"// {set.name}");
-                writer.WriteLine($"m_{setName} = asset.GetActionMap(\"{set.name}\");");
+                InputActionMap m = new InputActionMap();
+                //writer.WriteLine($"m_{setName} = asset.GetActionMap(\"{set.name}\");");
+                writer.WriteLine($"m_{setName} = new InputActionMap(\"{set.name}\");");
 
                 foreach (var action in set.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"m_{setName}_{actionName} = m_{setName}.GetAction(\"{action.name}\");");
+                    writer.WriteIndent();
+                    writer.Write($"m_{setName}_{actionName} = m_{setName}.AddAction(\"{action.name}\"");
+                    if (!string.IsNullOrEmpty(action.interactions))
+                    	writer.Write($", interactions: \"{action.interactions}\"");
+                    if (!string.IsNullOrEmpty(action.processors))
+                    	writer.Write($", processors: \"{action.processors}\"");
+                    writer.Write(");\n");
+					if (action.continuous)
+						writer.WriteLine($"m_{setName}_{actionName}.continuous = true;");
+					if (action.passThrough)
+						writer.WriteLine($"m_{setName}_{actionName}.passThrough = true;");
 
+                    for (var i=0; i<action.bindings.Count; i++)
+                    {
+                        var binding = action.bindings[i];
+						writer.WriteIndent();
+                        if (binding.isComposite)
+                        {
+                            writer.Write($"m_{setName}_{actionName}.AddCompositeBinding(\"{binding.path}\"");
+                            if (!string.IsNullOrEmpty(binding.interactions))
+                                writer.Write($", interactions: \"{binding.interactions}\"");
+                            writer.Write(")");
+
+                            while (i +1 < action.bindings.Count && action.bindings[i + 1].isPartOfComposite)
+                            {
+                                i++;
+                                binding = action.bindings[i];
+                                writer.Write($".With(\"{binding.name}\", \"{binding.path}\")");
+                            }
+                            writer.Write(";\n");
+                        }
+                        else
+                        {
+                            writer.Write($"m_{setName}_{actionName}.AddBinding(\"{binding.path}\"");
+                            if (!string.IsNullOrEmpty(binding.interactions))
+                                writer.Write($", interactions: \"{binding.interactions}\"");
+                            writer.Write(")");
+    						if (!string.IsNullOrEmpty(binding.processors))
+    							writer.Write($".WithProcessor(\"{binding.processors}\")");							               	
+                            writer.Write(";\n");
+                        }
+                    }
                     if (options.generateEvents)
                     {
                         WriteActionEventInitializer(setName, actionName, InputActionPhase.Started, writer);
@@ -130,7 +157,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                 }
             }
-            writer.WriteLine("m_Initialized = true;");
             writer.EndBlock();
 
             // Uninitialize method.
@@ -164,38 +190,25 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                 }
             }
-            writer.WriteLine("m_Initialized = false;");
             writer.EndBlock();
 
-            // SwitchAsset method.
-            writer.WriteLine("public void SetAsset(InputActionAsset newAsset)");
-            writer.BeginBlock();
-            writer.WriteLine("if (newAsset == asset) return;");
-            if (options.generateInterfaces)
+            writer.WriteLine("public void Enable()");
+			writer.BeginBlock();
+            foreach (var set in maps)
             {
-                foreach (var map in maps)
-                {
-                    var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
-                    var mapTypeName = CSharpCodeHelpers.MakeTypeName(map.name, "Actions");
-                    writer.WriteLine($"var {mapName}Callbacks = m_{mapTypeName}CallbackInterface;");
-                }
-            }
-            writer.WriteLine("if (m_Initialized) Uninitialize();");
-            writer.WriteLine("asset = newAsset;");
-            if (options.generateInterfaces)
-            {
-                foreach (var map in maps)
-                {
-                    var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
-                    writer.WriteLine(string.Format("{0}.SetCallbacks({0}Callbacks);", mapName));
-                }
-            }
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                InputActionMap m = new InputActionMap();
+                writer.WriteLine($"m_{setName}.Enable();");
+			}
             writer.EndBlock();
-
-            // MakePrivateCopyOfActions method.
-            writer.WriteLine("public override void MakePrivateCopyOfActions()");
-            writer.BeginBlock();
-            writer.WriteLine("SetAsset(ScriptableObject.Instantiate(asset));");
+            writer.WriteLine("public void Disable()");
+			writer.BeginBlock();
+            foreach (var set in maps)
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                InputActionMap m = new InputActionMap();
+                writer.WriteLine($"m_{setName}.Disable();");
+			}
             writer.EndBlock();
 
             // Action map accessors.
@@ -312,7 +325,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 writer.WriteLine("get");
                 writer.BeginBlock();
-                writer.WriteLine("if (!m_Initialized) Initialize();");
                 writer.WriteLine($"return new {mapTypeName}(this);");
                 writer.EndBlock();
 
@@ -438,7 +450,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 buffer.Append('\n');
             }
 
-            private void WriteIndent()
+            public void Write(string text)
+            {
+                buffer.Append(text);
+            }
+            
+            public void WriteIndent()
             {
                 for (var i = 0; i < indentLevel; ++i)
                 {
