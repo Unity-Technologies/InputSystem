@@ -1614,9 +1614,6 @@ partial class CoreTests
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
-        Assert.That(code, Contains.Substring("public override void MakePrivateCopyOfActions()"));
-        Assert.That(code, Contains.Substring("public void SetAsset(InputActionAsset newAsset)"));
     }
 
     [Test]
