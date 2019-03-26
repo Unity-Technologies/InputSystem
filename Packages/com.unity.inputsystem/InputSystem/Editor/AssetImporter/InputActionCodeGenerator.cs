@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 
@@ -75,10 +76,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Usings.
             writer.WriteLine("using System;");
+            writer.WriteLine("using System.Collections;");
+            writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine("using UnityEngine;");
             if (options.generateEvents)
                 writer.WriteLine("using UnityEngine.Events;");
             writer.WriteLine("using UnityEngine.Experimental.Input;");
+            writer.WriteLine("using UnityEngine.Experimental.Input.Utilities;");
             writer.WriteLine("\n");
 
             // Begin namespace.
@@ -90,7 +94,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Begin class.
-            writer.WriteLine($"public class {options.className}");
+            writer.WriteLine($"public class {options.className} : IInputActionCollection");
             writer.BeginBlock();
 
             // Default constructor.
@@ -100,8 +104,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine($"// {set.name}");
-                InputActionMap m = new InputActionMap();
-                //writer.WriteLine($"m_{setName} = asset.GetActionMap(\"{set.name}\");");
                 writer.WriteLine($"m_{setName} = new InputActionMap(\"{set.name}\");");
 
                 foreach (var action in set.actions)
@@ -110,19 +112,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     writer.WriteIndent();
                     writer.Write($"m_{setName}_{actionName} = m_{setName}.AddAction(\"{action.name}\"");
                     if (!string.IsNullOrEmpty(action.interactions))
-                    	writer.Write($", interactions: \"{action.interactions}\"");
+                        writer.Write($", interactions: \"{action.interactions}\"");
                     if (!string.IsNullOrEmpty(action.processors))
-                    	writer.Write($", processors: \"{action.processors}\"");
+                        writer.Write($", processors: \"{action.processors}\"");
                     writer.Write(");\n");
-					if (action.continuous)
-						writer.WriteLine($"m_{setName}_{actionName}.continuous = true;");
-					if (action.passThrough)
-						writer.WriteLine($"m_{setName}_{actionName}.passThrough = true;");
+                    if (action.continuous)
+                        writer.WriteLine($"m_{setName}_{actionName}.continuous = true;");
+                    if (action.passThrough)
+                        writer.WriteLine($"m_{setName}_{actionName}.passThrough = true;");
 
-                    for (var i=0; i<action.bindings.Count; i++)
+                    for (var i = 0; i < action.bindings.Count; i++)
                     {
                         var binding = action.bindings[i];
-						writer.WriteIndent();
+                        writer.WriteIndent();
                         if (binding.isComposite)
                         {
                             writer.Write($"m_{setName}_{actionName}.AddCompositeBinding(\"{binding.path}\"");
@@ -130,7 +132,7 @@ namespace UnityEngine.Experimental.Input.Editor
                                 writer.Write($", interactions: \"{binding.interactions}\"");
                             writer.Write(")");
 
-                            while (i +1 < action.bindings.Count && action.bindings[i + 1].isPartOfComposite)
+                            while (i + 1 < action.bindings.Count && action.bindings[i + 1].isPartOfComposite)
                             {
                                 i++;
                                 binding = action.bindings[i];
@@ -144,8 +146,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             if (!string.IsNullOrEmpty(binding.interactions))
                                 writer.Write($", interactions: \"{binding.interactions}\"");
                             writer.Write(")");
-    						if (!string.IsNullOrEmpty(binding.processors))
-    							writer.Write($".WithProcessor(\"{binding.processors}\")");							               	
+                            if (!string.IsNullOrEmpty(binding.processors))
+                                writer.Write($".WithProcessor(\"{binding.processors}\")");
                             writer.Write(";\n");
                         }
                     }
@@ -159,12 +161,89 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             writer.EndBlock();
 
+            writer.WriteLine("public InputBinding? bindingMask");
+            writer.BeginBlock();
+            if (maps.Any())
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(maps.First().name);
+                writer.WriteLine($"get => m_{setName}.bindingMask;");
+            }
+            else
+                writer.WriteLine("get => null;\"");
+            writer.WriteLine("set");
+            writer.BeginBlock();
+            foreach (var set in maps)
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                writer.WriteLine($"m_{setName}.bindingMask = value;");
+            }
+            writer.EndBlock();
+            writer.EndBlock();
+
+            writer.WriteLine("public ReadOnlyArray<InputDevice>? devices");
+            writer.BeginBlock();
+            if (maps.Any())
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(maps.First().name);
+                writer.WriteLine($"get => m_{setName}.devices;");
+            }
+            else
+                writer.WriteLine("get => null;\"");
+            writer.WriteLine("set");
+            writer.BeginBlock();
+            foreach (var set in maps)
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                writer.WriteLine($"m_{setName}.devices = value;");
+            }
+            writer.EndBlock();
+            writer.EndBlock();
+
+            writer.WriteLine("private InputControlScheme[] s_controlSchemes;");
+            writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes");
+            writer.BeginBlock();
+            writer.WriteLine("get");
+            writer.BeginBlock();
+            writer.WriteLine("if (s_controlSchemes == null)");
+            writer.BeginBlock();
+            writer.WriteLine("s_controlSchemes = new InputControlScheme[] {");
+            foreach (var scheme in schemes)
+            {
+                writer.WriteLine($"\tnew InputControlScheme(\"{scheme.name}\"), //todo");
+            }
+            writer.WriteLine("};");
+            writer.EndBlock();
+            writer.WriteLine("return new ReadOnlyArray<InputControlScheme>(s_controlSchemes);");
+            writer.EndBlock();
+            writer.EndBlock();
+
+            writer.WriteLine("public bool Contains(InputAction action)");
+            writer.BeginBlock();
+            writer.WriteIndent();
+            writer.Write("return ");
+            writer.Write(string.Join(" ||\n", maps.Select(set => $"m_{CSharpCodeHelpers.MakeIdentifier(set.name)}.Contains(action)")));
+            writer.Write(";\n");
+            writer.EndBlock();
+
+            writer.WriteLine("public IEnumerator<InputAction> GetEnumerator()");
+            writer.BeginBlock();
+            writer.WriteIndent();
+            writer.Write("return ");
+            writer.Write(string.Join(".Concat(\n", maps.Select(set => $"m_{CSharpCodeHelpers.MakeIdentifier(set.name)}.GetEnumerator()")));
+            writer.Write(new string(')', maps.Count()-1));
+            writer.Write(";\n");
+            writer.EndBlock();
+
+            writer.WriteLine("IEnumerator IEnumerable.GetEnumerator()");
+            writer.BeginBlock();
+            writer.WriteLine("return GetEnumerator();");
+            writer.EndBlock();
+
             writer.WriteLine("public void Enable()");
 			writer.BeginBlock();
             foreach (var set in maps)
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                InputActionMap m = new InputActionMap();
                 writer.WriteLine($"m_{setName}.Enable();");
 			}
             writer.EndBlock();
@@ -173,7 +252,6 @@ namespace UnityEngine.Experimental.Input.Editor
             foreach (var set in maps)
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                InputActionMap m = new InputActionMap();
                 writer.WriteLine($"m_{setName}.Disable();");
 			}
             writer.EndBlock();

@@ -1,11 +1,14 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Demo/SimpleDemo/SimpleControls.inputactions'
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Utilities;
 
 
-public class SimpleControls
+public class SimpleControls : IInputActionCollection
 {
     public SimpleControls()
     {
@@ -25,6 +28,47 @@ public class SimpleControls
         m_gameplay_jump = m_gameplay.AddAction("jump");
         m_gameplay_jump.AddBinding("<Keyboard>/space");
         m_gameplay_jump.AddBinding("<Gamepad>/buttonNorth");
+    }
+    public InputBinding? bindingMask
+    {
+        get => m_gameplay.bindingMask;
+        set
+        {
+            m_gameplay.bindingMask = value;
+        }
+    }
+    public ReadOnlyArray<InputDevice>? devices
+    {
+        get => m_gameplay.devices;
+        set
+        {
+            m_gameplay.devices = value;
+        }
+    }
+    private InputControlScheme[] s_controlSchemes;
+    public ReadOnlyArray<InputControlScheme> controlSchemes
+    {
+        get
+        {
+            if (s_controlSchemes == null)
+            {
+                s_controlSchemes = new InputControlScheme[] {
+                };
+            }
+            return new ReadOnlyArray<InputControlScheme>(s_controlSchemes);
+        }
+    }
+    public bool Contains(InputAction action)
+    {
+        return m_gameplay.Contains(action);
+    }
+    public IEnumerator<InputAction> GetEnumerator()
+    {
+        return m_gameplay.GetEnumerator();
+    }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
     public void Enable()
     {
