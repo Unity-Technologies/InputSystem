@@ -274,6 +274,7 @@ internal class XInputTests : InputTestFixture
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Select), gamepad.view);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Select), gamepad.selectButton);
     }
+
 #endif
 
 

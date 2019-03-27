@@ -118,7 +118,7 @@ namespace UnityEngine.Experimental.Input
 
                 if (m_UpdateMask == value)
                     return;
-                    
+
                 m_UpdateMask = value;
 
                 // Recreate state buffers.
