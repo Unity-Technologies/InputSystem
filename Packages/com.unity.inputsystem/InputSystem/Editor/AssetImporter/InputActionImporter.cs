@@ -154,7 +154,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, asset.controlSchemes, options))
+                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
                 {
                     // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
                     // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during

@@ -50,13 +50,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (string.IsNullOrEmpty(options.className) && !string.IsNullOrEmpty(asset.name))
                 options.className =
                     CSharpCodeHelpers.MakeTypeName(asset.name);
-            return GenerateWrapperCode(asset.actionMaps, asset.controlSchemes, options);
-        }
 
-        // Generate a string containing C# code that simplifies working with the given
-        // action sets in code.
-        public static string GenerateWrapperCode(IEnumerable<InputActionMap> maps, IEnumerable<InputControlScheme> schemes, Options options)
-        {
             if (string.IsNullOrEmpty(options.className))
             {
                 if (string.IsNullOrEmpty(options.sourceAssetPath))
@@ -97,60 +91,26 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine($"public class {options.className} : IInputActionCollection");
             writer.BeginBlock();
 
+            writer.WriteLine($"private InputActionAsset asset;");
+
             // Default constructor.
             writer.WriteLine($"public {options.className}()");
             writer.BeginBlock();
+            writer.WriteLine($"asset = InputActionAsset.FromJson(@\"{asset.ToJson().Replace("\"", "\"\"")}\");");
+
+            var maps = asset.actionMaps;
+            var schemes = asset.controlSchemes;
             foreach (var set in maps)
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine($"// {set.name}");
-                writer.WriteLine($"m_{setName} = new InputActionMap(\"{set.name}\");");
+                writer.WriteLine($"m_{setName} = asset.GetActionMap(\"{set.name}\");");
 
                 foreach (var action in set.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteIndent();
-                    writer.Write($"m_{setName}_{actionName} = m_{setName}.AddAction(\"{action.name}\"");
-                    if (!string.IsNullOrEmpty(action.interactions))
-                        writer.Write($", interactions: \"{action.interactions}\"");
-                    if (!string.IsNullOrEmpty(action.processors))
-                        writer.Write($", processors: \"{action.processors}\"");
-                    writer.Write(");\n");
-                    if (action.continuous)
-                        writer.WriteLine($"m_{setName}_{actionName}.continuous = true;");
-                    if (action.passThrough)
-                        writer.WriteLine($"m_{setName}_{actionName}.passThrough = true;");
+                    writer.WriteLine($"m_{setName}_{actionName} = m_{setName}.GetAction(\"{action.name}\");");
 
-                    for (var i = 0; i < action.bindings.Count; i++)
-                    {
-                        var binding = action.bindings[i];
-                        writer.WriteIndent();
-                        if (binding.isComposite)
-                        {
-                            writer.Write($"m_{setName}_{actionName}.AddCompositeBinding(\"{binding.path}\"");
-                            if (!string.IsNullOrEmpty(binding.interactions))
-                                writer.Write($", interactions: \"{binding.interactions}\"");
-                            writer.Write(")");
-
-                            while (i + 1 < action.bindings.Count && action.bindings[i + 1].isPartOfComposite)
-                            {
-                                i++;
-                                binding = action.bindings[i];
-                                writer.Write($".With(\"{binding.name}\", \"{binding.path}\")");
-                            }
-                            writer.Write(";\n");
-                        }
-                        else
-                        {
-                            writer.Write($"m_{setName}_{actionName}.AddBinding(\"{binding.path}\"");
-                            if (!string.IsNullOrEmpty(binding.interactions))
-                                writer.Write($", interactions: \"{binding.interactions}\"");
-                            writer.Write(")");
-                            if (!string.IsNullOrEmpty(binding.processors))
-                                writer.Write($".WithProcessor(\"{binding.processors}\")");
-                            writer.Write(";\n");
-                        }
-                    }
                     if (options.generateEvents)
                     {
                         WriteActionEventInitializer(setName, actionName, InputActionPhase.Started, writer);
@@ -161,81 +121,36 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             writer.EndBlock();
 
+            writer.WriteLine($"~{options.className}()");
+            writer.BeginBlock();
+            writer.WriteLine("UnityEngine.Object.Destroy(asset);");
+            writer.EndBlock();
+
             writer.WriteLine("public InputBinding? bindingMask");
             writer.BeginBlock();
-            if (maps.Any())
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(maps.First().name);
-                writer.WriteLine($"get => m_{setName}.bindingMask;");
-            }
-            else
-                writer.WriteLine("get => null;\"");
-            writer.WriteLine("set");
-            writer.BeginBlock();
-            foreach (var set in maps)
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine($"m_{setName}.bindingMask = value;");
-            }
-            writer.EndBlock();
+            writer.WriteLine("get => asset.bindingMask;");
+            writer.WriteLine("set => asset.bindingMask = value;");
             writer.EndBlock();
 
             writer.WriteLine("public ReadOnlyArray<InputDevice>? devices");
             writer.BeginBlock();
-            if (maps.Any())
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(maps.First().name);
-                writer.WriteLine($"get => m_{setName}.devices;");
-            }
-            else
-                writer.WriteLine("get => null;\"");
-            writer.WriteLine("set");
-            writer.BeginBlock();
-            foreach (var set in maps)
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine($"m_{setName}.devices = value;");
-            }
-            writer.EndBlock();
+            writer.WriteLine("get => asset.devices;");
+            writer.WriteLine("set => asset.devices = value;");
             writer.EndBlock();
 
-            writer.WriteLine("private InputControlScheme[] s_controlSchemes;");
             writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes");
             writer.BeginBlock();
-            writer.WriteLine("get");
-            writer.BeginBlock();
-            writer.WriteLine("if (s_controlSchemes == null)");
-            writer.BeginBlock();
-            writer.WriteLine("s_controlSchemes = new InputControlScheme[] {");
-            foreach (var scheme in schemes)
-            {
-                writer.WriteLine($"\tnew InputControlScheme(\"{scheme.name}\"), //todo");
-            }
-            writer.WriteLine("};");
-            writer.EndBlock();
-            writer.WriteLine("return new ReadOnlyArray<InputControlScheme>(s_controlSchemes);");
-            writer.EndBlock();
+            writer.WriteLine("get => asset.controlSchemes;");
             writer.EndBlock();
 
             writer.WriteLine("public bool Contains(InputAction action)");
             writer.BeginBlock();
-            writer.WriteIndent();
-            writer.Write("return ");
-            writer.Write(string.Join(" ||\n", maps.Select(set => $"m_{CSharpCodeHelpers.MakeIdentifier(set.name)}.Contains(action)")));
-            writer.Write(";\n");
+            writer.WriteLine("return asset.Contains(action);");
             writer.EndBlock();
 
             writer.WriteLine("public IEnumerator<InputAction> GetEnumerator()");
             writer.BeginBlock();
-            foreach (var set in maps)
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                foreach (var action in set.actions)
-                {
-                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"yield return m_{setName}_{actionName};");
-                }
-            }
+            writer.WriteLine("return asset.GetEnumerator();");
             writer.EndBlock();
 
             writer.WriteLine("IEnumerator IEnumerable.GetEnumerator()");
@@ -245,19 +160,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
             writer.WriteLine("public void Enable()");
 			writer.BeginBlock();
-            foreach (var set in maps)
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine($"m_{setName}.Enable();");
-			}
+            writer.WriteLine("asset.Enable();");
             writer.EndBlock();
             writer.WriteLine("public void Disable()");
 			writer.BeginBlock();
-            foreach (var set in maps)
-            {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine($"m_{setName}.Disable();");
-			}
+            writer.WriteLine("asset.Disable();");
             writer.EndBlock();
 
             // Action map accessors.
@@ -517,10 +424,10 @@ namespace UnityEngine.Experimental.Input.Editor
         // Updates the given file with wrapper code generated for the given action sets.
         // If the generated code is unchanged, does not touch the file.
         // Returns true if the file was touched, false otherwise.
-        public static bool GenerateWrapperCode(string filePath, IEnumerable<InputActionMap> maps, IEnumerable<InputControlScheme> schemes, Options options)
+        public static bool GenerateWrapperCode(string filePath, InputActionAsset asset, Options options)
         {
             // Generate code.
-            var code = GenerateWrapperCode(maps, schemes, options);
+            var code = GenerateWrapperCode(asset, options);
 
             // Check if the code changed. Don't write if it hasn't.
             if (File.Exists(filePath))
