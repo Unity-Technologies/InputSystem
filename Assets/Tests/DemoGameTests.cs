@@ -98,7 +98,7 @@ public partial class DemoGameTests : DemoGameTestFixture
         Press(Gamepad.all[1].buttonSouth);
 
         Assert.That(game.players, Has.Count.EqualTo(2));
-        Assert.That(game.players[0].controls.asset, Is.Not.SameAs(game.players[1].controls.asset));
+        Assert.That(game.players[0].controls, Is.Not.SameAs(game.players[1].controls));
         Assert.That(game.players[0].user.pairedDevices, Is.EquivalentTo(new[] {Gamepad.all[0]}));
         Assert.That(game.players[1].user.pairedDevices, Is.EquivalentTo(new[] {Gamepad.all[1]}));
 

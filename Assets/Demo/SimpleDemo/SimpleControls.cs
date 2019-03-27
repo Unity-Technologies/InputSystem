@@ -64,7 +64,7 @@ public class SimpleControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""08cab8b5-731d-4a89-ad06-e3346063f1a6"",
+                    ""id"": ""baf01088-0f60-405c-9b2e-d076c8a78ce1"",
                     ""path"": ""*/{PrimaryAction}"",
                     ""interactions"": ""Tap,SlowTap"",
                     ""processors"": """",
@@ -77,7 +77,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""5cee7f84-5a3d-4391-b0a2-06d481f6b03d"",
+                    ""id"": ""23145aac-70a1-43c2-b468-bf601d7ef22e"",
                     ""path"": ""<SteamDemoController>/fire"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -90,7 +90,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""6801a662-f1aa-4767-b433-dc300781044c"",
+                    ""id"": ""1340764f-2896-4c9c-86ca-43791e0e8009"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -103,7 +103,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""38b6a6e0-c713-4b53-9485-3dfa84ed24cf"",
+                    ""id"": ""92646583-59ef-41c3-9f6a-584532e54c85"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -116,7 +116,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""2393a00d-d04c-4a06-a25f-af343481e6a5"",
+                    ""id"": ""60f483a0-0399-48a8-89d7-92f3907c8477"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -129,7 +129,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""1f8c03c8-3bb0-44c5-b65e-ac74d60741cf"",
+                    ""id"": ""99e9f2f8-57a9-44fa-8c0f-d3838aa9c965"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -142,7 +142,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""18754c3c-b52c-43ea-91b7-bf926e6a5a39"",
+                    ""id"": ""8fb12f0b-7685-4cc1-a798-85ab50298b1d"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -155,7 +155,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""46b16088-f39b-4ff1-921e-c0e2c2c99364"",
+                    ""id"": ""c36ab2ef-3fde-443f-9481-e1a3dc45936e"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -168,7 +168,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""10143c9f-3a01-4d83-8eab-892016abc65c"",
+                    ""id"": ""03ec0183-f49b-43f9-977c-83983951f345"",
                     ""path"": ""<SteamDemoController>/move"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -181,7 +181,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""40ae20df-b8b1-41ba-ae1b-b15d73e71f66"",
+                    ""id"": ""7d769d02-85b8-4b24-bfae-4e85e8875722"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -194,7 +194,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""5965807b-6e3f-4c0a-a25e-ac808dc384fe"",
+                    ""id"": ""c6f2fe0b-fc39-4cc8-8822-919ac2ff76cd"",
                     ""path"": ""<Pointer>/delta"",
                     ""interactions"": """",
                     ""processors"": ""ScaleVector2(x=2,y=2)"",
@@ -207,7 +207,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""f5db00f8-0572-41b9-afbf-6a2f49131830"",
+                    ""id"": ""cc333995-12b4-4fc5-a9d2-f4415677ec80"",
                     ""path"": ""<SteamDemoController>/look"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -220,7 +220,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""feaec935-ddb4-4d8b-a043-b31e113bc381"",
+                    ""id"": ""0a6089df-89db-4ec5-8bf9-791fb3364f90"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -233,7 +233,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""8f222d06-5519-4b91-9933-da9294fb5c03"",
+                    ""id"": ""02af1937-970f-405c-8a54-3d597781e4d0"",
                     ""path"": ""<Gamepad>/buttonNorth"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -296,6 +296,7 @@ public class SimpleControls : IInputActionCollection
     }
     // gameplay
     private InputActionMap m_gameplay;
+    private IGameplayActions m_GameplayActionsCallbackInterface;
     private InputAction m_gameplay_fire;
     private InputAction m_gameplay_move;
     private InputAction m_gameplay_look;
@@ -314,6 +315,40 @@ public class SimpleControls : IInputActionCollection
         public bool enabled { get { return Get().enabled; } }
         public InputActionMap Clone() { return Get().Clone(); }
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
+        public void SetCallbacks(IGameplayActions instance)
+        {
+            if (m_Wrapper.m_GameplayActionsCallbackInterface != null)
+            {
+                fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                fire.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                move.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                look.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                jump.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+                jump.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+                jump.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+            }
+            m_Wrapper.m_GameplayActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                fire.started += instance.OnFire;
+                fire.performed += instance.OnFire;
+                fire.cancelled += instance.OnFire;
+                move.started += instance.OnMove;
+                move.performed += instance.OnMove;
+                move.cancelled += instance.OnMove;
+                look.started += instance.OnLook;
+                look.performed += instance.OnLook;
+                look.cancelled += instance.OnLook;
+                jump.started += instance.OnJump;
+                jump.performed += instance.OnJump;
+                jump.cancelled += instance.OnJump;
+            }
+        }
     }
     public GameplayActions @gameplay
     {
@@ -321,5 +356,12 @@ public class SimpleControls : IInputActionCollection
         {
             return new GameplayActions(this);
         }
+    }
+    public interface IGameplayActions
+    {
+        void OnFire(InputAction.CallbackContext context);
+        void OnMove(InputAction.CallbackContext context);
+        void OnLook(InputAction.CallbackContext context);
+        void OnJump(InputAction.CallbackContext context);
     }
 }
