@@ -1604,17 +1604,10 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
-        asset.name = "MyControls";
+        asset.name = "My Controls (2)";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
-
-        // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
-        // is just perform some textual verification. Once we have the newest Mono, this should
-        // use CSharpCodeProvider and at least parse if not compile and run the generated wrapper.
-
-        Assert.That(code, Contains.Substring("namespace MyNamespace"));
-        Assert.That(code, Contains.Substring("public class MyControls"));
 
 #if NET_4_6
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
@@ -1625,7 +1618,7 @@ partial class CoreTests
         Assert.That(cr.Errors, Is.Empty);
         var assembly = cr.CompiledAssembly;
         Assert.That(assembly, Is.Not.Null);
-        var type = assembly.GetType("MyNamespace.MyControls");
+        var type = assembly.GetType("MyNamespace.MyControls2");
         Assert.That(type, Is.Not.Null);
         var set1Property = type.GetProperty("set1");
         Assert.That(set1Property, Is.Not.Null);
@@ -1641,49 +1634,6 @@ partial class CoreTests
 #endif
     }
 
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset_WithInterfaces()
-    {
-     /*   var map1 = new InputActionMap("map1");
-        map1.AddAction("action1", binding: "/gamepad/leftStick");
-        map1.AddAction("action2", binding: "/gamepad/rightStick");
-        var map2 = new InputActionMap("map2");
-        map2.AddAction("action3", binding: "/gamepad/buttonSouth");
-
-        var code = InputActionCodeGenerator.GenerateWrapperCode(new[] { map1, map2 },
-            Enumerable.Empty<InputControlScheme>(),
-            new InputActionCodeGenerator.Options { generateInterfaces = true, className = "Test" });
-
-        Assert.That(code, Contains.Substring("public interface IMap1Actions"));
-        Assert.That(code, Contains.Substring("public interface IMap2Actions"));
-        Assert.That(code, Contains.Substring("private IMap1Actions m_Map1ActionsCallbackInterface;"));
-        Assert.That(code, Contains.Substring("private IMap2Actions m_Map2ActionsCallbackInterface;"));
-        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap1Actions instance)"));
-        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap2Actions instance)"));
-        Assert.That(code, Contains.Substring("void OnAction1(InputAction.CallbackContext context)"));
-        Assert.That(code, Contains.Substring("void OnAction2(InputAction.CallbackContext context)"));
-        Assert.That(code, Contains.Substring("void OnAction3(InputAction.CallbackContext context)"));*/
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
-    {
-        var set1 = new InputActionMap("set1");
-        set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
-        set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set1);
-        asset.name = "New Controls (4)";
-
-        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-            new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
-
-        Assert.That(code, Contains.Substring("class NewControls4"));
-        Assert.That(code, Contains.Substring("public InputAction @action"));
-        Assert.That(code, Contains.Substring("public InputAction @_1thing"));
-    }
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on

@@ -37,8 +37,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
                 var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
                 var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
-                var generateActionEventsProperty = serializedObject.FindProperty("m_GenerateActionEvents");
-                var generateInterfacesProperty = serializedObject.FindProperty("m_GenerateInterfaces");
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PropertyField(wrapperCodePathProperty, m_WrapperCodePathLabel);
@@ -66,9 +64,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty, m_WrapperCodeNamespaceLabel);
                 if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
-
-                EditorGUILayout.PropertyField(generateActionEventsProperty, m_GenerateActionEventsLabel);
-                EditorGUILayout.PropertyField(generateInterfacesProperty);
             }
 
             #if UNITY_2019_2_OR_NEWER
@@ -89,7 +84,6 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
-        private readonly GUIContent m_GenerateActionEventsLabel = EditorGUIUtility.TrTextContent("Generate Events");
         private readonly GUIContent m_WrapperCodePathLabel = EditorGUIUtility.TrTextContent("C# Class File");
         private readonly GUIContent m_WrapperClassNameLabel = EditorGUIUtility.TrTextContent("C# Class Name");
         private GUIContent m_WrapperCodeNamespaceLabel = EditorGUIUtility.TrTextContent("C# Class Namespace");
