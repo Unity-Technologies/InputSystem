@@ -227,11 +227,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             writer.WriteLine("public IEnumerator<InputAction> GetEnumerator()");
             writer.BeginBlock();
-            writer.WriteIndent();
-            writer.Write("return ");
-            writer.Write(string.Join(".Concat(\n", maps.Select(set => $"m_{CSharpCodeHelpers.MakeIdentifier(set.name)}.GetEnumerator()")));
-            writer.Write(new string(')', maps.Count()-1));
-            writer.Write(";\n");
+            foreach (var set in maps)
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                foreach (var action in set.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    writer.WriteLine($"yield return m_{setName}_{actionName};");
+                }
+            }
             writer.EndBlock();
 
             writer.WriteLine("IEnumerator IEnumerable.GetEnumerator()");
