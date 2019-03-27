@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.CodeDom.Compiler;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -1614,6 +1615,30 @@ partial class CoreTests
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
+
+#if NET_4_6
+        var codeProvider = CodeDomProvider.CreateProvider("CSharp");
+        var cp = new CompilerParameters();
+        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+        var cr = codeProvider.CompileAssemblyFromSource(cp, code);
+        Assert.That(cr.Errors, Is.Empty);
+        var assembly = cr.CompiledAssembly;
+        Assert.That(assembly, Is.Not.Null);
+        var type = assembly.GetType("MyNamespace.MyControls");
+        Assert.That(type, Is.Not.Null);
+        var set1Property = type.GetProperty("set1");
+        Assert.That(set1Property, Is.Not.Null);
+        var set1MapGetter = set1Property.PropertyType.GetMethod("Get");
+        var instance = Activator.CreateInstance(type);
+        Assert.That(instance, Is.Not.Null);
+        var set1Instance = set1Property.GetValue(instance);
+        Assert.That(set1Instance, Is.Not.Null);
+        var set1map = set1MapGetter.Invoke(set1Instance, null) as InputActionMap;
+        Assert.That(set1map, Is.Not.Null);
+
+        Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
+#endif
     }
 
     [Test]
