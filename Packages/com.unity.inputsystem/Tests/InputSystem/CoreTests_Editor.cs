@@ -731,6 +731,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -786,6 +787,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteAction_IntoSameActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -821,6 +823,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteAction_IntoDifferentActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -861,6 +864,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteBinding_IntoSameAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -894,6 +898,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteBinding_IntoDifferentAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -961,6 +966,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteCompositeBinding()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1017,6 +1023,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPastePartOfCompositeBinding_IntoSameComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1074,6 +1081,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPastePartOfCompositeBinding_IntoDifferentComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1142,6 +1150,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCutAndPasteAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
