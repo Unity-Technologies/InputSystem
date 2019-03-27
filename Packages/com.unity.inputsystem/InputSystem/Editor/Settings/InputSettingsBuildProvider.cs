@@ -6,7 +6,7 @@ using UnityEditor.Build.Reporting;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class InputSettingsBuildProvider: IPreprocessBuildWithReport, IPostprocessBuildWithReport
+    internal class InputSettingsBuildProvider : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
         private Object[] m_OriginalPreloadedAssets;
 

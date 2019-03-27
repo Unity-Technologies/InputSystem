@@ -61,7 +61,7 @@ public class XRHaptics : MonoBehaviour
                 case RumbleState.LeftHalf:
                     controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
                     controller.SendImpulse(0.5f, m_RumblePeriod);
-                    
+
                     leftTryingToRumble.color = Color.white;
                     leftTryingToRumbleHalf.color = Color.red;
                     rightTryingToRumble.color = Color.white;
