@@ -4,20 +4,6 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.3-preview] - TBD
-
-### Added
-
-- Support for Bluetooth Xbox One controllers on macOS.
-
-### Changed
-
-- `Joystick.axes` and `Joystick.buttons` have been removed.
-
-### Fixed
-
-- Input Settings configured in the editor are now transferred to the built player correctly.
-
 ## [0.2.6-preview] - 2019-03-20
 
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
@@ -27,7 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Support gamepad vibration on Switch.
-- Added support for Joysticks on Linux.
 
 #### Actions
 
@@ -74,7 +59,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Input device icons in input debugger window now render in appropriate resolution on retina displays.
 - Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
 - `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
-
+	
 #### Actions
 
 - Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
