@@ -94,7 +94,8 @@ namespace UnityEngine.Experimental.Input
 
             lock (m_Lock)
             {
-                eventPtr->eventId = m_NextEventId;
+                eventPtr->eventId = m_NextEventId; 
+                eventPtr->handled = false;
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
