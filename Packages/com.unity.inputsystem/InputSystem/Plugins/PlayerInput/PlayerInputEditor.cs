@@ -392,7 +392,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                     foreach (var entry in oldActionEvents)
                     {
                         var guid = entry.actionId;
-                        var action = asset.FindAction(guid);
+                        var action = asset.FindAction("{"+guid+"}");
                         if (action != null)
                         {
                             newActionEvents.Add(entry);
@@ -404,8 +404,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 // Add any new actions.
                 foreach (var action in asset)
                 {
-                    newActionEvents.Add(new PlayerInput.ActionEvent(action.id));
-                    newActionNames.Add(new GUIContent(action + " Action"));
+                    if(newActionEvents.Find(act=>act.actionId==action.id.ToString())==null)
+                    {
+                        newActionEvents.Add(new PlayerInput.ActionEvent(action.id));
+                        newActionNames.Add(new GUIContent(action + " Action"));
+                    }
                 }
 
                 m_ActionNames = newActionNames.ToArray();

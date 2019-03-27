@@ -685,7 +685,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                                 continue;
 
                             // Find action for event.
-                            var action = m_Actions.FindAction(id);
+                            var action = m_Actions.FindAction("{" + id + "}");
                             if (action != null)
                             {
                                 ////REVIEW: really wish we had a single callback
