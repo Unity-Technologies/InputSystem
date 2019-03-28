@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
+- Generated wrapper code for Input Action Assets are now self-contained, generating all the data from code and not needing a reference to the asset; `InputActionAssetReference` has been removed.
+- The option to generate interfaces on wrappers has been removed, instead we always do this now.
+- The option to generate events on wrappers has been removed, we felt that this no longer made sense.
+- Will now show default values in Input Action inspector if no custom values for file path, class name or namespace have been provided.
 
 ### Fixed
 
