@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Haptics;
@@ -1710,8 +1711,7 @@ namespace UnityEngine.Experimental.Input
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            ////TODO: figure out bring settings into player
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance, settings);
 
