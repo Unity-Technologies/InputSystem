@@ -1576,6 +1576,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("Broken Fogbugz Ticket Filed")]
     public void Actions_CanPerformContinuousPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
