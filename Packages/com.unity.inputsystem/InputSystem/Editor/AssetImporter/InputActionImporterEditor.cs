@@ -15,6 +15,25 @@ namespace UnityEngine.Experimental.Input.Editor
     [CustomEditor(typeof(InputActionImporter))]
     internal class InputActionImporterEditor : ScriptedImporterEditor
     {
+        // Show a PropertyField with a greyed-out default text if the field is empty and not being edited.
+        // This is meant to communicate the fact that filling these properties is optional and that Unity will
+        // use reasonable defaults if left empty.
+        private void PropertyFieldWithDefaultText(SerializedProperty prop, GUIContent label, string defaultText)
+        {
+            GUI.SetNextControlName(label.text);
+            var rt = GUILayoutUtility.GetRect(label, GUI.skin.textField);
+
+            EditorGUI.PropertyField(rt, prop, label);
+            if (string.IsNullOrEmpty(prop.stringValue) && GUI.GetNameOfFocusedControl() != label.text && Event.current.type == EventType.Repaint)
+            {
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    rt.xMin += EditorGUIUtility.labelWidth;
+                    GUI.skin.textField.Draw(rt, new GUIContent(defaultText), false, false, false, false);
+                }
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
@@ -39,11 +58,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PropertyField(wrapperCodePathProperty, m_WrapperCodePathLabel);
-                if (GUILayout.Button("...", EditorStyles.miniButton, GUILayout.MaxWidth(20)))
+                var assetPath = AssetDatabase.GetAssetPath(GetAsset());
+                var defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+
+                PropertyFieldWithDefaultText(wrapperCodePathProperty, m_WrapperCodePathLabel, defaultFileName);
+
+                if (GUILayout.Button("…", EditorStyles.miniButton, GUILayout.MaxWidth(20)))
                 {
-                    var assetPath = AssetDatabase.GetAssetPath(GetAsset());
-                    var defaultFileName = Path.ChangeExtension(assetPath, ".cs");
                     var fileName = EditorUtility.SaveFilePanel("Location for generated C# file",
                         Path.GetDirectoryName(defaultFileName),
                         Path.GetFileName(defaultFileName), "cs");
@@ -57,11 +78,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.PropertyField(wrapperClassNameProperty, m_WrapperClassNameLabel);
+                PropertyFieldWithDefaultText(wrapperClassNameProperty, m_WrapperClassNameLabel, CSharpCodeHelpers.MakeTypeName(GetAsset().name));
+
                 if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
 
-                EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty, m_WrapperCodeNamespaceLabel);
+                PropertyFieldWithDefaultText(wrapperCodeNamespaceProperty, m_WrapperCodeNamespaceLabel, "<Global namespace>");
+
                 if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
             }
