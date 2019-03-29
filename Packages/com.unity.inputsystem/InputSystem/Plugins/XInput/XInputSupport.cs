@@ -27,7 +27,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             InputSystem.RegisterLayout<XInputControllerOSX>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
-                    .WithProduct("Xbox.*Controller"));
+                    .WithProduct("Xbox.*Wired Controller"));
+            InputSystem.RegisterLayout<XInputControllerWirelessOSX>(
+                matches: new InputDeviceMatcher().WithInterface("HID")
+                    .WithProduct("Xbox.*Wireless Controller"));
 #endif
         }
     }
