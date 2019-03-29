@@ -97,11 +97,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout]
     public class ViveKnuckles : XRControllerWithRumble
     {
-        [InputControl(aliases = new[] { "A", "Primary"})]
-        public ButtonControl primaryButton { get; private set; }
+        [InputControl(aliases = new[] { "A",  "GripButton" })]
+        public ButtonControl gripPressed { get; private set; }
 
-        [InputControl(aliases = new[] { "B",  "Alternate" })]
-        public ButtonControl secondaryButton { get; private set; }
+        [InputControl(aliases = new[] { "B",  "Primary"})]
+        public ButtonControl primaryButton { get; private set; }
 
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]        
         public ButtonControl trackpadPressed { get; private set; }
@@ -126,9 +126,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-            
-            primaryButton = builder.GetControl<ButtonControl>("primary");
-            secondaryButton = builder.GetControl<ButtonControl>("alternate");            
+                    
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
+            primaryButton = builder.GetControl<ButtonControl>("primary");            
             trackpadPressed = builder.GetControl<ButtonControl>("trackpadPressed");
             trackpadTouched = builder.GetControl<ButtonControl>("trackpadTouched");
             trackpad = builder.GetControl<Vector2Control>("trackpad");
