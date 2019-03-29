@@ -238,6 +238,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        private bool gameIsPlayingAndHasFocus => EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
 
@@ -1403,6 +1405,7 @@ namespace UnityEngine.Experimental.Input
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
+            m_HasFocus = Application.isFocused;
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
@@ -1577,6 +1580,7 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
+        private bool m_HasFocus;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
@@ -2183,6 +2187,7 @@ namespace UnityEngine.Experimental.Input
 
         private void OnFocusChanged(bool focus)
         {
+            m_HasFocus = focus;
             var deviceCount = m_DevicesCount;
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -2194,12 +2199,14 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
+            var mask = m_UpdateMask;
 #if UNITY_EDITOR
-            // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
-            if (updateType == InputUpdateType.Editor && Application.isPlaying && !EditorApplication.isPaused)
-                return false;
+            if (gameIsPlayingAndHasFocus)
+                mask &= ~InputUpdateType.Editor;
+            else
+                mask &= ~(InputUpdateType.Dynamic | InputUpdateType.Fixed);
 #endif
-            return (updateType & m_UpdateMask) != 0;
+            return (updateType & mask) != 0;
         }
 
         /// <summary>
@@ -2241,35 +2248,6 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             ////TODO: manual mode must be treated like lockInputToGameView in editor
-            // In the editor, we need to decide where to route state. Whenever the game is playing and
-            // has focus, we route all input to play mode buffers. When the game is stopped or if any
-            // of the other editor windows has focus, we route input to edit mode buffers.
-            var gameIsPlayingAndHasFocus = true;
-            var buffersToUseForUpdate = updateType;
-
-            #if UNITY_EDITOR
-            gameIsPlayingAndHasFocus = InputEditorUserSettings.lockInputToGameView ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
-
-            if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
-            {
-                switch (m_Settings.updateMode)
-                {
-                    case InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly:
-                    case InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate:
-                        buffersToUseForUpdate = InputUpdateType.Dynamic;
-                        break;
-
-                    case InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly:
-                        buffersToUseForUpdate = InputUpdateType.Fixed;
-                        break;
-
-                    case InputSettings.UpdateMode.ProcessEventsManually:
-                        buffersToUseForUpdate = InputUpdateType.Manual;
-                        break;
-                }
-            }
-            #endif
 
             // Update metrics.
             m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
@@ -2282,7 +2260,7 @@ namespace UnityEngine.Experimental.Input
             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
             InputUpdate.s_LastUpdateType = updateType;
-            InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
+            InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic)
@@ -2333,8 +2311,6 @@ namespace UnityEngine.Experimental.Input
                 if (gameIsPlayingAndHasFocus)
                     ProcessStateChangeMonitorTimeouts();
 
-                if (buffersToUseForUpdate != updateType)
-                    InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
@@ -2839,9 +2815,6 @@ namespace UnityEngine.Experimental.Input
                 ProcessStateChangeMonitorTimeouts();
 
             ////TODO: fire event that allows code to update state *from* state we just updated
-
-            if (buffersToUseForUpdate != updateType)
-                InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             Profiler.EndSample();
 
