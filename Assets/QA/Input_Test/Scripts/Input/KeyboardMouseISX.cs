@@ -29,12 +29,10 @@ public class KeyboardMouseISX : MonoBehaviour
     {
         m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>") { passThrough = true };
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
-        //m_keyboardAction.cancelled += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         m_keyboardAction.Enable();
 
         m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>") {passThrough = true};
-        m_mouseAction.performed += callbackContext => MouseKeyPress(callbackContext.control.device as Mouse);
-        //m_mouseAction.cancelled += callbackContext => MouseKeyPress(callbackContext.control.device as Mouse);
+        m_mouseAction.performed += callbackContext => MouseKeyPress(callbackContext.control as ButtonControl);
         m_mouseAction.Enable();
     }
 
@@ -159,23 +157,14 @@ public class KeyboardMouseISX : MonoBehaviour
     }
 
     // callback function when a button is pressed on Mouse
-    private void MouseKeyPress(Mouse mouse)
+    private void MouseKeyPress(ButtonControl control)
     {
-        // Mouse mouse = InputSystem.GetDevice<Mouse>();
-        if (mouse.leftButton.ReadValue() == 0)
-            StopKeyHighlight("Mouse0");
-        else
-            StartKeyHightlight("Mouse0");
+        string buttonName = control.name.ToString();
 
-        if (mouse.rightButton.ReadValue() == 0)
-            StopKeyHighlight("Mouse1");
+        if (control.isPressed)
+            StartKeyHightlight(buttonName);
         else
-            StartKeyHightlight("Mouse1");
-
-        if (mouse.middleButton.ReadValue() == 0)
-            StopKeyHighlight("Mouse2");
-        else
-            StartKeyHightlight("Mouse2");
+            StopKeyHighlight(buttonName);
     }
 
     // Generate the red square over the key or mouse button
