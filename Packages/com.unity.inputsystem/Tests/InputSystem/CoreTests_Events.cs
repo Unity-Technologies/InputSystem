@@ -407,8 +407,6 @@ partial class CoreTests
     [Category("Events")]
     public unsafe void Events_TimeslicingCanBeTurnedOff()
     {
-        runtime.fixedUpdateIntervalInSeconds = 1.0 / 60; // 60 FPS.
-
         // Get first update out of the way with timeslicing on. First fixed update will consume all
         // input so we can't really tell the difference.
         InputSystem.Update(InputUpdateType.Fixed);

@@ -149,11 +149,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
         /// <summary>
-        /// Frequency at which fixed updates are being run.
-        /// </summary>
-        double fixedUpdateIntervalInSeconds { get; }
-
-        /// <summary>
         /// Flag which tells runtime whether to process input events when in the background.
         /// </summary>
         /// <remarks>

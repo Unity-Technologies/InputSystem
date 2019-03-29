@@ -215,9 +215,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
 
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-
-        public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
-
+        
         public bool shouldRunInBackground
         {
             set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)(value ? 1 << 31 : 0));
