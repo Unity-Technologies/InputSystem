@@ -2326,24 +2326,10 @@ namespace UnityEngine.Experimental.Input
             //       Otherwise, once an event with a newer timestamp has been processed, events coming later
             //       in the buffer and having older timestamps will get rejected.
 
-            var currentTime = m_Runtime.currentTime;
-            var timesliceTime = currentTime;
+            var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
             #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
-
-            ////TODO: account for fixed updates getting dropped when framerate tanks
-            // For fixed updates, we space timeslices out evenly according to fixed update length.
-            // NOTE: In the first fixed update, we simply take the current time and consume everything that
-            //       happened until then. After the first update, we start the regular cadence.
-            if (updateType == InputUpdateType.Fixed)
-            {
-                if (InputUpdate.s_FixedUpdateCount == 1)
-                    timesliceTime = m_Runtime.currentTime;
-                else
-                    timesliceTime = InputUpdate.s_LastFixedUpdateTime + m_Runtime.fixedUpdateIntervalInSeconds;
-                InputUpdate.s_LastFixedUpdateTime = timesliceTime;
-            }
             #endif
 
             // Early out if there's no events to process.
@@ -2434,7 +2420,7 @@ namespace UnityEngine.Experimental.Input
 
                 #if UNITY_2019_2_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
-                if (timesliceEvents && currentEventReadPtr->internalTime >= timesliceTime)
+                if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
                 {
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);

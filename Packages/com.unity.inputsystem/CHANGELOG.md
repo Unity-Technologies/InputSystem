@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
+- Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 
 ## [0.2.6-preview] - 2019-03-20
 

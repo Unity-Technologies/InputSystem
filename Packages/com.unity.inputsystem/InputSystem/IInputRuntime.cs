@@ -135,14 +135,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTime { get; }
 
         /// <summary>
+        /// The current time on the same timeline that input events are delivered on, for the current FixedUpdate.
+        /// </summary>
+        /// <remarks>
+        /// This should be used inside FixedUpdate calls instead of currentTime, as FixedUpdates are simulated at times
+        /// not matching the real time the simulation corresponds to.
+        /// </remarks>
+        double currentTimeForFixedUpdate { get; }
+
+        /// <summary>
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
-
-        /// <summary>
-        /// Frequency at which fixed updates are being run.
-        /// </summary>
-        double fixedUpdateIntervalInSeconds { get; }
 
         /// <summary>
         /// Flag which tells runtime whether to process input events when in the background.
