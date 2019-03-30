@@ -67,7 +67,6 @@ public class PenISX : MonoBehaviour
         m_penButtonAction?.Enable();
         m_penVector2Action?.Enable();
         m_penAxisAction?.Enable();
-
     }
 
     private void OnDisable()
@@ -88,10 +87,7 @@ public class PenISX : MonoBehaviour
                            + pen.position.ReadValue().ToString("F0") + "\n"
                            + pen.tilt.ReadValue().ToString("F2") + "\n"
                            + pen.twist.ReadValue().ToString("F2") + "\n"
-                           + pen.delta.ReadValue().ToString("F2");
-
-        // Update inRange state/indicator
-        m_outOfRangeSign.SetActive(!pen.inRange.isPressed);
+                           + pen.delta.ReadValue().ToString("F2");        
     }
 
     private void ButtonPress(ButtonControl control)
@@ -115,6 +111,10 @@ public class PenISX : MonoBehaviour
                     StartRotatePen(0);
                     m_highlightPS.Stop();
                 }
+                break;
+
+            case "inRange":
+                m_outOfRangeSign.SetActive(control.ReadValue() == 0);
                 break;
 
             case "button":
