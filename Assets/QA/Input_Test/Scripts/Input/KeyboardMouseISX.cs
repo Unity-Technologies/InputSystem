@@ -18,11 +18,12 @@ public class KeyboardMouseISX : MonoBehaviour
     public Text m_mouseInfoText;
 
     private InputAction m_keyboardAction;
-    private InputAction m_mouseAction;
+    private InputAction m_mouseButtonAction;
+    private InputAction m_mouseOtherAction;
 
     private Keyboard m_registeredKeyboard;
 
-    private const int MOUSE_MOVE_DEADZONE = 0;
+    private const int MOUSE_MOVE_DEADZONE = 5;
 
     // Use this for initialization
     void Start()
@@ -31,15 +32,20 @@ public class KeyboardMouseISX : MonoBehaviour
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         m_keyboardAction.Enable();
 
-        m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>") {passThrough = true};
-        m_mouseAction.performed += callbackContext => MouseKeyPress(callbackContext.control as ButtonControl);
-        m_mouseAction.Enable();
+        m_mouseButtonAction = new InputAction(name: "MouseButtonAction", binding: "<mouse>/<button>") {passThrough = true};
+        m_mouseButtonAction.performed += callbackContext => MouseKeyPress(callbackContext.control as ButtonControl);
+        m_mouseButtonAction.Enable();
+
+        m_mouseOtherAction = new InputAction(name: "MouseVector2Action", binding: "<mouse>/<vector2>") { passThrough = true };
+        m_mouseOtherAction.performed += callbackContext => MouseVector2(callbackContext.control as Vector2Control);
+        m_mouseOtherAction.Enable();
     }
 
     private void OnEnable()
     {
         m_keyboardAction?.Enable();
-        m_mouseAction?.Enable();
+        m_mouseButtonAction?.Enable();
+        m_mouseOtherAction?.Enable();
 
         StartCoroutine(nameof(EnableTrackKeyboardInput));
     }
@@ -47,7 +53,8 @@ public class KeyboardMouseISX : MonoBehaviour
     private void OnDisable()
     {
         m_keyboardAction.Disable();
-        m_mouseAction.Disable();
+        m_mouseButtonAction.Disable();
+        m_mouseOtherAction.Disable();
 
         if (m_registeredKeyboard != null)
             m_registeredKeyboard.onTextInput -= new Action<char>(RecordKey);
@@ -58,72 +65,11 @@ public class KeyboardMouseISX : MonoBehaviour
         // Show mouse actions
         Mouse mouse = InputSystem.GetDevice<Mouse>();
         if (mouse != null)
-        {
-            Vector2 move = mouse.delta.ReadValue();
-            Vector2 scroll = mouse.scroll.ReadValue();
-
-            // Mouse move horizontally
-            if (Mathf.Abs(move.x) > MOUSE_MOVE_DEADZONE)
-            {
-                if (move.x > 0)
-                {
-                    StartMouseHighlight("Move Right");
-                    StopMouseHighlight("Move Left");
-                }
-                else
-                {
-                    StartMouseHighlight("Move Left");
-                    StopMouseHighlight("Move Right");
-                }
-            }
-            else
-            {
-                StopMouseHighlight("Move Right");
-                StopMouseHighlight("Move Left");
-            }
-
-            // Mouse move vertically
-            if (Mathf.Abs(move.y) > MOUSE_MOVE_DEADZONE)
-            {
-                if (move.y > 0)
-                {
-                    StartMouseHighlight("Move Up");
-                    StopMouseHighlight("Move Down");
-                }
-                else
-                {
-                    StartMouseHighlight("Move Down");
-                    StopMouseHighlight("Move Up");
-                }
-            }
-            else
-            {
-                StopMouseHighlight("Move Up");
-                StopMouseHighlight("Move Down");
-            }
-
-            // Mouse Wheel scroll
-            // Only horizontal scroll has UI. Vertical scroll is shown in text box.
-            if (scroll.y > 0)
-            {
-                StartMouseHighlight("Wheel Up");
-                StopMouseHighlight("Wheel Down");
-            }
-            else if (scroll.y < 0)
-            {
-                StartMouseHighlight("Wheel Down");
-                StopMouseHighlight("Wheel Up");
-            }
-            else
-            {
-                StopMouseHighlight("Wheel Up");
-                StopMouseHighlight("Wheel Down");
-            }
-
+        {       
             // Update mouse position
             m_mouseInfoText.text = mouse.position.ReadValue().ToString("F0") + "\n"
-                + scroll.ToString() + "\n"
-                + move.ToString("F3");
+                                 + mouse.scroll.ReadValue().ToString() + "\n"
+                                 + mouse.delta.ReadValue().ToString("F3");
         }
     }
 
@@ -159,12 +105,86 @@ public class KeyboardMouseISX : MonoBehaviour
     // callback function when a button is pressed on Mouse
     private void MouseKeyPress(ButtonControl control)
     {
-        string buttonName = control.name.ToString();
+        string buttonName = control.name;
 
         if (control.isPressed)
             StartKeyHightlight(buttonName);
         else
             StopKeyHighlight(buttonName);
+    }
+
+    // callback function when a Vector2 value is passed in from mouse
+    // including delta, position, radius, scroll and tilt.
+    // Only delta and scroll have UI to reflect changes
+    private void MouseVector2(Vector2Control control)
+    {
+        if (control.name == "delta")
+            OnMouseDelta(control.ReadValue());
+        else if (control.name == "scroll")
+            OnMouseScroll(control.ReadValue());
+    }
+
+    private void OnMouseDelta(Vector2 move)
+    {
+        // Mouse move horizontally
+        if (Mathf.Abs(move.x) > MOUSE_MOVE_DEADZONE)
+        {
+            if (move.x > 0)
+            {
+                StartMouseHighlight("Move Right");
+                StopMouseHighlight("Move Left");
+            }
+            else
+            {
+                StartMouseHighlight("Move Left");
+                StopMouseHighlight("Move Right");
+            }
+        }
+        else
+        {
+            StopMouseHighlight("Move Right");
+            StopMouseHighlight("Move Left");
+        }
+
+        // Mouse move vertically
+        if (Mathf.Abs(move.y) > MOUSE_MOVE_DEADZONE)
+        {
+            if (move.y > 0)
+            {
+                StartMouseHighlight("Move Up");
+                StopMouseHighlight("Move Down");
+            }
+            else
+            {
+                StartMouseHighlight("Move Down");
+                StopMouseHighlight("Move Up");
+            }
+        }
+        else
+        {
+            StopMouseHighlight("Move Up");
+            StopMouseHighlight("Move Down");
+        }
+    }
+
+    private void OnMouseScroll(Vector2 scroll)
+    {
+        // Only vertical scroll has UI. Horizontal scroll is shown in text box.
+        if (scroll.y > 0)
+        {
+            StartMouseHighlight("Wheel Up");
+            StopMouseHighlight("Wheel Down");
+        }
+        else if (scroll.y < 0)
+        {
+            StartMouseHighlight("Wheel Down");
+            StopMouseHighlight("Wheel Up");
+        }
+        else
+        {
+            StopMouseHighlight("Wheel Up");
+            StopMouseHighlight("Wheel Down");
+        }
     }
 
     // Generate the red square over the key or mouse button
