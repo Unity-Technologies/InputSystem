@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
+- Several new `Sensor`-based classes have been added. Various existing Android sensor implementations are now based on them.
 
 #### Actions
 
