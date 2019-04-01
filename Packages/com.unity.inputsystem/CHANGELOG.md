@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
+- Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
 
 ## [0.2.6-preview] - 2019-03-20
 
