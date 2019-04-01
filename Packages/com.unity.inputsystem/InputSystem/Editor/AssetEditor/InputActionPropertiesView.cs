@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -21,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ExpectedControlLayoutProperty = actionProperty.FindPropertyRelative("m_ExpectedControlLayout");
             m_FlagsProperty = actionProperty.FindPropertyRelative("m_Flags");
-            m_ControlTypeList = BuildControlTypeList();
+            BuildControlTypeList();
 
             m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlLayoutProperty.stringValue);
             if (m_SelectedControlType == -1)
@@ -34,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override void DrawGeneralProperties()
         {
             EditorGUI.BeginChangeCheck();
-            m_SelectedControlType = EditorGUILayout.Popup(s_TypeLabel, m_SelectedControlType, m_ControlTypeList);
+            m_SelectedControlType = EditorGUILayout.Popup(s_TypeLabel, m_SelectedControlType, m_ControlTypeOptions);
             if (EditorGUI.EndChangeCheck())
             {
                 if (m_SelectedControlType == 0)
@@ -67,13 +68,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private static string[] BuildControlTypeList()
+        private void BuildControlTypeList()
         {
             var types = new List<string>();
-            foreach (var layoutName in InputSystem.s_Manager.m_Layouts.layoutTypes.Keys)
+            var allLayouts = InputSystem.s_Manager.m_Layouts;
+            foreach (var layoutName in allLayouts.layoutTypes.Keys)
             {
-                if (typeof(InputControl).IsAssignableFrom(InputSystem.s_Manager.m_Layouts.layoutTypes[layoutName]) &&
-                    !typeof(InputDevice).IsAssignableFrom(InputSystem.s_Manager.m_Layouts.layoutTypes[layoutName]))
+                if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)
+                    continue;
+
+                ////TODO: skip aliases
+
+                if (typeof(InputControl).IsAssignableFrom(allLayouts.layoutTypes[layoutName]) &&
+                    !typeof(InputDevice).IsAssignableFrom(allLayouts.layoutTypes[layoutName]))
                 {
                     types.Add(layoutName);
                 }
@@ -82,14 +89,18 @@ namespace UnityEngine.Experimental.Input.Editor
             types.Sort((a, b) => string.Compare(a, b, StringComparison.OrdinalIgnoreCase));
             // Make sure "Any" is always topmost entry.
             types.Insert(0, "Any");
-            return types.ToArray();
+
+            m_ControlTypeList = types.ToArray();
+            m_ControlTypeOptions = m_ControlTypeList.Select(x => new GUIContent(ObjectNames.NicifyVariableName(x)))
+                .ToArray();
         }
 
         private readonly SerializedProperty m_ExpectedControlLayoutProperty;
         private readonly SerializedProperty m_FlagsProperty;
 
         private string m_ExpectedControlLayout;
-        private readonly string[] m_ControlTypeList;
+        private string[] m_ControlTypeList;
+        private GUIContent[] m_ControlTypeOptions;
         private int m_SelectedControlType;
 
         private static GUIContent s_TypeLabel;

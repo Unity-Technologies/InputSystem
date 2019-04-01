@@ -224,13 +224,14 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(actionProperty)
         {
             this.actionMapProperty = actionMapProperty;
-            expectedControlLayout = property.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
         }
 
         public SerializedProperty actionMapProperty { get; }
-        public override string expectedControlLayout { get; }
         public override GUIStyle colorTagStyle => Styles.greenRect;
         public bool isSingletonAction => actionMapProperty == null;
+
+        public override string expectedControlLayout =>
+            property.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
 
         public SerializedProperty bindingsArrayProperty => isSingletonAction
         ? property.FindPropertyRelative("m_SingletonActionBindings")

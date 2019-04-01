@@ -567,6 +567,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         // NOTE: Case-insensitive.
         public InternedString name => m_Name;
 
+        public string displayName => m_DisplayName ?? m_Name;
+
         public Type type => m_Type;
 
         public InternedString variants => m_Variants;
@@ -586,6 +588,30 @@ namespace UnityEngine.Experimental.Input.Layouts
         public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
 
         public bool isControlLayout => !isDeviceLayout;
+
+        public bool isGenericTypeOfDevice
+        {
+            get => (m_Flags & Flags.IsGenericTypeOfDevice) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.IsGenericTypeOfDevice;
+                else
+                    m_Flags &= ~Flags.IsGenericTypeOfDevice;
+            }
+        }
+
+        public bool hideInUI
+        {
+            get => (m_Flags & Flags.HideInUI) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.HideInUI;
+                else
+                    m_Flags &= ~Flags.HideInUI;
+            }
+        }
 
         public ControlItem this[string path]
         {
@@ -867,6 +893,10 @@ namespace UnityEngine.Experimental.Input.Layouts
                 m_StateFormat = stateFormat,
                 m_Variants = variants,
                 m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
+                isGenericTypeOfDevice = layoutAttribute?.isGenericTypeOfDevice ?? false,
+                hideInUI = layoutAttribute?.hideInUI ?? false,
+                m_Description = layoutAttribute?.description,
+                m_DisplayName = layoutAttribute?.displayName,
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -903,6 +933,15 @@ namespace UnityEngine.Experimental.Input.Layouts
         private InternedString[] m_CommonUsages;
         internal ControlItem[] m_Controls;
         internal string m_DisplayName;
+        private string m_Description;
+        private Flags m_Flags;
+
+        [Flags]
+        private enum Flags
+        {
+            IsGenericTypeOfDevice = 1 << 0,
+            HideInUI = 1 << 1,
+        }
 
         private InputControlLayout(string name, Type type)
         {
@@ -1380,9 +1419,6 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (m_StateFormat == new FourCC())
                 m_StateFormat = other.m_StateFormat;
 
-            if (string.IsNullOrEmpty(m_DisplayName))
-                m_DisplayName = other.m_DisplayName;
-
             // Combine common usages.
             m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
 
@@ -1637,8 +1673,11 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string[] commonUsages;
             public string displayName;
+            public string description;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
             public string variant;
+            public bool isGenericTypeOfDevice;
+            public bool hideInUI;
             public InputDeviceMatcher.MatcherJson device;
             public ControlItemJson[] controls;
 
@@ -1673,6 +1712,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                 var layout = new InputControlLayout(name, type)
                 {
                     m_DisplayName = displayName,
+                    m_Description = description,
+                    isGenericTypeOfDevice = isGenericTypeOfDevice,
+                    hideInUI = hideInUI,
                     m_Variants = new InternedString(variant)
                 };
                 if (!string.IsNullOrEmpty(format))
@@ -1727,6 +1769,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                     type = layout.type.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
+                    description = layout.m_Description,
+                    isGenericTypeOfDevice = layout.isGenericTypeOfDevice,
+                    hideInUI = layout.hideInUI,
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
@@ -2035,6 +2080,34 @@ namespace UnityEngine.Experimental.Input.Layouts
                 while (baseLayoutTable.TryGetValue(layoutName, out var baseLayout))
                     layoutName = baseLayout;
                 return layoutName;
+            }
+
+            public InternedString FindLayoutThatIntroducesControl(InputControl control, Cache cache)
+            {
+                // Find the topmost child control on the device. A device layout can only
+                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
+                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
+                // To determine which device contributes the control has a whole, we have to be looking
+                // at the topmost child of the device.
+                var topmostChild = control;
+                while (topmostChild.parent != control.device)
+                    topmostChild = topmostChild.parent;
+
+                // Find the layout in the device's base layout chain that first mentions the given control.
+                // If we don't find it, we know it's first defined directly in the layout of the given device,
+                // i.e. it's not an inherited control.
+                var deviceLayoutName = control.device.m_Layout;
+                var baseLayoutName = deviceLayoutName;
+                while (baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
+                {
+                    var layout = cache.FindOrLoadLayout(baseLayoutName);
+
+                    var controlItem = layout.FindControl(topmostChild.m_Name);
+                    if (controlItem != null)
+                        deviceLayoutName = baseLayoutName;
+                }
+
+                return deviceLayoutName;
             }
 
             // Get the type which will be instantiated for the given layout.

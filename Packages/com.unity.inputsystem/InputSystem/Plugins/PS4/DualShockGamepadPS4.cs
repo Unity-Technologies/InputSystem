@@ -242,10 +242,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
     [Serializable]
     class PS4InputDeviceDescriptor
     {
-        public uint slotId = 0;
-        public bool isAimController = false;
-        public uint defaultColorId = 0;
-        public uint userId = 0;
+        public uint slotId;
+        public bool isAimController;
+        public uint defaultColorId;
+        public uint userId;
 
         internal string ToJson()
         {
@@ -259,6 +259,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
     }
 
     ////TODO: Unify this with general touch support
+    [InputControlLayout(hideInUI = true)]
     public class PS4TouchControl : InputControl<PS4Touch>
     {
         /// <summary>
@@ -298,10 +299,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
     }
 
 
-    [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4))]
+    [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4), displayName = "PS4 Controller (on PS4)")]
     public class DualShockGamepadPS4 : DualShockGamepad
     {
-        ////TODO: move up into base
+        public Vector3Control acceleration { get; private set; }
+        public QuaternionControl orientation { get; private set; }
+        public Vector3Control angularVelocity { get; private set; }
+
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
         public new static ReadOnlyArray<DualShockGamepadPS4> all => new ReadOnlyArray<DualShockGamepadPS4>(s_Devices);
@@ -425,6 +429,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
+
+            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
+            orientation = builder.GetControl<QuaternionControl>(this, "orientation");
+            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
 
             var touchArray = new PS4TouchControl[2];
 

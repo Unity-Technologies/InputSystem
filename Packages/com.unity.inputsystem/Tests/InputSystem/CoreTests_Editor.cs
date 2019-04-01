@@ -1324,7 +1324,7 @@ partial class CoreTests
         var map1 = asset.AddActionMap("map");
         var action = map1.AddAction("action");
         action.AddBinding("<Gamepad>/buttonNorth", groups: "Other");
-        action.AddBinding("<Gamepad>/buttonSouth", groups: "Binding Group With Spaces");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Binding(Group\"With)  Spaces");
 
         using (var so = new SerializedObject(asset))
         {
@@ -1333,7 +1333,7 @@ partial class CoreTests
                 onBuildTree = () => InputActionTreeView.BuildFullTree(so)
             };
 
-            tree.SetItemSearchFilterAndReload("\"g:Binding Group With Spaces\"");
+            tree.SetItemSearchFilterAndReload("\"g:Binding(Group\\\"With)  Spaces\"");
 
             Assert.That(tree["map"].children, Has.Count.EqualTo(1));
             Assert.That(tree["map/action"].children, Has.Count.EqualTo(1));
@@ -1933,7 +1933,7 @@ partial class CoreTests
     {
         const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
         var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-        int scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+        var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
         var scalePostFix = scale > 1 ? $"@{scale}x" : "";
 
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),

@@ -14,6 +14,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
 
+#### Actions
+
+- A number of changes have been made to the control picker UI in the editor. \
+  ![Input Control Picker](Documentation~/Images/InputControlPicker.png)
+  * The button to pick controls interactively (e.g. by pressing a button on a gamepad) has been moved inside the picker and renamed to "Listen". It now works as a toggle that puts the picker into a special kind of 'search' mode. While listening, suitable controls that are actuated will be listed in the picker and can then be picked from.
+  * Controls are now displayed with their nice names (e.g. "Cross" instead of "buttonSouth" in the case of the PS4 controller).
+  * Child controls are indented instead of listed in "parent/child" format.
+  * The hierarchy of devices has been rearranged for clarity. The toplevel groups of "Specific Devices" and "Abstract Devices" are now merged into one hierarchy that progressively groups devices into more specific groups.
+  * Controls now have icons displayed for them.
+- There is new support for binding to keys on the keyboard by their generated character rather than by their location. \
+  ![Keyboard Binding](Documentation~/Images/KeyboardBindByLocationVsCharacter.png)
+  * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
+  * Binding by location shows differences between the local keyboard layout and the US reference layout.
+  * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
+
 ## [0.2.6-preview] - 2019-03-20
 
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.

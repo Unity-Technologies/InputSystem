@@ -20,8 +20,8 @@ public class PS4Tests : InputTestFixture
             interfaceName = "PS4"
         });
 
-        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
-        var gamepad = (DualShockGamepad)device;
+        Assert.That(device, Is.AssignableTo<DualShockGamepadPS4>());
+        var gamepad = (DualShockGamepadPS4)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockGamepadStatePS4

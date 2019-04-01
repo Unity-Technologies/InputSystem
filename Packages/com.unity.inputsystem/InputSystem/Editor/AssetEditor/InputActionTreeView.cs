@@ -14,6 +14,8 @@ using UnityEngine.Experimental.Input.Utilities;
 // not for the convenience of editing operations. This means that editing operations have to constantly jump through
 // hoops to map themselves onto the persistence model of the data.
 
+////FIXME: context menu cannot be brought up when there's no items in the tree
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>

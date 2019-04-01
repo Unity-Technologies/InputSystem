@@ -779,6 +779,18 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanFindControlsByDisplayName()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls("<Gamepad>/#(right shoulder)"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightShoulder));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanFindControlsByUsage()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

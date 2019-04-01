@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -45,7 +43,7 @@ namespace UnityEngine.Experimental.Input
     /// By default comes with just a trigger, a potentially twistable
     /// stick and an optional single hatswitch.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(JoystickState))]
+    [InputControlLayout(stateType = typeof(JoystickState), isGenericTypeOfDevice = true)]
     public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }

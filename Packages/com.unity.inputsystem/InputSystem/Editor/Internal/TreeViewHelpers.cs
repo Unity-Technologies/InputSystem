@@ -37,6 +37,15 @@ namespace UnityEngine.Experimental.Input.Editor
             while (child != null && child != parent);
             return child != null;
         }
+
+        public static void ExpandChildren(this TreeView treeView, TreeViewItem item)
+        {
+            if (!item.hasChildren)
+                return;
+
+            foreach (var child in item.children)
+                treeView.SetExpanded(child.id, true);
+        }
     }
 }
 #endif // UNITY_EDITOR

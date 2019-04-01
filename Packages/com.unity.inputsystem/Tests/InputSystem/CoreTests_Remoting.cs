@@ -112,7 +112,7 @@ partial class CoreTests
         // We call RemoteInputPlayerConnection.instance once to make sure that we an instance is created, and we get
         // a deterministic number of two errors.
         var instance = RemoteInputPlayerConnection.instance;
-        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");   
+        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
         UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
 #endif
         var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();

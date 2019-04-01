@@ -7,28 +7,80 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class StringHelpers
     {
-        public static string Escape(this string str)
+        /// <summary>
+        /// For every character in <paramref name="str"/> that is contained in <paramref name="chars"/>, replace it
+        /// by the corresponding character in <paramref name="replacements"/> preceded by a backslash.
+        /// </summary>
+        public static string Escape(this string str, string chars = "\n\t\r\\\"", string replacements = "ntr\\\"")
         {
             if (str == null)
                 return null;
 
+            // Scan for characters that need escaping. If there's none, just return
+            // string as is.
+            var hasCharacterThatNeedsEscaping = false;
+            foreach (var ch in str)
+            {
+                if (chars.Contains(ch))
+                {
+                    hasCharacterThatNeedsEscaping = true;
+                    break;
+                }
+            }
+            if (!hasCharacterThatNeedsEscaping)
+                return str;
+
             var builder = new StringBuilder();
             foreach (var ch in str)
             {
-                if (ch == '"')
-                    builder.Append("\\\"");
-                else if (ch == '\\')
-                    builder.Append("\\\\");
-                else if (ch == '\n')
-                    builder.Append("\\n");
-                else if (ch == '\r')
-                    builder.Append("\\r");
-                else if (ch == '\t')
-                    builder.Append("\\t");
-                else
+                var index = chars.IndexOf(ch);
+                if (index == -1)
+                {
                     builder.Append(ch);
+                }
+                else
+                {
+                    builder.Append('\\');
+                    builder.Append(replacements[index]);
+                }
             }
             return builder.ToString();
+        }
+
+        public static string Unescape(this string str, string chars = "ntr\\\"", string replacements = "\n\t\r\\\"")
+        {
+            if (str == null)
+                return str;
+
+            // If there's no backslashes in the string, there's nothing to unescape.
+            if (!str.Contains('\\'))
+                return str;
+
+            var builder = new StringBuilder();
+            for (var i = 0; i < str.Length; ++i)
+            {
+                var ch = str[i];
+                if (ch == '\\' && i < str.Length - 2)
+                {
+                    ++i;
+                    ch = str[i];
+                    var index = chars.IndexOf(ch);
+                    if (index != -1)
+                        builder.Append(replacements[index]);
+                    else
+                        builder.Append(ch);
+                }
+                else
+                {
+                    builder.Append(ch);
+                }
+            }
+            return builder.ToString();
+        }
+
+        public static bool Contains(this string str, char ch)
+        {
+            return str.IndexOf(ch) != -1;
         }
 
         public static bool Contains(this string str, string text, StringComparison comparison)
@@ -125,7 +177,12 @@ namespace UnityEngine.Experimental.Input.Utilities
                     ++pos;
                     var endPos = pos;
                     while (endPos < length && str[endPos] != '\"')
+                    {
+                        // Doesn't recognize control sequences but allows escaping double quotes.
+                        if (str[endPos] == '\\' && endPos < length - 1)
+                            ++endPos;
                         ++endPos;
+                    }
                     yield return new Substring(str, pos, endPos - pos);
                     pos = endPos + 1;
                 }
@@ -390,7 +447,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public static unsafe string ReadStringFromBuffer(IntPtr buffer, int bufferSize, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset + sizeof(int) > bufferSize)
                 return null;
@@ -410,6 +467,12 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             offset = (uint)endOffset;
             return text;
+        }
+
+        public static bool IsPrintable(this char ch)
+        {
+            // This is crude and far from how Unicode defines printable but it should serve as a good enough approximation.
+            return !char.IsControl(ch) && !char.IsWhiteSpace(ch);
         }
     }
 }
