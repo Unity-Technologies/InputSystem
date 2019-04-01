@@ -520,6 +520,7 @@ namespace UnityEngine.Experimental.Input
 
         private void OnDestroy()
         {
+            Disable();
             if (m_SharedStateForAllMaps != null)
             {
                 m_SharedStateForAllMaps.Dispose(); // Will clean up InputActionMap state.
