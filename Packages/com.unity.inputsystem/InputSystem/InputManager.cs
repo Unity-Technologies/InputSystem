@@ -2601,7 +2601,7 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Buffer flip.
-                        if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
+                        if (FlipBuffersForDeviceIfNecessary(device, updateType))
                         {
                             // In case of a delta state event we need to carry forward all state we're
                             // not updating. Instead of optimizing the copy here, we're just bringing the
@@ -3033,7 +3033,7 @@ namespace UnityEngine.Experimental.Input
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
         // the given update type.
         // Returns true if there was a buffer flip.
-        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType, bool gameIsPlayingAndHasFocus)
+        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType)
         {
             if (updateType == InputUpdateType.BeforeRender)
             {
