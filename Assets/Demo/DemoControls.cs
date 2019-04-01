@@ -7,7 +7,6 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Utilities;
 
-
 public class DemoControls : IInputActionCollection
 {
     private InputActionAsset asset;
@@ -74,7 +73,7 @@ public class DemoControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""835e9892-47f3-46d8-ab24-2da6a2366b12"",
+                    ""id"": ""c5de64a3-60dd-48f9-a79e-e957aaec816e"",
                     ""path"": ""*/{PrimaryAction}"",
                     ""interactions"": ""Tap,SlowTap"",
                     ""processors"": """",
@@ -87,7 +86,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""afc296ad-2abf-49e7-824d-01b1eaedd561"",
+                    ""id"": ""1ed197af-20d0-4779-95a0-53a8066cf1f3"",
                     ""path"": ""<SteamDemoController>/fire"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -100,7 +99,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""f790a8f2-bc8b-4101-a4f1-d5dbe38d734b"",
+                    ""id"": ""f3f591c2-fc4f-4aec-88b5-4af72d05da0c"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -113,7 +112,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""f0f22493-fa97-4137-b13f-eff19c3611d1"",
+                    ""id"": ""02b33304-f826-4615-b4b3-4060848ab75c"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -126,7 +125,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""2298cc23-334c-4e16-a245-05cfa7759401"",
+                    ""id"": ""c398a92b-4237-407a-83cc-e3d8af6cddd3"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -139,7 +138,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""6db34b29-292c-4a29-b4cb-a0da831edec8"",
+                    ""id"": ""cd93c9c0-75ad-4189-b9c7-2a320bdc8815"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -152,7 +151,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""0859e0ab-899d-4a28-8793-25971e0071bc"",
+                    ""id"": ""49459206-9bef-4a8f-9195-1770359f1d36"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -165,7 +164,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""44ba2502-7ad7-411d-9cf1-93b7fb32bf6e"",
+                    ""id"": ""a1227436-225e-4c54-b64f-c166712b3cf5"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -178,7 +177,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""96e8270e-7c43-462d-828c-1725d8b29a60"",
+                    ""id"": ""1d3133b3-d618-42f2-9020-1dfb01663c87"",
                     ""path"": ""<SteamDemoController>/move"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -191,7 +190,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""c923feb9-55e4-49c5-a7ff-2ae0da008a10"",
+                    ""id"": ""d7141a9a-b710-4b7a-b284-ca9c813f0cdc"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -204,7 +203,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""5be963c0-ebc4-438c-a6e9-aa49ec9949b0"",
+                    ""id"": ""3647ef49-bb9b-4ea8-b1b0-71fd43e60060"",
                     ""path"": ""<Pointer>/delta"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -217,7 +216,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""91bb5928-80b6-420c-9749-2148d8187723"",
+                    ""id"": ""62276afc-737f-4b3e-ba4b-fbb8748c1b51"",
                     ""path"": ""<SteamDemoController>/look"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -230,7 +229,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""cd8bd088-9dab-41ef-9e07-ba6d8050f977"",
+                    ""id"": ""e686da91-9e57-4dc1-bfd0-891ba4980c30"",
                     ""path"": ""<Keyboard>/escape"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -243,7 +242,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""4d11a9d7-8132-4b9a-b56b-1762eac051e3"",
+                    ""id"": ""0a2f68f1-b5b3-4e35-bb9e-7a6652a050cd"",
                     ""path"": ""<Gamepad>/{Menu}"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -256,7 +255,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""3a9e1481-5089-4ab2-bf4b-7fa120cc354e"",
+                    ""id"": ""e06ec89c-142f-44d3-8181-f669e89ccc6a"",
                     ""path"": ""<SteamDemoController>/steamEnterMenu"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -327,7 +326,7 @@ public class DemoControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""3e2c3290-80ea-44d4-85bb-6f0af361d6c9"",
+                    ""id"": ""7f431a52-58c2-4c9a-88db-b90df1546d7c"",
                     ""path"": ""<Gamepad>/{submit}"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -340,7 +339,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""2d538a69-63a4-41b6-996c-ded14de15d15"",
+                    ""id"": ""a42bd582-111c-4110-9f0d-d68533d488a0"",
                     ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -353,7 +352,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d0a0cf31-41c8-45f0-ad20-508d6d485d77"",
+                    ""id"": ""91991801-7cee-48c8-9511-c131a0436852"",
                     ""path"": ""<Mouse>/position"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -366,7 +365,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""ecc5f077-2e3d-4ad9-86e0-767d520c9181"",
+                    ""id"": ""7ef8ee0c-363c-45ad-8be0-be00a73caa08"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -379,7 +378,7 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""6356f6e3-5221-4d20-9b4e-463b84f1b3ba"",
+                    ""id"": ""5c50e7b8-de72-4aca-ad94-f836592cd1fe"",
                     ""path"": ""<Gamepad>/dpad"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -658,7 +657,6 @@ public class DemoControls : IInputActionCollection
     public InputControlScheme KeyboardMouseScheme
     {
         get
-
         {
             if (m_KeyboardMouseSchemeIndex == -1) m_KeyboardMouseSchemeIndex = asset.GetControlSchemeIndex("Keyboard&Mouse");
             return asset.controlSchemes[m_KeyboardMouseSchemeIndex];
@@ -668,7 +666,6 @@ public class DemoControls : IInputActionCollection
     public InputControlScheme GamepadScheme
     {
         get
-
         {
             if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.GetControlSchemeIndex("Gamepad");
             return asset.controlSchemes[m_GamepadSchemeIndex];
@@ -678,7 +675,6 @@ public class DemoControls : IInputActionCollection
     public InputControlScheme SteamScheme
     {
         get
-
         {
             if (m_SteamSchemeIndex == -1) m_SteamSchemeIndex = asset.GetControlSchemeIndex("Steam");
             return asset.controlSchemes[m_SteamSchemeIndex];
@@ -688,7 +684,6 @@ public class DemoControls : IInputActionCollection
     public InputControlScheme VRScheme
     {
         get
-
         {
             if (m_VRSchemeIndex == -1) m_VRSchemeIndex = asset.GetControlSchemeIndex("VR");
             return asset.controlSchemes[m_VRSchemeIndex];
