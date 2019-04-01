@@ -238,7 +238,12 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private bool gameIsPlayingAndHasFocus => EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+        private bool gameIsPlayingAndHasFocus =>
+#if UNITY_EDITOR
+            EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+#else
+            true;
+#endif
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
