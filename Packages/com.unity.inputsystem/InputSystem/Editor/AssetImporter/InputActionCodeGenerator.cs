@@ -73,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("using UnityEngine;");
             writer.WriteLine("using UnityEngine.Experimental.Input;");
             writer.WriteLine("using UnityEngine.Experimental.Input.Utilities;");
-            writer.WriteLine("\n");
+            writer.WriteLine("");
 
             // Begin namespace.
             var haveNamespace = !string.IsNullOrEmpty(options.namespaceName);
@@ -263,7 +263,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.WriteLine($"private int m_{identifier}SchemeIndex = -1;");
                 writer.WriteLine($"public InputControlScheme {identifier}Scheme");
                 writer.BeginBlock();
-                writer.WriteLine("get\n");
+                writer.WriteLine("get");
                 writer.BeginBlock();
                 writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.GetControlSchemeIndex(\"{scheme.name}\");");
                 writer.WriteLine($"return asset.controlSchemes[m_{identifier}SchemeIndex];");
