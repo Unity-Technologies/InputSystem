@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a `clickCount` control to the `Mouse` class, which specifies the click count for the last mouse click (to allow distinguishing between single-, double- and multi-clicks).
 - Support for Bluetooth Xbox One controllers on macOS.
 
 ### Changed
@@ -29,6 +30,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
   * Binding by location shows differences between the local keyboard layout and the US reference layout.
   * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
+
+### Fixed
+
+- Input Settings configured in the editor are now transferred to the built player correctly.
+- Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 
 ## [0.2.6-preview] - 2019-03-20
 

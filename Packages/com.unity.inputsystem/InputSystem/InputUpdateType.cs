@@ -68,7 +68,6 @@ namespace UnityEngine.Experimental.Input
         public static InputUpdateType s_LastUpdateType;
         public static uint s_DynamicUpdateCount;
         public static uint s_FixedUpdateCount;
-        public static double s_LastFixedUpdateTime;
         public static uint s_LastUpdateRetainedEventBytes;
         public static uint s_LastUpdateRetainedEventCount;
 
@@ -78,7 +77,6 @@ namespace UnityEngine.Experimental.Input
             public InputUpdateType lastUpdateType;
             public uint dynamicUpdateCount;
             public uint fixedUpdateCount;
-            public double lastFixedUpdateTime;
             public uint lastUpdateRetainedEventBytes;
             public uint lastUpdateRetainedEventCount;
         }
@@ -90,7 +88,6 @@ namespace UnityEngine.Experimental.Input
                 lastUpdateType = s_LastUpdateType,
                 dynamicUpdateCount = s_DynamicUpdateCount,
                 fixedUpdateCount = s_FixedUpdateCount,
-                lastFixedUpdateTime = s_LastFixedUpdateTime,
                 lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
                 lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
@@ -101,7 +98,6 @@ namespace UnityEngine.Experimental.Input
             s_LastUpdateType = state.lastUpdateType;
             s_DynamicUpdateCount = state.dynamicUpdateCount;
             s_FixedUpdateCount = state.fixedUpdateCount;
-            s_LastFixedUpdateTime = state.lastFixedUpdateTime;
             s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
             s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
         }

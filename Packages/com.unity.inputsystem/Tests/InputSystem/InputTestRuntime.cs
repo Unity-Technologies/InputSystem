@@ -95,6 +95,7 @@ namespace UnityEngine.Experimental.Input
             lock (m_Lock)
             {
                 eventPtr->eventId = m_NextEventId;
+                eventPtr->handled = false;
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
@@ -320,13 +321,12 @@ namespace UnityEngine.Experimental.Input
         public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
+        public double currentTimeForFixedUpdate { get; set; }
         public bool shouldRunInBackground { get; set; }
         public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
-
-        public double fixedUpdateIntervalInSeconds { get; set; } = 1.0 / 30;
-
+        
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public Vector2 screenSize { set; get; } = new Vector2(Screen.width, Screen.height);

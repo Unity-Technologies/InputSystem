@@ -148,10 +148,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [FieldOffset(14)]
         public uint buttons;
 
-        [InputControl(name = "leftTrigger", format = "BYTE")]
-        [FieldOffset(9)] public byte leftTrigger;
-        [InputControl(name = "rightTrigger", format = "BYTE")]
-        [FieldOffset(11)] public byte rightTrigger;
+        [InputControl(name = "leftTrigger", format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=0.01560998")]
+        [FieldOffset(9)] public ushort leftTrigger;
+        [InputControl(name = "rightTrigger", format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=0.01560998")]
+        [FieldOffset(11)] public ushort rightTrigger;
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
         [InputControl(name = "leftStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
