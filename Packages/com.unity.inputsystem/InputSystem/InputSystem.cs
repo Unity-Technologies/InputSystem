@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Haptics;
@@ -394,6 +395,8 @@ namespace UnityEngine.Experimental.Input
         #endregion
 
         #region Processors
+
+        ////TODO: rename to RegisterProcessor
 
         /// <summary>
         /// Register an <see cref="InputProcessor{TValue}"/> with the system.
@@ -960,7 +963,7 @@ namespace UnityEngine.Experimental.Input
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
             if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new ArgumentException(message: string.Format("Device for control '{0}' has not been added to system"), nameof(control));
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"), nameof(control));
 
             s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
@@ -1218,6 +1221,8 @@ namespace UnityEngine.Experimental.Input
             var inputEvent = TextEvent.Create(device.id, character, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
+
+        ////REVIEW: this should run the "natural" update according to what's configured in the input systems (e.g. manual if manual is chosen there)
 
         public static void Update()
         {
@@ -1638,14 +1643,14 @@ namespace UnityEngine.Experimental.Input
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettings.newSystemBackendsEnabled)
+                !EditorPlayerSettingHelpers.newSystemBackendsEnabled)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
                     "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
-                    EditorPlayerSettings.newSystemBackendsEnabled = true;
+                    EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
@@ -1706,8 +1711,7 @@ namespace UnityEngine.Experimental.Input
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            ////TODO: figure out bring settings into player
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance, settings);
 
@@ -1766,6 +1770,10 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
             Plugins.XR.XRSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
+            Plugins.Linux.LinuxSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA

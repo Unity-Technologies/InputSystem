@@ -94,7 +94,8 @@ namespace UnityEngine.Experimental.Input
 
             lock (m_Lock)
             {
-                eventPtr->m_EventId = m_NextEventId;
+                eventPtr->eventId = m_NextEventId;
+                eventPtr->handled = false;
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
@@ -314,18 +315,18 @@ namespace UnityEngine.Experimental.Input
 
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
+        public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
-        public InputUpdateType updateMask { get; set; }
+        public double currentTimeForFixedUpdate { get; set; }
+        public bool shouldRunInBackground { get; set; }
         public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
-
-        public double fixedUpdateIntervalInSeconds { get; set; } = 1.0 / 30;
-
+        
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public Vector2 screenSize { set; get; } = new Vector2(Screen.width, Screen.height);
@@ -357,7 +358,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         private int m_NextDeviceId = 1;
-        private uint m_NextEventId = 1;
+        private int m_NextEventId = 1;
         private int m_EventCount;
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);

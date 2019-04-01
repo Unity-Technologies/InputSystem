@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
+using UnityEditor;
 #endif
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
@@ -110,19 +111,15 @@ namespace UnityEngine.Experimental.Input
             get => m_UpdateMask;
             set
             {
-                if (m_UpdateMask == value)
-                    return;
-
                 // In editor, we don't allow disabling editor updates.
                 #if UNITY_EDITOR
                 value |= InputUpdateType.Editor;
                 #endif
 
-                m_UpdateMask = value;
+                if (m_UpdateMask == value)
+                    return;
 
-                // Tell runtime.
-                if (m_Runtime != null)
-                    m_Runtime.updateMask = m_UpdateMask;
+                m_UpdateMask = value;
 
                 // Recreate state buffers.
                 if (m_DevicesCount > 0)
@@ -362,6 +359,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
+            ////FIXME: this is no longer necessary; kill it
             // If we have an instance, make sure it is [Serializable].
             if (instance != null)
             {
@@ -1381,6 +1379,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
                     InputRuntime.s_Instance = null;
@@ -1404,6 +1403,7 @@ namespace UnityEngine.Experimental.Input
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
+            m_HasFocus = Application.isFocused;
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
@@ -1425,6 +1425,7 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
+            RegisterControlLayout("DpadAxis", typeof(DpadControl.DpadAxisControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
             RegisterControlLayout("Touch", typeof(TouchControl));
 
@@ -1458,7 +1459,6 @@ namespace UnityEngine.Experimental.Input
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
-            processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
             #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
@@ -1486,14 +1486,16 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onFocusChanged = OnFocusChanged;
-            m_Runtime.updateMask = updateMask;
+            m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
+            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1577,6 +1579,7 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
+        private bool m_HasFocus;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
@@ -1885,6 +1888,10 @@ namespace UnityEngine.Experimental.Input
 
         private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
+            // Make sure we're not adding to m_AvailableDevices before we restored what we
+            // had before a domain reload.
+            RestoreDevicesAfterDomainReloadIfNecessary();
+
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
@@ -1972,16 +1979,21 @@ namespace UnityEngine.Experimental.Input
             m_NativeBeforeUpdateHooked = true;
         }
 
+        private void RestoreDevicesAfterDomainReloadIfNecessary()
+        {
+            #if UNITY_EDITOR
+            if (m_SavedDeviceStates != null)
+                RestoreDevicesAfterDomainReload();
+            #endif
+        }
+
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
 
-            #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
-                RestoreDevicesAfterDomainReload();
-            #endif
+            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
@@ -2105,8 +2117,7 @@ namespace UnityEngine.Experimental.Input
                 default:
                     throw new NotImplementedException("Input update mode: " + m_Settings.updateMode);
             }
-            if (m_Settings.runInBackground)
-                newUpdateMask |= (InputUpdateType)(1 << 31);
+
             #if UNITY_EDITOR
             // In the editor, we force editor updates to be on even if InputEditorUserSettings.lockInputToGameView is
             // on as otherwise we'll end up accumulating events in edit mode without anyone flushing the
@@ -2114,6 +2125,8 @@ namespace UnityEngine.Experimental.Input
             newUpdateMask |= InputUpdateType.Editor;
             #endif
             updateMask = newUpdateMask;
+
+            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
@@ -2175,6 +2188,7 @@ namespace UnityEngine.Experimental.Input
 
         private void OnFocusChanged(bool focus)
         {
+            m_HasFocus = focus;
             var deviceCount = m_DevicesCount;
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -2182,6 +2196,31 @@ namespace UnityEngine.Experimental.Input
                 if (!InputSystem.TrySyncDevice(device))
                     InputSystem.TryResetDevice(device);
             }
+        }
+
+        private bool ShouldRunUpdate(InputUpdateType updateType)
+        {
+            switch (updateType)
+            {
+                case InputUpdateType.BeforeRender:
+                case InputUpdateType.Dynamic:
+                case InputUpdateType.Fixed:
+                    // Note: When Touchscreen Keyboard is active, Unity application looses focus, thus none of input is being processed
+                    //       Force input updating while keyboard is show
+                    //       In the future, hopefully we'll have TouchscreenKeyboard integrated in thew new input system directly
+                    //       Thus with removal of KeyboardOnScreen, KeyboardOnScreen::IsVisible() check should go away
+                    if (!(m_Settings.runInBackground || TouchScreenKeyboard.visible) && !m_HasFocus)
+                        return false;
+                    break;
+#if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
+                    if (Application.isPlaying && !EditorApplication.isPaused && (m_HasFocus || m_Settings.runInBackground))
+                        return false;
+                    break;
+#endif
+            }
+            return (updateType & m_UpdateMask) != 0;
         }
 
         /// <summary>
@@ -2211,10 +2250,7 @@ namespace UnityEngine.Experimental.Input
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
-            #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
-                RestoreDevicesAfterDomainReload();
-            #endif
+            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -2290,24 +2326,10 @@ namespace UnityEngine.Experimental.Input
             //       Otherwise, once an event with a newer timestamp has been processed, events coming later
             //       in the buffer and having older timestamps will get rejected.
 
-            var currentTime = m_Runtime.currentTime;
-            var timesliceTime = currentTime;
+            var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
             #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
-
-            ////TODO: account for fixed updates getting dropped when framerate tanks
-            // For fixed updates, we space timeslices out evenly according to fixed update length.
-            // NOTE: In the first fixed update, we simply take the current time and consume everything that
-            //       happened until then. After the first update, we start the regular cadence.
-            if (updateType == InputUpdateType.Fixed)
-            {
-                if (InputUpdate.s_FixedUpdateCount == 1)
-                    timesliceTime = m_Runtime.currentTime;
-                else
-                    timesliceTime = InputUpdate.s_LastFixedUpdateTime + m_Runtime.fixedUpdateIntervalInSeconds;
-                InputUpdate.s_LastFixedUpdateTime = timesliceTime;
-            }
             #endif
 
             // Early out if there's no events to process.
@@ -2398,7 +2420,7 @@ namespace UnityEngine.Experimental.Input
 
                 #if UNITY_2019_2_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
-                if (timesliceEvents && currentEventReadPtr->internalTime >= timesliceTime)
+                if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
                 {
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
@@ -3233,7 +3255,7 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             m_DeviceSetupVersion = state.deviceSetupVersion + 1;
-            m_UpdateMask = state.updateMask;
+            updateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 

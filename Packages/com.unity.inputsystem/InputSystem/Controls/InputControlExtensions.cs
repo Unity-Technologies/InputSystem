@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -132,7 +133,7 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             var statePtr = control.GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == null)
@@ -149,7 +150,7 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             var result = default(TValue);
             control.ReadUnprocessedValueFromEvent(eventPtr, out result);
@@ -160,7 +161,7 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             var statePtr = control.GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == null)
@@ -176,7 +177,7 @@ namespace UnityEngine.Experimental.Input
         public static unsafe void WriteValueFromObjectIntoEvent(this InputControl control, InputEventPtr eventPtr, object value)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
             if (statePtr == null)
@@ -201,9 +202,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe void WriteValueIntoState(this InputControl control, void* statePtr)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             var valueSize = control.valueSizeInBytes;
             var valuePtr = UnsafeUtility.Malloc(valueSize, 8, Allocator.Temp);
@@ -222,12 +223,11 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
-            var controlOfType = control as InputControl<TValue>;
-            if (controlOfType == null)
-                throw new ArgumentException(string.Format("Expecting control of type '{0}' but got '{1}'",
-                    typeof(TValue).Name, control.GetType().Name));
+            if (!(control is InputControl<TValue> controlOfType))
+                throw new ArgumentException(
+                    $"Expecting control of type '{typeof(TValue).Name}' but got '{control.GetType().Name}'");
 
             controlOfType.WriteValueIntoState(value, statePtr);
         }
@@ -236,9 +236,9 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             var valuePtr = UnsafeUtility.AddressOf(ref value);
             var valueSize = UnsafeUtility.SizeOf<TValue>();
@@ -250,7 +250,7 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             control.WriteValueIntoState(control.ReadValue(), statePtr);
         }
@@ -269,16 +269,14 @@ namespace UnityEngine.Experimental.Input
             where TState : struct, IInputStateTypeInfo
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             // Make sure the control's state actually fits within the given state.
             var sizeOfState = UnsafeUtility.SizeOf<TState>();
             if (control.stateOffsetRelativeToDeviceRoot + control.m_StateBlock.alignedSizeInBytes >= sizeOfState)
                 throw new ArgumentException(
-                    string.Format(
-                        "Control {0} with offset {1} and size of {2} bits is out of bounds for state of type {3} with size {4}",
-                        control.path, control.stateOffsetRelativeToDeviceRoot, control.m_StateBlock.sizeInBits,
-                        typeof(TState).Name, sizeOfState), "state");
+                    $"Control {control.path} with offset {control.stateOffsetRelativeToDeviceRoot} and size of {control.m_StateBlock.sizeInBits} bits is out of bounds for state of type {typeof(TState).Name} with size {sizeOfState}",
+                    nameof(state));
 
             // Write value.
             var statePtr = (byte*)UnsafeUtility.AddressOf(ref state);
@@ -289,14 +287,13 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
+                throw new ArgumentNullException(nameof(eventPtr));
 
-            var controlOfType = control as InputControl<TValue>;
-            if (controlOfType == null)
-                throw new ArgumentException(string.Format("Expecting control of type '{0}' but got '{1}'",
-                    typeof(TValue).Name, control.GetType().Name));
+            if (!(control is InputControl<TValue> controlOfType))
+                throw new ArgumentException(
+                    $"Expecting control of type '{typeof(TValue).Name}' but got '{control.GetType().Name}'");
 
             controlOfType.WriteValueIntoEvent(value, eventPtr);
         }
@@ -305,9 +302,9 @@ namespace UnityEngine.Experimental.Input
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
+                throw new ArgumentNullException(nameof(eventPtr));
 
             var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
             if (statePtr == null)
@@ -319,7 +316,7 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool CheckStateIsAtDefault(this InputControl control)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             return CheckStateIsAtDefault(control, control.currentStatePtr);
         }
@@ -340,9 +337,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool CheckStateIsAtDefault(this InputControl control, void* statePtr, void* maskPtr = null)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             return control.CompareState(statePtr, control.defaultStatePtr, maskPtr);
         }
@@ -350,7 +347,7 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool CheckStateIsAtDefaultIgnoringNoise(this InputControl control)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
 
             return control.CheckStateIsAtDefaultIgnoringNoise(control.currentStatePtr);
         }
@@ -358,9 +355,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool CheckStateIsAtDefaultIgnoringNoise(this InputControl control, void* statePtr)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             return control.CheckStateIsAtDefault(statePtr, InputStateBuffers.s_NoiseMaskBuffer);
         }
@@ -381,9 +378,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool CompareStateIgnoringNoise(this InputControl control, void* statePtr)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             return control.CompareState(control.currentStatePtr, statePtr, control.noiseMaskPtr);
         }
@@ -391,9 +388,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool CompareState(this InputControl control, void* statePtr, void* maskPtr = null)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             return control.CompareState(control.currentStatePtr, statePtr, maskPtr);
         }
@@ -406,9 +403,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool HasValueChangeInState(this InputControl control, void* statePtr)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
 
             return control.CompareValue(control.currentStatePtr, statePtr);
         }
@@ -416,9 +413,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe bool HasValueChangeInEvent(this InputControl control, InputEventPtr eventPtr)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
+                throw new ArgumentNullException(nameof(eventPtr));
 
             return control.CompareValue(control.currentStatePtr, control.GetStatePtrFromStateEvent(eventPtr));
         }
@@ -426,9 +423,9 @@ namespace UnityEngine.Experimental.Input
         public static unsafe void* GetStatePtrFromStateEvent(this InputControl control, InputEventPtr eventPtr)
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
+                throw new ArgumentNullException(nameof(eventPtr));
 
             uint stateOffset;
             FourCC stateFormat;
@@ -465,9 +462,7 @@ namespace UnityEngine.Experimental.Input
             var device = control.device;
             if (stateFormat != device.m_StateBlock.format)
                 throw new InvalidOperationException(
-                    string.Format(
-                        "Cannot read control '{0}' from {1} with format {2}; device '{3}' expects format {4}",
-                        control.path, eventPtr.type, stateFormat, device, device.m_StateBlock.format));
+                    $"Cannot read control '{control.path}' from {eventPtr.type} with format {stateFormat}; device '{device}' expects format {device.m_StateBlock.format}");
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
@@ -477,6 +472,21 @@ namespace UnityEngine.Experimental.Input
                 return null;
 
             return (byte*)statePtr - (int)stateOffset;
+        }
+
+        public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
+            where TControl : InputControl
+        {
+            if (parent is TControl parentAsTControl && predicate(parentAsTControl))
+                controls.Add(parentAsTControl);
+
+            var children = parent.children;
+            var childCount = children.Count;
+            for (var i = 0; i < childCount; ++i)
+            {
+                var child = parent.children[i];
+                FindControlsRecursive(child, controls, predicate);
+            }
         }
     }
 }
