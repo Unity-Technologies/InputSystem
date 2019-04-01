@@ -166,7 +166,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 // Caching field for action map.
                 writer.WriteLine($"private InputActionMap m_{mapName};");
-                //if (options.generateInterfaces)
                 writer.WriteLine(string.Format("private I{0} m_{0}CallbackInterface;", mapTypeName));
 
                 // Caching fields for all actions.
@@ -208,45 +207,40 @@ namespace UnityEngine.Experimental.Input.Editor
                     $"public static implicit operator InputActionMap({mapTypeName} set) {{ return set.Get(); }}");
 
                 // SetCallbacks method.
-                //if (options.generateInterfaces)
+                writer.WriteLine($"public void SetCallbacks(I{mapTypeName} instance)");
+                writer.BeginBlock();
+
+                ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
+
+                // Uninitialize existing interface.
+                writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterface != null)");
+                writer.BeginBlock();
+                foreach (var action in map.actions)
                 {
-                    writer.WriteLine($"public void SetCallbacks(I{mapTypeName} instance)");
-                    writer.BeginBlock();
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
-
-                    // Uninitialize existing interface.
-                    writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterface != null)");
-                    writer.BeginBlock();
-                    foreach (var action in map.actions)
-                    {
-                        var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                        var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
-
-                        writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                        writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                        writer.WriteLine($"{actionName}.cancelled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    }
-                    writer.EndBlock();
-
-                    // Initialize new interface.
-                    writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterface = instance;");
-                    writer.WriteLine("if (instance != null)");
-                    writer.BeginBlock();
-                    foreach (var action in map.actions)
-                    {
-                        var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                        var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
-
-                        writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
-                        writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
-                        writer.WriteLine($"{actionName}.cancelled += instance.On{actionTypeName};");
-                    }
-                    writer.EndBlock();
-
-                    writer.EndBlock();
+                    writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.cancelled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                 }
+                writer.EndBlock();
 
+                // Initialize new interface.
+                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterface = instance;");
+                writer.WriteLine("if (instance != null)");
+                writer.BeginBlock();
+                foreach (var action in map.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
+
+                    writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.cancelled += instance.On{actionTypeName};");
+                }
+                writer.EndBlock();
+                writer.EndBlock();
                 writer.EndBlock();
 
                 // Getter for instance of struct.
@@ -278,22 +272,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Generate interfaces.
-            //if (options.generateInterfaces)
+            foreach (var map in maps)
             {
-                foreach (var map in maps)
+                var typeName = CSharpCodeHelpers.MakeTypeName(map.name);
+                writer.WriteLine($"public interface I{typeName}Actions");
+                writer.BeginBlock();
+
+                foreach (var action in map.actions)
                 {
-                    var typeName = CSharpCodeHelpers.MakeTypeName(map.name);
-                    writer.WriteLine($"public interface I{typeName}Actions");
-                    writer.BeginBlock();
-
-                    foreach (var action in map.actions)
-                    {
-                        var methodName = CSharpCodeHelpers.MakeTypeName(action.name);
-                        writer.WriteLine($"void On{methodName}(InputAction.CallbackContext context);");
-                    }
-
-                    writer.EndBlock();
+                    var methodName = CSharpCodeHelpers.MakeTypeName(action.name);
+                    writer.WriteLine($"void On{methodName}(InputAction.CallbackContext context);");
                 }
+
+                writer.EndBlock();
             }
 
             // End class.
