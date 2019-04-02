@@ -1576,7 +1576,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("Broken Fogbugz Ticket Filed")]
     public void Actions_CanPerformContinuousPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1613,12 +1612,9 @@ partial class CoreTests
             InputSystem.Update();
 
             actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();

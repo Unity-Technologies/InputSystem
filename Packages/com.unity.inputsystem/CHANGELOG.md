@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
+- `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
 
 ### Fixed
 
