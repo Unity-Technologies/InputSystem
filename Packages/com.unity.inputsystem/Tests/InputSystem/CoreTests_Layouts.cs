@@ -1446,6 +1446,10 @@ partial class CoreTests
                         ""name"" : ""stick"",
                         ""layout"" : ""Stick"",
                         ""noisy"" : true
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button""
                     }
                 ]
             }
@@ -1460,6 +1464,9 @@ partial class CoreTests
         Assert.That(device["stick"].As<StickControl>().right.noisy, Is.True);
         Assert.That(device["stick"].As<StickControl>().up.noisy, Is.True);
         Assert.That(device["stick"].As<StickControl>().down.noisy, Is.True);
+
+        // Make sure it didn't spill over.
+        Assert.That(device["button"].noisy, Is.False);
     }
 
     [Test]
