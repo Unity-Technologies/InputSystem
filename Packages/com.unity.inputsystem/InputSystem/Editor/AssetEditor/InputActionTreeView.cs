@@ -510,7 +510,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
 
                     case k_PasteCommand:
-                        var systemCopyBuffer = EditorGUIUtility.systemCopyBuffer;
+                        var systemCopyBuffer = EditorHelpers.GetSystemCopyBufferContents();
                         if (systemCopyBuffer != null && systemCopyBuffer.StartsWith(k_CopyPasteMarker))
                             uiEvent.Use();
                         break;
@@ -532,8 +532,8 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
                     case k_DuplicateCommand:
                         var buffer = new StringBuilder();
-                        CopySelectedItems(buffer);
-                        PasteData(buffer.ToString());
+                        CopySelectedItemsTo(buffer);
+                        PasteDataFrom(buffer.ToString());
                         break;
                     case k_DeleteCommand:
                         DeleteDataOfSelectedItems();
@@ -558,11 +558,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public void CopySelectedItemsToClipboard()
         {
             var copyBuffer = new StringBuilder();
-            CopySelectedItems(copyBuffer);
-            EditorGUIUtility.systemCopyBuffer = copyBuffer.ToString();
+            CopySelectedItemsTo(copyBuffer);
+            EditorHelpers.SetSystemCopyBufferContents(copyBuffer.ToString());
         }
 
-        private void CopySelectedItems(StringBuilder buffer)
+        public void CopySelectedItemsTo(StringBuilder buffer)
         {
             CopyItems(GetSelectedItemsWithChildrenFilteredOut(), buffer);
         }
@@ -630,10 +630,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void PasteDataFromClipboard()
         {
-            PasteData(EditorGUIUtility.systemCopyBuffer);
+            PasteDataFrom(EditorHelpers.GetSystemCopyBufferContents());
         }
 
-        private void PasteData(string copyBufferString)
+        public void PasteDataFrom(string copyBufferString)
         {
             if (!copyBufferString.StartsWith(k_CopyPasteMarker))
                 return;
@@ -670,7 +670,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // We may have pasted into a different tree view. Only select the items if we can find them in
                 // our current tree view.
                 var newItems = newItemPropertyPaths.Select(FindItemByPropertyPath).Where(x => x != null);
-                if (newItems.Count() > 0)
+                if (newItems.Any())
                     SelectItems(newItems);
             }
         }
