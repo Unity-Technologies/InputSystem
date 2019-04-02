@@ -453,17 +453,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 var items = itemIds.Select(id => (ActionTreeItemBase)sourceTree.FindItem(id, sourceTree.rootItem));
                 CopyItems(items, copyBuffer);
 
-                ////FIXME: doing this *before* the move probably has the potential of losing reference points we need to insert the data
-                // If alt isn't down (i.e. we're not duplicating), delete old items.
-                // Do this *before* pasting so that assigning new names will not cause names to
-                // change when just moving items around.
-                if (isMove)
-                {
-                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
-                    foreach (var item in items)
-                        item.DeleteData();
-                }
-
                 // If we're moving items within the same tree, no need to generate new IDs.
                 var assignNewIDs = !(isMove && sourceTree == this);
 
@@ -472,6 +461,24 @@ namespace UnityEngine.Experimental.Input.Editor
                 int? childIndex = null;
                 if (args.dragAndDropPosition == DragAndDropPosition.BetweenItems)
                     childIndex = args.insertAtIndex;
+
+                // If alt isn't down (i.e. we're not duplicating), delete old items.
+                // Do this *before* pasting so that assigning new names will not cause names to
+                // change when just moving items around.
+                if (isMove)
+                {
+                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
+                    foreach (var item in items)
+                    {
+                        // If we're dropping *between* items on the same parent as the current item and the
+                        // index we're dropping at (in the parent, NOT in the array) is coming *after* this item,
+                        // then deleting the item will shift the target index down by one.
+                        if (item.parent == target && childIndex != null && childIndex > target.children.IndexOf(item))
+                            --childIndex;
+
+                        item.DeleteData();
+                    }
+                }
 
                 // Paste items onto target.
                 PasteItems(copyBuffer.ToString(),
