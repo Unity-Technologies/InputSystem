@@ -234,39 +234,6 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.True);
     }
 
-    public enum Events_ShouldRunUpdate_TracksFocus_Mode
-    {
-        RunInBackground, DontRunInBackground
-    };
-    [Test]
-    [Category("Events")]
-    [TestCase(Events_ShouldRunUpdate_TracksFocus_Mode.RunInBackground)]
-    [TestCase(Events_ShouldRunUpdate_TracksFocus_Mode.DontRunInBackground)]
-    public void Events_ShouldRunUpdate_TracksFocus(Events_ShouldRunUpdate_TracksFocus_Mode runInBackgroundMode)
-    {
-        bool runInBackground = runInBackgroundMode == Events_ShouldRunUpdate_TracksFocus_Mode.RunInBackground;
-        InputSystem.settings.runInBackground = runInBackground;
-        Assert.That(InputSystem.settings.runInBackground, Is.EqualTo(runInBackground));
-        Assert.That(runtime.shouldRunInBackground, Is.EqualTo(runInBackground));
-        InputSystem.s_Manager.updateMask = InputUpdateType.Default;
-
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
-        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Editor));
-
-        runtime.onFocusChanged.Invoke(false);
-
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic), Is.EqualTo(runInBackground));
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed), Is.EqualTo(runInBackground));
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Editor), Is.EqualTo(!runInBackground));
-
-        runtime.onFocusChanged.Invoke(true);
-
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
-        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
-        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Editor));
-    }
-
     [Test]
     [Category("Events")]
     public void Events_ShouldRunUpdate_AppliesUpdateMask()

@@ -110,7 +110,6 @@ namespace UnityEngine.Experimental.Input.Editor
             ////TODO: enable when backported
             //EditorGUILayout.PropertyField(m_TimesliceEvents);
 
-            EditorGUILayout.PropertyField(m_RunInBackground);
             EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
             EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
 
@@ -225,7 +224,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
             m_ActionUpdateMode = m_SettingsObject.FindProperty("m_ActionUpdateMode");
             m_TimesliceEvents = m_SettingsObject.FindProperty("m_TimesliceEvents");
-            m_RunInBackground = m_SettingsObject.FindProperty("m_RunInBackground");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
@@ -317,7 +315,6 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_ActionUpdateMode;
         [NonSerialized] private SerializedProperty m_TimesliceEvents;
-        [NonSerialized] private SerializedProperty m_RunInBackground;
         [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;

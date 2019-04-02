@@ -3535,6 +3535,37 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_DestroyingAssetClearsCallbacks()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+
+        asset.AddActionMap(map);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = map.AddAction("action", "/gamepad/leftTrigger");
+        asset.Enable();
+
+        var wasPerformed = false;
+        action.performed += ctx => wasPerformed = true;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1 });
+        InputSystem.Update();
+
+        Assert.That(wasPerformed);
+        wasPerformed = false;
+
+        UnityEngine.Object.DestroyImmediate(asset);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0 });
+        // There must be no exceptions here from trying to call any callbacks on the destroyed asset.
+        InputSystem.Update();
+
+        Assert.That(wasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_MapsInAssetMustHaveName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
