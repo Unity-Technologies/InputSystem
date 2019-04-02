@@ -34,14 +34,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double startTime
         {
-            get { return m_StartTime; }
-            set { m_StartTime = value; }
+            get => m_StartTime;
+            set => m_StartTime = value;
         }
 
         public InputActionPhase phase
         {
-            get { return (InputActionPhase)m_Phase; }
-            set { m_Phase = (byte)value; }
+            get => (InputActionPhase)m_Phase;
+            set => m_Phase = (byte)value;
         }
 
         public byte* valueData
@@ -55,14 +55,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public int valueSizeInBytes
-        {
-            get { return (int)baseEvent.sizeInBytes - InputEvent.kBaseEventSize - 16; }
-        }
+        public int valueSizeInBytes => (int)baseEvent.sizeInBytes - InputEvent.kBaseEventSize - 16;
 
         public int stateIndex
         {
-            get { return m_StateIndex; }
+            get => m_StateIndex;
             set
             {
                 Debug.Assert(value >= 0 && value <= byte.MaxValue);
@@ -74,7 +71,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int controlIndex
         {
-            get { return m_ControlIndex; }
+            get => m_ControlIndex;
             set
             {
                 Debug.Assert(value >= 0 && value <= ushort.MaxValue);
@@ -86,7 +83,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int bindingIndex
         {
-            get { return m_BindingIndex; }
+            get => m_BindingIndex;
             set
             {
                 Debug.Assert(value >= 0 && value <= ushort.MaxValue);
@@ -139,10 +136,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public static ActionEvent* From(InputEventPtr ptr)
         {
             if (!ptr.valid)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (!ptr.IsA<ActionEvent>())
-                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into ActionEvent",
-                    ptr.type));
+                throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into ActionEvent");
 
             return (ActionEvent*)ptr.data;
         }

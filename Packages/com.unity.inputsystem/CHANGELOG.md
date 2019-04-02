@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
 
+#### Actions
+
+- `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
+- The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
 ## [0.2.6-preview] - 2019-03-20
 
 >NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
