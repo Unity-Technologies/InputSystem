@@ -13,6 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle toolbarSearchField = "ToolbarSeachTextField";
 
             public static GUIStyle itemStyle = new GUIStyle("PR Label");
+            public static GUIStyle richTextItemStyle;
             public static GUIStyle header = new GUIStyle("In BigTitle");
             public static GUIStyle headerArrow = new GUIStyle();
             public static GUIStyle checkMark = new GUIStyle("PR Label");
@@ -26,6 +27,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 itemStyle.padding = new RectOffset(0, 0, 0, 0);
                 itemStyle.margin = new RectOffset(0, 0, 0, 0);
                 itemStyle.fixedHeight += 1;
+
+                richTextItemStyle = new GUIStyle(itemStyle) {richText = true};
 
                 header.font = EditorStyles.boldLabel.font;
                 header.margin = new RectOffset(0, 0, 0, 0);
@@ -60,6 +63,7 @@ namespace UnityEngine.Experimental.Input.Editor
         internal virtual float headerHeight => m_HeaderRect.height;
 
         internal virtual GUIStyle lineStyle => Styles.itemStyle;
+        internal virtual GUIStyle richTextLineStyle => Styles.richTextItemStyle;
         internal GUIStyle headerStyle => Styles.header;
 
         internal virtual Vector2 iconSize => s_IconSize;
@@ -83,20 +87,22 @@ namespace UnityEngine.Experimental.Input.Editor
         {
         }
 
-        internal virtual void DrawItem(AdvancedDropdownItem item, string name, Texture2D icon, bool enabled, bool drawArrow, bool selected, bool hasSearch)
+        internal virtual void DrawItem(AdvancedDropdownItem item, string name, Texture2D icon, bool enabled,
+            bool drawArrow, bool selected, bool hasSearch, bool richText = false)
         {
             var content = new GUIContent(name, icon);
             var imgTemp = content.image;
             //we need to pretend we have an icon to calculate proper width in case
             if (content.image == null)
                 content.image = Texture2D.whiteTexture;
-            var rect = GUILayoutUtility.GetRect(content, lineStyle, GUILayout.ExpandWidth(true));
+            var style = richText ? richTextLineStyle : lineStyle;
+            var rect = GUILayoutUtility.GetRect(content, style, GUILayout.ExpandWidth(true));
             content.image = imgTemp;
 
             if (Event.current.type != EventType.Repaint)
                 return;
 
-            lineStyle.Draw(rect, GUIContent.none, false, false, selected, selected);
+            style.Draw(rect, GUIContent.none, false, false, selected, selected);
             if (!hasSearch)
             {
                 rect.x += item.indent * k_IndentPerLevel;
@@ -106,20 +112,20 @@ namespace UnityEngine.Experimental.Input.Editor
             var imageTemp = content.image;
             if (content.image == null)
             {
-                lineStyle.Draw(rect, GUIContent.none, false, false, selected, selected);
+                style.Draw(rect, GUIContent.none, false, false, selected, selected);
                 rect.x += iconSize.x + 1;
                 rect.width -= iconSize.x + 1;
             }
             rect.x += EditorGUIUtility.standardVerticalSpacing;
             rect.width -= EditorGUIUtility.standardVerticalSpacing;
             EditorGUI.BeginDisabledGroup(!enabled);
-            lineStyle.Draw(rect, content, false, false, selected, selected);
+            style.Draw(rect, content, false, false, selected, selected);
             content.image = imageTemp;
             if (drawArrow)
             {
-                var size = lineStyle.lineHeight;
+                var size = style.lineHeight;
                 var arrowRect = new Rect(rect.x + rect.width - size, rect.y, size, size);
-                lineStyle.Draw(arrowRect, Styles.arrowRightContent, false, false, false, false);
+                style.Draw(arrowRect, Styles.arrowRightContent, false, false, false, false);
             }
             EditorGUI.EndDisabledGroup();
         }

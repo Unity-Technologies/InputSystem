@@ -326,7 +326,7 @@ namespace UnityEngine.Experimental.Input
         public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
-        
+
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public Vector2 screenSize { set; get; } = new Vector2(Screen.width, Screen.height);

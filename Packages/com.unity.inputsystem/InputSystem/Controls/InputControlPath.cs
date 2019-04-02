@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
@@ -58,7 +59,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(path))
                 return string.Empty;
 
-            var result = string.Empty;
+            var buffer = new StringBuilder();
             var parser = new PathParser(path);
 
             ////REVIEW: ideally, we'd use display names of controls rather than the control paths directly from the path
@@ -73,26 +74,26 @@ namespace UnityEngine.Experimental.Input
                 while (parser.MoveToNextComponent())
                 {
                     if (!isFirstControlLevel)
-                        result += '/';
+                        buffer.Append('/');
 
-                    result += parser.current.ToHumanReadableString();
+                    buffer.Append(parser.current.ToHumanReadableString());
                     isFirstControlLevel = false;
                 }
 
                 if (!string.IsNullOrEmpty(device))
                 {
-                    result += " [";
-                    result += device;
-                    result += "]";
+                    buffer.Append(" [");
+                    buffer.Append(device);
+                    buffer.Append(']');
                 }
             }
 
             // If we didn't manage to figure out a display name, default to displaying
             // the path as is.
-            if (string.IsNullOrEmpty(result))
+            if (buffer.Length == 0)
                 return path;
 
-            return result;
+            return buffer.ToString();
         }
 
         public static string TryGetDeviceUsage(string path)

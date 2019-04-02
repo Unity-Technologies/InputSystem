@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
 - Several new `Sensor`-based classes have been added. Various existing Android sensor implementations are now based on them.
+- `InputControlLayoutAttribute` is no longer inherited.
+  * Rationale: A class marked as a layout will usually be registered using `RegisterLayout`. A class derived from it will usually be registered the same way. Because of layout inheritance, properties applied to the base class through `InputControlLayoutAttribute` will affect the subclass as intended. Not inheriting the attribute itself, however, now allows having properties such as `isGenericTypeOfDevice` which should not be inherited.
 
 #### Actions
 
@@ -35,6 +37,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
+
+#### Actions
+
+- Actions and bindings disappearing when control schemes have spaces in their names.
 
 ## [0.2.6-preview] - 2019-03-20
 

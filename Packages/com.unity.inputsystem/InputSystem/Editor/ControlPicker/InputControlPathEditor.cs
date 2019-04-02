@@ -109,6 +109,11 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_PickerState.manualPathEditMode)
             {
                 ////FIXME: for some reason the text field does not fill all the rect but rather adds large padding on the left
+                bindingTextRect.x -= 15;
+                bindingTextRect.width += 15;
+
+                bindingTextRect.height -= 2;
+                bindingTextRect.y += 1;
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(bindingTextRect, path);
                 if (EditorGUI.EndChangeCheck())
@@ -166,8 +171,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
 
         private static readonly GUIContent s_PathLabel = EditorGUIUtility.TrTextContent("Path", "Path of the controls that will be bound to the action at runtime.");
-        private static GUIStyle s_WaitingForInputLabel;
-        private static Texture2D s_PickButtonIcon;
     }
 }
  #endif // UNITY_EDITOR

@@ -215,7 +215,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void AddControlTreeItemsRecursive(InputControlLayout layout, AdvancedDropdownItem parent,
+        private void AddControlTreeItemsRecursive(InputControlLayout layout, DeviceDropdownItem parent,
             string device, string usage, bool searchable, ControlDropdownItem parentControl = null)
         {
             var haveControls = false;
@@ -263,8 +263,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (optionalGroup.children.Any())
                 {
-                    if (haveControls)
-                        parent.AddSeparator("Controls Present on More Specific " + parent.name.GetPlural());
+                    var deviceName = EditorInputControlLayoutCache.TryGetLayout(device).m_DisplayName ??
+                        ObjectNames.NicifyVariableName(device);
+                    parent.AddSeparator("Controls Present on More Specific " + deviceName.GetPlural());
                     parent.AddChild(optionalGroup);
                 }
             }
@@ -510,12 +511,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
 
-            internal override void DrawItem(AdvancedDropdownItem item, string name, Texture2D icon, bool enabled, bool drawArrow, bool selected, bool hasSearch)
+            internal override void DrawItem(AdvancedDropdownItem item, string name, Texture2D icon, bool enabled,
+                bool drawArrow, bool selected, bool hasSearch, bool richText = false)
             {
                 if (hasSearch && item is InputControlDropdownItem viewItem)
-                {
                     name = viewItem.searchableName;
-                }
+
                 base.DrawItem(item, name, icon, enabled, drawArrow, selected, hasSearch);
             }
 
