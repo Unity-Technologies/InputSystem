@@ -87,15 +87,15 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        [InputControl(name = "acceleration")]
+        [InputControl(name = "acceleration", noisy = true)]
         [FieldOffset(28)]
         public Vector3 acceleration;
 
-        [InputControl(name = "orientation")]
+        [InputControl(name = "orientation", noisy = true)]
         [FieldOffset(40)]
         public Quaternion orientation;
 
-        [InputControl(name = "angularVelocity")]
+        [InputControl(name = "angularVelocity", noisy = true)]
         [FieldOffset(56)]
         public Vector3 angularVelocity;
 
