@@ -78,38 +78,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// If enabled, input will be collected and processed while the application is running in the background (i.e. when =
-        /// the application does not have focus).
-        /// </summary>
-        /// <remarks>
-        /// This is disabled by default.
-        ///
-        /// Note that it depends both on the platform as well as the specific devices being used what input will actually be collected
-        /// when running in the background. To query the ability of a specific device to collect input while in the background, use
-        /// <see cref="InputDevice.canRunInBackground"/>.
-        ///
-        /// In general, collecting input while running in the background only works on desktop platforms.
-        ///
-        /// Also note that for processing of input to occur, <see cref="UnityEditor.PlayerSettings.runInBackground"/> must be
-        /// enabled, too. The setting here only determines whether input from devices is sourced while the application is in
-        /// the background
-        /// </remarks>
-        /// <seealso cref="UnityEditor.PlayerSettings.runInBackground"/>
-        /// <seealso cref="InputDevice.canRunInBackground"/>
-        /// <seealso cref="Application.focusChanged"/>
-        public bool runInBackground
-        {
-            get => m_RunInBackground;
-            set
-            {
-                if (m_RunInBackground == value)
-                    return;
-                m_RunInBackground = value;
-                OnChange();
-            }
-        }
-
-        /// <summary>
         /// If enabled, any given input event will only be processed for any given fixed or dynamic
         /// update if it has been generated before or within the time slice allotted to the update.
         /// </summary>
@@ -313,7 +281,6 @@ namespace UnityEngine.Experimental.Input
             + "updates are enabled. If enabled, the system will compute a real-time time span corresponding to each update and will process only "
             + "those events that have timestamps within or before that time span.")]
         [SerializeField] private bool m_TimesliceEvents = true;
-        [SerializeField] private bool m_RunInBackground = false;
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
 
