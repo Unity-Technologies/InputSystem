@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed `acceleration`, `orientation`, and `angularVelocity` controls from `DualShockGamepad` base class.
   * They are still on `DualShockGamepadPS4`.
   * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
+- Marking a control as noisy now also marks all child controls as noisy.
 
 #### Actions
 

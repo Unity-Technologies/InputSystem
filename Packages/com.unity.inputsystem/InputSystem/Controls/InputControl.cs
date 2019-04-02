@@ -230,7 +230,12 @@ namespace UnityEngine.Experimental.Input
             internal set
             {
                 if (value)
+                {
                     m_ControlFlags |= ControlFlags.IsNoisy;
+                    // Making a control noisy makes all its children noisy.
+                    foreach (var child in children)
+                        child.noisy = true;
+                }
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;
             }
