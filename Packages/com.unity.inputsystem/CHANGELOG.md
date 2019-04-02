@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Several new `Sensor`-based classes have been added. Various existing Android sensor implementations are now based on them.
 - `InputControlLayoutAttribute` is no longer inherited.
   * Rationale: A class marked as a layout will usually be registered using `RegisterLayout`. A class derived from it will usually be registered the same way. Because of layout inheritance, properties applied to the base class through `InputControlLayoutAttribute` will affect the subclass as intended. Not inheriting the attribute itself, however, now allows having properties such as `isGenericTypeOfDevice` which should not be inherited.
+- Removed `acceleration`, `orientation`, and `angularVelocity` controls from `DualShockGamepad` base class.
+  * They are still on `DualShockGamepadPS4`.
+  * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
 
 #### Actions
 
