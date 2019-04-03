@@ -148,14 +148,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
-        /// <summary>
-        /// Flag which tells runtime whether to process input events when in the background.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to turn on or off event processing for background windows.
-        /// </remarks>
-        bool shouldRunInBackground { set; }
-
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }
         int frameCount { get; }
