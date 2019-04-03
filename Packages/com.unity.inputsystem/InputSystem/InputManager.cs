@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input
 
         private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-            EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+                     EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
 #else
             true;
 #endif
@@ -2131,7 +2131,7 @@ namespace UnityEngine.Experimental.Input
             newUpdateMask |= InputUpdateType.Editor;
             #endif
             updateMask = newUpdateMask;
-            
+
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
 

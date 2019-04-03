@@ -742,6 +742,11 @@ namespace UnityEngine.Experimental.Input
                 throw new NotImplementedException();
             }
             */
+
+            public override string ToString()
+            {
+                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+            }
         }
     }
 }
