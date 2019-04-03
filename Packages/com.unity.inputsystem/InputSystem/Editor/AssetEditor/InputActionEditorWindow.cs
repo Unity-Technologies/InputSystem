@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Make sure we have an action selected.
             var actionItems = m_ActionsTree.GetSelectedItems().OfType<ActionTreeItem>();
-            if (actionItems.Count() == 0)
+            if (!actionItems.Any())
             {
                 EditorApplication.Beep();
                 return;

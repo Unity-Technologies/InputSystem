@@ -215,7 +215,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
 
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-        
+
         private Action m_ShutdownMethod;
 
         private void OnShutdown()

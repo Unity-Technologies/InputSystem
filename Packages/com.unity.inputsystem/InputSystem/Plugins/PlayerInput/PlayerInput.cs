@@ -1095,6 +1095,14 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             m_PlayerIndex = -1;
         }
 
+        /// <summary>
+        /// Debug helper method that can be hooked up to actions when using <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// </summary>
+        public void DebugLogAction(InputAction.CallbackContext context)
+        {
+            Debug.Log(context.ToString());
+        }
+
         private void HandleDeviceLost()
         {
             switch (m_NotificationBehavior)
@@ -1206,7 +1214,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 if (action.actionMap.asset == null)
                     throw new ArgumentException($"Action must be part of an asset (given action '{action}' is not)");
 
-                m_ActionId = $"{{{action.id.ToString()}}}";
+                m_ActionId = action.id.ToString();
                 m_ActionName = $"{action.actionMap.name}/{action.name}";
             }
 

@@ -449,7 +449,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 // Adjust child index by index of composite item itself.
                 arrayIndex = childIndex != null
-                    ? this.arrayIndex + childIndex.Value
+                    ? this.arrayIndex + 1 + childIndex.Value // Dropping at #0 should put as our index plus one.
                     : this.arrayIndex + 1 + InputActionSerializationHelpers.GetCompositePartCount(array, this.arrayIndex);
 
                 return true;

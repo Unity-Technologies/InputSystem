@@ -2007,10 +2007,55 @@ partial class CoreTests
 
         Assert.That(map.TryGetAction("action1"), Is.SameAs(action1));
         Assert.That(map.TryGetAction("action2"), Is.SameAs(action2));
+        Assert.That(map.TryGetAction("action3"), Is.Null);
 
         // Lookup is case-insensitive.
         Assert.That(map.TryGetAction("Action1"), Is.SameAs(action1));
         Assert.That(map.TryGetAction("Action2"), Is.SameAs(action2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionsInMapById()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        Assert.That(map.TryGetAction(action1.id), Is.SameAs(action1));
+        Assert.That(map.TryGetAction(action2.id), Is.SameAs(action2));
+        Assert.That(map.TryGetAction(Guid.NewGuid()), Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionsInMapByStringId()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        Assert.That(map.TryGetAction(action1.id.ToString()), Is.SameAs(action1));
+        Assert.That(map.TryGetAction(action2.id.ToString()), Is.SameAs(action2));
+        Assert.That(map.TryGetAction(Guid.NewGuid().ToString()), Is.Null);
+    }
+
+    // We used to require string GUIDs to be using a "{...}" format when looking up actions. We no
+    // longer do this but there's still data that may be using this format so make sure it works for now.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionsInMapByStringId_UsingOldBracedFormat()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        Assert.That(map.TryGetAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
+        Assert.That(map.TryGetAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
+        Assert.That(map.TryGetAction($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -3596,6 +3641,7 @@ partial class CoreTests
         asset.AddActionMap(map);
 
         Assert.That(asset.TryGetActionMap("test"), Is.SameAs(map));
+        Assert.That(asset.TryGetActionMap("other"), Is.Null);
     }
 
     [Test]
@@ -3606,7 +3652,22 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
+        Assert.That(asset.TryGetActionMap(map.id.ToString()), Is.SameAs(map));
+        Assert.That(asset.TryGetActionMap(Guid.NewGuid().ToString()), Is.Null);
+    }
+
+    // Legacy format where we use "{...}" notation to indicate we have a GUID string. No longer necessary but
+    // we may have some old data that uses it.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpMapInAssetById_UsingOldBracedFormat()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
         Assert.That(asset.TryGetActionMap($"{{{map.id}}}"), Is.SameAs(map));
+        Assert.That(asset.TryGetActionMap($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]

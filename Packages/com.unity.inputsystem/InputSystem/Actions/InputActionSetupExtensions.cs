@@ -173,7 +173,7 @@ namespace UnityEngine.Experimental.Input
             if (action == Guid.Empty)
                 return AddBinding(actionMap, path: path, interactions: interactions, groups: groups);
             return AddBinding(actionMap, path: path, interactions: interactions, groups: groups,
-                action: $"{{{action}}}");
+                action: action.ToString());
         }
 
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
