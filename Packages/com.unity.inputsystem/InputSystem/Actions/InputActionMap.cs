@@ -493,9 +493,9 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         internal ReadOnlyArray<InputBinding> GetBindingsForSingleAction(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap == this);
-            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
+            Debug.Assert(action != null, "Action cannot be null");
+            Debug.Assert(action.m_ActionMap == this, "Action must be in action map");
+            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action, "Action is not a singleton action");
 
             // See if we need to refresh.
             if (m_BindingsForEachAction == null)
@@ -884,6 +884,18 @@ namespace UnityEngine.Experimental.Input
             {
                 tempMemory.Dispose();
             }
+        }
+
+        internal int FindBinding(InputBinding match)
+        {
+            var numBindings = m_Bindings.LengthSafe();
+            for (var i = 0; i < numBindings; ++i)
+            {
+                ref var binding = ref m_Bindings[i];
+                if (match.Matches(ref binding))
+                    return i;
+            }
+            return -1;
         }
 
         #region Serialization

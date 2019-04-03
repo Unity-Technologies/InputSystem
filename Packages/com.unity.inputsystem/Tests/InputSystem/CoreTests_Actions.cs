@@ -3580,6 +3580,53 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanChangeExistingBindingOnAction()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.AddBinding("<Mouse>/leftButton", groups: "other;mouse");
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "<Keyboard>/a", groups: "keyboard")
+            .With("Negative", "<Keyboard>/b");
+
+        action.ChangeBindingWithPath("<Keyboard>/a")
+            .WithPath("<Keyboard>/1")
+            .WithInteraction("Press");
+        action.ChangeBindingWithGroup("mouse")
+            .WithProcessor("Invert");
+        action.ChangeBinding(4)
+            .WithName("Positive");
+        action.ChangeBindingWithId(action.bindings[2].id)
+            .WithProcessor("Test");
+        action.ChangeBindingWithPath("<Gamepad>/buttonSouth")
+            .To(new InputBinding {path = "test"}); // No action but given it's a singleton action, the binding will stay associated with the action.
+
+        Assert.That(action.bindings[3].path, Is.EqualTo("<Keyboard>/1"));
+        Assert.That(action.bindings[3].interactions, Is.EqualTo("Press"));
+        Assert.That(action.bindings[1].path, Is.EqualTo("<Mouse>/leftButton"));
+        Assert.That(action.bindings[1].processors, Is.EqualTo("Invert"));
+        Assert.That(action.bindings[4].name, Is.EqualTo("Positive"));
+        Assert.That(action.bindings[2].processors, Is.EqualTo("Test"));
+        Assert.That(action.bindings[0].path, Is.EqualTo("test"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRemoveExistingBindingOnAction()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.AddBinding("<Mouse>/leftButton");
+
+        action.ChangeBindingWithPath("<Gamepad>/buttonSouth")
+            .Erase();
+
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Mouse>/leftButton"));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_DestroyingAssetClearsCallbacks()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
