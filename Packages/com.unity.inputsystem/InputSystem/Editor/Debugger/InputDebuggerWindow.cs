@@ -454,7 +454,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 settingsItem = AddChild(root, settingsLabel, ref id);
                 AddValueItem(settingsItem, "Update Mode", settings.updateMode, ref id);
                 AddValueItem(settingsItem, "Timeslice Events", settings.timesliceEvents, ref id);
-                AddValueItem(settingsItem, "Run In Background", settings.runInBackground, ref id);
                 AddValueItem(settingsItem, "Compensate For Screen Orientation", settings.compensateForScreenOrientation, ref id);
                 AddValueItem(settingsItem, "Filter Noise On .current", settings.filterNoiseOnCurrent, ref id);
                 AddValueItem(settingsItem, "Default Button Press Point", settings.defaultButtonPressPoint, ref id);

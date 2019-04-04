@@ -453,17 +453,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 var items = itemIds.Select(id => (ActionTreeItemBase)sourceTree.FindItem(id, sourceTree.rootItem));
                 CopyItems(items, copyBuffer);
 
-                ////FIXME: doing this *before* the move probably has the potential of losing reference points we need to insert the data
-                // If alt isn't down (i.e. we're not duplicating), delete old items.
-                // Do this *before* pasting so that assigning new names will not cause names to
-                // change when just moving items around.
-                if (isMove)
-                {
-                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
-                    foreach (var item in items)
-                        item.DeleteData();
-                }
-
                 // If we're moving items within the same tree, no need to generate new IDs.
                 var assignNewIDs = !(isMove && sourceTree == this);
 
@@ -472,6 +461,24 @@ namespace UnityEngine.Experimental.Input.Editor
                 int? childIndex = null;
                 if (args.dragAndDropPosition == DragAndDropPosition.BetweenItems)
                     childIndex = args.insertAtIndex;
+
+                // If alt isn't down (i.e. we're not duplicating), delete old items.
+                // Do this *before* pasting so that assigning new names will not cause names to
+                // change when just moving items around.
+                if (isMove)
+                {
+                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
+                    foreach (var item in items)
+                    {
+                        // If we're dropping *between* items on the same parent as the current item and the
+                        // index we're dropping at (in the parent, NOT in the array) is coming *after* this item,
+                        // then deleting the item will shift the target index down by one.
+                        if (item.parent == target && childIndex != null && childIndex > target.children.IndexOf(item))
+                            --childIndex;
+
+                        item.DeleteData();
+                    }
+                }
 
                 // Paste items onto target.
                 PasteItems(copyBuffer.ToString(),
@@ -510,7 +517,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
 
                     case k_PasteCommand:
-                        var systemCopyBuffer = EditorGUIUtility.systemCopyBuffer;
+                        var systemCopyBuffer = EditorHelpers.GetSystemCopyBufferContents();
                         if (systemCopyBuffer != null && systemCopyBuffer.StartsWith(k_CopyPasteMarker))
                             uiEvent.Use();
                         break;
@@ -532,8 +539,8 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
                     case k_DuplicateCommand:
                         var buffer = new StringBuilder();
-                        CopySelectedItems(buffer);
-                        PasteData(buffer.ToString());
+                        CopySelectedItemsTo(buffer);
+                        PasteDataFrom(buffer.ToString());
                         break;
                     case k_DeleteCommand:
                         DeleteDataOfSelectedItems();
@@ -558,11 +565,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public void CopySelectedItemsToClipboard()
         {
             var copyBuffer = new StringBuilder();
-            CopySelectedItems(copyBuffer);
-            EditorGUIUtility.systemCopyBuffer = copyBuffer.ToString();
+            CopySelectedItemsTo(copyBuffer);
+            EditorHelpers.SetSystemCopyBufferContents(copyBuffer.ToString());
         }
 
-        private void CopySelectedItems(StringBuilder buffer)
+        public void CopySelectedItemsTo(StringBuilder buffer)
         {
             CopyItems(GetSelectedItemsWithChildrenFilteredOut(), buffer);
         }
@@ -630,10 +637,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void PasteDataFromClipboard()
         {
-            PasteData(EditorGUIUtility.systemCopyBuffer);
+            PasteDataFrom(EditorHelpers.GetSystemCopyBufferContents());
         }
 
-        private void PasteData(string copyBufferString)
+        public void PasteDataFrom(string copyBufferString)
         {
             if (!copyBufferString.StartsWith(k_CopyPasteMarker))
                 return;
@@ -670,7 +677,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // We may have pasted into a different tree view. Only select the items if we can find them in
                 // our current tree view.
                 var newItems = newItemPropertyPaths.Select(FindItemByPropertyPath).Where(x => x != null);
-                if (newItems.Count() > 0)
+                if (newItems.Any())
                     SelectItems(newItems);
             }
         }

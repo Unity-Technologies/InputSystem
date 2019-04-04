@@ -190,7 +190,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 using (var actionsProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex))
                 {
                     var actionName = GetName(actionsProperty);
-                    var actionIdString = $"{{{actionId}}}";
+                    var actionIdString = actionId.ToString();
 
                     // Delete all bindings that refer to the action by ID or name.
                     for (var i = 0; i < bindingsArrayProperty.arraySize; ++i)
