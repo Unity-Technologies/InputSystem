@@ -385,7 +385,7 @@ partial class CoreTests
         // Change to vector2 composite and make sure that we've added two more bindings, changed the names
         // of bindings accordingly, and preserved the existing binding paths and such.
         InputActionSerializationHelpers.ChangeCompositeBindingType(composite,
-            InputControlLayout.ParseNameAndParameters("Dpad(normalize=false)"));
+            NameAndParameters.Parse("Dpad(normalize=false)"));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].GetAction("action1");
