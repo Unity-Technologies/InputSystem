@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: hide in UI
+
 namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>

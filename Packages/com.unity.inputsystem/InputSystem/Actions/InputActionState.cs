@@ -361,7 +361,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Enable all controls on the binding.
-                EnableControls(actionState->mapIndex, bindingState->controlStartIndex, bindingState->controlCount);
+                // NOTE: We force an initial state check on actions here regardless of whether the action has
+                //       it enabled or not. The reason is that we use this path to temporarily disable actions
+                //       and re-enabling them should have the actions resume where they left off (where applicable).
+                EnableControls(actionState->mapIndex, bindingState->controlStartIndex, bindingState->controlCount,
+                    forceStateCheck: true);
             }
 
             // Make sure we get an initial state check.
@@ -656,7 +660,7 @@ namespace UnityEngine.Experimental.Input
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
 
-        private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
+        private void EnableControls(int mapIndex, int controlStartIndex, int numControls, bool forceStateCheck = false)
         {
             Debug.Assert(controls != null, "State must have controls");
             Debug.Assert(controlStartIndex >= 0 && (controlStartIndex < totalControlCount || numControls == 0),
@@ -670,7 +674,8 @@ namespace UnityEngine.Experimental.Input
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                bindingStates[bindingIndex].needsInitialStateCheck = true;
+                if (forceStateCheck || bindingStates[bindingIndex].wantsInitialStateCheck)
+                    bindingStates[bindingIndex].initialStateCheckPending = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
         }
@@ -689,7 +694,8 @@ namespace UnityEngine.Experimental.Input
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                bindingStates[bindingIndex].needsInitialStateCheck = false;
+                if (bindingStates[bindingIndex].wantsInitialStateCheck)
+                    bindingStates[bindingIndex].initialStateCheckPending = false;
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
         }
@@ -725,7 +731,7 @@ namespace UnityEngine.Experimental.Input
         {
             ////TODO: deal with update type
 
-            // Remove us from the callback.
+            // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
 
             Profiler.BeginSample("InitialActionStateCheck");
@@ -745,10 +751,10 @@ namespace UnityEngine.Experimental.Input
             // that the control just got actuated.
             for (var bindingIndex = 0; bindingIndex < totalBindingCount; ++bindingIndex)
             {
-                if (!bindingStates[bindingIndex].needsInitialStateCheck)
+                if (!bindingStates[bindingIndex].initialStateCheckPending)
                     continue;
 
-                bindingStates[bindingIndex].needsInitialStateCheck = false;
+                bindingStates[bindingIndex].initialStateCheckPending = false;
 
                 var mapIndex = bindingStates[bindingIndex].mapIndex;
                 var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
@@ -2237,7 +2243,8 @@ namespace UnityEngine.Experimental.Input
                 EndOfChain = 1 << 1,
                 Composite = 1 << 2,
                 PartOfComposite = 1 << 3,
-                NeedsInitialStateCheck = 1 << 4,
+                InitialStateCheckPending = 1 << 4,
+                WantsInitialStateCheck = 1 << 5,
             }
 
             /// <summary>
@@ -2480,15 +2487,27 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public bool needsInitialStateCheck
+            public bool initialStateCheckPending
             {
-                get => (flags & Flags.NeedsInitialStateCheck) != 0;
+                get => (flags & Flags.InitialStateCheckPending) != 0;
                 set
                 {
                     if (value)
-                        flags |= Flags.NeedsInitialStateCheck;
+                        flags |= Flags.InitialStateCheckPending;
                     else
-                        flags &= ~Flags.NeedsInitialStateCheck;
+                        flags &= ~Flags.InitialStateCheckPending;
+                }
+            }
+
+            public bool wantsInitialStateCheck
+            {
+                get => (flags & Flags.WantsInitialStateCheck) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.WantsInitialStateCheck;
+                    else
+                        flags &= ~Flags.WantsInitialStateCheck;
                 }
             }
 

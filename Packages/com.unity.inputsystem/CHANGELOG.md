@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `Joystick.axes` and `Joystick.buttons` have been removed.
 - `InputSettings.runInBackground` has been removed. This should now be supported or not on a per-device level. Most devices never supported it in the first place, so a global setting did not seem to be useful.
 
+#### Actions
+
+- Reacting to controls that are already actuated when an action is enabled is now an __optional__ behavior rather than the default behavior. This is a __breaking__ change.
+  * Essentially, this change reverts back to the behavior before 0.2-preview.
+  * To reenable the behavior, toggle "Initial State Check" on in the UI or set the `initialStateCheck` property in code.
+  ![Inital State Check](Documentation~/Images/InitialStateCheck.png)
+  * The reason for the change is that having the behavior on by default made certain setups hard to achieve. For example, if `<Keyboard>/escape` is used in one action map to toggle *into* the main menu and in another action map to toggle *out* of it, then the previous behavior would immediately exit out of the menu if `escape` was still pressed from going into the menu. \
+  We have come to believe that wanting to react to the current state of a control right away is the less often desirable behavior and so have made it optional with a separate toggle.
+
 ### Fixed
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
