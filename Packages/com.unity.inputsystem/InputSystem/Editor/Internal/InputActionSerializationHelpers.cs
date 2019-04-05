@@ -483,7 +483,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public static SerializedProperty ChangeCompositeBindingType(SerializedProperty bindingProperty,
-            InputControlLayout.NameAndParameters nameAndParameters)
+            NameAndParameters nameAndParameters)
         {
             var bindingsArrayProperty = bindingProperty.GetArrayPropertyFromElement();
             Debug.Assert(bindingsArrayProperty != null, "SerializedProperty is not an array of bindings");
@@ -497,7 +497,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var pathProperty = bindingProperty.FindPropertyRelative("m_Path");
             var nameProperty = bindingProperty.FindPropertyRelative("m_Name");
             if (nameProperty.stringValue ==
-                ObjectNames.NicifyVariableName(InputControlLayout.ParseNameAndParameters(pathProperty.stringValue).name))
+                ObjectNames.NicifyVariableName(NameAndParameters.Parse(pathProperty.stringValue).name))
                 nameProperty.stringValue = ObjectNames.NicifyVariableName(nameAndParameters.name);
 
             pathProperty.stringValue = nameAndParameters.ToString();

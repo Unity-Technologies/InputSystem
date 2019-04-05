@@ -85,8 +85,8 @@ namespace UnityEngine.Experimental.Input.Controls
                 return -1;
 
             var value = ReadValueFromState(statePtr);
-            var min = m_MinValue.ToFloat();
-            var max = m_MaxValue.ToFloat();
+            var min = m_MinValue.ToSingle();
+            var max = m_MaxValue.ToSingle();
 
             value = Mathf.Clamp(value, min, max);
 

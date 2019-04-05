@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static int s_Disabled;
         private static InputDebuggerWindow s_Instance;
 
-        [MenuItem("Window/Input Debugger", false, 2100)]
+        [MenuItem("Window/Analysis/Input Debugger", false, 2100)]
         public static void CreateOrShow()
         {
             if (s_Instance == null)
@@ -788,11 +788,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 public string name;
             }
-
-            //class ActionItem : TreeViewItem
-            //{
-            //public InputAction action;
-            //}
         }
     }
 }
