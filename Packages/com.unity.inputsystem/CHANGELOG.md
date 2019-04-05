@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
 - The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
 - Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
+- Saving no longer causes the selection of the current processor or interaction to be lost.
+  * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 
 ## [0.2.6-preview] - 2019-03-20
 

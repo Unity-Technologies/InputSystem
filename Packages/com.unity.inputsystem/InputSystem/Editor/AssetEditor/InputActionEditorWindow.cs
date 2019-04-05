@@ -176,7 +176,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
             {
-                m_ActionAssetManager.InitializeObjectReferences();
+                m_ActionAssetManager.Initialize();
                 m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
 
                 InitializeTrees();
@@ -209,7 +209,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void SetAsset(InputActionAsset asset)
         {
             m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
-            m_ActionAssetManager.InitializeObjectReferences();
+            m_ActionAssetManager.Initialize();
 
             InitializeTrees();
             LoadControlSchemes();
@@ -630,7 +630,13 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionAssetManager.dirty)
                 return;
 
-            m_ActionAssetManager.CreateWorkingCopyAsset();
+            // Don't touch the UI state if the serialized data is still the same.
+            if (!m_ActionAssetManager.ReInitializeIfAssetHasChanged())
+                return;
+
+            // Unfortunately, on this path we lose the selection state of the interactions and processors lists
+            // in the properties view.
+
             InitializeTrees();
             LoadPropertiesForSelection();
             Repaint();
