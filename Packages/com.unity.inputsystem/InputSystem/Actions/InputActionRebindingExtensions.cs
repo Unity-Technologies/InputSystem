@@ -39,12 +39,6 @@ namespace UnityEngine.Experimental.Input
             ApplyBindingOverride(action, new InputBinding {overridePath = newPath, groups = group, path = path});
         }
 
-        // Apply the given override to the action.
-        //
-        // NOTE: Ignores the action name in the override.
-        // NOTE: Action must be disabled while applying overrides.
-        // NOTE: If there's already an override on the respective binding, replaces the override.
-
         /// <summary>
         ///
         /// </summary>
@@ -71,35 +65,9 @@ namespace UnityEngine.Experimental.Input
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            // We don't want to hit InputAction.bindings here as this requires setting up per-action
-            // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
-            // repeatedly with an index would thus cause the same data to be computed and thrown away
-            // over and over.
-            // Instead we manually search through the map's bindings to find the right binding index
-            // in the map.
-
-            var actionMap = action.GetOrCreateActionMap();
-            var bindingsInMap = actionMap.m_Bindings;
-            var bindingCountInMap = bindingsInMap?.Length ?? 0;
-            var actionName = action.name;
-
-            var currentBindingIndexOnAction = -1;
-            for (var i = 0; i < bindingCountInMap; ++i)
-            {
-                if (string.Compare(bindingsInMap[i].action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0)
-                    continue;
-
-                ++currentBindingIndexOnAction;
-                if (currentBindingIndexOnAction == bindingIndex)
-                {
-                    bindingOverride.action = actionName;
-                    ApplyBindingOverride(actionMap, i, bindingOverride);
-                    return;
-                }
-            }
-
-            throw new ArgumentOutOfRangeException(
-                $"Binding index {bindingIndex} is out of range for action '{action}' with {currentBindingIndexOnAction} bindings", "bindingIndex");
+            var indexOnMap = action.BindingIndexOnActionToBindingIndexOnMap(bindingIndex);
+            bindingOverride.action = action.name;
+            ApplyBindingOverride(action.GetOrCreateActionMap(), indexOnMap, bindingOverride);
         }
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)

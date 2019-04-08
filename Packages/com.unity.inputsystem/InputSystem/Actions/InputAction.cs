@@ -618,6 +618,40 @@ namespace UnityEngine.Experimental.Input
                     $"Cannot modify bindings on action '{this}' while its action map is enabled");
         }
 
+        internal int BindingIndexOnActionToBindingIndexOnMap(int indexOfBindingOnAction)
+        {
+            // We don't want to hit InputAction.bindings here as this requires setting up per-action
+            // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
+            // repeatedly with an index would thus cause the same data to be computed and thrown away
+            // over and over.
+            // Instead we manually search through the map's bindings to find the right binding index
+            // in the map.
+
+            var actionMap = GetOrCreateActionMap();
+            var bindingsInMap = actionMap.m_Bindings;
+            var bindingCountInMap = bindingsInMap.LengthSafe();
+            var actionName = name;
+
+            var currentBindingIndexOnAction = -1;
+            for (var i = 0; i < bindingCountInMap; ++i)
+            {
+                ref var binding = ref bindingsInMap[i];
+
+                // Match both name and ID on binding.
+                if (string.Compare(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0 &&
+                    binding.action != m_Id)
+                    continue;
+
+                ++currentBindingIndexOnAction;
+                if (currentBindingIndexOnAction == indexOfBindingOnAction)
+                    return i;
+            }
+
+            throw new ArgumentOutOfRangeException(
+                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings",
+                nameof(indexOfBindingOnAction));
+        }
+
         /// <summary>
         /// Information provided to action callbacks about what triggered an action.
         /// </summary>

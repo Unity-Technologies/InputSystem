@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a `clickCount` control to the `Mouse` class, which specifies the click count for the last mouse click (to allow distinguishing between single-, double- and multi-clicks).
 - Support for Bluetooth Xbox One controllers on macOS.
 
+#### Actions
+
+- New API for changing bindings on actions
+```
+    // Several variations exist that allow to look up bindings in various ways.
+    myAction.ChangeBindingWithPath("<Gamepad>/buttonSouth")
+        .WithPath("<Keyboard>/space");
+
+    // Can also replace the binding wholesale.
+    myAction.ChangeBindingWithPath("<Keyboard>/space")
+        .To(new InputBinding { ... });
+
+    // Can also remove bindings programmatically now.
+    myAction.ChangeBindingWithPath("<Keyboard>/space").Erase();
+```
+
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
