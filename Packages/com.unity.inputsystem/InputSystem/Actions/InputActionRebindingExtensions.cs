@@ -660,7 +660,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 HookOnEvent();
+
                 m_Flags |= Flags.Started;
+                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Completed;
+
                 return this;
             }
 
@@ -779,7 +783,7 @@ namespace UnityEngine.Experimental.Input
                     var control = controls[i];
 
                     // Skip controls that have no state in the event.
-                    var statePtr = (void*)control.GetStatePtrFromStateEvent(eventPtr);
+                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
                     if (statePtr == null)
                         continue;
 
