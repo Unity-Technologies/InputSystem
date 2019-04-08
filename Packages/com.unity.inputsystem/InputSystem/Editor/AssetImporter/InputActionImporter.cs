@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Editor
     [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 5;
+        private const int kVersion = 6;
 
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap.png";
