@@ -510,7 +510,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             Array.Resize(ref array, length - 1);
         }
 
-        public static void EraseAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index)
+        public static void EraseAtWithCapacity<TValue>(TValue[] array, ref int count, int index)
         {
             Debug.Assert(array != null);
             Debug.Assert(count <= array.Length);
@@ -527,7 +527,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             --count;
         }
 
-        public static unsafe void EraseAtWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int index)
+        public static unsafe void EraseAtWithCapacity<TValue>(NativeArray<TValue> array, ref int count, int index)
             where TValue : struct
         {
             Debug.Assert(array.IsCreated);

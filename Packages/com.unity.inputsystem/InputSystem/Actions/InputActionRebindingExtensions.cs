@@ -688,7 +688,7 @@ namespace UnityEngine.Experimental.Input
 
                 var candidateCount = m_Candidates.Count;
                 m_Candidates.RemoveAt(index);
-                ArrayHelpers.EraseAtWithCapacity(ref m_Scores, ref candidateCount, index);
+                ArrayHelpers.EraseAtWithCapacity(m_Scores, ref candidateCount, index);
             }
 
             public void Dispose()
