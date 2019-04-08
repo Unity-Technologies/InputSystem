@@ -6567,46 +6567,4 @@ partial class CoreTests
 
         Assert.That(map.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
     }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanCreateReferenceToAsset()
-    {
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var reference = new InputActionAssetReference(asset);
-
-        ////REVIEW: would be great to test serializability
-
-        Assert.That(reference.asset, Is.SameAs(asset));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanMakePrivateCopyOfActionsThroughAssetReference()
-    {
-        var map1 = new InputActionMap("map1");
-        var map2 = new InputActionMap("map2");
-        map1.AddAction("action1", "<Gamepad>/leftStick");
-        map1.AddAction("action2", "<Gamepad>/rightStick");
-        map2.AddAction("action3", "<Keyboard>/space");
-
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map1);
-        asset.AddActionMap(map2);
-
-        var reference = new InputActionAssetReference(asset);
-        reference.MakePrivateCopyOfActions();
-
-        Assert.That(reference.asset, Is.Not.SameAs(asset));
-        Assert.That(reference.asset.actionMaps, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[0].name, Is.EqualTo("map1"));
-        Assert.That(reference.asset.actionMaps[1].name, Is.EqualTo("map2"));
-        Assert.That(reference.asset.actionMaps[0].actions, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[1].actions, Has.Count.EqualTo(1));
-        Assert.That(reference.asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
-        Assert.That(reference.asset.actionMaps[0].actions[1].name, Is.EqualTo("action2"));
-        Assert.That(reference.asset.actionMaps[1].actions[0].name, Is.EqualTo("action3"));
-        Assert.That(reference.asset.actionMaps[0].bindings, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[1].bindings, Has.Count.EqualTo(1));
-    }
 }
