@@ -247,15 +247,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// and <see cref="controlSchemeMatch"/>).
         ///
         /// Note that is generally does not make sense for users to share actions. Instead, each user should
-        /// receive a set of actions private to the user. To duplicate an existing set of actions, call
-        /// <see cref="InputActionAssetReference.MakePrivateCopyOfActions"/> or <see cref="ScriptableObject.Instantiate(Object)"/>
-        /// to duplicate an <see cref="InputActionAsset"/>.
+        /// receive a set of actions private to the user. 
         ///
         /// If <see cref="settings"/> are applied with customized bindings (<see cref="InputUserSettings.customBindings"/>),
         /// these are applied automatically to the actions.
         /// </remarks>
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>
-        /// <seealso cref="AssociateActionsWithUser(InputActionAssetReference)"/>
         /// <seealso cref="InputActionMap"/>
         /// <seealso cref="InputActionAsset"/>
         /// <seealso cref="InputUserChange.BindingsChanged"/>
@@ -498,14 +495,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 if (s_AllUserData[userIndex].controlScheme != null)
                     ActivateControlScheme(s_AllUserData[userIndex].controlScheme.Value);
             }
-        }
-
-        public void AssociateActionsWithUser(InputActionAssetReference assetReference)
-        {
-            if (assetReference == null)
-                throw new ArgumentNullException(nameof(assetReference));
-
-            AssociateActionsWithUser(assetReference.asset);
         }
 
         public ControlSchemeChangeSyntax ActivateControlScheme(string schemeName)

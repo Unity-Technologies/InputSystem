@@ -210,20 +210,18 @@ namespace UnityEngine.Experimental.Input
                 return InputActionState.kInvalidIndex;
             var actionCount = m_Actions.Length;
 
-            var isReferenceById = nameOrId[0] == '{';
-            if (isReferenceById)
+            // If it contains hyphens, it may be a GUID so try looking up that way.
+            if (nameOrId.Contains('-') && Guid.TryParse(nameOrId, out var id))
             {
-                var id = new Guid(nameOrId);
                 for (var i = 0; i < actionCount; ++i)
                     if (m_Actions[i].idDontGenerate == id)
                         return i;
             }
-            else
-            {
-                for (var i = 0; i < actionCount; ++i)
-                    if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
-                        return i;
-            }
+
+            // Default search goes by name (case insensitive).
+            for (var i = 0; i < actionCount; ++i)
+                if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return i;
 
             return InputActionState.kInvalidIndex;
         }
@@ -956,6 +954,7 @@ namespace UnityEngine.Experimental.Input
             public string expectedControlLayout;
             public bool continuous;
             public bool passThrough;
+            public bool initialStateCheck;
             public string processors;
             public string interactions;
 
@@ -973,6 +972,7 @@ namespace UnityEngine.Experimental.Input
                     expectedControlLayout = action.m_ExpectedControlLayout,
                     continuous = action.continuous,
                     passThrough = action.passThrough,
+                    initialStateCheck = action.initialStateCheck,
                     processors = action.processors,
                     interactions = action.interactions,
                 };
@@ -1126,6 +1126,7 @@ namespace UnityEngine.Experimental.Input
                             : null,
                         continuous = jsonAction.continuous,
                         passThrough = jsonAction.passThrough,
+                        initialStateCheck = jsonAction.initialStateCheck,
                         m_Processors = jsonAction.processors,
                         m_Interactions = jsonAction.interactions,
                     };
@@ -1198,6 +1199,7 @@ namespace UnityEngine.Experimental.Input
                                 : null,
                             continuous = jsonAction.continuous,
                             passThrough = jsonAction.passThrough,
+                            initialStateCheck = jsonAction.initialStateCheck,
                             m_Processors = jsonAction.processors,
                             m_Interactions = jsonAction.interactions,
                         };

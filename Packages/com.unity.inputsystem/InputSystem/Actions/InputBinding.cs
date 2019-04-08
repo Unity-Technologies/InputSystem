@@ -155,7 +155,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Name of the action triggered by the binding.
+        /// Name or ID of the action triggered by the binding.
         /// </summary>
         /// <remarks>
         /// This is null if the binding does not trigger an action.
@@ -163,6 +163,8 @@ namespace UnityEngine.Experimental.Input
         /// For InputBindings that are used as filters, this can be a "mapName/actionName" combination
         /// or "mapName/*" to match all actions in the given map.
         /// </remarks>
+        /// <seealso cref="InputAction.name"/>
+        /// <seealso cref="InputAction.id"/>
         public string action
         {
             get => m_Action;

@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.CodeDom.Compiler;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -384,7 +386,7 @@ partial class CoreTests
         // Change to vector2 composite and make sure that we've added two more bindings, changed the names
         // of bindings accordingly, and preserved the existing binding paths and such.
         InputActionSerializationHelpers.ChangeCompositeBindingType(composite,
-            InputControlLayout.ParseNameAndParameters("Dpad(normalize=false)"));
+            NameAndParameters.Parse("Dpad(normalize=false)"));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].GetAction("action1");
@@ -731,7 +733,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -756,38 +757,40 @@ partial class CoreTests
         tree.Reload();
         tree.SelectItem("map1");
 
-        tree.CopySelectedItemsToClipboard();
-        Assert.That(EditorGUIUtility.systemCopyBuffer, Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
-        tree.PasteDataFromClipboard();
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.CopySelectedItemsToClipboard();
+            Assert.That(EditorHelpers.GetSystemCopyBufferContents(), Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
+            tree.PasteDataFromClipboard();
 
-        Assert.That(tree.rootItem.children, Has.Count.EqualTo(3));
-        Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
-        Assert.That(tree.rootItem.children[1].displayName, Is.EqualTo("map3"));
-        Assert.That(tree.rootItem.children[1].As<ActionMapTreeItem>().guid, Is.Not.EqualTo(map1.id));
-        Assert.That(tree.rootItem.children[1].children, Is.Not.Null);
-        Assert.That(tree.rootItem.children[1].children, Has.Count.EqualTo(2));
-        Assert.That(tree.rootItem.children[1].children[0], Is.TypeOf<ActionTreeItem>());
-        Assert.That(tree.rootItem.children[1].children[1], Is.TypeOf<ActionTreeItem>());
-        Assert.That(tree.rootItem.children[1].children[0].displayName, Is.EqualTo("action1"));
-        Assert.That(tree.rootItem.children[1].children[1].displayName, Is.EqualTo("action2"));
-        Assert.That(tree.rootItem.children[1].children[0].children, Is.Not.Null);
-        Assert.That(tree.rootItem.children[1].children[1].children, Is.Not.Null);
-        Assert.That(tree.rootItem.children[1].children[0].children, Has.Count.EqualTo(2));
-        Assert.That(tree.rootItem.children[1].children[1].children, Has.Count.EqualTo(1));
-        Assert.That(tree.rootItem.children[1].children[0].children[0], Is.TypeOf<BindingTreeItem>());
-        Assert.That(tree.rootItem.children[1].children[0].children[1], Is.TypeOf<BindingTreeItem>());
-        Assert.That(tree.rootItem.children[1].children[1].children[0], Is.TypeOf<BindingTreeItem>());
-        Assert.That(tree.rootItem.children[1].children[0].children[0].As<BindingTreeItem>().path,
-            Is.EqualTo("<Gamepad>/leftStick"));
-        Assert.That(tree.rootItem.children[1].children[0].children[1].As<BindingTreeItem>().path,
-            Is.EqualTo("<Keyboard>/a"));
-        Assert.That(tree.rootItem.children[1].children[1].children[0].As<BindingTreeItem>().path,
-            Is.EqualTo("<Gamepad>/rightStick"));
+            Assert.That(tree.rootItem.children, Has.Count.EqualTo(3));
+            Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
+            Assert.That(tree.rootItem.children[1].displayName, Is.EqualTo("map3"));
+            Assert.That(tree.rootItem.children[1].As<ActionMapTreeItem>().guid, Is.Not.EqualTo(map1.id));
+            Assert.That(tree.rootItem.children[1].children, Is.Not.Null);
+            Assert.That(tree.rootItem.children[1].children, Has.Count.EqualTo(2));
+            Assert.That(tree.rootItem.children[1].children[0], Is.TypeOf<ActionTreeItem>());
+            Assert.That(tree.rootItem.children[1].children[1], Is.TypeOf<ActionTreeItem>());
+            Assert.That(tree.rootItem.children[1].children[0].displayName, Is.EqualTo("action1"));
+            Assert.That(tree.rootItem.children[1].children[1].displayName, Is.EqualTo("action2"));
+            Assert.That(tree.rootItem.children[1].children[0].children, Is.Not.Null);
+            Assert.That(tree.rootItem.children[1].children[1].children, Is.Not.Null);
+            Assert.That(tree.rootItem.children[1].children[0].children, Has.Count.EqualTo(2));
+            Assert.That(tree.rootItem.children[1].children[1].children, Has.Count.EqualTo(1));
+            Assert.That(tree.rootItem.children[1].children[0].children[0], Is.TypeOf<BindingTreeItem>());
+            Assert.That(tree.rootItem.children[1].children[0].children[1], Is.TypeOf<BindingTreeItem>());
+            Assert.That(tree.rootItem.children[1].children[1].children[0], Is.TypeOf<BindingTreeItem>());
+            Assert.That(tree.rootItem.children[1].children[0].children[0].As<BindingTreeItem>().path,
+                Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree.rootItem.children[1].children[0].children[1].As<BindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree.rootItem.children[1].children[1].children[0].As<BindingTreeItem>().path,
+                Is.EqualTo("<Gamepad>/rightStick"));
+        }
     }
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteAction_IntoSameActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -807,23 +810,25 @@ partial class CoreTests
         tree.Reload();
         tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Actions.Array.data[1]"));
 
-        tree.CopySelectedItemsToClipboard();
-        Assert.That(EditorGUIUtility.systemCopyBuffer, Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
-        tree.PasteDataFromClipboard();
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.CopySelectedItemsToClipboard();
+            Assert.That(EditorHelpers.GetSystemCopyBufferContents(), Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
+            tree.PasteDataFromClipboard();
 
-        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(3));
-        Assert.That(tree.rootItem.children[0].children[2], Is.TypeOf<ActionTreeItem>());
-        Assert.That(tree.rootItem.children[0].children[2].displayName, Is.EqualTo("action3"));
-        Assert.That(tree.rootItem.children[0].children[2].children, Is.Not.Null);
-        Assert.That(tree.rootItem.children[0].children[2].children, Has.Count.EqualTo(1));
-        Assert.That(tree.rootItem.children[0].children[2].children[0], Is.TypeOf<BindingTreeItem>());
-        Assert.That(tree.rootItem.children[0].children[2].children[0].As<BindingTreeItem>().path,
-            Is.EqualTo("<Gamepad>/rightStick"));
+            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(3));
+            Assert.That(tree.rootItem.children[0].children[2], Is.TypeOf<ActionTreeItem>());
+            Assert.That(tree.rootItem.children[0].children[2].displayName, Is.EqualTo("action3"));
+            Assert.That(tree.rootItem.children[0].children[2].children, Is.Not.Null);
+            Assert.That(tree.rootItem.children[0].children[2].children, Has.Count.EqualTo(1));
+            Assert.That(tree.rootItem.children[0].children[2].children[0], Is.TypeOf<BindingTreeItem>());
+            Assert.That(tree.rootItem.children[0].children[2].children[0].As<BindingTreeItem>().path,
+                Is.EqualTo("<Gamepad>/rightStick"));
+        }
     }
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteAction_IntoDifferentActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -835,14 +840,15 @@ partial class CoreTests
         action1.AddBinding("<Keyboard>/a");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var serializedObject = new SerializedObject(asset))
+        var serializedObject = new SerializedObject(asset);
+        var tree = new InputActionTreeView(serializedObject)
         {
-            var tree = new InputActionTreeView(serializedObject)
-            {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject),
-            };
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject),
+        };
+        tree.Reload();
 
-            tree.Reload();
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Actions.Array.data[0]"));
             tree.CopySelectedItemsToClipboard();
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[1].m_Actions.Array.data[0]"));
@@ -864,7 +870,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteBinding_IntoSameAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -875,14 +880,15 @@ partial class CoreTests
         action1.AddBinding("<Keyboard>/a");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var serializedObject = new SerializedObject(asset))
+        var serializedObject = new SerializedObject(asset);
+        var tree = new InputActionTreeView(serializedObject)
         {
-            var tree = new InputActionTreeView(serializedObject)
-            {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject),
-            };
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject),
+        };
+        tree.Reload();
 
-            tree.Reload();
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
             tree.CopySelectedItemsToClipboard();
             tree.PasteDataFromClipboard();
@@ -898,7 +904,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteBinding_IntoDifferentAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -909,14 +914,15 @@ partial class CoreTests
         action1.AddBinding("<Keyboard>/a");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var serializedObject = new SerializedObject(asset))
+        var serializedObject = new SerializedObject(asset);
+        var tree = new InputActionTreeView(serializedObject)
         {
-            var tree = new InputActionTreeView(serializedObject)
-            {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject),
-            };
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject),
+        };
+        tree.Reload();
 
-            tree.Reload();
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
             tree.CopySelectedItemsToClipboard();
             tree.SelectItem("map1/action2");
@@ -939,19 +945,21 @@ partial class CoreTests
         var map = asset.AddActionMap("map");
         map.AddAction("action", binding: "<Gamepad>leftStick");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
         {
-            var selectionChanged = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                }
-            };
-            tree.Reload();
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
             selectionChanged = false;
             tree.CopySelectedItemsToClipboard();
@@ -966,7 +974,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPasteCompositeBinding()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -978,25 +985,27 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/b");
         action.AddBinding("<Gamepad>/leftStick/y");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var serializedObjectModified = false;
+        var tree = new InputActionTreeView(so)
         {
-            var selectionChanged = false;
-            var serializedObjectModified = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                },
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(serializedObjectModified, Is.False);
-                    serializedObjectModified = true;
-                }
-            };
-            tree.Reload();
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            },
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(serializedObjectModified, Is.False);
+                serializedObjectModified = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
             selectionChanged = false;
             tree.CopySelectedItemsToClipboard();
@@ -1023,7 +1032,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPastePartOfCompositeBinding_IntoSameComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1034,25 +1042,27 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/b");
         action.AddBinding("<Gamepad>/rightTrigger");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var serializedObjectModified = false;
+        var tree = new InputActionTreeView(so)
         {
-            var selectionChanged = false;
-            var serializedObjectModified = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                },
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(serializedObjectModified, Is.False);
-                    serializedObjectModified = true;
-                }
-            };
-            tree.Reload();
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            },
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(serializedObjectModified, Is.False);
+                serializedObjectModified = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
             tree.CopySelectedItemsToClipboard();
             selectionChanged = false;
@@ -1081,7 +1091,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCopyPastePartOfCompositeBinding_IntoDifferentComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1094,25 +1103,27 @@ partial class CoreTests
             .With("Positive", "<Gamepad>/buttonEast")
             .With("Negative", "<Gamepad>/buttonWest");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var serializedObjectModified = false;
+        var tree = new InputActionTreeView(so)
         {
-            var selectionChanged = false;
-            var serializedObjectModified = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                },
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(serializedObjectModified, Is.False);
-                    serializedObjectModified = true;
-                }
-            };
-            tree.Reload();
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            },
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(serializedObjectModified, Is.False);
+                serializedObjectModified = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"));
             tree.CopySelectedItemsToClipboard();
             selectionChanged = false;
@@ -1150,7 +1161,6 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    [Ignore("Disable broken test Fogbugz ticket entered.")]
     public void Editor_ActionTree_CanCutAndPasteAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1163,25 +1173,27 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/b");
         map2.AddAction("action2", "<Keyboard>/space");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var serializedObjectModified = false;
+        var tree = new InputActionTreeView(so)
         {
-            var selectionChanged = false;
-            var serializedObjectModified = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                },
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(serializedObjectModified, Is.False);
-                    serializedObjectModified = true;
-                }
-            };
-            tree.Reload();
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            },
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(serializedObjectModified, Is.False);
+                serializedObjectModified = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
             tree.SelectItem("map1/action1");
             selectionChanged = false;
             tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_CutCommand));
@@ -1191,7 +1203,7 @@ partial class CoreTests
             Assert.That(tree.GetSelectedItems(), Is.Empty);
             Assert.That(tree.FindItemByPath("map1/action1"), Is.Null);
             Assert.That(tree["map1"].children, Is.Null.Or.Empty);
-            Assert.That(EditorGUIUtility.systemCopyBuffer, Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
+            Assert.That(EditorHelpers.GetSystemCopyBufferContents(), Does.StartWith(InputActionTreeView.k_CopyPasteMarker));
 
             selectionChanged = false;
             serializedObjectModified = false;
@@ -1238,91 +1250,89 @@ partial class CoreTests
             .With("Positive", "<Gamepad>/buttonSouth", groups: "BB")
             .With("Negative", "<Gamepad>/buttonNorth", groups: "BB");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
         {
-            var tree = new InputActionTreeView(so)
-            {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so)
-            };
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+        };
 
-            // Filter by just name.
-            tree.SetItemSearchFilterAndReload("cc");
+        // Filter by just name.
+        tree.SetItemSearchFilterAndReload("cc");
 
-            Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map2"));
-            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("CCAA"));
-            Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[0].children[0].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[0].children[1], Is.TypeOf<CompositeBindingTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[0].children[1].children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map2"));
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("CCAA"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[0].children[0].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[0].children[1], Is.TypeOf<CompositeBindingTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[0].children[1].children, Has.Count.EqualTo(2));
 
-            // Filter by binding group.
-            // NOTE: This should match by the *complete* group name, not just by substring.
-            tree.SetItemSearchFilterAndReload("g:B");
+        // Filter by binding group.
+        // NOTE: This should match by the *complete* group name, not just by substring.
+        tree.SetItemSearchFilterAndReload("g:B");
 
-            Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
-            Assert.That(tree.rootItem.children[1].displayName, Is.EqualTo("map2"));
-            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[0].children[0], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[1], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("AAAA"));
-            Assert.That(tree.rootItem.children[0].children[1].displayName, Is.EqualTo("AABB"));
-            Assert.That(tree.rootItem.children[0].children[0].children, Is.Empty);
-            Assert.That(tree.rootItem.children[0].children[1].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[1].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[1].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/rightStick"));
-            Assert.That(tree.rootItem.children[1].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[1].children[0], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[1].children[0].displayName, Is.EqualTo("CCAA"));
-            Assert.That(tree.rootItem.children[1].children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[1].children[0].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree.rootItem.children[1].children[0].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Keyboard>/a"));
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[1].displayName, Is.EqualTo("map2"));
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[0].children[0], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[1], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("AAAA"));
+        Assert.That(tree.rootItem.children[0].children[1].displayName, Is.EqualTo("AABB"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Is.Empty);
+        Assert.That(tree.rootItem.children[0].children[1].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[1].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[1].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(tree.rootItem.children[1].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[1].children[0], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[1].children[0].displayName, Is.EqualTo("CCAA"));
+        Assert.That(tree.rootItem.children[1].children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[1].children[0].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree.rootItem.children[1].children[0].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Keyboard>/a"));
 
-            // Filter by device layout.
-            tree.SetItemSearchFilterAndReload("d:Gamepad");
+        // Filter by device layout.
+        tree.SetItemSearchFilterAndReload("d:Gamepad");
 
-            Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
-            Assert.That(tree.rootItem.children[1].displayName, Is.EqualTo("map2"));
-            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[0].children[0], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[1], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("AAAA"));
-            Assert.That(tree.rootItem.children[0].children[1].displayName, Is.EqualTo("AABB"));
-            Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/leftStick"));
-            Assert.That(tree.rootItem.children[0].children[1].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[1].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree.rootItem.children[0].children[1].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/rightStick"));
-            Assert.That(tree.rootItem.children[1].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[1].children[0], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree.rootItem.children[1].children[0].displayName, Is.EqualTo("CCAA"));
-            Assert.That(tree.rootItem.children[1].children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[1].children[0].children[0], Is.TypeOf<CompositeBindingTreeItem>());
-            Assert.That(tree.rootItem.children[1].children[0].children[0].children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[1].children[0].children[0].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/buttonSouth"));
-            Assert.That(tree.rootItem.children[1].children[0].children[0].children[1].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/buttonNorth"));
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[1].displayName, Is.EqualTo("map2"));
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[0].children[0], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[1], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("AAAA"));
+        Assert.That(tree.rootItem.children[0].children[1].displayName, Is.EqualTo("AABB"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(tree.rootItem.children[0].children[1].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[1].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree.rootItem.children[0].children[1].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(tree.rootItem.children[1].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[1].children[0], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree.rootItem.children[1].children[0].displayName, Is.EqualTo("CCAA"));
+        Assert.That(tree.rootItem.children[1].children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[1].children[0].children[0], Is.TypeOf<CompositeBindingTreeItem>());
+        Assert.That(tree.rootItem.children[1].children[0].children[0].children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[1].children[0].children[0].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/buttonSouth"));
+        Assert.That(tree.rootItem.children[1].children[0].children[0].children[1].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/buttonNorth"));
 
-            // Filter that matches nothing.
-            tree.SetItemSearchFilterAndReload("matchesNothing");
+        // Filter that matches nothing.
+        tree.SetItemSearchFilterAndReload("matchesNothing");
 
-            Assert.That(tree.rootItem.children, Is.Empty);
-        }
+        Assert.That(tree.rootItem.children, Is.Empty);
     }
 
     // Bindings that have no associated binding group (i.e. aren't part of any control scheme), will not be constrained
@@ -1338,22 +1348,20 @@ partial class CoreTests
         action.AddBinding("<Gamepad>/leftStick", groups: "A"); // In group.
         action.AddBinding("<Gamepad>/rightStick"); // Not in group.
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
         {
-            var tree = new InputActionTreeView(so)
-            {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so)
-            };
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+        };
 
-            tree.SetItemSearchFilterAndReload("g:A");
+        tree.SetItemSearchFilterAndReload("g:A");
 
-            var actionItem = tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Actions.Array.data[0]");
-            Assert.That(actionItem, Is.Not.Null);
+        var actionItem = tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Actions.Array.data[0]");
+        Assert.That(actionItem, Is.Not.Null);
 
-            Assert.That(actionItem.children, Has.Count.EqualTo(2));
-            Assert.That(actionItem.children[0].displayName, Does.Not.Contain("{GLOBAL}"));
-            Assert.That(actionItem.children[1].displayName, Does.Contain("{GLOBAL}"));
-        }
+        Assert.That(actionItem.children, Has.Count.EqualTo(2));
+        Assert.That(actionItem.children[0].displayName, Does.Not.Contain("{GLOBAL}"));
+        Assert.That(actionItem.children[1].displayName, Does.Contain("{GLOBAL}"));
     }
 
     [Test]
@@ -1369,45 +1377,43 @@ partial class CoreTests
         action1.AddBinding("<Gamepad>/leftStick");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
         {
-            var modified = false;
-            var selectionChanged = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(modified, Is.False);
-                    modified = true;
-                },
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                }
-            };
-            tree.Reload();
-            tree.SelectItem("map1");
-            selectionChanged = false;
-            tree.SelectItem("map3", additive: true);
-            selectionChanged = false;
-            tree.DeleteDataOfSelectedItems();
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        tree.SelectItem("map1");
+        selectionChanged = false;
+        tree.SelectItem("map3", additive: true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
 
-            Assert.That(selectionChanged, Is.True);
-            Assert.That(modified, Is.True);
-            Assert.That(tree.HasSelection, Is.False);
-            Assert.That(tree.rootItem.children, Is.Not.Null);
-            Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map2"));
-            Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
-            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action2"));
-            Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/rightStick"));
-        }
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map2"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action2"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/rightStick"));
     }
 
     [Test]
@@ -1422,45 +1428,43 @@ partial class CoreTests
         action1.AddBinding("<Gamepad>/leftStick");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
         {
-            var modified = false;
-            var selectionChanged = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(modified, Is.False);
-                    modified = true;
-                },
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                }
-            };
-            tree.Reload();
-            tree.SelectItem("map1/action1");
-            selectionChanged = false;
-            tree.SelectItem("map1/action3", additive: true);
-            selectionChanged = false;
-            tree.DeleteDataOfSelectedItems();
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        tree.SelectItem("map1/action1");
+        selectionChanged = false;
+        tree.SelectItem("map1/action3", additive: true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
 
-            Assert.That(selectionChanged, Is.True);
-            Assert.That(modified, Is.True);
-            Assert.That(tree.HasSelection, Is.False);
-            Assert.That(tree.rootItem.children, Is.Not.Null);
-            Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
-            Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
-            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action2"));
-            Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/rightStick"));
-        }
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action2"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/rightStick"));
     }
 
     [Test]
@@ -1476,50 +1480,48 @@ partial class CoreTests
         action1.AddBinding("<Gamepad>/dpad");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
         {
-            var modified = false;
-            var selectionChanged = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(modified, Is.False);
-                    modified = true;
-                },
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                }
-            };
-            tree.Reload();
-            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
-            selectionChanged = false;
-            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"),
-                additive: true);
-            selectionChanged = false;
-            tree.DeleteDataOfSelectedItems();
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"),
+            additive: true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
 
-            Assert.That(selectionChanged, Is.True);
-            Assert.That(modified, Is.True);
-            Assert.That(tree.HasSelection, Is.False);
-            Assert.That(tree.rootItem.children, Is.Not.Null);
-            Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
-            Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
-            Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(2));
-            Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action1"));
-            Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/leftStick"));
-            Assert.That(tree.rootItem.children[0].children[1].displayName, Is.EqualTo("action2"));
-            Assert.That(tree.rootItem.children[0].children[1].children, Has.Count.EqualTo(1));
-            Assert.That(tree.rootItem.children[0].children[1].children[0].As<BindingTreeItem>().path,
-                Is.EqualTo("<Gamepad>/rightStick"));
-        }
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(2));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action1"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(tree.rootItem.children[0].children[1].displayName, Is.EqualTo("action2"));
+        Assert.That(tree.rootItem.children[0].children[1].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[1].children[0].As<BindingTreeItem>().path,
+            Is.EqualTo("<Gamepad>/rightStick"));
     }
 
     [Test]
@@ -1536,45 +1538,43 @@ partial class CoreTests
         action1.AddBinding("<Gamepad>/dpad");
         action2.AddBinding("<Gamepad>/rightStick");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
         {
-            var modified = false;
-            var selectionChanged = false;
-            var tree = new InputActionTreeView(so)
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
             {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so),
-                onSerializedObjectModified = () =>
-                {
-                    Assert.That(modified, Is.False);
-                    modified = true;
-                },
-                onSelectionChanged = () =>
-                {
-                    Assert.That(selectionChanged, Is.False);
-                    selectionChanged = true;
-                }
-            };
-            tree.Reload();
-            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
-            selectionChanged = false;
-            tree.DeleteDataOfSelectedItems();
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
 
-            Assert.That(selectionChanged, Is.True);
-            Assert.That(modified, Is.True);
-            Assert.That(tree.HasSelection, Is.False);
-            Assert.That(tree["map1"], Is.TypeOf<ActionMapTreeItem>());
-            Assert.That(tree["map1"].children, Has.Count.EqualTo(2));
-            Assert.That(tree["map1/action1"], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree["map1/action2"], Is.TypeOf<ActionTreeItem>());
-            Assert.That(tree["map1/action1"].children, Has.Count.EqualTo(1));
-            Assert.That(tree["map1/action2"].children, Has.Count.EqualTo(1));
-            Assert.That(tree["map1/action1"].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree["map1/action2"].children[0], Is.TypeOf<BindingTreeItem>());
-            Assert.That(tree["map1/action1"].children[0].children, Is.Null);
-            Assert.That(tree["map1/action2"].children[0].children, Is.Null);
-            Assert.That(tree["map1/action1"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/dpad"));
-            Assert.That(tree["map1/action2"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/rightStick"));
-        }
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree["map1"], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree["map1"].children, Has.Count.EqualTo(2));
+        Assert.That(tree["map1/action1"], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree["map1/action2"], Is.TypeOf<ActionTreeItem>());
+        Assert.That(tree["map1/action1"].children, Has.Count.EqualTo(1));
+        Assert.That(tree["map1/action2"].children, Has.Count.EqualTo(1));
+        Assert.That(tree["map1/action1"].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree["map1/action2"].children[0], Is.TypeOf<BindingTreeItem>());
+        Assert.That(tree["map1/action1"].children[0].children, Is.Null);
+        Assert.That(tree["map1/action2"].children[0].children, Is.Null);
+        Assert.That(tree["map1/action1"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/dpad"));
+        Assert.That(tree["map1/action2"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/rightStick"));
     }
 
     [Test]
@@ -1588,18 +1588,17 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/a")
             .With("Positive", "<Keyboard>/b");
 
-        using (var so = new SerializedObject(asset))
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
         {
-            var tree = new InputActionTreeView(so)
-            {
-                onBuildTree = () => InputActionTreeView.BuildFullTree(so)
-            };
-            tree.Reload();
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+        };
+        tree.Reload();
 
-            Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
-        }
+        Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
+#if NET_4_6
     [Test]
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
@@ -1612,65 +1611,34 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
-        asset.name = "MyControls";
+        asset.name = "My Controls (2)";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
-        // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
-        // is just perform some textual verification. Once we have the newest Mono, this should
-        // use CSharpCodeProvider and at least parse if not compile and run the generated wrapper.
+        var codeProvider = CodeDomProvider.CreateProvider("CSharp");
+        var cp = new CompilerParameters();
+        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+        var cr = codeProvider.CompileAssemblyFromSource(cp, code);
+        Assert.That(cr.Errors, Is.Empty);
+        var assembly = cr.CompiledAssembly;
+        Assert.That(assembly, Is.Not.Null);
+        var type = assembly.GetType("MyNamespace.MyControls2");
+        Assert.That(type, Is.Not.Null);
+        var set1Property = type.GetProperty("set1");
+        Assert.That(set1Property, Is.Not.Null);
+        var set1MapGetter = set1Property.PropertyType.GetMethod("Get");
+        var instance = Activator.CreateInstance(type);
+        Assert.That(instance, Is.Not.Null);
+        var set1Instance = set1Property.GetValue(instance);
+        Assert.That(set1Instance, Is.Not.Null);
+        var set1map = set1MapGetter.Invoke(set1Instance, null) as InputActionMap;
+        Assert.That(set1map, Is.Not.Null);
 
-        Assert.That(code, Contains.Substring("namespace MyNamespace"));
-        Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
-        Assert.That(code, Contains.Substring("public override void MakePrivateCopyOfActions()"));
-        Assert.That(code, Contains.Substring("public void SetAsset(InputActionAsset newAsset)"));
+        Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset_WithInterfaces()
-    {
-        var map1 = new InputActionMap("map1");
-        map1.AddAction("action1", binding: "/gamepad/leftStick");
-        map1.AddAction("action2", binding: "/gamepad/rightStick");
-        var map2 = new InputActionMap("map2");
-        map2.AddAction("action3", binding: "/gamepad/buttonSouth");
-
-        var code = InputActionCodeGenerator.GenerateWrapperCode(new[] { map1, map2 },
-            Enumerable.Empty<InputControlScheme>(),
-            new InputActionCodeGenerator.Options { generateInterfaces = true, className = "Test" });
-
-        Assert.That(code, Contains.Substring("public interface IMap1Actions"));
-        Assert.That(code, Contains.Substring("public interface IMap2Actions"));
-        Assert.That(code, Contains.Substring("private IMap1Actions m_Map1ActionsCallbackInterface;"));
-        Assert.That(code, Contains.Substring("private IMap2Actions m_Map2ActionsCallbackInterface;"));
-        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap1Actions instance)"));
-        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap2Actions instance)"));
-        Assert.That(code, Contains.Substring("void OnAction1(InputAction.CallbackContext context)"));
-        Assert.That(code, Contains.Substring("void OnAction2(InputAction.CallbackContext context)"));
-        Assert.That(code, Contains.Substring("void OnAction3(InputAction.CallbackContext context)"));
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
-    {
-        var set1 = new InputActionMap("set1");
-        set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
-        set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set1);
-        asset.name = "New Controls (4)";
-
-        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-            new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
-
-        Assert.That(code, Contains.Substring("class NewControls4"));
-        Assert.That(code, Contains.Substring("public InputAction @action"));
-        Assert.That(code, Contains.Substring("public InputAction @_1thing"));
-    }
+#endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on

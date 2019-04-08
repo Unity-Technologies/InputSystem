@@ -352,12 +352,11 @@ internal class PlayerInputTests : InputTestFixture
 
         go.SendMessage("SwitchActions", "other");
 
-        // Need update to see initial state check.
-        InputSystem.Update();
+        Set(gamepad.leftTrigger, 0.345f);
 
         Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
         Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.345f)}));
     }
 
     [Test]

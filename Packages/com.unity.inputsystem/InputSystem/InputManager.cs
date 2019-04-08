@@ -238,6 +238,13 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        private bool gameIsPlayingAndHasFocus =>
+#if UNITY_EDITOR
+                     EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+#else
+            true;
+#endif
+
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
 
@@ -1495,7 +1502,6 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.onFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
-            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2126,8 +2132,6 @@ namespace UnityEngine.Experimental.Input
             #endif
             updateMask = newUpdateMask;
 
-            m_Runtime.shouldRunInBackground = m_Settings.runInBackground;
-
             ////TODO: optimize this so that we don't repeatedly recreate state if we add/remove multiple devices
             ////      (same goes for not resolving actions repeatedly)
 
@@ -2200,27 +2204,14 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
-            switch (updateType)
-            {
-                case InputUpdateType.BeforeRender:
-                case InputUpdateType.Dynamic:
-                case InputUpdateType.Fixed:
-                    // Note: When Touchscreen Keyboard is active, Unity application looses focus, thus none of input is being processed
-                    //       Force input updating while keyboard is show
-                    //       In the future, hopefully we'll have TouchscreenKeyboard integrated in thew new input system directly
-                    //       Thus with removal of KeyboardOnScreen, KeyboardOnScreen::IsVisible() check should go away
-                    if (!(m_Settings.runInBackground || TouchScreenKeyboard.visible) && !m_HasFocus)
-                        return false;
-                    break;
+            var mask = m_UpdateMask;
 #if UNITY_EDITOR
-                case InputUpdateType.Editor:
-                    // If we're in play mode and the player has focus (or ignores focus), don't run editor updates.
-                    if (Application.isPlaying && !EditorApplication.isPaused && (m_HasFocus || m_Settings.runInBackground))
-                        return false;
-                    break;
+            if (gameIsPlayingAndHasFocus)
+                mask &= ~InputUpdateType.Editor;
+            else
+                mask &= ~(InputUpdateType.Dynamic | InputUpdateType.Fixed);
 #endif
-            }
-            return (updateType & m_UpdateMask) != 0;
+            return (updateType & mask) != 0;
         }
 
         /// <summary>
@@ -2262,35 +2253,6 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             ////TODO: manual mode must be treated like lockInputToGameView in editor
-            // In the editor, we need to decide where to route state. Whenever the game is playing and
-            // has focus, we route all input to play mode buffers. When the game is stopped or if any
-            // of the other editor windows has focus, we route input to edit mode buffers.
-            var gameIsPlayingAndHasFocus = true;
-            var buffersToUseForUpdate = updateType;
-
-            #if UNITY_EDITOR
-            gameIsPlayingAndHasFocus = InputEditorUserSettings.lockInputToGameView ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
-
-            if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
-            {
-                switch (m_Settings.updateMode)
-                {
-                    case InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly:
-                    case InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate:
-                        buffersToUseForUpdate = InputUpdateType.Dynamic;
-                        break;
-
-                    case InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly:
-                        buffersToUseForUpdate = InputUpdateType.Fixed;
-                        break;
-
-                    case InputSettings.UpdateMode.ProcessEventsManually:
-                        buffersToUseForUpdate = InputUpdateType.Manual;
-                        break;
-                }
-            }
-            #endif
 
             // Update metrics.
             m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
@@ -2303,7 +2265,7 @@ namespace UnityEngine.Experimental.Input
             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
             InputUpdate.s_LastUpdateType = updateType;
-            InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
+            InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic)
@@ -2340,8 +2302,6 @@ namespace UnityEngine.Experimental.Input
                 if (gameIsPlayingAndHasFocus)
                     ProcessStateChangeMonitorTimeouts();
 
-                if (buffersToUseForUpdate != updateType)
-                    InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
@@ -2627,7 +2587,7 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Buffer flip.
-                        if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
+                        if (FlipBuffersForDeviceIfNecessary(device, updateType))
                         {
                             // In case of a delta state event we need to carry forward all state we're
                             // not updating. Instead of optimizing the copy here, we're just bringing the
@@ -2847,9 +2807,6 @@ namespace UnityEngine.Experimental.Input
 
             ////TODO: fire event that allows code to update state *from* state we just updated
 
-            if (buffersToUseForUpdate != updateType)
-                InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
-
             Profiler.EndSample();
 
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
@@ -3062,7 +3019,7 @@ namespace UnityEngine.Experimental.Input
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
         // the given update type.
         // Returns true if there was a buffer flip.
-        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType, bool gameIsPlayingAndHasFocus)
+        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType)
         {
             if (updateType == InputUpdateType.BeforeRender)
             {

@@ -171,14 +171,15 @@ partial class CoreTests
             trace.Clear();
 
             // Re-enable an action and make sure that it indeed starts from scratch again.
-            // Note that the button is still held so no input required.
 
             action1.Enable();
 
             Assert.That(action1.phase, Is.EqualTo(InputActionPhase.Waiting));
 
             runtime.currentTime = 0.345f;
-            InputSystem.Update();
+
+            Release(gamepad.buttonSouth);
+            Press(gamepad.buttonSouth);
 
             actions = trace.ToArray();
 
@@ -205,11 +206,34 @@ partial class CoreTests
         }
     }
 
-    // Controls may already be actuated when we enable an action. To deal with this, we pretend that at
-    // the time an action is enabled, any bound control that isn't at default
+    // See test after this one for how to switch away from this default behavior.
     [Test]
     [Category("Actions")]
-    public void Actions_WhenEnabled_ReactToCurrentValueOfControlsInNextUpdate()
+    public void Actions_ByDefaultDoNotReactToCurrentStateOfControlWhenEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Press(gamepad.buttonSouth);
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            action.Enable();
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    // It can be useful to react to the value of a control immediately when an action is enabled rather
+    // than wait for the first time the control changes value. To do so, "Initial State Check" needs to
+    // be enabled on an action. If this is done and a bound is actuated at the time an action is enabled,
+    // the action pretends for the control to *just* have changed to the state it already has.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformInitialStateCheckWhenEnabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -219,6 +243,10 @@ partial class CoreTests
         var actionWithoutInteraction = new InputAction("ActionWithoutInteraction", binding: "<Gamepad>/leftStick");
         var actionWithHold = new InputAction("ActionWithHold", binding: "<Gamepad>/buttonSouth", interactions: "Hold");
         var actionThatShouldNotTrigger = new InputAction("ActionThatShouldNotTrigger", binding: "<Gamepad>/rightStick");
+
+        actionWithoutInteraction.initialStateCheck = true;
+        actionWithHold.initialStateCheck = true;
+        actionThatShouldNotTrigger.initialStateCheck = true;
 
         actionWithHold.performed += ctx => Assert.Fail("Hold should not complete");
         actionThatShouldNotTrigger.started += ctx => Assert.Fail("Action should not start");
@@ -543,6 +571,8 @@ partial class CoreTests
         action5.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
         action6.AddBinding("<Gamepad>/leftTrigger").WithProcessor("invert");
         action7.AddBinding("<Gamepad>/leftTrigger").WithProcessor("clamp(min=0,max=0.5)");
+
+        action4.initialStateCheck = true;
 
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
@@ -2003,10 +2033,55 @@ partial class CoreTests
 
         Assert.That(map.TryGetAction("action1"), Is.SameAs(action1));
         Assert.That(map.TryGetAction("action2"), Is.SameAs(action2));
+        Assert.That(map.TryGetAction("action3"), Is.Null);
 
         // Lookup is case-insensitive.
         Assert.That(map.TryGetAction("Action1"), Is.SameAs(action1));
         Assert.That(map.TryGetAction("Action2"), Is.SameAs(action2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionsInMapById()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        Assert.That(map.TryGetAction(action1.id), Is.SameAs(action1));
+        Assert.That(map.TryGetAction(action2.id), Is.SameAs(action2));
+        Assert.That(map.TryGetAction(Guid.NewGuid()), Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionsInMapByStringId()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        Assert.That(map.TryGetAction(action1.id.ToString()), Is.SameAs(action1));
+        Assert.That(map.TryGetAction(action2.id.ToString()), Is.SameAs(action2));
+        Assert.That(map.TryGetAction(Guid.NewGuid().ToString()), Is.Null);
+    }
+
+    // We used to require string GUIDs to be using a "{...}" format when looking up actions. We no
+    // longer do this but there's still data that may be using this format so make sure it works for now.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionsInMapByStringId_UsingOldBracedFormat()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        Assert.That(map.TryGetAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
+        Assert.That(map.TryGetAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
+        Assert.That(map.TryGetAction($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -3531,6 +3606,37 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_DestroyingAssetClearsCallbacks()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+
+        asset.AddActionMap(map);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = map.AddAction("action", "/gamepad/leftTrigger");
+        asset.Enable();
+
+        var wasPerformed = false;
+        action.performed += ctx => wasPerformed = true;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1 });
+        InputSystem.Update();
+
+        Assert.That(wasPerformed);
+        wasPerformed = false;
+
+        UnityEngine.Object.DestroyImmediate(asset);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0 });
+        // There must be no exceptions here from trying to call any callbacks on the destroyed asset.
+        InputSystem.Update();
+
+        Assert.That(wasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_MapsInAssetMustHaveName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -3561,6 +3667,7 @@ partial class CoreTests
         asset.AddActionMap(map);
 
         Assert.That(asset.TryGetActionMap("test"), Is.SameAs(map));
+        Assert.That(asset.TryGetActionMap("other"), Is.Null);
     }
 
     [Test]
@@ -3571,7 +3678,22 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
+        Assert.That(asset.TryGetActionMap(map.id.ToString()), Is.SameAs(map));
+        Assert.That(asset.TryGetActionMap(Guid.NewGuid().ToString()), Is.Null);
+    }
+
+    // Legacy format where we use "{...}" notation to indicate we have a GUID string. No longer necessary but
+    // we may have some old data that uses it.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpMapInAssetById_UsingOldBracedFormat()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
         Assert.That(asset.TryGetActionMap($"{{{map.id}}}"), Is.SameAs(map));
+        Assert.That(asset.TryGetActionMap($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -6470,47 +6592,5 @@ partial class CoreTests
         var action3 = map.AddAction("action3");
 
         Assert.That(map.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanCreateReferenceToAsset()
-    {
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var reference = new InputActionAssetReference(asset);
-
-        ////REVIEW: would be great to test serializability
-
-        Assert.That(reference.asset, Is.SameAs(asset));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanMakePrivateCopyOfActionsThroughAssetReference()
-    {
-        var map1 = new InputActionMap("map1");
-        var map2 = new InputActionMap("map2");
-        map1.AddAction("action1", "<Gamepad>/leftStick");
-        map1.AddAction("action2", "<Gamepad>/rightStick");
-        map2.AddAction("action3", "<Keyboard>/space");
-
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map1);
-        asset.AddActionMap(map2);
-
-        var reference = new InputActionAssetReference(asset);
-        reference.MakePrivateCopyOfActions();
-
-        Assert.That(reference.asset, Is.Not.SameAs(asset));
-        Assert.That(reference.asset.actionMaps, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[0].name, Is.EqualTo("map1"));
-        Assert.That(reference.asset.actionMaps[1].name, Is.EqualTo("map2"));
-        Assert.That(reference.asset.actionMaps[0].actions, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[1].actions, Has.Count.EqualTo(1));
-        Assert.That(reference.asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
-        Assert.That(reference.asset.actionMaps[0].actions[1].name, Is.EqualTo("action2"));
-        Assert.That(reference.asset.actionMaps[1].actions[0].name, Is.EqualTo("action3"));
-        Assert.That(reference.asset.actionMaps[0].bindings, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[1].bindings, Has.Count.EqualTo(1));
     }
 }
