@@ -218,7 +218,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private void AddControlTreeItemsRecursive(InputControlLayout layout, DeviceDropdownItem parent,
             string device, string usage, bool searchable, ControlDropdownItem parentControl = null)
         {
-            var haveControls = false;
             foreach (var control in layout.controls.OrderBy(a => a.name))
             {
                 if (control.isModifyingChildControlByPath)
@@ -230,8 +229,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     continue;
                 }
-
-                haveControls = true;
 
                 var child = new ControlDropdownItem(parentControl, control.name, control.displayName,
                     device, usage, searchable);
