@@ -8,6 +8,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
+
 ////TODO: remove direct references to InputManager
 
 ////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)

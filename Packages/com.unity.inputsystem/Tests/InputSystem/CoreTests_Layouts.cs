@@ -1436,6 +1436,41 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_NoisyControls_AutomaticallyMakeAllTheirChildrenNoisy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""layout"" : ""Stick"",
+                        ""noisy"" : true
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["stick"].As<StickControl>().x.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().y.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().left.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().right.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().up.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().down.noisy, Is.True);
+
+        // Make sure it didn't spill over.
+        Assert.That(device["button"].noisy, Is.False);
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanMarkControlAsSynthetic()
     {
         const string json = @"

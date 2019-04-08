@@ -201,12 +201,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 }
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputControlLayout(stateType = typeof(XInputControllerOSXState))]
+    [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     public class XInputControllerOSX : XInputController
     {
     }
 
-    [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState))]
+    [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     public class XInputControllerWirelessOSX : XInputController
     {
     }

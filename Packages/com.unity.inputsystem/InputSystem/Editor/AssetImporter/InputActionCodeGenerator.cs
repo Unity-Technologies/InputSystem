@@ -327,7 +327,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 buffer.Append(text);
             }
-            
+
             public void WriteIndent()
             {
                 for (var i = 0; i < indentLevel; ++i)

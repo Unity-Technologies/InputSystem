@@ -32,10 +32,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <seealso cref="GamepadButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "A", shortDisplayName = "A")]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "X", shortDisplayName = "X")]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Y", shortDisplayName = "Y")]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "B", shortDisplayName = "B")]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = "A")]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = "X")]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = "Y")]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
@@ -152,7 +152,7 @@ namespace UnityEngine.Experimental.Input
     /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
-    [InputControlLayout(stateType = typeof(GamepadState))]
+    [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         ////REVIEW: add PS4 and Xbox style alternate accessors?

@@ -14,6 +14,8 @@ using UnityEngine.Experimental.Input.Utilities;
 // not for the convenience of editing operations. This means that editing operations have to constantly jump through
 // hoops to map themselves onto the persistence model of the data.
 
+////FIXME: context menu cannot be brought up when there's no items in the tree
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -1120,11 +1122,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 var text = item.displayName;
                 var textRect = GetTextRect(args.rowRect, item);
 
-                if (args.selected)
-                    Styles.selectedText.Draw(textRect, text, false, false, args.selected,
-                        args.focused);
-                else
-                    Styles.text.Draw(textRect, text, false, false, args.selected, args.focused);
+                var style = args.selected ? Styles.selectedText : Styles.text;
+                style.Draw(textRect, text, false, false, args.selected,
+                    args.focused);
             }
 
             // Bottom line.
@@ -1425,14 +1425,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     return null;
 
                 var list = new List<FilterCriterion>();
-                foreach (var substring in criteria.Split(char.IsWhiteSpace))
+                foreach (var substring in criteria.Tokenize())
                 {
                     if (substring.StartsWith(k_DeviceLayoutTag))
-                        list.Add(ByDeviceLayout(substring.Substring(2)));
+                        list.Add(ByDeviceLayout(substring.Substr(2).Unescape()));
                     else if (substring.StartsWith(k_BindingGroupTag))
-                        list.Add(ByBindingGroup(substring.Substring(2)));
+                        list.Add(ByBindingGroup(substring.Substr(2).Unescape()));
                     else
-                        list.Add(ByName(substring));
+                        list.Add(ByName(substring.ToString().Unescape()));
                 }
 
                 return list;
@@ -1459,7 +1459,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static class Styles
         {
-            public static readonly GUIStyle line = new GUIStyle("TV Line");
             public static readonly GUIStyle text = new GUIStyle("Label");
             public static readonly GUIStyle selectedText = new GUIStyle("Label");
             public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label");

@@ -264,7 +264,7 @@ namespace UnityEngine.Experimental.Input
             var isControlLayout = typeof(InputControl).IsAssignableFrom(type);
 
             if (!isDeviceLayout && !isControlLayout)
-                throw new ArgumentException("Types used as layouts have to be InputControls or InputDevices",
+                throw new ArgumentException($"Types used as layouts have to be InputControls or InputDevices; '{type.Name}' is a '{type.BaseType.Name}'",
                     nameof(type));
 
             var internedName = new InternedString(name);
@@ -1446,9 +1446,15 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Sensor", typeof(Sensor));
             RegisterControlLayout("Accelerometer", typeof(Accelerometer));
             RegisterControlLayout("Gyroscope", typeof(Gyroscope));
-            RegisterControlLayout("Gravity", typeof(Gravity));
-            RegisterControlLayout("Attitude", typeof(Attitude));
-            RegisterControlLayout("LinearAcceleration", typeof(LinearAcceleration));
+            RegisterControlLayout("GravitySensor", typeof(GravitySensor));
+            RegisterControlLayout("AttitudeSensor", typeof(AttitudeSensor));
+            RegisterControlLayout("LinearAccelerationSensor", typeof(LinearAccelerationSensor));
+            RegisterControlLayout("MagneticFieldSensor", typeof(MagneticFieldSensor));
+            RegisterControlLayout("LightSensor", typeof(LightSensor));
+            RegisterControlLayout("PressureSensor", typeof(PressureSensor));
+            RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
+            RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
+            RegisterControlLayout("StepCounter", typeof(StepCounter));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));

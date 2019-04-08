@@ -333,17 +333,19 @@ namespace UnityEngine.Experimental.Input.Editor
             // Filter by binding group of selected control scheme.
             if (m_Toolbar.selectedControlScheme != null)
             {
-                searchStringBuffer.Append(' ');
+                searchStringBuffer.Append(" \"");
                 searchStringBuffer.Append(InputActionTreeView.FilterCriterion.k_BindingGroupTag);
                 searchStringBuffer.Append(m_Toolbar.selectedControlScheme.Value.bindingGroup);
+                searchStringBuffer.Append('\"');
             }
 
             // Filter by device layout.
             if (m_Toolbar.selectedDeviceRequirement != null)
             {
-                searchStringBuffer.Append(' ');
+                searchStringBuffer.Append(" \"");
                 searchStringBuffer.Append(InputActionTreeView.FilterCriterion.k_DeviceLayoutTag);
                 searchStringBuffer.Append(InputControlPath.TryGetDeviceLayout(m_Toolbar.selectedDeviceRequirement.Value.controlPath));
+                searchStringBuffer.Append('\"');
             }
 
             var searchString = searchStringBuffer.ToString();
@@ -679,12 +681,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
             m_Toolbar.isDirty = dirty;
-        }
-
-        internal void CloseWithoutSaving()
-        {
-            m_ForceQuit = true;
-            Close();
         }
 
         [SerializeField] private TreeViewState m_ActionMapsTreeState;

@@ -6197,6 +6197,34 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanReuseRebindOperationMultipleTimes()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation())
+        {
+            InputControl[] candidates = null;
+
+            rebind
+                .WithExpectedControlLayout("Button")
+                .OnPotentialMatch(ctx => candidates = ctx.candidates.ToArray())
+                .OnApplyBinding((operation, s) => {});
+
+            rebind.Start();
+            Press(gamepad.buttonSouth);
+
+            Assert.That(candidates, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+            rebind.Cancel();
+            candidates = null;
+            rebind.Start();
+            Press(gamepad.buttonNorth);
+
+            Assert.That(candidates, Is.EquivalentTo(new[] { gamepad.buttonNorth }));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanResolveActionReference()
     {
         var map = new InputActionMap("map");

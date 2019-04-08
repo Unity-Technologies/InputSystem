@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
-                throw new ArgumentNullException("eventData");
+                throw new ArgumentNullException(nameof(eventData));
 
             eventSystem.RaycastAll(eventData, m_RaycastResultCache);
             var result = FindFirstRaycast(m_RaycastResultCache);
@@ -338,7 +338,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
                         moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
                     else
-                        moveDirection = (moveVector.y > 0) ? MoveDirection.Up : MoveDirection.Down;
+                        moveDirection = moveVector.y > 0 ? MoveDirection.Up : MoveDirection.Down;
                 }
 
                 if (moveDirection != internalJoystickState.lastMoveDirection)
@@ -352,9 +352,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     if (internalJoystickState.consecutiveMoveCount != 0)
                     {
                         if (internalJoystickState.consecutiveMoveCount > 1)
-                            allow = (time > (internalJoystickState.lastMoveTime + repeatRate));
+                            allow = time > internalJoystickState.lastMoveTime + repeatRate;
                         else
-                            allow = (time > (internalJoystickState.lastMoveTime + repeatDelay));
+                            allow = time > internalJoystickState.lastMoveTime + repeatDelay;
                     }
 
                     if (allow)

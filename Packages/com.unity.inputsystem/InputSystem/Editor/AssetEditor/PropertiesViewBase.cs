@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private bool m_InteractionsFoldout = true;
         private bool m_ProcessorsFoldout = true;
 
-        private Action<FourCC> m_OnChange;
+        private readonly Action<FourCC> m_OnChange;
 
         private readonly InteractionsListView m_InteractionsList;
         private readonly ProcessorsListView m_ProcessorsList;

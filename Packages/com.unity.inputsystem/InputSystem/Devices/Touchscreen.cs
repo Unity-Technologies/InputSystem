@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A multi-touch surface.
     /// </summary>
-    [InputControlLayout(stateType = typeof(TouchscreenState))]
+    [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
         public TouchControl primaryTouch => allTouchControls[0];

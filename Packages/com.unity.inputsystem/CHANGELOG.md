@@ -35,6 +35,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The option to generate events on wrappers has been removed, we felt that this no longer made sense.
 - Will now show default values in Input Action inspector if no custom values for file path, class name or namespace have been provided.
 - `InputSettings.runInBackground` has been removed. This should now be supported or not on a per-device level. Most devices never supported it in the first place, so a global setting did not seem to be useful.
+- Several new `Sensor`-based classes have been added. Various existing Android sensor implementations are now based on them.
+- `InputControlLayoutAttribute` is no longer inherited.
+  * Rationale: A class marked as a layout will usually be registered using `RegisterLayout`. A class derived from it will usually be registered the same way. Because of layout inheritance, properties applied to the base class through `InputControlLayoutAttribute` will affect the subclass as intended. Not inheriting the attribute itself, however, now allows having properties such as `isGenericTypeOfDevice` which should not be inherited.
+- Removed `acceleration`, `orientation`, and `angularVelocity` controls from `DualShockGamepad` base class.
+  * They are still on `DualShockGamepadPS4`.
+  * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
+- Marking a control as noisy now also marks all child controls as noisy.
+
+#### Actions
+
+- A number of changes have been made to the control picker UI in the editor. \
+  ![Input Control Picker](Documentation~/Images/InputControlPicker.png)
+  * The button to pick controls interactively (e.g. by pressing a button on a gamepad) has been moved inside the picker and renamed to "Listen". It now works as a toggle that puts the picker into a special kind of 'search' mode. While listening, suitable controls that are actuated will be listed in the picker and can then be picked from.
+  * Controls are now displayed with their nice names (e.g. "Cross" instead of "buttonSouth" in the case of the PS4 controller).
+  * Child controls are indented instead of listed in "parent/child" format.
+  * The hierarchy of devices has been rearranged for clarity. The toplevel groups of "Specific Devices" and "Abstract Devices" are now merged into one hierarchy that progressively groups devices into more specific groups.
+  * Controls now have icons displayed for them.
+- There is new support for binding to keys on the keyboard by their generated character rather than by their location. \
+  ![Keyboard Binding](Documentation~/Images/KeyboardBindByLocationVsCharacter.png)
+  * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
+  * Binding by location shows differences between the local keyboard layout and the US reference layout.
+  * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
 
 #### Actions
 
@@ -51,6 +73,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Input Settings configured in the editor are now transferred to the built player correctly.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
+- DualShock sensors on PS4 are now marked as noisy (#494).
+
+#### Actions
+
+- Actions and bindings disappearing when control schemes have spaces in their names.
+- `InputActionRebindingExceptions.RebindOperation` can now be reused as intended; used to stop working properly the first time a rebind completed or was cancelled.
 
 #### Actions
 

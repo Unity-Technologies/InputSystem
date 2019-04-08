@@ -779,6 +779,18 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanFindControlsByDisplayName()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls("<Gamepad>/#(right shoulder)"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightShoulder));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanFindControlsByUsage()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -957,7 +969,6 @@ partial class CoreTests
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("leftStick [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("leftStick/x [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("leftStick/x [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XRController]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));

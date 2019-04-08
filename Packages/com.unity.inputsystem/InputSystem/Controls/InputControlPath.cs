@@ -1,17 +1,12 @@
 using System;
+using System.Text;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add "#name" notation (or something like that) that looks up by *displayName* rather than name
-
-////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
 ////TODO: allow stuff like "/gamepad/**/<button>"
 ////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
-////TODO: store CRC32s of names on controls and use that for first-level matching of name components
 ////TODO: handle arrays
-
-////TODO: add ability to cache images and display names for an entire action set
 
 ////REVIEW: change "*/{PrimaryAction}" to "*/**/{PrimaryAction}" so that the hierarchy crawling becomes explicit?
 
@@ -64,7 +59,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(path))
                 return string.Empty;
 
-            var result = string.Empty;
+            var buffer = new StringBuilder();
             var parser = new PathParser(path);
 
             ////REVIEW: ideally, we'd use display names of controls rather than the control paths directly from the path
@@ -79,26 +74,26 @@ namespace UnityEngine.Experimental.Input
                 while (parser.MoveToNextComponent())
                 {
                     if (!isFirstControlLevel)
-                        result += '/';
+                        buffer.Append('/');
 
-                    result += parser.current.ToHumanReadableString();
+                    buffer.Append(parser.current.ToHumanReadableString());
                     isFirstControlLevel = false;
                 }
 
                 if (!string.IsNullOrEmpty(device))
                 {
-                    result += " [";
-                    result += device;
-                    result += "]";
+                    buffer.Append(" [");
+                    buffer.Append(device);
+                    buffer.Append(']');
                 }
             }
 
             // If we didn't manage to figure out a display name, default to displaying
             // the path as is.
-            if (string.IsNullOrEmpty(result))
+            if (buffer.Length == 0)
                 return path;
 
-            return result;
+            return buffer.ToString();
         }
 
         public static string TryGetDeviceUsage(string path)
@@ -571,6 +566,15 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            // Match by display name.
+            if (indexInPath < pathLength - 1 && controlIsMatch && path[indexInPath] == '#' &&
+                path[indexInPath + 1] == '(')
+            {
+                indexInPath += 2;
+                controlIsMatch = MatchPathComponent(control.displayName, path, ref indexInPath,
+                    PathComponentType.DisplayName);
+            }
+
             // Match by name.
             if (indexInPath < pathLength && controlIsMatch && path[indexInPath] != '/')
             {
@@ -759,6 +763,7 @@ namespace UnityEngine.Experimental.Input
         private enum PathComponentType
         {
             Name,
+            DisplayName,
             Usage,
             Layout
         }
@@ -778,36 +783,46 @@ namespace UnityEngine.Experimental.Input
             {
                 // Check if we've reached a terminator in the path.
                 var nextCharInPath = path[indexInPath];
-                if (nextCharInPath == '/')
-                    break;
-                if ((nextCharInPath == '>' && componentType == PathComponentType.Layout)
-                    || (nextCharInPath == '}' && componentType == PathComponentType.Usage))
+                if (nextCharInPath == '\\' && indexInPath + 1 < pathLength)
                 {
+                    // Escaped character. Bypass treatment of special characters below.
                     ++indexInPath;
-                    break;
+                    nextCharInPath = path[indexInPath];
                 }
-
-                ////TODO: allow only single '*' and recognize '**'
-                // If we've reached a '*' in the path, skip character in name.
-                if (nextCharInPath == '*')
+                else
                 {
-                    // But first let's see if the following character is a match.
-                    if (indexInPath < (pathLength - 1) &&
-                        indexInName < nameLength &&
-                        char.ToLower(path[indexInPath + 1]) == char.ToLower(component[indexInName]))
+                    if (nextCharInPath == '/')
+                        break;
+                    if ((nextCharInPath == '>' && componentType == PathComponentType.Layout)
+                        || (nextCharInPath == '}' && componentType == PathComponentType.Usage)
+                        || (nextCharInPath == ')' && componentType == PathComponentType.DisplayName))
                     {
-                        ++indexInName;
-                        indexInPath += 2; // Match '*' and following character.
+                        ++indexInPath;
+                        break;
                     }
-                    else if (indexInName < nameLength)
+
+                    ////TODO: allow only single '*' and recognize '**'
+                    // If we've reached a '*' in the path, skip character in name.
+                    if (nextCharInPath == '*')
                     {
-                        ++indexInName;
+                        // But first let's see if the following character is a match.
+                        if (indexInPath < (pathLength - 1) &&
+                            indexInName < nameLength &&
+                            char.ToLower(path[indexInPath + 1]) == char.ToLower(component[indexInName]))
+                        {
+                            ++indexInName;
+                            indexInPath += 2; // Match '*' and following character.
+                        }
+                        else if (indexInName < nameLength)
+                        {
+                            ++indexInName;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                        continue;
                     }
-                    else
-                    {
-                        return true;
-                    }
-                    continue;
                 }
 
                 // If we've reached the end of the component name, we did so before
@@ -858,6 +873,7 @@ namespace UnityEngine.Experimental.Input
             public Substring layout;
             public Substring usage;
             public Substring name;
+            public Substring displayName;
 
             public bool isWildcard => name == kWildcard;
 
@@ -871,27 +887,42 @@ namespace UnityEngine.Experimental.Input
                 if (!usage.isEmpty)
                 {
                     if (result != string.Empty)
-                        result += ' ' + usage.ToString();
+                        result += ' ' + ToHumanReadableString(usage);
                     else
-                        result += usage.ToString();
+                        result += ToHumanReadableString(usage);
                 }
 
                 if (!layout.isEmpty)
                 {
                     if (result != string.Empty)
-                        result += ' ' + layout.ToString();
+                        result += ' ' + ToHumanReadableString(layout);
                     else
-                        result += layout.ToString();
+                        result += ToHumanReadableString(layout);
                 }
 
                 if (!name.isEmpty && !isWildcard)
                 {
                     if (result != string.Empty)
-                        result += ' ' + name.ToString();
+                        result += ' ' + ToHumanReadableString(name);
                     else
-                        result += name.ToString();
+                        result += ToHumanReadableString(name);
                 }
+
+                if (!displayName.isEmpty)
+                {
+                    var str = $"\"{ToHumanReadableString(displayName)}\"";
+                    if (result != string.Empty)
+                        result += ' ' + str;
+                    else
+                        result += str;
+                }
+
                 return result;
+            }
+
+            private static string ToHumanReadableString(Substring substring)
+            {
+                return substring.ToString().Unescape("/*{<", "/*{<");
             }
 
             /// <summary>
@@ -941,7 +972,16 @@ namespace UnityEngine.Experimental.Input
                 // Match name.
                 if (!name.isEmpty && !isWildcard)
                 {
+                    ////FIXME: unlike the matching path we have in MatchControlsRecursive, this does not take aliases into account
                     if (Substring.Compare(control.name, name, StringComparison.InvariantCultureIgnoreCase) != 0)
+                        return false;
+                }
+
+                // Match display name.
+                if (!displayName.isEmpty)
+                {
+                    if (Substring.Compare(control.displayName, displayName,
+                        StringComparison.InvariantCultureIgnoreCase) != 0)
                         return false;
                 }
 
@@ -1002,6 +1042,14 @@ namespace UnityEngine.Experimental.Input
                 if (rightIndexInPath < length && path[rightIndexInPath] == '{')
                     usage = ParseComponentPart('}');
 
+                // Parse display name part, if present.
+                var displayName = new Substring();
+                if (rightIndexInPath < length - 1 && path[rightIndexInPath] == '#' && path[rightIndexInPath + 1] == '(')
+                {
+                    ++rightIndexInPath;
+                    displayName = ParseComponentPart(')');
+                }
+
                 // Parse name part, if present.
                 var name = new Substring();
                 if (rightIndexInPath < length && path[rightIndexInPath] != '/')
@@ -1011,10 +1059,11 @@ namespace UnityEngine.Experimental.Input
                 {
                     layout = layout,
                     usage = usage,
-                    name = name
+                    name = name,
+                    displayName = displayName
                 };
 
-                return (leftIndexInPath != rightIndexInPath);
+                return leftIndexInPath != rightIndexInPath;
             }
 
             private Substring ParseComponentPart(char terminator)

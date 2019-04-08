@@ -17,6 +17,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </remarks>
     public class DpadControl : Vector2Control
     {
+        [InputControlLayout(hideInUI = true)]
         internal class DpadAxisControl : AxisControl
         {
             public int component;

@@ -1,7 +1,6 @@
 #if UNITY_EDITOR || UNITY_PS4
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input.Layouts;
@@ -20,8 +19,8 @@ public class PS4Tests : InputTestFixture
             interfaceName = "PS4"
         });
 
-        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
-        var gamepad = (DualShockGamepad)device;
+        Assert.That(device, Is.AssignableTo<DualShockGamepadPS4>());
+        var gamepad = (DualShockGamepadPS4)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockGamepadStatePS4
@@ -71,7 +70,7 @@ public class PS4Tests : InputTestFixture
         Assert.That(gamepad.acceleration.y.ReadValue(), Is.EqualTo(0.654).Within(0.00001));
         Assert.That(gamepad.acceleration.z.ReadValue(), Is.EqualTo(0.321).Within(0.00001));
 
-        Quaternion orientation = gamepad.orientation.ReadValue();
+        var orientation = gamepad.orientation.ReadValue();
 
         Assert.That(orientation.x, Is.EqualTo(0.111).Within(0.00001));
         Assert.That(orientation.y, Is.EqualTo(0.222).Within(0.00001));
@@ -81,6 +80,11 @@ public class PS4Tests : InputTestFixture
         Assert.That(gamepad.angularVelocity.x.ReadValue(), Is.EqualTo(0.444).Within(0.00001));
         Assert.That(gamepad.angularVelocity.y.ReadValue(), Is.EqualTo(0.555).Within(0.00001));
         Assert.That(gamepad.angularVelocity.z.ReadValue(), Is.EqualTo(0.666).Within(0.00001));
+
+        // Sensors should be marked as noisy.
+        Assert.That(gamepad.acceleration.noisy, Is.True);
+        Assert.That(gamepad.orientation.noisy, Is.True);
+        Assert.That(gamepad.angularVelocity.noisy, Is.True);
 
         ////TODO: touch
     }

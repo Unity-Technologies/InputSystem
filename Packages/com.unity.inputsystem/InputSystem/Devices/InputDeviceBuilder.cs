@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -100,7 +99,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 return match;
 
             if (ReferenceEquals(parent, m_Device))
-                return InputControlPath.TryFindControl(m_Device, string.Format("{0}/{1}", m_Device.name, path));
+                return InputControlPath.TryFindControl(m_Device, $"{m_Device.name}/{path}");
 
             return null;
         }
@@ -137,8 +136,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = GetControl(parent, path);
 
-            var controlOfType = control as TControl;
-            if (controlOfType == null)
+            if (!(control is TControl controlOfType))
                 throw new Exception(
                     $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 

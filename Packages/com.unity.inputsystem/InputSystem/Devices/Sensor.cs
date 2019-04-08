@@ -8,6 +8,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
 
+////REVIEW: Is there a better way than having all the sensor classes?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     public struct AccelerometerState : IInputStateTypeInfo
@@ -78,6 +80,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
+    [InputControlLayout(isGenericTypeOfDevice = true)]
     public abstract class Sensor : InputDevice
     {
         public float samplingFrequency
@@ -151,8 +154,8 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    [InputControlLayout(stateType = typeof(GravityState))]
-    public class Gravity : Sensor
+    [InputControlLayout(stateType = typeof(GravityState), displayName = "Gravity")]
+    public class GravitySensor : Sensor
     {
         public Vector3Control gravity { get; private set; }
 
@@ -162,7 +165,7 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        public static Gravity current { get; private set; }
+        public static GravitySensor current { get; private set; }
 
         public override void MakeCurrent()
         {
@@ -180,12 +183,12 @@ namespace UnityEngine.Experimental.Input
 
     //// REVIEW: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
     ////         This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
-    [InputControlLayout(stateType = typeof(AttitudeState))]
-    public class Attitude : Sensor
+    [InputControlLayout(stateType = typeof(AttitudeState), displayName = "Attitude")]
+    public class AttitudeSensor : Sensor
     {
         public QuaternionControl attitude { get; private set; }
 
-        public static Attitude current { get; private set; }
+        public static AttitudeSensor current { get; private set; }
 
         public override void MakeCurrent()
         {
@@ -207,12 +210,12 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    [InputControlLayout(stateType = typeof(LinearAccelerationState))]
-    public class LinearAcceleration : Sensor
+    [InputControlLayout(stateType = typeof(LinearAccelerationState), displayName = "Linear Acceleration")]
+    public class LinearAccelerationSensor : Sensor
     {
         public Vector3Control acceleration { get; private set; }
 
-        public static LinearAcceleration current { get; private set; }
+        public static LinearAccelerationSensor current { get; private set; }
 
         public override void MakeCurrent()
         {
@@ -230,6 +233,219 @@ namespace UnityEngine.Experimental.Input
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             acceleration = builder.GetControl<Vector3Control>("acceleration");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "Magnetic Field")]
+    public class MagneticFieldSensor : Sensor
+    {
+        /// <summary>
+        /// TODO
+        /// </summary>
+        /// <remarks>
+        /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
+        /// </remarks>
+        public Vector3Control magneticField { get; private set; }
+
+        public static MagneticFieldSensor current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            magneticField = builder.GetControl<Vector3Control>("magneticField");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "Light")]
+    public class LightSensor : Sensor
+    {
+        /// <summary>
+        /// Light level in SI lux units.
+        /// </summary>
+        public AxisControl lightLevel { get; private set; }
+
+        public static LightSensor current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            lightLevel = builder.GetControl<AxisControl>("lightLevel");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "Pressure")]
+    public class PressureSensor : Sensor
+    {
+        /// <summary>
+        /// Atmospheric pressure in hPa (millibar).
+        /// </summary>
+        public AxisControl atmosphericPressure { get; private set; }
+
+        public static PressureSensor current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            atmosphericPressure = builder.GetControl<AxisControl>("atmosphericPressure");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "Proximity")]
+    public class ProximitySensor : Sensor
+    {
+        /// <summary>
+        /// Proximity sensor distance measured in centimeters.
+        /// </summary>
+        public AxisControl distance { get; private set; }
+
+        public static ProximitySensor current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            distance = builder.GetControl<AxisControl>("distance");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "Humidity")]
+    public class HumiditySensor : Sensor
+    {
+        /// <summary>
+        /// Relative ambient air humidity in percent.
+        /// </summary>
+        public AxisControl relativeHumidity { get; private set; }
+
+        public static HumiditySensor current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            relativeHumidity = builder.GetControl<AxisControl>("relativeHumidity");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "Ambient Temperature")]
+    public class AmbientTemperatureSensor : Sensor
+    {
+        /// <summary>
+        /// Temperature in degree Celsius.
+        /// </summary>
+        public AxisControl ambientTemperature { get; private set; }
+
+        public static AmbientTemperatureSensor current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            ambientTemperature = builder.GetControl<AxisControl>("ambientTemperature");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(displayName = "StepCounter")]
+    public class StepCounter : Sensor
+    {
+        /// <summary>
+        /// The number of steps taken by the user since the last reboot while activated.
+        /// </summary>
+        public IntegerControl stepCounter { get; private set; }
+
+        public static StepCounter current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            stepCounter = builder.GetControl<IntegerControl>("stepCounter");
             base.FinishSetup(builder);
         }
     }

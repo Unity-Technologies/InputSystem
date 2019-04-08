@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputControlLayout(stateType = typeof(XboxOneGamepadState))]
+    [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;

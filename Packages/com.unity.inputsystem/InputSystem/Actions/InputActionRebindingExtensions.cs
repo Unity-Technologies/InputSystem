@@ -15,6 +15,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////FIXME: properly work with composites
 
+////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -626,7 +628,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 HookOnEvent();
+
                 m_Flags |= Flags.Started;
+                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Completed;
+
                 return this;
             }
 
@@ -745,7 +751,7 @@ namespace UnityEngine.Experimental.Input
                     var control = controls[i];
 
                     // Skip controls that have no state in the event.
-                    var statePtr = (void*)control.GetStatePtrFromStateEvent(eventPtr);
+                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
                     if (statePtr == null)
                         continue;
 
@@ -1035,60 +1041,20 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Based on the chosen control, generate an override path to rebind to.
             /// </summary>
-            /// <param name="control"></param>
-            /// <returns></returns>
             private string GeneratePathForControl(InputControl control)
             {
                 var device = control.device;
-                Debug.Assert(device != control, "Control must not be a device!");
+                Debug.Assert(control != device, "Control must not be a device");
 
-                // Find the topmost child control on the device. A device layout can only
-                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
-                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
-                // To determine which device contributes the control has a whole, we have to be looking
-                // at the topmost child of the device.
-                var topmostChild = control;
-                while (topmostChild.parent != device)
-                    topmostChild = topmostChild.parent;
+                var deviceLayoutName =
+                    InputControlLayout.s_Layouts.FindLayoutThatIntroducesControl(control, m_LayoutCache);
 
-                // Find the layout in the device's base layout chain that first mentions the given control.
-                // If we don't find it, we know it's first defined directly in the layout of the given device,
-                // i.e. it's not an inherited control.
-                var deviceLayoutName = device.m_Layout;
-                var baseLayoutName = deviceLayoutName;
-                while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
-                {
-                    var layout = m_LayoutCache.FindOrLoadLayout(baseLayoutName);
-
-                    var controlItem = layout.FindControl(topmostChild.m_Name);
-                    if (controlItem != null)
-                        deviceLayoutName = baseLayoutName;
-                }
-
-                // Create a path with the given device layout
                 if (m_PathBuilder == null)
                     m_PathBuilder = new StringBuilder();
                 else
                     m_PathBuilder.Length = 0;
 
-                m_PathBuilder.Append('<');
-                m_PathBuilder.Append(deviceLayoutName);
-                m_PathBuilder.Append('>');
-
-                // Add usages of device, if any.
-                var deviceUsages = device.usages;
-                for (var i = 0; i < deviceUsages.Count; ++i)
-                {
-                    m_PathBuilder.Append('{');
-                    m_PathBuilder.Append(deviceUsages[i]);
-                    m_PathBuilder.Append('}');
-                }
-
-                m_PathBuilder.Append('/');
-
-                var devicePath = device.path;
-                var controlPath = control.path;
-                m_PathBuilder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
+                control.BuildPath(deviceLayoutName, m_PathBuilder);
 
                 return m_PathBuilder.ToString();
             }

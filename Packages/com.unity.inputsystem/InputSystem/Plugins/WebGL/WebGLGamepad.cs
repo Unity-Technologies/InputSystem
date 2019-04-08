@@ -42,19 +42,19 @@ namespace UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel
 
         public float leftTrigger
         {
-            get { return GetValue(kNumAxes + 6); }
-            set { SetValue(kNumAxes + 6, value); }
+            get => GetValue(kNumAxes + 6);
+            set => SetValue(kNumAxes + 6, value);
         }
 
         public float rightTrigger
         {
-            get { return GetValue(kNumAxes + 7); }
-            set { SetValue(kNumAxes + 7, value); }
+            get => GetValue(kNumAxes + 7);
+            set => SetValue(kNumAxes + 7, value);
         }
 
         public Vector2 leftStick
         {
-            get { return new Vector2(GetValue(0), GetValue(1)); }
+            get => new Vector2(GetValue(0), GetValue(1));
             set
             {
                 SetValue(0, value.x);
@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel
 
         public Vector2 rightStick
         {
-            get { return new Vector2(GetValue(2), GetValue(3)); }
+            get => new Vector2(GetValue(2), GetValue(3));
             set
             {
                 SetValue(2, value.x);
@@ -132,7 +132,7 @@ namespace UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel
         public static WebGLDeviceCapabilities FromJson(string json)
         {
             if (string.IsNullOrEmpty(json))
-                throw new ArgumentNullException("json");
+                throw new ArgumentNullException(nameof(json));
             return JsonUtility.FromJson<WebGLDeviceCapabilities>(json);
         }
     }
@@ -144,7 +144,7 @@ namespace UnityEngine.Experimental.Input.Plugins.WebGL
     /// Gamepad on WebGL that uses the "standard" mapping.
     /// </summary>
     /// <seealso href="https://w3c.github.io/gamepad/#remapping"/>
-    [InputControlLayout(stateType = typeof(WebGLGamepadState))]
+    [InputControlLayout(stateType = typeof(WebGLGamepadState), displayName = "WebGL Gamepad (\"standard\" mapping)")]
     public class WebGLGamepad : Gamepad
     {
     }
