@@ -39,13 +39,14 @@ namespace UnityEngine.Experimental.Input.Editor
             get => m_Search;
             set
             {
+                var isNewSearch = string.IsNullOrEmpty(m_Search) && !string.IsNullOrEmpty(value);
                 m_Search = value;
                 m_DataSource.RebuildSearch(m_Search);
                 m_CurrentlyRenderedTree = m_DataSource.mainTree;
                 if (hasSearch)
                 {
                     m_CurrentlyRenderedTree = m_DataSource.searchTree;
-                    if (state.GetSelectedIndex(m_CurrentlyRenderedTree) < 0)
+                    if (isNewSearch || state.GetSelectedIndex(m_CurrentlyRenderedTree) < 0)
                         state.SetSelectedIndex(m_CurrentlyRenderedTree, 0);
                     m_ViewsStack.Clear();
                 }

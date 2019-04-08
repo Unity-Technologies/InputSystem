@@ -76,7 +76,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (string.IsNullOrEmpty(searchString))
                 return null;
 
-
             var searchTree = PerformCustomSearch(searchString);
             if (searchTree == null)
             {
