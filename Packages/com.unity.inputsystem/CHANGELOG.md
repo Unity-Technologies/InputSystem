@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a `clickCount` control to the `Mouse` class, which specifies the click count for the last mouse click (to allow distinguishing between single-, double- and multi-clicks).
 - Support for Bluetooth Xbox One controllers on macOS.
 
 ### Changed
@@ -17,10 +18,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The option to generate interfaces on wrappers has been removed, instead we always do this now.
 - The option to generate events on wrappers has been removed, we felt that this no longer made sense.
 - Will now show default values in Input Action inspector if no custom values for file path, class name or namespace have been provided.
+- `InputSettings.runInBackground` has been removed. This should now be supported or not on a per-device level. Most devices never supported it in the first place, so a global setting did not seem to be useful.
 
 ### Fixed
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
+- Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
+- Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
+
+#### Actions
+
+- `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
+- The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
+- Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
+- In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
 
 ## [0.2.6-preview] - 2019-03-20
 

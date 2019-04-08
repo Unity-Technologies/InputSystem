@@ -226,8 +226,8 @@ internal class XInputTests : InputTestFixture
                 leftStickY = 0,
                 rightStickX = 65535,
                 rightStickY = 0,
-                leftTrigger = 255,
-                rightTrigger = 255,
+                leftTrigger = 1023,
+                rightTrigger = 1023,
             });
 
         InputSystem.Update();

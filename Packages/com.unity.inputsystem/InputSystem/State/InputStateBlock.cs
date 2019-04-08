@@ -385,20 +385,20 @@ namespace UnityEngine.Experimental.Input.LowLevel
                         "Cannot yet write primitive values into bitfields wider than 32 bits");
 
                 if (sizeInBits == 1)
-                    MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value.ToBool());
+                    MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value.ToBoolean());
                 else
-                    MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt());
+                    MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt32());
             }
             else if (format == kTypeFloat)
             {
                 Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
-                *(float*)valuePtr = value.ToFloat();
+                *(float*)valuePtr = value.ToSingle();
             }
             else
             {
                 throw new NotImplementedException(
-                    $"Writing primitive value of type '{value.valueType}' into state block with format '{format}'");
+                    $"Writing primitive value of type '{value.type}' into state block with format '{format}'");
             }
         }
 

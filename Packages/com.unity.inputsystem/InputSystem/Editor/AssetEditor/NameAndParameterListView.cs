@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor.Lists
@@ -14,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     /// to edit the parameters of the currently selected pair.
     /// </summary>
     /// <remarks>
-    /// Produces output that can be consumed by <see cref="InputControlLayout.ParseNameAndParameterList(string)"/>.
+    /// Produces output that can be consumed by <see cref="NameAndParameters.ParseMultiple"/>.
     /// </remarks>
     internal abstract class NameAndParameterListView
     {
@@ -25,8 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_ListItems = new List<string>();
             m_ListOptions = GetOptions();
             m_EditableParametersForSelectedItem = new ParameterListView {onChange = OnParametersChanged};
-            m_ParametersForEachListItem = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue)
-                ?? new InputControlLayout.NameAndParameters[0];
+            m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
             m_ExpectedControlLayout = expectedControlLayout;
             Type expectedValueType = null;
             if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
@@ -104,7 +102,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
             m_ListItems.Add(ObjectNames.NicifyVariableName(name));
             ArrayHelpers.Append(ref m_ParametersForEachListItem,
-                new InputControlLayout.NameAndParameters {name = name});
+                new NameAndParameters {name = name});
             m_Apply();
         }
 
@@ -114,7 +112,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             if (selected < 0)
                 return;
 
-            m_ParametersForEachListItem[selected] = new InputControlLayout.NameAndParameters
+            m_ParametersForEachListItem[selected] = new NameAndParameters
             {
                 name = m_ParametersForEachListItem[selected].name,
                 parameters = m_EditableParametersForSelectedItem.GetParameters(),
@@ -161,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             if (m_ParametersForEachListItem == null)
                 return string.Empty;
 
-            return string.Join(InputControlLayout.kSeparatorString,
+            return string.Join(NamedValue.Separator,
                 m_ParametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
@@ -171,7 +169,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         private TypeTable m_ListOptions;
         private string m_ExpectedControlLayout;
 
-        private InputControlLayout.NameAndParameters[] m_ParametersForEachListItem;
+        private NameAndParameters[] m_ParametersForEachListItem;
         private readonly ParameterListView m_EditableParametersForSelectedItem;
         private readonly Action m_Apply;
     }

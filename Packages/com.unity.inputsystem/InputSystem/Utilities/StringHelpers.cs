@@ -31,6 +31,13 @@ namespace UnityEngine.Experimental.Input.Utilities
             return builder.ToString();
         }
 
+        public static bool Contains(this string str, char ch)
+        {
+            if (str == null)
+                return false;
+            return str.IndexOf(ch) != -1;
+        }
+
         public static bool Contains(this string str, string text, StringComparison comparison)
         {
             if (str == null)
