@@ -12,12 +12,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 {
     public struct AccelerometerState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('A', 'C', 'C', 'L'); }
-        }
+        public static FourCC kFormat => new FourCC('A', 'C', 'C', 'L');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
         public FourCC GetFormat()
@@ -28,12 +25,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
     public struct GyroscopeState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('G', 'Y', 'R', 'O'); }
-        }
+        public static FourCC kFormat => new FourCC('G', 'Y', 'R', 'O');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
         public FourCC GetFormat()
@@ -44,12 +38,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
     public struct GravityState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('G', 'R', 'V', ' '); }
-        }
+        public static FourCC kFormat => new FourCC('G', 'R', 'V', ' ');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
         public FourCC GetFormat()
@@ -60,12 +51,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
     public struct AttitudeState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('A', 'T', 'T', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('A', 'T', 'T', 'D');
 
-        [InputControl(processors = "CompensateRotation")]
+        [InputControl(processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
         public FourCC GetFormat()
@@ -76,12 +64,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
     public struct LinearAccelerationState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('L', 'A', 'A', 'C'); }
-        }
+        public static FourCC kFormat => new FourCC('L', 'A', 'A', 'C');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
         public FourCC GetFormat()

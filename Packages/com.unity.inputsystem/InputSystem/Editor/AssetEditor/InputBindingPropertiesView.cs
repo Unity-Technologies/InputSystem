@@ -137,7 +137,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Find name of current composite.
             var path = m_PathProperty.stringValue;
-            var compositeNameAndParameters = InputControlLayout.ParseNameAndParameters(path);
+            var compositeNameAndParameters = NameAndParameters.Parse(path);
             var compositeName = compositeNameAndParameters.name;
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
 
@@ -193,7 +193,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             var compositeBindingProperty = bindingArrayProperty.GetArrayElementAtIndex(compositeBindingIndex);
             var compositePath = compositeBindingProperty.FindPropertyRelative("m_Path").stringValue;
-            var compositeNameAndParameters = InputControlLayout.ParseNameAndParameters(compositePath);
+            var compositeNameAndParameters = NameAndParameters.Parse(compositePath);
 
             // Initialize option list from all parts available for the composite.
             var optionList = new List<GUIContent>();
@@ -228,7 +228,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Debug.Assert(m_CompositeParameters != null);
 
             var path = m_PathProperty.stringValue;
-            var nameAndParameters = InputControlLayout.ParseNameAndParameters(path);
+            var nameAndParameters = NameAndParameters.Parse(path);
             nameAndParameters.parameters = m_CompositeParameters.GetParameters();
 
             m_PathProperty.stringValue = nameAndParameters.ToString();
@@ -253,7 +253,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnCompositeTypeChanged()
         {
-            var nameAndParameters = new InputControlLayout.NameAndParameters
+            var nameAndParameters = new NameAndParameters
             {
                 name = m_CompositeTypes[m_SelectedCompositeType],
                 parameters = m_CompositeParameters.GetParameters()

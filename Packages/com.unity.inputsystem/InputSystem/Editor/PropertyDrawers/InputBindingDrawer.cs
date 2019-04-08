@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: reordering support for interactions
 
@@ -116,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Show interactions.
             if (!string.IsNullOrEmpty(interactions))
             {
-                var interactionList = InputControlLayout.ParseNameAndParameterList(interactions);
+                var interactionList = NameAndParameters.ParseMultiple(interactions);
                 var interactionString = string.Join(" OR ", interactionList.Select(x => x.name).ToArray());
                 text = $"{interactionString} {text}";
             }
@@ -150,12 +149,13 @@ namespace UnityEngine.Experimental.Input.Editor
             private const int kPaddingLeftRight = 5;
             private const int kCombineToggleHeight = 20;
 
-            private SerializedProperty m_FlagsProperty;
-            private SerializedProperty m_InteractionsProperty;
+            private readonly SerializedProperty m_FlagsProperty;
+            private readonly SerializedProperty m_InteractionsProperty;
+            private readonly GUIContent[] m_InteractionChoices;
+
             private InputBinding.Flags m_Flags;
-            private InputControlLayout.NameAndParameters[] m_Interactions;
+            private NameAndParameters[] m_Interactions;
             private Vector2 m_ScrollPosition;
-            private GUIContent[] m_InteractionChoices;
             private int m_SelectedInteraction;
             private ReorderableList m_InteractionListView;
 
@@ -173,9 +173,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 var interactionString = m_InteractionsProperty.stringValue;
                 if (!string.IsNullOrEmpty(interactionString))
-                    m_Interactions = InputControlLayout.ParseNameAndParameterList(interactionString);
+                    m_Interactions = NameAndParameters.ParseMultiple(interactionString).ToArray();
                 else
-                    m_Interactions = new InputControlLayout.NameAndParameters[0];
+                    m_Interactions = new NameAndParameters[0];
 
                 InitializeInteractionListView();
             }
@@ -226,7 +226,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private void AddInteraction(object interactionNameString)
             {
                 ArrayHelpers.Append(ref m_Interactions,
-                    new InputControlLayout.NameAndParameters {name = (string)interactionNameString});
+                    new NameAndParameters {name = (string)interactionNameString});
                 m_InteractionListView.list = m_Interactions;
                 ApplyInteractions();
             }
@@ -238,13 +238,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
                 InitializeInteractionListView();
 
-                if (onApplyCallback != null)
-                    onApplyCallback(m_InteractionsProperty);
+                onApplyCallback?.Invoke(m_InteractionsProperty);
             }
 
             private void InitializeInteractionListView()
             {
-                m_InteractionListView = new ReorderableList(m_Interactions, typeof(InputControlLayout.NameAndParameters));
+                m_InteractionListView = new ReorderableList(m_Interactions, typeof(NameAndParameters));
 
                 m_InteractionListView.drawHeaderCallback =
                     rect => EditorGUI.LabelField(rect, Contents.interactions);
@@ -273,7 +272,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         --list.index;
                     ArrayHelpers.EraseAt(ref m_Interactions, indexToRemove);
                     if (m_Interactions == null)
-                        m_Interactions = new InputControlLayout.NameAndParameters[0];
+                        m_Interactions = new NameAndParameters[0];
                     list.list = m_Interactions;
                     ApplyInteractions();
                 };
