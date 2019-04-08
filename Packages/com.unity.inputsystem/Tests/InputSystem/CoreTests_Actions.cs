@@ -171,14 +171,15 @@ partial class CoreTests
             trace.Clear();
 
             // Re-enable an action and make sure that it indeed starts from scratch again.
-            // Note that the button is still held so no input required.
 
             action1.Enable();
 
             Assert.That(action1.phase, Is.EqualTo(InputActionPhase.Waiting));
 
             runtime.currentTime = 0.345f;
-            InputSystem.Update();
+
+            Release(gamepad.buttonSouth);
+            Press(gamepad.buttonSouth);
 
             actions = trace.ToArray();
 
@@ -205,11 +206,34 @@ partial class CoreTests
         }
     }
 
-    // Controls may already be actuated when we enable an action. To deal with this, we pretend that at
-    // the time an action is enabled, any bound control that isn't at default
+    // See test after this one for how to switch away from this default behavior.
     [Test]
     [Category("Actions")]
-    public void Actions_WhenEnabled_ReactToCurrentValueOfControlsInNextUpdate()
+    public void Actions_ByDefaultDoNotReactToCurrentStateOfControlWhenEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Press(gamepad.buttonSouth);
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            action.Enable();
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    // It can be useful to react to the value of a control immediately when an action is enabled rather
+    // than wait for the first time the control changes value. To do so, "Initial State Check" needs to
+    // be enabled on an action. If this is done and a bound is actuated at the time an action is enabled,
+    // the action pretends for the control to *just* have changed to the state it already has.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformInitialStateCheckWhenEnabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -219,6 +243,10 @@ partial class CoreTests
         var actionWithoutInteraction = new InputAction("ActionWithoutInteraction", binding: "<Gamepad>/leftStick");
         var actionWithHold = new InputAction("ActionWithHold", binding: "<Gamepad>/buttonSouth", interactions: "Hold");
         var actionThatShouldNotTrigger = new InputAction("ActionThatShouldNotTrigger", binding: "<Gamepad>/rightStick");
+
+        actionWithoutInteraction.initialStateCheck = true;
+        actionWithHold.initialStateCheck = true;
+        actionThatShouldNotTrigger.initialStateCheck = true;
 
         actionWithHold.performed += ctx => Assert.Fail("Hold should not complete");
         actionThatShouldNotTrigger.started += ctx => Assert.Fail("Action should not start");
@@ -543,6 +571,8 @@ partial class CoreTests
         action5.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
         action6.AddBinding("<Gamepad>/leftTrigger").WithProcessor("invert");
         action7.AddBinding("<Gamepad>/leftTrigger").WithProcessor("clamp(min=0,max=0.5)");
+
+        action4.initialStateCheck = true;
 
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
@@ -1576,7 +1606,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("Broken Fogbugz Ticket Filed")]
     public void Actions_CanPerformContinuousPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1613,12 +1642,9 @@ partial class CoreTests
             InputSystem.Update();
 
             actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
 
             trace.Clear();
@@ -6566,47 +6592,5 @@ partial class CoreTests
         var action3 = map.AddAction("action3");
 
         Assert.That(map.ToList(), Is.EquivalentTo(new[] { action1, action2, action3 }));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanCreateReferenceToAsset()
-    {
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var reference = new InputActionAssetReference(asset);
-
-        ////REVIEW: would be great to test serializability
-
-        Assert.That(reference.asset, Is.SameAs(asset));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanMakePrivateCopyOfActionsThroughAssetReference()
-    {
-        var map1 = new InputActionMap("map1");
-        var map2 = new InputActionMap("map2");
-        map1.AddAction("action1", "<Gamepad>/leftStick");
-        map1.AddAction("action2", "<Gamepad>/rightStick");
-        map2.AddAction("action3", "<Keyboard>/space");
-
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map1);
-        asset.AddActionMap(map2);
-
-        var reference = new InputActionAssetReference(asset);
-        reference.MakePrivateCopyOfActions();
-
-        Assert.That(reference.asset, Is.Not.SameAs(asset));
-        Assert.That(reference.asset.actionMaps, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[0].name, Is.EqualTo("map1"));
-        Assert.That(reference.asset.actionMaps[1].name, Is.EqualTo("map2"));
-        Assert.That(reference.asset.actionMaps[0].actions, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[1].actions, Has.Count.EqualTo(1));
-        Assert.That(reference.asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
-        Assert.That(reference.asset.actionMaps[0].actions[1].name, Is.EqualTo("action2"));
-        Assert.That(reference.asset.actionMaps[1].actions[0].name, Is.EqualTo("action3"));
-        Assert.That(reference.asset.actionMaps[0].bindings, Has.Count.EqualTo(2));
-        Assert.That(reference.asset.actionMaps[1].bindings, Has.Count.EqualTo(1));
     }
 }

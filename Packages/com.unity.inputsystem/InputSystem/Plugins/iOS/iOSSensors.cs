@@ -1,14 +1,12 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = 52)]
-    public unsafe struct MotionDeviceState : IInputStateTypeInfo
+    public struct MotionDeviceState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'M', 'T', 'N');
 

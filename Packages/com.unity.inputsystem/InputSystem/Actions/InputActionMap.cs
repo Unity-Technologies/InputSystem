@@ -954,6 +954,7 @@ namespace UnityEngine.Experimental.Input
             public string expectedControlLayout;
             public bool continuous;
             public bool passThrough;
+            public bool initialStateCheck;
             public string processors;
             public string interactions;
 
@@ -971,6 +972,7 @@ namespace UnityEngine.Experimental.Input
                     expectedControlLayout = action.m_ExpectedControlLayout,
                     continuous = action.continuous,
                     passThrough = action.passThrough,
+                    initialStateCheck = action.initialStateCheck,
                     processors = action.processors,
                     interactions = action.interactions,
                 };
@@ -1124,6 +1126,7 @@ namespace UnityEngine.Experimental.Input
                             : null,
                         continuous = jsonAction.continuous,
                         passThrough = jsonAction.passThrough,
+                        initialStateCheck = jsonAction.initialStateCheck,
                         m_Processors = jsonAction.processors,
                         m_Interactions = jsonAction.interactions,
                     };
@@ -1196,6 +1199,7 @@ namespace UnityEngine.Experimental.Input
                                 : null,
                             continuous = jsonAction.continuous,
                             passThrough = jsonAction.passThrough,
+                            initialStateCheck = jsonAction.initialStateCheck,
                             m_Processors = jsonAction.processors,
                             m_Interactions = jsonAction.interactions,
                         };

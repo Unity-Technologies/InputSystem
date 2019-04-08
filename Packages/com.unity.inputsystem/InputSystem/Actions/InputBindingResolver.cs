@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public InputBinding? bindingMask;
 
-        private List<InputControlLayout.NameAndParameters> m_Parameters;
+        private List<NameAndParameters> m_Parameters;
 
         /// <summary>
         /// Release native memory held by the resolver.
@@ -390,6 +390,7 @@ namespace UnityEngine.Experimental.Input
                             actionIndex = actionIndexForBinding,
                             compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
+                            wantsInitialStateCheck = action?.initialStateCheck ?? false
                         };
                     }
                     catch (Exception exception)
@@ -564,7 +565,7 @@ namespace UnityEngine.Experimental.Input
             ////        moving the logic to a shared place.
             ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
 
-            if (!InputControlLayout.ParseNameAndParameterList(interactionString, ref m_Parameters))
+            if (!NameAndParameters.ParseMultiple(interactionString, ref m_Parameters))
                 return InputActionState.kInvalidIndex;
 
             var firstInteractionIndex = totalInteractionCount;
@@ -581,7 +582,7 @@ namespace UnityEngine.Experimental.Input
                     throw new Exception($"Interaction '{m_Parameters[i].name}' is not an IInputInteraction");
 
                 // Pass parameters to it.
-                InputDeviceBuilder.SetParameters(interaction, m_Parameters[i].parameters);
+                NamedValue.ApplyAllToObject(interaction, m_Parameters[i].parameters);
 
                 // Add to list.
                 ArrayHelpers.AppendWithCapacity(ref interactions, ref totalInteractionCount, interaction);
@@ -592,7 +593,7 @@ namespace UnityEngine.Experimental.Input
 
         private int ResolveProcessors(string processorString)
         {
-            if (!InputControlLayout.ParseNameAndParameterList(processorString, ref m_Parameters))
+            if (!NameAndParameters.ParseMultiple(processorString, ref m_Parameters))
                 return InputActionState.kInvalidIndex;
 
             var firstProcessorIndex = totalProcessorCount;
@@ -610,7 +611,7 @@ namespace UnityEngine.Experimental.Input
                         $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' is not an InputProcessor");
 
                 // Pass parameters to it.
-                InputDeviceBuilder.SetParameters(processor, m_Parameters[i].parameters);
+                NamedValue.ApplyAllToObject(processor, m_Parameters[i].parameters);
 
                 // Add to list.
                 ArrayHelpers.AppendWithCapacity(ref processors, ref totalProcessorCount, processor);
@@ -621,7 +622,7 @@ namespace UnityEngine.Experimental.Input
 
         private static InputBindingComposite InstantiateBindingComposite(string nameAndParameters)
         {
-            var nameAndParametersParsed = InputControlLayout.ParseNameAndParameters(nameAndParameters);
+            var nameAndParametersParsed = NameAndParameters.Parse(nameAndParameters);
 
             // Look up.
             var type = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParametersParsed.name);
@@ -635,7 +636,7 @@ namespace UnityEngine.Experimental.Input
                     $"Registered type '{type.Name}' used for '{nameAndParametersParsed.name}' is not an InputBindingComposite");
 
             // Set parameters.
-            InputDeviceBuilder.SetParameters(instance, nameAndParametersParsed.parameters);
+            NamedValue.ApplyAllToObject(instance, nameAndParametersParsed.parameters);
 
             return instance;
         }

@@ -253,18 +253,6 @@ public class DemoGameTestFixture
         buttonObject.GetComponent<Button>().onClick.Invoke();
     }
 
-    public void Trigger(string action, int playerIndex = 0)
-    {
-        // Look up action.
-        var controls = game.players[playerIndex].controls;
-        var actionInstance = controls.asset.FindAction(action);
-        if (actionInstance == null)
-            throw new ArgumentException("action");
-
-        // And trigger it.
-        Trigger(actionInstance);
-    }
-
     public void Trigger(InputAction action)
     {
         input.Trigger(action);
