@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
 - The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
 - Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
+- Editing name of control scheme in editor not taking effect *except* if hitting enter key.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
