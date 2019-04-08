@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -397,7 +396,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, InputControlLayout.kSeparator))
+                        variants, ','))
                     continue;
 
                 if (controlLayouts[i].isArray)
@@ -425,8 +424,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // If the control is part of a variant, skip it if it isn't in the variants we're
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
-                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants, variants,
-                        InputControlLayout.kSeparator))
+                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants,
+                        variants, ','))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -620,7 +619,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             // Set parameters.
             if (controlItem.parameters.Count > 0)
-                SetParameters(control, controlItem.parameters);
+                NamedValue.ApplyAllToObject(control, controlItem.parameters);
 
             // Add processors.
             if (controlItem.processors.Count > 0)
@@ -705,7 +704,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     AddProcessors(child, ref controlItem, layout.name);
                 ////REVIEW: ATM parameters applied using this path add on top instead of just overriding existing parameters
                 if (controlItem.parameters.Count > 0)
-                    SetParameters(child, controlItem.parameters);
+                    NamedValue.ApplyAllToObject(child, controlItem.parameters);
                 if (!string.IsNullOrEmpty(controlItem.displayName))
                     child.m_DisplayNameFromLayout = controlItem.displayName;
                 if (!controlItem.defaultState.isEmpty)
@@ -845,54 +844,15 @@ namespace UnityEngine.Experimental.Input.Layouts
                 var type = InputProcessor.s_Processors.LookupTypeRegistration(name);
                 if (type == null)
                     throw new Exception(
-                        string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,
-                            controlItem.name, layoutName));
+                        $"Cannot find processor '{name}' referenced by control '{controlItem.name}' in layout '{layoutName}'");
 
                 var processor = Activator.CreateInstance(type);
 
                 var parameters = controlItem.processors[n].parameters;
                 if (parameters.Count > 0)
-                    SetParameters(processor, parameters);
+                    NamedValue.ApplyAllToObject(processor, parameters);
 
                 control.AddProcessor(processor);
-            }
-        }
-
-        internal static void SetParameters(object onObject, ReadOnlyArray<InputControlLayout.ParameterValue> parameters)
-        {
-            var objectType = onObject.GetType();
-            for (var i = 0; i < parameters.Count; ++i)
-            {
-                var parameter = parameters[i];
-
-                ////REVIEW: what about properties?
-
-                var field = objectType.GetField(parameter.name,
-                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (field == null)
-                    throw new Exception(
-                        $"Cannot find public field {parameter.name} in {objectType.Name} (referenced by parameter)");
-
-                ////REVIEW: can we do this without boxing?
-
-                object value = null;
-                unsafe
-                {
-                    switch (parameter.type)
-                    {
-                        case InputControlLayout.ParameterType.Boolean:
-                            value = *(bool*)parameter.value;
-                            break;
-                        case InputControlLayout.ParameterType.Integer:
-                            value = *(int*)parameter.value;
-                            break;
-                        case InputControlLayout.ParameterType.Float:
-                            value = *(float*)parameter.value;
-                            break;
-                    }
-                }
-
-                field.SetValue(onObject, value);
             }
         }
 
@@ -952,7 +912,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
                 if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.kInvalidOffset)
                     throw new Exception(
-                        string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
+                        $"Child '{child.name}' of '{control.name}' has no size set!");
 
                 // Skip children that don't have fixed offsets.
                 if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||

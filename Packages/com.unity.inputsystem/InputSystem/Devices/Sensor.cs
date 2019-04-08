@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC kFormat => new FourCC('A', 'C', 'C', 'L');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
         public FourCC GetFormat()
@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC kFormat => new FourCC('G', 'Y', 'R', 'O');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
         public FourCC GetFormat()
@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC kFormat => new FourCC('G', 'R', 'V', ' ');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
         public FourCC GetFormat()
@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC kFormat => new FourCC('A', 'T', 'T', 'D');
 
-        [InputControl(processors = "CompensateRotation")]
+        [InputControl(processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
         public FourCC GetFormat()
@@ -68,7 +68,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC kFormat => new FourCC('L', 'A', 'A', 'C');
 
-        [InputControl(processors = "CompensateDirection")]
+        [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
         public FourCC GetFormat()

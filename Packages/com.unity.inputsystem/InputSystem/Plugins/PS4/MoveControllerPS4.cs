@@ -45,11 +45,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
         [FieldOffset(4)]
         public float trigger;
 
-        [InputControl(name = "accelerometer")]
+        [InputControl(name = "accelerometer", noisy = true)]
         [FieldOffset(8)]
         public Vector3 accelerometer;
 
-        [InputControl(name = "gyro")]
+        [InputControl(name = "gyro", noisy = true)]
         [FieldOffset(20)]
         public Vector3 gyro;
 
@@ -66,7 +66,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct MoveControllerPS4OuputCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('P', 'S', 'M', 'C'); } }
+        public static FourCC Type => new FourCC('P', 'S', 'M', 'C');
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
 

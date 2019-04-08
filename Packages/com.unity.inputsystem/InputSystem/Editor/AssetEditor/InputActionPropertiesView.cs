@@ -46,13 +46,15 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             var flags = (InputAction.ActionFlags)m_FlagsProperty.intValue;
+            var initialStateCheckOld = (flags & InputAction.ActionFlags.InitialStateCheck) != 0;
             var isContinuousOld = (flags & InputAction.ActionFlags.Continuous) != 0;
             var isPassThroughOld = (flags & InputAction.ActionFlags.PassThrough) != 0;
 
+            var initialStateCheckNew = EditorGUILayout.Toggle(s_InitialStateCheck, initialStateCheckOld);
             var isContinuousNew = EditorGUILayout.Toggle(s_ContinuousLabel, isContinuousOld);
             var isPassThroughNew = EditorGUILayout.Toggle(s_PassThroughLabel, isPassThroughOld);
 
-            if (isContinuousOld != isContinuousNew || isPassThroughOld != isPassThroughNew)
+            if (isContinuousOld != isContinuousNew || isPassThroughOld != isPassThroughNew || initialStateCheckOld != initialStateCheckNew)
             {
                 flags = InputAction.ActionFlags.None;
 
@@ -60,6 +62,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     flags |= InputAction.ActionFlags.Continuous;
                 if (isPassThroughNew)
                     flags |= InputAction.ActionFlags.PassThrough;
+                if (initialStateCheckNew)
+                    flags |= InputAction.ActionFlags.InitialStateCheck;
 
                 m_FlagsProperty.intValue = (int)flags;
                 m_FlagsProperty.serializedObject.ApplyModifiedProperties();
@@ -105,11 +109,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static GUIContent s_TypeLabel;
         private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous",
-            "If enabled, the action will trigger every update while controls are actuated even if the controls do not change value.");
+            "If enabled, the action will trigger every update while controls are actuated even if the controls do not change value in a given frame.");
         private static readonly GUIContent s_PassThroughLabel = EditorGUIUtility.TrTextContent("Pass Through",
             "If enabled, the action will not gate value changes on controls but will instead perform for every value change on any bound control. " +
             "This is especially useful when binding multiple controls concurrently and not wanting the action to single out any one of multiple " +
             "concurrent inputs.");
+        private static readonly GUIContent s_InitialStateCheck = EditorGUIUtility.TrTextContent("Initial State Check",
+            "If enabled, the action will perform an initial state check on all bound controls when the action is enabled. This means that " +
+            "if, for example, a button is held when the action is enabled, the action will be triggered right away. By default, controls " +
+            "that are already actuated when an action is enabled do not cause the action to be triggered.");
     }
 }
 #endif // UNITY_EDITOR
