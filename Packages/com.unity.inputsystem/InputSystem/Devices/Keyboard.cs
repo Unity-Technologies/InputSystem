@@ -802,27 +802,37 @@ namespace UnityEngine.Experimental.Input
         {
             switch (key)
             {
-                case Key.LeftAlt:
-                case Key.RightAlt:
                 case Key.LeftShift:
                 case Key.RightShift:
-                case Key.LeftMeta:
-                case Key.RightMeta:
+                case Key.LeftAlt:
+                case Key.RightAlt:
                 case Key.LeftCtrl:
                 case Key.RightCtrl:
+                case Key.LeftMeta:
+                case Key.RightMeta:
                 case Key.ContextMenu:
                 case Key.Escape:
-                case Key.Delete:
-                case Key.Insert:
+                case Key.LeftArrow:
+                case Key.RightArrow:
+                case Key.UpArrow:
+                case Key.DownArrow:
+                case Key.Backspace:
                 case Key.PageDown:
                 case Key.PageUp:
                 case Key.Home:
                 case Key.End:
-                case Key.NumLock:
+                case Key.Insert:
+                case Key.Delete:
                 case Key.CapsLock:
-                case Key.ScrollLock:
+                case Key.NumLock:
                 case Key.PrintScreen:
+                case Key.ScrollLock:
                 case Key.Pause:
+                case Key.None:
+                case Key.Space:
+                case Key.Enter:
+                case Key.Tab:
+                case Key.NumpadEnter:
                 case Key.F1:
                 case Key.F2:
                 case Key.F3:
@@ -840,6 +850,7 @@ namespace UnityEngine.Experimental.Input
                 case Key.OEM3:
                 case Key.OEM4:
                 case Key.OEM5:
+                case Key.IMESelected:
                     return false;
             }
             return true;

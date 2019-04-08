@@ -2087,7 +2087,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Find the topmost child control on the device. A device layout can only
                 // add children that sit directly underneath it (e.g. "leftStick"). Children of children
                 // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
-                // To determine which device contributes the control has a whole, we have to be looking
+                // To determine which device contributes the control as a whole, we have to be looking
                 // at the topmost child of the device.
                 var topmostChild = control;
                 while (topmostChild.parent != control.device)
