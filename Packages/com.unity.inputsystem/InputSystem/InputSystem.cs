@@ -1616,9 +1616,8 @@ namespace UnityEngine.Experimental.Input
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                InputSettings settingsAsset;
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
-                    out settingsAsset))
+                    out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
                         ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
