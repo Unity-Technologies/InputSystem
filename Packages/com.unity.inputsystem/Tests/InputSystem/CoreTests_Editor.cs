@@ -1601,6 +1601,7 @@ partial class CoreTests
         }
     }
 
+#if NET_4_6
     [Test]
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
@@ -1618,7 +1619,6 @@ partial class CoreTests
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
-#if NET_4_6
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
         var cp = new CompilerParameters();
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
@@ -1640,9 +1640,8 @@ partial class CoreTests
         Assert.That(set1map, Is.Not.Null);
 
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
-#endif
     }
-
+#endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
