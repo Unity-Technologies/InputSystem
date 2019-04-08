@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 #### Actions
 
+- `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
 - Reacting to controls that are already actuated when an action is enabled is now an __optional__ behavior rather than the default behavior. This is a __breaking__ change.
   * Essentially, this change reverts back to the behavior before 0.2-preview.
   * To reenable the behavior, toggle "Initial State Check" on in the UI or set the `initialStateCheck` property in code.
