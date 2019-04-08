@@ -248,6 +248,8 @@ internal class ParameterValueTests
 
     private class TestObject
     {
+#pragma warning disable 649
         public TestEnum enumField;
+#pragma warning restore 649
     }
 }
