@@ -188,6 +188,22 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public bool initialStateCheck
+        {
+            get => (m_Flags & ActionFlags.InitialStateCheck) != 0;
+            set
+            {
+                if (enabled)
+                    throw new InvalidOperationException(
+                        $"Cannot change the 'initialStateCheck' flag of action '{this} while the action is enabled");
+
+                if (value)
+                    m_Flags |= ActionFlags.InitialStateCheck;
+                else
+                    m_Flags &= ~ActionFlags.InitialStateCheck;
+            }
+        }
+
         /// <summary>
         /// If true, the action will continuously trigger <see cref="performed"/> on every input update
         /// while the action is in the <see cref="InputActionPhase.Performed"/> phase.
@@ -427,6 +443,7 @@ namespace UnityEngine.Experimental.Input
             if (m_Name == null)
                 return "<Unnamed>";
 
+            ////REVIEW: should we cache this?
             if (m_ActionMap != null && !isSingletonAction && !String.IsNullOrEmpty(m_ActionMap.name))
                 return $"{m_ActionMap.name}/{m_Name}";
 
@@ -480,6 +497,7 @@ namespace UnityEngine.Experimental.Input
             None = 0,
             Continuous = 1 << 1,
             PassThrough = 1 << 2,
+            InitialStateCheck = 1 << 3,
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings

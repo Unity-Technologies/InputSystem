@@ -390,6 +390,7 @@ namespace UnityEngine.Experimental.Input
                             actionIndex = actionIndexForBinding,
                             compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
+                            wantsInitialStateCheck = action?.initialStateCheck ?? false
                         };
                     }
                     catch (Exception exception)
