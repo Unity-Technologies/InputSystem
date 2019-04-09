@@ -38,8 +38,6 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         #region Creation
 
-        public bool forceAcceptRename { get; set; }
-
         public InputActionTreeView(SerializedObject serializedObject, TreeViewState state = null)
             : base(state ?? new TreeViewState())
         {
@@ -50,7 +48,7 @@ namespace UnityEngine.Experimental.Input.Editor
             drawHeader = true;
             drawPlusButton = true;
             drawMinusButton = true;
-            forceAcceptRename = false;
+            m_ForceAcceptRename = false;
             m_Title = new GUIContent("");
         }
 
@@ -380,13 +378,20 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!(FindItem(args.itemID, rootItem) is ActionTreeItemBase actionItem))
                 return;
 
-            if (!(args.acceptedRename || forceAcceptRename) || args.originalName == args.newName)
+            if (!(args.acceptedRename || m_ForceAcceptRename) || args.originalName == args.newName)
                 return;
                 
             Debug.Assert(actionItem.canRename, "Cannot rename " + actionItem);
 
             actionItem.Rename(args.newName);
             OnSerializedObjectModified();
+        }
+
+        public void EndRename(bool forceAccept)
+        {
+            m_ForceAcceptRename = forceAccept;
+            EndRename();
+            m_ForceAcceptRename = false;
         }
 
         protected override void DoubleClickedItem(int id)
@@ -1280,6 +1285,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private FilterCriterion[] m_ItemFilterCriteria;
         private GUIContent m_Title;
         private bool m_InitiateContextMenuOnNextRepaint;
+        private bool m_ForceAcceptRename;
         private int m_SerializedObjectDirtyCount;
 
         private static readonly GUIContent s_AddBindingLabel = EditorGUIUtility.TrTextContent("Add Binding");

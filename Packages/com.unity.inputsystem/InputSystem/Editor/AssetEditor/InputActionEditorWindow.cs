@@ -561,9 +561,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see 
                 // that the action map column had processed the current event. This is not particularly elegant, but I cannot think
                 // of a better solution as we are limited by the public APIs exposed by TreeView.
-                m_ActionsTree.forceAcceptRename = true;
-                m_ActionsTree.EndRename();
-                m_ActionsTree.forceAcceptRename = false;
+                m_ActionsTree.EndRename(forceAccept: true);
             }
             DrawActionsColumn(columnAreaWidth * 0.38f);
             DrawPropertiesColumn(columnAreaWidth * 0.40f);
