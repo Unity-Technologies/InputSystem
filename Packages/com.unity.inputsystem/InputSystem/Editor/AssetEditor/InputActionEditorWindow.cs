@@ -547,19 +547,23 @@ namespace UnityEngine.Experimental.Input.Editor
                 InputActionTreeView.Styles.backgroundWithBorder.margin.left -
                 InputActionTreeView.Styles.backgroundWithBorder.margin.right;
 
-            // When renaming an item, TreeViews will capture all mouse Events, and process any clicks outside the item
-            // being renamed to end the renaming process. However, since we have two TreeViews, if the action column is
-            // renaming an item, and then you double click on an item in the action map column, the action map column will
-            // get to use the mouse event before the action collumn gets to see it, which would cause the action map column
-            // to enter rename mode and use the event, before the action column gets a chance to see it and exit rename mode.
-            // Then we end up with two active renaming sessions, which does not work correctly. 
-            // (See https://fogbugz.unity3d.com/f/cases/1140869/). Now this workaround is to disable the action map column
-            // while the action column is renaming, so the action column gets to see clicks on the action map column first,
-            // and gets a chance to exit rename mode. However, we don't want to UI to be visually greyed out, so we don't
-            // disable for repaint events.
-            using (var s = new EditorGUI.DisabledScope(m_ActionsTree.isRenaming && Event.current.type != EventType.Repaint))
+            var oldType = Event.current.type;
+            DrawActionMapsColumn(columnAreaWidth * 0.22f);
+            if (Event.current.type == EventType.Used && oldType != Event.current.type)
             {
-                DrawActionMapsColumn(columnAreaWidth * 0.22f);
+                // When renaming an item, TreeViews will capture all mouse Events, and process any clicks outside the item
+                // being renamed to end the renaming process. However, since we have two TreeViews, if the action column is
+                // renaming an item, and then you double click on an item in the action map column, the action map column will
+                // get to use the mouse event before the action collumn gets to see it, which would cause the action map column
+                // to enter rename mode and use the event, before the action column gets a chance to see it and exit rename mode.
+                // Then we end up with two active renaming sessions, which does not work correctly. 
+                // (See https://fogbugz.unity3d.com/f/cases/1140869/). 
+                // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see 
+                // that the action map column had processed the current event. This is not particularly elegant, but I cannot think
+                // of a better solution as we are limited by the public APIs exposed by TreeView.
+                m_ActionsTree.forceAcceptRename = true;
+                m_ActionsTree.EndRename();
+                m_ActionsTree.forceAcceptRename = false;
             }
             DrawActionsColumn(columnAreaWidth * 0.38f);
             DrawPropertiesColumn(columnAreaWidth * 0.40f);

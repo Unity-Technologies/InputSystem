@@ -38,7 +38,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         #region Creation
 
-        internal bool isRenaming { get; private set; }
+        public bool forceAcceptRename { get; set; }
 
         public InputActionTreeView(SerializedObject serializedObject, TreeViewState state = null)
             : base(state ?? new TreeViewState())
@@ -50,8 +50,8 @@ namespace UnityEngine.Experimental.Input.Editor
             drawHeader = true;
             drawPlusButton = true;
             drawMinusButton = true;
+            forceAcceptRename = false;
             m_Title = new GUIContent("");
-            isRenaming = false;
         }
 
         /// <summary>
@@ -366,8 +366,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // If a rename is already in progress, force it to end first.
             EndRename();
-
-            isRenaming = true;
             onBeginRename?.Invoke((ActionTreeItemBase)item);
             base.BeginRename(item);
         }
@@ -379,13 +377,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RenameEnded(RenameEndedArgs args)
         {
-            isRenaming = false;
             if (!(FindItem(args.itemID, rootItem) is ActionTreeItemBase actionItem))
                 return;
 
-            if (!args.acceptedRename || args.originalName == args.newName)
+            if (!(args.acceptedRename || forceAcceptRename) || args.originalName == args.newName)
                 return;
-
+                
             Debug.Assert(actionItem.canRename, "Cannot rename " + actionItem);
 
             actionItem.Rename(args.newName);
