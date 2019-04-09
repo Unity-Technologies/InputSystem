@@ -89,6 +89,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Disabling and enabling actions in action callbacks should work correctly now.
 
 ## [0.2.6-preview] - 2019-03-20
 

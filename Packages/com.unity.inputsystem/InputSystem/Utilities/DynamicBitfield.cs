@@ -51,6 +51,12 @@ namespace UnityEngine.Experimental.Input
             array[bitIndex / 64] &= ~((ulong)1 << (bitIndex % 64));
         }
 
+        public void ClearAll()
+        {
+            for (var i = 0; i < length / 64; i++)
+                array[i] = 0;
+        }
+
         private static int BitCountToULongCount(int bitCount)
         {
             return (bitCount + 63) / 64;

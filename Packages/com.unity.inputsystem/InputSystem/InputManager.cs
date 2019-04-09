@@ -2972,11 +2972,10 @@ namespace UnityEngine.Experimental.Input
                 {
                     var listener = listeners[i];
                     listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr, listener.monitorIndex);
-                    signals.ClearBit(i);
                 }
             }
 
-            m_StateChangeMonitors[deviceIndex].signalled = signals;
+            m_StateChangeMonitors[deviceIndex].signalled.ClearAll();
         }
 
         private void ProcessStateChangeMonitorTimeouts()
