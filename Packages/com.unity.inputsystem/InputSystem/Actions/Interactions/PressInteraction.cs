@@ -81,6 +81,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                     }
                     else if (isActuated)
                     {
+                        ////REVIEW: should this trigger Started?
                         m_WaitingForRelease = true;
                     }
                     break;

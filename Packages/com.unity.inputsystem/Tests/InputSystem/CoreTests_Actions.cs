@@ -1108,13 +1108,74 @@ partial class CoreTests
         }
     }
 
-    // There can be situations where two different controls are driven from the state. Most prominently, this is
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Action with PressInteraction set to ReleaseOnly.
+        // In this configuration, PressInteraction will not do anything on button down. Make sure that
+        // the disambiguation code does not get confused by this but still correctly processes the button
+        // up state change (which is a state change *back* to default state, i.e. has zero magnitude).
+        var action = new InputAction(interactions: "Press(behavior=1)");
+
+        action.AddBinding("<Keyboard>/a");
+        action.AddBinding("<Gamepad>/buttonNorth");
+
+        action.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonNorth);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(gamepad.buttonNorth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+
+            trace.Clear();
+
+            Press(gamepad.buttonNorth);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(gamepad.buttonNorth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+
+            trace.Clear();
+
+            Press(keyboard.aKey);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(keyboard.aKey);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+        }
+    }
+
+    // There can be situations where two different controls are driven from the same state. Most prominently, this is
     // the case with the Pointer.button control that subclasses usually rewrite to whatever their primary button is.
     [Test]
     [Category("Actions")]
     [Property("TimesliceEvents", "Off")]
     [Ignore("TODO")]
-    public void TODO_Actions_WithMultipleActuationsFromStateState_()
+    public void TODO_Actions_WithMultipleActuationsFromSameState_()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var action = new InputAction(binding: "<Mouse>/*button");
