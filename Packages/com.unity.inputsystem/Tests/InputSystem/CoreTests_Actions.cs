@@ -330,6 +330,59 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanDisableAndEnableOtherActionInCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCalls = 0;
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed +=
+            ctx =>
+        {
+            ++receivedCalls;
+        };
+        action.Enable();
+
+        var disableAction = new InputAction(binding: "<Gamepad>/buttonEast");
+        disableAction.performed +=
+            ctx =>
+        {
+            action.Disable();
+        };
+        disableAction.Enable();
+
+        var enableAction = new InputAction(binding: "<Gamepad>/buttonWest");
+        enableAction.performed +=
+            ctx =>
+        {
+            action.Enable();
+        };
+        enableAction.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.Update();
+        Assert.That(receivedCalls, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.East));
+        InputSystem.Update();
+        Assert.That(action.enabled, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.Update();
+        Assert.That(receivedCalls, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.West));
+        InputSystem.Update();
+        Assert.That(action.enabled, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.Update();
+        Assert.That(receivedCalls, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenEnabled_TriggerNotification()
     {
         var map = new InputActionMap("map");
