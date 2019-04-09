@@ -1640,9 +1640,11 @@ namespace UnityEngine.Experimental.Input
             EditorApplication.projectChanged += OnProjectChange;
 
             // If native backends for new input system aren't enabled, ask user whether we should
-            // enable them (requires restart). We only ask once per session.
+            // enable them (requires restart). We only ask once per session and don't ask when
+            // running in batch mode.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettingHelpers.newSystemBackendsEnabled)
+                !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
