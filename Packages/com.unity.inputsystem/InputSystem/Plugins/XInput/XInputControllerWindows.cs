@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [InputControl(name = "buttonNorth", bit = (uint)Button.Y, displayName = "Y")]
 
         [FieldOffset(0)]
-        public uint buttons;
+        public ushort buttons;
 
         [InputControl(name = "leftTrigger", format = "BYTE")]
         [FieldOffset(2)] public byte leftTrigger;
