@@ -57,9 +57,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
   * Binding by location shows differences between the local keyboard layout and the US reference layout.
   * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
-
-#### Actions
-
 - `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
 - Reacting to controls that are already actuated when an action is enabled is now an __optional__ behavior rather than the default behavior. This is a __breaking__ change.
   * Essentially, this change reverts back to the behavior before 0.2-preview.
@@ -89,6 +86,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
 - The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
+- In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.
 - Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
 - Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
 - Fixed blurry icons in editor for imported .inputactions assets and actions in them.
