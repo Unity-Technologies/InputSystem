@@ -99,7 +99,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
         public XInputControllerOSXState WithButton(Button button)
         {
-            buttons |= (uint)1 << (int)button;
+            buttons |= (ushort)((uint)1 << (int)button);
             return this;
         }
     }
