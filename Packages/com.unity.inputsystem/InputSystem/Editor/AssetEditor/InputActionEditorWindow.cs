@@ -301,6 +301,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onSelectionChanged = OnActionMapTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
+                viewToAddActions = m_ActionsTree,
                 title = "Actions Maps",
             };
             m_ActionMapsTree.Reload();
