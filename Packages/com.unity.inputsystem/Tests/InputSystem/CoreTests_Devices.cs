@@ -1421,6 +1421,8 @@ partial class CoreTests
             // Make sure InputManager kept the gamepad.
             Assert.That(manager.devices.Count, Is.EqualTo(1));
             Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
+
+            LogAssert.NoUnexpectedReceived();
         }
     }
 
