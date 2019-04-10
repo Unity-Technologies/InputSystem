@@ -33,9 +33,9 @@ internal class ArrayHelperTests
         var array2Length = 8;
         var array3Length = 4;
 
-        ArrayHelpers.EraseAtWithCapacity(ref array1, ref array1Length, 2);
-        ArrayHelpers.EraseAtWithCapacity(ref array2, ref array2Length, 7);
-        ArrayHelpers.EraseAtWithCapacity(ref array3, ref array3Length, 0);
+        ArrayHelpers.EraseAtWithCapacity(array1, ref array1Length, 2);
+        ArrayHelpers.EraseAtWithCapacity(array2, ref array2Length, 7);
+        ArrayHelpers.EraseAtWithCapacity(array3, ref array3Length, 0);
 
         Assert.That(array1, Is.EquivalentTo(new[] {1, 2, 4, 5, 0, 0, 0, 0}));
         Assert.That(array2, Is.EquivalentTo(new[] {1, 2, 3, 4, 5, 6, 7, 0}));
@@ -60,9 +60,9 @@ internal class ArrayHelperTests
 
         try
         {
-            ArrayHelpers.EraseAtWithCapacity(ref array1, ref array1Length, 2);
-            ArrayHelpers.EraseAtWithCapacity(ref array2, ref array2Length, 7);
-            ArrayHelpers.EraseAtWithCapacity(ref array3, ref array3Length, 0);
+            ArrayHelpers.EraseAtWithCapacity(array1, ref array1Length, 2);
+            ArrayHelpers.EraseAtWithCapacity(array2, ref array2Length, 7);
+            ArrayHelpers.EraseAtWithCapacity(array3, ref array3Length, 0);
 
             // For NativeArray, we don't clear memory.
             Assert.That(array1, Is.EquivalentTo(new[] {1, 2, 4, 5, 5, 0, 0, 0}));
