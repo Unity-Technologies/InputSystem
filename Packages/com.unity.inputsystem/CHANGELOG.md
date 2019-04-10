@@ -79,9 +79,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Actions and bindings disappearing when control schemes have spaces in their names.
 - `InputActionRebindingExceptions.RebindOperation` can now be reused as intended; used to stop working properly the first time a rebind completed or was cancelled.
-
-#### Actions
-
 - `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
 - The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
 - Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
@@ -92,6 +89,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
 - The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
+- Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
+- Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
+- Fixed blurry icons in editor for imported .inputactions assets and actions in them.
 
 ## [0.2.6-preview] - 2019-03-20
 

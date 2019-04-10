@@ -227,7 +227,7 @@ namespace UnityEngine.Experimental.Input
             {
                 if (m_Indices[i] == index)
                 {
-                    ArrayHelpers.EraseAtWithCapacity(ref m_Indices, ref m_Count, i);
+                    ArrayHelpers.EraseAtWithCapacity(m_Indices, ref m_Count, i);
                     return true;
                 }
             }
@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException(
                     $"Index {index} is out of range in list with {m_Count} elements", nameof(index));
 
-            ArrayHelpers.EraseAtWithCapacity(ref m_Indices, ref m_Count, index);
+            ArrayHelpers.EraseAtWithCapacity(m_Indices, ref m_Count, index);
         }
 
         public void CopyTo(TControl[] array, int arrayIndex)

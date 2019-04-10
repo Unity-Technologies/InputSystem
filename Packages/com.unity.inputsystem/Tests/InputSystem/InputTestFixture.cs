@@ -163,6 +163,12 @@ namespace UnityEngine.Experimental.Input
             Set(button, 0, absoluteTime, timeOffset);
         }
 
+        public void PressAndRelease(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Press(button, absoluteTime, timeOffset);
+            Release(button, absoluteTime, timeOffset);
+        }
+
         /// <summary>
         /// Set the control to the given value by sending a state event with the value to the
         /// control's device.
