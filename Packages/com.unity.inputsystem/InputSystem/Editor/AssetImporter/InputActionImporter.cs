@@ -20,10 +20,10 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private const int kVersion = 6;
 
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap.png";
-        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action.png";
-        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap.png";
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action@4x.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap@4x.png";
+        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action@4x.png";
+        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap@4x.png";
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;

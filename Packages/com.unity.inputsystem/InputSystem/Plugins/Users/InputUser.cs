@@ -247,7 +247,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// and <see cref="controlSchemeMatch"/>).
         ///
         /// Note that is generally does not make sense for users to share actions. Instead, each user should
-        /// receive a set of actions private to the user. 
+        /// receive a set of actions private to the user.
         ///
         /// If <see cref="settings"/> are applied with customized bindings (<see cref="InputUserSettings.customBindings"/>),
         /// these are applied automatically to the actions.
@@ -1060,8 +1060,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
             // Remove.
             var userCount = s_AllUserCount;
-            ArrayHelpers.EraseAtWithCapacity(ref s_AllUsers, ref userCount, userIndex);
-            ArrayHelpers.EraseAtWithCapacity(ref s_AllUserData, ref s_AllUserCount, userIndex);
+            ArrayHelpers.EraseAtWithCapacity(s_AllUsers, ref userCount, userIndex);
+            ArrayHelpers.EraseAtWithCapacity(s_AllUserData, ref s_AllUserCount, userIndex);
 
             // Remove our hook if we no longer need it.
             if (s_AllUserCount == 0 && s_ListenForUnpairedDeviceActivity == 0)
@@ -1221,13 +1221,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
             if (asLostDevice)
             {
-                ArrayHelpers.EraseAtWithCapacity(ref s_AllLostDevices, ref s_AllLostDeviceCount, deviceIndex);
+                ArrayHelpers.EraseAtWithCapacity(s_AllLostDevices, ref s_AllLostDeviceCount, deviceIndex);
                 --s_AllUserData[userIndex].lostDeviceCount;
             }
             else
             {
                 --s_PairingStateVersion;
-                ArrayHelpers.EraseAtWithCapacity(ref s_AllPairedDevices, ref s_AllPairedDeviceCount, deviceIndex);
+                ArrayHelpers.EraseAtWithCapacity(s_AllPairedDevices, ref s_AllPairedDeviceCount, deviceIndex);
                 --s_AllUserData[userIndex].deviceCount;
             }
 

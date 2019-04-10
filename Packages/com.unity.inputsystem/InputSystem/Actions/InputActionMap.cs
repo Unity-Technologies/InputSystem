@@ -449,7 +449,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// GUID converted from <see cref="m_Id"/>.
         /// </summary>
-        [NonSerialized] internal Guid m_Guid;
+        [NonSerialized] private Guid m_Guid;
 
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
@@ -915,7 +915,8 @@ namespace UnityEngine.Experimental.Input
             public string processors;
             public string groups;
             public string action;
-            public bool chainWithPrevious;
+            ////TODO: re-enable when chained bindings are implemented
+            //public bool chainWithPrevious;
             public bool isComposite;
             public bool isPartOfComposite;
 
@@ -934,7 +935,7 @@ namespace UnityEngine.Experimental.Input
                     interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
                     processors = string.IsNullOrEmpty(processors) ? null : processors,
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
-                    chainWithPrevious = chainWithPrevious,
+                    //chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
                 };
@@ -951,7 +952,7 @@ namespace UnityEngine.Experimental.Input
                     interactions = binding.interactions,
                     processors = binding.processors,
                     groups = binding.groups,
-                    chainWithPrevious = binding.chainWithPrevious,
+                    //chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
                 };
