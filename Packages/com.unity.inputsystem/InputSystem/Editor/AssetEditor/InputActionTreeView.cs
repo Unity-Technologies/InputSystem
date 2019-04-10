@@ -739,16 +739,16 @@ namespace UnityEngine.Experimental.Input.Editor
             if (arrayIndex == -1)
                 arrayIndex = array.arraySize;
 
+            var actionForNewBindings = location.item is ActionTreeItem actionItem ? actionItem.name : null;
+
             // Paste new element.
-            var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs,
-                actionForNewBindings: location.item is ActionTreeItem actionItem ? actionItem.name : null);
+            var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs, actionForNewBindings);
             newItemPropertyPaths.Add(newElement.propertyPath);
 
             // If the element can have children, read whatever blocks are following the current one (if any).
             if ((tag == k_ActionTag || tag == k_CompositeBindingTag) && blocks.Length > 1)
             {
                 var bindingArray = array;
-                var actionForNewBindings = (string)null;
 
                 if (tag == k_ActionTag)
                 {

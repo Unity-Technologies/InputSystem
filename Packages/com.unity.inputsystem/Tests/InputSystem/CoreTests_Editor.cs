@@ -974,7 +974,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_ActionTree_CanCopyPasteCompositeBinding()
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_IntoSameAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -1026,6 +1026,69 @@ partial class CoreTests
             Assert.That(tree["map/action"].children[2].children[0].As<PartOfCompositeBindingTreeItem>().path,
                 Is.EqualTo("<Keyboard>/a"));
             Assert.That(tree["map/action"].children[2].children[1].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/b"));
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_IntoDifferentAction()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action = map.AddAction("action");
+        var action2 = map.AddAction("action2");
+        action.AddBinding("<Gamepad>/leftStick/x");
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "<Keyboard>/a")
+            .With("Negative", "<Keyboard>/b");
+        action2.AddBinding("<Gamepad>/leftStick/x");
+
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var serializedObjectModified = false;
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            },
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(serializedObjectModified, Is.False);
+                serializedObjectModified = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
+            selectionChanged = false;
+            tree.CopySelectedItemsToClipboard();
+            tree.SelectItem("map/action2");
+            selectionChanged = false;
+            tree.PasteDataFromClipboard();
+
+            Assert.That(selectionChanged, Is.True);
+            Assert.That(tree["map/action"].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick/x"));
+            Assert.That(tree["map/action"].children[1], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(tree["map/action"].children[1].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action"].children[1].children[0].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree["map/action"].children[1].children[1].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/b"));
+
+            Assert.That(tree["map/action2"].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action2"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick/x"));
+            Assert.That(tree["map/action2"].children[1], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(tree["map/action2"].children[1].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action2"].children[1].children[0].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree["map/action2"].children[1].children[1].As<PartOfCompositeBindingTreeItem>().path,
                 Is.EqualTo("<Keyboard>/b"));
         }
     }
