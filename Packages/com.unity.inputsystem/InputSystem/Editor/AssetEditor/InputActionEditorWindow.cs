@@ -159,6 +159,36 @@ namespace UnityEngine.Experimental.Input.Editor
                 window.ReloadAssetFromFileIfNotDirty();
         }
 
+        private bool ConfirmSaveChangesIfNeeded()
+        {
+            // Ask for confirmation if we have unsaved changes.
+            if (!m_ForceQuit && m_ActionAssetManager.dirty)
+            {
+                var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
+                    $"Do you want to save the changes you made in:\n{m_ActionAssetManager.path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+                switch (result)
+                {
+                    case 0: // Save
+                        m_ActionAssetManager.SaveChangesToAsset();
+                        m_ActionAssetManager.Cleanup();
+                        break;
+                    case 1: // Cancel
+                        Instantiate(this).Show();
+                        // Cancel editor quit.
+                        return false;
+                    case 2: // Don't save, don't ask again.
+                        m_ForceQuit = true;
+                        break;
+                }
+            }
+            return true;
+        }
+
+        private bool EditorWantsToQuit()
+        {
+            return ConfirmSaveChangesIfNeeded();
+        }
+
         private void OnEnable()
         {
             minSize = new Vector2(600, 300);
@@ -172,6 +202,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Toolbar.onSelectedDeviceChanged = OnControlSchemeSelectionChanged;
             m_Toolbar.onSave = SaveChangesToAsset;
             m_Toolbar.onControlSchemesChanged = OnControlSchemesModified;
+            EditorApplication.wantsToQuit += EditorWantsToQuit;
 
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
@@ -185,24 +216,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnDestroy()
         {
-            // Ask for confirmation if we have unsaved changes.
-            if (!m_ForceQuit && m_ActionAssetManager.dirty)
-            {
-                var result = EditorUtility.DisplayDialogComplex("Unsaved changes",
-                    "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
-                switch (result)
-                {
-                    case 0: // Save
-                        m_ActionAssetManager.SaveChangesToAsset();
-                        m_ActionAssetManager.Cleanup();
-                        break;
-                    case 1: // Cancel
-                        Instantiate(this).Show();
-                        break;
-                    case 2: // Don't save
-                        break;
-                }
-            }
+            ConfirmSaveChangesIfNeeded();
+            EditorApplication.wantsToQuit -= EditorWantsToQuit;
         }
 
         // Set asset would usually only be called when the window is open
