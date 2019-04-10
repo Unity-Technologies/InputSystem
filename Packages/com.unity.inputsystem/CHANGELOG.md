@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Fixed pasting or dragging a composite binding from one action into another.
 - In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.
 - Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
 - Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
