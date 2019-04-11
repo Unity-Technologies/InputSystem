@@ -23,19 +23,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
         // in which case events from all devices are recorded.
         public int deviceId
         {
-            get { return m_DeviceId; }
-            set { m_DeviceId = value; }
+            get => m_DeviceId;
+            set => m_DeviceId = value;
         }
 
-        public bool enabled
-        {
-            get { return m_Enabled; }
-        }
+        public bool enabled => m_Enabled;
 
         public event Action<InputEventPtr> onEvent
         {
-            add { m_EventListeners.Append(value); }
-            remove { m_EventListeners.Remove(value); }
+            add => m_EventListeners.Append(value);
+            remove => m_EventListeners.Remove(value);
         }
 
         // Create a disabled event trace that does not perform any allocation
@@ -177,7 +174,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (m_EventBuffer == IntPtr.Zero)
                 return;
 
-            var eventSize = (uint)inputEvent.sizeInBytes;
+            var eventSize = inputEvent.sizeInBytes;
             var eventData = inputEvent.data;
 
             // Make sure we can fit the event at all.
@@ -287,15 +284,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 m_Current = new InputEventPtr();
             }
 
-            public InputEventPtr Current
-            {
-                get { return m_Current; }
-            }
-
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            public InputEventPtr Current => m_Current;
+            object IEnumerator.Current => Current;
         }
     }
 }

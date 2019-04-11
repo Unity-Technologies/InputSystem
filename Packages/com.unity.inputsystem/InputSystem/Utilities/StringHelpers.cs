@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -9,17 +7,138 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class StringHelpers
     {
+        /// <summary>
+        /// For every character in <paramref name="str"/> that is contained in <paramref name="chars"/>, replace it
+        /// by the corresponding character in <paramref name="replacements"/> preceded by a backslash.
+        /// </summary>
+        public static string Escape(this string str, string chars = "\n\t\r\\\"", string replacements = "ntr\\\"")
+        {
+            if (str == null)
+                return null;
+
+            // Scan for characters that need escaping. If there's none, just return
+            // string as is.
+            var hasCharacterThatNeedsEscaping = false;
+            foreach (var ch in str)
+            {
+                if (chars.Contains(ch))
+                {
+                    hasCharacterThatNeedsEscaping = true;
+                    break;
+                }
+            }
+            if (!hasCharacterThatNeedsEscaping)
+                return str;
+
+            var builder = new StringBuilder();
+            foreach (var ch in str)
+            {
+                var index = chars.IndexOf(ch);
+                if (index == -1)
+                {
+                    builder.Append(ch);
+                }
+                else
+                {
+                    builder.Append('\\');
+                    builder.Append(replacements[index]);
+                }
+            }
+            return builder.ToString();
+        }
+
+        public static string Unescape(this string str, string chars = "ntr\\\"", string replacements = "\n\t\r\\\"")
+        {
+            if (str == null)
+                return str;
+
+            // If there's no backslashes in the string, there's nothing to unescape.
+            if (!str.Contains('\\'))
+                return str;
+
+            var builder = new StringBuilder();
+            for (var i = 0; i < str.Length; ++i)
+            {
+                var ch = str[i];
+                if (ch == '\\' && i < str.Length - 2)
+                {
+                    ++i;
+                    ch = str[i];
+                    var index = chars.IndexOf(ch);
+                    if (index != -1)
+                        builder.Append(replacements[index]);
+                    else
+                        builder.Append(ch);
+                }
+                else
+                {
+                    builder.Append(ch);
+                }
+            }
+            return builder.ToString();
+        }
+
+        public static bool Contains(this string str, char ch)
+        {
+            if (str == null)
+                return false;
+            return str.IndexOf(ch) != -1;
+        }
+
+        public static bool Contains(this string str, string text, StringComparison comparison)
+        {
+            if (str == null)
+                return false;
+            return str.IndexOf(text, comparison) != -1;
+        }
+
         public static string GetPlural(this string str)
         {
+            if (str == null)
+                throw new ArgumentNullException(nameof(str));
+
             switch (str)
             {
                 case "Mouse": return "Mice";
                 case "mouse": return "mice";
                 case "Axis": return "Axes";
-                case "axis": return "axis";
+                case "axis": return "axes";
             }
 
             return str + 's';
+        }
+
+        public static string NicifyMemorySize(long numBytes)
+        {
+            // Gigabytes.
+            if (numBytes > 1024 * 1024 * 1024)
+            {
+                var gb = numBytes / (1024 * 1024 * 1024);
+                var remainder = (numBytes % (1024 * 1024 * 1024)) / 1.0f;
+
+                return $"{gb + remainder} GB";
+            }
+
+            // Megabytes.
+            if (numBytes > 1024 * 1024)
+            {
+                var mb = numBytes / (1024 * 1024);
+                var remainder = (numBytes % (1024 * 1024)) / 1.0f;
+
+                return $"{mb + remainder} MB";
+            }
+
+            // Kilobytes.
+            if (numBytes > 1024)
+            {
+                var kb = numBytes / 1024;
+                var remainder = (numBytes % 1024) / 1.0f;
+
+                return $"{kb + remainder} KB";
+            }
+
+            // Bytes.
+            return $"{numBytes} Bytes";
         }
 
         public static int CountOccurrences(this string str, char ch)
@@ -42,6 +161,41 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return count;
+        }
+
+        public static IEnumerable<Substring> Tokenize(this string str)
+        {
+            var pos = 0;
+            var length = str.Length;
+
+            while (pos < length)
+            {
+                while (pos < length && char.IsWhiteSpace(str[pos]))
+                    ++pos;
+
+                if (str[pos] == '"')
+                {
+                    ++pos;
+                    var endPos = pos;
+                    while (endPos < length && str[endPos] != '\"')
+                    {
+                        // Doesn't recognize control sequences but allows escaping double quotes.
+                        if (str[endPos] == '\\' && endPos < length - 1)
+                            ++endPos;
+                        ++endPos;
+                    }
+                    yield return new Substring(str, pos, endPos - pos);
+                    pos = endPos + 1;
+                }
+                else
+                {
+                    var endPos = pos;
+                    while (endPos < length && !char.IsWhiteSpace(str[endPos]))
+                        ++endPos;
+                    yield return new Substring(str, pos, endPos - pos);
+                    pos = endPos;
+                }
+            }
         }
 
         public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
@@ -116,10 +270,29 @@ namespace UnityEngine.Experimental.Input.Utilities
         public static string MakeUniqueName<TExisting>(string baseName, IEnumerable<TExisting> existingSet,
             Func<TExisting, string> getNameFunc)
         {
+            if (getNameFunc == null)
+                throw new ArgumentNullException(nameof(getNameFunc));
+
+            if (existingSet == null)
+                return baseName;
+
             var name = baseName;
             var nameLowerCase = name.ToLower();
             var nameIsUnique = false;
             var namesTried = 1;
+
+            // If the name ends in digits, start counting from the given number.
+            if (baseName.Length > 0)
+            {
+                var lastDigit = baseName.Length;
+                while (lastDigit > 0 && char.IsDigit(baseName[lastDigit - 1]))
+                    --lastDigit;
+                if (lastDigit != baseName.Length)
+                {
+                    namesTried = int.Parse(baseName.Substring(lastDigit)) + 1;
+                    baseName = baseName.Substring(0, lastDigit);
+                }
+            }
 
             // Find unique name.
             while (!nameIsUnique)
@@ -130,7 +303,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     var existingName = getNameFunc(existing);
                     if (existingName.ToLower() == nameLowerCase)
                     {
-                        name = string.Format("{0}{1}", baseName, namesTried);
+                        name = $"{baseName}{namesTried}";
                         nameLowerCase = name.ToLower();
                         nameIsUnique = false;
                         ++namesTried;
@@ -147,9 +320,9 @@ namespace UnityEngine.Experimental.Input.Utilities
             char separator)
         {
             if (firstList == null)
-                throw new ArgumentNullException("firstList");
+                throw new ArgumentNullException(nameof(firstList));
             if (secondList == null)
-                throw new ArgumentNullException("secondList");
+                throw new ArgumentNullException(nameof(secondList));
 
             // Go element by element through firstList and try to find a matching
             // element in secondList.
@@ -236,13 +409,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         ////TODO: this should use UTF-8 and not UTF-16
 
-        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize)
+        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters)
         {
             uint offset = 0;
-            return WriteStringToBuffer(text, buffer, bufferSize, ref offset);
+            return WriteStringToBuffer(text, buffer, bufferSizeInCharacters, ref offset);
         }
 
-        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize, ref uint offset)
+        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSizeInCharacters, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
                 throw new ArgumentNullException("buffer");
@@ -252,7 +425,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 throw new ArgumentException(string.Format("String exceeds max size of {0} characters", ushort.MaxValue), "text");
 
             var endOffset = offset + sizeof(char) * length + sizeof(int);
-            if (endOffset > bufferSize)
+            if (endOffset > bufferSizeInCharacters)
                 return false;
 
             var ptr = ((byte*)buffer) + offset;
@@ -275,7 +448,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public static unsafe string ReadStringFromBuffer(IntPtr buffer, int bufferSize, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset + sizeof(int) > bufferSize)
                 return null;
@@ -295,6 +468,12 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             offset = (uint)endOffset;
             return text;
+        }
+
+        public static bool IsPrintable(this char ch)
+        {
+            // This is crude and far from how Unicode defines printable but it should serve as a good enough approximation.
+            return !char.IsControl(ch) && !char.IsWhiteSpace(ch);
         }
     }
 }

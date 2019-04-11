@@ -1,12 +1,15 @@
 using System;
+using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: should bindings have unique IDs, too? maybe instead of "name"?
-
 ////REVIEW: do we really need overridable processors and interactions?
 
-////REVIEW: do we really need "name"?
+// Downsides to the current approach:
+// - Being able to address entire batches of controls through a single control is awesome. Especially
+//   when combining it type-kind of queries (e.g. "<MyDevice>/<Button>"). However, it complicates things
+//   in quite a few areas. There's quite a few bits in InputActionState that could be simplified if a
+//   binding simply maps to a control.
 
 namespace UnityEngine.Experimental.Input
 {
@@ -42,8 +45,23 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string name
         {
-            get { return m_Name; }
-            set { m_Name = value; }
+            get => m_Name;
+            set => m_Name = value;
+        }
+
+        public Guid id
+        {
+            get
+            {
+                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
+                    m_Guid = new Guid(m_Id);
+                return m_Guid;
+            }
+            set
+            {
+                m_Guid = value;
+                m_Id = m_Guid.ToString();
+            }
         }
 
         /// <summary>
@@ -60,8 +78,8 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public string path
         {
-            get { return m_Path; }
-            set { m_Path = value; }
+            get => m_Path;
+            set => m_Path = value;
         }
 
         /// <summary>
@@ -73,8 +91,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string overridePath
         {
-            get { return m_OverridePath; }
-            set { m_OverridePath = value; }
+            get => m_OverridePath;
+            set => m_OverridePath = value;
         }
 
         /// <summary>
@@ -87,14 +105,14 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public string interactions
         {
-            get { return m_Interactions; }
-            set { m_Interactions = value; }
+            get => m_Interactions;
+            set => m_Interactions = value;
         }
 
         public string overrideInteractions
         {
-            get { return m_OverrideInteractions; }
-            set { m_OverrideInteractions = value; }
+            get => m_OverrideInteractions;
+            set => m_OverrideInteractions = value;
         }
 
         /// <summary>
@@ -105,14 +123,14 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public string processors
         {
-            get { return m_Processors; }
-            set { m_Processors = value; }
+            get => m_Processors;
+            set => m_Processors = value;
         }
 
         public string overrideProcessors
         {
-            get { return m_OverrideProcessors; }
-            set { m_OverrideProcessors = value; }
+            get => m_OverrideProcessors;
+            set => m_OverrideProcessors = value;
         }
 
         // Optional group name. This can be used, for example, to divide bindings into
@@ -137,12 +155,12 @@ namespace UnityEngine.Experimental.Input
         //       mark up every single use of the interaction ...
         public string groups
         {
-            get { return m_Groups; }
-            set { m_Groups = value; }
+            get => m_Groups;
+            set => m_Groups = value;
         }
 
         /// <summary>
-        /// Name of the action triggered by the binding.
+        /// Name or ID of the action triggered by the binding.
         /// </summary>
         /// <remarks>
         /// This is null if the binding does not trigger an action.
@@ -150,42 +168,18 @@ namespace UnityEngine.Experimental.Input
         /// For InputBindings that are used as filters, this can be a "mapName/actionName" combination
         /// or "mapName/*" to match all actions in the given map.
         /// </remarks>
+        /// <seealso cref="InputAction.name"/>
+        /// <seealso cref="InputAction.id"/>
         public string action
         {
-            get { return m_Action; }
-            set { m_Action = value; }
+            get => m_Action;
+            set => m_Action = value;
         }
 
-        [SerializeField] private string m_Name;
-        [SerializeField] private string m_Path;
-        [SerializeField] private string m_Interactions;
-        [SerializeField] private string m_Processors;
-        [SerializeField] private string m_Groups;
-        [SerializeField] private string m_Action;
-        [SerializeField] internal Flags m_Flags;
-
-        [NonSerialized] private string m_OverridePath;
-        [NonSerialized] private string m_OverrideInteractions;
-        [NonSerialized] private string m_OverrideProcessors;
-
-        internal string effectivePath
+        ////TODO: make public when chained bindings are implemented fully
+        internal bool chainWithPrevious
         {
-            get { return overridePath ?? path; }
-        }
-
-        internal string effectiveInteractions
-        {
-            get { return overrideInteractions ?? interactions; }
-        }
-
-        internal string effectiveProcessors
-        {
-            get { return overrideProcessors ?? processors; }
-        }
-
-        public bool chainWithPrevious
-        {
-            get { return (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine; }
+            get => (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine;
             set
             {
                 if (value)
@@ -197,7 +191,7 @@ namespace UnityEngine.Experimental.Input
 
         public bool isComposite
         {
-            get { return (m_Flags & Flags.Composite) == Flags.Composite; }
+            get => (m_Flags & Flags.Composite) == Flags.Composite;
             set
             {
                 if (value)
@@ -209,7 +203,7 @@ namespace UnityEngine.Experimental.Input
 
         public bool isPartOfComposite
         {
-            get { return (m_Flags & Flags.PartOfComposite) == Flags.PartOfComposite; }
+            get => (m_Flags & Flags.PartOfComposite) == Flags.PartOfComposite;
             set
             {
                 if (value)
@@ -219,14 +213,42 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        internal bool isEmpty
+        public void GenerateId()
         {
-            get
-            {
-                return string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
-                    string.IsNullOrEmpty(groups);
-            }
+            m_Guid = Guid.NewGuid();
+            m_Id = m_Guid.ToString();
         }
+
+        public static InputBinding MaskByGroup(string group)
+        {
+            if (string.IsNullOrEmpty(group))
+                throw new ArgumentNullException(nameof(group));
+
+            return new InputBinding {groups = group};
+        }
+
+        [SerializeField] private string m_Name;
+        [SerializeField] internal string m_Id;
+        [SerializeField] private string m_Path;
+        [SerializeField] private string m_Interactions;
+        [SerializeField] private string m_Processors;
+        [SerializeField] private string m_Groups;
+        [SerializeField] private string m_Action;
+        [SerializeField] internal Flags m_Flags;
+
+        [NonSerialized] private string m_OverridePath;
+        [NonSerialized] private string m_OverrideInteractions;
+        [NonSerialized] private string m_OverrideProcessors;
+        ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
+        [NonSerialized] private Guid m_Guid;
+
+        internal string effectivePath => overridePath ?? path;
+        internal string effectiveInteractions => overrideInteractions ?? interactions;
+        internal string effectiveProcessors => overrideProcessors ?? processors;
+
+        internal bool isEmpty =>
+            string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
+            string.IsNullOrEmpty(groups);
 
         public bool Equals(InputBinding other)
         {
@@ -268,6 +290,33 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+
+            // Add action.
+            if (!string.IsNullOrEmpty(action))
+            {
+                builder.Append(action);
+                builder.Append(':');
+            }
+
+            // Add path.
+            var path = effectivePath;
+            if (!string.IsNullOrEmpty(path))
+                builder.Append(path);
+
+            // Add groups.
+            if (!string.IsNullOrEmpty(groups))
+            {
+                builder.Append('[');
+                builder.Append(groups);
+                builder.Append(']');
+            }
+
+            return builder.ToString();
+        }
+
         ////TODO: also support matching by name (taking the binding tree into account so that components
         ////      of composites can be referenced through their parent)
 
@@ -286,6 +335,7 @@ namespace UnityEngine.Experimental.Input
             {
                 ////TODO: handle "map/action" format
                 ////TODO: handle "map/*" format
+                ////REVIEW: this will not be able to handle cases where one binding references an action by ID and the other by name but both do mean the same action
                 if (other.action == null
                     || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, kSeparator))
                     return false;
@@ -298,12 +348,20 @@ namespace UnityEngine.Experimental.Input
                     return false;
             }
 
+            if (!string.IsNullOrEmpty(m_Id))
+            {
+                if (other.id != id)
+                    return false;
+            }
+
             return true;
         }
 
         [Flags]
         internal enum Flags
         {
+            None = 0,
+
             /// <summary>
             /// This and the next binding in the list combine such that both need to be
             /// triggered to trigger the associated action.

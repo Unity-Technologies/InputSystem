@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using UnityEngine.Experimental.Input.Editor;
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -12,6 +14,7 @@ namespace UnityEngine.Experimental.Input
     {
         [SerializeField] public InputSystem.State systemState;
         [SerializeField] public bool newInputBackendsCheckedAsEnabled;
+        [SerializeField] public string settings;
 
         public void OnBeforeSerialize()
         {
@@ -21,6 +24,7 @@ namespace UnityEngine.Experimental.Input
             systemState.remoteConnection = InputSystem.s_RemoteConnection;
             systemState.managerState = InputSystem.s_Manager.SaveState();
             systemState.remotingState = InputSystem.s_Remote.SaveState();
+            systemState.userSettings = InputEditorUserSettings.s_Settings;
         }
 
         public void OnAfterDeserialize()

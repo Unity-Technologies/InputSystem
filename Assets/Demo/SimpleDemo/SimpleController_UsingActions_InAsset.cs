@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 
 // Use action set asset instead of lose InputActions directly on component.
@@ -11,7 +12,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     public float jumpForce = 2.0f;
     public GameObject projectile;
 
-    public SimpleControls controls;
+    private SimpleControls controls;
 
     private Vector2 m_Move;
     private Vector2 m_Look;
@@ -21,8 +22,15 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     private Rigidbody m_Rigidbody;
 
     private void Start()
-    {
+    {		
         m_Rigidbody = GetComponent<Rigidbody>();
+
+        ////FIXME: Solve this properly. ATM, if we have both fixed and dynamic updates enabled, then
+        ////       we run into problems as actions will fire in updates while the actual processing of input
+        ////       happens in Update(). So, if we're looking at m_Look, for example, we will see mouse deltas
+        ////       on it but then also see the deltas get reset between updates meaning that most of the time
+        ////       Update() will end up with a zero m_Look vector.
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly;
     }
 
     void OnCollisionStay()
@@ -32,8 +40,11 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     public void Awake()
     {
+		controls = new SimpleControls();
         controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
+        controls.gameplay.move.cancelled += ctx => m_Move = Vector2.zero;
+        controls.gameplay.look.cancelled += ctx => m_Look = Vector2.zero;
 
         controls.gameplay.fire.performed +=
             ctx =>

@@ -3,11 +3,17 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.Plugins.XR;
+
+////TODO: runtime remapping of usages on a per-device basis
+
+////TODO: finer-grained control over what devices deliver input while running in background
+////      (e.g. get gamepad input but do *not* get mouse and keyboard input)
 
 ////REVIEW: should be possible to completely hijack the input stream of a device such that its original input is suppressed
 
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
-////        the heap objects of devices he doesn't use?
+////        the heap objects of devices that aren't used?
 
 // per device functions:
 //  - update/poll
@@ -35,6 +41,7 @@ namespace UnityEngine.Experimental.Input
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;
+        public const int kLocalParticipantId = 0;
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
@@ -44,24 +51,7 @@ namespace UnityEngine.Experimental.Input
         /// The description of a device is unchanging over its lifetime and does not
         /// comprise data about a device's configuration (which is considered mutable).
         /// </remarks>
-        public InputDeviceDescription description
-        {
-            get { return m_Description; }
-        }
-
-        ////TODO: kill this and leave this entirely to user management
-        /// <summary>
-        /// The user currently associated with the input device or null if no user is.
-        /// </summary>
-        public string userId
-        {
-            get
-            {
-                RefreshConfigurationIfNeeded();
-                return m_UserId;
-            }
-            protected set { m_UserId = value; }
-        }
+        public InputDeviceDescription description => m_Description;
 
         ////REVIEW: this might be useful even at the control level
         /// <summary>
@@ -113,6 +103,29 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// If true, the device is capable of delivering input while the application is running in the background.
+        /// </summary>
+        /// <remarks>
+        /// Note that by default, even if capable of doing so, devices will not generate input while the application is not
+        /// focused. To enable the behavior, use <see cref="InputSettings.runInBackground"/>.
+        /// </remarks>
+        /// <seealso cref="InputSettings.runInBackground"/>
+        public bool canRunInBackground
+        {
+            get
+            {
+#if UNITY_2019_1_OR_NEWER
+                var command = QueryCanRunInBackground.Create();
+                if (ExecuteCommand(ref command) >= 0)
+                {
+                    return command.canRunInBackground;
+                }
+#endif
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Whether the device has been added to the system.
         /// </summary>
         /// <remarks>
@@ -125,10 +138,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <seealso cref="InputSystem.AddDevice(InputDevice)"/>
         /// <seealso cref="InputSystem.devices"/>
-        public bool added
-        {
-            get { return m_DeviceIndex != kInvalidDeviceIndex; }
-        }
+        public bool added => m_DeviceIndex != kInvalidDeviceIndex;
 
         /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
@@ -136,10 +146,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <seealso cref="InputSystem.remoting"/>
         /// <seealso cref="InputRemoting"/>
-        public bool remote
-        {
-            get { return (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote; }
-        }
+        public bool remote => (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote;
 
         /// <summary>
         /// Whether the device comes from the <see cref="IInputRuntime">runtime</see>
@@ -154,10 +161,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <seealso cref="IInputRuntime"/>
         /// <seealso cref="IInputRuntime.onDeviceDiscovered"/>
-        public bool native
-        {
-            get { return (m_DeviceFlags & DeviceFlags.Native) == DeviceFlags.Native; }
-        }
+        public bool native => (m_DeviceFlags & DeviceFlags.Native) == DeviceFlags.Native;
 
         /// <summary>
         /// Whether the device requires an extra update before rendering.
@@ -171,10 +175,7 @@ namespace UnityEngine.Experimental.Input
         /// beginning of the frame will lead to a noticeable lag.
         /// </remarks>
         /// <seealso cref="InputUpdateType.BeforeRender"/>
-        public bool updateBeforeRender
-        {
-            get { return (m_DeviceFlags & DeviceFlags.UpdateBeforeRender) == DeviceFlags.UpdateBeforeRender; }
-        }
+        public bool updateBeforeRender => (m_DeviceFlags & DeviceFlags.UpdateBeforeRender) == DeviceFlags.UpdateBeforeRender;
 
         /// <summary>
         /// Unique numeric ID for the device.
@@ -186,10 +187,7 @@ namespace UnityEngine.Experimental.Input
         /// IDs are assigned by the input runtime.
         /// </remarks>
         /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
-        public int id
-        {
-            get { return m_Id; }
-        }
+        public int id => m_Id;
 
         /// <summary>
         /// Timestamp of last state event used to update the device.
@@ -198,20 +196,17 @@ namespace UnityEngine.Experimental.Input
         /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
         /// not cause lastUpdateTime to be changed.
         /// </remarks>
-        public double lastUpdateTime
-        {
-            get { return m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
-        }
+        public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         public bool wasUpdatedThisFrame
         {
             get
             {
-                var updateType = InputUpdate.lastUpdateType;
+                var updateType = InputUpdate.s_LastUpdateType;
                 if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.BeforeRender)
-                    return m_CurrentDynamicUpdateCount == InputUpdate.dynamicUpdateCount;
+                    return m_CurrentDynamicUpdateCount == InputUpdate.s_DynamicUpdateCount;
                 if (updateType == InputUpdateType.Fixed)
-                    return m_CurrentFixedUpdateCount == InputUpdate.fixedUpdateCount;
+                    return m_CurrentFixedUpdateCount == InputUpdate.s_FixedUpdateCount;
 
                 ////REVIEW: how should this behave in the editor
                 return false;
@@ -236,34 +231,36 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public override Type valueType
-        {
-            get { return typeof(byte[]); }
-        }
+        ////REVIEW: This violates the constraint of controls being required to not have reference types as value types.
+        public override Type valueType => typeof(byte[]);
 
-        public override int valueSizeInBytes
-        {
-            get { return (int)m_StateBlock.alignedSizeInBytes; }
-        }
-
-        public InputNoiseFilter userInteractionFilter
-        {
-            get
-            {
-                return m_UserInteractionFilter;
-            }
-            set
-            {
-                m_UserInteractionFilter.Reset(this);
-                m_UserInteractionFilter = value;
-                m_UserInteractionFilter.Apply(this);
-            }
-        }
+        public override int valueSizeInBytes => (int)m_StateBlock.alignedSizeInBytes;
 
         /// <summary>
-        /// Return the current state of the device as byte array.
+        /// Return all input devices currently added to the system.
         /// </summary>
-        public override unsafe object ReadValueAsObject()
+        /// <remarks>
+        /// This is equivalent to <see cref="InputSystem.devices"/>.
+        /// </remarks>
+        public static ReadOnlyArray<InputDevice> all => InputSystem.devices;
+
+        // This has to be public for Activator.CreateInstance() to be happy.
+        public InputDevice()
+        {
+            m_Id = kInvalidDeviceId;
+            m_ParticipantId = kLocalParticipantId;
+            m_DeviceIndex = kInvalidDeviceIndex;
+        }
+
+        ////REVIEW: Is making devices be byte[] values really all that useful? Seems better than returning nulls but
+        ////        at the same time, seems questionable.
+
+        public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {
             if (m_DeviceIndex == kInvalidDeviceIndex)
                 return null;
@@ -272,37 +269,39 @@ namespace UnityEngine.Experimental.Input
             var array = new byte[numBytes];
             fixed(byte* arrayPtr = array)
             {
-                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
+                var adjustedStatePtr = (byte*)statePtr + m_StateBlock.byteOffset;
+                UnsafeUtility.MemCpy(arrayPtr, adjustedStatePtr, numBytes);
             }
 
             return array;
         }
 
-        public override object ReadDefaultValueAsObject()
+        public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
-            throw new NotImplementedException();
+            if (statePtr == null)
+                throw new ArgumentNullException("statePtr");
+            if (bufferPtr == null)
+                throw new ArgumentNullException("bufferPtr");
+            if (bufferSize < valueSizeInBytes)
+                throw new ArgumentException(string.Format("Buffer tool small (expected: {0}, actual: {1}",
+                    valueSizeInBytes, bufferSize));
+
+            var adjustedStatePtr = (byte*)statePtr + m_StateBlock.byteOffset;
+            UnsafeUtility.MemCpy(bufferPtr, adjustedStatePtr, m_StateBlock.alignedSizeInBytes);
         }
 
-        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
-            throw new NotImplementedException();
-        }
+            if (firstStatePtr == null)
+                throw new ArgumentNullException("firstStatePtr");
+            if (secondStatePtr == null)
+                throw new ArgumentNullException("secondStatePtr");
 
-        public override unsafe void WriteValueInto(void* buffer, int bufferSize)
-        {
-            throw new NotImplementedException();
-        }
+            var adjustedFirstStatePtr = (byte*)firstStatePtr + m_StateBlock.byteOffset;
+            var adjustedSecondStatePtr = (byte*)firstStatePtr + m_StateBlock.byteOffset;
 
-        public override bool HasValueChangeIn(IntPtr statePtr)
-        {
-            throw new NotImplementedException();
-        }
-
-        // This has to be public for Activator.CreateInstance() to be happy.
-        public InputDevice()
-        {
-            m_Id = kInvalidDeviceId;
-            m_DeviceIndex = kInvalidDeviceIndex;
+            return UnsafeUtility.MemCmp(adjustedFirstStatePtr, adjustedSecondStatePtr,
+                m_StateBlock.alignedSizeInBytes) == 0;
         }
 
         /// <summary>
@@ -320,6 +319,23 @@ namespace UnityEngine.Experimental.Input
 
             // Make sure we fetch the enabled/disabled state again.
             m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+        }
+
+        /// <summary>
+        /// Make this the current device of its type.
+        /// </summary>
+        /// <remarks>
+        /// Use this to set static properties that give fast access to the latest device used of a given
+        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
+        ///
+        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
+        /// be multiple current working directories, one for each type.
+        ///
+        /// A device will be made current by the system initially when it is created and subsequently whenever
+        /// it receives an event.
+        /// </remarks>
+        public virtual void MakeCurrent()
+        {
         }
 
         protected virtual void OnAdded()
@@ -362,30 +378,21 @@ namespace UnityEngine.Experimental.Input
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
         }
 
-        protected void RefreshUserId()
-        {
-            m_UserId = null;
-            var command = QueryUserIdCommand.Create();
-            if (ExecuteCommand(ref command) > 0)
-                m_UserId = command.ReadId();
-        }
-
         [Flags]
         internal enum DeviceFlags
         {
             UpdateBeforeRender = 1 << 0,
             HasStateCallbacks = 1 << 1,
-            HasNoisyControls = 1 << 2,
-            HasControlsWithDefaultState = 1 << 3,
-            Remote = 1 << 4, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 5, // It's a device created from data surfaced by NativeInputRuntime.
-            Disabled = 1 << 6,
-            DisabledStateHasBeenQueried = 1 << 7, // Whether we have fetched the current enable/disable state from the runtime.
+            HasControlsWithDefaultState = 1 << 2,
+            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
+            Disabled = 1 << 5,
+            DisabledStateHasBeenQueried = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
         }
 
         internal DeviceFlags m_DeviceFlags;
         internal int m_Id;
-        internal string m_UserId;
+        internal int m_ParticipantId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
@@ -417,8 +424,6 @@ namespace UnityEngine.Experimental.Input
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
-
-        internal InputNoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

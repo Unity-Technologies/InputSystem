@@ -1,9 +1,8 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
-
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
+#if UNITY_EDITOR
+using UnityEditor;
 #endif
 
 namespace UnityEngine.Experimental.Input
@@ -17,13 +16,26 @@ namespace UnityEngine.Experimental.Input
     //       be a ScriptableObject as it will register every listeners as a persistent
     //       one.
     [Serializable]
-    internal class RemoteInputPlayerConnection : ScriptableObject, IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
+    internal class RemoteInputPlayerConnection :
+#if UNITY_EDITOR
+        // In the editor, we need to make sure that we get the same instance after domain reloads.
+        // Otherwise, callbacks we have registered before the reload will no longer be valid, because
+        // the object instance they point to will not deserialize to a valid object. So we use a
+        // ScriptableSingleton instance, which fullfills these requirements. In the player, we need to
+        // use a simple ScriptableObject, as ScriptableSingleton is an editor-only class.
+        ScriptableSingleton<RemoteInputPlayerConnection>,
+#else
+        ScriptableObject,
+#endif
+        IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
     {
         public static readonly Guid kNewDeviceMsg = new Guid("fcd9651ded40425995dfa6aeb78f1f1c");
         public static readonly Guid kNewLayoutMsg = new Guid("fccfec2b7369466d88502a9dd38505f4");
         public static readonly Guid kNewEventsMsg = new Guid("34d9b47f923142ff847c0d1f8b0554d9");
         public static readonly Guid kRemoveDeviceMsg = new Guid("e5e299b2d9e44255b8990bb71af8922d");
         public static readonly Guid kChangeUsagesMsg = new Guid("b9fe706dfc854d7ca109a5e38d7db730");
+        public static readonly Guid kStartSendingMsg = new Guid("0d58e99045904672b3ef34b8797d23cb");
+        public static readonly Guid kStopSendingMsg = new Guid("548716b2534a45369ab0c9323fc8b4a8");
 
         public void Bind(IEditorPlayerConnection connection, bool isConnected)
         {
@@ -47,6 +59,9 @@ namespace UnityEngine.Experimental.Input
             connection.Register(kNewEventsMsg, OnNewEvents);
             connection.Register(kRemoveDeviceMsg, OnRemoveDevice);
             connection.Register(kChangeUsagesMsg, OnChangeUsages);
+
+            connection.Register(kStartSendingMsg, OnStartSending);
+            connection.Register(kStopSendingMsg, OnStopSending);
 
             m_Connection = connection;
 
@@ -115,6 +130,16 @@ namespace UnityEngine.Experimental.Input
             SendToSubscribers(InputRemoting.MessageType.ChangeUsages, args);
         }
 
+        private void OnStartSending(MessageEventArgs args)
+        {
+            SendToSubscribers(InputRemoting.MessageType.StartSending, args);
+        }
+
+        private void OnStopSending(MessageEventArgs args)
+        {
+            SendToSubscribers(InputRemoting.MessageType.StopSending, args);
+        }
+
         private void SendToSubscribers(InputRemoting.MessageType type, MessageEventArgs args)
         {
             if (m_Subscribers == null)
@@ -167,7 +192,7 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
-        [NonSerialized] private IEditorPlayerConnection m_Connection;
+        [SerializeField] private IEditorPlayerConnection m_Connection;
         [NonSerialized] private Subscriber[] m_Subscribers;
         [SerializeField] private int[] m_ConnectedIds;
 

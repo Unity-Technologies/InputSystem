@@ -1,8 +1,7 @@
-using System;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
-////REVEW: expose euler angle subcontrols?
+////REVIEW: expose euler angle subcontrols?
 
 namespace UnityEngine.Experimental.Input.Controls
 {
@@ -34,18 +33,18 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Quaternion ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Quaternion(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr),
-                w.ReadUnprocessedValueFrom(statePtr));
+            return new Quaternion(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr), z.ReadValueFromState(statePtr),
+                w.ReadUnprocessedValueFromState(statePtr));
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Quaternion value)
+        public override unsafe void WriteValueIntoState(Quaternion value, void* statePtr)
         {
-            x.WriteValueInto(statePtr, value.x);
-            y.WriteValueInto(statePtr, value.y);
-            z.WriteValueInto(statePtr, value.z);
-            w.WriteValueInto(statePtr, value.w);
+            x.WriteValueIntoState(value.x, statePtr);
+            y.WriteValueIntoState(value.y, statePtr);
+            z.WriteValueIntoState(value.z, statePtr);
+            w.WriteValueIntoState(value.w, statePtr);
         }
     }
 }

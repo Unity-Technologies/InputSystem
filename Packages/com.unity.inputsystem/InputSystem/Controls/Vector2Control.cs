@@ -37,14 +37,6 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeVector2;
         }
 
-        public override bool HasSignificantChange(InputEventPtr eventPtr)
-        {
-            Vector2 value;
-            if (ReadValueFrom(eventPtr, out value))
-                return Vector2.SqrMagnitude(value - ReadDefaultValue()) > float.Epsilon;
-            return false;
-        }
-
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             x = builder.GetControl<AxisControl>(this, "x");
@@ -52,21 +44,21 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector2 ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector2(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr));
+            return new Vector2(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr));
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector2 value)
+        public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            x.WriteValueInto(statePtr, value.x);
-            y.WriteValueInto(statePtr, value.y);
+            x.WriteValueIntoState(value.x, statePtr);
+            y.WriteValueIntoState(value.y, statePtr);
         }
 
-        public override float EvaluateMagnitude(IntPtr statePtr)
+        public override unsafe float EvaluateMagnitude(void* statePtr)
         {
             ////REVIEW: this can go beyond 1; that okay?
-            return ReadValueFrom(statePtr).magnitude;
+            return ReadValueFromState(statePtr).magnitude;
         }
     }
 }

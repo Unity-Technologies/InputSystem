@@ -3,9 +3,8 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 {
@@ -17,8 +16,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         Gyroscope = 4,
         Light = 5,
         Pressure = 6,
-        Proximity = 8,
         Temperature = 7,            // Was deprecated in API 14 https://developer.android.com/reference/android/hardware/Sensor#TYPE_TEMPERATURE
+        Proximity = 8,
         Gravity = 9,
         LinearAcceleration = 10,
         RotationVector = 11,
@@ -32,6 +31,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         StepCounter = 19,
         GeomagneticRotationVector = 20,
         HeartRate = 21,
+        Pose6DOF = 28,
+        StationaryDetect = 29,
+        MotionDetect = 30,
+        HeartBeat = 31,
+        LowLatencyOffBodyDetect = 34,
+        AccelerometerUncalibrated = 35,
     }
 
     [Serializable]
@@ -47,13 +52,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         public static AndroidSensorCapabilities FromJson(string json)
         {
             if (json == null)
-                throw new ArgumentNullException("json");
+                throw new ArgumentNullException(nameof(json));
             return JsonUtility.FromJson<AndroidSensorCapabilities>(json);
         }
 
         public override string ToString()
         {
-            return string.Format("type = {0}", sensorType.ToString());
+            return $"type = {sensorType.ToString()}";
         }
     }
 
@@ -80,7 +85,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Accelerometer")]
         [InputControl(name = "magneticField", layout = "Vector3", variants = "MagneticField")]
-        [InputControl(name = "angularVelocity", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Gyroscope")]
+        // Note: Using CompensateDirection instead of AndroidCompensateDirection, because we don't need to normalize velocity
+        [InputControl(name = "angularVelocity", layout = "Vector3", processors = "CompensateDirection", variants = "Gyroscope")]
         [InputControl(name = "lightLevel", layout = "Axis", variants = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Axis", variants = "Pressure")]
         [InputControl(name = "distance", layout = "Axis", variants = "Proximity")]
@@ -115,22 +121,22 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
+    internal class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
-        // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
+        // Taken from platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public override Vector3 Process(Vector3 vector, InputControl control)
+        public override Vector3 Process(Vector3 vector, InputControl<Vector3> control)
         {
             return base.Process(vector * kAccelerationMultiplier, control);
         }
     }
 
-    public class AndroidCompensateRotationProcessor : CompensateRotationProcessor
+    internal class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
-        public override Quaternion Process(Quaternion value, InputControl control)
+        public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
         {
             // https://developer.android.com/reference/android/hardware/SensorEvent#values
             // "...The rotation vector represents the orientation of the device as a combination of an angle and an axis, in which the device has rotated through an angle theta around an axis <x, y, z>."
@@ -138,7 +144,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
             // "...The three elements of the rotation vector are equal to the last three components of a unit quaternion < cos(theta / 2), x* sin(theta/ 2), y* sin(theta / 2), z* sin(theta/ 2)>."
             //
             // In other words, axis + rotation is combined into Vector3, to recover the quaternion from it, we must compute 4th component as 1 - sqrt(x*x + y*y + z*z)
-            float sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
+            var sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
             value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
 
             return base.Process(value, control);
@@ -148,134 +154,64 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
     public class AndroidAccelerometer : Accelerometer
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField")]
-    public class AndroidMagneticField : Sensor
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField", hideInUI = true)]
+    public class AndroidMagneticFieldSensor : MagneticFieldSensor
     {
-        /// <summary>
-        /// All values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
-        /// </summary>
-        public Vector3Control magneticField { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            magneticField = builder.GetControl<Vector3Control>("magneticField");
-            base.FinishSetup(builder);
-        }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope", hideInUI = true)]
     public class AndroidGyroscope : Gyroscope
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light")]
-    public class AndroidLight : Sensor
-    {
-        /// <summary>
-        /// Light level in SI lux units
-        /// </summary>
-        public AxisControl lightLevel { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            lightLevel = builder.GetControl<AxisControl>("lightLevel");
-            base.FinishSetup(builder);
-        }
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure")]
-    public class AndroidPressure : Sensor
-    {
-        /// <summary>
-        /// Atmospheric pressure in hPa (millibar)
-        /// </summary>
-        public AxisControl atmosphericPressure { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            atmosphericPressure = builder.GetControl<AxisControl>("atmosphericPressure");
-            base.FinishSetup(builder);
-        }
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity")]
-    public class AndroidProximity : Sensor
-    {
-        /// <summary>
-        /// Proximity sensor distance measured in centimeters
-        /// </summary>
-        public AxisControl distance { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            distance = builder.GetControl<AxisControl>("distance");
-            base.FinishSetup(builder);
-        }
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity")]
-    public class AndroidGravity : Gravity
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light", hideInUI = true)]
+    public class AndroidLightSensor : LightSensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration")]
-    public class AndroidLinearAcceleration : LinearAcceleration
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure", hideInUI = true)]
+    public class AndroidPressureSensor : PressureSensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector")]
-    public class AndroidRotationVector : Attitude
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity", hideInUI = true)]
+    public class AndroidProximity : ProximitySensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity")]
-    public class AndroidRelativeHumidity : Sensor
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity", hideInUI = true)]
+    public class AndroidGravitySensor : GravitySensor
     {
-        /// <summary>
-        /// Relative ambient air humidity in percent
-        /// </summary>
-        public AxisControl relativeHumidity { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            relativeHumidity = builder.GetControl<AxisControl>("relativeHumidity");
-            base.FinishSetup(builder);
-        }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature")]
-    public class AndroidAmbientTemperature : Sensor
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration", hideInUI = true)]
+    public class AndroidLinearAccelerationSensor : LinearAccelerationSensor
     {
-        /// <summary>
-        /// Ambient (room) temperature in degree Celsius.
-        /// </summary>
-        public AxisControl ambientTemperature { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            ambientTemperature = builder.GetControl<AxisControl>("ambientTemperature");
-            base.FinishSetup(builder);
-        }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter")]
-    public class AndroidStepCounter : Sensor
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector", hideInUI = true)]
+    public class AndroidRotationVector : AttitudeSensor
     {
-        /// <summary>
-        /// The number of steps taken by the user since the last reboot while activated.
-        /// </summary>
-        public IntegerControl stepCounter { get; private set; }
+    }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            stepCounter = builder.GetControl<IntegerControl>("stepCounter");
-            base.FinishSetup(builder);
-        }
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity", hideInUI = true)]
+    public class AndroidRelativeHumidity : HumiditySensor
+    {
+    }
+
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature", hideInUI = true)]
+    public class AndroidAmbientTemperature : AmbientTemperatureSensor
+    {
+    }
+
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter", hideInUI = true)]
+    public class AndroidStepCounter : StepCounter
+    {
     }
 }
 

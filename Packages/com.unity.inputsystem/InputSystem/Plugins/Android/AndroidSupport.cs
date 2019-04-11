@@ -38,6 +38,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
     ""extend"" : ""AndroidGamepad"",
+    ""hideInUI"" : true,
     ""controls"" : [
     " + kDpadHatSettings + @"
     ]
@@ -47,6 +48,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     ""name"" : ""AndroidGamepadWithDpadButtons"",
     ""extend"" : ""AndroidGamepad"",
+    ""hideInUI"" : true,
     ""controls"" : [
         { ""name"" : ""dpad"", ""offset"" : 0, ""bit"" : 19, ""sizeInBits"" : 4 },
         { ""name"" : ""dpad/left"", ""bit"" : 21 },
@@ -62,6 +64,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {{
     ""name"" : ""AndroidGamepadXboxController"",
     ""extend"" : ""AndroidGamepad"",
+    ""displayName"" : ""Android Xbox Gamepad"",
     ""controls"" : [
         {0},
         {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {1}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{4}"" }},
@@ -82,6 +85,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {{
     ""name"" : ""AndroidGamepadDualShock"",
     ""extend"" : ""AndroidGamepad"",
+    ""displayName"" : ""Android PS4 Gamepad"",
     ""controls"" : [
         {0},
         {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
@@ -115,7 +119,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Accelerometer));
-            InputSystem.RegisterLayout<AndroidMagneticField>(
+            InputSystem.RegisterLayout<AndroidMagneticFieldSensor>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
@@ -125,12 +129,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Gyroscope));
-            InputSystem.RegisterLayout<AndroidLight>(
+            InputSystem.RegisterLayout<AndroidLightSensor>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Light));
-            InputSystem.RegisterLayout<AndroidPressure>(
+            InputSystem.RegisterLayout<AndroidPressureSensor>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
@@ -140,12 +144,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Proximity));
-            InputSystem.RegisterLayout<AndroidGravity>(
+            InputSystem.RegisterLayout<AndroidGravitySensor>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.Gravity));
-            InputSystem.RegisterLayout<AndroidLinearAcceleration>(
+            InputSystem.RegisterLayout<AndroidLinearAccelerationSensor>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")

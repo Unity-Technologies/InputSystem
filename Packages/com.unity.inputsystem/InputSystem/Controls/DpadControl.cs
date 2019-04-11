@@ -15,15 +15,36 @@ namespace UnityEngine.Experimental.Input.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
-    public class DpadControl : InputControl<Vector2>
+    public class DpadControl : Vector2Control
     {
-        public enum ButtonBits
+        [InputControlLayout(hideInUI = true)]
+        internal class DpadAxisControl : AxisControl
         {
-            Up,
-            Down,
-            Left,
-            Right,
+            public int component;
+
+            protected override void FinishSetup(InputDeviceBuilder builder)
+            {
+                base.FinishSetup(builder);
+                component = name == "x" ? 0 : 1;
+
+                // Set the state block to be the parent's state block. We don't use that to read
+                // the axis directly (we call the parent control to do that), but we need to set
+                // it up the actions know to monitor this memory for changes to the control.
+                m_StateBlock = m_Parent.m_StateBlock;
+            }
+
+            public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
+            {
+                var value = (m_Parent as DpadControl).ReadUnprocessedValueFromState(statePtr);
+                return value[component];
+            }
         }
+
+        // The DpadAxisControl has it's own logic to read state from the parent dpad.
+        // The useStateFrom argument here is not actually used by that. The only reason
+        // it is set up here is to avoid any state bytes being reserved for the DpadAxisControl.
+        [InputControl(name = "x", layout = "DpadAxis", useStateFrom = "right", synthetic = true)]
+        [InputControl(name = "y", layout = "DpadAxis", useStateFrom = "up", synthetic = true)]
 
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
@@ -66,25 +87,17 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override bool HasSignificantChange(InputEventPtr eventPtr)
+        public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            Vector2 value;
-            if (ReadValueFrom(eventPtr, out value))
-                return Vector2.SqrMagnitude(value - ReadDefaultValue()) > float.Epsilon;
-            return false;
-        }
-
-        public override Vector2 ReadUnprocessedValueFrom(IntPtr statePtr)
-        {
-            var upIsPressed = up.ReadValueFrom(statePtr) >= up.pressPointOrDefault;
-            var downIsPressed = down.ReadValueFrom(statePtr) >= down.pressPointOrDefault;
-            var leftIsPressed = left.ReadValueFrom(statePtr) >= left.pressPointOrDefault;
-            var rightIsPressed = right.ReadValueFrom(statePtr) >= right.pressPointOrDefault;
+            var upIsPressed = up.ReadValueFromState(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFromState(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFromState(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFromState(statePtr) >= right.pressPointOrDefault;
 
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
-        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector2 value)
+        public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
             throw new NotImplementedException();
         }
@@ -117,6 +130,14 @@ namespace UnityEngine.Experimental.Input.Controls
             }
 
             return result;
+        }
+
+        internal enum ButtonBits
+        {
+            Up,
+            Down,
+            Left,
+            Right,
         }
     }
 }

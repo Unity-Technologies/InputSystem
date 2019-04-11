@@ -20,10 +20,7 @@ namespace UnityEngine.Experimental.Input.Controls
     public class ButtonControl : AxisControl
     {
         public float pressPoint;
-        public float pressPointOrDefault
-        {
-            get { return pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint; }
-        }
+        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         public ButtonControl()
         {
@@ -37,19 +34,10 @@ namespace UnityEngine.Experimental.Input.Controls
             return value >= pressPointOrDefault;
         }
 
-        public bool isPressed
-        {
-            get { return IsValueConsideredPressed(ReadValue()); }
-        }
+        public bool isPressed => IsValueConsideredPressed(ReadValue());
 
-        public bool wasJustPressed
-        {
-            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadPreviousValue()); }
-        }
+        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
-        public bool wasJustReleased
-        {
-            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadPreviousValue()); }
-        }
+        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
     }
 }

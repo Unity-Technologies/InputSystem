@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngineInternal.Input;
 
 ////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
 
@@ -20,19 +21,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public const int kInvalidId = 0;
         public const int kAlignment = 4;
 
-        [FieldOffset(0)] private FourCC m_Type;
-        [FieldOffset(4)] private ushort m_SizeInBytes;
-        [FieldOffset(6)] private ushort m_DeviceId;
-        [FieldOffset(8)] internal uint m_EventId;
-        [FieldOffset(12)] private double m_Time;
+        [FieldOffset(0)]
+        private NativeInputEvent m_Event;
 
         /// <summary>
         /// Type code for the event.
         /// </summary>
         public FourCC type
         {
-            get { return m_Type; }
-            set { m_Type = value; }
+            get => new FourCC((int)m_Event.type);
+            set => m_Event.type = (NativeInputEventType)(int)value;
         }
 
         /// <summary>
@@ -60,12 +58,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </example>
         public uint sizeInBytes
         {
-            get { return m_SizeInBytes; }
+            get => m_Event.sizeInBytes;
             set
             {
                 if (value > ushort.MaxValue)
-                    throw new ArgumentException("Maximum event size is " + ushort.MaxValue, "value");
-                m_SizeInBytes = (ushort)value;
+                    throw new ArgumentException("Maximum event size is " + ushort.MaxValue, nameof(value));
+                m_Event.sizeInBytes = (ushort)value;
             }
         }
 
@@ -77,8 +75,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         public int eventId
         {
-            get { return (int)(m_EventId & kIdMask); }
-            set { m_EventId = (uint)value | (m_EventId & ~kIdMask); }
+            get => (int)(m_Event.eventId & kIdMask);
+            set => m_Event.eventId = (int)(value | (int)(m_Event.eventId & ~kIdMask));
         }
 
         /// <summary>
@@ -93,8 +91,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <seealso cref="InputSystem.GetDeviceById"/>
         public int deviceId
         {
-            get { return m_DeviceId; }
-            set { m_DeviceId = (ushort)value; }
+            get => m_Event.deviceId;
+            set => m_Event.deviceId = (ushort)value;
         }
 
         /// <summary>
@@ -106,8 +104,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         public double time
         {
-            get { return m_Time - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
-            set { m_Time = value + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
+            get => m_Event.time - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+            set => m_Event.time = value + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
         }
 
         /// <summary>
@@ -120,17 +118,28 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         internal double internalTime
         {
-            get { return m_Time; }
-            set { m_Time = value; }
+            get => m_Event.time;
+            set => m_Event.time = value;
         }
 
-        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time)
+        static InputEvent()
         {
-            m_Type = type;
-            m_SizeInBytes = (ushort)sizeInBytes;
-            m_DeviceId = (ushort)deviceId;
-            m_Time = time;
-            m_EventId = kInvalidId;
+            unsafe
+            {
+                Debug.Assert(kBaseEventSize == sizeof(NativeInputEvent), "kBaseEventSize sizemust match NativeInputEvent struct size.");
+            }
+        }
+
+        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
+        {
+            if (time < 0)
+                time = InputRuntime.s_Instance.currentTime;
+
+            m_Event.type = (NativeInputEventType)(int)type;
+            m_Event.sizeInBytes = (ushort)sizeInBytes;
+            m_Event.deviceId = (ushort)deviceId;
+            m_Event.time = time;
+            m_Event.eventId = kInvalidId;
         }
 
         // We internally use bits inside m_EventId as flags. IDs are linearly counted up by the
@@ -140,26 +149,60 @@ namespace UnityEngine.Experimental.Input.LowLevel
         //       when they go on the queue makes sense in itself, though, so this is fine.
         public bool handled
         {
-            get { return (m_EventId & kHandledMask) == kHandledMask; }
+            get => (m_Event.eventId & kHandledMask) == kHandledMask;
             set
             {
                 if (value)
-                    m_EventId |= kHandledMask;
+                    m_Event.eventId = (int)(m_Event.eventId | kHandledMask);
                 else
-                    m_EventId &= ~kHandledMask;
+                    m_Event.eventId = (int)(m_Event.eventId & ~kHandledMask);
             }
         }
 
         public override string ToString()
         {
-            return string.Format("id={0} type={1} device={2} size={3} time={4}",
-                eventId, type, deviceId, sizeInBytes, time);
+            return $"id={eventId} type={type} device={deviceId} size={sizeInBytes} time={time}";
         }
 
-        internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
+        /// <summary>
+        /// Get the next event after the given one.
+        /// </summary>
+        /// <param name="currentPtr">A valid event pointer.</param>
+        /// <returns>Pointer to the next event in memory.</returns>
+        /// <remarks>
+        /// This method applies no checks and must only be called if there is an event following the
+        /// given one. Also, the size of the given event must be 100% as the method will simply
+        /// take the size and advance the given pointer by it (and aligning it to <see cref="kAlignment"/>).
+        /// </remarks>
+        /// <seealso cref="GetNextInMemoryChecked"/>
+        internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, kAlignment);
-            return (InputEvent*)((byte*)current + alignedSizeInBytes);
+            Debug.Assert(currentPtr != null);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
+        }
+
+        /// <summary>
+        /// Get the next event after the given one. Throw if that would point to invalid memory as indicated
+        /// by the given memory buffer.
+        /// </summary>
+        /// <param name="currentPtr">A valid event pointer to an event inside <paramref name="buffer"/>.</param>
+        /// <param name="buffer">Event buffer in which to advance to the next event.</param>
+        /// <returns>Pointer to the next event.</returns>
+        /// <exception cref="InvalidOperationException">There are no more events in the given buffer.</exception>
+        internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
+        {
+            Debug.Assert(currentPtr != null);
+            Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
+
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
+
+            if (!buffer.Contains(nextPtr))
+                throw new InvalidOperationException(
+                    $"Event '{new InputEventPtr(currentPtr)}' is last event in given buffer with size {buffer.sizeInBytes}");
+
+            return nextPtr;
         }
     }
 }

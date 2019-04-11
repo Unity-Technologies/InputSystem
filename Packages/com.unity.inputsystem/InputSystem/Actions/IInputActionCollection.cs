@@ -4,11 +4,12 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// A collection of <see cref="InputAction">input actions</see>.
+    /// A collection of input actions (<see cref="InputAction"/>).
     /// </summary>
+    /// <seealso cref="InputActionMap"/>
+    /// <seealso cref="InputActionAsset"/>
     public interface IInputActionCollection : IEnumerable<InputAction>
     {
-        ////REVIEW: remove `bindingMask` and drive everything through `devices`?
         /// <summary>
         /// Optional mask applied to all bindings in the collection.
         /// </summary>
@@ -29,6 +30,14 @@ namespace UnityEngine.Experimental.Input
         /// globally.
         /// </remarks>
         ReadOnlyArray<InputDevice>? devices { get; set; }
+
+        /// <summary>
+        /// List of control schemes defined for the set of actions.
+        /// </summary>
+        /// <remarks>
+        /// Control schemes are optional and the list may be empty.
+        /// </remarks>
+        ReadOnlyArray<InputControlScheme> controlSchemes { get; }
 
         /// <summary>
         /// Check whether the given action is contained in this collection.

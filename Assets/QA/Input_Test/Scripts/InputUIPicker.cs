@@ -5,91 +5,115 @@ using UnityEngine.Experimental.Input;
 
 public class InputUIPicker : MonoBehaviour
 {
-    // Input Gameobjects
+    public Dropdown m_inputPickerDropdown;
+
+    [Header("Input Gameobject")]
     public GameObject m_windowsKeyboardMouse;
     public GameObject m_macKeyboardMouse;
     public GameObject m_controllerDiagram;
     public GameObject m_xboxController;
+    public GameObject m_dualShockController;
+    public GameObject m_joystick;
     public GameObject m_pen;
     public GameObject m_touch;
 
-    public InputAction m_switchToKeyboardMouseAction;
-    public InputAction m_switchToXboxAction;
-    public InputAction m_switchToGamepadDiagramAction;
-    public InputAction m_switchToPenAction;
-    public InputAction m_switchToTouchAction;
+    //[Header("Input Action")]
+    //public InputAction m_switchToKeyboardMouseAction;
+    //public InputAction m_switchToXboxAction;
+    //public InputAction m_switchToGamepadDiagramAction;
+    //public InputAction m_switchToJoystickAction;
+    //public InputAction m_switchToPenAction;
+    //public InputAction m_switchToTouchAction;
 
     // Current displayed diagram
     private GameObject m_currentDisplay;
-    private Keyboard m_currentKeyboard;
 
-    public void Start()
+    void Start()
     {
         SwitchToKeyMouse();
-        m_currentKeyboard = InputSystem.GetDevice<Keyboard>();
+
+        m_inputPickerDropdown.onValueChanged.RemoveAllListeners();
+        m_inputPickerDropdown.onValueChanged.AddListener(delegate { SwitchToInputMethod(m_inputPickerDropdown); });
+
         //m_switchToKeyboardMouseAction.performed += _ => SwitchToInputMethod(0);
         //m_switchToXboxAction.performed += _ => SwitchToInputMethod(1);
         //m_switchToGamepadDiagramAction.performed += _ => SwitchToInputMethod(2);
-        //m_switchToPenAction.performed += _ => SwitchToInputMethod(3);
-        //m_switchToTouchAction.performed += _ => SwitchToInputMethod(4);
+        //m_switchToJoystickAction.performed += _ => SwitchToInputMethod(3);
+        //m_switchToPenAction.performed += _ => SwitchToInputMethod(4);
+        //m_switchToTouchAction.performed += _ => SwitchToInputMethod(5);
     }
 
-    void OnEnable()
-    {
-        //m_switchToKeyboardMouseAction.Enable();
-        //m_switchToXboxAction.Enable();
-        //m_switchToGamepadDiagramAction.Enable();
-        //m_switchToPenAction.Enable();
-        //m_switchToTouchAction.Enable();
-    }
+    //void OnEnable()
+    //{
+    //    m_switchToKeyboardMouseAction.Enable();
+    //    m_switchToXboxAction.Enable();
+    //    m_switchToGamepadDiagramAction.Enable();
+    //    m_switchToJoystickAction.Enable();
+    //    m_switchToPenAction.Enable();
+    //    m_switchToTouchAction.Enable();
+    //}
 
-    void OnDisable()
-    {
-        m_switchToKeyboardMouseAction.Disable();
-        m_switchToXboxAction.Disable();
-        m_switchToGamepadDiagramAction.Disable();
-        m_switchToPenAction.Disable();
-        m_switchToTouchAction.Disable();
-    }
+    //void OnDisable()
+    //{
+    //    m_switchToKeyboardMouseAction.Disable();
+    //    m_switchToXboxAction.Disable();
+    //    m_switchToGamepadDiagramAction.Disable();
+    //    m_switchToJoystickAction.Disable();
+    //    m_switchToPenAction.Disable();
+    //    m_switchToTouchAction.Disable();
+    //}
 
     // !!!!!TEMPORARY: Before composite input is implemented
     void Update()
     {
-        if (m_currentKeyboard.leftCtrlKey.isPressed || m_currentKeyboard.rightCtrlKey.isPressed)
+        if (InputSystem.GetDevice<Keyboard>() == null) return;
+
+        Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
+        if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
         {
-            if (m_currentKeyboard.digit1Key.isPressed)
-                SwitchToInputMethod(0);
-            else if (m_currentKeyboard.digit2Key.isPressed)
-                SwitchToInputMethod(1);
-            else if (m_currentKeyboard.digit3Key.isPressed)
-                SwitchToInputMethod(2);
-            else if (m_currentKeyboard.digit4Key.isPressed)
-                SwitchToInputMethod(3);
-            else if (m_currentKeyboard.digit5Key.isPressed)
-                SwitchToInputMethod(4);
+            if (currentKeyboard.digit1Key.isPressed)
+                m_inputPickerDropdown.value = 0;
+            else if (currentKeyboard.digit2Key.isPressed)
+                m_inputPickerDropdown.value = 1;
+            else if (currentKeyboard.digit3Key.isPressed)
+                m_inputPickerDropdown.value = 2;
+            else if (currentKeyboard.digit4Key.isPressed)
+                m_inputPickerDropdown.value = 3;
+            else if (currentKeyboard.digit5Key.isPressed)
+                m_inputPickerDropdown.value = 4;
+            else if (currentKeyboard.digit6Key.isPressed)
+                m_inputPickerDropdown.value = 5;
+            else if (currentKeyboard.digit7Key.isPressed)
+                m_inputPickerDropdown.value = 6;
         }
     }
 
-    public void SwitchToInputMethod(Dropdown picker)
+    private void SwitchToInputMethod(Dropdown picker)
     {
         SwitchToInputMethod(Convert.ToByte(picker.value));
     }
 
     private void SwitchToInputMethod(byte inputValue)
     {
-        Debug.Log("Switch to Input: " + inputValue);
+        // Debug.Log("Switch to Input: " + inputValue);
         switch (inputValue)
         {
             case 1:
                 SwitchToDiagram(m_xboxController);
                 break;
             case 2:
-                SwitchToDiagram(m_controllerDiagram);
+                SwitchToDiagram(m_dualShockController);
                 break;
             case 3:
-                SwitchToDiagram(m_pen);
+                SwitchToDiagram(m_controllerDiagram);
                 break;
             case 4:
+                SwitchToDiagram(m_joystick);
+                break;
+            case 5:
+                SwitchToDiagram(m_pen);
+                break;
+            case 6:
                 SwitchToDiagram(m_touch);
                 break;
             case 0:

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
@@ -24,10 +23,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', 'T', 'R'); }
-        }
+        public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
         [InputControl(layout = "Digital")]
         public uint pointerId;
@@ -43,10 +39,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure", defaultState = "1.0")]
         public float pressure;
 
         [InputControl(layout = "Axis", usage = "Twist")]
@@ -99,7 +95,7 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(PointerState))]
+    [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -150,12 +146,30 @@ namespace UnityEngine.Experimental.Input
         public AxisControl twist { get; private set; }
 
         public IntegerControl pointerId { get; private set; }
-        ////TODO: find a way which gives values as PointerPhase instead of as int
         public PointerPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }////TODO: kill this
 
         ////TODO: give this a better name; primaryButton?
         public ButtonControl button { get; private set; }
+
+        /// <summary>
+        /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
+        /// device connected to the system.
+        /// </summary>
+        public static Pointer current { get; internal set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -173,36 +187,38 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected bool ResetDelta(IntPtr statePtr, InputControl<float> control)
+        protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
-            var value = control.ReadValueFrom(statePtr);
+            ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
+            var value = control.ReadValueFromState(statePtr);
             if (Mathf.Approximately(0f, value))
                 return false;
-            control.WriteValueInto(statePtr, 0f);
+            control.WriteValueIntoState(0f, statePtr);
             return true;
         }
 
-        protected void AccumulateDelta(IntPtr oldStatePtr, IntPtr newStatePtr, InputControl<float> control)
+        protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
-            var oldDelta = control.ReadValueFrom(oldStatePtr);
-            var newDelta = control.ReadValueFrom(newStatePtr);
-            control.WriteValueInto(newStatePtr, oldDelta + newDelta);
+            ////FIXME: if there's processors on the delta, this is junk
+            var oldDelta = control.ReadValueFromState(oldStatePtr);
+            var newDelta = control.ReadValueFromState(newStatePtr);
+            control.WriteValueIntoState(oldDelta + newDelta, newStatePtr);
         }
 
-        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
             return deltaXChanged || deltaYChanged;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
-        bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }

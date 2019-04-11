@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -9,10 +7,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 {
     public struct JoystickState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('J', 'O', 'Y'); }
-        }
+        public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 
         [InputControl(name = "hat", layout = "Dpad", usage = "Hatswitch")]
         [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
@@ -41,10 +36,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    // A joystick with an arbitrary number of buttons and axes.
-    // By default comes with just a trigger, a potentially twistable
-    // stick and an optional single hatswitch.
-    [InputControlLayout(stateType = typeof(JoystickState))]
+    /// <summary>
+    /// A joystick with an arbitrary number of buttons and axes.
+    /// </summary>
+    /// <remarks>
+    /// By default comes with just a trigger, a potentially twistable
+    /// stick and an optional single hatswitch.
+    /// </remarks>
+    [InputControlLayout(stateType = typeof(JoystickState), isGenericTypeOfDevice = true)]
     public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }
@@ -54,31 +53,10 @@ namespace UnityEngine.Experimental.Input
         public AxisControl twist { get; private set; }
         public DpadControl hat { get; private set; }
 
-        ////REVIEW: are these really useful?
-        // List of all buttons and axes on the joystick.
-        public ReadOnlyArray<ButtonControl> buttons
-        {
-            get { return new ReadOnlyArray<ButtonControl>(m_Buttons); }
-        }
-
-        public ReadOnlyArray<AxisControl> axes
-        {
-            get { return new ReadOnlyArray<AxisControl>(m_Axes); }
-        }
+        public static Joystick current { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            var buttons = new List<ButtonControl>();
-            var axes = new List<AxisControl>();
-
-            FindControlsRecursive(this, buttons, x => !(x.parent is StickControl) && !(x.parent is DpadControl));
-            FindControlsRecursive(this, axes, x => !(x is ButtonControl));
-
-            if (buttons.Count > 0)
-                m_Buttons = buttons.ToArray();
-            if (axes.Count > 0)
-                m_Axes = axes.ToArray();
-
             // Mandatory controls.
             trigger = builder.GetControl<ButtonControl>("{PrimaryTrigger}");
             stick = builder.GetControl<StickControl>("{Primary2DMotion}");
@@ -90,23 +68,17 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        ////TODO: move this into InputControl
-        private void FindControlsRecursive<TControl>(InputControl parent, List<TControl> controls, Func<TControl, bool> filter)
-            where TControl : InputControl
+        public override void MakeCurrent()
         {
-            var parentAsTControl = parent as TControl;
-            if (parentAsTControl != null && filter(parentAsTControl))
-            {
-                controls.Add(parentAsTControl);
-            }
+            base.MakeCurrent();
+            current = this;
+        }
 
-            var children = parent.children;
-            var childCount = children.Count;
-            for (var i = 0; i < childCount; ++i)
-            {
-                var child = parent.children[i];
-                FindControlsRecursive<TControl>(child, controls, filter);
-            }
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
 
         private ButtonControl[] m_Buttons;

@@ -1,5 +1,6 @@
 using System;
 using Unity.Collections;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -23,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// path, a device layout is generated that is based on the "Keyboard" layout
     /// and the on-screen control becomes the 'a' key in that layout.
     ///
-    /// If a GameObject has multiple on-screen controls that reference different
+    /// If a <see cref="GameObject"/> has multiple on-screen controls that reference different
     /// types of device layouts (e.g. one control references 'buttonWest' on
     /// a gamepad and another references 'leftButton' on a mouse), then a device
     /// is created for each type referenced by the setup.
@@ -32,27 +33,37 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     {
         public string controlPath
         {
-            get { return m_ControlPath; }
+            get => controlPathInternal;
             set
             {
-                m_ControlPath = value;
+                controlPathInternal = value;
                 if (enabled)
-                {
                     SetupInputControl();
-                }
             }
         }
 
-        public InputControl control
-        {
-            get { return m_Control; }
-        }
-
-        [SerializeField] internal string m_ControlPath;
+        /// <summary>
+        /// The actual control that is fed input from the on-screen control.
+        /// </summary>
+        /// <remarks>
+        /// This is only valid while the on-screen control is enabled. Otherwise, it is null. Also,
+        /// if no <see cref="controlPath"/> has been set, this will remain null even if the component is enabled.
+        /// </remarks>
+        public InputControl control => m_Control;
 
         private InputControl m_Control;
         private OnScreenControl m_NextControlOnDevice;
         private InputEventPtr m_InputEventPtr;
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <remarks>
+        /// Moving the definition of how the control path is stored into subclasses allows them to
+        /// apply their own <see cref="InputControlAttribute"/> attributes to them and thus set their
+        /// own layout filters.
+        /// </remarks>
+        protected abstract string controlPathInternal { get; set; }
 
         private void SetupInputControl()
         {
@@ -61,17 +72,17 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             Debug.Assert(!m_InputEventPtr.valid);
 
             // Nothing to do if we don't have a control path.
-            if (string.IsNullOrEmpty(m_ControlPath))
+            var path = controlPathInternal;
+            if (string.IsNullOrEmpty(path))
                 return;
 
             // Determine what type of device to work with.
-            var layoutName = InputControlPath.TryGetDeviceLayout(m_ControlPath);
+            var layoutName = InputControlPath.TryGetDeviceLayout(path);
             if (layoutName == null)
             {
                 Debug.LogError(
-                    string.Format(
-                        "Cannot determine device layout to use based on control path '{0}' used in {1} component",
-                        m_ControlPath, GetType().Name), this);
+                    $"Cannot determine device layout to use based on control path '{path}' used in {GetType().Name} component",
+                    this);
                 return;
             }
 
@@ -98,15 +109,14 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError(string.Format("Could not create device with layout '{0}' used in '{1}' component", layoutName,
-                        GetType().Name));
+                    Debug.LogError(
+                        $"Could not create device with layout '{layoutName}' used in '{GetType().Name}' component");
                     Debug.LogException(exception);
                     return;
                 }
 
                 // Create event buffer.
-                InputEventPtr eventPtr;
-                var buffer = StateEvent.From(device, out eventPtr, Allocator.Persistent);
+                var buffer = StateEvent.From(device, out var eventPtr, Allocator.Persistent);
 
                 // Add to list.
                 deviceInfoIndex = s_OnScreenDevices.Append(new OnScreenDeviceInfo
@@ -122,13 +132,12 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             }
 
             // Try to find control on device.
-            m_Control = InputControlPath.TryFindControl(device, m_ControlPath);
+            m_Control = InputControlPath.TryFindControl(device, path);
             if (m_Control == null)
             {
                 Debug.LogError(
-                    string.Format(
-                        "Cannot find control with path '{0}' on device of type '{1}' referenced by component '{2}'",
-                        m_ControlPath, layoutName, GetType().Name), this);
+                    $"Cannot find control with path '{path}' on device of type '{layoutName}' referenced by component '{GetType().Name}'",
+                    this);
 
                 // Remove the device, if we just created one.
                 if (s_OnScreenDevices[deviceInfoIndex].firstControl == null)
@@ -153,52 +162,48 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                 return;
 
             ////TODO: only cast once
-            var control = m_Control as InputControl<TValue>;
-            if (control == null)
-            {
-                throw new Exception(string.Format(
-                    "The control path {0} yields a control of type {1} which is not an InputControl with value type {2}",
-                    controlPath, m_Control.GetType().Name, typeof(TValue).Name));
-            }
+            if (!(m_Control is InputControl<TValue> control))
+                throw new Exception(
+                    $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}");
 
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
-            control.WriteValueInto(m_InputEventPtr, value);
+            control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-        void OnEnable()
+        private void OnEnable()
         {
             SetupInputControl();
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
-            if (m_Control != null)
+            if (m_Control == null)
+                return;
+
+            var device = m_Control.device;
+            for (var i = 0; i < s_OnScreenDevices.length; ++i)
             {
-                var device = m_Control.device;
-                for (var i = 0; i < s_OnScreenDevices.length; ++i)
+                if (s_OnScreenDevices[i].device != device)
+                    continue;
+
+                var deviceInfo = s_OnScreenDevices[i].RemoveControl(this);
+                if (deviceInfo.firstControl == null)
                 {
-                    if (s_OnScreenDevices[i].device != device)
-                        continue;
-
-                    var deviceInfo = s_OnScreenDevices[i].RemoveControl(this);
-                    if (deviceInfo.firstControl == null)
-                    {
-                        // We're the last on-screen control on this device. Remove the device.
-                        s_OnScreenDevices[i].Destroy();
-                        s_OnScreenDevices.RemoveAt(i);
-                    }
-                    else
-                    {
-                        s_OnScreenDevices[i] = deviceInfo;
-                    }
-
-                    m_Control = null;
-                    m_InputEventPtr = new InputEventPtr();
-                    Debug.Assert(m_NextControlOnDevice == null);
-
-                    break;
+                    // We're the last on-screen control on this device. Remove the device.
+                    s_OnScreenDevices[i].Destroy();
+                    s_OnScreenDevices.RemoveAt(i);
                 }
+                else
+                {
+                    s_OnScreenDevices[i] = deviceInfo;
+                }
+
+                m_Control = null;
+                m_InputEventPtr = new InputEventPtr();
+                Debug.Assert(m_NextControlOnDevice == null);
+
+                break;
             }
         }
 

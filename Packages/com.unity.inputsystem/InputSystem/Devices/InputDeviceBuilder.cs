@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -14,6 +13,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
+
+////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingChildControlByPath
 
 namespace UnityEngine.Experimental.Input.Layouts
 {
@@ -59,14 +60,12 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
-                    string.Format("Cannot modify control setup of existing device {0} while added to system.",
-                        existingDevice));
+                    $"Cannot modify control setup of existing device {existingDevice} while added to system.");
 
             InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
 
             m_Device.m_Description = deviceDescription;
-            m_Device.m_UserInteractionFilter = InputNoiseFilter.CreateDefaultNoiseFilter(m_Device);
             m_Device.CallFinishSetupRecursive(this);
         }
 
@@ -100,7 +99,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 return match;
 
             if (ReferenceEquals(parent, m_Device))
-                return InputControlPath.TryFindControl(m_Device, string.Format("{0}/{1}", m_Device.name, path));
+                return InputControlPath.TryFindControl(m_Device, $"{m_Device.name}/{path}");
 
             return null;
         }
@@ -116,9 +115,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception(string.Format(
-                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                    typeof(TControl).Name, control.GetType().Name));
+                throw new Exception(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -129,7 +127,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = TryGetControl(parent, path);
             if (control == null)
-                throw new Exception(string.Format("Cannot find input control '{0}'", parent.MakeChildPath(path)));
+                throw new Exception($"Cannot find input control '{parent.MakeChildPath(path)}'");
             return control;
         }
 
@@ -138,11 +136,9 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = GetControl(parent, path);
 
-            var controlOfType = control as TControl;
-            if (controlOfType == null)
-                throw new Exception(string.Format(
-                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                    typeof(TControl).Name, control.GetType().Name));
+            if (!(control is TControl controlOfType))
+                throw new Exception(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -151,7 +147,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = TryGetControl(path);
             if (control == null)
-                throw new Exception(string.Format("Cannot find input control '{0}'", path));
+                throw new Exception($"Cannot find input control '{path}'");
             return control;
         }
 
@@ -165,7 +161,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var control = TryGetControl<TControl>(path);
             if (control == null)
-                throw new Exception(string.Format("Cannot find input control '{0}'", path));
+                throw new Exception($"Cannot find input control '{path}'");
             return control;
         }
 
@@ -178,9 +174,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception(string.Format(
-                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                    typeof(TControl).Name, control.GetType().Name));
+                throw new Exception(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -240,23 +235,22 @@ namespace UnityEngine.Experimental.Input.Layouts
                 control = controlObject as InputControl;
                 if (control == null)
                 {
-                    throw new Exception(string.Format("Type '{0}' referenced by layout '{1}' is not an InputControl",
-                        layout.type.Name, layout.name));
+                    throw new Exception(
+                        $"Type '{layout.type.Name}' referenced by layout '{layout.name}' is not an InputControl");
                 }
             }
 
             // If it's a device, perform some extra work specific to the control
             // hierarchy root.
-            var controlAsDevice = control as InputDevice;
-            if (controlAsDevice != null)
+            if (control is InputDevice controlAsDevice)
             {
                 if (parent != null)
-                    throw new Exception(string.Format(
-                        "Cannot instantiate device layout '{0}' as child of '{1}'; devices must be added at root",
-                        layout.name, parent.path));
+                    throw new Exception(
+                        $"Cannot instantiate device layout '{layout.name}' as child of '{parent.path}'; devices must be added at root");
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
+                m_Device.m_StateBlock.bitOffset = 0;
                 m_Device.m_StateBlock.format = layout.stateFormat;
 
                 // If we have an existing device, we'll start the various control arrays
@@ -284,9 +278,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Someone did "new InputDeviceBuilder(...)" with a control layout.
                 // We don't support creating control hierarchies without a device at the root.
                 throw new InvalidOperationException(
-                    string.Format(
-                        "Toplevel layout used with InputDeviceBuilder must be a device layout; '{0}' is a control layout",
-                        layout.name));
+                    $"Toplevel layout used with InputDeviceBuilder must be a device layout; '{layout.name}' is a control layout");
             }
 
             // Name defaults to name of layout.
@@ -326,7 +318,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
                 AddChildControls(layout, variants, control,
-                    existingControl != null ? existingControl.m_ChildrenReadOnly : (ReadOnlyArray<InputControl>?)null,
+                    existingControl?.m_ChildrenReadOnly,
                     ref haveChildrenUsingStateFromOtherControl);
             }
             catch
@@ -354,9 +346,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     var referencedControl = TryGetControl(control, controlLayout.useStateFrom);
                     if (referencedControl == null)
                         throw new Exception(
-                            string.Format(
-                                "Cannot find control '{0}' referenced in 'useStateFrom' of control '{1}' in layout '{2}'",
-                                controlLayout.useStateFrom, controlLayout.name, layout.name));
+                            $"Cannot find control '{controlLayout.useStateFrom}' referenced in 'useStateFrom' of control '{controlLayout.name}' in layout '{layout.name}'");
 
                     // Copy its state settings.
                     child.m_StateBlock = referencedControl.m_StateBlock;
@@ -395,9 +385,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                 if (controlLayouts[i].isModifyingChildControlByPath)
                 {
                     if (controlLayouts[i].isArray)
-                        throw new NotSupportedException(string.Format(
-                            "Control '{0}' in layout '{1}' is modifying the child of another control but is marked as an array",
-                            controlLayouts[i].name, layout.name));
+                        throw new NotSupportedException(
+                            $"Control '{controlLayouts[i].name}' in layout '{layout.name}' is modifying the child of another control but is marked as an array");
 
                     haveControlLayoutWithPath = true;
                     InsertChildControlOverrides(parent, ref controlLayouts[i]);
@@ -407,7 +396,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, InputControlLayout.kListSeparator))
+                        variants, ','))
                     continue;
 
                 if (controlLayouts[i].isArray)
@@ -435,8 +424,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // If the control is part of a variant, skip it if it isn't in the variants we're
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
-                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants, variants,
-                        InputControlLayout.kListSeparator))
+                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants,
+                        variants, ','))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -503,18 +492,16 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
-                throw new Exception(string.Format("Layout has not been set on control '{0}' in '{1}'",
-                    controlItem.name, layout.name));
+                throw new Exception($"Layout has not been set on control '{controlItem.name}' in '{layout.name}'");
 
             // See if there is an override for the control.
             InputControlLayout.ControlItem? controlOverride = null;
             if (m_ChildControlOverrides != null)
             {
-                var path = string.Format("{0}/{1}", parent.path, name);
+                var path = $"{parent.path}/{name}";
                 var pathLowerCase = path.ToLower();
 
-                InputControlLayout.ControlItem match;
-                if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out match))
+                if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out var match))
                     controlOverride = match;
             }
 
@@ -550,8 +537,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 // Throw better exception that gives more info.
                 throw new Exception(
-                    string.Format("Cannot find layout '{0}' used in control '{1}' of layout '{2}'",
-                        exception.layout, name, layout.name),
+                    $"Cannot find layout '{exception.layout}' used in control '{name}' of layout '{layout.name}'",
                     exception);
             }
 
@@ -564,6 +550,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             // Set flags and misc things.
             control.noisy = controlItem.isNoisy;
             control.synthetic = controlItem.isSynthetic;
+            if (control.noisy)
+                m_Device.noisy = true;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
@@ -587,8 +575,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (!usesStateFromOtherControl)
             {
                 control.m_StateBlock.byteOffset = controlItem.offset;
-                if (controlItem.bit != InputStateBlock.kInvalidOffset)
-                    control.m_StateBlock.bitOffset = controlItem.bit;
+                control.m_StateBlock.bitOffset = controlItem.bit;
                 if (controlItem.sizeInBits != 0)
                     control.m_StateBlock.sizeInBits = controlItem.sizeInBits;
                 if (controlItem.format != 0)
@@ -606,7 +593,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             ////        of successive re-allocations
 
             // Add usages.
-            var usages = controlOverride != null ? controlOverride.Value.usages : controlItem.usages;
+            var usages = controlOverride?.usages ?? controlItem.usages;
             if (usages.Count > 0)
             {
                 var usageCount = usages.Count;
@@ -632,7 +619,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             // Set parameters.
             if (controlItem.parameters.Count > 0)
-                SetParameters(control, controlItem.parameters);
+                NamedValue.ApplyAllToObject(control, controlItem.parameters);
 
             // Add processors.
             if (controlItem.processors.Count > 0)
@@ -650,8 +637,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             var pathLowerCase = path.ToLower();
 
             // See if there are existing overrides for the control.
-            InputControlLayout.ControlItem existingOverrides;
-            if (!m_ChildControlOverrides.TryGetValue(pathLowerCase, out existingOverrides))
+            if (!m_ChildControlOverrides.TryGetValue(pathLowerCase, out var existingOverrides))
             {
                 // So, so just insert our overrides and we're done.
                 m_ChildControlOverrides[pathLowerCase] = controlItem;
@@ -718,7 +704,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     AddProcessors(child, ref controlItem, layout.name);
                 ////REVIEW: ATM parameters applied using this path add on top instead of just overriding existing parameters
                 if (controlItem.parameters.Count > 0)
-                    SetParameters(child, controlItem.parameters);
+                    NamedValue.ApplyAllToObject(child, controlItem.parameters);
                 if (!string.IsNullOrEmpty(controlItem.displayName))
                     child.m_DisplayNameFromLayout = controlItem.displayName;
                 if (!controlItem.defaultState.isEmpty)
@@ -758,14 +744,12 @@ namespace UnityEngine.Experimental.Input.Layouts
             var immediateParent = InputControlPath.TryFindChild(parent, immediateParentPath);
             if (immediateParent == null)
                 throw new Exception(
-                    string.Format("Cannot find parent '{0}' of control '{1}' in layout '{2}'", immediateParentPath,
-                        controlItem.name, layout.name));
+                    $"Cannot find parent '{immediateParentPath}' of control '{controlItem.name}' in layout '{layout.name}'");
 
             var controlName = path.Substring(indexOfSlash + 1);
             if (controlName.Length == 0)
                 throw new Exception(
-                    string.Format("Path cannot end in '/' (control '{0}' in layout '{1}')", controlItem.name,
-                        layout.name));
+                    $"Path cannot end in '/' (control '{controlItem.name}' in layout '{layout.name}')");
 
             // Make room in the device's child array.
             var childStartIndex = immediateParent.m_ChildrenReadOnly.m_StartIndex;
@@ -857,57 +841,18 @@ namespace UnityEngine.Experimental.Input.Layouts
             for (var n = 0; n < processorCount; ++n)
             {
                 var name = controlItem.processors[n].name;
-                var type = InputControlProcessor.s_Processors.LookupTypeRegistration(name);
+                var type = InputProcessor.s_Processors.LookupTypeRegistration(name);
                 if (type == null)
                     throw new Exception(
-                        string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,
-                            controlItem.name, layoutName));
+                        $"Cannot find processor '{name}' referenced by control '{controlItem.name}' in layout '{layoutName}'");
 
                 var processor = Activator.CreateInstance(type);
 
                 var parameters = controlItem.processors[n].parameters;
                 if (parameters.Count > 0)
-                    SetParameters(processor, parameters);
+                    NamedValue.ApplyAllToObject(processor, parameters);
 
                 control.AddProcessor(processor);
-            }
-        }
-
-        internal static void SetParameters(object onObject, ReadOnlyArray<InputControlLayout.ParameterValue> parameters)
-        {
-            var objectType = onObject.GetType();
-            for (var i = 0; i < parameters.Count; ++i)
-            {
-                var parameter = parameters[i];
-
-                ////REVIEW: what about properties?
-
-                var field = objectType.GetField(parameter.name,
-                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (field == null)
-                    throw new Exception(string.Format("Cannot find public field {0} in {1} (referenced by parameter)",
-                        parameter.name, objectType.Name));
-
-                ////REVIEW: can we do this without boxing?
-
-                object value = null;
-                unsafe
-                {
-                    switch (parameter.type)
-                    {
-                        case InputControlLayout.ParameterType.Boolean:
-                            value = *((bool*)parameter.value);
-                            break;
-                        case InputControlLayout.ParameterType.Integer:
-                            value = *((int*)parameter.value);
-                            break;
-                        case InputControlLayout.ParameterType.Float:
-                            value = *((float*)parameter.value);
-                            break;
-                    }
-                }
-
-                field.SetValue(onObject, value);
             }
         }
 
@@ -945,9 +890,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             if (control.m_StateBlock.sizeInBits == 0 && children.Count == 0)
             {
                 throw new Exception(
-                    string.Format(
-                        "Control '{0}' with layout '{1}' has no size set and has no children to compute size from",
-                        control.path, control.layout));
+                    $"Control '{control.path}' with layout '{control.layout}' has no size set and has no children to compute size from");
             }
 
             // If there's no children, our job is done.
@@ -967,15 +910,20 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
-                if (childSizeInBits == 0)
+                if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.kInvalidOffset)
                     throw new Exception(
-                        string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
+                        $"Child '{child.name}' of '{control.name}' has no size set!");
 
                 // Skip children that don't have fixed offsets.
                 if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||
                     child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
                     continue;
 
+                // At this point, if the child has no valid bit offset, put it at #0 now.
+                if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.bitOffset = 0;
+
+                // See if the control bumps our fixed layout size.
                 var endOffset =
                     MemoryHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + childSizeInBits);
                 if (endOffset > firstUnfixedByteOffset)
@@ -1012,10 +960,18 @@ namespace UnityEngine.Experimental.Input.Layouts
                         firstBitAddressingChild = child;
 
                     // Keep a running count of the size of the bitfield.
-                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset ||
+                        child.m_StateBlock.bitOffset == InputStateBlock.kAutomaticOffset)
+                    {
+                        // Put child at current bit offset.
+                        child.m_StateBlock.bitOffset = bitfieldSizeInBits;
+
                         bitfieldSizeInBits += child.m_StateBlock.sizeInBits;
+                    }
                     else
                     {
+                        // Child already has bit offset. Keep it but make sure we're accounting for it
+                        // in the bitfield size.
                         var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
                         if (lastBit > bitfieldSizeInBits)
                             bitfieldSizeInBits = lastBit;
@@ -1029,8 +985,12 @@ namespace UnityEngine.Experimental.Input.Layouts
                         runningByteOffset = MemoryHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
                         firstBitAddressingChild = null;
                     }
+
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                        child.m_StateBlock.bitOffset = 0;
                 }
 
+                ////FIXME: seems like this should take bitOffset into account
                 child.m_StateBlock.byteOffset = runningByteOffset;
 
                 if (!isBitAddressingChild)
@@ -1048,7 +1008,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             control.m_StateBlock.sizeInBits = totalSizeInBytes * 8;
         }
 
-        // Finalize array references in the control hierarchy and make all state offets relative to the
+        // Finalize array references in the control hierarchy and make all state offsets relative to the
         // device root.
         private void FinalizeControlHierarchy()
         {

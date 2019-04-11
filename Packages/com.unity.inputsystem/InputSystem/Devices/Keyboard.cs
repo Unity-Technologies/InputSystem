@@ -17,10 +17,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('K', 'E', 'Y', 'S'); }
-        }
+        public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
         // Number of keys rounded up to nearest size of 4.
         private const int kSizeInBytesUnrounded = Keyboard.KeyCount / 8 + (Keyboard.KeyCount % 8 > 0 ? 1 : 0);
@@ -148,7 +145,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
                 for (var i = 0; i < pressedKeys.Length; ++i)
                 {
-                    MemoryHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
+                    MemoryHelpers.WriteSingleBit(keysPtr, (uint)pressedKeys[i], true);
                 }
             }
         }
@@ -323,7 +320,7 @@ namespace UnityEngine.Experimental.Input
     /// <see cref="InputControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(KeyboardState))]
+    [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
         public const int KeyCount = (int)Key.OEM5;
@@ -333,8 +330,8 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public event Action<char> onTextInput
         {
-            add { m_TextInputListeners.Append(value); }
-            remove { m_TextInputListeners.Remove(value); }
+            add => m_TextInputListeners.Append(value);
+            remove => m_TextInputListeners.Remove(value);
         }
 
         /// <summary>
@@ -349,8 +346,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
-            add { m_ImeCompositionListeners.Append(value); }
-            remove { m_ImeCompositionListeners.Remove(value); }
+            add => m_ImeCompositionListeners.Append(value);
+            remove => m_ImeCompositionListeners.Remove(value);
         }
 
         /// <summary>
@@ -373,7 +370,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        /// <summary>
+
         /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
         /// </summary>
         /// <remarks>
@@ -411,7 +408,7 @@ namespace UnityEngine.Experimental.Input
                 RefreshConfigurationIfNeeded();
                 return m_KeyboardLayoutName;
             }
-            protected set { m_KeyboardLayoutName = value; }
+            protected set => m_KeyboardLayoutName = value;
         }
 
 
@@ -423,7 +420,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The space bar key.
         /// </summary>
-        public KeyControl spaceKey { get; private set; }
+        public KeyControl spaceKey => this[Key.Space];
 
         /// <summary>
         /// The enter/return key in the main key block.
@@ -431,149 +428,149 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This key is distinct from the enter key on the numpad which is <see cref="numpadEnterKey"/>.
         /// </remarks>
-        public KeyControl enterKey { get; private set; }
+        public KeyControl enterKey => this[Key.Enter];
 
         /// <summary>
         /// The tab key.
         /// </summary>
-        public KeyControl tabKey { get; private set; }
+        public KeyControl tabKey => this[Key.Tab];
 
         /// <summary>
         /// The ` key. The leftmost key in the row of digits. Directly above tab.
         /// </summary>
-        public KeyControl backquoteKey { get; private set; }
+        public KeyControl backquoteKey => this[Key.Backquote];
 
         /// <summary>
         /// The ' key. The key immediately to the left of the enter/return key.
         /// </summary>
-        public KeyControl quoteKey { get; private set; }
+        public KeyControl quoteKey => this[Key.Quote];
 
         /// <summary>
         /// The ';' key. The key immediately to the left of the quote key.
         /// </summary>
-        public KeyControl semicolonKey { get; private set; }
+        public KeyControl semicolonKey => this[Key.Semicolon];
 
         /// <summary>
         /// The ',' key. Third key to the left of the right shift key.
         /// </summary>
-        public KeyControl commaKey { get; private set; }
-        public KeyControl periodKey { get; private set; }
-        public KeyControl slashKey { get; private set; }
-        public KeyControl backslashKey { get; private set; }
-        public KeyControl leftBracketKey { get; private set; }
-        public KeyControl rightBracketKey { get; private set; }
-        public KeyControl minusKey { get; private set; }
+        public KeyControl commaKey => this[Key.Comma];
+        public KeyControl periodKey => this[Key.Period];
+        public KeyControl slashKey => this[Key.Slash];
+        public KeyControl backslashKey => this[Key.Backslash];
+        public KeyControl leftBracketKey => this[Key.LeftBracket];
+        public KeyControl rightBracketKey => this[Key.RightBracket];
+        public KeyControl minusKey => this[Key.Minus];
 
         /// <summary>
         /// The '=' key in the main key block. Key immediately to the left of the backspace key.
         /// </summary>
-        public KeyControl equalsKey { get; private set; }
+        public KeyControl equalsKey => this[Key.Equals];
 
         /// <summary>
         /// The 'a' key. Key immediately to the right of the caps lock key.
         /// </summary>
-        public KeyControl aKey { get; private set; }
-        public KeyControl bKey { get; private set; }
-        public KeyControl cKey { get; private set; }
-        public KeyControl dKey { get; private set; }
-        public KeyControl eKey { get; private set; }
-        public KeyControl fKey { get; private set; }
-        public KeyControl gKey { get; private set; }
-        public KeyControl hKey { get; private set; }
-        public KeyControl iKey { get; private set; }
-        public KeyControl jKey { get; private set; }
-        public KeyControl kKey { get; private set; }
-        public KeyControl lKey { get; private set; }
-        public KeyControl mKey { get; private set; }
-        public KeyControl nKey { get; private set; }
-        public KeyControl oKey { get; private set; }
-        public KeyControl pKey { get; private set; }
-        public KeyControl qKey { get; private set; }
-        public KeyControl rKey { get; private set; }
-        public KeyControl sKey { get; private set; }
-        public KeyControl tKey { get; private set; }
-        public KeyControl uKey { get; private set; }
-        public KeyControl vKey { get; private set; }
-        public KeyControl wKey { get; private set; }
-        public KeyControl xKey { get; private set; }
-        public KeyControl yKey { get; private set; }
-        public KeyControl zKey { get; private set; }
-        public KeyControl digit1Key { get; private set; }
-        public KeyControl digit2Key { get; private set; }
-        public KeyControl digit3Key { get; private set; }
-        public KeyControl digit4Key { get; private set; }
-        public KeyControl digit5Key { get; private set; }
-        public KeyControl digit6Key { get; private set; }
-        public KeyControl digit7Key { get; private set; }
-        public KeyControl digit8Key { get; private set; }
-        public KeyControl digit9Key { get; private set; }
-        public KeyControl digit0Key { get; private set; }
-        public KeyControl leftShiftKey { get; private set; }
-        public KeyControl rightShiftKey { get; private set; }
-        public KeyControl leftAltKey { get; private set; }
-        public KeyControl rightAltKey { get; private set; }
-        public KeyControl leftCtrlKey { get; private set; }
-        public KeyControl rightCtrlKey { get; private set; }
-        public KeyControl leftMetaKey { get; private set; }
-        public KeyControl rightMetaKey { get; private set; }
-        public KeyControl leftWindowsKey { get; private set; }
-        public KeyControl rightWindowsKey { get; private set; }
-        public KeyControl leftAppleKey { get; private set; }
-        public KeyControl rightAppleKey { get; private set; }
-        public KeyControl leftCommandKey { get; private set; }
-        public KeyControl rightCommandKey { get; private set; }
-        public KeyControl contextMenuKey { get; private set; }
-        public KeyControl escapeKey { get; private set; }
-        public KeyControl leftArrowKey { get; private set; }
-        public KeyControl rightArrowKey { get; private set; }
-        public KeyControl upArrowKey { get; private set; }
-        public KeyControl downArrowKey { get; private set; }
-        public KeyControl backspaceKey { get; private set; }
-        public KeyControl pageDownKey { get; private set; }
-        public KeyControl pageUpKey { get; private set; }
-        public KeyControl homeKey { get; private set; }
-        public KeyControl endKey { get; private set; }
-        public KeyControl insertKey { get; private set; }
-        public KeyControl deleteKey { get; private set; }
-        public KeyControl capsLockKey { get; private set; }
-        public KeyControl scrollLockKey { get; private set; }
-        public KeyControl numLockKey { get; private set; }
-        public KeyControl printScreenKey { get; private set; }
-        public KeyControl pauseKey { get; private set; }
-        public KeyControl numpadEnterKey { get; private set; }
-        public KeyControl numpadDivideKey { get; private set; }
-        public KeyControl numpadMultiplyKey { get; private set; }
-        public KeyControl numpadMinusKey { get; private set; }
-        public KeyControl numpadPlusKey { get; private set; }
-        public KeyControl numpadPeriodKey { get; private set; }
-        public KeyControl numpadEqualsKey { get; private set; }
-        public KeyControl numpad0Key { get; private set; }
-        public KeyControl numpad1Key { get; private set; }
-        public KeyControl numpad2Key { get; private set; }
-        public KeyControl numpad3Key { get; private set; }
-        public KeyControl numpad4Key { get; private set; }
-        public KeyControl numpad5Key { get; private set; }
-        public KeyControl numpad6Key { get; private set; }
-        public KeyControl numpad7Key { get; private set; }
-        public KeyControl numpad8Key { get; private set; }
-        public KeyControl numpad9Key { get; private set; }
-        public KeyControl f1Key { get; private set; }
-        public KeyControl f2Key { get; private set; }
-        public KeyControl f3Key { get; private set; }
-        public KeyControl f4Key { get; private set; }
-        public KeyControl f5Key { get; private set; }
-        public KeyControl f6Key { get; private set; }
-        public KeyControl f7Key { get; private set; }
-        public KeyControl f8Key { get; private set; }
-        public KeyControl f9Key { get; private set; }
-        public KeyControl f10Key { get; private set; }
-        public KeyControl f11Key { get; private set; }
-        public KeyControl f12Key { get; private set; }
-        public KeyControl oem1Key { get; private set; }
-        public KeyControl oem2Key { get; private set; }
-        public KeyControl oem3Key { get; private set; }
-        public KeyControl oem4Key { get; private set; }
-        public KeyControl oem5Key { get; private set; }
+        public KeyControl aKey => this[Key.A];
+        public KeyControl bKey => this[Key.B];
+        public KeyControl cKey => this[Key.C];
+        public KeyControl dKey => this[Key.D];
+        public KeyControl eKey => this[Key.E];
+        public KeyControl fKey => this[Key.F];
+        public KeyControl gKey => this[Key.G];
+        public KeyControl hKey => this[Key.H];
+        public KeyControl iKey => this[Key.I];
+        public KeyControl jKey => this[Key.J];
+        public KeyControl kKey => this[Key.K];
+        public KeyControl lKey => this[Key.L];
+        public KeyControl mKey => this[Key.M];
+        public KeyControl nKey => this[Key.N];
+        public KeyControl oKey => this[Key.O];
+        public KeyControl pKey => this[Key.P];
+        public KeyControl qKey => this[Key.Q];
+        public KeyControl rKey => this[Key.R];
+        public KeyControl sKey => this[Key.S];
+        public KeyControl tKey => this[Key.T];
+        public KeyControl uKey => this[Key.U];
+        public KeyControl vKey => this[Key.V];
+        public KeyControl wKey => this[Key.W];
+        public KeyControl xKey => this[Key.X];
+        public KeyControl yKey => this[Key.Y];
+        public KeyControl zKey => this[Key.Z];
+        public KeyControl digit1Key => this[Key.Digit1];
+        public KeyControl digit2Key => this[Key.Digit2];
+        public KeyControl digit3Key => this[Key.Digit3];
+        public KeyControl digit4Key => this[Key.Digit4];
+        public KeyControl digit5Key => this[Key.Digit5];
+        public KeyControl digit6Key => this[Key.Digit6];
+        public KeyControl digit7Key => this[Key.Digit7];
+        public KeyControl digit8Key => this[Key.Digit8];
+        public KeyControl digit9Key => this[Key.Digit9];
+        public KeyControl digit0Key => this[Key.Digit0];
+        public KeyControl leftShiftKey => this[Key.LeftShift];
+        public KeyControl rightShiftKey => this[Key.RightShift];
+        public KeyControl leftAltKey => this[Key.LeftAlt];
+        public KeyControl rightAltKey => this[Key.RightAlt];
+        public KeyControl leftCtrlKey => this[Key.LeftCtrl];
+        public KeyControl rightCtrlKey => this[Key.RightCtrl];
+        public KeyControl leftMetaKey => this[Key.LeftMeta];
+        public KeyControl rightMetaKey => this[Key.RightMeta];
+        public KeyControl leftWindowsKey => this[Key.LeftWindows];
+        public KeyControl rightWindowsKey => this[Key.RightWindows];
+        public KeyControl leftAppleKey => this[Key.LeftApple];
+        public KeyControl rightAppleKey => this[Key.RightApple];
+        public KeyControl leftCommandKey => this[Key.LeftCommand];
+        public KeyControl rightCommandKey => this[Key.RightCommand];
+        public KeyControl contextMenuKey => this[Key.ContextMenu];
+        public KeyControl escapeKey => this[Key.Escape];
+        public KeyControl leftArrowKey => this[Key.LeftArrow];
+        public KeyControl rightArrowKey => this[Key.RightArrow];
+        public KeyControl upArrowKey => this[Key.UpArrow];
+        public KeyControl downArrowKey => this[Key.DownArrow];
+        public KeyControl backspaceKey => this[Key.Backspace];
+        public KeyControl pageDownKey => this[Key.PageDown];
+        public KeyControl pageUpKey => this[Key.PageUp];
+        public KeyControl homeKey => this[Key.Home];
+        public KeyControl endKey => this[Key.End];
+        public KeyControl insertKey => this[Key.Insert];
+        public KeyControl deleteKey => this[Key.Delete];
+        public KeyControl capsLockKey => this[Key.CapsLock];
+        public KeyControl scrollLockKey => this[Key.ScrollLock];
+        public KeyControl numLockKey => this[Key.NumLock];
+        public KeyControl printScreenKey => this[Key.PrintScreen];
+        public KeyControl pauseKey => this[Key.Pause];
+        public KeyControl numpadEnterKey => this[Key.NumpadEnter];
+        public KeyControl numpadDivideKey => this[Key.NumpadDivide];
+        public KeyControl numpadMultiplyKey => this[Key.NumpadMultiply];
+        public KeyControl numpadMinusKey => this[Key.NumpadMinus];
+        public KeyControl numpadPlusKey => this[Key.NumpadPlus];
+        public KeyControl numpadPeriodKey => this[Key.NumpadPeriod];
+        public KeyControl numpadEqualsKey => this[Key.NumpadEquals];
+        public KeyControl numpad0Key => this[Key.Numpad0];
+        public KeyControl numpad1Key => this[Key.Numpad1];
+        public KeyControl numpad2Key => this[Key.Numpad2];
+        public KeyControl numpad3Key => this[Key.Numpad3];
+        public KeyControl numpad4Key => this[Key.Numpad4];
+        public KeyControl numpad5Key => this[Key.Numpad5];
+        public KeyControl numpad6Key => this[Key.Numpad6];
+        public KeyControl numpad7Key => this[Key.Numpad7];
+        public KeyControl numpad8Key => this[Key.Numpad8];
+        public KeyControl numpad9Key => this[Key.Numpad9];
+        public KeyControl f1Key => this[Key.F1];
+        public KeyControl f2Key => this[Key.F2];
+        public KeyControl f3Key => this[Key.F3];
+        public KeyControl f4Key => this[Key.F4];
+        public KeyControl f5Key => this[Key.F5];
+        public KeyControl f6Key => this[Key.F6];
+        public KeyControl f7Key => this[Key.F7];
+        public KeyControl f8Key => this[Key.F8];
+        public KeyControl f9Key => this[Key.F9];
+        public KeyControl f10Key => this[Key.F10];
+        public KeyControl f11Key => this[Key.F11];
+        public KeyControl f12Key => this[Key.F12];
+        public KeyControl oem1Key => this[Key.OEM1];
+        public KeyControl oem2Key => this[Key.OEM2];
+        public KeyControl oem3Key => this[Key.OEM3];
+        public KeyControl oem4Key => this[Key.OEM4];
+        public KeyControl oem5Key => this[Key.OEM5];
 
         /// <summary>
         /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
@@ -596,280 +593,158 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (key >= Key.A && key <= Key.Z)
-                {
-                    switch (key)
-                    {
-                        case Key.A: return aKey;
-                        case Key.B: return bKey;
-                        case Key.C: return cKey;
-                        case Key.D: return dKey;
-                        case Key.E: return eKey;
-                        case Key.F: return fKey;
-                        case Key.G: return gKey;
-                        case Key.H: return hKey;
-                        case Key.I: return iKey;
-                        case Key.J: return jKey;
-                        case Key.K: return kKey;
-                        case Key.L: return lKey;
-                        case Key.M: return mKey;
-                        case Key.N: return nKey;
-                        case Key.O: return oKey;
-                        case Key.P: return pKey;
-                        case Key.Q: return qKey;
-                        case Key.R: return rKey;
-                        case Key.S: return sKey;
-                        case Key.T: return tKey;
-                        case Key.U: return uKey;
-                        case Key.V: return vKey;
-                        case Key.W: return wKey;
-                        case Key.X: return xKey;
-                        case Key.Y: return yKey;
-                        case Key.Z: return zKey;
-                    }
-                }
-
-                if (key >= Key.Digit1 && key <= Key.Digit0)
-                {
-                    switch (key)
-                    {
-                        case Key.Digit1: return digit1Key;
-                        case Key.Digit2: return digit2Key;
-                        case Key.Digit3: return digit3Key;
-                        case Key.Digit4: return digit4Key;
-                        case Key.Digit5: return digit5Key;
-                        case Key.Digit6: return digit6Key;
-                        case Key.Digit7: return digit7Key;
-                        case Key.Digit8: return digit8Key;
-                        case Key.Digit9: return digit9Key;
-                        case Key.Digit0: return digit0Key;
-                    }
-                }
-
-                if (key >= Key.F1 && key <= Key.F12)
-                {
-                    switch (key)
-                    {
-                        case Key.F1: return f1Key;
-                        case Key.F2: return f2Key;
-                        case Key.F3: return f3Key;
-                        case Key.F4: return f4Key;
-                        case Key.F5: return f5Key;
-                        case Key.F6: return f6Key;
-                        case Key.F7: return f7Key;
-                        case Key.F8: return f8Key;
-                        case Key.F9: return f9Key;
-                        case Key.F10: return f10Key;
-                        case Key.F11: return f11Key;
-                        case Key.F12: return f12Key;
-                    }
-                }
-
-                if (key >= Key.NumpadEnter && key <= Key.Numpad9)
-                {
-                    switch (key)
-                    {
-                        case Key.NumpadEnter: return numpadEnterKey;
-                        case Key.NumpadDivide: return numpadDivideKey;
-                        case Key.NumpadMultiply: return numpadMultiplyKey;
-                        case Key.NumpadPlus: return numpadPlusKey;
-                        case Key.NumpadMinus: return numpadMinusKey;
-                        case Key.NumpadPeriod: return numpadPeriodKey;
-                        case Key.NumpadEquals: return numpadEqualsKey;
-                        case Key.Numpad0: return numpad0Key;
-                        case Key.Numpad1: return numpad1Key;
-                        case Key.Numpad2: return numpad2Key;
-                        case Key.Numpad3: return numpad3Key;
-                        case Key.Numpad4: return numpad4Key;
-                        case Key.Numpad5: return numpad5Key;
-                        case Key.Numpad6: return numpad6Key;
-                        case Key.Numpad7: return numpad7Key;
-                        case Key.Numpad8: return numpad8Key;
-                        case Key.Numpad9: return numpad9Key;
-                    }
-                }
-
-                switch (key)
-                {
-                    case Key.Space: return spaceKey;
-                    case Key.Enter: return enterKey;
-                    case Key.Tab: return tabKey;
-                    case Key.Backquote: return backquoteKey;
-                    case Key.Quote: return quoteKey;
-                    case Key.Semicolon: return semicolonKey;
-                    case Key.Comma: return commaKey;
-                    case Key.Period: return periodKey;
-                    case Key.Slash: return slashKey;
-                    case Key.Backslash: return backslashKey;
-                    case Key.LeftBracket: return leftBracketKey;
-                    case Key.RightBracket: return rightBracketKey;
-                    case Key.Minus: return minusKey;
-                    case Key.Equals: return equalsKey;
-                    case Key.LeftShift: return leftShiftKey;
-                    case Key.RightShift: return rightShiftKey;
-                    case Key.LeftAlt: return leftAltKey;
-                    case Key.RightAlt: return rightAltKey;
-                    case Key.LeftCtrl: return leftCtrlKey;
-                    case Key.RightCtrl: return rightCtrlKey;
-                    case Key.LeftMeta: return leftMetaKey;
-                    case Key.RightMeta: return rightMetaKey;
-                    case Key.ContextMenu: return contextMenuKey;
-                    case Key.Escape: return escapeKey;
-                    case Key.LeftArrow: return leftArrowKey;
-                    case Key.RightArrow: return rightArrowKey;
-                    case Key.UpArrow: return upArrowKey;
-                    case Key.DownArrow: return downArrowKey;
-                    case Key.Backspace: return backspaceKey;
-                    case Key.PageDown: return pageDownKey;
-                    case Key.PageUp: return pageUpKey;
-                    case Key.Home: return homeKey;
-                    case Key.End: return endKey;
-                    case Key.Insert: return insertKey;
-                    case Key.Delete: return deleteKey;
-                    case Key.CapsLock: return capsLockKey;
-                    case Key.NumLock: return numLockKey;
-                    case Key.PrintScreen: return printScreenKey;
-                    case Key.ScrollLock: return scrollLockKey;
-                    case Key.Pause: return pauseKey;
-                    case Key.OEM1: return oem1Key;
-                    case Key.OEM2: return oem2Key;
-                    case Key.OEM3: return oem3Key;
-                    case Key.OEM4: return oem4Key;
-                    case Key.OEM5: return oem5Key;
-                }
-
-                throw new ArgumentException("key");
+                var index = (int)key;
+                if (index <= 0 || index >= m_Keys.Length)
+                    throw new ArgumentOutOfRangeException(nameof(key));
+                return m_Keys[(int)key - 1];
             }
         }
 
+        public static Keyboard current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        private KeyControl[] m_Keys;
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            var keyStrings = new[]
+            {
+                "space",
+                "enter",
+                "tab",
+                "backquote",
+                "quote",
+                "semicolon",
+                "comma",
+                "period",
+                "slash",
+                "backslash",
+                "leftbracket",
+                "rightbracket",
+                "minus",
+                "equals",
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+                "g",
+                "h",
+                "i",
+                "j",
+                "k",
+                "l",
+                "m",
+                "n",
+                "o",
+                "p",
+                "q",
+                "r",
+                "s",
+                "t",
+                "u",
+                "v",
+                "w",
+                "x",
+                "y",
+                "z",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "0",
+                "leftshift",
+                "rightshift",
+                "leftalt",
+                "rightalt",
+                "leftctrl",
+                "rightctrl",
+                "leftmeta",
+                "rightmeta",
+                "contextmenu",
+                "escape",
+                "leftarrow",
+                "rightarrow",
+                "uparrow",
+                "downarrow",
+                "backspace",
+                "pagedown",
+                "pageup",
+                "home",
+                "end",
+                "insert",
+                "delete",
+                "capslock",
+                "numlock",
+                "printscreen",
+                "scrolllock",
+                "pause",
+                "numpadenter",
+                "numpaddivide",
+                "numpadmultiply",
+                "numpadplus",
+                "numpadminus",
+                "numpadperiod",
+                "numpadequals",
+                "numpad0",
+                "numpad1",
+                "numpad2",
+                "numpad3",
+                "numpad4",
+                "numpad5",
+                "numpad6",
+                "numpad7",
+                "numpad8",
+                "numpad9",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "f5",
+                "f6",
+                "f7",
+                "f8",
+                "f9",
+                "f10",
+                "f11",
+                "f12",
+                "oem1",
+                "oem2",
+                "oem3",
+                "oem4",
+                "oem5",
+            };
+            m_Keys = new KeyControl[keyStrings.Length];
+            for (var i = 0; i < keyStrings.Length; ++i)
+            {
+                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i]);
+
+                ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
+                ////        and it just seems somewhat dirty to jam the data into the control here
+                m_Keys[i].keyCode = (Key)(i + 1);
+            }
+            Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
+                "keyString array layout doe not match Key enum layout");
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");
-            spaceKey = builder.GetControl<KeyControl>("space");
-            enterKey = builder.GetControl<KeyControl>("enter");
-            tabKey = builder.GetControl<KeyControl>("tab");
-            backquoteKey = builder.GetControl<KeyControl>("backquote");
-            quoteKey = builder.GetControl<KeyControl>("quote");
-            semicolonKey = builder.GetControl<KeyControl>("semicolon");
-            commaKey = builder.GetControl<KeyControl>("comma");
-            periodKey = builder.GetControl<KeyControl>("period");
-            slashKey = builder.GetControl<KeyControl>("slash");
-            backslashKey = builder.GetControl<KeyControl>("backslash");
-            leftBracketKey = builder.GetControl<KeyControl>("leftBracket");
-            rightBracketKey = builder.GetControl<KeyControl>("rightBracket");
-            minusKey = builder.GetControl<KeyControl>("minus");
-            equalsKey = builder.GetControl<KeyControl>("equals");
-            aKey = builder.GetControl<KeyControl>("a");
-            bKey = builder.GetControl<KeyControl>("b");
-            cKey = builder.GetControl<KeyControl>("c");
-            dKey = builder.GetControl<KeyControl>("d");
-            eKey = builder.GetControl<KeyControl>("e");
-            fKey = builder.GetControl<KeyControl>("f");
-            gKey = builder.GetControl<KeyControl>("g");
-            hKey = builder.GetControl<KeyControl>("h");
-            iKey = builder.GetControl<KeyControl>("i");
-            jKey = builder.GetControl<KeyControl>("j");
-            kKey = builder.GetControl<KeyControl>("k");
-            lKey = builder.GetControl<KeyControl>("l");
-            mKey = builder.GetControl<KeyControl>("m");
-            nKey = builder.GetControl<KeyControl>("n");
-            oKey = builder.GetControl<KeyControl>("o");
-            pKey = builder.GetControl<KeyControl>("p");
-            qKey = builder.GetControl<KeyControl>("q");
-            rKey = builder.GetControl<KeyControl>("r");
-            sKey = builder.GetControl<KeyControl>("s");
-            tKey = builder.GetControl<KeyControl>("t");
-            uKey = builder.GetControl<KeyControl>("u");
-            vKey = builder.GetControl<KeyControl>("v");
-            wKey = builder.GetControl<KeyControl>("w");
-            xKey = builder.GetControl<KeyControl>("x");
-            yKey = builder.GetControl<KeyControl>("y");
-            zKey = builder.GetControl<KeyControl>("z");
-            digit1Key = builder.GetControl<KeyControl>("1");
-            digit2Key = builder.GetControl<KeyControl>("2");
-            digit3Key = builder.GetControl<KeyControl>("3");
-            digit4Key = builder.GetControl<KeyControl>("4");
-            digit5Key = builder.GetControl<KeyControl>("5");
-            digit6Key = builder.GetControl<KeyControl>("6");
-            digit7Key = builder.GetControl<KeyControl>("7");
-            digit8Key = builder.GetControl<KeyControl>("8");
-            digit9Key = builder.GetControl<KeyControl>("9");
-            digit0Key = builder.GetControl<KeyControl>("0");
-            leftShiftKey = builder.GetControl<KeyControl>("leftShift");
-            rightShiftKey = builder.GetControl<KeyControl>("rightShift");
-            leftAltKey = builder.GetControl<KeyControl>("leftAlt");
-            rightAltKey = builder.GetControl<KeyControl>("rightAlt");
-            leftCtrlKey = builder.GetControl<KeyControl>("leftCtrl");
-            rightCtrlKey = builder.GetControl<KeyControl>("rightCtrl");
-            leftMetaKey = builder.GetControl<KeyControl>("leftMeta");
-            rightMetaKey = builder.GetControl<KeyControl>("rightMeta");
-            leftWindowsKey = builder.GetControl<KeyControl>("leftWindows");
-            rightWindowsKey = builder.GetControl<KeyControl>("rightWindows");
-            leftAppleKey = builder.GetControl<KeyControl>("leftApple");
-            rightAppleKey = builder.GetControl<KeyControl>("rightApple");
-            leftCommandKey = builder.GetControl<KeyControl>("leftCommand");
-            rightCommandKey = builder.GetControl<KeyControl>("rightCommand");
-            contextMenuKey = builder.GetControl<KeyControl>("contextMenu");
-            escapeKey = builder.GetControl<KeyControl>("escape");
-            leftArrowKey = builder.GetControl<KeyControl>("leftArrow");
-            rightArrowKey = builder.GetControl<KeyControl>("rightArrow");
-            upArrowKey = builder.GetControl<KeyControl>("upArrow");
-            downArrowKey = builder.GetControl<KeyControl>("downArrow");
-            backspaceKey = builder.GetControl<KeyControl>("backspace");
-            pageDownKey = builder.GetControl<KeyControl>("pageDown");
-            pageUpKey = builder.GetControl<KeyControl>("pageUp");
-            homeKey = builder.GetControl<KeyControl>("home");
-            endKey = builder.GetControl<KeyControl>("end");
-            insertKey = builder.GetControl<KeyControl>("insert");
-            deleteKey = builder.GetControl<KeyControl>("delete");
-            numpadEnterKey = builder.GetControl<KeyControl>("numpadEnter");
-            numpadDivideKey = builder.GetControl<KeyControl>("numpadDivide");
-            numpadMultiplyKey = builder.GetControl<KeyControl>("numpadMultiply");
-            numpadPlusKey = builder.GetControl<KeyControl>("numpadPlus");
-            numpadMinusKey = builder.GetControl<KeyControl>("numpadMinus");
-            numpadPeriodKey = builder.GetControl<KeyControl>("numpadPeriod");
-            numpadEqualsKey = builder.GetControl<KeyControl>("numpadEquals");
-            numpad0Key = builder.GetControl<KeyControl>("numpad0");
-            numpad1Key = builder.GetControl<KeyControl>("numpad1");
-            numpad2Key = builder.GetControl<KeyControl>("numpad2");
-            numpad3Key = builder.GetControl<KeyControl>("numpad3");
-            numpad4Key = builder.GetControl<KeyControl>("numpad4");
-            numpad5Key = builder.GetControl<KeyControl>("numpad5");
-            numpad6Key = builder.GetControl<KeyControl>("numpad6");
-            numpad7Key = builder.GetControl<KeyControl>("numpad7");
-            numpad8Key = builder.GetControl<KeyControl>("numpad8");
-            numpad9Key = builder.GetControl<KeyControl>("numpad9");
-            f1Key = builder.GetControl<KeyControl>("f1");
-            f2Key = builder.GetControl<KeyControl>("f2");
-            f3Key = builder.GetControl<KeyControl>("f3");
-            f4Key = builder.GetControl<KeyControl>("f4");
-            f5Key = builder.GetControl<KeyControl>("f5");
-            f6Key = builder.GetControl<KeyControl>("f6");
-            f7Key = builder.GetControl<KeyControl>("f7");
-            f8Key = builder.GetControl<KeyControl>("f8");
-            f9Key = builder.GetControl<KeyControl>("f9");
-            f10Key = builder.GetControl<KeyControl>("f10");
-            f11Key = builder.GetControl<KeyControl>("f11");
-            f12Key = builder.GetControl<KeyControl>("f12");
-            capsLockKey = builder.GetControl<KeyControl>("capsLock");
-            numLockKey = builder.GetControl<KeyControl>("numLock");
-            scrollLockKey = builder.GetControl<KeyControl>("scrollLock");
-            printScreenKey = builder.GetControl<KeyControl>("printScreen");
-            pauseKey = builder.GetControl<KeyControl>("pause");
-            oem1Key = builder.GetControl<KeyControl>("OEM1");
-            oem2Key = builder.GetControl<KeyControl>("OEM2");
-            oem3Key = builder.GetControl<KeyControl>("OEM3");
-            oem4Key = builder.GetControl<KeyControl>("OEM4");
-            oem5Key = builder.GetControl<KeyControl>("OEM5");
-
             imeSelected = builder.GetControl<ButtonControl>("IMESelected");
-
-            ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
-            ////        and it just seems somewhat dirty to jam the data into the control here
-
-            // Assign key code to all keys.
-            for (var key = 1; key < (int)Keyboard.KeyCount; ++key)
-                this[(Key)key].keyCode = (Key)key;
 
             base.FinishSetup(builder);
         }
@@ -901,5 +776,84 @@ namespace UnityEngine.Experimental.Input
         private string m_KeyboardLayoutName;
 
         internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
+    }
+
+    public static class KeyboardExtensions
+    {
+        public static bool IsModifierKey(this Key key)
+        {
+            switch (key)
+            {
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                case Key.LeftShift:
+                case Key.RightShift:
+                case Key.LeftMeta:
+                case Key.RightMeta:
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                    return true;
+            }
+            return false;
+        }
+
+        ////REVIEW: Is this a good idea? Ultimately it's up to any one keyboard layout to define this however it wants.
+        public static bool IsTextInputKey(this Key key)
+        {
+            switch (key)
+            {
+                case Key.LeftShift:
+                case Key.RightShift:
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                case Key.LeftMeta:
+                case Key.RightMeta:
+                case Key.ContextMenu:
+                case Key.Escape:
+                case Key.LeftArrow:
+                case Key.RightArrow:
+                case Key.UpArrow:
+                case Key.DownArrow:
+                case Key.Backspace:
+                case Key.PageDown:
+                case Key.PageUp:
+                case Key.Home:
+                case Key.End:
+                case Key.Insert:
+                case Key.Delete:
+                case Key.CapsLock:
+                case Key.NumLock:
+                case Key.PrintScreen:
+                case Key.ScrollLock:
+                case Key.Pause:
+                case Key.None:
+                case Key.Space:
+                case Key.Enter:
+                case Key.Tab:
+                case Key.NumpadEnter:
+                case Key.F1:
+                case Key.F2:
+                case Key.F3:
+                case Key.F4:
+                case Key.F5:
+                case Key.F6:
+                case Key.F7:
+                case Key.F8:
+                case Key.F9:
+                case Key.F10:
+                case Key.F11:
+                case Key.F12:
+                case Key.OEM1:
+                case Key.OEM2:
+                case Key.OEM3:
+                case Key.OEM4:
+                case Key.OEM5:
+                case Key.IMESelected:
+                    return false;
+            }
+            return true;
+        }
     }
 }

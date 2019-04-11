@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputControlLayout(stateType = typeof(XboxOneGamepadState))]
+    [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;
@@ -199,6 +199,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         public ButtonControl paddle2 { get; private set; }
         public ButtonControl paddle3 { get; private set; }
         public ButtonControl paddle4 { get; private set; }
+
+        public new static XboxOneGamepad current { get; set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -258,6 +266,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             base.OnRemoved();
 
             ArrayHelpers.Erase(ref s_Devices, this);
+            if (current == this)
+                current = null;
         }
 
         private void UpdatePadSettings()

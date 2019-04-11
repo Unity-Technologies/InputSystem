@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
+
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.
     /// </summary>
@@ -70,7 +72,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Set delegate to be called on input updates.
         /// </summary>
-        Action<InputUpdateType, int, IntPtr> onUpdate { set; }
+        InputUpdateDelegate onUpdate { set; }
 
         /// <summary>
         /// Set delegate to be called right before <see cref="onUpdate"/>.
@@ -80,6 +82,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// in the upcoming update.
         /// </remarks>
         Action<InputUpdateType> onBeforeUpdate { set; }
+
+        Func<InputUpdateType, bool> onShouldRunUpdate { set; }
 
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
@@ -92,6 +96,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// in JSON format of the device (see <see cref="InputDeviceDescription.FromJson"/>).
         /// </remarks>
         Action<int, string> onDeviceDiscovered { set; }
+
+        /// <summary>
+        /// Set delegate to call when the application changes focus.
+        /// </summary>
+        /// <seealso cref="Application.onFocusChanged"/>
+        Action<bool> onFocusChanged { set; }
 
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
@@ -125,18 +135,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTime { get; }
 
         /// <summary>
+        /// The current time on the same timeline that input events are delivered on, for the current FixedUpdate.
+        /// </summary>
+        /// <remarks>
+        /// This should be used inside FixedUpdate calls instead of currentTime, as FixedUpdates are simulated at times
+        /// not matching the real time the simulation corresponds to.
+        /// </remarks>
+        double currentTimeForFixedUpdate { get; }
+
+        /// <summary>
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
-
-        /// <summary>
-        /// Mask that determines which input updates are executed by the runtime.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to turn off unneeded updates (like fixed updates) or turn on updates
-        /// that are disabled by default (like before-render updates).
-        /// </remarks>
-        InputUpdateType updateMask { set; }
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }

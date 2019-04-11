@@ -7,10 +7,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
-
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
+using Property = NUnit.Framework.PropertyAttribute;
 
 ////TODO: have to decide what to do if a layout is removed
 
@@ -34,6 +31,7 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
+    [Property("TimesliceEvents", "Off")]
     public void Remote_EventsAreSentToRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -92,7 +90,7 @@ partial class CoreTests
     [Category("Remote")]
     public void Remote_SettingUsageOnDevice_WillSendChangeToRemotes()
     {
-        var gamepad = InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var remote = new FakeRemote())
         {
             var remoteGamepad = (Gamepad)remote.manager.devices[0];
@@ -108,6 +106,15 @@ partial class CoreTests
     [Category("Remote")]
     public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
     {
+#if UNITY_EDITOR
+        // In the editor, RemoteInputPlayerConnection is a scriptable singleton. Creating multiple instances of it
+        // will cause an error messages - but will work nevertheless, so we expect those errors to let us run the test.
+        // We call RemoteInputPlayerConnection.instance once to make sure that we an instance is created, and we get
+        // a deterministic number of two errors.
+        var instance = RemoteInputPlayerConnection.instance;
+        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
+        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
+#endif
         var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
         var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
 
@@ -120,7 +127,8 @@ partial class CoreTests
         fakeEditorConnection.otherEnd = fakePlayerConnection;
         fakePlayerConnection.otherEnd = fakeEditorConnection;
 
-        var observer = new RemoteTestObserver();
+        var observerEditor = new RemoteTestObserver();
+        var observerPlayer = new RemoteTestObserver();
 
         // In the Unity API, "PlayerConnection" is the connection to the editor
         // and "EditorConnection" is the connection to the player. Seems counter-intuitive.
@@ -130,23 +138,40 @@ partial class CoreTests
         // Bind a local remote on the player side.
         var local = new InputRemoting(InputSystem.s_Manager);
         local.Subscribe(connectionToEditor);
-        local.StartSending();
 
-        connectionToPlayer.Subscribe(observer);
+        connectionToEditor.Subscribe(local);
+        connectionToPlayer.Subscribe(observerEditor);
+        connectionToEditor.Subscribe(observerPlayer);
 
-        var device = InputSystem.AddDevice("Gamepad");
+        fakeEditorConnection.Send(RemoteInputPlayerConnection.kStartSendingMsg, null);
+
+        var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
         InputSystem.RemoveDevice(device);
 
-        ////TODO: make sure that we also get the connection sequence right and send our initial layouts and devices
-        Assert.That(observer.messages, Has.Count.EqualTo(4));
-        Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
-        Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
-        Assert.That(observer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
-        Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
+        fakeEditorConnection.Send(RemoteInputPlayerConnection.kStopSendingMsg, null);
 
-        ////TODO: test disconnection
+        // We should not obseve any messages for these, as we stopped sending!
+        device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+        InputSystem.RemoveDevice(device);
+
+        fakeEditorConnection.DisconnectAll();
+
+        ////TODO: make sure that we also get the connection sequence right and send our initial layouts and devices
+        Assert.That(observerEditor.messages, Has.Count.EqualTo(5));
+        Assert.That(observerEditor.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
+        Assert.That(observerEditor.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
+        Assert.That(observerEditor.messages[2].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
+        Assert.That(observerEditor.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
+        Assert.That(observerEditor.messages[4].type, Is.EqualTo(InputRemoting.MessageType.Disconnect));
+
+        Assert.That(observerPlayer.messages, Has.Count.EqualTo(3));
+        Assert.That(observerPlayer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
+        Assert.That(observerPlayer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.StartSending));
+        Assert.That(observerPlayer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.StopSending));
 
         ScriptableObject.Destroy(connectionToEditor);
         ScriptableObject.Destroy(connectionToPlayer);
@@ -193,6 +218,7 @@ partial class CoreTests
 
         public void DisconnectAll()
         {
+            m_DisconnectionListeners.Invoke(playerId);
             m_MessageListeners.Clear();
             m_ConnectionListeners.RemoveAllListeners();
             m_DisconnectionListeners.RemoveAllListeners();
@@ -263,8 +289,11 @@ partial class CoreTests
         {
             runtime = new InputTestRuntime();
             manager = new InputManager();
+            manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
+            manager.m_Settings.timesliceEvents = false;
             manager.InstallRuntime(runtime);
             manager.InitializeData();
+            manager.ApplySettings();
 
             local = new InputRemoting(InputSystem.s_Manager);
             remote = new InputRemoting(manager);

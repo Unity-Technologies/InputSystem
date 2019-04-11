@@ -7,17 +7,16 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: gyro and accelerometer support
+////REVIEW: The Switch controller can be used to point at things; can we somehow help leverage that?
 
 namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for Switch NPad controllers.
     /// </summary>
-    /// <rem
     /// <seealso href="http://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/~/joy-con-controller-diagram"/>
     [StructLayout(LayoutKind.Explicit, Size = 60)]
-    public unsafe struct NPadInputState : IInputStateTypeInfo
+    public struct NPadInputState : IInputStateTypeInfo
     {
         public FourCC GetFormat()
         {
@@ -50,21 +49,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(12)]
         public Vector2 rightStick;
 
-        [InputControl(name = "acceleration")]
+        [InputControl(name = "acceleration", noisy = true)]
         [FieldOffset(20)]
         public Vector3 acceleration;
 
-        [InputControl(name = "attitude")]
+        [InputControl(name = "attitude", noisy = true)]
         [FieldOffset(32)]
         public Quaternion attitude;
 
-        [InputControl(name = "angularVelocity")]
+        [InputControl(name = "angularVelocity", noisy = true)]
         [FieldOffset(48)]
         public Vector3 angularVelocity;
 
-        public float leftTrigger { get { return ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f; } }
+        public float leftTrigger => ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f;
 
-        public float rightTrigger { get { return ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f; } }
+        public float rightTrigger => ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f;
 
         public enum Button
         {
@@ -119,7 +118,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NPadStatusReport : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'S'); } }
+        public static FourCC Type => new FourCC('N', 'P', 'D', 'S');
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 24;
 
@@ -160,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NPadControllerSupportCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'U'); } }
+        public static FourCC Type => new FourCC('N', 'P', 'D', 'U');
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 8;
 
@@ -199,7 +198,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("NSUI"); } }
+        public static FourCC Type => new FourCC("NSUI");
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
@@ -218,7 +217,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("NSOR"); } }
+        public static FourCC Type => new FourCC("NSOR");
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
 
         [FieldOffset(0)]
@@ -241,7 +240,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("SXST"); } }
+        public static FourCC Type => new FourCC("SXST");
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
@@ -260,7 +259,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC("SXSP"); } }
+        public static FourCC Type => new FourCC("SXSP");
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
@@ -275,6 +274,55 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
             };
         }
     }
+    /// <summary>
+    /// Switch output report sent as command to backend.
+    /// </summary>
+    // IMPORTANT: Struct must match the NpadDeviceIOCTLOutputReport in native
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct NPadDeviceIOCTLOutputCommand : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('N', 'P', 'G', 'O'); } }
+
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 20;
+        public const float kDefaultFrequencyLow = 160.0f;
+        public const float kDefaultFrequencyHigh = 320.0f;
+
+        public enum NPadRumblePostion : byte
+        {
+            Left = 0x02,
+            Right = 0x04,
+            All = 0xFF,
+            None = 0x00,
+        }
+
+        [FieldOffset(0)] public InputDeviceCommand baseCommand;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
+        public byte positionFlags;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
+        public float amplitudeLow;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
+        public float frequencyLow;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
+        public float amplitudeHigh;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
+        public float frequencyHigh;
+
+        public FourCC GetTypeStatic() { return Type; }
+
+        public static NPadDeviceIOCTLOutputCommand Create()
+        {
+            return new NPadDeviceIOCTLOutputCommand()
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                positionFlags = (byte)NPadRumblePostion.None,
+                amplitudeLow = 0,
+                frequencyLow = kDefaultFrequencyLow,
+                amplitudeHigh = 0,
+                frequencyHigh = kDefaultFrequencyHigh
+            };
+        }
+    }
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.Switch
@@ -283,8 +331,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
     /// <seealso cref="NPadInputState"/>
-    [InputControlLayout(stateType = typeof(NPadInputState))]
-    public class NPad : Gamepad
+    [InputControlLayout(stateType = typeof(NPadInputState), displayName = "Switch Controller (on Switch)")]
+    public class NPad : Gamepad, INPadRumble
     {
         public ButtonControl leftSL { get; private set; }
         public ButtonControl leftSR { get; private set; }
@@ -317,14 +365,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             Invalid = 0xFF,
         }
 
+        //orientation matters for stick axes!!!!
+
+        //there's a touchpad and 90% of games don't support it
+
+        //each person could play with a different style
         [Flags]
-        public enum NpadStyle : int
+        public enum NpadStyle
         {
-            FullKey = (1 << 0),
-            Handheld = (1 << 1),
-            JoyDual = (1 << 2),
-            JoyLeft = (1 << 3),
-            JoyRight = (1 << 4),
+            FullKey = 1 << 0,//separate;or pro controller;only one accel
+            Handheld = 1 << 1,//docked to switch
+            JoyDual = 1 << 2,//separate; one accel per joycon
+            JoyLeft = 1 << 3,//just one; orientation matters
+            JoyRight = 1 << 4,//just one; orientation matters
         }
 
         public struct JoyConColor
@@ -383,6 +436,43 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         private JoyConColor m_LeftControllerColor;
         private JoyConColor m_RightControllerColor;
 
+
+        private struct NPadRumbleValues
+        {
+            public float? amplitudeLow;
+            public float? frequencyLow;
+            public float? amplitudeHigh;
+            public float? frequencyHigh;
+
+            public bool HasValues => amplitudeLow.HasValue && frequencyLow.HasValue && amplitudeHigh.HasValue && frequencyHigh.HasValue;
+
+            public void SetRumbleValues(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+            {
+                amplitudeLow = Mathf.Clamp01(lowAmplitude);
+                frequencyLow = lowFrequency;
+                amplitudeHigh = Mathf.Clamp01(highAmplitude);
+                frequencyHigh = highFrequency;
+            }
+
+            public void Reset()
+            {
+                amplitudeLow = null;
+                frequencyLow = null;
+                amplitudeHigh = null;
+                frequencyLow = null;
+            }
+
+            public void ApplyRumbleValues(ref NPadDeviceIOCTLOutputCommand cmd)
+            {
+                cmd.amplitudeLow = (float)amplitudeLow;
+                cmd.frequencyLow = (float)frequencyLow;
+                cmd.amplitudeHigh = (float)amplitudeHigh;
+                cmd.frequencyHigh = (float)frequencyHigh;
+            }
+        }
+        private NPadRumbleValues m_leftRumbleValues;
+        private NPadRumbleValues m_rightRumbleValues;
+
         protected override void RefreshConfiguration()
         {
             base.RefreshConfiguration();
@@ -391,9 +481,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
 
             if (ExecuteCommand(ref command) > 0)
             {
-                m_NpadId = (NpadId)command.npadId;
-                m_Orientation = (Orientation)command.orientation;
-                m_StyleMask = (NpadStyle)command.styleMask;
+                m_NpadId = command.npadId;
+                m_Orientation = command.orientation;
+                m_StyleMask = command.styleMask;
                 m_LeftControllerColor = NNColorToJoyConColor(command.colorLeftMain, command.colorLeftSub);
                 m_RightControllerColor = NNColorToJoyConColor(command.colorRightMain, command.colorRightSub);
             }
@@ -452,6 +542,110 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         public static int Color32ToNNColor(Color32 color)
         {
             return (int)color.r | ((int)color.g << 8) | ((int)color.b << 16) | ((int)color.a << 24);
+        }
+
+        public override void PauseHaptics()
+        {
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            ExecuteCommand(ref cmd);
+        }
+
+        public override void ResetHaptics()
+        {
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            ExecuteCommand(ref cmd);
+            m_leftRumbleValues.Reset();
+            m_rightRumbleValues.Reset();
+        }
+
+        public override void ResumeHaptics()
+        {
+            if (m_leftRumbleValues.Equals(m_rightRumbleValues) && m_leftRumbleValues.HasValues)
+            {
+                var cmd = NPadDeviceIOCTLOutputCommand.Create();
+                cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+                m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+                ExecuteCommand(ref cmd);
+            }
+            else
+            {
+                if (m_leftRumbleValues.HasValues)
+                {
+                    var cmd = NPadDeviceIOCTLOutputCommand.Create();
+                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+                    m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+                    ExecuteCommand(ref cmd);
+                }
+                if (m_rightRumbleValues.HasValues)
+                {
+                    var cmd = NPadDeviceIOCTLOutputCommand.Create();
+                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+                    m_rightRumbleValues.ApplyRumbleValues(ref cmd);
+                    ExecuteCommand(ref cmd);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set rummble intensity for all low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowFrequency">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration intensity, 0..1 range</param>
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
+        {
+            SetMotorSpeeds(lowFrequency, NPadDeviceIOCTLOutputCommand.kDefaultFrequencyLow, highFrequency, NPadDeviceIOCTLOutputCommand.kDefaultFrequencyHigh);
+        }
+
+        /// <summary>
+        /// Set the intensity and vibration frequency for all low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowAmplitude">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="lowFrequency">Low frequency motor's vibration frequency in Hz</param>
+        /// <param name="highAmplitude">High frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration frequency in Hz</param>
+        public void SetMotorSpeeds(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+        {
+            m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+            m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+            m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+            ExecuteCommand(ref cmd);
+        }
+
+        /// <summary>
+        /// Set the intensity and vibration frequency for the left low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowAmplitude">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="lowFrequency">Low frequency motor's vibration frequency in Hz</param>
+        /// <param name="highAmplitude">High frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration frequency in Hz</param>
+        public void SetMotorSpeedLeft(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+        {
+            m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+            m_leftRumbleValues.ApplyRumbleValues(ref cmd);
+            ExecuteCommand(ref cmd);
+        }
+
+        /// <summary>
+        /// Set the intensity and vibration frequency for the right low and high frequency rumble motors
+        /// </summary>
+        /// <param name="lowAmplitude">Low frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="lowFrequency">Low frequency motor's vibration frequency in Hz</param>
+        /// <param name="highAmplitude">High frequency motor's vibration intensity, 0..1 range</param>
+        /// <param name="highFrequency">High frequency motor's vibration frequency in Hz</param>
+        public void SetMotorSpeedRight(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
+        {
+            m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
+
+            var cmd = NPadDeviceIOCTLOutputCommand.Create();
+            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+            m_rightRumbleValues.ApplyRumbleValues(ref cmd);
+            ExecuteCommand(ref cmd);
         }
     }
 }

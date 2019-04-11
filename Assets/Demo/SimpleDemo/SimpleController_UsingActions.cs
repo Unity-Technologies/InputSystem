@@ -25,6 +25,8 @@ public class SimpleController_UsingActions : MonoBehaviour
     {
         moveAction.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         lookAction.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
+        moveAction.cancelled += ctx => m_Move = Vector2.zero;
+        lookAction.cancelled += ctx => m_Look = Vector2.zero;
 
         fireAction.performed +=
             ctx =>
@@ -87,9 +89,9 @@ public class SimpleController_UsingActions : MonoBehaviour
 
     private void Look(Vector2 rotate)
     {
-        var scaledRoateSpeed = rotateSpeed * Time.deltaTime;
-        m_Rotation.y += rotate.x * scaledRoateSpeed;
-        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRoateSpeed, -89, 89);
+        var scaledRotateSpeed = rotateSpeed * Time.deltaTime;
+        m_Rotation.y += rotate.x * scaledRotateSpeed;
+        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRotateSpeed, -89, 89);
         transform.localEulerAngles = m_Rotation;
     }
 

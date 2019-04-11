@@ -5,6 +5,27 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class TypeHelpers
     {
+        public static TObject As<TObject>(this System.Object obj)
+        {
+            return (TObject)obj;
+        }
+
+        public static bool IsInt(this TypeCode type)
+        {
+            switch (type)
+            {
+                case TypeCode.Byte: return true;
+                case TypeCode.SByte: return true;
+                case TypeCode.Int16: return true;
+                case TypeCode.Int32: return true;
+                case TypeCode.Int64: return true;
+                case TypeCode.UInt16: return true;
+                case TypeCode.UInt32: return true;
+                case TypeCode.UInt64: return true;
+            }
+            return false;
+        }
+
         public static Type GetValueType(MemberInfo member)
         {
             var field = member as FieldInfo;
@@ -51,6 +72,62 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return type.Name;
+        }
+
+        public static Type GetGenericTypeArgumentFromHierarchy(Type type, Type genericTypeDefinition, int argumentIndex)
+        {
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+            if (genericTypeDefinition == null)
+                throw new ArgumentNullException(nameof(genericTypeDefinition));
+            if (argumentIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(argumentIndex));
+
+            if (genericTypeDefinition.IsInterface)
+            {
+                // Walk up the chain until we find the generic type def as an interface on a type.
+                while (true)
+                {
+                    var interfaces = type.GetInterfaces();
+                    var haveFoundInterface = false;
+                    foreach (var element in interfaces)
+                    {
+                        if (element.IsConstructedGenericType &&
+                            element.GetGenericTypeDefinition() == genericTypeDefinition)
+                        {
+                            type = element;
+                            haveFoundInterface = true;
+                            break;
+                        }
+
+                        // Recurse into interface in case we're looking for a base interface.
+                        var typeArgument =
+                            GetGenericTypeArgumentFromHierarchy(element, genericTypeDefinition, argumentIndex);
+                        if (typeArgument != null)
+                            return typeArgument;
+                    }
+
+                    if (haveFoundInterface)
+                        break;
+
+                    type = type.BaseType;
+                    if (type == null || type == typeof(object))
+                        return null;
+                }
+            }
+            else
+            {
+                // Walk up the chain until we find the generic type def.
+                while (!type.IsConstructedGenericType || type.GetGenericTypeDefinition() != genericTypeDefinition)
+                {
+                    type = type.BaseType;
+                    if (type == typeof(object))
+                        return null;
+                }
+            }
+
+
+            return type.GenericTypeArguments[argumentIndex];
         }
     }
 }

@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: move this inside InputActionQueue?
+////REVIEW: move this inside InputActionTrace?
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -12,9 +12,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <remarks>
     /// Action events capture fully processed values only.
     ///
-    /// This struct is internal as the data it stores requires having access to <see cref="InputActionMapState"/>.
-    /// Public access is meant to go through <see cref="InputActionQueue"/> which provides a wrapper around
-    /// action events in the form of <see cref="InputActionQueue.ActionEventPtr"/>.
+    /// This struct is internal as the data it stores requires having access to <see cref="InputActionState"/>.
+    /// Public access is meant to go through <see cref="InputActionTrace"/> which provides a wrapper around
+    /// action events in the form of <see cref="InputActionTrace.ActionEventPtr"/>.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 16 + 1)]
     internal unsafe struct ActionEvent : IInputEventTypeInfo
@@ -34,14 +34,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double startTime
         {
-            get { return m_StartTime; }
-            set { m_StartTime = value; }
+            get => m_StartTime;
+            set => m_StartTime = value;
         }
 
         public InputActionPhase phase
         {
-            get { return (InputActionPhase)m_Phase; }
-            set { m_Phase = (byte)value; }
+            get => (InputActionPhase)m_Phase;
+            set => m_Phase = (byte)value;
         }
 
         public byte* valueData
@@ -55,14 +55,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public int valueSizeInBytes
-        {
-            get { return (int)baseEvent.sizeInBytes - InputEvent.kBaseEventSize - 16; }
-        }
+        public int valueSizeInBytes => (int)baseEvent.sizeInBytes - InputEvent.kBaseEventSize - 16;
 
         public int stateIndex
         {
-            get { return m_StateIndex; }
+            get => m_StateIndex;
             set
             {
                 Debug.Assert(value >= 0 && value <= byte.MaxValue);
@@ -74,7 +71,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int controlIndex
         {
-            get { return m_ControlIndex; }
+            get => m_ControlIndex;
             set
             {
                 Debug.Assert(value >= 0 && value <= ushort.MaxValue);
@@ -86,7 +83,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int bindingIndex
         {
-            get { return m_BindingIndex; }
+            get => m_BindingIndex;
             set
             {
                 Debug.Assert(value >= 0 && value <= ushort.MaxValue);
@@ -101,13 +98,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get
             {
                 if (m_InteractionIndex == ushort.MaxValue)
-                    return InputActionMapState.kInvalidIndex;
+                    return InputActionState.kInvalidIndex;
                 return m_InteractionIndex;
             }
             set
             {
-                Debug.Assert(value == InputActionMapState.kInvalidIndex || (value >= 0 && value < ushort.MaxValue));
-                if (value == InputActionMapState.kInvalidIndex)
+                Debug.Assert(value == InputActionState.kInvalidIndex || (value >= 0 && value < ushort.MaxValue));
+                if (value == InputActionState.kInvalidIndex)
                     m_InteractionIndex = ushort.MaxValue;
                 else
                 {
@@ -139,10 +136,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public static ActionEvent* From(InputEventPtr ptr)
         {
             if (!ptr.valid)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (!ptr.IsA<ActionEvent>())
-                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into ActionEvent",
-                    ptr.type));
+                throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into ActionEvent");
 
             return (ActionEvent*)ptr.data;
         }

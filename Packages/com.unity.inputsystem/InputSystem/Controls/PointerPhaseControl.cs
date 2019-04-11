@@ -1,4 +1,4 @@
-using System;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 // Unfortunately, C# (at least up to version 6) does not support enum type constraints. There's
@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Controls
 {
+    [InputControlLayout(hideInUI = true)]
     public class PointerPhaseControl : InputControl<PointerPhase>
     {
         public PointerPhaseControl()
@@ -16,15 +17,15 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
-        public override unsafe PointerPhase ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe PointerPhase ReadUnprocessedValueFromState(void* statePtr)
         {
             var intValue = stateBlock.ReadInt(statePtr);
             return (PointerPhase)intValue;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, PointerPhase value)
+        public override unsafe void WriteValueIntoState(PointerPhase value, void* statePtr)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             *(PointerPhase*)valuePtr = value;
         }
     }

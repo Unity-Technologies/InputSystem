@@ -47,17 +47,41 @@ namespace UnityEngine.Experimental.Input
                     m_NewDeviceDiscoveries.Clear();
                 }
 
-                if (onBeforeUpdate != null)
-                {
-                    onBeforeUpdate(type);
-                }
+                onBeforeUpdate?.Invoke(type);
+
+                // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
+                // don't get bumped into the following update.
+                if (type == InputUpdateType.Dynamic)
+                    currentTime += advanceTimeEachDynamicUpdate;
+
                 if (onUpdate != null)
                 {
-                    onUpdate(type, m_EventCount, (IntPtr)m_EventBuffer.GetUnsafePtr());
+                    var buffer = new InputEventBuffer(
+                        (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
+                        m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
+
+                    onUpdate(type, ref buffer);
+
+                    #if UNITY_2019_1_OR_NEWER
+                    m_EventCount = buffer.eventCount;
+                    m_EventWritePosition = (int)buffer.sizeInBytes;
+                    if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
+                        NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
+                        m_EventBuffer = buffer.data;
+                    #else
+                    if (type != InputUpdateType.BeforeRender)
+                    {
+                        m_EventCount = 0;
+                        m_EventWritePosition = 0;
+                    }
+                    #endif
+                }
+                else
+                {
+                    m_EventCount = 0;
+                    m_EventWritePosition = 0;
                 }
 
-                m_EventCount = 0;
-                m_EventWritePosition = 0;
                 ++frameCount;
             }
         }
@@ -70,7 +94,8 @@ namespace UnityEngine.Experimental.Input
 
             lock (m_Lock)
             {
-                eventPtr->m_EventId = m_NextEventId;
+                eventPtr->eventId = m_NextEventId;
+                eventPtr->handled = false;
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
@@ -143,17 +168,49 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
+                if (commandPtr->type == QueryPairedUserAccountCommand.Type)
+                {
+                    foreach (var pairing in userAccountPairings)
+                    {
+                        if (pairing.deviceId != deviceId)
+                            continue;
+
+                        var queryPairedUser = (QueryPairedUserAccountCommand*)commandPtr;
+                        queryPairedUser->handle = pairing.userHandle;
+                        queryPairedUser->name = pairing.userName;
+                        queryPairedUser->id = pairing.userId;
+                        return (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
+                    }
+                }
+
+                var result = InputDeviceCommand.kGenericFailure;
                 if (m_DeviceCommandCallbacks != null)
                     foreach (var entry in m_DeviceCommandCallbacks)
                     {
                         if (entry.Key == deviceId)
                         {
-                            return entry.Value(deviceId, commandPtr);
+                            result = entry.Value(deviceId, commandPtr);
+                            if (result >= 0)
+                                return result;
                         }
                     }
+                return result;
             }
+        }
 
-            return -1;
+        public void InvokeFocusChanged(bool newFocusState)
+        {
+            onFocusChanged?.Invoke(newFocusState);
+        }
+
+        public void FocusLost()
+        {
+            InvokeFocusChanged(false);
+        }
+
+        public void FocusGained()
+        {
+            InvokeFocusChanged(true);
         }
 
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
@@ -169,42 +226,118 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId)
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId,
+            ulong userHandle = 0, string userName = null, string userId = null)
         {
-            return ReportNewInputDevice(description.ToJson(), deviceId);
+            deviceId = ReportNewInputDevice(description.ToJson(), deviceId);
+
+            // If we have user information, automatically set up
+            if (userHandle != 0)
+                AssociateInputDeviceWithUser(deviceId, userHandle, userName, userId);
+
+            return deviceId;
         }
 
-        public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
+        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.kInvalidDeviceId,
+            ulong userHandle = 0, string userName = null, string userId = null)
+            where TDevice : InputDevice
+        {
+            return ReportNewInputDevice(
+                new InputDeviceDescription {deviceClass = typeof(TDevice).Name, interfaceName = "Test"}, deviceId,
+                userHandle, userName, userId);
+        }
+
+        public unsafe void ReportInputDeviceRemoved(int deviceId)
+        {
+            var removeEvent = DeviceRemoveEvent.Create(deviceId);
+            var removeEventPtr = UnsafeUtility.AddressOf(ref removeEvent);
+            QueueEvent(new IntPtr(removeEventPtr));
+        }
+
+        public void ReportInputDeviceRemoved(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            ReportInputDeviceRemoved(device.id);
+        }
+
+        public void AssociateInputDeviceWithUser(int deviceId, ulong userHandle, string userName = null, string userId = null)
+        {
+            var existingIndex = -1;
+            for (var i = 0; i < userAccountPairings.Count; ++i)
+                if (userAccountPairings[i].deviceId == deviceId)
+                {
+                    existingIndex = i;
+                    break;
+                }
+
+            if (userHandle == 0)
+            {
+                if (existingIndex != -1)
+                    userAccountPairings.RemoveAt(existingIndex);
+            }
+            else if (existingIndex != -1)
+            {
+                userAccountPairings[existingIndex] =
+                    new PairedUser
+                {
+                    deviceId = deviceId,
+                    userHandle = userHandle,
+                    userName = userName,
+                    userId = userId,
+                };
+            }
+            else
+            {
+                userAccountPairings.Add(
+                    new PairedUser
+                    {
+                        deviceId = deviceId,
+                        userHandle = userHandle,
+                        userName = userName,
+                        userId = userId,
+                    });
+            }
+        }
+
+        public void AssociateInputDeviceWithUser(InputDevice device, ulong userHandle, string userName = null, string userId = null)
+        {
+            AssociateInputDeviceWithUser(device.id, userHandle, userName, userId);
+        }
+
+        public struct PairedUser
+        {
+            public int deviceId;
+            public ulong userHandle;
+            public string userName;
+            public string userId;
+        }
+
+        public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
+        public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
+        public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
-        public InputUpdateType updateMask { get; set; }
+        public double currentTimeForFixedUpdate { get; set; }
+        public bool shouldRunInBackground { get; set; }
         public int frameCount { get; set; }
 
-        public ScreenOrientation screenOrientation
-        {
-            set
-            {
-                m_ScreenOrientation = value;
-            }
+        public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
+        public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+
+        public Vector2 screenSize { set; get; } = new Vector2(Screen.width, Screen.height);
+
+        public List<PairedUser> userAccountPairings
+        {
             get
             {
-                return m_ScreenOrientation;
-            }
-        }
-
-        public Vector2 screenSize
-        {
-            set
-            {
-                m_ScreenSize = value;
-            }
-            get
-            {
-                return m_ScreenSize;
+                if (m_UserPairings == null)
+                    m_UserPairings = new List<PairedUser>();
+                return m_UserPairings;
             }
         }
 
@@ -216,7 +349,7 @@ namespace UnityEngine.Experimental.Input
 
         public double currentTimeOffsetToRealtimeSinceStartup
         {
-            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            get => m_CurrentTimeOffsetToRealtimeSinceStartup;
             set
             {
                 m_CurrentTimeOffsetToRealtimeSinceStartup = value;
@@ -225,15 +358,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         private int m_NextDeviceId = 1;
-        private uint m_NextEventId = 1;
+        private int m_NextEventId = 1;
         private int m_EventCount;
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
+        private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
-        internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
+        private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
-        private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
-        private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -243,14 +375,12 @@ namespace UnityEngine.Experimental.Input
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
-            if (onRegisterAnalyticsEvent != null)
-                onRegisterAnalyticsEvent(name, maxPerHour, maxPropertiesPerEvent);
+            onRegisterAnalyticsEvent?.Invoke(name, maxPerHour, maxPropertiesPerEvent);
         }
 
         public void SendAnalyticsEvent(string name, object data)
         {
-            if (onSendAnalyticsEvent != null)
-                onSendAnalyticsEvent(name, data);
+            onSendAnalyticsEvent?.Invoke(name, data);
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR

@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     /// <summary>
     /// A Sony DualShock controller.
     /// </summary>
-    [InputControlLayout] // Unset state type inherited from base.
+    [InputControlLayout(displayName = "PS4 Controller")]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
         public ButtonControl touchpadButton { get; private set; }
@@ -49,9 +49,20 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         [InputControl(name = "rightStickPress", shortDisplayName = "R3")]
         public ButtonControl R3 { get; private set; }
 
-        public Vector3Control acceleration { get; private set; }
-        public QuaternionControl orientation { get; private set; }
-        public Vector3Control angularVelocity { get; private set; }
+        public new static DualShockGamepad current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -60,10 +71,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             touchpadButton = builder.GetControl<ButtonControl>(this, "touchpadButton");
             optionsButton = startButton;
             shareButton = selectButton;
-
-            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
-            orientation = builder.GetControl<QuaternionControl>(this, "orientation");
-            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
 
             squareButton = buttonWest;
             triangleButton = buttonNorth;

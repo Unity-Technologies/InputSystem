@@ -10,6 +10,10 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: should we add a gyro as a standard feature of gamepads?
 
+////REVIEW: is the Lefty layout variant actually useful?
+
+////TODO: allow to be used for mouse simulation
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
@@ -20,10 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('G', 'P', 'A', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
 
         /// <summary>
         /// Button bit mask.
@@ -31,10 +32,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <seealso cref="GamepadButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" }, displayName = "A", shortDisplayName = "A")]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "X", shortDisplayName = "X")]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Y", shortDisplayName = "Y")]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "B", shortDisplayName = "B")]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = "A")]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = "X")]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = "Y")]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
@@ -83,6 +84,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public FourCC GetFormat()
         {
             return kFormat;
+        }
+
+        public GamepadState(params GamepadButton[] buttons)
+            : this()
+        {
+            foreach (var button in buttons)
+            {
+                var bit = (uint)1 << (int)button;
+                this.buttons |= bit;
+            }
         }
 
         public GamepadState WithButton(GamepadButton button, bool value = true)
@@ -138,10 +149,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
+    /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
-    [InputControlLayout(stateType = typeof(GamepadState))]
+    [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         ////REVIEW: add PS4 and Xbox style alternate accessors?
@@ -167,6 +178,38 @@ namespace UnityEngine.Experimental.Input
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
 
+        /// <summary>
+        /// Same as <see cref="buttonSouth"/>.
+        /// </summary>
+        public ButtonControl aButton
+        {
+            get { return buttonSouth; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonEast"/>.
+        /// </summary>
+        public ButtonControl bButton
+        {
+            get { return buttonEast; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonWest"/>
+        /// </summary>
+        public ButtonControl xButton
+        {
+            get { return buttonWest; }
+        }
+
+        /// <summary>
+        /// Same as <see cref="buttonNorth"/>.
+        /// </summary>
+        public ButtonControl yButton
+        {
+            get { return buttonNorth; }
+        }
+
         ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
         {
@@ -189,10 +232,15 @@ namespace UnityEngine.Experimental.Input
                     case GamepadButton.DpadLeft: return dpad.left;
                     case GamepadButton.DpadRight: return dpad.right;
                     default:
-                        throw new InvalidEnumArgumentException("button", (int)button, typeof(GamepadButton));
+                        throw new InvalidEnumArgumentException(nameof(button), (int)button, typeof(GamepadButton));
                 }
             }
         }
+
+        /// <summary>
+        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
+        /// </summary>
+        public static Gamepad current { get; private set; }
 
         /// <summary>
         /// A list of gamepads currently connected to the system.
@@ -204,10 +252,7 @@ namespace UnityEngine.Experimental.Input
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
         /// </remarks>
-        public static ReadOnlyArray<Gamepad> all
-        {
-            get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
-        }
+        public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -236,10 +281,10 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        protected override void RefreshConfiguration()
+        public override void MakeCurrent()
         {
-            base.RefreshConfiguration();
-            RefreshUserId();
+            base.MakeCurrent();
+            current = this;
         }
 
         protected override void OnAdded()
@@ -249,9 +294,12 @@ namespace UnityEngine.Experimental.Input
 
         protected override void OnRemoved()
         {
-            // Remove from array.
+            if (current == this)
+                current = null;
+
+            // Remove from `all`.
             var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
-            Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));
+            Debug.Assert(wasFound, $"Gamepad {this} seems to not have been added but is being removed");
             if (wasFound)
                 --s_GamepadCount;
         }

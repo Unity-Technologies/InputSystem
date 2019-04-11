@@ -15,6 +15,8 @@ using UnityEngine.Profiling;
 
 ////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
 
+////TODO: implement support for sorting data by different property collumns (we currently always sort events by ID)
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Multi-column TreeView that shows the events in a trace.
@@ -64,35 +66,40 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 width = 80,
                 minWidth = 60,
-                headerContent = new GUIContent("Id")
+                headerContent = new GUIContent("Id"),
+                canSort = false
             };
             columns[(int)ColumnId.Type] =
                 new MultiColumnHeaderState.Column
             {
                 width = 60,
                 minWidth = 60,
-                headerContent = new GUIContent("Type")
+                headerContent = new GUIContent("Type"),
+                canSort = false
             };
             columns[(int)ColumnId.Device] =
                 new MultiColumnHeaderState.Column
             {
                 width = 80,
                 minWidth = 60,
-                headerContent = new GUIContent("Device")
+                headerContent = new GUIContent("Device"),
+                canSort = false
             };
             columns[(int)ColumnId.Size] =
                 new MultiColumnHeaderState.Column
             {
                 width = 50,
                 minWidth = 50,
-                headerContent = new GUIContent("Size")
+                headerContent = new GUIContent("Size"),
+                canSort = false
             };
             columns[(int)ColumnId.Time] =
                 new MultiColumnHeaderState.Column
             {
                 width = 100,
                 minWidth = 80,
-                headerContent = new GUIContent("Time")
+                headerContent = new GUIContent("Time"),
+                canSort = false
             };
 
             columns[(int)ColumnId.Details] =
@@ -100,7 +107,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 width = 250,
                 minWidth = 100,
-                headerContent = new GUIContent("Details")
+                headerContent = new GUIContent("Details"),
+                canSort = false
             };
 
             return new MultiColumnHeaderState(columns);
@@ -188,11 +196,11 @@ namespace UnityEngine.Experimental.Input.Editor
             Array.Sort(m_Events,
                 (a, b) =>
                 {
-                    var aTime = a.time;
-                    var bTime = b.time;
-                    if (aTime > bTime)
+                    var aId = a.id;
+                    var bId = b.id;
+                    if (aId > bId)
                         return -1;
-                    if (bTime > aTime)
+                    if (aId < bId)
                         return 1;
                     return 0;
                 });
@@ -263,17 +271,17 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (eventPtr.IsA<DeltaStateEvent>())
                     {
                         var deltaEventPtr = DeltaStateEvent.From(eventPtr);
-                        GUI.Label(cellRect, string.Format("Format={0}, Offset={1}", deltaEventPtr->stateFormat, deltaEventPtr->stateOffset));
+                        GUI.Label(cellRect, $"Format={deltaEventPtr->stateFormat}, Offset={deltaEventPtr->stateOffset}");
                     }
                     else if (eventPtr.IsA<StateEvent>())
                     {
                         var stateEventPtr = StateEvent.From(eventPtr);
-                        GUI.Label(cellRect, string.Format("Format={0}", stateEventPtr->stateFormat));
+                        GUI.Label(cellRect, $"Format={stateEventPtr->stateFormat}");
                     }
                     else if (eventPtr.IsA<TextEvent>())
                     {
                         var textEventPtr = TextEvent.From(eventPtr);
-                        GUI.Label(cellRect, string.Format("Character='{0}'", (char)textEventPtr->character));
+                        GUI.Label(cellRect, $"Character='{(char) textEventPtr->character}'");
                     }
                     break;
             }

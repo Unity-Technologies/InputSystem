@@ -1,0 +1,34 @@
+editors:
+  - version: 2019.1
+platforms:
+  - name: win
+    type: Unity::VM
+    image: package-ci/win10:latest
+    flavor: m1.large
+  - name: mac
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+---
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name : Build and Test version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+    - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+  triggers:
+    branches:
+      only:
+        - "/.*/"
+  artifacts:
+    UTR_Output.zip:
+      paths:
+        - "upm-ci~/test-results/**/*"
+{% endfor %}
+{% endfor %}

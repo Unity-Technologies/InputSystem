@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+#pragma warning disable CS0649
 namespace UnityEngine.Experimental.Input.Plugins.UI
 {
     public class TrackedDeviceRaycaster : BaseRaycaster
