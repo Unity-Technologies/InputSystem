@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     [InputControlLayout]
-    public class ViveKnuckles : XRControllerWithRumble
+    public class KnucklesController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "A",  "GripButton" })]
         public ButtonControl gripPressed { get; private set; }

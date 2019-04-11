@@ -169,7 +169,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(OpenVR Controller\(((Vive. Controller)|(VIVE. Controller)|(Vive Controller)))"));
-            InputSystem.RegisterLayout<ViveKnuckles>(
+            InputSystem.RegisterLayout<KnucklesController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("Valve")
