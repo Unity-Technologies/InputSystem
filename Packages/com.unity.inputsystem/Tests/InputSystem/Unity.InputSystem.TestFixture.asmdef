@@ -1,9 +1,7 @@
 {
-    "name": "DemoTests",
+    "name": "Unity.InputSystem.TestFixture",
     "references": [
-        "Demo",
-        "Unity.InputSystem",
-        "Unity.InputSystem.TestFixture"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

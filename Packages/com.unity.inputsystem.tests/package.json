@@ -1,0 +1,15 @@
+{
+	"name": "com.unity.inputsystem.tests",
+	"displayName": "Input System Tests",
+	"version": "0.2.6-preview",
+	"unity": "2019.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Unity-Technologies/InputSystem.git",
+		"revision": "bdb556e64749c2dbd7218e31c080d48f3053388f"
+	},
+  	"description": "Tests for com.unity.inputsystem",
+	"dependencies": {
+		"com.unity.inputsystem": "0.2.6-preview"
+	}
+}
