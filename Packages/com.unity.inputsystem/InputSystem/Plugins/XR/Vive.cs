@@ -97,9 +97,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout]
     public class KnucklesController : XRControllerWithRumble
     {
-        [InputControl(aliases = new[] { "A",  "GripButton" })]
-        public ButtonControl gripPressed { get; private set; }
-
+ 
         [InputControl(aliases = new[] { "B",  "Primary"})]
         public ButtonControl primaryButton { get; private set; }
 
@@ -109,6 +107,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl trackpadTouched { get; private set; }
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
+
+        public AxisControl grip { get; private set; }
+
+        [InputControl(aliases = new[] { "A",  "GripButton" })]
+        public ButtonControl gripPressed { get; private set; }
+
 
         public AxisControl trigger { get; private set; }
         public ButtonControl triggerPressed { get; private set; }
