@@ -1220,6 +1220,8 @@ partial class CoreTests
 
             trace.Clear();
 
+            // Test same button again with full press and release cycle to make sure
+            // there's no state that's gotten stuck on the button.
             Press(gamepad.buttonNorth);
 
             Assert.That(trace, Is.Empty);
@@ -1233,6 +1235,7 @@ partial class CoreTests
 
             trace.Clear();
 
+            // Make sure that using the other binding is unaffected by the previous use of buttonSouth.
             Press(keyboard.aKey);
 
             Assert.That(trace, Is.Empty);
@@ -1243,6 +1246,37 @@ partial class CoreTests
             Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+
+            trace.Clear();
+
+            // Make sure that if we press both buttonSouth *and* the key and then release them both,
+            // we get two releases on the action.
+            //
+            // NOTE: This differs very slightly from what one might expect from the built-in disambiguation
+            //       code that basically dictates that the control with the largest actuation is being tracked
+            //       and "locked on". However, PressInteraction never *starts* an interaction on a button press
+            //       when it is set to "ReleaseOnly". This means that from the perspective of the disambiguation
+            //       code, there is nothing in progress when the second button goes down.
+            Press(keyboard.aKey);
+            Press(gamepad.buttonNorth);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(keyboard.aKey);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+
+            trace.Clear();
+
+            Release(gamepad.buttonNorth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
         }
     }
 
