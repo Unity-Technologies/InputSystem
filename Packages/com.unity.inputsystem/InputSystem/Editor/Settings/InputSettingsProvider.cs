@@ -37,52 +37,28 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onSettingsChange += OnSettingsChange;
         }
 
+        public override void OnTitleBarGUI()
+        {
+            if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
+                menu.AddSeparator("");
+                for (var i =0; i< m_AvailableSettingsAssetsOptions.Length; i++)
+                    menu.AddItem(new GUIContent(m_AvailableSettingsAssetsOptions[i]), m_CurrentSelectedInputSettingsAsset == i, (path) => {
+                        InputSystem.settings = AssetDatabase.LoadAssetAtPath<InputSettings>((string)path);
+                    }, m_AvailableInputSettingsAssets[i]);
+                menu.AddSeparator("");
+                menu.AddItem(new GUIContent("New Settings Asset…"), false, CreateNewSettingsAsset);
+                menu.ShowAsContext();
+                Event.current.Use();
+            }
+        }
+
         public override void OnGUI(string searchContext)
         {
             if (m_Settings == null)
                 InitializeWithCurrentSettings();
-
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-            var selectedSettingsAsset = EditorGUILayout.Popup(m_CurrentSelectedInputSettingsAsset,
-                m_AvailableSettingsAssetsOptions, EditorStyles.toolbarPopup);
-            if (selectedSettingsAsset != m_CurrentSelectedInputSettingsAsset)
-            {
-                // If we selected an asset and the current settings are not coming from an asset,
-                // remove the "<No Asset>" entry we added to the dropdown.
-                if (selectedSettingsAsset != 0 && m_AvailableInputSettingsAssets[m_CurrentSelectedInputSettingsAsset] == "<No Asset>")
-                    ArrayHelpers.EraseAt(ref m_AvailableInputSettingsAssets, m_CurrentSelectedInputSettingsAsset);
-
-                m_CurrentSelectedInputSettingsAsset = selectedSettingsAsset;
-                var settings =
-                    AssetDatabase.LoadAssetAtPath<InputSettings>(
-                        m_AvailableInputSettingsAssets[selectedSettingsAsset]);
-
-                // Install. This will automatically cause us to re-initialize through InputSystem.onSettingsChange.
-                InputSystem.settings = settings;
-            }
-
-            // Style can only be initialized after skin has been initialized. Settings providers are
-            // pulled up earlier than that so we do it lazily from here.
-            if (m_NewAssetButtonStyle == null)
-            {
-                m_NewAssetButtonStyle = new GUIStyle("toolbarButton");
-                m_NewAssetButtonStyle.fixedWidth = 40;
-            }
-
-            if (GUILayout.Button(m_NewAssetButtonText, m_NewAssetButtonStyle))
-                CreateNewSettingsAsset();
-
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-
-            if (m_AvailableInputSettingsAssets[m_CurrentSelectedInputSettingsAsset] == "<No Asset>")
-            {
-                EditorGUILayout.HelpBox("Input settings can only be edited when stored in an asset.\n\n"
-                    + "Choose an existing asset (if any) from the dropdown or create a new asset by pressing the 'New' button. "
-                    + "Input settings can be placed anywhere in your project.",
-                    MessageType.Info);
-            }
 
             EditorGUILayout.HelpBox(
                 "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
@@ -138,6 +114,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 Apply();
         }
 
+        private static void CreateNewSettingsAsset(string relativePath)
+        {
+            // Create settings file.
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            AssetDatabase.CreateAsset(settings, relativePath);
+            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
+            // will cause us to re-initialize.
+            InputSystem.settings = settings;
+        }
+
         private static void CreateNewSettingsAsset()
         {
             // Query for file name.
@@ -163,13 +149,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 path += ".asset";
 
             // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
             var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            AssetDatabase.CreateAsset(settings, relativePath);
-
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
-            // will cause us to re-initialize.
-            InputSystem.settings = settings;
+            CreateNewSettingsAsset(relativePath);
         }
 
         /// <summary>
@@ -185,11 +166,16 @@ namespace UnityEngine.Experimental.Input.Editor
             var currentSettingsPath = AssetDatabase.GetAssetPath(m_Settings);
             if (string.IsNullOrEmpty(currentSettingsPath))
             {
-                // The current settings aren't coming from an asset. These won't be editable
-                // in the UI but we still have to show something.
-
-                m_CurrentSelectedInputSettingsAsset = ArrayHelpers.Append(ref m_AvailableInputSettingsAssets, "<No Asset>");
-                EditorBuildSettings.RemoveConfigObject(kEditorBuildSettingsConfigKey);
+                if (m_AvailableInputSettingsAssets.Length != 0)
+                {
+                    m_CurrentSelectedInputSettingsAsset = 0;
+                    m_Settings = AssetDatabase.LoadAssetAtPath<InputSettings>(m_AvailableInputSettingsAssets[0]);
+                    InputSystem.settings = m_Settings;
+                }
+                else
+                {
+                    CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
+                }
             }
             else
             {
@@ -216,7 +202,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     name = name.Substring(0, name.Length - ".asset".Length);
                 if (name.EndsWith(".inputsettings"))
                     name = name.Substring(0, name.Length - ".inputsettings".Length);
-                m_AvailableSettingsAssetsOptions[i] = new GUIContent(name);
+
+                // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+                m_AvailableSettingsAssetsOptions[i] = new GUIContent(name.Replace("/", "\u29f8"));
             }
 
             // Look up properties.
@@ -346,6 +334,33 @@ namespace UnityEngine.Experimental.Input.Editor
                 s_Instance.Repaint();
                 #endif
             }
+        }
+    }
+
+    [CustomEditor(typeof(InputSettings))]
+    internal class InputSettingsEditor : UnityEditor.Editor 
+    {
+        public override void OnInspectorGUI()
+        {
+            GUILayout.Space(10);
+            if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
+                InputSettingsProvider.Open();
+            GUILayout.Space(10);
+
+            if (InputSystem.settings == target)
+                EditorGUILayout.HelpBox("This asset contains the currently active settings for the Input System.", MessageType.Info);
+            else
+            {
+                string currentlyActiveAssetsPath = null;
+                if (InputSystem.settings != null)
+                    currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(InputSystem.settings);
+                if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
+                    currentlyActiveAssetsPath = $"The currently active settings are stored in {currentlyActiveAssetsPath}. ";
+                EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active settings for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make {target.name} the active one.", MessageType.Warning);
+                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
+                    InputSystem.settings = (InputSettings)target;
+            }
+
         }
     }
 }
