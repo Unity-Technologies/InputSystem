@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public string guid => m_AssetGUID;
 
-        public string path { get; set; }
+        public string path { get => m_AssetPath; set => m_AssetPath = value; }
 
         public string name
         {
@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public bool dirty => m_IsDirty;
 
-        public void InitializeObjectReferences()
+        public void Initialize()
         {
             if (m_AssetObjectForEditing == null)
             {
@@ -76,16 +76,29 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        internal void CreateWorkingCopyAsset()
+        public bool ReInitializeIfAssetHasChanged()
+        {
+            var asset = importedAsset;
+            var json = asset.ToJson();
+            if (m_ImportedAssetJson == json)
+                return false;
+
+            CreateWorkingCopyAsset();
+            return true;
+        }
+
+        private void CreateWorkingCopyAsset()
         {
             if (m_AssetObjectForEditing != null)
                 Cleanup();
 
             // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
             // GUIDs.
-            m_AssetObjectForEditing = Object.Instantiate(importedAsset);
+            var asset = importedAsset;
+            m_AssetObjectForEditing = Object.Instantiate(asset);
             m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
             m_AssetObjectForEditing.name = importedAsset.name;
+            m_ImportedAssetJson = asset.ToJson();
             m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
         }
 

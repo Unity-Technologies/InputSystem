@@ -18,19 +18,17 @@ namespace UnityEngine.Experimental.Input.Editor
     [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 5;
+        private const int kVersion = 6;
 
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap.png";
-        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action.png";
-        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap.png";
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action@4x.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap@4x.png";
+        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action@4x.png";
+        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap@4x.png";
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
         [SerializeField] private string m_WrapperClassName;
         [SerializeField] private string m_WrapperCodeNamespace;
-        [SerializeField] private bool m_GenerateActionEvents;
-        [SerializeField] private bool m_GenerateInterfaces;
 
         private static InlinedArray<Action> s_OnImportCallbacks;
 
@@ -143,8 +141,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     sourceAssetPath = ctx.assetPath,
                     namespaceName = m_WrapperCodeNamespace,
                     className = m_WrapperClassName,
-                    generateEvents = m_GenerateActionEvents,
-                    generateInterfaces = m_GenerateInterfaces,
                 };
 
                 if (!wrapperFilePath.ToLower().StartsWith("assets/"))
@@ -154,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, asset.controlSchemes, options))
+                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
                 {
                     // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
                     // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during

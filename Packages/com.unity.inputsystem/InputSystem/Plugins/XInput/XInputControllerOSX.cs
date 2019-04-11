@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [InputControl(name = "buttonNorth", bit = (uint)Button.Y, displayName = "Y")]
 
         [FieldOffset(2)]
-        public uint buttons;
+        public ushort buttons;
 
         [InputControl(name = "leftTrigger", format = "BYTE")]
         [FieldOffset(4)] public byte leftTrigger;
@@ -99,7 +99,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
         public XInputControllerOSXState WithButton(Button button)
         {
-            buttons |= (uint)1 << (int)button;
+            buttons |= (ushort)((uint)1 << (int)button);
             return this;
         }
     }
@@ -201,12 +201,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 }
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputControlLayout(stateType = typeof(XInputControllerOSXState))]
+    [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     public class XInputControllerOSX : XInputController
     {
     }
 
-    [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState))]
+    [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     public class XInputControllerWirelessOSX : XInputController
     {
     }

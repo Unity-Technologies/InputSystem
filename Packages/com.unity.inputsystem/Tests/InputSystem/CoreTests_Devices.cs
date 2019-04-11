@@ -1421,6 +1421,8 @@ partial class CoreTests
             // Make sure InputManager kept the gamepad.
             Assert.That(manager.devices.Count, Is.EqualTo(1));
             Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
+
+            LogAssert.NoUnexpectedReceived();
         }
     }
 
@@ -2958,46 +2960,46 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetGravityReading()
     {
-        var sensor = InputSystem.AddDevice<Gravity>();
+        var sensor = InputSystem.AddDevice<GravitySensor>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
         InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
         InputSystem.Update();
 
         Assert.That(sensor.gravity.ReadValue(), Is.EqualTo(value).Within(0.00001));
-        Assert.That(Gravity.current, Is.SameAs(sensor));
+        Assert.That(GravitySensor.current, Is.SameAs(sensor));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanGetAttitudeReading()
     {
-        var sensor = InputSystem.AddDevice<Attitude>();
+        var sensor = InputSystem.AddDevice<AttitudeSensor>();
         var value = Quaternion.Euler(10, 20, 30);
         InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = value });
         InputSystem.Update();
 
         Assert.That(sensor.attitude.ReadValue(), Is.EqualTo(value).Within(0.00001));
-        Assert.That(Attitude.current, Is.SameAs(sensor));
+        Assert.That(AttitudeSensor.current, Is.SameAs(sensor));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanGetLinearAccelerationReading()
     {
-        var sensor = InputSystem.AddDevice<LinearAcceleration>();
+        var sensor = InputSystem.AddDevice<LinearAccelerationSensor>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
         InputSystem.QueueStateEvent(sensor, new LinearAccelerationState { acceleration = value });
         InputSystem.Update();
 
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
-        Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
+        Assert.That(LinearAccelerationSensor.current, Is.SameAs(sensor));
     }
 
     [Test]
     [Category("Devices")]
     [TestCase("Accelerometer", "acceleration")]
     [TestCase("Gyroscope", "angularVelocity")]
-    [TestCase("Gravity", "gravity")]
+    [TestCase("GravitySensor", "gravity")]
     public void Devices_CanCompensateSensorDirectionValues(string layoutName, string controlName)
     {
         var sensor = InputSystem.AddDevice(layoutName);
@@ -3034,7 +3036,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    [TestCase("Attitude", "attitude")]
+    [TestCase("AttitudeSensor", "attitude")]
     public void Devices_CanCompensateSensorRotationValues(string layoutName, string controlName)
     {
         var sensor = InputSystem.AddDevice(layoutName);

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -21,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_ExpectedControlLayoutProperty = actionProperty.FindPropertyRelative("m_ExpectedControlLayout");
             m_FlagsProperty = actionProperty.FindPropertyRelative("m_Flags");
-            m_ControlTypeList = BuildControlTypeList();
+            BuildControlTypeList();
 
             m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlLayoutProperty.stringValue);
             if (m_SelectedControlType == -1)
@@ -34,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override void DrawGeneralProperties()
         {
             EditorGUI.BeginChangeCheck();
-            m_SelectedControlType = EditorGUILayout.Popup(s_TypeLabel, m_SelectedControlType, m_ControlTypeList);
+            m_SelectedControlType = EditorGUILayout.Popup(s_TypeLabel, m_SelectedControlType, m_ControlTypeOptions);
             if (EditorGUI.EndChangeCheck())
             {
                 if (m_SelectedControlType == 0)
@@ -45,13 +46,15 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             var flags = (InputAction.ActionFlags)m_FlagsProperty.intValue;
+            var initialStateCheckOld = (flags & InputAction.ActionFlags.InitialStateCheck) != 0;
             var isContinuousOld = (flags & InputAction.ActionFlags.Continuous) != 0;
             var isPassThroughOld = (flags & InputAction.ActionFlags.PassThrough) != 0;
 
+            var initialStateCheckNew = EditorGUILayout.Toggle(s_InitialStateCheck, initialStateCheckOld);
             var isContinuousNew = EditorGUILayout.Toggle(s_ContinuousLabel, isContinuousOld);
             var isPassThroughNew = EditorGUILayout.Toggle(s_PassThroughLabel, isPassThroughOld);
 
-            if (isContinuousOld != isContinuousNew || isPassThroughOld != isPassThroughNew)
+            if (isContinuousOld != isContinuousNew || isPassThroughOld != isPassThroughNew || initialStateCheckOld != initialStateCheckNew)
             {
                 flags = InputAction.ActionFlags.None;
 
@@ -59,6 +62,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     flags |= InputAction.ActionFlags.Continuous;
                 if (isPassThroughNew)
                     flags |= InputAction.ActionFlags.PassThrough;
+                if (initialStateCheckNew)
+                    flags |= InputAction.ActionFlags.InitialStateCheck;
 
                 m_FlagsProperty.intValue = (int)flags;
                 m_FlagsProperty.serializedObject.ApplyModifiedProperties();
@@ -67,13 +72,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private static string[] BuildControlTypeList()
+        private void BuildControlTypeList()
         {
             var types = new List<string>();
-            foreach (var layoutName in InputSystem.s_Manager.m_Layouts.layoutTypes.Keys)
+            var allLayouts = InputSystem.s_Manager.m_Layouts;
+            foreach (var layoutName in allLayouts.layoutTypes.Keys)
             {
-                if (typeof(InputControl).IsAssignableFrom(InputSystem.s_Manager.m_Layouts.layoutTypes[layoutName]) &&
-                    !typeof(InputDevice).IsAssignableFrom(InputSystem.s_Manager.m_Layouts.layoutTypes[layoutName]))
+                if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)
+                    continue;
+
+                ////TODO: skip aliases
+
+                if (typeof(InputControl).IsAssignableFrom(allLayouts.layoutTypes[layoutName]) &&
+                    !typeof(InputDevice).IsAssignableFrom(allLayouts.layoutTypes[layoutName]))
                 {
                     types.Add(layoutName);
                 }
@@ -82,23 +93,31 @@ namespace UnityEngine.Experimental.Input.Editor
             types.Sort((a, b) => string.Compare(a, b, StringComparison.OrdinalIgnoreCase));
             // Make sure "Any" is always topmost entry.
             types.Insert(0, "Any");
-            return types.ToArray();
+
+            m_ControlTypeList = types.ToArray();
+            m_ControlTypeOptions = m_ControlTypeList.Select(x => new GUIContent(ObjectNames.NicifyVariableName(x)))
+                .ToArray();
         }
 
         private readonly SerializedProperty m_ExpectedControlLayoutProperty;
         private readonly SerializedProperty m_FlagsProperty;
 
         private string m_ExpectedControlLayout;
-        private readonly string[] m_ControlTypeList;
+        private string[] m_ControlTypeList;
+        private GUIContent[] m_ControlTypeOptions;
         private int m_SelectedControlType;
 
         private static GUIContent s_TypeLabel;
         private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous",
-            "If enabled, the action will trigger every update while controls are actuated even if the controls do not change value.");
+            "If enabled, the action will trigger every update while controls are actuated even if the controls do not change value in a given frame.");
         private static readonly GUIContent s_PassThroughLabel = EditorGUIUtility.TrTextContent("Pass Through",
             "If enabled, the action will not gate value changes on controls but will instead perform for every value change on any bound control. " +
             "This is especially useful when binding multiple controls concurrently and not wanting the action to single out any one of multiple " +
             "concurrent inputs.");
+        private static readonly GUIContent s_InitialStateCheck = EditorGUIUtility.TrTextContent("Initial State Check",
+            "If enabled, the action will perform an initial state check on all bound controls when the action is enabled. This means that " +
+            "if, for example, a button is held when the action is enabled, the action will be triggered right away. By default, controls " +
+            "that are already actuated when an action is enabled do not cause the action to be triggered.");
     }
 }
 #endif // UNITY_EDITOR

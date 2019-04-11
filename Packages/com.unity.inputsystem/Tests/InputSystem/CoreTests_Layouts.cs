@@ -231,12 +231,12 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("MyDevice");
 
-        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
-        Assert.That(layout["digital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(1234));
-        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
-        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(0x1234));
+        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["digital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(0x1234));
     }
 
     class TestDeviceWithDefaultState : InputDevice
@@ -253,7 +253,7 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultState");
 
-        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
@@ -304,11 +304,11 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
-        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
-        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control2"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
-        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control3"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
@@ -1348,8 +1348,8 @@ partial class CoreTests
 
         Assert.That(layout["control"].minValue.isEmpty, Is.False);
         Assert.That(layout["control"].maxValue.isEmpty, Is.False);
-        Assert.That(layout["control"].minValue.ToFloat(), Is.EqualTo(0.1234f));
-        Assert.That(layout["control"].maxValue.ToFloat(), Is.EqualTo(0.5432f));
+        Assert.That(layout["control"].minValue.ToSingle(), Is.EqualTo(0.1234f));
+        Assert.That(layout["control"].maxValue.ToSingle(), Is.EqualTo(0.5432f));
     }
 
     [Test]
@@ -1375,8 +1375,8 @@ partial class CoreTests
 
         Assert.That(layout["control"].minValue.isEmpty, Is.False);
         Assert.That(layout["control"].maxValue.isEmpty, Is.False);
-        Assert.That(layout["control"].minValue.ToInt(), Is.EqualTo(-123));
-        Assert.That(layout["control"].maxValue.ToInt(), Is.EqualTo(123));
+        Assert.That(layout["control"].minValue.ToInt32(), Is.EqualTo(-123));
+        Assert.That(layout["control"].maxValue.ToInt32(), Is.EqualTo(123));
     }
 
     class BaseClassWithControl : InputDevice
@@ -1432,6 +1432,41 @@ partial class CoreTests
         var device = InputSystem.AddDevice("MyLayout");
 
         Assert.That(device["button"].noisy, Is.True);
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_NoisyControls_AutomaticallyMakeAllTheirChildrenNoisy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""layout"" : ""Stick"",
+                        ""noisy"" : true
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["stick"].As<StickControl>().x.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().y.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().left.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().right.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().up.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().down.noisy, Is.True);
+
+        // Make sure it didn't spill over.
+        Assert.That(device["button"].noisy, Is.False);
     }
 
     [Test]
@@ -1851,65 +1886,6 @@ partial class CoreTests
 
         Assert.That(deviceA["button"].variants, Is.EqualTo("A"));
         Assert.That(deviceB["axis"].variants, Is.EqualTo("B"));
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_ParseNameAndParameters_EmptyParametersResultInEmptyArray()
-    {
-        var nameAndParameters = InputControlLayout.ParseNameAndParameters("name()");
-        Assert.That(nameAndParameters.name, Is.EqualTo("name"));
-        Assert.That(nameAndParameters.parameters, Is.Empty);
-    }
-
-    void Layouts_ParseNameAndParameters_ParametersMatchExpectations<T>(T[] expectedValues, InputControlLayout.ParameterType parameterType, string input) where T : unmanaged
-    {
-        var nameAndParameters = InputControlLayout.ParseNameAndParameters($"name({input})");
-        Assert.That(nameAndParameters.name, Is.EqualTo("name"));
-        Assert.That(nameAndParameters.parameters.Count, Is.EqualTo(expectedValues.Length), "Number of parameters does not match.");
-        unsafe
-        {
-            for (int i = 0; i < expectedValues.Length; i++)
-            {
-                var p = nameAndParameters.parameters[i];
-                Assert.That(p.type, Is.EqualTo(parameterType), $"Unexpected type in parameter {i}");
-                Assert.That(p.name, Is.EqualTo($"p{i}"), $"Unexpected name in parameter {i}");
-                Assert.That(*(T*)p.value, Is.EqualTo(expectedValues[i]), $"Unexpected value in parameter {i}");
-            }
-        }
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_ParseNameAndParameters_BoolParametersMatchExpectations()
-    {
-        Layouts_ParseNameAndParameters_ParametersMatchExpectations(
-            new bool[] { true, false, true, false },
-            InputControlLayout.ParameterType.Boolean,
-            "p0=true,p1=false,p2=TRUE,p3=False"
-        );
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_ParseParameters_IntParametersMatchExpectations()
-    {
-        Layouts_ParseNameAndParameters_ParametersMatchExpectations(
-            new int[] { 0, 0, 1234, -5678, 0 },
-            InputControlLayout.ParameterType.Integer,
-            "p0=0,p1=-0,p2=1234,p3=-5678,p4=12345678901234567890"
-        );
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_ParseParameters_FloatParametersMatchExpectations()
-    {
-        Layouts_ParseNameAndParameters_ParametersMatchExpectations(
-            new float[] { 0, 0, 0.1234f, -0.5678f, 1e10f, -2e-10f, 0, float.PositiveInfinity, float.NegativeInfinity },
-            InputControlLayout.ParameterType.Float,
-            "p0=0.0,p1=-0.0,p2=0.1234,p3=-0.5678,p4=1e10,p5=-2E-10,p6=1e100,p7=Infinity,p8=-Infinity"
-        );
     }
 
     [Test]

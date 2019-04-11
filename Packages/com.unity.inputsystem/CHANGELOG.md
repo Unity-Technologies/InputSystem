@@ -11,22 +11,87 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a `clickCount` control to the `Mouse` class, which specifies the click count for the last mouse click (to allow distinguishing between single-, double- and multi-clicks).
 - Support for Bluetooth Xbox One controllers on macOS.
 
+#### Actions
+
+- New API for changing bindings on actions
+```
+    // Several variations exist that allow to look up bindings in various ways.
+    myAction.ChangeBindingWithPath("<Gamepad>/buttonSouth")
+        .WithPath("<Keyboard>/space");
+
+    // Can also replace the binding wholesale.
+    myAction.ChangeBindingWithPath("<Keyboard>/space")
+        .To(new InputBinding { ... });
+
+    // Can also remove bindings programmatically now.
+    myAction.ChangeBindingWithPath("<Keyboard>/space").Erase();
+```
+
 ### Changed
 
 - `Joystick.axes` and `Joystick.buttons` have been removed.
+- Generated wrapper code for Input Action Assets are now self-contained, generating all the data from code and not needing a reference to the asset; `InputActionAssetReference` has been removed.
+- The option to generate interfaces on wrappers has been removed, instead we always do this now.
+- The option to generate events on wrappers has been removed, we felt that this no longer made sense.
+- Will now show default values in Input Action inspector if no custom values for file path, class name or namespace have been provided.
 - `InputSettings.runInBackground` has been removed. This should now be supported or not on a per-device level. Most devices never supported it in the first place, so a global setting did not seem to be useful.
+- Several new `Sensor`-based classes have been added. Various existing Android sensor implementations are now based on them.
+- `InputControlLayoutAttribute` is no longer inherited.
+  * Rationale: A class marked as a layout will usually be registered using `RegisterLayout`. A class derived from it will usually be registered the same way. Because of layout inheritance, properties applied to the base class through `InputControlLayoutAttribute` will affect the subclass as intended. Not inheriting the attribute itself, however, now allows having properties such as `isGenericTypeOfDevice` which should not be inherited.
+- Removed `acceleration`, `orientation`, and `angularVelocity` controls from `DualShockGamepad` base class.
+  * They are still on `DualShockGamepadPS4`.
+  * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
+- Marking a control as noisy now also marks all child controls as noisy.
+
+#### Actions
+
+- A number of changes have been made to the control picker UI in the editor. \
+  ![Input Control Picker](Documentation~/Images/InputControlPicker.png)
+  * The button to pick controls interactively (e.g. by pressing a button on a gamepad) has been moved inside the picker and renamed to "Listen". It now works as a toggle that puts the picker into a special kind of 'search' mode. While listening, suitable controls that are actuated will be listed in the picker and can then be picked from.
+  * Controls are now displayed with their nice names (e.g. "Cross" instead of "buttonSouth" in the case of the PS4 controller).
+  * Child controls are indented instead of listed in "parent/child" format.
+  * The hierarchy of devices has been rearranged for clarity. The toplevel groups of "Specific Devices" and "Abstract Devices" are now merged into one hierarchy that progressively groups devices into more specific groups.
+  * Controls now have icons displayed for them.
+- There is new support for binding to keys on the keyboard by their generated character rather than by their location. \
+  ![Keyboard Binding](Documentation~/Images/KeyboardBindByLocationVsCharacter.png)
+  * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
+  * Binding by location shows differences between the local keyboard layout and the US reference layout.
+  * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
+- `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
+- Reacting to controls that are already actuated when an action is enabled is now an __optional__ behavior rather than the default behavior. This is a __breaking__ change.
+  * Essentially, this change reverts back to the behavior before 0.2-preview.
+  * To reenable the behavior, toggle "Initial State Check" on in the UI or set the `initialStateCheck` property in code.
+  ![Inital State Check](Documentation~/Images/InitialStateCheck.png)
+  * The reason for the change is that having the behavior on by default made certain setups hard to achieve. For example, if `<Keyboard>/escape` is used in one action map to toggle *into* the main menu and in another action map to toggle *out* of it, then the previous behavior would immediately exit out of the menu if `escape` was still pressed from going into the menu. \
+  We have come to believe that wanting to react to the current state of a control right away is the less often desirable behavior and so have made it optional with a separate toggle.
 
 ### Fixed
 
 - Input Settings configured in the editor are now transferred to the built player correctly.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
+- DualShock sensors on PS4 are now marked as noisy (#494).
+- IL2CPP causing issues with XInput on windows and osx desktops.
 
 #### Actions
 
+- Actions and bindings disappearing when control schemes have spaces in their names.
+- `InputActionRebindingExceptions.RebindOperation` can now be reused as intended; used to stop working properly the first time a rebind completed or was cancelled.
 - `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
 - The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
 - Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
+- Editing name of control scheme in editor not taking effect *except* if hitting enter key.
+- Saving no longer causes the selection of the current processor or interaction to be lost.
+  * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
+- In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- The input action asset editor window will no longer fail saving if the asset has been moved.
+- The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
+- Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
+- Fixed pasting or dragging a composite binding from one action into another.
+- In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.
+- Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
+- Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
+- Fixed blurry icons in editor for imported .inputactions assets and actions in them.
 
 ## [0.2.6-preview] - 2019-03-20
 

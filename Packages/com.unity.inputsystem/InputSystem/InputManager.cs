@@ -264,7 +264,7 @@ namespace UnityEngine.Experimental.Input
             var isControlLayout = typeof(InputControl).IsAssignableFrom(type);
 
             if (!isDeviceLayout && !isControlLayout)
-                throw new ArgumentException("Types used as layouts have to be InputControls or InputDevices",
+                throw new ArgumentException($"Types used as layouts have to be InputControls or InputDevices; '{type.Name}' is a '{type.BaseType.Name}'",
                     nameof(type));
 
             var internedName = new InternedString(name);
@@ -1069,7 +1069,7 @@ namespace UnityEngine.Experimental.Input
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.id;
-            ArrayHelpers.EraseAtWithCapacity(ref m_Devices, ref m_DevicesCount, deviceIndex);
+            ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
             m_DevicesById.Remove(deviceId);
 
@@ -1099,7 +1099,7 @@ namespace UnityEngine.Experimental.Input
                     if (keepOnListOfAvailableDevices)
                         m_AvailableDevices[i].isRemoved = true;
                     else
-                        ArrayHelpers.EraseAtWithCapacity(ref m_AvailableDevices, ref m_AvailableDeviceCount, i);
+                        ArrayHelpers.EraseAtWithCapacity(m_AvailableDevices, ref m_AvailableDeviceCount, i);
                     break;
                 }
             }
@@ -1446,9 +1446,15 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Sensor", typeof(Sensor));
             RegisterControlLayout("Accelerometer", typeof(Accelerometer));
             RegisterControlLayout("Gyroscope", typeof(Gyroscope));
-            RegisterControlLayout("Gravity", typeof(Gravity));
-            RegisterControlLayout("Attitude", typeof(Attitude));
-            RegisterControlLayout("LinearAcceleration", typeof(LinearAcceleration));
+            RegisterControlLayout("GravitySensor", typeof(GravitySensor));
+            RegisterControlLayout("AttitudeSensor", typeof(AttitudeSensor));
+            RegisterControlLayout("LinearAccelerationSensor", typeof(LinearAccelerationSensor));
+            RegisterControlLayout("MagneticFieldSensor", typeof(MagneticFieldSensor));
+            RegisterControlLayout("LightSensor", typeof(LightSensor));
+            RegisterControlLayout("PressureSensor", typeof(PressureSensor));
+            RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
+            RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
+            RegisterControlLayout("StepCounter", typeof(StepCounter));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
@@ -1650,6 +1656,10 @@ namespace UnityEngine.Experimental.Input
 
             public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
             {
+                // NOTE: This method must only *append* to arrays. This way we can safely add data while traversing
+                //       the arrays in FireStateChangeNotifications. Note that appending *may* mean that the arrays
+                //       are switched to larger arrays.
+
                 // Record listener.
                 var listenerCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
@@ -1670,19 +1680,19 @@ namespace UnityEngine.Experimental.Input
 
             public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
             {
+                // NOTE: This must *not* actually destroy the record for the monitor as we may currently be traversing the
+                //       arrays in FireStateChangeNotifications. Instead, we only invalidate entries here and leave it to
+                //       ProcessStateChangeMonitors to compact arrays.
+
                 if (listeners == null)
                     return;
 
-                ////REVIEW: would be better to clean these up implicitly during the next traversal
                 for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        var listenerCount = signalled.length;
-                        var memoryRegionCount = signalled.length;
-                        ArrayHelpers.EraseAtByMovingTail(listeners, ref listenerCount, i);
-                        ArrayHelpers.EraseAtByMovingTail(memoryRegions, ref memoryRegionCount, i);
-                        ////FIXME: if we want to preserve signal bits here, need to move them, too
-                        signalled.SetLength(signalled.length - 1);
+                        listeners[i] = new StateChangeMonitorListener();
+                        memoryRegions[i] = new StateChangeMonitorMemoryRegion();
+                        signalled.ClearBit(i);
                         break;
                     }
             }
@@ -1928,7 +1938,7 @@ namespace UnityEngine.Experimental.Input
                     if (m_DisconnectedDevices[i].description == description)
                     {
                         device = m_DisconnectedDevices[i];
-                        ArrayHelpers.EraseAtWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
+                        ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
                         break;
                     }
                 }
@@ -2774,6 +2784,7 @@ namespace UnityEngine.Experimental.Input
             m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
             m_Metrics.totalEventLagTime += totalEventLag;
 
+            ////REVIEW: This was moved to 2019.2 while the timeslice code was wrong; should probably be reenabled now
             #if UNITY_2019_2_OR_NEWER
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
@@ -2881,6 +2892,7 @@ namespace UnityEngine.Experimental.Input
             var numMonitors = m_StateChangeMonitors[deviceIndex].count;
             var signalled = false;
             var signals = m_StateChangeMonitors[deviceIndex].signalled;
+            var haveChangedSignalsBitfield = false;
 
             // Bake offsets into state pointers so that we don't have to adjust for
             // them repeatedly.
@@ -2893,6 +2905,25 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < numMonitors; ++i)
             {
                 var memoryRegion = memoryRegions[i];
+
+                // Check if the monitor record has been wiped in the meantime. If so, remove it.
+                if (memoryRegion.sizeInBits == 0)
+                {
+                    ////REVIEW: Do we really care? It is nice that it's predictable this way but hardly a hard requirement
+                    // NOTE: We're using EraseAtWithCapacity here rather than EraseAtByMovingTail to preserve
+                    //       order which makes the order of callbacks somewhat more predictable.
+
+                    var listenerCount = numMonitors;
+                    var memoryRegionCount = numMonitors;
+                    ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors[deviceIndex].listeners, ref listenerCount, i);
+                    ArrayHelpers.EraseAtWithCapacity(memoryRegions, ref memoryRegionCount, i);
+                    signals.SetLength(numMonitors - 1);
+                    haveChangedSignalsBitfield = true;
+                    --numMonitors;
+                    --i;
+                    continue;
+                }
+
                 var offset = (int)memoryRegion.offsetRelativeToDevice;
                 var sizeInBits = memoryRegion.sizeInBits;
                 var bitOffset = memoryRegion.bitOffset;
@@ -2940,10 +2971,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 signals.SetBit(i);
+                haveChangedSignalsBitfield = true;
                 signalled = true;
             }
 
-            if (signalled)
+            if (haveChangedSignalsBitfield)
                 m_StateChangeMonitors[deviceIndex].signalled = signals;
 
             return signalled;
@@ -2954,23 +2986,36 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(m_StateChangeMonitors != null);
             Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
 
-            var signals = m_StateChangeMonitors[deviceIndex].signalled;
-            var listeners = m_StateChangeMonitors[deviceIndex].listeners;
+            // NOTE: This method must be safe for mutating the state change monitor arrays from *within*
+            //       NotifyControlStateChanged()! This includes all monitors for the device being wiped
+            //       completely or arbitrary additions and removals having occurred.
+
+            ref var signals = ref m_StateChangeMonitors[deviceIndex].signalled;
+            ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
             var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
+            // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
+            // signalled state.
             for (var i = 0; i < signals.length; ++i)
             {
-                ////TODO: we're going linear here so instead of computing a byte and bit index from scratch every
-                ////      time, shift indices and masks incrementally
-                if (signals.TestBit(i))
-                {
-                    var listener = listeners[i];
-                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr, listener.monitorIndex);
-                    signals.ClearBit(i);
-                }
-            }
+                if (!signals.TestBit(i))
+                    continue;
 
-            m_StateChangeMonitors[deviceIndex].signalled = signals;
+                var listener = listeners[i];
+                try
+                {
+                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr,
+                        listener.monitorIndex);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(
+                        $"Exception '{exception.GetType().Name}' thrown from state change monitor '{listener.monitor.GetType().Name}' on '{listener.control}'");
+                    Debug.LogException(exception);
+                }
+
+                signals.ClearBit(i);
+            }
         }
 
         private void ProcessStateChangeMonitorTimeouts()

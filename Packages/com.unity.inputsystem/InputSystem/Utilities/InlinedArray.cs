@@ -246,13 +246,13 @@ namespace UnityEngine.Experimental.Input.Utilities
                     Debug.Assert(length > 2);
                     firstValue = additionalValues[0];
                     var numAdditional = length - 1;
-                    ArrayHelpers.EraseAtWithCapacity(ref additionalValues, ref numAdditional, 0);
+                    ArrayHelpers.EraseAtWithCapacity(additionalValues, ref numAdditional, 0);
                 }
             }
             else
             {
                 var numAdditional = length - 1;
-                ArrayHelpers.EraseAtWithCapacity(ref additionalValues, ref numAdditional, index - 1);
+                ArrayHelpers.EraseAtWithCapacity(additionalValues, ref numAdditional, index - 1);
             }
 
             --length;

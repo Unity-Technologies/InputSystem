@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.CodeDom.Compiler;
 using System.Text;
 using NUnit.Framework;
 using UnityEditor;
@@ -385,7 +386,7 @@ partial class CoreTests
         // Change to vector2 composite and make sure that we've added two more bindings, changed the names
         // of bindings accordingly, and preserved the existing binding paths and such.
         InputActionSerializationHelpers.ChangeCompositeBindingType(composite,
-            InputControlLayout.ParseNameAndParameters("Dpad(normalize=false)"));
+            NameAndParameters.Parse("Dpad(normalize=false)"));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].GetAction("action1");
@@ -973,7 +974,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_ActionTree_CanCopyPasteCompositeBinding()
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_IntoSameAction()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -1025,6 +1026,69 @@ partial class CoreTests
             Assert.That(tree["map/action"].children[2].children[0].As<PartOfCompositeBindingTreeItem>().path,
                 Is.EqualTo("<Keyboard>/a"));
             Assert.That(tree["map/action"].children[2].children[1].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/b"));
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_IntoDifferentAction()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action = map.AddAction("action");
+        var action2 = map.AddAction("action2");
+        action.AddBinding("<Gamepad>/leftStick/x");
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "<Keyboard>/a")
+            .With("Negative", "<Keyboard>/b");
+        action2.AddBinding("<Gamepad>/leftStick/x");
+
+        var so = new SerializedObject(asset);
+        var selectionChanged = false;
+        var serializedObjectModified = false;
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            },
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(serializedObjectModified, Is.False);
+                serializedObjectModified = true;
+            }
+        };
+        tree.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
+            selectionChanged = false;
+            tree.CopySelectedItemsToClipboard();
+            tree.SelectItem("map/action2");
+            selectionChanged = false;
+            tree.PasteDataFromClipboard();
+
+            Assert.That(selectionChanged, Is.True);
+            Assert.That(tree["map/action"].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick/x"));
+            Assert.That(tree["map/action"].children[1], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(tree["map/action"].children[1].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action"].children[1].children[0].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree["map/action"].children[1].children[1].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/b"));
+
+            Assert.That(tree["map/action2"].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action2"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick/x"));
+            Assert.That(tree["map/action2"].children[1], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(tree["map/action2"].children[1].children, Has.Count.EqualTo(2));
+            Assert.That(tree["map/action2"].children[1].children[0].As<PartOfCompositeBindingTreeItem>().path,
+                Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree["map/action2"].children[1].children[1].As<PartOfCompositeBindingTreeItem>().path,
                 Is.EqualTo("<Keyboard>/b"));
         }
     }
@@ -1334,6 +1398,31 @@ partial class CoreTests
         Assert.That(tree.rootItem.children, Is.Empty);
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanHaveWhitespaceInSearchFilter()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map");
+        var action = map1.AddAction("action");
+        action.AddBinding("<Gamepad>/buttonNorth", groups: "Other");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Binding(Group\"With)  Spaces");
+
+        using (var so = new SerializedObject(asset))
+        {
+            var tree = new InputActionTreeView(so)
+            {
+                onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+            };
+
+            tree.SetItemSearchFilterAndReload("\"g:Binding(Group\\\"With)  Spaces\"");
+
+            Assert.That(tree["map"].children, Has.Count.EqualTo(1));
+            Assert.That(tree["map/action"].children, Has.Count.EqualTo(1));
+            Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        }
+    }
+
     // Bindings that have no associated binding group (i.e. aren't part of any control scheme), will not be constrained
     // by a binding mask. Means they will be active regardless of which binding group / control scheme is chosen. To
     // make this more visible in the tree, we display those items as "{GLOBAL}" when filtering by binding group.
@@ -1597,6 +1686,7 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
+#if NET_4_6
     [Test]
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
@@ -1609,65 +1699,34 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
-        asset.name = "MyControls";
+        asset.name = "My Controls (2)";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
-        // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
-        // is just perform some textual verification. Once we have the newest Mono, this should
-        // use CSharpCodeProvider and at least parse if not compile and run the generated wrapper.
+        var codeProvider = CodeDomProvider.CreateProvider("CSharp");
+        var cp = new CompilerParameters();
+        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+        var cr = codeProvider.CompileAssemblyFromSource(cp, code);
+        Assert.That(cr.Errors, Is.Empty);
+        var assembly = cr.CompiledAssembly;
+        Assert.That(assembly, Is.Not.Null);
+        var type = assembly.GetType("MyNamespace.MyControls2");
+        Assert.That(type, Is.Not.Null);
+        var set1Property = type.GetProperty("set1");
+        Assert.That(set1Property, Is.Not.Null);
+        var set1MapGetter = set1Property.PropertyType.GetMethod("Get");
+        var instance = Activator.CreateInstance(type);
+        Assert.That(instance, Is.Not.Null);
+        var set1Instance = set1Property.GetValue(instance);
+        Assert.That(set1Instance, Is.Not.Null);
+        var set1map = set1MapGetter.Invoke(set1Instance, null) as InputActionMap;
+        Assert.That(set1map, Is.Not.Null);
 
-        Assert.That(code, Contains.Substring("namespace MyNamespace"));
-        Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
-        Assert.That(code, Contains.Substring("public override void MakePrivateCopyOfActions()"));
-        Assert.That(code, Contains.Substring("public void SetAsset(InputActionAsset newAsset)"));
+        Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset_WithInterfaces()
-    {
-        var map1 = new InputActionMap("map1");
-        map1.AddAction("action1", binding: "/gamepad/leftStick");
-        map1.AddAction("action2", binding: "/gamepad/rightStick");
-        var map2 = new InputActionMap("map2");
-        map2.AddAction("action3", binding: "/gamepad/buttonSouth");
-
-        var code = InputActionCodeGenerator.GenerateWrapperCode(new[] { map1, map2 },
-            Enumerable.Empty<InputControlScheme>(),
-            new InputActionCodeGenerator.Options { generateInterfaces = true, className = "Test" });
-
-        Assert.That(code, Contains.Substring("public interface IMap1Actions"));
-        Assert.That(code, Contains.Substring("public interface IMap2Actions"));
-        Assert.That(code, Contains.Substring("private IMap1Actions m_Map1ActionsCallbackInterface;"));
-        Assert.That(code, Contains.Substring("private IMap2Actions m_Map2ActionsCallbackInterface;"));
-        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap1Actions instance)"));
-        Assert.That(code, Contains.Substring("public void SetCallbacks(IMap2Actions instance)"));
-        Assert.That(code, Contains.Substring("void OnAction1(InputAction.CallbackContext context)"));
-        Assert.That(code, Contains.Substring("void OnAction2(InputAction.CallbackContext context)"));
-        Assert.That(code, Contains.Substring("void OnAction3(InputAction.CallbackContext context)"));
-    }
-
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
-    {
-        var set1 = new InputActionMap("set1");
-        set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
-        set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set1);
-        asset.name = "New Controls (4)";
-
-        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-            new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
-
-        Assert.That(code, Contains.Substring("class NewControls4"));
-        Assert.That(code, Contains.Substring("public InputAction @action"));
-        Assert.That(code, Contains.Substring("public InputAction @_1thing"));
-    }
+#endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
@@ -1914,7 +1973,7 @@ partial class CoreTests
     {
         const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
         var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-        int scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+        var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
         var scalePostFix = scale > 1 ? $"@{scale}x" : "";
 
         Assert.That(EditorInputControlLayoutCache.GetIconForLayout("Button"),

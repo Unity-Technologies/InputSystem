@@ -244,8 +244,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 onAddDropdownCallback =
                     (rect, list) =>
                 {
-                    var state = new AdvancedDropdownState();
-                    var dropdown = new InputControlPickerDropdown(state,
+                    var dropdown = new InputControlPickerDropdown(
+                        new InputControlPickerState(),
                         path =>
                         {
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
@@ -254,7 +254,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             supportedDevicesProperty.GetArrayElementAtIndex(numDevices)
                                 .stringValue = layoutName;
                             Apply();
-                        }, InputControlPicker.Mode.PickDevice);
+                        },
+                        mode: InputControlPicker.Mode.PickDevice);
                     dropdown.Show(rect);
                 },
                 drawElementCallback =

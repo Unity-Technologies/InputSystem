@@ -896,6 +896,7 @@ partial class CoreTests
         }
     }
 
+    [InputControlLayout(stateType = typeof(CustomDeviceState))]
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;

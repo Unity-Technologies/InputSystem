@@ -14,6 +14,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: handle required actions ahead of time so that we catch it if a device matches by type but doesn't otherwise
 
+////TODO: handle case of control scheme not having any devices in its requirements
+
 ////FIXME: why can't I join with a mouse left click?
 
 //pairing with specific devices requires PlayerInputManager
@@ -912,6 +914,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 }
                 else
                 {
+                    ////TODO: support action sets that don't have control schemes when player isn't joining through PlayerInputManager
                     throw new NotImplementedException();
                 }
             }
@@ -1070,7 +1073,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             // Remove from global list.
             var index = ArrayHelpers.IndexOfReference(s_AllActivePlayers, this, s_AllActivePlayersCount);
             if (index != -1)
-                ArrayHelpers.EraseAtWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, index);
+                ArrayHelpers.EraseAtWithCapacity(s_AllActivePlayers, ref s_AllActivePlayersCount, index);
 
             // Unhook from change notifications if we're the last player.
             if (s_AllActivePlayersCount == 0 && s_UserChangeDelegate != null)

@@ -71,6 +71,11 @@ internal class SwitchTests : InputTestFixture
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.LSR), controller.leftSR);
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.RSL), controller.rightSL);
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.RSR), controller.rightSR);
+
+        // Sensors should be marked as noisy.
+        Assert.That(controller.attitude.noisy, Is.True);
+        Assert.That(controller.angularVelocity.noisy, Is.True);
+        Assert.That(controller.acceleration.noisy, Is.True);
     }
 
     [Test]

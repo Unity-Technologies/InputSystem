@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -487,6 +488,40 @@ namespace UnityEngine.Experimental.Input
                 var child = parent.children[i];
                 FindControlsRecursive(child, controls, predicate);
             }
+        }
+
+        internal static string BuildPath(this InputControl control, string deviceLayout, StringBuilder builder = null)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (string.IsNullOrEmpty(deviceLayout))
+                throw new ArgumentNullException(nameof(deviceLayout));
+
+            if (builder == null)
+                builder = new StringBuilder();
+
+            var device = control.device;
+
+            builder.Append('<');
+            builder.Append(deviceLayout);
+            builder.Append('>');
+
+            // Add usages of device, if any.
+            var deviceUsages = device.usages;
+            for (var i = 0; i < deviceUsages.Count; ++i)
+            {
+                builder.Append('{');
+                builder.Append(deviceUsages[i]);
+                builder.Append('}');
+            }
+
+            builder.Append('/');
+
+            var devicePath = device.path;
+            var controlPath = control.path;
+            builder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
+
+            return builder.ToString();
         }
     }
 }

@@ -14,6 +14,8 @@ using UnityEngine.Experimental.Input.Utilities;
 // not for the convenience of editing operations. This means that editing operations have to constantly jump through
 // hoops to map themselves onto the persistence model of the data.
 
+////FIXME: context menu cannot be brought up when there's no items in the tree
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -46,6 +48,7 @@ namespace UnityEngine.Experimental.Input.Editor
             drawHeader = true;
             drawPlusButton = true;
             drawMinusButton = true;
+            m_ForceAcceptRename = false;
             m_Title = new GUIContent("");
         }
 
@@ -361,7 +364,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // If a rename is already in progress, force it to end first.
             EndRename();
-
             onBeginRename?.Invoke((ActionTreeItemBase)item);
             base.BeginRename(item);
         }
@@ -376,13 +378,20 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!(FindItem(args.itemID, rootItem) is ActionTreeItemBase actionItem))
                 return;
 
-            if (!args.acceptedRename || args.originalName == args.newName)
+            if (!(args.acceptedRename || m_ForceAcceptRename) || args.originalName == args.newName)
                 return;
-
+                
             Debug.Assert(actionItem.canRename, "Cannot rename " + actionItem);
 
             actionItem.Rename(args.newName);
             OnSerializedObjectModified();
+        }
+
+        public void EndRename(bool forceAccept)
+        {
+            m_ForceAcceptRename = forceAccept;
+            EndRename();
+            m_ForceAcceptRename = false;
         }
 
         protected override void DoubleClickedItem(int id)
@@ -737,16 +746,16 @@ namespace UnityEngine.Experimental.Input.Editor
             if (arrayIndex == -1)
                 arrayIndex = array.arraySize;
 
+            var actionForNewBindings = location.item is ActionTreeItem actionItem ? actionItem.name : null;
+
             // Paste new element.
-            var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs,
-                actionForNewBindings: location.item is ActionTreeItem actionItem ? actionItem.name : null);
+            var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs, actionForNewBindings);
             newItemPropertyPaths.Add(newElement.propertyPath);
 
             // If the element can have children, read whatever blocks are following the current one (if any).
             if ((tag == k_ActionTag || tag == k_CompositeBindingTag) && blocks.Length > 1)
             {
                 var bindingArray = array;
-                var actionForNewBindings = (string)null;
 
                 if (tag == k_ActionTag)
                 {
@@ -1120,11 +1129,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 var text = item.displayName;
                 var textRect = GetTextRect(args.rowRect, item);
 
-                if (args.selected)
-                    Styles.selectedText.Draw(textRect, text, false, false, args.selected,
-                        args.focused);
-                else
-                    Styles.text.Draw(textRect, text, false, false, args.selected, args.focused);
+                var style = args.selected ? Styles.selectedText : Styles.text;
+                style.Draw(textRect, text, false, false, args.selected,
+                    args.focused);
             }
 
             // Bottom line.
@@ -1278,6 +1285,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private FilterCriterion[] m_ItemFilterCriteria;
         private GUIContent m_Title;
         private bool m_InitiateContextMenuOnNextRepaint;
+        private bool m_ForceAcceptRename;
         private int m_SerializedObjectDirtyCount;
 
         private static readonly GUIContent s_AddBindingLabel = EditorGUIUtility.TrTextContent("Add Binding");
@@ -1425,14 +1433,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     return null;
 
                 var list = new List<FilterCriterion>();
-                foreach (var substring in criteria.Split(char.IsWhiteSpace))
+                foreach (var substring in criteria.Tokenize())
                 {
                     if (substring.StartsWith(k_DeviceLayoutTag))
-                        list.Add(ByDeviceLayout(substring.Substring(2)));
+                        list.Add(ByDeviceLayout(substring.Substr(2).Unescape()));
                     else if (substring.StartsWith(k_BindingGroupTag))
-                        list.Add(ByBindingGroup(substring.Substring(2)));
+                        list.Add(ByBindingGroup(substring.Substr(2).Unescape()));
                     else
-                        list.Add(ByName(substring));
+                        list.Add(ByName(substring.ToString().Unescape()));
                 }
 
                 return list;
@@ -1459,7 +1467,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static class Styles
         {
-            public static readonly GUIStyle line = new GUIStyle("TV Line");
             public static readonly GUIStyle text = new GUIStyle("Label");
             public static readonly GUIStyle selectedText = new GUIStyle("Label");
             public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label");
