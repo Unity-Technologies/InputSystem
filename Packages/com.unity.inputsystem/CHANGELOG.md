@@ -57,9 +57,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
   * Binding by location shows differences between the local keyboard layout and the US reference layout.
   * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
-
-#### Actions
-
 - `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
 - Reacting to controls that are already actuated when an action is enabled is now an __optional__ behavior rather than the default behavior. This is a __breaking__ change.
   * Essentially, this change reverts back to the behavior before 0.2-preview.
@@ -80,9 +77,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Actions and bindings disappearing when control schemes have spaces in their names.
 - `InputActionRebindingExceptions.RebindOperation` can now be reused as intended; used to stop working properly the first time a rebind completed or was cancelled.
 - Actions bound to multiple controls now trigger correctly when using `PressInteraction` set to `ReleaseOnly` (#492).
-
-#### Actions
-
 - `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
 - The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
 - Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
@@ -90,6 +84,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- The input action asset editor window will no longer fail saving if the asset has been moved.
+- The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
+- Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
+- Fixed pasting or dragging a composite binding from one action into another.
+- In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.
+- Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
+- Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
+- Fixed blurry icons in editor for imported .inputactions assets and actions in them.
 
 ## [0.2.6-preview] - 2019-03-20
 

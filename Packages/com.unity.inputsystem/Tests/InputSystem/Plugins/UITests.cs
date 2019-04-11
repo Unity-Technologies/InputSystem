@@ -94,7 +94,6 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    [Ignore("Broken Fogbugz Ticket Filed")]
     public IEnumerator MouseActions_CanDriveUI()
     {
         // Create devices.
@@ -222,7 +221,6 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    [Ignore("Broken Fogbugz Ticket Filed")]
     public IEnumerator JoystickActions_CanDriveUI()
     {
         // Create devices.
@@ -511,7 +509,6 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    [Ignore("Broken Fogbugz Ticket Filed")]
     public IEnumerator TouchActions_CanDriveUI()
     {
         // Create devices.

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -8,6 +9,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Property = NUnit.Framework.PropertyAttribute;
 
@@ -625,7 +627,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
-    class TestDeviceWithMultiBitControl : InputDevice
+    private class TestDeviceWithMultiBitControl : InputDevice
     {
     }
 
@@ -637,16 +639,16 @@ partial class CoreTests
 
         var monitorFired = false;
         InputControl receivedControl = null;
-        Action<InputControl, double, InputEventPtr, long> action =
-            (control, time, eventPtr, monitorIndex) =>
+
+        void Callback(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
         {
             Assert.That(!monitorFired);
             monitorFired = true;
             receivedControl = control;
-        };
+        }
 
-        InputSystem.AddStateChangeMonitor(device["dpad"], action);
-        InputSystem.AddStateChangeMonitor(device["data"], action);
+        InputSystem.AddStateChangeMonitor(device["dpad"], Callback);
+        InputSystem.AddStateChangeMonitor(device["data"], Callback);
 
         InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3));
         InputSystem.Update();
@@ -833,6 +835,73 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(timeoutFired);
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_StateChangeMonitor_CanBeAddedFromMonitorCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.AddStateChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => { Debug.Log("ButtonWest"); });
+        InputSystem.AddStateChangeMonitor(gamepad.buttonEast,
+            (control, time, eventPtr, monitorIndex) =>
+            {
+                Debug.Log("ButtonEast");
+                InputSystem.AddStateChangeMonitor(gamepad.buttonSouth, (c, t, e, m) => { Debug.Log("ButtonSouth"); });
+            });
+
+        LogAssert.Expect(LogType.Log, "ButtonEast");
+        Press(gamepad.buttonEast);
+        LogAssert.NoUnexpectedReceived();
+
+        LogAssert.Expect(LogType.Log, "ButtonSouth");
+        Press(gamepad.buttonSouth);
+        LogAssert.NoUnexpectedReceived();
+
+        LogAssert.Expect(LogType.Log, "ButtonWest");
+        Press(gamepad.buttonWest);
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_StateChangeMonitor_CanBeRemovedFromMonitorCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var buttonWestMonitor = InputSystem.AddStateChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => { Debug.Log("ButtonWest"); });
+        InputSystem.AddStateChangeMonitor(gamepad.buttonEast,
+            (control, time, eventPtr, monitorIndex) =>
+            {
+                Debug.Log("ButtonEast");
+                InputSystem.RemoveStateChangeMonitor(gamepad.buttonWest, buttonWestMonitor);
+            });
+
+        LogAssert.Expect(LogType.Log, "ButtonEast");
+        Press(gamepad.buttonEast);
+        LogAssert.NoUnexpectedReceived();
+
+        Press(gamepad.buttonWest);
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanThrowExceptionFromStateChangeMonitorCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.AddStateChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => throw new InvalidOperationException("TESTEXCEPTION"));
+
+        LogAssert.Expect(LogType.Error, new Regex("Exception.*thrown from state change monitor.*Gamepad.*buttonWest.*"));
+        LogAssert.Expect(LogType.Exception, new Regex(".*InvalidOperationException.*TESTEXCEPTION"));
+
+        Press(gamepad.buttonWest);
+        LogAssert.NoUnexpectedReceived();
     }
 
     [Test]
