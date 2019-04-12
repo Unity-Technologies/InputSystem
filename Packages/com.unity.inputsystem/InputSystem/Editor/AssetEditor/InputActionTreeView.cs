@@ -825,7 +825,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var canRename = false;
             if (itemType == typeof(ActionMapTreeItem))
             {
-                menu.AddItem(s_AddActionLabel, false, () => {(viewToAddActions ?? this).AddNewAction(); });
+                menu.AddItem(s_AddActionLabel, false, AddNewAction);
             }
             else if (itemType == typeof(ActionTreeItem))
             {
@@ -946,9 +946,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void AddNewAction(SerializedProperty actionMapProperty)
         {
-            var actionProperty = InputActionSerializationHelpers.AddAction(actionMapProperty);
-            InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty, groups: bindingGroupForNewBindings);
-            OnNewItemAdded(actionProperty);
+            if (onHandleAddNewAction != null)
+                onHandleAddNewAction(actionMapProperty);
+            else
+            {
+                var actionProperty = InputActionSerializationHelpers.AddAction(actionMapProperty);
+                InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty, groups: bindingGroupForNewBindings);
+                OnNewItemAdded(actionProperty);
+            }
         }
 
         public void AddNewBinding()
@@ -1232,7 +1237,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public bool drawMinusButton { get; set; }
         public float foldoutOffset { get; set; }
 
-        public InputActionTreeView viewToAddActions { get; set; }
+        public Action<SerializedProperty> onHandleAddNewAction { get; set; }
         public string title
         {
             get => m_Title?.text;
