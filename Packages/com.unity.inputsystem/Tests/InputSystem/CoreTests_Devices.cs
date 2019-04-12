@@ -530,11 +530,11 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(deviceJson);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
 
         InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
     }
 
     [Test]
@@ -554,15 +554,15 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("CustomGamepad");
         var device2 = InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device1);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device2);
 
-        Assert.That(runtime.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
     private class TestDeviceReceivingAddAndRemoveNotification : Mouse
@@ -1421,6 +1421,8 @@ partial class CoreTests
             // Make sure InputManager kept the gamepad.
             Assert.That(manager.devices.Count, Is.EqualTo(1));
             Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
+
+            LogAssert.NoUnexpectedReceived();
         }
     }
 
@@ -1842,11 +1844,8 @@ partial class CoreTests
         Assert.That(Joystick.current, Is.SameAs(device));
 
         var joystick = (Joystick)device;
-
-        Assert.That(joystick.axes, Has.Count.EqualTo(4)); // Includes stick.
-        Assert.That(joystick.buttons, Has.Count.EqualTo(3)); // Includes trigger.
-        Assert.That(joystick.trigger.name, Is.EqualTo("trigger"));
-        Assert.That(joystick.stick.name, Is.EqualTo("stick"));
+        Assert.That(joystick.stick, Is.Not.Null);
+        Assert.That(joystick.trigger, Is.Not.Null);
     }
 
     // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
@@ -2559,6 +2558,43 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
+    {
+        // On iOS and probably Android, when you're touching the screen with two fingers. Touches with different ids can come in different order.
+        // Here's an example, in what order OS sends us touches
+        // NewInput: Touch Moved 2227.000000 x 1214.000000, id = 5, time = 24.478610
+        // NewInput: Touch Moved 1828.000000 x 1156.000000, id = 6, time = 24.478610
+        // NewInput: Touch Moved 2227.000000 x 1290.000000, id = 5, time = 24.494703
+        // NewInput: Touch Moved 1818.000000 x 1231.000000, id = 6, time = 24.494702
+        //
+        // Notice, last event has lower timestamp than previous events, but these are two different touches so they shouldn't affect each other.
+        // Sadly currently there's a bug in managed side, where Input System will ignore events with lower timestamp than previous event
+
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(1, 2)
+            },
+            1.0);
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+            {
+                phase = PointerPhase.Began,
+                touchId = 5,
+                position = new Vector2(3, 4)
+            },
+            0.9);
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_TouchDeltasAreComputedAutomatically()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
@@ -2924,46 +2960,46 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetGravityReading()
     {
-        var sensor = InputSystem.AddDevice<Gravity>();
+        var sensor = InputSystem.AddDevice<GravitySensor>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
         InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
         InputSystem.Update();
 
         Assert.That(sensor.gravity.ReadValue(), Is.EqualTo(value).Within(0.00001));
-        Assert.That(Gravity.current, Is.SameAs(sensor));
+        Assert.That(GravitySensor.current, Is.SameAs(sensor));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanGetAttitudeReading()
     {
-        var sensor = InputSystem.AddDevice<Attitude>();
+        var sensor = InputSystem.AddDevice<AttitudeSensor>();
         var value = Quaternion.Euler(10, 20, 30);
         InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = value });
         InputSystem.Update();
 
         Assert.That(sensor.attitude.ReadValue(), Is.EqualTo(value).Within(0.00001));
-        Assert.That(Attitude.current, Is.SameAs(sensor));
+        Assert.That(AttitudeSensor.current, Is.SameAs(sensor));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanGetLinearAccelerationReading()
     {
-        var sensor = InputSystem.AddDevice<LinearAcceleration>();
+        var sensor = InputSystem.AddDevice<LinearAccelerationSensor>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
         InputSystem.QueueStateEvent(sensor, new LinearAccelerationState { acceleration = value });
         InputSystem.Update();
 
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
-        Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
+        Assert.That(LinearAccelerationSensor.current, Is.SameAs(sensor));
     }
 
     [Test]
     [Category("Devices")]
     [TestCase("Accelerometer", "acceleration")]
     [TestCase("Gyroscope", "angularVelocity")]
-    [TestCase("Gravity", "gravity")]
+    [TestCase("GravitySensor", "gravity")]
     public void Devices_CanCompensateSensorDirectionValues(string layoutName, string controlName)
     {
         var sensor = InputSystem.AddDevice(layoutName);
@@ -3000,7 +3036,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    [TestCase("Attitude", "attitude")]
+    [TestCase("AttitudeSensor", "attitude")]
     public void Devices_CanCompensateSensorRotationValues(string layoutName, string controlName)
     {
         var sensor = InputSystem.AddDevice(layoutName);
@@ -3199,7 +3235,6 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Devices")]
     [Ignore("TODO")]
@@ -3228,8 +3263,6 @@ partial class CoreTests
             InputSystem.Update();
         }, Is.Not.AllocatingGCMemory());
     }
-
-    #endif
 
     [Test]
     [Category("Devices")]

@@ -88,26 +88,16 @@ namespace UnityEngine.Experimental.Input.Interactions
                 case PressBehavior.PressAndRelease:
                     if (m_WaitingForRelease)
                     {
-                        if (context.continuous)
-                        {
-                            if (isActuated)
-                                context.PerformedAndStayPerformed();
-                            else
-                                context.Cancelled();
-                        }
-                        else if (!isActuated)
-                        {
-                            context.Cancelled();
-                        }
+                        if (!isActuated)
+                            context.PerformedAndGoBackToWaiting();
+                        // No support for continuous mode.
 
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
-                        if (context.continuous)
-                            context.PerformedAndStayPerformed();
-                        else
-                            context.PerformedAndStayStarted();
+                        context.PerformedAndGoBackToWaiting();
+                        // No support for continuous mode.
 
                         m_WaitingForRelease = true;
                     }

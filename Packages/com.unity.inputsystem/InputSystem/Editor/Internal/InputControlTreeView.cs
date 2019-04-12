@@ -46,8 +46,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void RefreshControlValuesRecursive(TreeViewItem item)
         {
-            var controlItem = item as ControlItem;
-            if (controlItem != null)
+            if (item is ControlItem controlItem)
                 ReadState(controlItem.control, out controlItem.value, out controlItem.values);
 
             if (item.children != null)
@@ -341,8 +340,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     else
                     {
-                        int halfMaxValue = ((1 << (int)control.m_StateBlock.sizeInBits) - 1) / 2;
-                        int fullValue = (MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
+                        var halfMaxValue = ((1 << (int)control.m_StateBlock.sizeInBits) - 1) / 2;
+                        var fullValue = (MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
                         value = fullValue - halfMaxValue;
                     }
                 }
@@ -382,7 +381,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     value = Enum.ToObject(control.valueType, intValue);
                 }
 
-                return value != null ? value.ToString() : null;
+                return value?.ToString();
             }
         }
 

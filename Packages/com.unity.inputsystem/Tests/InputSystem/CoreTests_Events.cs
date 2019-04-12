@@ -76,7 +76,6 @@ partial class CoreTests
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
     }
 
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Events")]
     [Ignore("TODO")]
@@ -93,8 +92,6 @@ partial class CoreTests
         ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
         Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
     }
-
-    #endif
 
     [Test]
     [Category("Events")]
@@ -192,15 +189,15 @@ partial class CoreTests
         Assert.That(receivedOnChange, Is.True);
         Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
             Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(runtime.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
-        Assert.That(runtime.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.True);
 
         #if UNITY_EDITOR
         // Edit mode updates shouldn't have been disabled in editor.
-        Assert.That(runtime.updateMask & InputUpdateType.Editor, Is.Not.Zero);
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Editor, Is.Not.Zero);
         #endif
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
@@ -225,8 +222,8 @@ partial class CoreTests
         Assert.That(receivedOnChange, Is.True);
         Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
             Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(runtime.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
-        Assert.That(runtime.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
@@ -235,6 +232,29 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Fixed);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_ShouldRunUpdate_AppliesUpdateMask()
+    {
+        InputSystem.s_Manager.updateMask = InputUpdateType.Dynamic;
+
+        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
+        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
+        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Manual));
+
+        InputSystem.s_Manager.updateMask = InputUpdateType.Manual;
+
+        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
+        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
+        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Manual));
+
+        InputSystem.s_Manager.updateMask = InputUpdateType.Default;
+
+        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Dynamic));
+        Assert.That(runtime.onShouldRunUpdate.Invoke(InputUpdateType.Fixed));
+        Assert.That(!runtime.onShouldRunUpdate.Invoke(InputUpdateType.Manual));
     }
 
     [Test]
@@ -252,8 +272,8 @@ partial class CoreTests
         Assert.That(receivedOnChange, Is.True);
         Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
             Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(runtime.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
-        Assert.That(runtime.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.True);
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
@@ -354,8 +374,6 @@ partial class CoreTests
     [Category("Events")]
     public unsafe void Events_TimeslicingCanBeTurnedOff()
     {
-        runtime.fixedUpdateIntervalInSeconds = 1.0 / 60; // 60 FPS.
-
         // Get first update out of the way with timeslicing on. First fixed update will consume all
         // input so we can't really tell the difference.
         InputSystem.Update(InputUpdateType.Fixed);
@@ -878,6 +896,7 @@ partial class CoreTests
         }
     }
 
+    [InputControlLayout(stateType = typeof(CustomDeviceState))]
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;

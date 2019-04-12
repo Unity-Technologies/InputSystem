@@ -17,6 +17,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     /// interface with Xbox controlllers. In those cases, XInput-specific functionality (like <see cref="Capabilities"/>)
     /// will not be available.
     /// </remarks>
+    [InputControlLayout(displayName = "Xbox Controller")]
     public class XInputController : Gamepad
     {
         public ButtonControl menu { get; private set; }

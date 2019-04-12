@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
+using UnityEditor;
 #endif
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
@@ -110,19 +111,15 @@ namespace UnityEngine.Experimental.Input
             get => m_UpdateMask;
             set
             {
-                if (m_UpdateMask == value)
-                    return;
-
                 // In editor, we don't allow disabling editor updates.
                 #if UNITY_EDITOR
                 value |= InputUpdateType.Editor;
                 #endif
 
-                m_UpdateMask = value;
+                if (m_UpdateMask == value)
+                    return;
 
-                // Tell runtime.
-                if (m_Runtime != null)
-                    m_Runtime.updateMask = m_UpdateMask;
+                m_UpdateMask = value;
 
                 // Recreate state buffers.
                 if (m_DevicesCount > 0)
@@ -241,6 +238,13 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        private bool gameIsPlayingAndHasFocus =>
+#if UNITY_EDITOR
+                     EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+#else
+            true;
+#endif
+
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
 
@@ -260,7 +264,7 @@ namespace UnityEngine.Experimental.Input
             var isControlLayout = typeof(InputControl).IsAssignableFrom(type);
 
             if (!isDeviceLayout && !isControlLayout)
-                throw new ArgumentException("Types used as layouts have to be InputControls or InputDevices",
+                throw new ArgumentException($"Types used as layouts have to be InputControls or InputDevices; '{type.Name}' is a '{type.BaseType.Name}'",
                     nameof(type));
 
             var internedName = new InternedString(name);
@@ -362,6 +366,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
+            ////FIXME: this is no longer necessary; kill it
             // If we have an instance, make sure it is [Serializable].
             if (instance != null)
             {
@@ -1064,7 +1069,7 @@ namespace UnityEngine.Experimental.Input
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.id;
-            ArrayHelpers.EraseAtWithCapacity(ref m_Devices, ref m_DevicesCount, deviceIndex);
+            ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
             m_DevicesById.Remove(deviceId);
 
@@ -1094,7 +1099,7 @@ namespace UnityEngine.Experimental.Input
                     if (keepOnListOfAvailableDevices)
                         m_AvailableDevices[i].isRemoved = true;
                     else
-                        ArrayHelpers.EraseAtWithCapacity(ref m_AvailableDevices, ref m_AvailableDeviceCount, i);
+                        ArrayHelpers.EraseAtWithCapacity(m_AvailableDevices, ref m_AvailableDeviceCount, i);
                     break;
                 }
             }
@@ -1381,6 +1386,7 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
                     InputRuntime.s_Instance = null;
@@ -1404,6 +1410,7 @@ namespace UnityEngine.Experimental.Input
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
+            m_HasFocus = Application.isFocused;
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
@@ -1425,6 +1432,7 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
+            RegisterControlLayout("DpadAxis", typeof(DpadControl.DpadAxisControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
             RegisterControlLayout("Touch", typeof(TouchControl));
 
@@ -1438,9 +1446,15 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Sensor", typeof(Sensor));
             RegisterControlLayout("Accelerometer", typeof(Accelerometer));
             RegisterControlLayout("Gyroscope", typeof(Gyroscope));
-            RegisterControlLayout("Gravity", typeof(Gravity));
-            RegisterControlLayout("Attitude", typeof(Attitude));
-            RegisterControlLayout("LinearAcceleration", typeof(LinearAcceleration));
+            RegisterControlLayout("GravitySensor", typeof(GravitySensor));
+            RegisterControlLayout("AttitudeSensor", typeof(AttitudeSensor));
+            RegisterControlLayout("LinearAccelerationSensor", typeof(LinearAccelerationSensor));
+            RegisterControlLayout("MagneticFieldSensor", typeof(MagneticFieldSensor));
+            RegisterControlLayout("LightSensor", typeof(LightSensor));
+            RegisterControlLayout("PressureSensor", typeof(PressureSensor));
+            RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
+            RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
+            RegisterControlLayout("StepCounter", typeof(StepCounter));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
@@ -1458,7 +1472,6 @@ namespace UnityEngine.Experimental.Input
             //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
-            processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
             #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
@@ -1486,13 +1499,14 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onFocusChanged = OnFocusChanged;
-            m_Runtime.updateMask = updateMask;
+            m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
@@ -1577,6 +1591,7 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
+        private bool m_HasFocus;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
@@ -1641,6 +1656,10 @@ namespace UnityEngine.Experimental.Input
 
             public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
             {
+                // NOTE: This method must only *append* to arrays. This way we can safely add data while traversing
+                //       the arrays in FireStateChangeNotifications. Note that appending *may* mean that the arrays
+                //       are switched to larger arrays.
+
                 // Record listener.
                 var listenerCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
@@ -1661,19 +1680,19 @@ namespace UnityEngine.Experimental.Input
 
             public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
             {
+                // NOTE: This must *not* actually destroy the record for the monitor as we may currently be traversing the
+                //       arrays in FireStateChangeNotifications. Instead, we only invalidate entries here and leave it to
+                //       ProcessStateChangeMonitors to compact arrays.
+
                 if (listeners == null)
                     return;
 
-                ////REVIEW: would be better to clean these up implicitly during the next traversal
                 for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        var listenerCount = signalled.length;
-                        var memoryRegionCount = signalled.length;
-                        ArrayHelpers.EraseAtByMovingTail(listeners, ref listenerCount, i);
-                        ArrayHelpers.EraseAtByMovingTail(memoryRegions, ref memoryRegionCount, i);
-                        ////FIXME: if we want to preserve signal bits here, need to move them, too
-                        signalled.SetLength(signalled.length - 1);
+                        listeners[i] = new StateChangeMonitorListener();
+                        memoryRegions[i] = new StateChangeMonitorMemoryRegion();
+                        signalled.ClearBit(i);
                         break;
                     }
             }
@@ -1885,6 +1904,10 @@ namespace UnityEngine.Experimental.Input
 
         private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
+            // Make sure we're not adding to m_AvailableDevices before we restored what we
+            // had before a domain reload.
+            RestoreDevicesAfterDomainReloadIfNecessary();
+
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
@@ -1915,7 +1938,7 @@ namespace UnityEngine.Experimental.Input
                     if (m_DisconnectedDevices[i].description == description)
                     {
                         device = m_DisconnectedDevices[i];
-                        ArrayHelpers.EraseAtWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
+                        ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
                         break;
                     }
                 }
@@ -1972,16 +1995,21 @@ namespace UnityEngine.Experimental.Input
             m_NativeBeforeUpdateHooked = true;
         }
 
+        private void RestoreDevicesAfterDomainReloadIfNecessary()
+        {
+            #if UNITY_EDITOR
+            if (m_SavedDeviceStates != null)
+                RestoreDevicesAfterDomainReload();
+            #endif
+        }
+
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
 
-            #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
-                RestoreDevicesAfterDomainReload();
-            #endif
+            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
@@ -2105,8 +2133,7 @@ namespace UnityEngine.Experimental.Input
                 default:
                     throw new NotImplementedException("Input update mode: " + m_Settings.updateMode);
             }
-            if (m_Settings.runInBackground)
-                newUpdateMask |= (InputUpdateType)(1 << 31);
+
             #if UNITY_EDITOR
             // In the editor, we force editor updates to be on even if InputEditorUserSettings.lockInputToGameView is
             // on as otherwise we'll end up accumulating events in edit mode without anyone flushing the
@@ -2175,6 +2202,7 @@ namespace UnityEngine.Experimental.Input
 
         private void OnFocusChanged(bool focus)
         {
+            m_HasFocus = focus;
             var deviceCount = m_DevicesCount;
             for (var i = 0; i < deviceCount; ++i)
             {
@@ -2182,6 +2210,18 @@ namespace UnityEngine.Experimental.Input
                 if (!InputSystem.TrySyncDevice(device))
                     InputSystem.TryResetDevice(device);
             }
+        }
+
+        private bool ShouldRunUpdate(InputUpdateType updateType)
+        {
+            var mask = m_UpdateMask;
+#if UNITY_EDITOR
+            if (gameIsPlayingAndHasFocus)
+                mask &= ~InputUpdateType.Editor;
+            else
+                mask &= ~(InputUpdateType.Dynamic | InputUpdateType.Fixed);
+#endif
+            return (updateType & mask) != 0;
         }
 
         /// <summary>
@@ -2211,10 +2251,7 @@ namespace UnityEngine.Experimental.Input
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
-            #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
-                RestoreDevicesAfterDomainReload();
-            #endif
+            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -2226,35 +2263,6 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             ////TODO: manual mode must be treated like lockInputToGameView in editor
-            // In the editor, we need to decide where to route state. Whenever the game is playing and
-            // has focus, we route all input to play mode buffers. When the game is stopped or if any
-            // of the other editor windows has focus, we route input to edit mode buffers.
-            var gameIsPlayingAndHasFocus = true;
-            var buffersToUseForUpdate = updateType;
-
-            #if UNITY_EDITOR
-            gameIsPlayingAndHasFocus = InputEditorUserSettings.lockInputToGameView ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
-
-            if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
-            {
-                switch (m_Settings.updateMode)
-                {
-                    case InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly:
-                    case InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate:
-                        buffersToUseForUpdate = InputUpdateType.Dynamic;
-                        break;
-
-                    case InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly:
-                        buffersToUseForUpdate = InputUpdateType.Fixed;
-                        break;
-
-                    case InputSettings.UpdateMode.ProcessEventsManually:
-                        buffersToUseForUpdate = InputUpdateType.Manual;
-                        break;
-                }
-            }
-            #endif
 
             // Update metrics.
             m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
@@ -2267,7 +2275,7 @@ namespace UnityEngine.Experimental.Input
             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
             InputUpdate.s_LastUpdateType = updateType;
-            InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
+            InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic)
@@ -2290,24 +2298,10 @@ namespace UnityEngine.Experimental.Input
             //       Otherwise, once an event with a newer timestamp has been processed, events coming later
             //       in the buffer and having older timestamps will get rejected.
 
-            var currentTime = m_Runtime.currentTime;
-            var timesliceTime = currentTime;
+            var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
             #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
-
-            ////TODO: account for fixed updates getting dropped when framerate tanks
-            // For fixed updates, we space timeslices out evenly according to fixed update length.
-            // NOTE: In the first fixed update, we simply take the current time and consume everything that
-            //       happened until then. After the first update, we start the regular cadence.
-            if (updateType == InputUpdateType.Fixed)
-            {
-                if (InputUpdate.s_FixedUpdateCount == 1)
-                    timesliceTime = m_Runtime.currentTime;
-                else
-                    timesliceTime = InputUpdate.s_LastFixedUpdateTime + m_Runtime.fixedUpdateIntervalInSeconds;
-                InputUpdate.s_LastFixedUpdateTime = timesliceTime;
-            }
             #endif
 
             // Early out if there's no events to process.
@@ -2318,8 +2312,6 @@ namespace UnityEngine.Experimental.Input
                 if (gameIsPlayingAndHasFocus)
                     ProcessStateChangeMonitorTimeouts();
 
-                if (buffersToUseForUpdate != updateType)
-                    InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
@@ -2398,7 +2390,7 @@ namespace UnityEngine.Experimental.Input
 
                 #if UNITY_2019_2_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
-                if (timesliceEvents && currentEventReadPtr->internalTime >= timesliceTime)
+                if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
                 {
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
@@ -2605,7 +2597,7 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Buffer flip.
-                        if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
+                        if (FlipBuffersForDeviceIfNecessary(device, updateType))
                         {
                             // In case of a delta state event we need to carry forward all state we're
                             // not updating. Instead of optimizing the copy here, we're just bringing the
@@ -2792,6 +2784,7 @@ namespace UnityEngine.Experimental.Input
             m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
             m_Metrics.totalEventLagTime += totalEventLag;
 
+            ////REVIEW: This was moved to 2019.2 while the timeslice code was wrong; should probably be reenabled now
             #if UNITY_2019_2_OR_NEWER
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
@@ -2824,9 +2817,6 @@ namespace UnityEngine.Experimental.Input
                 ProcessStateChangeMonitorTimeouts();
 
             ////TODO: fire event that allows code to update state *from* state we just updated
-
-            if (buffersToUseForUpdate != updateType)
-                InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             Profiler.EndSample();
 
@@ -2902,6 +2892,7 @@ namespace UnityEngine.Experimental.Input
             var numMonitors = m_StateChangeMonitors[deviceIndex].count;
             var signalled = false;
             var signals = m_StateChangeMonitors[deviceIndex].signalled;
+            var haveChangedSignalsBitfield = false;
 
             // Bake offsets into state pointers so that we don't have to adjust for
             // them repeatedly.
@@ -2914,6 +2905,25 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < numMonitors; ++i)
             {
                 var memoryRegion = memoryRegions[i];
+
+                // Check if the monitor record has been wiped in the meantime. If so, remove it.
+                if (memoryRegion.sizeInBits == 0)
+                {
+                    ////REVIEW: Do we really care? It is nice that it's predictable this way but hardly a hard requirement
+                    // NOTE: We're using EraseAtWithCapacity here rather than EraseAtByMovingTail to preserve
+                    //       order which makes the order of callbacks somewhat more predictable.
+
+                    var listenerCount = numMonitors;
+                    var memoryRegionCount = numMonitors;
+                    ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors[deviceIndex].listeners, ref listenerCount, i);
+                    ArrayHelpers.EraseAtWithCapacity(memoryRegions, ref memoryRegionCount, i);
+                    signals.SetLength(numMonitors - 1);
+                    haveChangedSignalsBitfield = true;
+                    --numMonitors;
+                    --i;
+                    continue;
+                }
+
                 var offset = (int)memoryRegion.offsetRelativeToDevice;
                 var sizeInBits = memoryRegion.sizeInBits;
                 var bitOffset = memoryRegion.bitOffset;
@@ -2961,10 +2971,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 signals.SetBit(i);
+                haveChangedSignalsBitfield = true;
                 signalled = true;
             }
 
-            if (signalled)
+            if (haveChangedSignalsBitfield)
                 m_StateChangeMonitors[deviceIndex].signalled = signals;
 
             return signalled;
@@ -2975,23 +2986,36 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(m_StateChangeMonitors != null);
             Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
 
-            var signals = m_StateChangeMonitors[deviceIndex].signalled;
-            var listeners = m_StateChangeMonitors[deviceIndex].listeners;
+            // NOTE: This method must be safe for mutating the state change monitor arrays from *within*
+            //       NotifyControlStateChanged()! This includes all monitors for the device being wiped
+            //       completely or arbitrary additions and removals having occurred.
+
+            ref var signals = ref m_StateChangeMonitors[deviceIndex].signalled;
+            ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
             var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
+            // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
+            // signalled state.
             for (var i = 0; i < signals.length; ++i)
             {
-                ////TODO: we're going linear here so instead of computing a byte and bit index from scratch every
-                ////      time, shift indices and masks incrementally
-                if (signals.TestBit(i))
-                {
-                    var listener = listeners[i];
-                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr, listener.monitorIndex);
-                    signals.ClearBit(i);
-                }
-            }
+                if (!signals.TestBit(i))
+                    continue;
 
-            m_StateChangeMonitors[deviceIndex].signalled = signals;
+                var listener = listeners[i];
+                try
+                {
+                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr,
+                        listener.monitorIndex);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(
+                        $"Exception '{exception.GetType().Name}' thrown from state change monitor '{listener.monitor.GetType().Name}' on '{listener.control}'");
+                    Debug.LogException(exception);
+                }
+
+                signals.ClearBit(i);
+            }
         }
 
         private void ProcessStateChangeMonitorTimeouts()
@@ -3040,7 +3064,7 @@ namespace UnityEngine.Experimental.Input
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
         // the given update type.
         // Returns true if there was a buffer flip.
-        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType, bool gameIsPlayingAndHasFocus)
+        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType)
         {
             if (updateType == InputUpdateType.BeforeRender)
             {
@@ -3233,7 +3257,7 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             m_DeviceSetupVersion = state.deviceSetupVersion + 1;
-            m_UpdateMask = state.updateMask;
+            updateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 

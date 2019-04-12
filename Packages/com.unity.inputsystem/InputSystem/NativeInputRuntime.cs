@@ -36,6 +36,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
             }
+            if ((updateType & InputUpdateType.Manual) == InputUpdateType.Manual)
+            {
+                NativeInputSystem.Update((NativeInputUpdateType)InputUpdateType.Manual);
+            }
 
             #if UNITY_EDITOR
             if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
@@ -98,7 +102,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                             eventBufferPtr->sizeInBytes = 0;
                         }
                     };
-                    #elif UNITY_2019_1
+                    #else
                     // 2019.1 has the native API change but we need to fix the code in InputManager first
                     // before we can fully migrate to the new update code. For now, just manually reset
                     // the buffer here every time.
@@ -125,13 +129,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                             }
                         }
                     };
-                    #else
-                    NativeInputSystem.onUpdate =
-                        (updateType, eventCount, eventPtr) =>
-                    {
-                        var buffer = new InputEventBuffer((InputEvent*)eventPtr, eventCount);
-                        value((InputUpdateType)updateType, ref buffer);
-                    };
                     #endif
                 else
                     NativeInputSystem.onUpdate = null;
@@ -148,6 +145,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     NativeInputSystem.onBeforeUpdate = updateType => value((InputUpdateType)updateType);
                 else
                     NativeInputSystem.onBeforeUpdate = null;
+            }
+        }
+
+        public Func<InputUpdateType, bool> onShouldRunUpdate
+        {
+            set
+            {
+                // This is stupid but the enum prevents us from jacking the delegate in directly.
+                // This means we get a double dispatch here :(
+                if (value != null)
+                    NativeInputSystem.onShouldRunUpdate = updateType => value((InputUpdateType)updateType);
+                else
+                    NativeInputSystem.onShouldRunUpdate = null;
             }
         }
 
@@ -202,14 +212,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double currentTime => NativeInputSystem.currentTime;
 
+        public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
+
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-
-        public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
-
-        public InputUpdateType updateMask
-        {
-            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
-        }
 
         private Action m_ShutdownMethod;
 

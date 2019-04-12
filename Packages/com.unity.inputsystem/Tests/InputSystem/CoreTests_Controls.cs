@@ -9,15 +9,11 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-
-#if UNITY_2018_3_OR_NEWER
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-#endif
 
 partial class CoreTests
 {
-    #if UNITY_2018_3_OR_NEWER
     [Test]
     [Category("Controls")]
     [Ignore("TODO")]
@@ -38,8 +34,6 @@ partial class CoreTests
             list.Dispose();
         }
     }
-
-    #endif
 
     [Test]
     [Category("Controls")]
@@ -703,6 +697,8 @@ partial class CoreTests
         Assert.That(dpad.right.isPressed, Is.False);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.down.isPressed, Is.False);
+        Assert.AreEqual(dpad.x.ReadValueAsObject(), -1.0f);
+        Assert.AreEqual(dpad.y.ReadValueAsObject(), 0.0f);
 
         InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(8));
         InputSystem.Update();
@@ -711,6 +707,8 @@ partial class CoreTests
         Assert.That(dpad.down.isPressed, Is.True);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.right.isPressed, Is.False);
+        Assert.AreEqual(dpad.x.ReadValueAsObject(), -0.707107f);
+        Assert.AreEqual(dpad.y.ReadValueAsObject(), -0.707107f);
     }
 
     [Test]
@@ -776,6 +774,18 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(2));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightStick));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsByDisplayName()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls("<Gamepad>/#(right shoulder)"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightShoulder));
         }
     }
 
@@ -959,7 +969,6 @@ partial class CoreTests
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("leftStick [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("leftStick/x [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("leftStick/x [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XRController]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
