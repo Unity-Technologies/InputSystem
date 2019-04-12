@@ -1113,6 +1113,26 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var item = (ActionTreeItemBase)args.item;
             var isRepaint = Event.current.type == EventType.Repaint;
+            var timeSincePhaseChange = Time.realtimeSinceStartup - item.lastPhaseChangeTime;
+            var alpha = Mathf.Clamp01(1.5f - (float)timeSincePhaseChange * 3.0f)*0.3f;
+            if (alpha > 0)
+                Repaint();
+
+            var highlightRect = args.rowRect;
+            switch (item.phase)
+            {
+                case InputActionPhase.Performed:
+                    EditorGUI.DrawRect(highlightRect, new Color(0,1,0,alpha));
+                    break;
+                case InputActionPhase.Started:
+                    EditorGUI.DrawRect(highlightRect, new Color(0, 0, 1, alpha));
+                    break;
+                case InputActionPhase.Cancelled:
+                    EditorGUI.DrawRect(highlightRect, new Color(1, 0, 0, alpha));
+                    break;
+                default:
+                    break;
+            }
 
             // Color tag at beginning of line.
             var colorTagRect = args.rowRect;

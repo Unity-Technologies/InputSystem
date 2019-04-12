@@ -16,6 +16,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public virtual bool canRename => true;
         public virtual bool serializedDataIncludesChildren => false;
         public abstract GUIStyle colorTagStyle { get; }
+        public InputActionPhase phase { get; set; }
+        public double lastPhaseChangeTime { get; set; }
         public string name { get; }
         public Guid guid { get; }
 

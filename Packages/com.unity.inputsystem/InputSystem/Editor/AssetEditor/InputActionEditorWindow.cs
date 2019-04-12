@@ -189,6 +189,34 @@ namespace UnityEngine.Experimental.Input.Editor
             return ConfirmSaveChangesIfNeeded();
         }
 
+        private void ActionVisualizationCallback(InputAction.CallbackContext context)
+        {
+            var foundItem = m_ActionsTree.FindFirstItem<ActionTreeItemBase>((item) => item.name == context.action.name);
+            foundItem.phase = context.phase;
+            foundItem.lastPhaseChangeTime = context.time;
+            foreach (var ch in foundItem.children)
+            {
+                var path = ((ActionTreeItemBase)ch).property.FindPropertyRelative("m_Path").stringValue;
+                if (InputControlPath.Matches(path, context.control))
+                {
+                    ((ActionTreeItemBase)ch).phase = context.phase;
+                    ((ActionTreeItemBase)ch).lastPhaseChangeTime = context.time;
+                }
+                if (ch.hasChildren)
+                    foreach (var ch2 in ch.children)
+                    {
+                        path = ((ActionTreeItemBase)ch2).property.FindPropertyRelative("m_Path").stringValue;
+                        if (InputControlPath.Matches(path, context.control))
+                        {
+                            ((ActionTreeItemBase)ch2).phase = context.phase;
+                            ((ActionTreeItemBase)ch2).lastPhaseChangeTime = context.time;
+                        }
+                    }
+            }
+
+            Repaint();
+        }
+
         private void OnEnable()
         {
             minSize = new Vector2(600, 300);
@@ -203,6 +231,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Toolbar.onSave = SaveChangesToAsset;
             m_Toolbar.onControlSchemesChanged = OnControlSchemesModified;
             EditorApplication.wantsToQuit += EditorWantsToQuit;
+            EditorApplication.playModeStateChanged += EditorApplication_PlayModeStateChanged;
 
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
@@ -211,6 +240,36 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
 
                 InitializeTrees();
+            }
+
+
+            foreach (var actionmap in m_ActionAssetManager.m_AssetObjectForEditing.actionMaps)
+            {
+                foreach (var action in actionmap.actions)
+                {
+                    action.Enable();
+                    action.started += ActionVisualizationCallback;
+                    action.performed += ActionVisualizationCallback;
+                    action.cancelled += ActionVisualizationCallback;
+                }
+            }
+        }
+
+        void EditorApplication_PlayModeStateChanged(PlayModeStateChange obj)
+        {
+            if (obj == PlayModeStateChange.ExitingPlayMode)
+            {
+                foreach (var actionmap in m_ActionAssetManager.m_AssetObjectForEditing.actionMaps)
+                {
+                    foreach (var action in actionmap.actions)
+                    {
+                        action.Disable();
+                        action.started -= ActionVisualizationCallback;
+                        action.performed -= ActionVisualizationCallback;
+                        action.cancelled -= ActionVisualizationCallback;
+                    }
+                }
+                m_ActionsTree.FindFirstItem<ActionTreeItemBase>((x) => { x.phase = InputActionPhase.Waiting; return false; });
             }
         }
 
