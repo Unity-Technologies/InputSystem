@@ -10,6 +10,6 @@
 	},
   	"description": "Tests for com.unity.inputsystem",
 	"dependencies": {
-		"com.unity.inputsystem": "file:../Packages/com.unity.inputsystem",
+		"com.unity.inputsystem": "file:../Packages/com.unity.inputsystem"
 	}
 }
