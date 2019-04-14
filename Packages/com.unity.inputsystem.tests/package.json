@@ -1,7 +1,7 @@
 {
 	"name": "com.unity.inputsystem.tests",
 	"displayName": "Input System Tests",
-	"version": "0.2.6-preview",
+	"version": "0.2.7-preview",
 	"unity": "2019.1",
 	"repository": {
 		"type": "git",
@@ -10,6 +10,6 @@
 	},
   	"description": "Tests for com.unity.inputsystem",
 	"dependencies": {
-		"com.unity.inputsystem": "file:../Packages/com.unity.inputsystem"
+		"com.unity.inputsystem": "0.2.7-preview"
 	}
 }
