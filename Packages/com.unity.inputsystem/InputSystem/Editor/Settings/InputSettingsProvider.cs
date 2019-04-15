@@ -60,58 +60,72 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_Settings == null)
                 InitializeWithCurrentSettings();
 
-            EditorGUILayout.HelpBox(
-                "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
-                + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
-                MessageType.Warning);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Separator();
-            EditorGUILayout.Space();
-
-            Debug.Assert(m_Settings != null);
-
-            EditorGUI.BeginChangeCheck();
-
-            EditorGUILayout.PropertyField(m_UpdateMode);
-            var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
-            if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
+            if (m_AvailableInputSettingsAssets.Length == 0)
             {
-                // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
-                // when we have both dynamic and fixed updates in the picture.
-                ////TODO: enable when action update mode is properly sorted
-                //EditorGUILayout.PropertyField(m_ActionUpdateMode);
+                EditorGUILayout.HelpBox(
+                        "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
+                        MessageType.Info);
+                if (GUILayout.Button("Create settings asset", GUILayout.Height(30)))
+                    CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
+                GUILayout.Space(20);
             }
 
-            ////TODO: enable when backported
-            //EditorGUILayout.PropertyField(m_TimesliceEvents);
+            using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
+            {
 
-            EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
-            EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
+                EditorGUILayout.HelpBox(
+                        "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
+                        + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
+                        MessageType.Warning);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.Separator();
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
+                EditorGUILayout.Separator();
+                EditorGUILayout.Space();
 
-            EditorGUILayout.PropertyField(m_DefaultDeadzoneMin);
-            EditorGUILayout.PropertyField(m_DefaultDeadzoneMax);
-            EditorGUILayout.PropertyField(m_DefaultButtonPressPoint);
-            EditorGUILayout.PropertyField(m_DefaultTapTime);
-            EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
-            EditorGUILayout.PropertyField(m_DefaultHoldTime);
+                Debug.Assert(m_Settings != null);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.Separator();
-            EditorGUILayout.Space();
+                EditorGUI.BeginChangeCheck();
 
-            EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
-                + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                + "and avoid picking up input from devices not relevant to the project.", MessageType.None);
+                EditorGUILayout.PropertyField(m_UpdateMode);
+                var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
+                if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
+                {
+                    // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
+                    // when we have both dynamic and fixed updates in the picture.
+                    ////TODO: enable when action update mode is properly sorted
+                    //EditorGUILayout.PropertyField(m_ActionUpdateMode);
+                }
 
-            m_SupportedDevices.DoLayoutList();
+                ////TODO: enable when backported
+                //EditorGUILayout.PropertyField(m_TimesliceEvents);
 
-            if (EditorGUI.EndChangeCheck())
-                Apply();
+                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
+                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
+
+                EditorGUILayout.Space();
+                EditorGUILayout.Separator();
+                EditorGUILayout.Space();
+
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin);
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax);
+                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint);
+                EditorGUILayout.PropertyField(m_DefaultTapTime);
+                EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
+                EditorGUILayout.PropertyField(m_DefaultHoldTime);
+
+                EditorGUILayout.Space();
+                EditorGUILayout.Separator();
+                EditorGUILayout.Space();
+
+                EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
+                    + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
+                    + "and avoid picking up input from devices not relevant to the project.", MessageType.None);
+
+                m_SupportedDevices.DoLayoutList();
+
+                if (EditorGUI.EndChangeCheck())
+                    Apply();
+            }
         }
 
         private static void CreateNewSettingsAsset(string relativePath)
@@ -119,6 +133,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Create settings file.
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             AssetDatabase.CreateAsset(settings, relativePath);
+            EditorGUIUtility.PingObject(settings);
             // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
             // will cause us to re-initialize.
             InputSystem.settings = settings;
@@ -171,10 +186,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_CurrentSelectedInputSettingsAsset = 0;
                     m_Settings = AssetDatabase.LoadAssetAtPath<InputSettings>(m_AvailableInputSettingsAssets[0]);
                     InputSystem.settings = m_Settings;
-                }
-                else
-                {
-                    CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
                 }
             }
             else
