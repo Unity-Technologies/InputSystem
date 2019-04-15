@@ -871,6 +871,34 @@ namespace UnityEngine.Experimental.Input
             device.MakeCurrent();
         }
 
+        public void AddUsage(InputDevice device, InternedString usage)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            device.AddUsage(usage);
+
+            // Notify listeners.
+            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
+                m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+
+            // Usage may affect current device so update.
+            device.MakeCurrent();
+        }
+
+        public void RemoveUsage(InputDevice device, InternedString usage)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            device.RemoveUsage(usage);
+
+            // Notify listeners.
+            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
+                m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+
+            // Usage may affect current device so update.
+            device.MakeCurrent();
+        }
+
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
 
         public InputDevice AddDevice(Type type, string name = null)
