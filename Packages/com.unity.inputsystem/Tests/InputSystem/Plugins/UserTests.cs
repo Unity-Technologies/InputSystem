@@ -579,22 +579,6 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanAssociateActionsWithUser_UsingAssetReference()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputUser.PerformPairingWithDevice(gamepad);
-
-        Assert.That(InputUser.all[0].actions, Is.Null);
-
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var reference = new InputActionAssetReference(asset);
-        InputUser.all[0].AssociateActionsWithUser(reference);
-
-        Assert.That(InputUser.all[0].actions, Is.SameAs(asset));
-    }
-
-    [Test]
-    [Category("Users")]
     public void Users_CannotActivateControlSchemeWithoutActions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

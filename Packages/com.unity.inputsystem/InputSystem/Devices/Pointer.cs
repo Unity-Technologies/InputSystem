@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(PointerState))]
+    [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -146,7 +146,6 @@ namespace UnityEngine.Experimental.Input
         public AxisControl twist { get; private set; }
 
         public IntegerControl pointerId { get; private set; }
-        ////TODO: find a way which gives values as PointerPhase instead of as int
         public PointerPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }////TODO: kill this
 

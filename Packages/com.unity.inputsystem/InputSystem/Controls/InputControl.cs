@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -229,7 +230,12 @@ namespace UnityEngine.Experimental.Input
             internal set
             {
                 if (value)
+                {
                     m_ControlFlags |= ControlFlags.IsNoisy;
+                    // Making a control noisy makes all its children noisy.
+                    foreach (var child in children)
+                        child.noisy = true;
+                }
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;
             }
@@ -273,7 +279,7 @@ namespace UnityEngine.Experimental.Input
         /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, i.e. Gamepad.aButton
         /// </code>
         /// </example>
-        /// <exception cref="IndexOutOfRangeException"><paramref name="path"/> cannot be found.</exception>
+        /// <exception cref="KeyNotFoundException"><paramref name="path"/> cannot be found.</exception>
         /// <seealso cref="InputControlPath"/>
         /// <seealso cref="path"/>
         /// <seealso cref="TryGetChildControl"/>
@@ -283,7 +289,7 @@ namespace UnityEngine.Experimental.Input
             {
                 var control = InputControlPath.TryFindChild(this, path);
                 if (control == null)
-                    throw new IndexOutOfRangeException(
+                    throw new KeyNotFoundException(
                         $"Cannot find control '{path}' as child of '{this}'");
                 return control;
             }

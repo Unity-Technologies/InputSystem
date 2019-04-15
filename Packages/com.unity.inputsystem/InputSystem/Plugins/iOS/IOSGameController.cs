@@ -22,7 +22,11 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         X,
         Y,
         A,
-        B
+        B,
+        Start,
+        Select
+
+        // Note: If you'll add an element here, be sure to update kMaxButtons const below
     };
 
     public enum iOSAxis
@@ -31,14 +35,16 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         LeftStickY,
         RightStickX,
         RightStickY
+
+        // Note: If you'll add an element here, be sure to update kMaxAxis const below
     };
 
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
-        public const int kMaxButtons = 14;
-        public const int kMaxAxis = 4;
+        public const int kMaxButtons = (int)iOSButton.Select + 1;
+        public const int kMaxAxis = (int)iOSAxis.RightStickY + 1;
 
         [InputControl(name = "dpad")]
         [InputControl(name = "dpad/up", bit = (uint)iOSButton.DpadUp)]
@@ -53,11 +59,8 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         [InputControl(name = "rightStickPress", bit = (uint)iOSButton.RightStick)]
         [InputControl(name = "leftShoulder", bit = (uint)iOSButton.LeftShoulder)]
         [InputControl(name = "rightShoulder", bit = (uint)iOSButton.RightShoulder)]
-        // iOS game controllers don't have the center menu buttons, so "park" them outside of the state we send.
-        ////FIXME: should not be necessary to set format here
-        ////FIXME: if bit isn't explicit set to 0 (means we inherit the existing setting) it seems we're reading invalid memory; probably a bug in InputDeviceBuilder
-        [InputControl(name = "start", offset = InputStateBlock.kInvalidOffset, bit = 0, format = "BIT")]
-        [InputControl(name = "select", offset = InputStateBlock.kInvalidOffset, bit = 0, format = "BIT")]
+        [InputControl(name = "start", bit = (uint)iOSButton.Start)]
+        [InputControl(name = "select", bit = (uint)iOSButton.Select)]
         public uint buttons;
 
         [InputControl(name = "leftTrigger", offset = sizeof(uint) + sizeof(float) * (uint)iOSButton.LeftTrigger)]
@@ -102,7 +105,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
-    [InputControlLayout(stateType = typeof(iOSGameControllerState))]
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
     public class iOSGameController : Gamepad
     {
     }

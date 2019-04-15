@@ -231,12 +231,12 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("MyDevice");
 
-        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
-        Assert.That(layout["digital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(1234));
-        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
-        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(0x1234));
+        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["digital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(0x1234));
     }
 
     class TestDeviceWithDefaultState : InputDevice
@@ -253,7 +253,7 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultState");
 
-        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
@@ -304,11 +304,11 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
-        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
-        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control2"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
-        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control3"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
@@ -1348,8 +1348,8 @@ partial class CoreTests
 
         Assert.That(layout["control"].minValue.isEmpty, Is.False);
         Assert.That(layout["control"].maxValue.isEmpty, Is.False);
-        Assert.That(layout["control"].minValue.ToFloat(), Is.EqualTo(0.1234f));
-        Assert.That(layout["control"].maxValue.ToFloat(), Is.EqualTo(0.5432f));
+        Assert.That(layout["control"].minValue.ToSingle(), Is.EqualTo(0.1234f));
+        Assert.That(layout["control"].maxValue.ToSingle(), Is.EqualTo(0.5432f));
     }
 
     [Test]
@@ -1375,8 +1375,8 @@ partial class CoreTests
 
         Assert.That(layout["control"].minValue.isEmpty, Is.False);
         Assert.That(layout["control"].maxValue.isEmpty, Is.False);
-        Assert.That(layout["control"].minValue.ToInt(), Is.EqualTo(-123));
-        Assert.That(layout["control"].maxValue.ToInt(), Is.EqualTo(123));
+        Assert.That(layout["control"].minValue.ToInt32(), Is.EqualTo(-123));
+        Assert.That(layout["control"].maxValue.ToInt32(), Is.EqualTo(123));
     }
 
     class BaseClassWithControl : InputDevice
@@ -1432,6 +1432,41 @@ partial class CoreTests
         var device = InputSystem.AddDevice("MyLayout");
 
         Assert.That(device["button"].noisy, Is.True);
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_NoisyControls_AutomaticallyMakeAllTheirChildrenNoisy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""layout"" : ""Stick"",
+                        ""noisy"" : true
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["stick"].As<StickControl>().x.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().y.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().left.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().right.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().up.noisy, Is.True);
+        Assert.That(device["stick"].As<StickControl>().down.noisy, Is.True);
+
+        // Make sure it didn't spill over.
+        Assert.That(device["button"].noisy, Is.False);
     }
 
     [Test]

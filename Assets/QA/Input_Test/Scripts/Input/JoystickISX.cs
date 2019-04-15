@@ -5,19 +5,19 @@ using UnityEngine.Experimental.Input.Controls;
 
 public class JoystickISX : MonoBehaviour
 {
-
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
 
     private InputAction m_stickAction;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         m_stickAction = new InputAction(name: "StickAction", binding: "<joystick>/<stick>");
         m_stickAction.performed += callbackContext => OnStickMove(callbackContext.control as StickControl);
         m_stickAction.cancelled += callbackContext => OnStickMove(callbackContext.control as StickControl);
         m_stickAction.Enable();
-	}
+    }
 
     private void OnStickMove(StickControl control)
     {

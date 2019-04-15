@@ -6,7 +6,9 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
+#if ENABLE_VR
 using UnityEngine.XR;
+#endif
 using InputDevice = UnityEngine.Experimental.Input.InputDevice;
 
 #if UNITY_EDITOR
@@ -178,7 +180,11 @@ public class DemoGame : MonoBehaviour
         get
         {
             if (!s_VRSupported.HasValue)
+#if ENABLE_VR
                 return XRSettings.enabled;
+#else
+                return false;
+#endif
             return s_VRSupported.Value;
         }
         set { s_VRSupported = value; }

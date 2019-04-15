@@ -103,20 +103,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         public static AndroidDeviceCapabilities FromJson(string json)
         {
             if (json == null)
-                throw new ArgumentNullException("json");
+                throw new ArgumentNullException(nameof(json));
             return JsonUtility.FromJson<AndroidDeviceCapabilities>(json);
         }
 
         public override string ToString()
         {
-            return string.Format(
-                "deviceDescriptor = {0}, productId = {1}, vendorId = {2}, isVirtual = {3}, motionAxes = {4}, inputSources = {5}",
-                deviceDescriptor,
-                productId,
-                vendorId,
-                isVirtual,
-                motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()),
-                inputSources);
+            return
+                $"deviceDescriptor = {deviceDescriptor}, productId = {productId}, vendorId = {vendorId}, isVirtual = {isVirtual}, motionAxes = {(motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()))}, inputSources = {inputSources}";
         }
     }
 }

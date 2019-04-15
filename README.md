@@ -1,6 +1,6 @@
 A new input system for Unity.
 
->NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.3+.
+>NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2019.1+.
 
 Work-in-progress documentation can be found [here](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
 

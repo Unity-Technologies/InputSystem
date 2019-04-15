@@ -83,6 +83,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         Action<InputUpdateType> onBeforeUpdate { set; }
 
+        Func<InputUpdateType, bool> onShouldRunUpdate { set; }
+
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
         /// </summary>
@@ -133,23 +135,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTime { get; }
 
         /// <summary>
+        /// The current time on the same timeline that input events are delivered on, for the current FixedUpdate.
+        /// </summary>
+        /// <remarks>
+        /// This should be used inside FixedUpdate calls instead of currentTime, as FixedUpdates are simulated at times
+        /// not matching the real time the simulation corresponds to.
+        /// </remarks>
+        double currentTimeForFixedUpdate { get; }
+
+        /// <summary>
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
-
-        /// <summary>
-        /// Frequency at which fixed updates are being run.
-        /// </summary>
-        double fixedUpdateIntervalInSeconds { get; }
-
-        /// <summary>
-        /// Mask that determines which input updates are executed by the runtime.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to turn off unneeded updates (like fixed updates) or turn on updates
-        /// that are disabled by default (like before-render updates).
-        /// </remarks>
-        InputUpdateType updateMask { set; }
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }

@@ -38,12 +38,12 @@ namespace UnityEngine.Experimental.Input.Editor
         /// <summary>
         /// Iterate over all unique usages and their respective lists of layouts that use them.
         /// </summary>
-        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> allUsages
+        public static IEnumerable<Tuple<string, IEnumerable<string>>> allUsages
         {
             get
             {
                 Refresh();
-                return s_Usages.Select(pair => new KeyValuePair<string, IEnumerable<string>>(pair.Key, pair.Value.Select(x => x.ToString())));
+                return s_Usages.Select(pair => new Tuple<string, IEnumerable<string>>(pair.Key, pair.Value.Select(x => x.ToString())));
             }
         }
 
@@ -88,11 +88,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     s_RefreshListeners = new List<Action>();
                 s_RefreshListeners.Add(value);
             }
-            remove
-            {
-                if (s_RefreshListeners != null)
-                    s_RefreshListeners.Remove(value);
-            }
+            remove => s_RefreshListeners?.Remove(value);
         }
 
         public static InputControlLayout TryGetLayout(string layoutName)
@@ -129,8 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
 
             Refresh();
-            InlinedArray<InputDeviceMatcher> matchers;
-            s_DeviceMatchers.TryGetValue(new InternedString(layoutName), out matchers);
+            s_DeviceMatchers.TryGetValue(new InternedString(layoutName), out var matchers);
             return matchers;
         }
 
@@ -147,8 +142,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             Refresh();
 
-            List<OptionalControl> list;
-            if (!s_OptionalControls.TryGetValue(new InternedString(layoutName), out list))
+            if (!s_OptionalControls.TryGetValue(new InternedString(layoutName), out var list))
                 return Enumerable.Empty<OptionalControl>();
 
             return list;
@@ -157,25 +151,23 @@ namespace UnityEngine.Experimental.Input.Editor
         public static Texture2D GetIconForLayout(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
-                throw new ArgumentNullException("layoutName");
+                throw new ArgumentNullException(nameof(layoutName));
 
             Refresh();
 
             // See if we already have it in the cache.
-            Texture2D icon;
             var internedName = new InternedString(layoutName);
-            if (s_Icons.TryGetValue(internedName, out icon))
+            if (s_Icons.TryGetValue(internedName, out var icon))
                 return icon;
 
             // No, so see if we have an icon on disk for exactly the layout
             // we're looking at (i.e. with the same name).
-            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-            int scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
-            var scalePostFix = scale > 1 ? $"@{scale}x" : "";
-            var path = Path.Combine(kIconPath, skinPrefix + layoutName + scalePostFix + ".png");
-            icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            icon = LoadIcon(layoutName);
             if (icon != null)
+            {
+                s_Icons.Add(internedName, icon);
                 return icon;
+            }
 
             // No, not that either so start walking up the inheritance chain
             // until we either bump against the ceiling or find an icon.
@@ -184,18 +176,41 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var baseLayoutName in layout.baseLayouts)
                 {
-                    ////FIXME: remove this; looks like HIDs lose their base layout info on domain reloads
-                    if (string.IsNullOrEmpty(baseLayoutName))
-                        continue;
-
                     icon = GetIconForLayout(baseLayoutName);
                     if (icon != null)
                         return icon;
+                }
+
+                // If it's a control and there's no specific icon, return a generic one.
+                if (layout.isControlLayout)
+                {
+                    var genericIcon = LoadIcon("InputControl");
+                    if (genericIcon != null)
+                    {
+                        s_Icons.Add(internedName, genericIcon);
+                        return genericIcon;
+                    }
                 }
             }
 
             // No icon for anything in this layout's chain.
             return null;
+        }
+
+        private static Texture2D LoadIcon(string name)
+        {
+            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
+            var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+            var scalePostFix = scale > 1 ? $"@{scale}x" : "";
+            var path = Path.Combine(kIconPath, skinPrefix + name + scalePostFix + ".png");
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        public struct ControlSearchResult
+        {
+            public string controlPath;
+            public InputControlLayout layout;
+            public InputControlLayout.ControlItem item;
         }
 
         internal static void Clear()
@@ -224,21 +239,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Remember which layout maps to which device matchers.
             var layoutMatchers = InputControlLayout.s_Layouts.layoutMatchers;
-            for (var i = 0; i < layoutMatchers.Count; ++i)
+            foreach (var entry in layoutMatchers)
             {
-                var entry = layoutMatchers[i];
-
-                InlinedArray<InputDeviceMatcher> matchers;
-                s_DeviceMatchers.TryGetValue(entry.layoutName, out matchers);
+                s_DeviceMatchers.TryGetValue(entry.layoutName, out var matchers);
 
                 matchers.Append(entry.deviceMatcher);
                 s_DeviceMatchers[entry.layoutName] = matchers;
             }
 
             // Load and store all layouts.
-            for (var i = 0; i < layoutNames.Count; ++i)
+            foreach (var layoutName in layoutNames)
             {
-                var layout = s_Cache.FindOrLoadLayout(layoutNames[i]);
+                var layout = s_Cache.FindOrLoadLayout(layoutName);
                 ScanLayout(layout);
 
                 if (layout.isControlLayout)
@@ -285,25 +297,25 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////REVIEW: is this affected by how the package is installed?
-        private const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+        internal const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
 
         private static int s_LayoutRegistrationVersion;
         private static InputControlLayout.Cache s_Cache;
         private static List<Action> s_RefreshListeners;
 
-        private static HashSet<InternedString> s_ControlLayouts = new HashSet<InternedString>();
-        private static HashSet<InternedString> s_DeviceLayouts = new HashSet<InternedString>();
-        private static HashSet<InternedString> s_ProductLayouts = new HashSet<InternedString>();
-        private static Dictionary<InternedString, List<OptionalControl>> s_OptionalControls =
+        private static readonly HashSet<InternedString> s_ControlLayouts = new HashSet<InternedString>();
+        private static readonly HashSet<InternedString> s_DeviceLayouts = new HashSet<InternedString>();
+        private static readonly HashSet<InternedString> s_ProductLayouts = new HashSet<InternedString>();
+        private static readonly Dictionary<InternedString, List<OptionalControl>> s_OptionalControls =
             new Dictionary<InternedString, List<OptionalControl>>();
-        private static Dictionary<InternedString, InlinedArray<InputDeviceMatcher>> s_DeviceMatchers =
+        private static readonly Dictionary<InternedString, InlinedArray<InputDeviceMatcher>> s_DeviceMatchers =
             new Dictionary<InternedString, InlinedArray<InputDeviceMatcher>>();
         private static Dictionary<InternedString, Texture2D> s_Icons =
             new Dictionary<InternedString, Texture2D>();
 
         // We keep a map of all unique usages we find in layouts and also
         // retain a list of the layouts they are used with.
-        private static SortedDictionary<InternedString, List<InternedString>> s_Usages =
+        private static readonly SortedDictionary<InternedString, List<InternedString>> s_Usages =
             new SortedDictionary<InternedString, List<InternedString>>();
 
         private static void ScanLayout(InputControlLayout layout)
@@ -327,11 +339,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Collect unique usages and the layouts used with them.
                 foreach (var usage in control.usages)
                 {
+                    // Empty usages can occur for controls that want to reset inherited usages.
+                    if (string.IsNullOrEmpty(usage))
+                        continue;
+
                     var internedUsage = new InternedString(usage);
                     var internedLayout = new InternedString(control.layout);
 
-                    List<InternedString> layoutList;
-                    if (!s_Usages.TryGetValue(internedUsage, out layoutList))
+                    if (!s_Usages.TryGetValue(internedUsage, out var layoutList))
                     {
                         layoutList = new List<InternedString> {internedLayout};
                         s_Usages[internedUsage] = layoutList;
@@ -353,14 +368,12 @@ namespace UnityEngine.Experimental.Input.Editor
             Debug.Assert(!controlItem.layout.IsEmpty());
 
             // Recurse into base.
-            InternedString baseLayoutName;
-            if (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(layoutName, out baseLayoutName))
+            if (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(layoutName, out var baseLayoutName))
                 AddOptionalControlRecursive(baseLayoutName, ref controlItem);
 
             // See if we already have this optional control.
-            List<OptionalControl> list;
             var alreadyPresent = false;
-            if (!s_OptionalControls.TryGetValue(layoutName, out list))
+            if (!s_OptionalControls.TryGetValue(layoutName, out var list))
             {
                 list = new List<OptionalControl>();
                 s_OptionalControls[layoutName] = list;
@@ -391,7 +404,7 @@ namespace UnityEngine.Experimental.Input.Editor
         /// MAY have a gyro and thus MAY have an "acceleration" control.
         ///
         /// In bindings (<see cref="InputBinding"/>), it is perfectly valid to deal with this opportunistically
-        /// and create a binding to <c>"{Gamepad}/acceleration"</c> which will bind correctly IF the gamepad has
+        /// and create a binding to <c>"&lt;Gamepad&gt;/acceleration"</c> which will bind correctly IF the gamepad has
         /// an acceleration control but will do nothing if it doesn't.
         ///
         /// The concept of optional controls permits setting up such bindings in the UI by making controls that
