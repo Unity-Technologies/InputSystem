@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Fix choosing "Add Action" in action map context menu throwing an exception.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
 - The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
