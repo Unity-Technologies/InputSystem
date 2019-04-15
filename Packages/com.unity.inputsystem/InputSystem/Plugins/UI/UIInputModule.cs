@@ -48,6 +48,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
             var buttonState = mouseState.leftButton;
             buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Left;
+
             ProcessMouseButton(buttonState.lastFrameDelta, eventData);
 
             ProcessMouseMovement(eventData);
@@ -63,6 +65,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             /// Right Mouse Button
             buttonState = mouseState.rightButton;
             buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Right;
 
             ProcessMouseButton(buttonState.lastFrameDelta, eventData);
             ProcessMouseButtonDrag(eventData);
@@ -73,6 +76,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             /// Middle Mouse Button
             buttonState = mouseState.middleButton;
             buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Middle;
 
             ProcessMouseButton(buttonState.lastFrameDelta, eventData);
             ProcessMouseButtonDrag(eventData);
