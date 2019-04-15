@@ -104,8 +104,7 @@ internal class SwitchTests : InputTestFixture
                         ((NPadStatusReport*)commandPtr)->colorRightSub = NPad.Color32ToNNColor(Color.gray);
                         return 1;
                     }
-
-                    if (commandPtr->type == QueryUserIdCommand.Type)
+                    else if (commandPtr->type == QueryUserIdCommand.Type)
                     {
                         // Sending this command happens before refreshing NPad status
                         return 1;
@@ -142,6 +141,23 @@ internal class SwitchTests : InputTestFixture
                         receivedCommand = *((NpadDeviceIOCTLSetOrientation*)commandPtr);
                         return 1;
                     }
+                    else if (commandPtr->type == NPadStatusReport.Type)
+                    {
+                        ((NPadStatusReport*)commandPtr)->npadId = NPad.NpadId.Handheld;
+                        ((NPadStatusReport*)commandPtr)->orientation = receivedCommand.Value.orientation;
+                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyle.Handheld;
+
+                        ((NPadStatusReport*)commandPtr)->colorLeftMain = NPad.Color32ToNNColor(Color.red);
+                        ((NPadStatusReport*)commandPtr)->colorLeftSub = NPad.Color32ToNNColor(Color.black);
+                        ((NPadStatusReport*)commandPtr)->colorRightMain = NPad.Color32ToNNColor(Color.cyan);
+                        ((NPadStatusReport*)commandPtr)->colorRightSub = NPad.Color32ToNNColor(Color.gray);
+                        return 1;
+                    }
+                    else if (commandPtr->type == QueryUserIdCommand.Type)
+                    {
+                        // Sending this command happens before refreshing NPad status
+                        return 1;
+                    }
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
@@ -151,12 +167,14 @@ internal class SwitchTests : InputTestFixture
 
         Assert.That(receivedCommand.HasValue, Is.True);
         Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPad.Orientation.Horizontal));
+        Assert.That(controller.usages, Has.All.EqualTo(CommonUsages.Horizontal));
 
         receivedCommand = null;
         controller.SetOrientationToSingleJoyCon(NPad.Orientation.Vertical);
 
         Assert.That(receivedCommand.HasValue, Is.True);
         Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPad.Orientation.Vertical));
+        Assert.That(controller.usages, Has.All.EqualTo(CommonUsages.Vertical));
     }
 
     [Test]

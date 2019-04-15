@@ -331,7 +331,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
     /// <seealso cref="NPadInputState"/>
-    [InputControlLayout(stateType = typeof(NPadInputState), displayName = "Switch Controller (on Switch)")]
+    [InputControlLayout(stateType = typeof(NPadInputState), commonUsages = new[] { "Vertical", "Horizontal" }, displayName = "Switch Controller (on Switch)")]
     public class NPad : Gamepad, INPadRumble
     {
         public ButtonControl leftSL { get; private set; }
@@ -486,6 +486,31 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
                 m_StyleMask = command.styleMask;
                 m_LeftControllerColor = NNColorToJoyConColor(command.colorLeftMain, command.colorLeftSub);
                 m_RightControllerColor = NNColorToJoyConColor(command.colorRightMain, command.colorRightSub);
+
+                switch (m_Orientation)
+                {
+                    case Orientation.Vertical:
+                        InputSystem.SetDeviceUsage(this, CommonUsages.Vertical);
+                        break;
+
+                    case Orientation.Horizontal:
+                        InputSystem.SetDeviceUsage(this, CommonUsages.Horizontal);
+                        break;
+                }
+
+                if (m_StyleMask == NpadStyle.JoyDual)
+                {
+                    InputSystem.AddDeviceUsage(this, CommonUsages.RightHand);
+                    InputSystem.AddDeviceUsage(this, CommonUsages.LeftHand);
+                }
+                else if (m_StyleMask == NpadStyle.JoyRight)
+                {
+                    InputSystem.AddDeviceUsage(this, CommonUsages.RightHand);
+                }
+                else if (m_StyleMask == NpadStyle.JoyLeft)
+                {
+                    InputSystem.AddDeviceUsage(this, CommonUsages.LeftHand);
+                }
             }
         }
 
@@ -493,8 +518,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         public long SetOrientationToSingleJoyCon(Orientation _orientation)
         {
             var supportCommand = NpadDeviceIOCTLSetOrientation.Create(_orientation);
+            var ret = ExecuteCommand(ref supportCommand);
 
-            return ExecuteCommand(ref supportCommand);
+            if (ret > 0)
+                RefreshConfiguration();
+
+            return ret;
         }
 
         public long StartSixAxisSensor()
@@ -523,6 +552,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
             attitude = builder.GetControl<QuaternionControl>(this, "attitude");
             angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
+
+            RefreshConfiguration();
         }
 
         private static JoyConColor NNColorToJoyConColor(int mainColor, int subColor)
