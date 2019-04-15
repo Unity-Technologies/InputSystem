@@ -8,7 +8,7 @@
 		"url": "https://github.com/Unity-Technologies/InputSystem.git",
 		"revision": "bdb556e64749c2dbd7218e31c080d48f3053388f"
 	},
-  	"description": "Tests for com.unity.inputsystem",
+    "description": "This package contains the tests for com.unity.inputsystem",
 	"dependencies": {
 		"com.unity.inputsystem": "0.2.7-preview"
 	}
