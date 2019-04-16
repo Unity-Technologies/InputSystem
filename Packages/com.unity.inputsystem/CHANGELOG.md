@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Added a `clickCount` control to the `Mouse` class, which specifies the click count for the last mouse click (to allow distinguishing between single-, double- and multi-clicks).
 - Support for Bluetooth Xbox One controllers on macOS.
+- Now the Joy-Con have orientation usage based on its orientation.
 
 #### Actions
 
@@ -84,7 +85,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
-- The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
+- The input action asset editor window will now show the name of the asset being edited when asking for saving changes.
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
 - Fixed pasting or dragging a composite binding from one action into another.
 - In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.
