@@ -2,20 +2,17 @@
     "name": "Unity.InputSystem.Tests",
     "references": [
         "Unity.InputSystem",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
         "Unity.InputSystem.TestFramework"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": true,
-    "precompiledReferences": [
-        "nunit.framework.dll"
-    ],
-    "autoReferenced": false,
-    "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
-    ],
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
     "versionDefines": []
 }
