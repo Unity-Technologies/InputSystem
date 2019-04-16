@@ -6,6 +6,6 @@ using System.Runtime.CompilerServices;
 //       "-preview" suffixes here.
 [assembly: AssemblyVersion("0.2.6")]
 
-[assembly: InternalsVisibleTo("Unity.InputSystem.TestFixture")]
+[assembly: InternalsVisibleTo("Unity.InputSystem.TestFramework")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests.Editor")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
