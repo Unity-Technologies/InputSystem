@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 #endif
 
@@ -30,6 +32,16 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// </summary>
         public static void Initialize()
         {
+            supportedUsages = new Dictionary<HID.UsagePage, HashSet<int>>
+            {
+                [HID.UsagePage.GenericDesktop] = new HashSet<int>
+                {
+                    (int)HID.GenericDesktop.Joystick,
+                    (int)HID.GenericDesktop.Gamepad,
+                    (int)HID.GenericDesktop.MultiAxisController
+                }
+            };
+
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
 
@@ -49,6 +61,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             };
             #endif
         }
+
+        public static Dictionary<HID.UsagePage, HashSet<int>> supportedUsages { get; set; }
 
         #if UNITY_EDITOR
         private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");

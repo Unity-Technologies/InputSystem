@@ -88,6 +88,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Read HID descriptor.
             var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
 
+            if (!HIDSupport.supportedUsages.ContainsKey(hidDeviceDescriptor.usagePage))
+                return null;
+
+            if (!HIDSupport.supportedUsages[hidDeviceDescriptor.usagePage].Contains(hidDeviceDescriptor.usage))
+                return null;
+
             // Determine if there's any usable elements on the device.
             var hasUsableElements = false;
             if (hidDeviceDescriptor.elements != null)
@@ -111,7 +117,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick || hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
+                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick || hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad || hidDeviceDescriptor.usage == (int)GenericDesktop.MultiAxisController)
                 {
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
