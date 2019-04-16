@@ -671,7 +671,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 180, y: 279.3}
+  m_SizeDelta: {x: 180, y: 331}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &12304006
 MonoBehaviour:
@@ -727,7 +727,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnDragStart
           m_Mode: 1
           m_Arguments:
@@ -744,7 +744,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnDrag
           m_Mode: 1
           m_Arguments:
@@ -761,7 +761,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnDragEnd
           m_Mode: 1
           m_Arguments:
@@ -778,7 +778,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnToggleDebugInfo
           m_Mode: 1
           m_Arguments:
@@ -3352,7 +3352,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 80, y: -30}
-  m_SizeDelta: {x: 100, y: -190}
+  m_SizeDelta: {x: 100, y: -185}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &167963954
 MonoBehaviour:
@@ -3387,9 +3387,19 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: '
+  m_Text: '8
 
-'
+    direct
+
+    Stationary
+
+    (8372, 3821)
+
+    0.2
+
+    73
+
+    (382, 932)'
 --- !u!222 &167963955
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3661,7 +3671,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 177671942}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8320679a7c60b4370b5f2f613eef7189, type: 3}
   m_Name: 
@@ -6578,7 +6588,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -118.8}
+  m_AnchoredPosition: {x: 0, y: -175}
   m_SizeDelta: {x: 0, y: 30}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &297021311
@@ -15284,7 +15294,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: -30}
-  m_SizeDelta: {x: 75, y: -190}
+  m_SizeDelta: {x: 75, y: -185}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &694268227
 MonoBehaviour:
@@ -15321,8 +15331,17 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'ID:
 
+    Type:
 
-'
+    Phase:
+
+    Position:
+
+    Pressure:
+
+    Radius:
+
+    Delta:'
 --- !u!222 &694268228
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -34840,8 +34859,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: -150}
-  m_SizeDelta: {x: 75, y: -150}
+  m_AnchoredPosition: {x: 0, y: -205}
+  m_SizeDelta: {x: 75, y: -205}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1404266820
 MonoBehaviour:
@@ -37279,8 +37298,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 80, y: -150}
-  m_SizeDelta: {x: 100, y: -150}
+  m_AnchoredPosition: {x: 80, y: -205}
+  m_SizeDelta: {x: 100, y: -205}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1510784575
 MonoBehaviour:
@@ -53472,20 +53491,6 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
---- !u!114 &8375805377112281771
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8479306875113158673}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 650883a0b6f1ac743b1ebe386faed49e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_arrowUI: {fileID: 8554509986707685487}
-  m_info: {fileID: 12304005}
 --- !u!114 &8375829797231787109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53561,7 +53566,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnDragStart
           m_Mode: 1
           m_Arguments:
@@ -53578,7 +53583,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnDrag
           m_Mode: 1
           m_Arguments:
@@ -53595,7 +53600,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnDragEnd
           m_Mode: 1
           m_Arguments:
@@ -53612,7 +53617,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 8375805377112281771}
+        - m_Target: {fileID: 8479306875113158674}
           m_MethodName: OnToggleDebugInfo
           m_Mode: 1
           m_Arguments:
@@ -53739,7 +53744,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8554160023683132135}
-  - component: {fileID: 8375805377112281771}
+  - component: {fileID: 8479306875113158674}
   m_Layer: 5
   m_Name: Touch Info
   m_TagString: Untagged
@@ -53747,6 +53752,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8479306875113158674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8479306875113158673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cca919d75c5a1514ab11c5c3e819f793, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_arrowUI: {fileID: 8554509986707685487}
+  m_info: {fileID: 12304005}
+  m_oldInputInfo: {fileID: 167963954}
+  m_ISXInfo: {fileID: 1510784575}
 --- !u!1 &8479350135584363493
 GameObject:
   m_ObjectHideFlags: 0
@@ -53824,7 +53845,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -179.8, y: -156}
+  m_AnchoredPosition: {x: 0, y: -156}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!224 &8554509986707685487

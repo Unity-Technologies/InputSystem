@@ -16,12 +16,12 @@ public class TouchOldInput : MonoBehaviour
     public InputField m_MessageWindow;
 
     // The old input manager does not support touch input for Standalone build, even when the device does.
-#if !UNITY_STANDALONE
+
     // Use this for initialization
     void Start()
     {
         if (!Input.touchSupported)
-            throw new Exception("Current device does not support touch input for old Input Manager.");
+            ShowMessage("Current device does not support touch input for old Input Manager.");
 
         if (!Input.touchPressureSupported)
             ShowMessage("Touch Pressue is not supported.");
@@ -101,5 +101,4 @@ public class TouchOldInput : MonoBehaviour
         m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
     }
 
-#endif
 }

@@ -22,15 +22,25 @@ public class TouchISX : MonoBehaviour
         m_touchAction.Enable();
     }
 
-    private void OnEnable()
+    void OnEnable()
     {
-        if (m_touchAction != null)
-            m_touchAction.Enable();
+        m_touchAction?.Enable();
     }
 
-    private void OnDisable()
+    void OnDisable()
     {
         m_touchAction.Disable();
+    }
+
+    void Update()
+    {
+        Touchscreen touchscreen = Touchscreen.current;
+        if (touchscreen != null)
+        {
+            for (int i = 0; i < touchscreen.activeTouches.Count; i++)
+                ;
+        }
+        
     }
 
     private void TouchInput(TouchControl control)

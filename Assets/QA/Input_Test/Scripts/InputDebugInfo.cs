@@ -5,19 +5,19 @@ using UnityEngine.Experimental.Input;
 
 public class InputDebugInfo : MonoBehaviour
 {
-    private bool m_isShowing = false;
-    private bool m_isPlaying = false;       // if the menu is in the process of sliding in/out
-    private bool m_isDragging = false;
+    protected bool m_isShowing = false;
+    protected bool m_isPlaying = false;       // if the menu is in the process of sliding in/out
+    protected bool m_isDragging = false;
 
     public Transform m_arrowUI;
     public RectTransform m_info;
 
-    private int m_moveTime = 500;     // millinsecond
+    protected int m_moveTime = 500;     // millinsecond
 
-    private float m_startMouseY;
-    private float m_startY;
+    protected float m_startMouseY;
+    protected float m_startY;
 
-    private InputAction m_toggleAction;
+    protected InputAction m_toggleAction;
 
     void Start()
     {
@@ -41,14 +41,7 @@ public class InputDebugInfo : MonoBehaviour
 
     void Update()
     {
-        if (InputSystem.GetDevice<Keyboard>() == null) return;
-
-        Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
-        if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
-        {
-            if (currentKeyboard.iKey.isPressed)
-                OnToggleDebugInfo();
-        }
+        CheckShortcut();
     }
 
     public void OnToggleDebugInfo()
@@ -83,9 +76,21 @@ public class InputDebugInfo : MonoBehaviour
         m_isDragging = false;
     }
 
+    protected void CheckShortcut()
+    {
+        if (InputSystem.GetDevice<Keyboard>() == null) return;
+
+        Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
+        if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
+        {
+            if (currentKeyboard.iKey.isPressed)
+                OnToggleDebugInfo();
+        }
+    }
+
     // Slide the debug info menu window in/out from view
     // Ratote the arrow UI 180 degrees
-    private IEnumerator SlideToPositionX()
+    protected IEnumerator SlideToPositionX()
     {
         m_isPlaying = true;
 
@@ -112,7 +117,7 @@ public class InputDebugInfo : MonoBehaviour
         m_isPlaying = false;
     }
 
-    private float CalculateInfoContainerWidth()
+    protected float CalculateInfoContainerWidth()
     {
         if (m_info != null)
             return m_info.rect.width * GetComponentInParent<Canvas>().scaleFactor;
@@ -120,7 +125,7 @@ public class InputDebugInfo : MonoBehaviour
             throw new Exception("Need assign \"info\" Transform Rect.");
     }
 
-    private void SetPositionByX(float posX)
+    protected void SetPositionByX(float posX)
     {
         Vector3 pos = transform.position;
         pos.x = posX;
