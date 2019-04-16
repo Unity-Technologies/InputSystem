@@ -446,10 +446,53 @@ namespace UnityEngine.Experimental.Input
         internal void SetUsage(InternedString usage)
         {
             // Make last entry in m_UsagesForEachControl be our device usage string.
+            SetUsage(m_UsageToControl != null ? m_UsageToControl.Length : 0, usage);
+        }
+
+        internal void AddUsage(InternedString usage)
+        {
+            // Check if the usage already exists
+            if (Array.Exists(m_UsagesForEachControl, o => o == usage))
+                return;
+
+            SetUsage(m_UsagesForEachControl != null ? m_UsagesForEachControl.Length : 0, usage);
+        }
+
+        internal void RemoveUsage(InternedString usage)
+        {
             var numControlUsages = m_UsageToControl != null ? m_UsageToControl.Length : 0;
-            Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
-            m_UsagesForEachControl[numControlUsages] = usage;
-            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);
+            var usageIndex = Array.IndexOf(m_UsagesForEachControl, usage, numControlUsages);
+            if (usageIndex < numControlUsages)
+                return;
+
+            var usageList = new System.Collections.ArrayList(m_UsagesForEachControl);
+            var commonPart = Array.FindAll<InternedString>((InternedString[])usageList.GetRange(numControlUsages, usageList.Count - numControlUsages).ToArray(typeof(InternedString)), e => e != usage);
+
+            Array.Resize(ref m_UsagesForEachControl, numControlUsages); 
+            ArrayHelpers.Append(ref m_UsagesForEachControl, commonPart);
+            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, m_UsagesForEachControl.Length - numControlUsages);
+
+            UpdateUsageArraysOnControls();
+        }
+
+        private void SetUsage(int usageIndex, InternedString usage)
+        {
+            // +---+---+---+
+            // | a | b | c |         : an array of usage to each controls (m_UsageToControl)
+            // +---+---+---+---+---+
+            //             | D | E | : device common usages (m_UsagesReadOnly)
+            //             +---+---+
+            //
+            // +---+---+---+---+---+
+            // | a | b | c | D | E | : usages which are for this device or control this device has (m_UsagesForEachControl)
+            // +---+---+---+---+---+
+            Array.Resize(ref m_UsagesForEachControl, usageIndex + 1);
+
+            var numControlUsages = m_UsageToControl != null ? m_UsageToControl.Length : 0;
+            var commonUsageCount = m_UsagesForEachControl.Length - numControlUsages;
+
+            m_UsagesForEachControl[usageIndex] = usage;
+            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, commonUsageCount);
 
             // Update controls to all point to new usage array.
             UpdateUsageArraysOnControls();
@@ -460,8 +503,11 @@ namespace UnityEngine.Experimental.Input
             if (m_UsageToControl == null)
                 return;
 
+            var numControlUsages = m_UsageToControl != null ? m_UsageToControl.Length : 0;
+            var commonUsageCount = m_UsagesForEachControl.Length - numControlUsages;
+
             for (var i = 0; i < m_UsageToControl.Length; ++i)
-                m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
+                m_UsageToControl[i].m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, commonUsageCount);
         }
 
         internal void NotifyAdded()

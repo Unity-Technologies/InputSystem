@@ -2130,4 +2130,47 @@ partial class CoreTests
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
         Assert.Fail();
     }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanConfigureDeviceUsages()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad.usages, Is.Empty);
+
+        // Set "Vertical" as usage
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Vertical);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+
+        // Change usage with "Horizontal"
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+
+        // Add "Vertical" to usages
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Vertical);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+        // Set "Horizontal" as the only one usage
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+        // Try to add "Horizontal" again
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+
+        // Remove the existed "Horizontal" usage from usages
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Vertical);
+        InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Horizontal));
+
+        InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Vertical);
+        Assert.That(gamepad.usages, Is.Empty);
+    }
 }

@@ -905,12 +905,12 @@ namespace UnityEngine.Experimental.Input
 
         public static void AddDeviceUsage(InputDevice device, InternedString usage)
         {
-            throw new NotImplementedException();
+            s_Manager.AddUsage(device, usage);
         }
 
         public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
         {
-            throw new NotImplementedException();
+            s_Manager.RemoveUsage(device, usage);
         }
 
         /// <summary>
