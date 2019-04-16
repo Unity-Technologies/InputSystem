@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * They are still on `DualShockGamepadPS4`.
   * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
 - Marking a control as noisy now also marks all child controls as noisy.
+- Tests are now no longer part of the com.unity.inputsystem package. The `InputTestFixture` class still is for when you want to write input-related tests for your project. You can reference the `Unity.InputSystem.TestFixture` assembly when you need to do that.
 
 #### Actions
 
@@ -84,6 +85,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Fix choosing "Add Action" in action map context menu throwing an exception.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
 - The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
@@ -92,6 +94,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
 - Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
 - Fixed blurry icons in editor for imported .inputactions assets and actions in them.
+- Made Vector2 composite actions respect the press points of button controls used to compose the value.
 
 ## [0.2.6-preview] - 2019-03-20
 
