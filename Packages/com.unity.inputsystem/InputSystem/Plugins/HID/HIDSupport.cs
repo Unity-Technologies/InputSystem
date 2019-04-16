@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
-using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Plugins.HID.Editor;
