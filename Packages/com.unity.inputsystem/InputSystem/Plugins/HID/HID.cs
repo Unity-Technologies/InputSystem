@@ -117,7 +117,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick || hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad || hidDeviceDescriptor.usage == (int)GenericDesktop.MultiAxisController)
+                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick || hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
                 {
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
