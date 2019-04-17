@@ -130,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.EndDisabledGroup();
         }
 
-        internal virtual void DrawLineSeparator(string label)
+        internal static void DrawLineSeparator(string label)
         {
             var hasLabel = !string.IsNullOrEmpty(label);
             EditorGUILayout.BeginVertical();
