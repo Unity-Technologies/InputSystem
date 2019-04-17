@@ -176,7 +176,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                     editableParams.OnGUI();
                     EditorGUI.indentLevel--;
                 }
-                AdvancedDropdownGUI.DrawLineSeparator(null);
+                GUIHelpers.DrawLineSeparator();
             }
         }
 

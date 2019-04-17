@@ -430,7 +430,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (child.IsSeparator())
                 {
-                    AdvancedDropdownGUI.DrawLineSeparator(child.name);
+                    GUIHelpers.DrawLineSeparator(child.name);
                 }
                 else
                 {

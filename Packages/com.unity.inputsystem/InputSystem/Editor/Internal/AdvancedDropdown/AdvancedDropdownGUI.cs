@@ -17,7 +17,6 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle header = new GUIStyle("In BigTitle");
             public static GUIStyle headerArrow = new GUIStyle();
             public static GUIStyle checkMark = new GUIStyle("PR Label");
-            public static GUIStyle lineSeparator = new GUIStyle();
             public static GUIContent arrowRightContent = new GUIContent("▸");
             public static GUIContent arrowLeftContent = new GUIContent("◂");
 
@@ -39,10 +38,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 headerArrow.alignment = TextAnchor.MiddleCenter;
                 headerArrow.fontSize = 20;
                 headerArrow.normal.textColor = Color.gray;
-
-                lineSeparator.fixedHeight = 1;
-                lineSeparator.margin.bottom = 2;
-                lineSeparator.margin.top = 2;
 
                 checkMark.alignment = TextAnchor.MiddleCenter;
                 checkMark.padding = new RectOffset(0, 0, 0, 0);
@@ -128,33 +123,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 style.Draw(arrowRect, Styles.arrowRightContent, false, false, false, false);
             }
             EditorGUI.EndDisabledGroup();
-        }
-
-        internal static void DrawLineSeparator(string label)
-        {
-            var hasLabel = !string.IsNullOrEmpty(label);
-            EditorGUILayout.BeginVertical();
-            var rect = GUILayoutUtility.GetRect(GUIContent.none, Styles.lineSeparator, GUILayout.ExpandWidth(true));
-            var labelRect = new Rect();
-            GUIContent labelContent = null;
-            if (hasLabel)
-            {
-                labelContent = new GUIContent(label);
-                labelRect = GUILayoutUtility.GetRect(labelContent, EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
-            }
-            EditorGUILayout.EndVertical();
-
-            if (Event.current.type != EventType.Repaint)
-                return;
-
-            var orgColor = GUI.color;
-            var tintColor = EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f, 1.333f) : new Color(0.6f, 0.6f, 0.6f, 1.333f);
-            GUI.color = GUI.color * tintColor;
-            GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
-            GUI.color = orgColor;
-
-            if (hasLabel)
-                EditorGUI.LabelField(labelRect, labelContent, EditorStyles.miniLabel);
         }
 
         internal virtual void DrawHeader(AdvancedDropdownItem group, Action backButtonPressed, bool hasParent)
@@ -247,7 +215,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 if (child.IsSeparator())
                 {
-                    maxHeight += Styles.lineSeparator.CalcHeight(content, maxWidth) + Styles.lineSeparator.margin.vertical;
+                    maxHeight += GUIHelpers.Styles.lineSeparator.CalcHeight(content, maxWidth) + GUIHelpers.Styles.lineSeparator.margin.vertical;
                 }
                 else
                 {
@@ -281,7 +249,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 if (child.IsSeparator())
                 {
-                    height += Styles.lineSeparator.CalcHeight(content, 0) + Styles.lineSeparator.margin.vertical;
+                    height += GUIHelpers.Styles.lineSeparator.CalcHeight(content, 0) + GUIHelpers.Styles.lineSeparator.margin.vertical;
                 }
                 else
                 {
