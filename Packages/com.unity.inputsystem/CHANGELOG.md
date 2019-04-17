@@ -97,6 +97,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
 - Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
 - Fixed blurry icons in editor for imported .inputactions assets and actions in them.
+- `Press` and `Release` interactions will now work correctly if they have multiple bound controls.
+- `Release` interactions will now invoke a `Started` callback when the control is pressed.
 - Made Vector2 composite actions respect the press points of button controls used to compose the value.
 
 ## [0.2.6-preview] - 2019-03-20
