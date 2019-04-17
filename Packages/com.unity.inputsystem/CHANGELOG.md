@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Marking a control as noisy now also marks all child controls as noisy.
 - In the Input Settings window, asset selection has now been moved to the "gear" popup menu. If no asset is created, we now automatically create one.
 - In the inspector for Input Settings assets, we now show a button to go to the Input Settings window, and a button to make the asset active if it isn't.
+- Tests are now no longer part of the com.unity.inputsystem package. The `InputTestFixture` class still is for when you want to write input-related tests for your project. You can reference the `Unity.InputSystem.TestFixture` assembly when you need to do that.
 
 #### Actions
 
@@ -73,6 +74,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
 - DualShock sensors on PS4 are now marked as noisy (#494).
+- IL2CPP causing issues with XInput on windows and osx desktops.
 
 #### Actions
 
@@ -85,6 +87,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Fix choosing "Add Action" in action map context menu throwing an exception.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
 - The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
@@ -93,6 +96,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
 - Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
 - Fixed blurry icons in editor for imported .inputactions assets and actions in them.
+- Made Vector2 composite actions respect the press points of button controls used to compose the value.
 
 ## [0.2.6-preview] - 2019-03-20
 

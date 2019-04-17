@@ -1,9 +1,7 @@
 {
-    "name": "DemoTests",
+    "name": "Unity.InputSystem.TestFramework",
     "references": [
-        "Demo",
-        "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
