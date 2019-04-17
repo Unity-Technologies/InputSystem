@@ -2,9 +2,10 @@ using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 #endif
+using UnityEngine.Experimental.Input.Utilities;
+using ShouldCreateHIDCallback = System.Func<UnityEngine.Experimental.Input.Plugins.HID.HID.HIDDeviceDescriptor, bool?>;
 
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
@@ -27,20 +28,35 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// </remarks>
     public static class HIDSupport
     {
+        public static event ShouldCreateHIDCallback shouldCreateHID
+        {
+            add => s_ShouldCreateHID.Append(value);
+            remove => s_ShouldCreateHID.Remove(value);
+        }
+
+        internal static InlinedArray<ShouldCreateHIDCallback> s_ShouldCreateHID;
+
+        private static bool? DefaultShouldCreateHIDCallback(HID.HIDDeviceDescriptor descriptor)
+        {
+            if (descriptor.usagePage == HID.UsagePage.GenericDesktop)
+            {
+                switch (descriptor.usage)
+                {
+                    case (int)HID.GenericDesktop.Joystick:
+                    case (int)HID.GenericDesktop.Gamepad:
+                    case (int)HID.GenericDesktop.MultiAxisController:
+                        return true;
+                }
+            }
+            return null;
+        }        
+
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
         /// </summary>
         public static void Initialize()
         {
-            supportedUsages = new Dictionary<HID.UsagePage, HashSet<int>>
-            {
-                [HID.UsagePage.GenericDesktop] = new HashSet<int>
-                {
-                    (int)HID.GenericDesktop.Joystick,
-                    (int)HID.GenericDesktop.Gamepad,
-                    (int)HID.GenericDesktop.MultiAxisController
-                }
-            };
+            s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
@@ -61,9 +77,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             };
             #endif
         }
-
-        public static Dictionary<HID.UsagePage, HashSet<int>> supportedUsages { get; set; }
-
+        
         #if UNITY_EDITOR
         private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
         #endif

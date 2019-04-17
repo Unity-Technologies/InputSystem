@@ -80,7 +80,7 @@ internal class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_DevicesNotInSupportedHIDUsagesAreSkipped()
+    public void Devices_DevicesNotAllowedByShouldCreateHIDAreSkipped()
     {
         var hidDescriptor = new HID.HIDDeviceDescriptor
         {
@@ -108,7 +108,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
 
-        HIDSupport.supportedUsages[(HID.UsagePage)5678] = new System.Collections.Generic.HashSet<int> { 1234 };
+        HIDSupport.shouldCreateHID += (descriptor) => (descriptor.usagePage == hidDescriptor.usagePage && descriptor.usage == hidDescriptor.usage) ? true : (bool?)null;
 
         runtime.ReportNewInputDevice(descriptionJson, deviceId);
         InputSystem.Update();

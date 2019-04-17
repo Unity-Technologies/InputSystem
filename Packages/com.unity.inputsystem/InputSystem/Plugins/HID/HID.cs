@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -88,10 +89,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Read HID descriptor.
             var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
 
-            if (!HIDSupport.supportedUsages.ContainsKey(hidDeviceDescriptor.usagePage))
-                return null;
-
-            if (!HIDSupport.supportedUsages[hidDeviceDescriptor.usagePage].Contains(hidDeviceDescriptor.usage))
+            // Check callbacks to see whether we should actually create a device for this specific HID.
+            // If no callback says yes or one says no, we ignore the device.
+            if (HIDSupport.s_ShouldCreateHID.All(f => f(hidDeviceDescriptor) != true) ||
+                HIDSupport.s_ShouldCreateHID.Any(f => f(hidDeviceDescriptor) == false))
                 return null;
 
             // Determine if there's any usable elements on the device.
