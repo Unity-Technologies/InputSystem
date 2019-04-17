@@ -35,9 +35,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             }
 
             m_ExpectedControlLayout = expectedControlLayout;
-            Type expectedValueType = null;
             if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
+                m_ExpectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
 
             foreach (var nameAndParams in m_ParametersForEachListItem)
             {
@@ -49,57 +48,15 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 var type = m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name));
                 if (type == null)
                     name += " (Obsolete)";
-                else if (expectedValueType != null)
+                else if (m_ExpectedValueType != null)
                 {
                     var valueType = GetValueType(type);
-                    if (!expectedValueType.IsAssignableFrom(valueType))
+                    if (!m_ExpectedValueType.IsAssignableFrom(valueType))
                         name += " (Ignored)";
                 }
 
                 m_ListItems.Add(name);
             }
-
-            m_ListView = new ReorderableList(m_ListItems, typeof(string))
-            {
-                headerHeight = 3,
-                onAddDropdownCallback = (rect, list) =>
-                {
-                    // Add only original names to the menu and not aliases.
-                    var menu = new GenericMenu();
-                    foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
-                    {
-                        // Skip if not compatible with value type.
-                        if (expectedValueType != null)
-                        {
-                            var type = m_ListOptions.LookupTypeRegistration(name);
-                            var valueType = GetValueType(type);
-                            if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
-                                continue;
-                        }
-
-                        var niceName = ObjectNames.NicifyVariableName(name);
-                        menu.AddItem(new GUIContent(niceName), false, OnAddElement, name.ToString());
-                    }
-                    menu.ShowAsContext();
-                },
-                onRemoveCallback = list =>
-                {
-                    var index = list.index;
-                    list.list.RemoveAt(index);
-                    ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, index);
-                    ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, index);
-                    m_Apply();
-                    list.index = -1;
-                },
-                onReorderCallbackWithDetails = (list, oldIndex, newIndex) =>
-                {
-                    MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex],
-                        ref m_ParametersForEachListItem[newIndex]);
-                    MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[oldIndex],
-                        ref m_EditableParametersForEachListItem[newIndex]);
-                    m_Apply();
-                },
-            };
         }
 
         protected abstract TypeTable GetOptions();
@@ -107,7 +64,23 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         public void OnAddDropdown(Rect r)
         {
-            m_ListView.onAddDropdownCallback(r, m_ListView);
+            // Add only original names to the menu and not aliases.
+            var menu = new GenericMenu();
+            foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
+            {
+                // Skip if not compatible with value type.
+                if (m_ExpectedValueType != null)
+                {
+                    var type = m_ListOptions.LookupTypeRegistration(name);
+                    var valueType = GetValueType(type);
+                    if (valueType != null && !m_ExpectedValueType.IsAssignableFrom(valueType))
+                        continue;
+                }
+
+                var niceName = ObjectNames.NicifyVariableName(name);
+                menu.AddItem(new GUIContent(niceName), false, OnAddElement, name.ToString());
+            }
+            menu.ShowAsContext();
         }
 
         private void OnAddElement(object data)
@@ -214,10 +187,10 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         protected abstract string itemName { get; }
         private readonly List<string> m_ListItems;
-        private readonly ReorderableList m_ListView;
         private SerializedProperty m_Property;
         private TypeTable m_ListOptions;
         private string m_ExpectedControlLayout;
+        private Type m_ExpectedValueType;
 
         private NameAndParameters[] m_ParametersForEachListItem;
         private ParameterListView[] m_EditableParametersForEachListItem;
