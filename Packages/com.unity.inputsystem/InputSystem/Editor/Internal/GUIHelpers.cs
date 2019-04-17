@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-using System;
+using System.IO;
 using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -17,6 +17,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 lineSeparator.margin.top = 2;
             }
         }
+
+        private const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
 
         public static void DrawLineSeparator(string label = null)
         {
@@ -43,6 +45,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (hasLabel)
                 EditorGUI.LabelField(labelRect, labelContent, EditorStyles.miniLabel);
+        }
+
+        public static Texture2D LoadIcon(string name)
+        {
+            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
+            var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
+            var scalePostFix = scale > 1 ? $"@{scale}x" : "";
+            var path = Path.Combine(kIconPath, skinPrefix + name + scalePostFix + ".png");
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
     }
 }

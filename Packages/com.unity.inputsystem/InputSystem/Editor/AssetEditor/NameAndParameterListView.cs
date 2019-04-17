@@ -20,8 +20,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         protected NameAndParameterListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
         {
             m_DeleteButton = EditorGUIUtility.TrIconContent("Toolbar Minus", $"Delete {itemName}");
-            m_UpButton = EditorGUIUtility.TrIconContent("NodeChevronUp", $"Move {itemName} up");
-            m_DownButton = EditorGUIUtility.TrIconContent("NodeChevronDown", $"Move {itemName} down");
+            m_UpButton = EditorGUIUtility.TrIconContent(GUIHelpers.LoadIcon("ChevronUp"), $"Move {itemName} up");
+            m_DownButton = EditorGUIUtility.TrIconContent(GUIHelpers.LoadIcon("ChevronDown"), $"Move {itemName} down");
 
             m_Property = property;
             m_Apply = applyAction;
@@ -115,10 +115,14 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         private static class Styles
         {
             public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout");
+            public static readonly GUIStyle s_UpDownButtonStyle = new GUIStyle("label");
 
             static Styles()
             {
                 s_FoldoutStyle.fontStyle = FontStyle.Bold;
+                s_UpDownButtonStyle.fixedWidth = 12;
+                s_UpDownButtonStyle.fixedHeight = 12;
+                s_UpDownButtonStyle.padding = new RectOffset();
             }
         }
 
@@ -154,12 +158,12 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 GUILayout.FlexibleSpace();
                 using (var scope = new EditorGUI.DisabledScope(i == 0))
                 {
-                    if (GUILayout.Button(m_UpButton, EditorStyles.label))
+                    if (GUILayout.Button(m_UpButton, Styles.s_UpDownButtonStyle))
                         SwapEntry(i, i - 1);
                 }
                 using (var scope = new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
                 {
-                    if (GUILayout.Button(m_DownButton, EditorStyles.label))
+                    if (GUILayout.Button(m_DownButton, Styles.s_UpDownButtonStyle))
                         SwapEntry(i, i + 1);
                 }
                 if (GUILayout.Button(m_DeleteButton, EditorStyles.label))
