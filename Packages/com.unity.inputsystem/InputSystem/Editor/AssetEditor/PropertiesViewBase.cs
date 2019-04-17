@@ -55,31 +55,32 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DrawProcessorsGroup()
         {
-            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsFoldoutLabel, m_ProcessorsFoldout);
+            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsFoldoutLabel, m_ProcessorsFoldout, m_ProcessorsList.OnAddDropdown);
             if (m_ProcessorsFoldout)
-            {
-                EditorGUI.indentLevel++;
                 m_ProcessorsList.OnGUI();
-                EditorGUI.indentLevel--;
-            }
         }
 
         private void DrawInteractionsGroup()
         {
-            m_InteractionsFoldout = DrawFoldout(s_InteractionsFoldoutLabel, m_InteractionsFoldout);
+            m_InteractionsFoldout = DrawFoldout(s_InteractionsFoldoutLabel, m_InteractionsFoldout, m_InteractionsList.OnAddDropdown);
             if (m_InteractionsFoldout)
-            {
-                EditorGUI.indentLevel++;
                 m_InteractionsList.OnGUI();
-                EditorGUI.indentLevel--;
-            }
         }
 
-        private static bool DrawFoldout(GUIContent content, bool folded)
+        private static bool DrawFoldout(GUIContent content, bool folded, Action<Rect> addDropDown = null)
         {
             var bgRect = GUILayoutUtility.GetRect(content, Styles.s_FoldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.s_FoldoutBackgroundStyle);
-            return EditorGUI.Foldout(bgRect, folded, content, Styles.s_FoldoutStyle);
+            var foldoutRect = bgRect;
+            foldoutRect.xMax -= 20;
+            var retval = EditorGUI.Foldout(foldoutRect, folded, content, Styles.s_FoldoutStyle);
+            bgRect.xMin = bgRect.xMax - 20;
+            if (addDropDown != null)
+            {
+                if (GUI.Button(bgRect, EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Action"), EditorStyles.label))
+                    addDropDown(bgRect);
+            }
+            return retval;
         }
 
         private void OnProcessorsModified()

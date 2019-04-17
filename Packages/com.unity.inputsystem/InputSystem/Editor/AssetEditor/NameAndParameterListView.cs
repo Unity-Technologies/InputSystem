@@ -23,8 +23,17 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_Apply = applyAction;
             m_ListItems = new List<string>();
             m_ListOptions = GetOptions();
-            m_EditableParametersForSelectedItem = new ParameterListView {onChange = OnParametersChanged};
             m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
+            m_EditableParametersForEachListItem = new ParameterListView[m_ParametersForEachListItem.Length];
+            for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
+            {
+                m_EditableParametersForEachListItem[i] = new ParameterListView{ onChange = OnParametersChanged };
+                var typeName = m_ParametersForEachListItem[i].name;
+                var rowType = m_ListOptions.LookupTypeRegistration(typeName);
+                m_EditableParametersForEachListItem[i].Initialize(rowType, m_ParametersForEachListItem[i].parameters);
+
+            }
+
             m_ExpectedControlLayout = expectedControlLayout;
             Type expectedValueType = null;
             if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
@@ -78,7 +87,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                     var index = list.index;
                     list.list.RemoveAt(index);
                     ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, index);
-                    m_EditableParametersForSelectedItem.Clear();
+                    ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, index);
                     m_Apply();
                     list.index = -1;
                 },
@@ -86,15 +95,20 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 {
                     MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex],
                         ref m_ParametersForEachListItem[newIndex]);
-                    OnSelection(list);
+                    MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[oldIndex],
+                        ref m_EditableParametersForEachListItem[newIndex]);
                     m_Apply();
                 },
-                onSelectCallback = OnSelection
             };
         }
 
         protected abstract TypeTable GetOptions();
         protected abstract Type GetValueType(Type type);
+
+        public void OnAddDropdown(Rect r)
+        {
+            m_ListView.onAddDropdownCallback(r, m_ListView);
+        }
 
         private void OnAddElement(object data)
         {
@@ -103,54 +117,89 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_ListItems.Add(ObjectNames.NicifyVariableName(name));
             ArrayHelpers.Append(ref m_ParametersForEachListItem,
                 new NameAndParameters {name = name});
+            ArrayHelpers.Append(ref m_EditableParametersForEachListItem,
+                new ParameterListView { onChange = OnParametersChanged });
+
+            var index = m_EditableParametersForEachListItem.Length - 1;
+            var typeName = m_ParametersForEachListItem[index].name;
+            var rowType = m_ListOptions.LookupTypeRegistration(typeName);
+            m_EditableParametersForEachListItem[index].Initialize(rowType, m_ParametersForEachListItem[index].parameters);
+
             m_Apply();
         }
 
         private void OnParametersChanged()
         {
-            var selected = m_ListView.index;
-            if (selected < 0)
-                return;
-
-            m_ParametersForEachListItem[selected] = new NameAndParameters
+            for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
-                name = m_ParametersForEachListItem[selected].name,
-                parameters = m_EditableParametersForSelectedItem.GetParameters(),
-            };
+                m_ParametersForEachListItem[i] = new NameAndParameters
+                {
+                    name = m_ParametersForEachListItem[i].name,
+                    parameters = m_EditableParametersForEachListItem[i].GetParameters(),
+                };
+            }
 
             m_Apply();
         }
 
-        private void OnSelection(ReorderableList list)
+        private static class Styles
         {
-            var index = list.index;
-            if (index < 0)
+            public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout");
+
+            static Styles()
             {
-                m_EditableParametersForSelectedItem.Clear();
-                return;
+                s_FoldoutStyle.fontStyle = FontStyle.Bold;
             }
-
-            var typeName = m_ParametersForEachListItem[index].name;
-            var rowType =  m_ListOptions.LookupTypeRegistration(typeName);
-
-            m_EditableParametersForSelectedItem.Initialize(rowType, m_ParametersForEachListItem[index].parameters);
         }
 
         public void OnGUI()
         {
-            // Use for debugging
-            // EditorGUILayout.LabelField(m_Property.stringValue);
-
-            var listRect = GUILayoutUtility.GetRect(200, m_ListView.GetHeight());
-            listRect = EditorGUI.IndentedRect(listRect);
-            m_ListView.DoList(listRect);
-            if (m_EditableParametersForSelectedItem.hasUIToShow)
+            if (m_EditableParametersForEachListItem == null || m_EditableParametersForEachListItem.Length == 0)
             {
-                var label = $"Parameters for {ObjectNames.NicifyVariableName(m_ParametersForEachListItem[m_ListView.index].name)}";
-                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
-                EditorGUI.indentLevel++;
-                m_EditableParametersForSelectedItem.OnGUI();
-                EditorGUI.indentLevel--;
+                using (var scope = new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.LabelField($"No {itemName}s have been added.");
+                    EditorGUI.indentLevel--;
+                }
+            }
+            else for (var i = 0; i < m_EditableParametersForEachListItem.Length; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                m_EditableParametersForEachListItem[i].visible = EditorGUILayout.Foldout(m_EditableParametersForEachListItem[i].visible, ObjectNames.NicifyVariableName(m_ParametersForEachListItem[i].name), Styles.s_FoldoutStyle);//, EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                using (var scope = new EditorGUI.DisabledScope(i == 0))
+                {
+                    if (GUILayout.Button(EditorGUIUtility.IconContent("NodeChevronUp"), EditorStyles.label))
+                    {
+                        MemoryHelpers.Swap(ref m_ParametersForEachListItem[i], ref m_ParametersForEachListItem[i - 1]);
+                        MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[i], ref m_EditableParametersForEachListItem[i - 1]);
+                        m_Apply();
+                    }
+                }
+                using (var scope = new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
+                {
+                    if (GUILayout.Button(EditorGUIUtility.IconContent("NodeChevronDown"), EditorStyles.label))
+                    {
+                        MemoryHelpers.Swap(ref m_ParametersForEachListItem[i], ref m_ParametersForEachListItem[i + 1]);
+                        MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[i], ref m_EditableParametersForEachListItem[i + 1]);
+                        m_Apply();
+                    }
+                }
+                if (GUILayout.Button(EditorGUIUtility.TrIconContent("Toolbar Minus", $"Delete {itemName}"), EditorStyles.label))
+                {
+                    ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, i);
+                    ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, i);
+                    m_Apply();
+                }
+                EditorGUILayout.EndHorizontal();
+                if (m_EditableParametersForEachListItem[i].visible)
+                {
+                    EditorGUI.indentLevel++;
+                    m_EditableParametersForEachListItem[i].OnGUI();
+                    EditorGUI.indentLevel--;
+                }
+                AdvancedDropdownGUI.DrawLineSeparator(null);
             }
         }
 
@@ -163,6 +212,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 m_ParametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
+        protected abstract string itemName { get; }
         private readonly List<string> m_ListItems;
         private readonly ReorderableList m_ListView;
         private SerializedProperty m_Property;
@@ -170,7 +220,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         private string m_ExpectedControlLayout;
 
         private NameAndParameters[] m_ParametersForEachListItem;
-        private readonly ParameterListView m_EditableParametersForSelectedItem;
+        private ParameterListView[] m_EditableParametersForEachListItem;
         private readonly Action m_Apply;
     }
 
@@ -193,6 +243,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             return InputProcessor.GetValueTypeFromType(type);
         }
+
+        protected override string itemName => "Processor";
     }
 
     /// <summary>
@@ -214,6 +266,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             return InputInteraction.GetValueType(type);
         }
+
+        protected override string itemName => "Interaction";
     }
 }
 #endif // UNITY_EDITOR
