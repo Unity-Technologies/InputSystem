@@ -94,8 +94,8 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -337,12 +337,13 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 554403522}
-  - {fileID: 1888361721}
-  - {fileID: 1852894979}
-  - {fileID: 2034786406}
-  - {fileID: 500660220}
-  - {fileID: 1871040713}
   - {fileID: 1482077036}
+  - {fileID: 1888361721}
+  - {fileID: 2034786406}
+  - {fileID: 1852894979}
+  - {fileID: 500660220}
+  - {fileID: 1323219420}
+  - {fileID: 1871040713}
   - {fileID: 221359355}
   - {fileID: 864514760}
   - {fileID: 2106529284}
@@ -885,7 +886,7 @@ RectTransform:
   - {fileID: 1705556950}
   - {fileID: 776620791}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -907,7 +908,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 5978d062-c039-48a7-92e1-2f3cba87e512
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -973,7 +974,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: f91c75f1-5ff1-456b-9755-8030fe6327ba
-      m_Path: <ViveKnuckles>{RightHand}/deviceVelocity
+      m_Path: <KnucklesController>{RightHand}/deviceVelocity
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -1167,7 +1168,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 8cac935c-643e-4092-a279-5e3291187de3
-      m_Path: <ViveKnuckles>{RightHand}/devicePosition
+      m_Path: <KnucklesController>{RightHand}/devicePosition
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -1962,7 +1963,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 988143cc-9d7c-49af-b67b-ef6525d062e8
-      m_Path: <ViveKnuckles>{RightHand}/isTracked
+      m_Path: <KnucklesController>{RightHand}/isTracked
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -2245,7 +2246,7 @@ RectTransform:
   - {fileID: 317624145}
   - {fileID: 744821554}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 10
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2274,7 +2275,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: a45f4b9e-4050-492a-98d2-e8ac8e84807b
-      m_Path: <ViveKnuckles>{LeftHand}/trigger
+      m_Path: <KnucklesController>{LeftHand}/trigger
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -2540,7 +2541,7 @@ RectTransform:
   - {fileID: 252353010}
   - {fileID: 1978521061}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2569,7 +2570,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 9eb62786-e056-4245-bd6a-68f8a96ca37a
-      m_Path: <ViveKnuckles>{RightHand}/trigger
+      m_Path: <KnucklesController>{RightHand}/trigger
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -2782,7 +2783,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 474ff7a2-61bd-4d57-b757-a440021d8634
-      m_Path: <ViveKnuckles>{RightHand}/primaryButton
+      m_Path: <KnucklesController>{RightHand}/primaryButton
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -2907,7 +2908,7 @@ RectTransform:
   - {fileID: 420524346}
   - {fileID: 795582974}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 5
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2929,7 +2930,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 2d21ecef-63e5-49eb-8171-3120bd2c002c
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -3913,7 +3914,7 @@ RectTransform:
   - {fileID: 1625197799}
   - {fileID: 1734179933}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -3942,7 +3943,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: d7cff048-7700-431e-9296-3e58b843e3e6
-      m_Path: <ViveKnuckles>{LeftHand}/trackpad
+      m_Path: <KnucklesController>{LeftHand}/trackpad
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -4392,7 +4393,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: a6953daa-3679-42e8-a553-5e7d5095cf3e
-      m_Path: <ViveKnuckles>{LeftHand}/deviceAngularVelocity
+      m_Path: <KnucklesController>{LeftHand}/deviceAngularVelocity
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -4617,7 +4618,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 03b8de74-e6c6-4002-a66e-cce3a24616e8
-      m_Path: <ViveKnuckles>{RightHand}/deviceAngularVelocity
+      m_Path: <KnucklesController>{RightHand}/deviceAngularVelocity
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -4655,7 +4656,7 @@ RectTransform:
   - {fileID: 1505930788}
   - {fileID: 904336444}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 8
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4677,7 +4678,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: f54e3159-1c1e-4e3d-a432-9d907720ba4c
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -5395,7 +5396,7 @@ MonoBehaviour:
   vector3Action:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: b14bdc1f-d404-4e25-b866-d55eb8f0a62c
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -5432,7 +5433,7 @@ RectTransform:
   - {fileID: 888035392}
   - {fileID: 1227533287}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 8
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -5454,7 +5455,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: a76d2a9e-1ec4-4097-84d1-52a196c5d5b1
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -6606,7 +6607,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: e63fcfc3-b1db-463a-a011-c99ade3d9cec
-      m_Path: <ViveKnuckles>{LeftHand}/primaryButton
+      m_Path: <KnucklesController>{LeftHand}/primaryButton
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6681,7 +6682,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 8e27109e-9638-4198-ab93-de3f0325ebab
-      m_Path: <ViveKnuckles>{RightHand}/deviceRotation
+      m_Path: <KnucklesController>{RightHand}/deviceRotation
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6951,6 +6952,80 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1045767345
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1045767346}
+  - component: {fileID: 1045767347}
+  m_Layer: 5
+  m_Name: Button(GripPressed)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1045767346
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045767345}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1118372544}
+  m_Father: {fileID: 1307617534}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 23, y: -172}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1045767347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045767345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonPressAction:
+    m_Name: Button Press
+    m_ExpectedControlLayout: 
+    m_Id: e317b980-c170-411c-a5dc-954f2e06574c
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 5aca8210-23d3-4a24-8e41-cc6e46acca26
+      m_Path: <KnucklesController>{LeftHand}/gripPressed
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Button Press
+      m_Flags: 0
+  buttonTouchAction:
+    m_Name: Button Touch
+    m_ExpectedControlLayout: 
+    m_Id: 6c9929f2-674d-4834-ac61-3961c7ef2391
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+  statusImage: {fileID: 1118372545}
 --- !u!1 &1046052075
 GameObject:
   m_ObjectHideFlags: 0
@@ -7161,7 +7236,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: dec7d527-b636-41d3-b898-0f5e1a45f164
-      m_Path: <ViveKnuckles>{LeftHand}/deviceRotation
+      m_Path: <KnucklesController>{LeftHand}/deviceRotation
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -7778,6 +7853,80 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1106508306}
   m_CullTransparentMesh: 0
+--- !u!1 &1118372543
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1118372544}
+  - component: {fileID: 1118372546}
+  - component: {fileID: 1118372545}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1118372544
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1118372543}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1045767346}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1118372545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1118372543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+--- !u!222 &1118372546
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1118372543}
+  m_CullTransparentMesh: 0
 --- !u!1 &1122739357
 GameObject:
   m_ObjectHideFlags: 0
@@ -7924,7 +8073,7 @@ RectTransform:
   - {fileID: 1284618399}
   - {fileID: 1295250822}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 9
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -7950,7 +8099,15 @@ MonoBehaviour:
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
-    m_SingletonActionBindings: []
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 408ba091-79f8-42b2-a1f0-8a49183faa6d
+      m_Path: <KnucklesController>{LeftHand}/grip
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Axis
+      m_Flags: 0
   statusSlider: {fileID: 1284618400}
 --- !u!1 &1161499115
 GameObject:
@@ -8012,7 +8169,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 920d19c8-4b5c-4cf2-b90a-21f837ea040d
-      m_Path: <ViveKnuckles>{LeftHand}/isTracked
+      m_Path: <KnucklesController>{LeftHand}/isTracked
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8342,7 +8499,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 3cba0482-fc0e-465e-9d6f-8d158fe03de8
-      m_Path: <ViveKnuckles>{LeftHand}/secondaryButton
+      m_Path: <KnucklesController>{LeftHand}/secondaryButton
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8388,7 +8545,7 @@ RectTransform:
   - {fileID: 2066307807}
   - {fileID: 1312012964}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 10
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -8410,7 +8567,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: d9125634-7094-4ac0-b580-9f6073bcec0c
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -8782,7 +8939,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 854aca5d-45e6-491f-a6a9-1f5f5b0ba978
-      m_Path: <ViveKnuckles>{LeftHand}/deviceVelocity
+      m_Path: <KnucklesController>{LeftHand}/deviceVelocity
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8923,7 +9080,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 5b28f2d1-23c6-4bf1-a46c-daa3e232f79f
-      m_Path: <ViveKnuckles>{LeftHand}/trackingState
+      m_Path: <KnucklesController>{LeftHand}/trackingState
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -9283,14 +9440,15 @@ RectTransform:
   - {fileID: 977667763}
   - {fileID: 1186562256}
   - {fileID: 1786174559}
-  - {fileID: 1534137418}
   - {fileID: 709200742}
+  - {fileID: 1534137418}
+  - {fileID: 441132489}
+  - {fileID: 1045767346}
+  - {fileID: 1142817234}
   - {fileID: 559090993}
   - {fileID: 1551526800}
   - {fileID: 1882420527}
   - {fileID: 793877819}
-  - {fileID: 1142817234}
-  - {fileID: 441132489}
   m_Father: {fileID: 2048573233}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -9450,6 +9608,80 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1323219419
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1323219420}
+  - component: {fileID: 1323219421}
+  m_Layer: 5
+  m_Name: Button(GripPressed)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1323219420
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1323219419}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 2061144579}
+  m_Father: {fileID: 97008436}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -9, y: -174}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1323219421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1323219419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonPressAction:
+    m_Name: Button Press
+    m_ExpectedControlLayout: 
+    m_Id: 4ae55aab-2c3c-43fe-9fea-b82e3f9ad805
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 15c92e5c-2204-44ac-bcaa-27fa1a9a8269
+      m_Path: <KnucklesController>{RightHand}/gripPressed
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Button Press
+      m_Flags: 0
+  buttonTouchAction:
+    m_Name: Button Touch
+    m_ExpectedControlLayout: 
+    m_Id: cae5e40d-9085-458b-9ef0-b863cdddcbf7
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+  statusImage: {fileID: 2061144580}
 --- !u!1 &1353709091
 GameObject:
   m_ObjectHideFlags: 0
@@ -9793,7 +10025,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 1a715f89-1a83-480e-bab0-9768b994a32b
-      m_Path: <ViveKnuckles>{RightHand}/trackingState
+      m_Path: <KnucklesController>{RightHand}/trackingState
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -10571,7 +10803,7 @@ RectTransform:
   - {fileID: 2021710270}
   - {fileID: 374970499}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 6
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -10597,15 +10829,7 @@ MonoBehaviour:
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
-    m_SingletonActionBindings:
-    - m_Name: 
-      m_Id: 992f097f-caf9-4c21-aa3d-b3c566aa8a4f
-      m_Path: <ViveKnuckles>{RightHand}/secondaryButton
-      m_Interactions: 
-      m_Processors: 
-      m_Groups: 
-      m_Action: Button Press
-      m_Flags: 0
+    m_SingletonActionBindings: []
   buttonTouchAction:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
@@ -11196,7 +11420,7 @@ RectTransform:
   - {fileID: 1000586097}
   - {fileID: 1015407553}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -11225,7 +11449,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 5aca8210-23d3-4a24-8e41-cc6e46acca26
-      m_Path: <ViveKnuckles>{LeftHand}/triggerPressed
+      m_Path: <KnucklesController>{LeftHand}/triggerPressed
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -11381,7 +11605,7 @@ RectTransform:
   - {fileID: 655251644}
   - {fileID: 801787618}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 6
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -11403,7 +11627,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 7584d375-18b5-4371-b231-1a37541e0daf
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -13090,7 +13314,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: ecdc30e8-3825-4f5f-a1a3-0d11fa3b3ecc
-      m_Path: <ViveKnuckles>{LeftHand}/trackpadPressed
+      m_Path: <KnucklesController>{LeftHand}/trackpadPressed
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -13106,7 +13330,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 19f74e0b-e0fe-45b9-9236-01a9dad93387
-      m_Path: <ViveKnuckles>{LeftHand}/trackpadTouched
+      m_Path: <KnucklesController>{LeftHand}/trackpadTouched
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -13726,7 +13950,7 @@ RectTransform:
   - {fileID: 1997756722}
   - {fileID: 1508968365}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 2
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -13755,7 +13979,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 15c92e5c-2204-44ac-bcaa-27fa1a9a8269
-      m_Path: <ViveKnuckles>{RightHand}/triggerPressed
+      m_Path: <KnucklesController>{RightHand}/triggerPressed
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -13880,7 +14104,7 @@ RectTransform:
   - {fileID: 1840855811}
   - {fileID: 394234194}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 5
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -13906,7 +14130,15 @@ MonoBehaviour:
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
-    m_SingletonActionBindings: []
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: c0a4d848-dd66-46aa-8dff-9bf0a3092e70
+      m_Path: <KnucklesController>{RightHand}/grip
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Axis
+      m_Flags: 0
   statusSlider: {fileID: 1840855812}
 --- !u!1 &1882420526
 GameObject:
@@ -13939,7 +14171,7 @@ RectTransform:
   - {fileID: 1489753023}
   - {fileID: 1947262020}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 7
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -13961,7 +14193,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 28cc5e9b-c7af-4eb0-8b42-563a8c044d70
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
@@ -14077,7 +14309,7 @@ RectTransform:
   - {fileID: 816572192}
   - {fileID: 1493438908}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -14106,7 +14338,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: b8b0dd4f-6664-44ef-9481-ce712da73a29
-      m_Path: <ViveKnuckles>{RightHand}/trackpadPressed
+      m_Path: <KnucklesController>{RightHand}/trackpadPressed
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -14122,7 +14354,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 3b06d567-7880-4d8d-b3e7-9420d8fd7242
-      m_Path: <ViveKnuckles>{RightHand}/trackpadTouched
+      m_Path: <KnucklesController>{RightHand}/trackpadTouched
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -15160,7 +15392,7 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: cdd1bc8b-e7e8-4691-bdef-49270b6c8887
-      m_Path: <ViveKnuckles>{RightHand}/trackpad
+      m_Path: <KnucklesController>{RightHand}/trackpad
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -15385,13 +15617,87 @@ MonoBehaviour:
     m_SingletonActionBindings:
     - m_Name: 
       m_Id: 2e6ae255-d84e-4d78-8495-95b43bf717db
-      m_Path: <ViveKnuckles>{LeftHand}/devicePosition
+      m_Path: <KnucklesController>{LeftHand}/devicePosition
       m_Interactions: 
       m_Processors: 
       m_Groups: 
       m_Action: Vector 3
       m_Flags: 0
   statusText: {fileID: 1933772070}
+--- !u!1 &2061144578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2061144579}
+  - component: {fileID: 2061144581}
+  - component: {fileID: 2061144580}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2061144579
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061144578}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1323219420}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2061144580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061144578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+--- !u!222 &2061144581
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061144578}
+  m_CullTransparentMesh: 0
 --- !u!1 &2065835747
 GameObject:
   m_ObjectHideFlags: 0
@@ -16018,7 +16324,7 @@ RectTransform:
   - {fileID: 1985749473}
   - {fileID: 1883087202}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 9
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -16040,7 +16346,7 @@ MonoBehaviour:
   axisAction:
     m_Name: Axis
     m_ExpectedControlLayout: 
-    m_Id: 
+    m_Id: 50972c80-46da-4c63-bbde-3e018be15027
     m_Flags: 0
     m_Processors: 
     m_Interactions: 
