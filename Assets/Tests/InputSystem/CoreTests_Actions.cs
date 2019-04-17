@@ -1628,11 +1628,18 @@ partial class CoreTests
     public void Actions_CanPerformPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        // we add a second input device (and bind to it), to test that the binding 
+        // conflict resolution will not interfere with the interaction handling.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // Test all three press behaviors concurrently.
         var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        pressAction.AddBinding("<Keyboard>/a");
         var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        releaseAction.AddBinding("<Keyboard>/s");
         var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
+        pressAndReleaseAction.AddBinding("<Keyboard>/d");
+
 
         pressAction.Enable();
         releaseAction.Enable();
@@ -1645,13 +1652,16 @@ partial class CoreTests
             Press(gamepad.buttonSouth);
 
             var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Started));
 
             trace.Clear();
 
@@ -1671,13 +1681,16 @@ partial class CoreTests
             Press(gamepad.buttonSouth);
 
             actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Started));
         }
     }
 
@@ -1686,10 +1699,16 @@ partial class CoreTests
     public void Actions_CanPerformContinuousPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        // we add a second input device (and bind to it), to test that the binding 
+        // conflict resolution will not interfere with the interaction handling.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        pressAction.AddBinding("<Keyboard>/a");
         var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        pressAction.AddBinding("<Keyboard>/s");
         var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
+        pressAction.AddBinding("<Keyboard>/d");
 
         pressAction.continuous = true;
         releaseAction.continuous = true; // ReleaseOnly doesn't care about continuous.
@@ -1706,14 +1725,16 @@ partial class CoreTests
             Press(gamepad.buttonSouth);
 
             var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
-
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Started));
             trace.Clear();
 
             InputSystem.Update();
@@ -4784,6 +4805,78 @@ partial class CoreTests
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
         Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Vector2Composite_RespectsButtonPressurePoint()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Set up classic WASD control.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Gamepad>/leftstick/up")
+            .With("Down", "<Gamepad>/leftstick/down")
+            .With("Left", "<Gamepad>/leftstick/left")
+            .With("Right", "<Gamepad>/leftstick/right");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+        action.cancelled += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        var pressPoint = gamepad.leftStick.up.pressPointOrDefault;
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up (slightly above press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up (slightly below press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.zero));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Up left (up slightly above press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Up left (up slightly below press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
     }
 
     [Test]

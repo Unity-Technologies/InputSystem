@@ -2076,7 +2076,7 @@ namespace UnityEngine.Experimental.Input
         /// </code>
         /// </example>
         /// </remarks>
-        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber)
+        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue)
             where TValue : struct, IComparable<TValue>
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
@@ -2085,6 +2085,8 @@ namespace UnityEngine.Experimental.Input
             var result = default(TValue);
             var firstChildBindingIndex = bindingIndex + 1;
             var isFirstValue = true;
+
+            buttonValue = false;
 
             // Find the binding in the composite that both has the given part number and
             // the greatest value.
@@ -2112,10 +2114,14 @@ namespace UnityEngine.Experimental.Input
                     {
                         result = value;
                         isFirstValue = false;
+                        if (controls[controlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
                     else if (value.CompareTo(result) > 0)
                     {
                         result = value;
+                        if (controls[controlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
                 }
             }

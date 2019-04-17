@@ -1,7 +1,6 @@
 {
-    "name": "DemoTests",
+    "name": "Unity.InputSystem.Tests",
     "references": [
-        "Demo",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"
     ],
