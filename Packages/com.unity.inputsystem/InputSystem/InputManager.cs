@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input
 
         private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-                     EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
 #else
             true;
 #endif
@@ -2005,11 +2005,12 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
+            // Restore devices before checking update mask. See InputSystem.InitializeInEditor().
+            RestoreDevicesAfterDomainReloadIfNecessary();
+
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
-
-            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
@@ -2214,12 +2215,21 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
+#if UNITY_EDITOR
+            // In the editor, we perform a "null" update after domain reloads to get our devices
+            // back. See InputSystem.InitializeInEditor().
+            if (updateType == InputUpdateType.None)
+                return true;
+#endif
+
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
+            // Ignore editor updates when the game is playing and has focus. All input goes to player.
             if (gameIsPlayingAndHasFocus)
                 mask &= ~InputUpdateType.Editor;
-            else
-                mask &= ~(InputUpdateType.Dynamic | InputUpdateType.Fixed);
+            // If the player isn't running, the only thing we run is editor updates.
+            else if (updateType != InputUpdateType.Editor)
+                return false;
 #endif
             return (updateType & mask) != 0;
         }
@@ -2242,16 +2252,20 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
-            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
-            if ((updateType & m_UpdateMask) == 0)
-                return;
-
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
+            // Restore devices before checking update mask. See InputSystem.InitializeInEditor().
             RestoreDevicesAfterDomainReloadIfNecessary();
+
+            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
+            if ((updateType & m_UpdateMask) == 0)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -3347,7 +3361,7 @@ namespace UnityEngine.Experimental.Input
             // before. This can be the case if there's new layout information that wasn't available
             // before.
             m_AvailableDevices = m_SavedAvailableDevices;
-            m_AvailableDeviceCount = m_SavedAvailableDevices.Length;
+            m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
                 var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);

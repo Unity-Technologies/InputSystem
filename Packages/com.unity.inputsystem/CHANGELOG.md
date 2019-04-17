@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
 - DualShock sensors on PS4 are now marked as noisy (#494).
 - IL2CPP causing issues with XInput on windows and osx desktops.
+- Devices not being available yet in `MonoBehavior.Awake`, `MonoBehaviour.Start`, and `MonoBehaviour.OnEnable` when entering play mode in editor.
 
 #### Actions
 
@@ -89,7 +90,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
 - Fix choosing "Add Action" in action map context menu throwing an exception.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
-- The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
+- The input action asset editor window will now show the name of the asset being edited when asking for saving changes.
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
 - Fixed pasting or dragging a composite binding from one action into another.
 - In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.

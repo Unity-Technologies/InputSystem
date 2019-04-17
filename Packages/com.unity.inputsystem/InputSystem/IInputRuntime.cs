@@ -2,6 +2,10 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 ////TODO: add API to send events in bulk rather than one by one
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -157,6 +161,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
         #if UNITY_ANALYTICS || UNITY_EDITOR
         void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
         void SendAnalyticsEvent(string name, object data);
+        #endif
+
+        bool isInBatchMode { get; }
+
+        #if UNITY_EDITOR
+        Action<PlayModeStateChange> onPlayModeChanged { set; }
+        Action onProjectChange { set; }
+        bool isInPlayMode { get;  }
+        bool isPaused { get; }
         #endif
     }
 
