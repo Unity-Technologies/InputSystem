@@ -247,7 +247,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// and <see cref="controlSchemeMatch"/>).
         ///
         /// Note that is generally does not make sense for users to share actions. Instead, each user should
-        /// receive a set of actions private to the user. 
+        /// receive a set of actions private to the user.
         ///
         /// If <see cref="settings"/> are applied with customized bindings (<see cref="InputUserSettings.customBindings"/>),
         /// these are applied automatically to the actions.

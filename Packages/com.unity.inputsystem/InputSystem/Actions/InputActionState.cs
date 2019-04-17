@@ -1165,7 +1165,7 @@ namespace UnityEngine.Experimental.Input
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
                     ////        first actuates; the current solution will occasionally run conflict resolution when it doesn't have to
-                    ////        but won't require the extra bookkepping)
+                    ////        but won't require the extra bookkeeping)
                     // Do NOT let this control state change affect the action.
                     // NOTE: We do not update hasMultipleConcurrentActuations here which means that it may
                     //       temporarily be wrong. If that happens, we will end up eventually running the

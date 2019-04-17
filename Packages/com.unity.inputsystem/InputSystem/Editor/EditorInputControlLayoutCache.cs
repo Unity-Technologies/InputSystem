@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
     ///
     /// This class is only available in the editor (when <c>UNITY_EDITOR</c> is true).
     /// </remarks>
-    public static class EditorInputControlLayoutCache
+    internal static class EditorInputControlLayoutCache
     {
         /// <summary>
         /// Iterate over all control layouts in the system.

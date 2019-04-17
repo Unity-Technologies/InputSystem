@@ -110,6 +110,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private readonly GUIContent m_GeneralFoldoutLabel;
 
+        ////TODO: tooltips
         private static readonly GUIContent s_ProcessorsFoldoutLabel = EditorGUIUtility.TrTextContent("Processors");
         private static readonly GUIContent s_InteractionsFoldoutLabel = EditorGUIUtility.TrTextContent("Interactions");
 

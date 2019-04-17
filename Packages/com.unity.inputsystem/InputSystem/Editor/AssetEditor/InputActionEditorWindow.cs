@@ -290,7 +290,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onSelectionChanged = OnActionTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
-                title = "Action",
+                title = "Actions",
             };
 
             // Create tree in left pane showing action maps.
@@ -301,7 +301,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onSelectionChanged = OnActionMapTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
-                title = "Actions Maps",
+                title = "Action Maps",
             };
             m_ActionMapsTree.Reload();
             m_ActionMapsTree.ExpandAll();
@@ -643,6 +643,8 @@ namespace UnityEngine.Experimental.Input.Editor
             LoadPropertiesForSelection();
             Repaint();
         }
+
+        ////TODO: add shortcut to focus search box
 
         #if UNITY_2019_1_OR_NEWER
         ////TODO: show shortcuts in tooltips

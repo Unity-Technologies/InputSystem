@@ -139,6 +139,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
     /// can be reimplemented on top of the same API.
     /// </remarks>
     /// <seealso cref="PlayerInputManager"/>
+    [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
     {

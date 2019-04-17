@@ -504,7 +504,7 @@ partial class CoreTests
     public void Devices_AddingDeviceByType_IfTypeIsNotKnownAsLayout_AutomaticallyRegistersControlLayout()
     {
         Assert.That(() => InputSystem.AddDevice<TestDeviceWithDefaultState>(), Throws.Nothing);
-        Assert.That(InputSystem.TryLoadLayout("TestDeviceWithDefaultState"), Is.Not.Null);
+        Assert.That(InputSystem.LoadLayout("TestDeviceWithDefaultState"), Is.Not.Null);
     }
 
     [Test]
