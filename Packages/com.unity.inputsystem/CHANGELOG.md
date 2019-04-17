@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   ![Inital State Check](Documentation~/Images/InitialStateCheck.png)
   * The reason for the change is that having the behavior on by default made certain setups hard to achieve. For example, if `<Keyboard>/escape` is used in one action map to toggle *into* the main menu and in another action map to toggle *out* of it, then the previous behavior would immediately exit out of the menu if `escape` was still pressed from going into the menu. \
   We have come to believe that wanting to react to the current state of a control right away is the less often desirable behavior and so have made it optional with a separate toggle.
+- Postprocessors and Interactions are now showed in a component-inspector-like fashion in the Input Action editor window, allowing you to see the properties of all items at once.
 
 ### Fixed
 
