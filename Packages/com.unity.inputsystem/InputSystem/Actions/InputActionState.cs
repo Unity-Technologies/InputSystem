@@ -853,7 +853,7 @@ namespace UnityEngine.Experimental.Input
                 count: m_ContinuousActionCount);
             Debug.Assert(index != -1, "Action not found in list of continuous actions");
 
-            ArrayHelpers.EraseAtWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, index);
+            ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
             actionStates[actionIndex].onContinuousList = false;
 
             // If the action was in the part of the list that continuous actions we have carried
@@ -885,7 +885,7 @@ namespace UnityEngine.Experimental.Input
             if (index < m_ContinuousActionCountFromPreviousUpdate)
             {
                 // Move to end of list.
-                ArrayHelpers.EraseAtWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, index);
+                ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
                 --m_ContinuousActionCountFromPreviousUpdate;
                 ArrayHelpers.AppendWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, actionIndex);
             }
@@ -1590,6 +1590,7 @@ namespace UnityEngine.Experimental.Input
         private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
             InputActionPhase phaseAfterPerformedOrCancelled = InputActionPhase.Waiting)
         {
+            Debug.Assert(newPhase != InputActionPhase.Disabled, "Should not disable an action using this method");
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount, "Map index out of range");
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < totalBindingCount, "Binding index out of range");
@@ -1598,8 +1599,12 @@ namespace UnityEngine.Experimental.Input
             if (actionIndex == kInvalidIndex)
                 return; // No action associated with binding.
 
-            // Update action state.
+            // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
+            if (actionState->phase == InputActionPhase.Disabled)
+                return;
+
+            // Update action state.
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
             var newState = trigger;
@@ -1626,16 +1631,19 @@ namespace UnityEngine.Experimental.Input
                 case InputActionPhase.Performed:
                 {
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
-                    actionState->phase = phaseAfterPerformedOrCancelled;
-
-                    // If the action is continuous and remains in performed or started state, make sure the action
-                    // is on the list of continuous actions that we check every update.
-                    if ((phaseAfterPerformedOrCancelled == InputActionPhase.Started ||
-                         phaseAfterPerformedOrCancelled == InputActionPhase.Performed) &&
-                        actionState->continuous &&
-                        !actionState->onContinuousList)
+                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
                     {
-                        AddContinuousAction(actionIndex);
+                        actionState->phase = phaseAfterPerformedOrCancelled;
+
+                        // If the action is continuous and remains in performed or started state, make sure the action
+                        // is on the list of continuous actions that we check every update.
+                        if ((phaseAfterPerformedOrCancelled == InputActionPhase.Started ||
+                             phaseAfterPerformedOrCancelled == InputActionPhase.Performed) &&
+                            actionState->continuous &&
+                            !actionState->onContinuousList)
+                        {
+                            AddContinuousAction(actionIndex);
+                        }
                     }
                     break;
                 }
@@ -1643,11 +1651,14 @@ namespace UnityEngine.Experimental.Input
                 case InputActionPhase.Cancelled:
                 {
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCancelled);
-                    actionState->phase = phaseAfterPerformedOrCancelled;
+                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
+                    {
+                        actionState->phase = phaseAfterPerformedOrCancelled;
 
-                    // Remove from list of continuous actions, if necessary.
-                    if (actionState->onContinuousList)
-                        RemoveContinuousAction(actionIndex);
+                        // Remove from list of continuous actions, if necessary.
+                        if (actionState->onContinuousList)
+                            RemoveContinuousAction(actionIndex);
+                    }
                     break;
                 }
 
@@ -2065,7 +2076,7 @@ namespace UnityEngine.Experimental.Input
         /// </code>
         /// </example>
         /// </remarks>
-        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber)
+        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue)
             where TValue : struct, IComparable<TValue>
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
@@ -2074,6 +2085,8 @@ namespace UnityEngine.Experimental.Input
             var result = default(TValue);
             var firstChildBindingIndex = bindingIndex + 1;
             var isFirstValue = true;
+
+            buttonValue = false;
 
             // Find the binding in the composite that both has the given part number and
             // the greatest value.
@@ -2101,10 +2114,14 @@ namespace UnityEngine.Experimental.Input
                     {
                         result = value;
                         isFirstValue = false;
+                        if (controls[controlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
                     else if (value.CompareTo(result) > 0)
                     {
                         result = value;
+                        if (controls[controlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
                 }
             }

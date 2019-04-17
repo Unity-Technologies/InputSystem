@@ -306,6 +306,83 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanBeDisabledInCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed += _ => action.Disable();
+
+        action.Enable();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.enabled, Is.False);
+
+        using (var trace = new InputActionTrace())
+        {
+            Release(gamepad.buttonSouth);
+            Press(gamepad.buttonSouth);
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAndEnableOtherActionInCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCalls = 0;
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed +=
+            ctx =>
+        {
+            ++receivedCalls;
+        };
+        action.Enable();
+
+        var disableAction = new InputAction(binding: "<Gamepad>/buttonEast");
+        disableAction.performed +=
+            ctx =>
+        {
+            action.Disable();
+        };
+        disableAction.Enable();
+
+        var enableAction = new InputAction(binding: "<Gamepad>/buttonWest");
+        enableAction.performed +=
+            ctx =>
+        {
+            action.Enable();
+        };
+        enableAction.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.Update();
+        Assert.That(receivedCalls, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.East));
+        InputSystem.Update();
+        Assert.That(action.enabled, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.Update();
+        Assert.That(receivedCalls, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.West));
+        InputSystem.Update();
+        Assert.That(action.enabled, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+        InputSystem.Update();
+        Assert.That(receivedCalls, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenEnabled_TriggerNotification()
     {
         var map = new InputActionMap("map");
@@ -4711,6 +4788,78 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_Vector2Composite_RespectsButtonPressurePoint()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Set up classic WASD control.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Gamepad>/leftstick/up")
+            .With("Down", "<Gamepad>/leftstick/down")
+            .With("Left", "<Gamepad>/leftstick/left")
+            .With("Right", "<Gamepad>/leftstick/right");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+        action.cancelled += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        var pressPoint = gamepad.leftStick.up.pressPointOrDefault;
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up (slightly above press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up (slightly below press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.zero));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Up left (up slightly above press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Up left (up slightly below press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateComposite_WithPartsBeingOutOfOrder()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4808,6 +4957,7 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(performedCount, Is.EqualTo(1));
+        LogAssert.NoUnexpectedReceived();
     }
 
     [Test]
@@ -6300,7 +6450,8 @@ partial class CoreTests
         // Not the most elegant test as we reach into internals here but with the
         // current API, it's not possible to enumerate monitors from outside.
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors,
-            Has.All.Matches((InputManager.StateChangeMonitorsForDevice x) => x.count == 0));
+            Has.All.Matches(
+                (InputManager.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
     }
 
     // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.
@@ -6524,6 +6675,8 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
+
+        LogAssert.NoUnexpectedReceived();
     }
 
     class TestInteractionCheckingDefaultState : IInputInteraction
@@ -6573,6 +6726,8 @@ partial class CoreTests
         LogAssert.Expect(LogType.Log, "TestInteractionCheckingDefaultState.Process(default)");
 
         Set(gamepad.leftStick, new Vector2(0.1234f, 0f));
+
+        LogAssert.NoUnexpectedReceived();
     }
 
     // It's possible to associate a control layout name with an action. This is useful both for

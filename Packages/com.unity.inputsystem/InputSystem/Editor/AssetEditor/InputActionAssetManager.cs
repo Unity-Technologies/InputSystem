@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public string guid => m_AssetGUID;
 
-        public string path { get; set; }
+        public string path { get => m_AssetPath; set => m_AssetPath = value; }
 
         public string name
         {

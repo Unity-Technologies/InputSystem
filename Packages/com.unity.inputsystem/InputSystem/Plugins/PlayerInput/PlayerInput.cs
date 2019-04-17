@@ -1074,7 +1074,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             // Remove from global list.
             var index = ArrayHelpers.IndexOfReference(s_AllActivePlayers, this, s_AllActivePlayersCount);
             if (index != -1)
-                ArrayHelpers.EraseAtWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, index);
+                ArrayHelpers.EraseAtWithCapacity(s_AllActivePlayers, ref s_AllActivePlayersCount, index);
 
             // Unhook from change notifications if we're the last player.
             if (s_AllActivePlayersCount == 0 && s_UserChangeDelegate != null)
