@@ -22,6 +22,7 @@ platforms:
     - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --stdout-filter=minimal --suite=editor --suite=playmode
   triggers:
     branches:
       only:

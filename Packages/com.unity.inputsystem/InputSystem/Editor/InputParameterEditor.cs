@@ -116,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (!m_UseDefaultValue)
                     m_SetValue(newValue);
                 EditorGUI.EndDisabledGroup();
-                var newUseDefault = EditorGUILayout.ToggleLeft(m_ToggleLabel, m_UseDefaultValue, GUILayout.ExpandWidth(false));
+                var newUseDefault = GUILayout.Toggle(m_UseDefaultValue, m_ToggleLabel, GUILayout.ExpandWidth(false));
                 if (newUseDefault != m_UseDefaultValue)
                 {
                     if (!newUseDefault)

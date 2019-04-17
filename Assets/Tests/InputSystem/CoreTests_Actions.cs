@@ -4809,6 +4809,78 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_Vector2Composite_RespectsButtonPressurePoint()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Set up classic WASD control.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Gamepad>/leftstick/up")
+            .With("Down", "<Gamepad>/leftstick/down")
+            .With("Left", "<Gamepad>/leftstick/left")
+            .With("Right", "<Gamepad>/leftstick/right");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+        action.cancelled += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        var pressPoint = gamepad.leftStick.up.pressPointOrDefault;
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up (slightly above press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up (slightly below press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.zero));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Up left (up slightly above press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Up left (up slightly below press point)
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateComposite_WithPartsBeingOutOfOrder()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
