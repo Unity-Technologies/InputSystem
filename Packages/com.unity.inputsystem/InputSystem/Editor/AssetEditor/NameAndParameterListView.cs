@@ -19,10 +19,17 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     {
         protected NameAndParameterListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
         {
+            m_DeleteButton = EditorGUIUtility.TrIconContent("Toolbar Minus", $"Delete {itemName}");
+            m_UpButton = EditorGUIUtility.TrIconContent("NodeChevronUp", $"Move {itemName} up");
+            m_DownButton = EditorGUIUtility.TrIconContent("NodeChevronDown", $"Move {itemName} down");
+
             m_Property = property;
             m_Apply = applyAction;
-            m_ListItems = new List<string>();
             m_ListOptions = GetOptions();
+            m_ExpectedControlLayout = expectedControlLayout;
+            if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
+                m_ExpectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
+
             m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
             m_EditableParametersForEachListItem = new ParameterListView[m_ParametersForEachListItem.Length];
             for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
@@ -32,30 +39,20 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 var rowType = m_ListOptions.LookupTypeRegistration(typeName);
                 m_EditableParametersForEachListItem[i].Initialize(rowType, m_ParametersForEachListItem[i].parameters);
 
-            }
-
-            m_ExpectedControlLayout = expectedControlLayout;
-            if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
-                m_ExpectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
-
-            foreach (var nameAndParams in m_ParametersForEachListItem)
-            {
-                var name = ObjectNames.NicifyVariableName(nameAndParams.name);
+                var name = ObjectNames.NicifyVariableName(typeName);
 
                 ////REVIEW: finding this kind of stuff should probably have better support globally on the asset; e.g. some
                 ////        notification that pops up and allows fixing all occurrences in one click
                 // Find out if we still support this option and indicate it in the list, if we don't.
-                var type = m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name));
-                if (type == null)
+                if (rowType == null)
                     name += " (Obsolete)";
                 else if (m_ExpectedValueType != null)
                 {
-                    var valueType = GetValueType(type);
+                    var valueType = GetValueType(rowType);
                     if (!m_ExpectedValueType.IsAssignableFrom(valueType))
                         name += " (Ignored)";
                 }
-
-                m_ListItems.Add(name);
+                m_EditableParametersForEachListItem[i].name = name;
             }
         }
 
@@ -87,7 +84,6 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             var name = (string)data;
 
-            m_ListItems.Add(ObjectNames.NicifyVariableName(name));
             ArrayHelpers.Append(ref m_ParametersForEachListItem,
                 new NameAndParameters {name = name});
             ArrayHelpers.Append(ref m_EditableParametersForEachListItem,
@@ -97,6 +93,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             var typeName = m_ParametersForEachListItem[index].name;
             var rowType = m_ListOptions.LookupTypeRegistration(typeName);
             m_EditableParametersForEachListItem[index].Initialize(rowType, m_ParametersForEachListItem[index].parameters);
+            m_EditableParametersForEachListItem[index].name = ObjectNames.NicifyVariableName(name);
 
             m_Apply();
         }
@@ -125,6 +122,13 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             }
         }
 
+        private void SwapEntry(int oldIndex, int newIndex)
+        {
+            MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex], ref m_ParametersForEachListItem[newIndex]);
+            MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[oldIndex], ref m_EditableParametersForEachListItem[newIndex]);
+            m_Apply();
+        }
+
         public void OnGUI()
         {
             if (m_EditableParametersForEachListItem == null || m_EditableParametersForEachListItem.Length == 0)
@@ -138,38 +142,38 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             }
             else for (var i = 0; i < m_EditableParametersForEachListItem.Length; i++)
             {
+                var editableParams = m_EditableParametersForEachListItem[i];
                 EditorGUILayout.BeginHorizontal();
-                m_EditableParametersForEachListItem[i].visible = EditorGUILayout.Foldout(m_EditableParametersForEachListItem[i].visible, ObjectNames.NicifyVariableName(m_ParametersForEachListItem[i].name), Styles.s_FoldoutStyle);//, EditorStyles.boldLabel);
+                if (editableParams.hasUIToShow)
+                    editableParams.visible = EditorGUILayout.Foldout(editableParams.visible, editableParams.name, Styles.s_FoldoutStyle);
+                else
+                {
+                    GUILayout.Space(16);
+                    EditorGUILayout.LabelField(editableParams.name, EditorStyles.boldLabel);
+                }
                 GUILayout.FlexibleSpace();
                 using (var scope = new EditorGUI.DisabledScope(i == 0))
                 {
-                    if (GUILayout.Button(EditorGUIUtility.IconContent("NodeChevronUp"), EditorStyles.label))
-                    {
-                        MemoryHelpers.Swap(ref m_ParametersForEachListItem[i], ref m_ParametersForEachListItem[i - 1]);
-                        MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[i], ref m_EditableParametersForEachListItem[i - 1]);
-                        m_Apply();
-                    }
+                    if (GUILayout.Button(m_UpButton, EditorStyles.label))
+                        SwapEntry(i, i - 1);
                 }
                 using (var scope = new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
                 {
-                    if (GUILayout.Button(EditorGUIUtility.IconContent("NodeChevronDown"), EditorStyles.label))
-                    {
-                        MemoryHelpers.Swap(ref m_ParametersForEachListItem[i], ref m_ParametersForEachListItem[i + 1]);
-                        MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[i], ref m_EditableParametersForEachListItem[i + 1]);
-                        m_Apply();
-                    }
+                    if (GUILayout.Button(m_DownButton, EditorStyles.label))
+                        SwapEntry(i, i + 1);
                 }
-                if (GUILayout.Button(EditorGUIUtility.TrIconContent("Toolbar Minus", $"Delete {itemName}"), EditorStyles.label))
+                if (GUILayout.Button(m_DeleteButton, EditorStyles.label))
                 {
                     ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, i);
                     ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, i);
                     m_Apply();
+                    GUIUtility.ExitGUI();
                 }
                 EditorGUILayout.EndHorizontal();
-                if (m_EditableParametersForEachListItem[i].visible)
+                if (editableParams.visible)
                 {
                     EditorGUI.indentLevel++;
-                    m_EditableParametersForEachListItem[i].OnGUI();
+                    editableParams.OnGUI();
                     EditorGUI.indentLevel--;
                 }
                 AdvancedDropdownGUI.DrawLineSeparator(null);
@@ -186,12 +190,14 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         }
 
         protected abstract string itemName { get; }
-        private readonly List<string> m_ListItems;
-        private SerializedProperty m_Property;
-        private TypeTable m_ListOptions;
-        private string m_ExpectedControlLayout;
-        private Type m_ExpectedValueType;
 
+        private SerializedProperty m_Property;
+        private readonly TypeTable m_ListOptions;
+        private readonly string m_ExpectedControlLayout;
+        private readonly Type m_ExpectedValueType;
+        private readonly GUIContent m_DeleteButton;
+        private readonly GUIContent m_UpButton;
+        private readonly GUIContent m_DownButton;
         private NameAndParameters[] m_ParametersForEachListItem;
         private ParameterListView[] m_EditableParametersForEachListItem;
         private readonly Action m_Apply;

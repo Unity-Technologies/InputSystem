@@ -55,30 +55,32 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void DrawProcessorsGroup()
         {
-            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsFoldoutLabel, m_ProcessorsFoldout, m_ProcessorsList.OnAddDropdown);
+            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsFoldoutLabel, m_ProcessorsFoldout, s_ProcessorsAddButton, m_ProcessorsList.OnAddDropdown);
             if (m_ProcessorsFoldout)
                 m_ProcessorsList.OnGUI();
         }
 
         private void DrawInteractionsGroup()
         {
-            m_InteractionsFoldout = DrawFoldout(s_InteractionsFoldoutLabel, m_InteractionsFoldout, m_InteractionsList.OnAddDropdown);
+            m_InteractionsFoldout = DrawFoldout(s_InteractionsFoldoutLabel, m_InteractionsFoldout, s_InteractionsAddButton, m_InteractionsList.OnAddDropdown);
             if (m_InteractionsFoldout)
                 m_InteractionsList.OnGUI();
         }
 
-        private static bool DrawFoldout(GUIContent content, bool folded, Action<Rect> addDropDown = null)
+        private static bool DrawFoldout(GUIContent content, bool folded, GUIContent addButton = null, Action<Rect> addDropDown = null)
         {
+            const int k_PopupSize = 20;
             var bgRect = GUILayoutUtility.GetRect(content, Styles.s_FoldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.s_FoldoutBackgroundStyle);
             var foldoutRect = bgRect;
-            foldoutRect.xMax -= 20;
+            foldoutRect.xMax -= k_PopupSize;
             var retval = EditorGUI.Foldout(foldoutRect, folded, content, Styles.s_FoldoutStyle);
-            bgRect.xMin = bgRect.xMax - 20;
-            if (addDropDown != null)
+            if (addButton != null)
             {
-                if (GUI.Button(bgRect, EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Action"), EditorStyles.label))
-                    addDropDown(bgRect);
+                var popupRect = bgRect;
+                popupRect.xMin = popupRect.xMax - k_PopupSize;
+                if (GUI.Button(popupRect, addButton, EditorStyles.label))
+                    addDropDown(popupRect);
             }
             return retval;
         }
@@ -112,7 +114,9 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_GeneralFoldoutLabel;
 
         private static readonly GUIContent s_ProcessorsFoldoutLabel = EditorGUIUtility.TrTextContent("Processors");
+        public static readonly GUIContent s_ProcessorsAddButton = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Processor");
         private static readonly GUIContent s_InteractionsFoldoutLabel = EditorGUIUtility.TrTextContent("Interactions");
+        public static readonly GUIContent s_InteractionsAddButton = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Interaction");
 
         public static FourCC k_InteractionsChanged => new FourCC("IACT");
         public static FourCC k_ProcessorsChanged => new FourCC("PROC");

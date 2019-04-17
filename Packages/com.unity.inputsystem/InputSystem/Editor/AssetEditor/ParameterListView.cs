@@ -31,6 +31,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         public bool hasUIToShow => (m_Parameters != null && m_Parameters.Length > 0) || m_ParameterEditor != null;
         public bool visible { get; set; }
+        public string name { get; set; }
 
         /// <summary>
         /// Get the current parameter values according to the editor state.
