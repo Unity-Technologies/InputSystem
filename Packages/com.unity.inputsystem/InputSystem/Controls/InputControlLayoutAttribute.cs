@@ -23,6 +23,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
         public string stateFormat;
 
+        ////TODO: rename this to just "usages"; "commonUsages" is such a weird name
         public string[] commonUsages;
 
         public string variants;

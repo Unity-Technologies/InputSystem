@@ -45,20 +45,20 @@ namespace UnityEngine.Experimental.Input.Interactions
                 case PressBehavior.PressOnly:
                     if (m_WaitingForRelease)
                     {
-                        if (context.continuous)
+                        if (isActuated)
                         {
-                            if (isActuated)
+                            if (context.continuous)
                                 context.PerformedAndStayPerformed();
-                            else
-                            {
-                                // We need to reset the action to waiting state in order to stop it from triggering
-                                // continuously. However, we do not want to cancel here as that will trigger the action.
-                                // So go back directly to waiting here.
-                                context.Waiting();
-                            }
+                        }
+                        else
+                        {
+                            m_WaitingForRelease = false;
+                            // We need to reset the action to waiting state in order to stop it from triggering
+                            // continuously. However, we do not want to cancel here as that will trigger the action.
+                            // So go back directly to waiting here.
+                            context.Waiting();
                         }
 
-                        m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
@@ -81,7 +81,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                     }
                     else if (isActuated)
                     {
-                        ////REVIEW: should this trigger Started?
+                        context.Started();
                         m_WaitingForRelease = true;
                     }
                     break;

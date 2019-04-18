@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * They are still on `DualShockGamepadPS4`.
   * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
 - Marking a control as noisy now also marks all child controls as noisy.
+- The input system now defaults to ignoring any HID devices with usage types not known to map to game controllers. You can use `HIDSupport.supportedUsages` to enable specific usage types.
+- In the Input Settings window, asset selection has now been moved to the "gear" popup menu. If no asset is created, we now automatically create one.
+- In the inspector for Input Settings assets, we now show a button to go to the Input Settings window, and a button to make the asset active if it isn't.
+- Tests are now no longer part of the com.unity.inputsystem package. The `InputTestFixture` class still is for when you want to write input-related tests for your project. You can reference the `Unity.InputSystem.TestFixture` assembly when you need to do that.
 
 #### Actions
 
@@ -64,6 +68,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   ![Inital State Check](Documentation~/Images/InitialStateCheck.png)
   * The reason for the change is that having the behavior on by default made certain setups hard to achieve. For example, if `<Keyboard>/escape` is used in one action map to toggle *into* the main menu and in another action map to toggle *out* of it, then the previous behavior would immediately exit out of the menu if `escape` was still pressed from going into the menu. \
   We have come to believe that wanting to react to the current state of a control right away is the less often desirable behavior and so have made it optional with a separate toggle.
+- Processors and Interactions are now shown in a component-inspector-like fashion in the Input Action editor window, allowing you to see the properties of all items at once.
 
 ### Fixed
 
@@ -71,6 +76,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
 - DualShock sensors on PS4 are now marked as noisy (#494).
+- IL2CPP causing issues with XInput on windows and osx desktops.
+- Fixed a bug where the event buffer used by `InputEventTrace` could get corrupted.
 
 #### Actions
 
@@ -84,6 +91,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Saving no longer causes the selection of the current processor or interaction to be lost.
   * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
 - In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Fix choosing "Add Action" in action map context menu throwing an exception.
 - The input action asset editor window will no longer fail saving if the asset has been moved.
 - The input action asset editor window will now show the name of the asset being edited when asking for saving changes.
 - Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
@@ -92,6 +100,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
 - Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
 - Fixed blurry icons in editor for imported .inputactions assets and actions in them.
+- `Press` and `Release` interactions will now work correctly if they have multiple bound controls.
+- `Release` interactions will now invoke a `Started` callback when the control is pressed.
+- Made Vector2 composite actions respect the press points of button controls used to compose the value.
 
 ## [0.2.6-preview] - 2019-03-20
 
