@@ -132,7 +132,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(baseLayout);
         InputSystem.RegisterLayout(derivedLayout);
 
-        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+        var layout = InputSystem.LoadLayout("DerivedLayout");
 
         Assert.That(layout["stick"].usages.Count, Is.EqualTo(1));
         Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
@@ -229,7 +229,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var layout = InputSystem.TryLoadLayout("MyDevice");
+        var layout = InputSystem.LoadLayout("MyDevice");
 
         Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
@@ -251,7 +251,7 @@ partial class CoreTests
     {
         InputSystem.RegisterLayout<TestDeviceWithDefaultState>();
 
-        var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultState");
+        var layout = InputSystem.LoadLayout("TestDeviceWithDefaultState");
 
         Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
@@ -302,7 +302,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(baseLayout);
         InputSystem.RegisterLayout(derivedLayout);
 
-        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+        var layout = InputSystem.LoadLayout("DerivedLayout");
 
         Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
@@ -469,7 +469,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(typeof(DeviceWithCommonUsages), "BaseDevice");
         InputSystem.RegisterLayout(derivedJson);
 
-        var layout = InputSystem.TryLoadLayout("DerivedDevice");
+        var layout = InputSystem.LoadLayout("DerivedDevice");
 
         Assert.That(layout.commonUsages, Has.Count.EqualTo(3));
         Assert.That(layout.commonUsages[0], Is.EqualTo(CommonUsages.LeftHand));
@@ -761,7 +761,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayoutOverride(json);
 
-        var layout = InputSystem.TryLoadLayout("Gamepad");
+        var layout = InputSystem.LoadLayout("Gamepad");
 
         Assert.That(layout.commonUsages.Count, Is.EqualTo(3));
         Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("A")));
@@ -1051,7 +1051,7 @@ partial class CoreTests
     {
         InputSystem.RegisterLayout<TestLayoutType>();
 
-        var layout = InputSystem.TryLoadLayout("TestLayoutType");
+        var layout = InputSystem.LoadLayout("TestLayoutType");
 
         Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
     }
@@ -1344,7 +1344,7 @@ partial class CoreTests
     {
         InputSystem.RegisterLayout<TestDeviceWithMinMaxValue>();
 
-        var layout = InputSystem.TryLoadLayout("TestDeviceWithMinMaxValue");
+        var layout = InputSystem.LoadLayout("TestDeviceWithMinMaxValue");
 
         Assert.That(layout["control"].minValue.isEmpty, Is.False);
         Assert.That(layout["control"].maxValue.isEmpty, Is.False);
@@ -1371,7 +1371,7 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var layout = InputSystem.TryLoadLayout("TestLayout");
+        var layout = InputSystem.LoadLayout("TestLayout");
 
         Assert.That(layout["control"].minValue.isEmpty, Is.False);
         Assert.That(layout["control"].maxValue.isEmpty, Is.False);
@@ -1399,8 +1399,8 @@ partial class CoreTests
         InputSystem.RegisterLayout<BaseClassWithControl>();
         InputSystem.RegisterLayout<DerivedClassModifyingControlFromBaseClass>();
 
-        var baseLayout = InputSystem.TryLoadLayout<BaseClassWithControl>();
-        var derivedLayout = InputSystem.TryLoadLayout<DerivedClassModifyingControlFromBaseClass>();
+        var baseLayout = InputSystem.LoadLayout<BaseClassWithControl>();
+        var derivedLayout = InputSystem.LoadLayout<DerivedClassModifyingControlFromBaseClass>();
 
         Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
         Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
@@ -1652,7 +1652,7 @@ partial class CoreTests
         public InputControlLayout DoIt()
         {
             // To make this as simple as possible, just load another layout.
-            layout = InputSystem.TryLoadLayout(layoutToLoad);
+            layout = InputSystem.LoadLayout(layoutToLoad);
             return layout;
         }
     }
@@ -1665,7 +1665,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "MyLayout");
 
-        var result = InputSystem.TryLoadLayout("MyLayout");
+        var result = InputSystem.LoadLayout("MyLayout");
 
         Assert.That(result.name.ToString(), Is.EqualTo("MyLayout"));
         Assert.That(result, Is.SameAs(builder.layout));
@@ -1675,7 +1675,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanTurnLayoutIntoJson()
     {
-        var layout = InputSystem.TryLoadLayout("Gamepad");
+        var layout = InputSystem.LoadLayout("Gamepad");
         var json = layout.ToJson();
         var deserializedLayout = InputControlLayout.FromJson(json);
 
@@ -1741,14 +1741,14 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var jsonLayout = InputSystem.TryLoadLayout("MyLayout");
+        var jsonLayout = InputSystem.LoadLayout("MyLayout");
 
         Assert.That(jsonLayout, Is.Not.Null);
         Assert.That(jsonLayout.name, Is.EqualTo(new InternedString("MyLayout")));
         Assert.That(jsonLayout.controls, Has.Count.EqualTo(1));
         Assert.That(jsonLayout.controls[0].name, Is.EqualTo(new InternedString("MyControl")));
 
-        var gamepadLayout = InputSystem.TryLoadLayout("Gamepad");
+        var gamepadLayout = InputSystem.LoadLayout("Gamepad");
 
         Assert.That(gamepadLayout, Is.Not.Null);
         Assert.That(gamepadLayout.name, Is.EqualTo(new InternedString("Gamepad")));
@@ -1919,7 +1919,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(jsonBase);
         InputSystem.RegisterLayout(jsonDerived);
 
-        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+        var layout = InputSystem.LoadLayout("DerivedLayout");
 
         // The variants setting here is coming all the way from the base layout so itself already has
         // to come through properly in the merge.

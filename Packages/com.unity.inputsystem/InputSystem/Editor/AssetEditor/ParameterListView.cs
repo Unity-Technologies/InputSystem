@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: show description of interaction or processor when selected
+
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
     /// <summary>
