@@ -21,6 +21,8 @@ The debugger shows a tree breakdown of the state of the input system.
 
 >NOTE: At the moment, debugging input in players is restricted to seeing devices and events from connected players. There is no support yet for seeing other input-related data from players.
 
+    ////TODO: explain "Remote Devices"
+
 ## Debugging Devices
 
 ## Debugging Actions

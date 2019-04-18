@@ -1,3 +1,5 @@
+    ////TODO: explain initial state check
+
 # Actions
 
 >NOTE: Actions are a game-time only feature. They cannot be used in `EditorWindow` code.

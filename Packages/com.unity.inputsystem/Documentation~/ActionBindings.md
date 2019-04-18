@@ -1,6 +1,8 @@
-# Action Bindings
+    ////TODO: mention/explain disambiguation on this page
+    ////REVIEW: is "Action Bindings" really the best name for this?
+    ////        (the respective API is called "InputBinding")
 
-----mention/explain disambiguation on this page
+# Action Bindings
 
 An `InputBinding` represents a connection between an action and one or more controls identified by a [control path](Controls.md#control-paths). An action can have arbitrary many bindings pointed at it and the same control may be referenced by multiple bindings.
 
