@@ -9,6 +9,8 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
 
+////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
+
 ////TODO: player ID
 #pragma warning disable 0649
 namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel

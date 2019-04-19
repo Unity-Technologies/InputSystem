@@ -380,13 +380,13 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="name">Name of the layout to load. Note that layout names are case-insensitive.</param>
         /// <returns>The constructed layout instance or null if no layout of the given name could be found.</returns>
-        public static InputControlLayout TryLoadLayout(string name)
+        public static InputControlLayout LoadLayout(string name)
         {
             ////FIXME: this will intern the name even if the operation fails
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
-        public static InputControlLayout TryLoadLayout<TControl>()
+        public static InputControlLayout LoadLayout<TControl>()
             where TControl : InputControl
         {
             return s_Manager.TryLoadControlLayout(typeof(TControl));

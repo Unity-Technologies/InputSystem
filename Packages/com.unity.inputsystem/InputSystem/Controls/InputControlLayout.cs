@@ -716,8 +716,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                     if (memberAsField != null)
                     {
                         var fieldOffset = Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
-                        var countrolCountAfter = controlItems.Count;
-                        for (var i = controlCountBefore; i < countrolCountAfter; ++i)
+                        var controlCountAfter = controlItems.Count;
+                        for (var i = controlCountBefore; i < controlCountAfter; ++i)
                         {
                             var controlLayout = controlItems[i];
                             if (controlItems[i].offset != InputStateBlock.kInvalidOffset)

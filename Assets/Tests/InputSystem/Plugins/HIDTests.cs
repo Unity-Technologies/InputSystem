@@ -80,6 +80,45 @@ internal class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_DevicesNotAllowedByShouldCreateHIDAreSkipped()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = 1234,
+            usagePage = (HID.UsagePage)5678,
+            // need at least one valid element for the device not to be ignored
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+            }
+        };
+
+        var descriptionJson = new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            manufacturer = "TestVendor",
+            product = "TestHID",
+            capabilities = hidDescriptor.ToJson()
+        }.ToJson();
+        var deviceId = runtime.AllocateDeviceId();
+
+        runtime.ReportNewInputDevice(descriptionJson, deviceId);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
+
+        HIDSupport.shouldCreateHID += (descriptor) => (descriptor.usagePage == hidDescriptor.usagePage && descriptor.usage == hidDescriptor.usage) ? true : (bool?)null;
+
+        runtime.ReportNewInputDevice(descriptionJson, deviceId);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanCreateGenericHID_FromDeviceWithBinaryReportDescriptor()
     {
         // This is several snippets from the PS4 controller's HID report descriptor

@@ -53,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         [InputControl(layout = "Vector2")]
         [SerializeField]
-        internal string m_ControlPath;
+        private string m_ControlPath;
 
         private Vector3 m_StartPos;
         private Vector2 m_PointerDownPos;

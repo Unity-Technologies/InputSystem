@@ -1,12 +1,13 @@
-# Quick Start Guide
-
 >NOTE: For information on how to install the new input system, please see [Installation](Installation.md).
 
-    ////TOO: add video here that provides quick start walkthrough
+# Quick Start Guide
+
+* [Getting Input Directly From An Input Device](#getting-input-directly-from-an-input-device)
+* [Getting Input Indirectly Through An Input Action](#getting-input-indirectly-through-an-input-action)
 
 ## Getting Input Directly From An Input Device
 
-The quickest way to get started in script is to just query state directly from input devices. For example, the following code grabs the gamepad last used by the player and reads out its current state:
+The quickest way to get started in script is to just read the current state directly from input devices. For example, the following code grabs the gamepad last used by the player and reads out its current state:
 
 ```CSharp
 using UnityEngine;
@@ -33,147 +34,61 @@ public class MyPlayerScript : MonoBehaviour
 
 The same approach works for other types of devices, e.g. `Keyboard.current`, `Mouse.current`, `Touchscreen.current`, etc.
 
-# Getting Input Indirectly Through An Input Action
+## Getting Input Indirectly Through An Input Action
 
-    ////TODO: replace with PlayerInput&PlayerInputManager approach; show current workflows under "Alternative Workflows" after PlayerInput stuff
+>Overview:
+>1. Add `PlayerInput` component.
+>2. Create actions with "Create Actions..." button.
+>3. Script action responses.
+
+### Step 1: Add `PlayerInput` Component
 
 Getting input directly from an input device is quick and convenient but requires a separate path for each type of device and also makes it hard to later change which control on the device leads to which action being taken by the game.
 
-An alternative is to use actions as an intermediary between input devices and the responses they trigger in the game:
+An alternative is to use actions as an intermediary between devices and the responses they trigger in the game. The easiest way to do so is using the `PlayerInput` component. You can add the component from the "Add Component" menu in the GameObject inspector or by selecting `Component >> Input >> Player Input` in the main menu.
+
+![Add Player Input Component](Images/AddPlayerInput.png)
+
+### Step 2: Create Actions
+
+Each `PlayerInput` component represents one player in the game. To receive input, the component must be connected to a set of actions. The quickest way to create a new set of actions is to click the "Create Actions..." button in the inspector of the component. This will create an asset prepopulated with a default set of maps, actions, and bindings.
+
+![Create Actions from Player Input Component](Images/PlayerInputCreateActions.png)
+
+A file requester will pop up that asks you where to create the new asset. Choose a name and folder somewhere inside the "Assets" folder of your project (or just accept the defaults) and click "Okay". This will create a new `.inputactions` asset in your project, connect it to the `PlayerInput` component, and bring up the editor for `.inputactions` files.
+
+>__NOTE__
+>
+>The default set of actions that are created is __still being worked on__. The bindings are incomplete and __missing support for touch__ and a number of other devices. Also, UI support for PlayerInput is not yet implemented.
+
+![MyGameActions](Images/MyGameActions.png)
+
+The default set can be freely edited to fit the needs of your project. See the in-depth documentation for the [action editor](ActionAssets.md#editing-action-assets) for instructions on how to use the editor.
+
+## Step 3: Setting Up Action Responses
+
+With the actions in place on the component, all that remains is to set up a response for each action. Through the "Behavior" setting in the inspector, `PlayerInput` gives you several ways by which responses can be set up:
+
+![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)
+
+For more details about the options, see [here](Components.md#notification-behaviors). In our case, we will use "Invoke Unity Events" which uses `UnityEvent` the same way the Unity UI does. When selecting this option, an event for each action that is linked to the component will be displayed. This allows us to directly wire in the target method for each event.
+
+![PlayerInput Action Events](Images/MyPlayerActionEvents.png)
+
+Each method takes an `InputAction.CallbackContext` argument that gives access to things like the control that triggered the action and its value. See [here](Actions.md#started-performed-and-cancelled-callbacks) for more details.
 
 ```CSharp
-using UnityEngine;
-using UnityEngine.Experimental.Input;
-
 public class MyPlayerScript : MonoBehaviour
 {
-    public InputAction useAction;
-    public InputAction moveAction;
-
-    public void Awake()
+    public void Fire(InputAction.CallbackContext context)
     {
-        useAction.performed += OnUse;
-        moveAction.performed += OnMove;
+        Debug.Log("Fire!");
     }
-
-    public void OnEnable()
-    {
-        useAction.Enable();
-        moveAction.Enable();
-    }
-
-    public void OnDisable()
-    {
-        useAction.Disable();
-        moveAction.Disable();
-    }
-
-    public void OnUse(InputAction.CallbackContext context)
-    {
-        // 'Use' code here.
-    }
-
-    public void OnMove(InputAction.CallbackContext context)
-    {
-        // 'Move' code here.
-    }
-
 }
 ```
 
-After adding this component to a `GameObject`, the actions on the component can be graphically edited in the inspector. We can add bindings to actions by clicking the plus icon for an action.
+This completes the basic setup using `PlayerInput`.
 
-![Add Binding To Action In Component](Images/AddBindingToActionInComponent.png)
+### Alternate Ways to Set Up Input Actions
 
-Double-click the newly added binding to show its properties.
-
-![Double Click Binding On Action In Component](Images/DoubleClickBindingOnActionInComponent.png)
-
-Click the path dropdown on the binding to show the control picker. You can either search for controls by name or navigate to them by going through the hierarchy.
-
-![Edit Binding On Action In Component](Images/EditBindingOnActionInComponent.png)
-
-# Moving The Actions Into An Asset
-
-Unfortunately, as more actions are added, this approach gets unwieldy fast. To simplify handling of the actions, we can move all of them into an asset and use the action asset editor instead of configuring actions directly on a component.
-
-To create the asset, right-click in the Project window or open the `Assets` entry in Unity's main menu. From there, select `Create >> Input Actions`.
-
-![Create Input Actions](Images/CreateInputActions.png)
-
-Give the asset a name (such as `MyPlayerControls`) and double-click the asset to open the action editor.
-
-![Action Editor Window](Images/ActionEditorWindow.png)
-
-The left column contains the "action maps" in the asset. Each map is a collection of actions that can be enabled and disabled in bulk. The middle column contains the actions in the map that is selected. And the right-most column contains the properties of the action or binding selected in the middle column.
-
-Click the plus icon next to "Action Maps" to add new action maps and the plus icon next to "Actions" to add new actions.
-
-![Edit Binding In Action Asset](Images/EditBindingInActionAsset.png)
-
->NOTE: Edits made in the action asset window are not saved automatically with the project. To save your changes, click `Save Asset` in the window's toolbar. To discard your changes, close the window and choose "Don't Save".
-
-After creating the asset, we could go straight to using it in `MyPlayerScript`. However, there are several helpers available that simplify working with the asset from script.
-
-Select the asset in the Project window and in the inspector, tick `Generate C# Class`. When ticked, several other options become available. Also tick the `Generate Interfaces` checkbox. Finally, hit `Apply`.
-
-![MyPlayerControls Importer Settings](Images/MyPlayerControlsImporterSettings.png)
-
-This will generate a C# script that makes working with the asset a lot simpler. After doing this, we can change `MyPlayerScript` like so:
-
-```CSharp
-using UnityEngine;
-using UnityEngine.Experimental.Input;
-
-// IGameplayActions is an interface generated from the "gameplay" action map
-// we added (note that if you called the action map differently, the name of
-// the interface will be different). This was triggered by the "Generate Interfaces"
-// checkbox.
-public class MyPlayerScript : MonoBehaviour, IGameplayActions
-{
-    // MyPlayerControls is the C# class that has been generated for us.
-    // It wraps around a reference to the .inputactions asset we created
-    // and automatically looks up all the maps and actions for us.
-    public MyPlayerControls controls;
-
-    public void Awake()
-    {
-        // Tell the "gameplay" action map that we want to get told about
-        // when actions get triggered.
-        controls.gameplay.SetCallbacks(this);
-    }
-
-    public void OnEnable()
-    {
-        controls.gameplay.Enable();
-    }
-
-    public void OnDisable()
-    {
-        controls.gameplay.Disable();
-    }
-
-    public void OnUse(InputAction.CallbackContext context)
-    {
-        // 'Use' code here.
-    }
-
-    public void OnMove(InputAction.CallbackContext context)
-    {
-        // 'Move' code here.
-    }
-
-}
-```
-
-With this in place, we can assign the asset we have created to our `MyPlayerScript` component in the editor.
-
-![MyPlayerScript Controls Assigned](Images/MyPlayerScriptControlsAssigned.png)
-
-# Adding Control Schemes
-
-...
-
-# Adding UI Support
-
-...
+There are ways other than `PlayerInput` to set up input actions. See the [documentation](Actions.md#creating-actions) for details.

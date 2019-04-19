@@ -10,11 +10,15 @@ Note that there is no routing mechanism. Events are delivered from the runtime s
 
 Each event has a set of properties common to all events:
 
-* `type`: FourCC code that indicates what type of event it is.
-* `id`: Unique numeric of the event.
-* `time`: Timestamp of when the event was generated.
-* `deviceId`: ID of the device that the event is targeted at.
-* `sizeInBytes`: Total size of the event in bytes.
+|Property|Description|
+|--------|-----------|
+|`type`|FourCC code that indicates what type of event it is.|
+|`id`|Unique numeric of the event.|
+|`time`|Timestamp of when the event was generated.|
+|`deviceId`|ID of the device that the event is targeted at.|
+|`sizeInBytes`|Total size of the event in bytes.|
+
+The events received for a specific input device can be observed in the [input debugger](Debugging.md).
 
 ## Types of Events
 
