@@ -1652,12 +1652,7 @@ namespace UnityEngine.Experimental.Input
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices.
-            // NOTE: We use InputUpdateType.None here to run a "null" update. InputManager.OnBeforeUpdate()
-            //       and InputManager.OnUpdate() will both early out when comparing this to their update
-            //       mask but will still restore devices.
-            Update(InputUpdateType.None);
+            RunInitialUpdate();
 
             Profiling.Profiler.EndSample();
         }
@@ -1728,12 +1723,22 @@ namespace UnityEngine.Experimental.Input
                 SetUpRemoting();
 #endif
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices prior to their Update methods.
-            Update();
+            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
+
+        private static void RunInitialUpdate()
+        {
+            // Request an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            //
+            // NOTE: We use InputUpdateType.None here to run a "null" update. InputManager.OnBeforeUpdate()
+            //       and InputManager.OnUpdate() will both early out when comparing this to their update
+            //       mask but will still restore devices. This means we're not actually processing input,
+            //       but we will force the runtime to push its devices.
+            Update(InputUpdateType.None);
+        }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
@@ -1939,6 +1944,7 @@ namespace UnityEngine.Experimental.Input
 
             InputUpdate.Restore(state.managerState.updateState);
 
+            s_Manager.InstallRuntime(s_Manager.m_Runtime);
             s_Manager.InstallGlobals();
 
             #if UNITY_EDITOR

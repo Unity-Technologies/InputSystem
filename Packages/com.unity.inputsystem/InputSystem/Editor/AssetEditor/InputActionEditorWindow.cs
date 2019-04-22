@@ -572,9 +572,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 // renaming an item, and then you double click on an item in the action map column, the action map column will
                 // get to use the mouse event before the action collumn gets to see it, which would cause the action map column
                 // to enter rename mode and use the event, before the action column gets a chance to see it and exit rename mode.
-                // Then we end up with two active renaming sessions, which does not work correctly. 
-                // (See https://fogbugz.unity3d.com/f/cases/1140869/). 
-                // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see 
+                // Then we end up with two active renaming sessions, which does not work correctly.
+                // (See https://fogbugz.unity3d.com/f/cases/1140869/).
+                // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see
                 // that the action map column had processed the current event. This is not particularly elegant, but I cannot think
                 // of a better solution as we are limited by the public APIs exposed by TreeView.
                 m_ActionsTree.EndRename(forceAccept: true);

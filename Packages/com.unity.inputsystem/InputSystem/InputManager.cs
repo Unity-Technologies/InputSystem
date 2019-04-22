@@ -1337,6 +1337,7 @@ namespace UnityEngine.Experimental.Input
 
         public void Update()
         {
+            ////FIXME: This is nonsense; dynamic updates may not even be enabled; make a more appropriate choice here
             Update(InputUpdateType.Dynamic);
         }
 
@@ -2005,7 +2006,7 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
-            // Restore devices before checking update mask. See InputSystem.InitializeInEditor().
+            // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
 
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
@@ -2215,12 +2216,10 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
-#if UNITY_EDITOR
-            // In the editor, we perform a "null" update after domain reloads to get our devices
-            // back. See InputSystem.InitializeInEditor().
+            // We perform a "null" update after domain reloads and on startup to get our devices
+            // in place before the runtime calls MonoBehaviour callbacks. See InputSystem.RunInitialUpdate().
             if (updateType == InputUpdateType.None)
                 return true;
-#endif
 
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
@@ -2257,7 +2256,7 @@ namespace UnityEngine.Experimental.Input
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
-            // Restore devices before checking update mask. See InputSystem.InitializeInEditor().
+            // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
 
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't

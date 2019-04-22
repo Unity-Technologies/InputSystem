@@ -182,7 +182,7 @@ partial class CoreTests
     [Test]
     [Category("Editor")]
     [Ignore("TODO")]
-    public void TODO_Editor_DomainReload_PreservesCurrentDevices()
+    public void TODO_Editor_DomainReload_PreservesCurrentStatusOfDevices()
     {
         Assert.Fail();
     }
