@@ -21,8 +21,11 @@ namespace UnityEngine.Experimental.Input.Interactions
         [Tooltip("How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.")]
         public int tapCount = 2;
 
+        public float pressPoint;
+
         private float tapTimeOrDefault => tapTime > 0.0 ? tapTime : InputSystem.settings.defaultTapTime;
-        private float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : tapTimeOrDefault * 2;
+        internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : tapTimeOrDefault * 2;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         public void Process(ref InputInteractionContext context)
         {
@@ -37,7 +40,7 @@ namespace UnityEngine.Experimental.Input.Interactions
             switch (m_CurrentTapPhase)
             {
                 case TapPhase.None:
-                    if (context.ControlIsActuated())
+                    if (context.ControlIsActuated(pressPointOrDefault))
                     {
                         m_CurrentTapPhase = TapPhase.WaitingForNextRelease;
                         m_CurrentTapStartTime = context.time;
@@ -47,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                     break;
 
                 case TapPhase.WaitingForNextRelease:
-                    if (!context.ControlIsActuated())
+                    if (!context.ControlIsActuated(pressPointOrDefault))
                     {
                         if (context.time - m_CurrentTapStartTime <= tapTimeOrDefault)
                         {

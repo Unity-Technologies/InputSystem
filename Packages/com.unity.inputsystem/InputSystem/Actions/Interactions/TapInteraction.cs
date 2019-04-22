@@ -7,7 +7,10 @@ namespace UnityEngine.Experimental.Input.Interactions
     public class TapInteraction : IInputInteraction
     {
         public float duration;
-        public float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
+        public float pressPoint;
+
+        private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         private double m_TapStartTime;
 
@@ -21,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                 return;
             }
 
-            if (context.isWaiting && context.ControlIsActuated())
+            if (context.isWaiting && context.ControlIsActuated(pressPointOrDefault))
             {
                 m_TapStartTime = context.time;
                 // Set timeout slightly after duration so that if tap comes in exactly at the expiration
@@ -31,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                 return;
             }
 
-            if (context.isStarted && !context.ControlIsActuated())
+            if (context.isStarted && !context.ControlIsActuated(pressPointOrDefault))
             {
                 if (context.time - m_TapStartTime <= durationOrDefault)
                 {

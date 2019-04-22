@@ -5,8 +5,11 @@ namespace UnityEngine.Experimental.Input.Interactions
     public class SlowTapInteraction : IInputInteraction
     {
         public float duration;
+        public float pressPoint;
+
         ////REVIEW: this seems stupid; shouldn't a slow tap just be anything that takes longer than TapTime?
-        public float durationOrDefault => duration > 0.0f ? duration : InputSystem.settings.defaultSlowTapTime;
+        private float durationOrDefault => duration > 0.0f ? duration : InputSystem.settings.defaultSlowTapTime;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         // If this is non-zero, then if the control is held for longer than
         // this time, the slow tap is not performed when the control is finally
@@ -17,14 +20,14 @@ namespace UnityEngine.Experimental.Input.Interactions
 
         public void Process(ref InputInteractionContext context)
         {
-            if (context.isWaiting && context.ControlIsActuated())
+            if (context.isWaiting && context.ControlIsActuated(pressPointOrDefault))
             {
                 m_SlowTapStartTime = context.time;
                 context.Started();
                 return;
             }
 
-            if (context.isStarted && !context.ControlIsActuated())
+            if (context.isStarted && !context.ControlIsActuated(pressPointOrDefault))
             {
                 if (context.time - m_SlowTapStartTime >= durationOrDefault)
                     context.PerformedAndGoBackToWaiting();
