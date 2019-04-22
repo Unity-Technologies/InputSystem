@@ -58,10 +58,10 @@ namespace UnityEngine.Experimental.Input.Interactions
                             // So go back directly to waiting here.
                             context.Waiting();
                         }
-
                     }
                     else if (isActuated)
                     {
+                        ////REVIEW: should this trigger Started?
                         if (context.continuous)
                             context.PerformedAndStayPerformed();
                         else

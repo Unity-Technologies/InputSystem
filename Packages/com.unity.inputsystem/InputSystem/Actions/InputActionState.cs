@@ -14,6 +14,10 @@ using UnityEngine.Profiling;
 
 ////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)
 
+////REVIEW: should the default interaction be an *explicit* interaction?
+
+////REVIEW: should "pass-through" be an interaction instead of a setting on actions?
+
 ////REVIEW: allow setup where state monitor is enabled but action is disabled?
 
 namespace UnityEngine.Experimental.Input
