@@ -1431,9 +1431,6 @@ partial class CoreTests
             }
 
             receivedChanges.Add(c);
-
-            // lastXXX state on action must have been updated.
-            Assert.That(((InputAction)a).lastTriggerControl, Is.SameAs(gamepad.leftTrigger));
         };
 
         Set(gamepad.leftTrigger, 0.5f);
@@ -3627,10 +3624,18 @@ partial class CoreTests
         Assert.That(action.controls[0], Is.SameAs(gamepad1.leftTrigger));
 
         // Make sure it actually triggers correctly.
-        InputSystem.QueueStateEvent(gamepad1, new GamepadState {leftTrigger = 0.5f});
-        InputSystem.Update();
+        using (var trace = new InputActionTrace(action))
+        {
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState {leftTrigger = 0.5f});
+            InputSystem.Update();
 
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad1.leftTrigger));
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].control, Is.SameAs(gamepad1.leftTrigger));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].control, Is.SameAs(gamepad1.leftTrigger));
+        }
 
         // Also make sure that this device creation path gets it right.
         runtime.ReportNewInputDevice(
@@ -4419,15 +4424,23 @@ partial class CoreTests
 
         action.bindingMask = new InputBinding {groups = "b"};
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-        InputSystem.Update();
+        using (var trace = new InputActionTrace(action))
+        {
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+            InputSystem.Update();
 
-        Assert.That(action.lastTriggerControl, Is.Null);
+            Assert.That(trace, Is.Empty);
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-        InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
+            InputSystem.Update();
 
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.buttonNorth));
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].control, Is.SameAs(gamepad.buttonNorth));
+        }
     }
 
     [Test]
@@ -4527,34 +4540,6 @@ partial class CoreTests
         map2.Enable();
 
         Assert.That(map1.m_State, Is.SameAs(map2.m_State));
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Property("TimesliceEvents", "Off")]
-    public void Actions_CanQueryLastTrigger()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/rightTrigger", interactions: "slowTap(duration=1)");
-        action.Enable();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1}, 2);
-        InputSystem.Update();
-
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
-        Assert.That(action.lastTriggerTime, Is.EqualTo(2).Within(0.0000001));
-        Assert.That(action.lastTriggerStartTime, Is.EqualTo(2).Within(0.0000001));
-        Assert.That(action.lastTriggerInteraction, Is.TypeOf<SlowTapInteraction>());
-        Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0}, 4);
-        InputSystem.Update();
-
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
-        Assert.That(action.lastTriggerTime, Is.EqualTo(4).Within(0.0000001));
-        Assert.That(action.lastTriggerStartTime, Is.EqualTo(2).Within(0.0000001));
-        Assert.That(action.lastTriggerInteraction, Is.TypeOf<SlowTapInteraction>());
-        Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
     }
 
     ////TODO: add tests for new matching of InputBindings against one another (e.g. separated lists of paths and actions)
