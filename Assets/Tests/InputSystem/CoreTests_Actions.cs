@@ -1185,6 +1185,23 @@ partial class CoreTests
         }
     }
 
+    private class ReleaseOnlyTestInteraction : IInputInteraction<float>
+    {
+        private bool m_WaitingForRelease;
+        public void Process(ref InputInteractionContext context)
+        {
+            var actuated = context.ControlIsActuated();
+            if (!actuated && m_WaitingForRelease)
+                context.PerformedAndGoBackToWaiting();
+            else if (actuated)
+                m_WaitingForRelease = true;
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
@@ -1192,11 +1209,9 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        // Action with PressInteraction set to ReleaseOnly.
-        // In this configuration, PressInteraction will not do anything on button down. Make sure that
-        // the disambiguation code does not get confused by this but still correctly processes the button
-        // up state change (which is a state change *back* to default state, i.e. has zero magnitude).
-        var action = new InputAction(interactions: "Press(behavior=1)");
+        InputSystem.RegisterInteraction<ReleaseOnlyTestInteraction>();
+
+        var action = new InputAction(interactions: "releaseOnlyTest");
 
         action.AddBinding("<Keyboard>/a");
         action.AddBinding("<Gamepad>/buttonNorth");
@@ -1720,21 +1735,21 @@ partial class CoreTests
     public void Actions_CanPerformPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        // we add a second input device (and bind to it), to test that the binding 
+
+        // We add a second input device (and bind to it), to test that the binding
         // conflict resolution will not interfere with the interaction handling.
-        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Keyboard>();
 
         // Test all three press behaviors concurrently.
-        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
-        pressAction.AddBinding("<Keyboard>/a");
-        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
-        releaseAction.AddBinding("<Keyboard>/s");
+        var pressOnlyAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        pressOnlyAction.AddBinding("<Keyboard>/a");
+        var releaseOnlyAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        releaseOnlyAction.AddBinding("<Keyboard>/s");
         var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
         pressAndReleaseAction.AddBinding("<Keyboard>/d");
 
-
-        pressAction.Enable();
-        releaseAction.Enable();
+        pressOnlyAction.Enable();
+        releaseOnlyAction.Enable();
         pressAndReleaseAction.Enable();
 
         using (var trace = new InputActionTrace())
@@ -1746,13 +1761,13 @@ partial class CoreTests
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Started));
 
             trace.Clear();
@@ -1762,7 +1777,7 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
@@ -1775,13 +1790,13 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Started));
         }
     }
@@ -1791,7 +1806,7 @@ partial class CoreTests
     public void Actions_CanPerformContinuousPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        // we add a second input device (and bind to it), to test that the binding 
+        // we add a second input device (and bind to it), to test that the binding
         // conflict resolution will not interfere with the interaction handling.
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
