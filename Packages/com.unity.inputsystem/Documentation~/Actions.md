@@ -1,12 +1,28 @@
-    ////WIP
+    ////TODO: explain initial state check
 
 # Actions
 
 >NOTE: Actions are a game-time only feature. They cannot be used in `EditorWindow` code.
 
+* [Overview](#overview)
+* [Creating Actions](#creating-actions)
+    * [Using the Action Editor](#using-the-action-editor)
+    * [Embedding Actions in MonoBehaviours](#embedding-actions-in-monobehaviours)
+    * [Loading Actions from JSON](#loading-actions-from-json)
+    * [Creating Actions in Code](#creating-actions-in-code)
+* [Using Actions](#using-actions)
+    * [Responding to Actions](#responding-to-actions)
+    * [Continuous Actions](#continuous-actions)
+    * [Pass-Through Actions](#pass-through-actions)
+    * [Debugging Actions](#debugging-actions)
+    * [Extending Actions](#extending-actions)
+* [Assets](ActionAssets.md)
+* [Bindings](ActionBindings.md)
+* [Interactions](Interactions.md)
+
 Input actions are designed to separate the logical meaning of an input from the physical means (i.e. activity on an input device) by which the input is generated. Instead of writing input code like so:
 
-```
+```CSharp
     var look = new Vector2();
 
     var gamepad = Gamepad.current;
@@ -18,63 +34,132 @@ Input actions are designed to separate the logical meaning of an input from the 
         look = mouse.delta.ReadValue();
 ```
 
-One can instead write code that is agnostic to where the input is coming from:
+You can instead write code that is agnostic to where the input is coming from:
 
-```
+```CSharp
     myControls.gameplay.look.performed +=
-        ctx => look = ctx.ReadValue<Vector2>();
+        context => look = context.ReadValue<Vector2>();
 ```
 
 The mapping can then be established graphically in the editor:
 
 ![Look Action Binding](Images/LookActionBinding.png)
 
-This also makes it easier to let players to customize bindings at runtime.
+This also makes it easier to let players to [customize bindings at runtime](ActionBindings.md#runtime-rebinding).
 
-## Terms and Concepts
+>NOTE: For an overview of the terms and terminology used on this page, see [Terms and Concepts](#terms-and-concepts).
 
-The following terms and concepts are used through the input action system:
+## Overview
 
-|Concept|Description|
-|-------|-----------|
-|Action|A "logical" input such as "Jump" or "Fire". I.e. an input action that can triggered by a player through one or more input devices.|
-|Binding||
-|Interation||
-|Processor||
-|Phase||
-|Control Scheme||
-|Action Map||
-|Action Asset||
+There are three key classes for actions in the API:
 
-## Setting Up Actions
+|Class|Description|
+|-----|-----------|
+|`InputActionAsset`|An asset that contains one or more action maps as well as, optionally, a sequence of control schemes. Details how to create, edit, and work with such assets can be found [here](ActionAssets.md).|
+|`InputActionMap`|A named collection of actions.|
+|`InputAction`|A named action which will trigger callbacks in response to input.|
 
-There are three different workflows for setting up actions for your game.
+The key mechanism by which bindings refer to the inputs they collect is `InputBinding`. More details about bindings and how to use them can be found [here](ActionBindings.md).
 
-### Asset Workflow
+Each action has a name (`InputAction.name`) which must be unique within the action map that the action belongs to (if any; see `InputAction.actionMap`). Also, each action has a unique ID (`InputAction.id`) that can be used to reference the action. The ID will remain the same even if the action is renamed.
 
-#### Using `UnityEvents`
+Each action map has a name (`InputActionMap.name`) which must be unique within the action asset that the map belongs to (if any; see `InputActionMap.asset`). Also, each action map has a unique ID (`InputActionMap.id`) that can be used to reference the map. The ID will remain the same even if the map is renamed.
 
-#### Using Interfaces
+    ////TODO: Clarify *when* actions are updated and how it relates to fixed/dynamic update.
 
-### Component Workflow
+## Creating Actions
 
-The component workflow is good for prototyping as it does not require setting up an asset yet still allows to set up bindings graphically. However, it does require a certain amount of scripting.
+Actions can be created in a variety of ways:
 
-To add actions directly to your component, simply declare fields that have type `InputAction` (make sure the fields are serialized).
+1. Using the dedicated editor for `.inputactions` assets.
+2. By embedding them in MonoBehaviour components.
+3. By manually loading them from JSON.
+4. By simply creating them directly in code.
 
-```
-public MyBehaviour : MonoBehaviour
+### Using the Action Editor
+
+How to create and edit input action assets using the dedicated editor is described on a [separate page](ActionEditor.md).
+
+![Action Editor Window](Images/MyGameActions.png)
+
+### Embedding Actions in MonoBehaviours
+
+`InputAction` and `InputActionMap` can be embedded as fields directly inside `MonoBehaviour` components. In the editor, these fields will receive a custom editor UI.
+
+```CSharp
+public MyBehavior : MonoBehaviour
 {
     public InputAction fireAction;
     public InputAction lookAction;
-    public InputAction moveAction;
+
+    public InputActionMap gameplayActions;
 }
 ```
-### Scripting Workflow
 
-Lastly, it is possible to create and set up input actions entirely in script.
+This is presented in the editor like so:
+
+![MyBehavior Inspector](Images/MyBehaviorInspector.png)
+
+The editors work similar to the [action asset editor](ActionEditor.md).
+
+* To add or remote actions or bindings, click the plus or minus icon in the header.
+* To edit binding entries, double-click them.<br>
+  ![InputBinding Inspector](Images/InputBindingInspector.png)
+* To edit action entries, double-click them.<br>
+  ![InputAction Inspector](Images/InputActionInspector.png)
+* Entries can also be right-clicked to bring up a context menu and can be dragged around (hold alt to duplicate).
+
+Actions and action maps that are embedded in MonoBehaviour components have to be manually [enabled and disabled](#enabling-and-disabling-actions).
 
 ```CSharp
+public class MyBehavior : MonoBehaviour
+{
+    // ...
+
+    void Awake()
+    {
+        fireAction.performed += OnFire;
+        lookAction.performed += OnLook;
+
+        gameplayActions["fire"].performed += OnFire;
+    }
+
+    void OnEnable()
+    {
+        fireAction.Enable();
+        lookAction.Enable();
+
+        gameplayActions.Enable();
+    }
+
+    void OnDisable()
+    {
+        fireAction.Disable();
+        lookAction.Disable();
+
+        gameplayActions.Disable();
+    }
+}
+```
+
+### Loading Actions from JSON
+
+Actions can be loaded as JSON in the form of a set of action maps or as a full `InputActionAsset`. This also works at runtime in the player.
+
+```CSharp
+// Load a set of action maps from JSON.
+var maps = InputActionMap.FromJson(json);
+
+// Load an entire InputActionAsset from JSON.
+var asset = InputActionAsset.FromJson(json);
+```
+
+### Creating Actions in Code
+
+Actions can be manually created and configured in code. This also works at runtime in the player.
+
+```CSharp
+// Create a free-standing actions.
 var lookAction = new InputAction("look", binding: "<Gamepad>/leftStick");
 var moveAction = new InputAction("move", binding: "<Gamepad>/rightStick");
 
@@ -84,53 +169,69 @@ moveAction.AddCompositeBinding("Dpad")
     .With("Down", "<Keyboard>/s")
     .With("Left", "<Keyboard>/a")
     .With("Right", "<Keyboard>/d");
+
+// Create an action map with actions.
+var map = new InputActionMap("Gameplay");
+var lookAction = map.AddAction("look");
+lookAction.AddBinding("<Gamepad>/leftStick");
+
+// Create an action asset.
+var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+var gameplayMap = new InputActionMap("gameplay");
+asset.AddActionMap(gameplayMap);
+var lookAction = gameplayMap.AddAction("look", "<Gamepad>/leftStick");
 ```
 
-## Action Maps
+## Using Actions
 
-## Bindings
+For an action to do something, it must be enabled. This can be done either by individually enabling actions or by enabling them in bulk through action maps. Note that the latter is always more efficient.
 
-### Composite Bindings
+```CSharp
+// Enable a single action.
+lookAction.Enable();
 
-Sometimes it is desirable to have several controls act in unison to mimick a different type of control. The most common example of this is using the W, A, S, and D keys on the keyboard to form a 2D vector control equivalent to mouse deltas or gamepad sticks. Another example is using two keys to form a 1D axis equivalent to a mouse scroll axis.
+// Enable an en entire action map.
+gameplayActions.Enable();
+```
 
-This effect can be achieved through "composite bindings", i.e. bindings that made up of other bindings. Composites themselves do not bind directly to controls but rather source values from other bindings that do and synthesize input on the fly from those values.
+When an action is enabled, all its bindings will be resolved, if this hasn't happened already or if the set of devices usable by the action has changed. For more details about this process, see [here](ActionBindings.md#binding-resolution).
 
->NOTE: Actions set on bindings that are part of composites are ignored. The composite as a whole can trigger an action. Individual parts of the composite cannot.
+To stop actions or action maps from responding to input, call `Disable`. Note that while actions are enabled, it is not possible to change certain aspects of the configuration (such as their bindings).
 
-### Conflict Resolution
+While enabled, an action will actively monitor the [control(s)](Controls.md) it is bound to. If a bound control changes state, the action will process the change and create a response if the state change represents an [interaction](Interactions.md) change.
 
-## Control Schemes
+### Responding to Actions
 
-## Continuous Actions
+By itself, an action does not represent an actual response to input. Instead, an action tells your code that a certain kind of input has been performed. It is up to your code to in turn respond.
 
-By default, actions will trigger only in response to input events. This means that, for example, an action bound to the left stick of a gamepad will only trigger when the left stick is moved. This behavior can be undesirable when an input is meant to register for as long as a control is actuated -- regardless of whether it actually changes value or not. In other words, it can be desirable to trigger the action associated with the left stick for as long as the left stick is moved out of its deadzone but regardless of whether the stick has actually been moved in a given frame.
+There are several ways in which this can be done.
 
-![Continuous Action](Images/ContinuousAction.png)
+1. Each action has a [`started`, `performed`, and `cancelled` callback](#started-performed-and-cancelled-callbacks).
+2. Each action map has an [`actionTriggered` callback](#inputactionmap-actiontriggered-callback).
+3. There is a global [`InputSystem.onActionChange` callback](#inputsystem-onactionchange-callback).
+4. [`InputActionTrace`](#inputactiontrace) can record changes happening on actions.
 
-When continuous mode is enabled, an action that goes into `Performed` phase will stay in the phase until it is `Cancelled`. Also, while in the `Performed` phase, an action in continuous mode will be `Performed` in a frame even if there is no input. The value returned by `ReadValue` will be the value of the control that was last used with the action.
+>NOTE: A polling API for actions is on the TODO list.
 
-## Pass-Through Actions
+There are also higher-level, more streamlined ways of picking up input from actions. One is to use [`PlayerInput`](Components.md#notification-behaviors) and another one is to [generate script code](ActionEditor.md#generating-script-code) that wraps around the input actions.
 
-    ////TODO
+#### `started`, `performed`, and `cancelled` Callbacks
 
-## Phases
-
-An action has a set of dictinct phases it can go through in response to receiving input.
+Every action has a set of dictinct phases it can go through in response to receiving input.
 
 |Phase|Description|
 |-----|-----------|
-|Disabled|The action is disabled and will not receive input.|
-|Waiting|The action is enabled and is actively waiting for input.|
-|Started|Input has been received that started an interaction with the action.|
-|Performed|An interaction with the action has been completed.|
-|Cancelled|An interaction with the action has been cancelled.|
+|`Disabled`|The action is disabled and will not receive input.|
+|`Waiting`|The action is enabled and is actively waiting for input.|
+|`Started`|Input has been received that started an interaction with the action.|
+|`Performed`|An interaction with the action has been completed.|
+|`Cancelled`|An interaction with the action has been cancelled.|
 
 The current phase of an action can be read using `InputAction.phase`.
 
 The `Started`, `Performed`, and `Cancelled` phases each have a callback associated with them:
 
-```
+```CSharp
     var action = new InputAction();
 
     action.started += ctx => /* Action was started */;
@@ -138,130 +239,49 @@ The `Started`, `Performed`, and `Cancelled` phases each have a callback associat
     action.cancelled += ctx => /* Action was started */;
 ```
 
-Each callback receives a structure holding context information that can be used to query the current state of the action and to read out values from controls that triggered the action (`InputAction.CallbackContext.ReadValue`). Note that the contents of the structure are only valid for the duration of the callback. In particular, it is not safe to store the received context and later access its properties from outside the callback.
+Each callback receives an `InputAction.CallbackContext` structure holding context information that can be used to query the current state of the action and to read out values from controls that triggered the action (`InputAction.CallbackContext.ReadValue`). Note that the contents of the structure are __only valid for the duration of the callback__. In particular, it is not safe to store the received context and later access its properties from outside the callback.
 
-Note that an action will go through the phases even if no interaction has been set on a binding. In this case, the default behavior applies:
+When an how the callbacks are triggered depends on the [interactions](Interactions.md) present on the respective bindings. If no interactions are applied to them, the [default interaction](Interactions.md#default-interactions) applies.
 
-1. As soon as a bound control becomes actuated (has a magnitude greater than 0 or, if the bound control does not have an associated magnitude, if it moves out of its default state), the action goes from `Waiting` to `Started` and then immediately to `Performed` and back to `Started`.
-2. For as long as the bound control remains actuated, the action stays in `Started` and will trigger `Performed` whenever the value of the control changes.
-3. When the bound control stops being actuated, the action goes to `Cancelled` and then back to `Waiting`.
+#### `InputActionMap.actionTriggered` Callback
 
-## Interactions
+Alternatively, instead of listening to individual actions, you can listen on an entire action map for state changes on any of the actions in the map.
 
-    ////TODO: move to its own page
+```CSharp
+var actionMap = new InputActionMap();
+actionMap.AddAction("action1", "<Gamepad>/buttonSouth");
+actionMap.AddAction("action2", "<Gamepad>/buttonNorth");
 
-An interaction drives an action based on specific input patterns. Interactions are placed on bindings and they source values from all the controls matched by the binding.
-
-The following table shows all the interactions that are registerd by default. Additional interactions can be added to the system using `InputSystem.RegisterInteraction<T>()`. See ["Writing Custom Interactions"](#writing-custom-interactions) for details.
-
-Some of the interactions behave differently when the action they are associated with through the binding is set to "continuous" mode (see `InputAction.continuous`). This is indicated in the table by a separate "... (continuous)" entry.
-
-|Interaction|Started|Performed|Cancelled|
-|-----------|-------|---------|---------|
-|*Press* (PressOnly)| |Control crosses button press threshold; then will not perform again until button is first released again| |
-|*Press* (ReleaseOnly)| |Control goes back below button press threshold after crossing it| |
-|*Press* (PressAndRelease)| |Control crosses button press threshold|Control goes back below button threshold|
-|*Press* (PressOnly; continuous)| |Control crosses button press threshold; then any time the control changes value or at least every frame| |
-|*Press* (ReleaseOnly; continuous)| |No difference to non-continuous mode| |
-|*Press* (PressAndRelease; continuous)| |Control cross button press threshold; then any time the control changes value or at least every frame|Control goes back below button threshold|
-|*Hold*|Control Actuated|Held for >= `duration`|
-|*Hold* (continuous)|Control Actuated|Held for >= `duration`; after that, every frame regardless of whether the bound control receives input in the frame or not.|
-|*Tap*|Control Actuated|Control Released within `duration` (defaults to `InputSettings.defaultTapTime`) seconds|Control Released before `duration` seconds|
-|*SlowTap*|Control Actuated|Control Released within `duration` (defaults to `InputSettings.defaultSlowTapTime`) seconds|Control Released before `duration` seconds|
-|*MultiTap*|||
-|*Passthrough*| |On every value change of control| |
-|*Passthrough* (continuous)| |On every value change of control and additionally, if there is no value value change in a frame, performs with value from last frame| |
-
-### `Press`
-
-A `Press` interaction can be used to explicitly force button-like interaction.
-
-Note that the `Press` interaction operates on control actuation, not on control values directly. This means that the press threshold will be evaluated against the magnitude of the control actuation. This means that it is possible to use
-
-### `Hold`
-
-A `Hold` requires a control to be held for a set duration before the action is triggered. The duration can either be set explicitly on the action or be left at default (`0`) in which case the default hold time setting applies (`InputSettings.defaultHoldTime`).
-
-```
-    // Create an action with a .3 second hold on the A button of the gamepad.
-    var action = new InputAction();
-    action.AddBinding("<Gamepad>/buttonSouth").WithInteraction("Hold(duration=0.3");
+actionMap.onActionTriggered +=
+    context => { ... };
 ```
 
-### `Tap`
+The argument received is the same `InputAction.CallbackContext` structure that is received through the [`started`, `performed`, and `cancelled` callbacks](#started-performed-and-cancelled-callbacks).
 
-### `SlowTap`
+>NOTE: The `InputActionMap.actionTriggered` will be called for all three of the individual callbacks on actions, i.e. you get `started`, `performed`, and `cancelled` all on a single callback.
 
-### `DoubleTap`
+#### `InputSystem.onActionChange` Callback
 
-### `Passthrough`
+Similar to `InputSystem.onDeviceChange`, it is possible to listen for any action-related change globally.
 
-This interaction is designed to revert the start/performed/cancelled interaction model to a simple, direct passthrough model where every value change on any bound control of an action performs the action. This can be useful, for example, to use an action to simply listen for activity of any kind.
-
-```
-// Set up an action that fires any time any button on the gamepad changes value.
-var action = new InputAction(
-    binding: "<Gamepad>/**/<Button>",
-    interactions: "passthrough");
-action.Enable();
-
-action.performed +=
-    ctx => Debug.Log($"Button {ctx.control} = {ctx.ReadValue<float>()}");
-
-// Perform the action twice by actuating and then resetting the left trigger
-// on a newly created gamepad.
-var gamepad = InputSystem.AddDevice<Gamepad>();
-InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
-InputSystem.QueueStateEvent(gamepad, new GamepadState());
-InputSystem.Update();
+```CSharp
+InputSystem.onActionChange +=
+    (obj, change) =>
+    {
+        // obj can be either an InputAction or an InputActionMap
+        // depending on the specific change.
+        switch (change)
+        {
+            case InputActionChange.ActionStarted:
+            case InputActionChange.ActionPerformed:
+            case InputActionChange.ActionCancelled:
+                Debug.Log($"{((InputAction)obj).name} {change}");
+                break;
+        }
+    }
 ```
 
-The `passthrough` interaction has no parameters.
-
-The `passthrough` interaction can be used on a `continuous` action. In this case, the action will perform not only on every value change but will also perform if none of the bound controls receive a new value in a given frame. The value received will be the current value of the control.
-
-### Multiple Interactions On Same Binding
-
-### Writing Custom Interactions
-
-The set of interactions is freely extensible. Newly added interactions are usable in the UI and data the same way that built-in interations are.
-
-To implement
-
->NOTE: Interactions cannot currently orchestrate input between several actions and/or bindings. They are at this point restricted to operating on a single binding and the data that flows in through it.
-
-Unlike processors, interations can be stateful, meaning that it is permissible to keep local state that mutates over time as input is received. The system may ask interactions to reset such state at certain points by invoking the `Reset()` method.
-
-## Processors
-
-### Writing Custom Processors
-
-## Devices
-
-By default, bindings will search through the global list of available devices given by `InputSystem.devices`. This means that when an action is enabled, they will bind to whatever controls are available in the system that match the bindings of the action.
-
-This behavior can be overridden by restricting `InputActionAssets` or individual `InputActionMaps` to a specific set of devices. If this is done, binding resolution will take only the controls of the given devices into account.
-
-```
-    var actionMap = new InputActionMap();
-
-    // Restrict the action map to just the first gamepad.
-    actionMap.devices = new[] { Gamepad.all[0] };
-```
-
-## Enabling and Disabling Actions
-
-## Responding to Actions
-
-There are several different ways
-
-### Global Callback
-
-### Action Map Callback
-
-### Per-Action Callbacks
-
-### Tracing Actions
+#### `InputActionTrace`
 
 As when using `InputEventTrace` for events, actions can be traced in order to generate a log of all activity that happened on a particular set of actions. To do so, use `InputActionTrace`.
 
@@ -319,22 +339,46 @@ trace.Dispose();
 
 Once recorded, a trace can be safely read from multiple threads as long as it is not concurrently being written to and as long as the action setup (i.e. the configuration data accessed by the trace) is not concurrently being changed on the main thread.
 
-## Rebinding Actions
+### Continuous Actions
 
-## Extending Actions
+By default, actions will trigger only in response to input events. This means that, for example, an action bound to the left stick of a gamepad will only trigger when the left stick is actually moved. This behavior can be undesirable when an input is meant to register for as long as a control is actuated -- regardless of whether it changes value in a particular frame or not.
 
-### Writing Custom Processors
+This is what "continuous" mode is for. It can be enabled in the UI by selecting the action in the [action editor](ActionEditor.md) and ticking the "Continuous" checkbox.
 
-### Writing Custom Interactions
+    ////TODO: Update screenshot
 
-### Writing Custom Composites
+![Continuous Action](Images/ContinuousAction.png)
 
-## Debugging Actions
+When continuous mode is enabled, an action that goes into `Performed` phase will stay in the phase until it is `Cancelled`. Also, while in the `Performed` phase, an action in continuous mode will be `Performed` in a frame even if there is no input. The value returned by `ReadValue` will be the value of the control that was last used with the action.
 
-### Action Processing
+>NOTE: Not all interactions support continuous mode. See [here](Interactions.md#predefined-interactions) for details.
 
-    TODO: go into detail about where and when actions are processed; also stuff like getting cancelled outside of input updates
+### Pass-Through Actions
 
-## Using Actions with Multiple Players
+    ////TODO
+Input on an action is "filtered" through an interaction model. Details about this process can be found [here](Interactions.md).
 
-It is possible to use the same action definitions for multiple local players. This setup is useful in a local co-op games, for example.
+### Debugging Actions
+
+### Extending Actions
+
+Actions employ
+
+### Using Actions with Multiple Players
+
+It is possible to use the same action definitions for multiple local players. This setup is useful in a local co-op games, for example. More details about this can be found [here](LocalMultiplayer.md#multiplayer-actions).
+
+## Terms and Concepts
+
+The following terms and concepts are used through the input action system:
+
+|Concept|Description|
+|-------|-----------|
+|__Action__|A "logical" input such as "Jump" or "Fire". I.e. an input action that can triggered by a player through one or more input devices and which will run a piece of game logic in response.|
+|__Binding__|A connection between an action and one or more controls represented by a [control path](Controls.md#control-paths). At runtime, a binding is "resolved" to yield zero or more controls which are then connected to the action.|
+|__Interaction__|A distinct input pattern that can be recognized on a control. Interactions trigger actions as they are being recognized.<br><br>An example of an interaction is a "hold" which requires a control to be actuated and then held for a certain time before the associated action is triggered.<br><br>Interactions are described in detail [here](Interactions.md).|
+|__Processor__|An operation that is applied to an input value. An example is "invert" which inverts a floating-point value.<br><br>Processors are described in detail [here](Processors.md).|
+|__Phase__||
+|__Control Scheme__||
+|__Action Map__||
+|__Action Asset__||

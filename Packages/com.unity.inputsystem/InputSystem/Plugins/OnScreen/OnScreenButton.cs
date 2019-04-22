@@ -1,7 +1,6 @@
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input.Layouts;
 
-////TODO: pressure support
 ////TODO: custom icon for OnScreenButton component
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
@@ -23,6 +22,8 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             SendValueToControl(1.0f);
         }
 
+        ////TODO: pressure support
+        /*
         /// <summary>
         /// If true, the button's value is driven from the pressure value of touch or pen input.
         /// </summary>
@@ -30,10 +31,11 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// This essentially allows having trigger-like buttons as on-screen controls.
         /// </remarks>
         [SerializeField] private bool m_UsePressure;
+        */
 
         [InputControl(layout = "Button")]
         [SerializeField]
-        internal string m_ControlPath;
+        private string m_ControlPath;
 
         protected override string controlPathInternal
         {
