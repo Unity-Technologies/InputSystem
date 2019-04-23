@@ -22,6 +22,7 @@ public class TankManager
     private TankShooting m_Shooting;                        // Reference to tank's shooting script, used to disable and enable control.
     private GameObject m_CanvasGameObject;                  // Used to disable the world space UI during the Starting and Ending phases of each round.
 
+    TanksInputActions tanksInputActions;
 
     public void Setup ()
     {
@@ -34,6 +35,9 @@ public class TankManager
         m_Movement.m_PlayerNumber = m_PlayerNumber;
         m_Shooting.m_PlayerNumber = m_PlayerNumber;
 
+
+        
+ 
         // Create a string using the correct color that says 'PLAYER 1' etc based on the tank's color and the player's number.
         m_ColoredPlayerText = "<color=#" + ColorUtility.ToHtmlStringRGB(m_PlayerColor) + ">PLAYER " + m_PlayerNumber + "</color>";
 
@@ -47,6 +51,7 @@ public class TankManager
             renderers[i].material.color = m_PlayerColor;
         }
     }
+
 
 
     // Used during the phases of the game where the player shouldn't be able to control their tank.
