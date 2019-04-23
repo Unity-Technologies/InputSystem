@@ -37,12 +37,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         HeartBeat = 31,
         LowLatencyOffBodyDetect = 34,
         AccelerometerUncalibrated = 35,
-        Pose6DOF = 28,
-        StationaryDetect = 29,
-        MotionDetect = 30,
-        HeartBeat = 31,
-        LowLatencyOffBodyDetect = 34,
-        AccelerometerUncalibrated = 35,
     }
 
     [Serializable]
