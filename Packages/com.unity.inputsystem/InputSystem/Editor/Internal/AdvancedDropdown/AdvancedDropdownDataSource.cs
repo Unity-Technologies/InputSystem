@@ -9,27 +9,23 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         private static readonly string kSearchHeader = L10n.Tr("Search");
 
-        private AdvancedDropdownItem m_MainTree;
-        private AdvancedDropdownItem m_SearchTree;
-        private List<int> m_SelectedIDs = new List<int>();
+        public AdvancedDropdownItem mainTree { get; private set; }
+        public AdvancedDropdownItem searchTree { get; private set; }
+        public List<int> selectedIDs { get; } = new List<int>();
 
-        public AdvancedDropdownItem mainTree { get { return m_MainTree; }}
-        public AdvancedDropdownItem searchTree { get { return m_SearchTree; }}
-        public List<int> selectedIDs { get { return m_SelectedIDs; }}
-
-        protected AdvancedDropdownItem root { get { return m_MainTree; }}
+        protected AdvancedDropdownItem root => mainTree;
         protected List<AdvancedDropdownItem> m_SearchableElements;
 
         public void ReloadData()
         {
-            m_MainTree = FetchData();
+            mainTree = FetchData();
         }
 
         protected abstract AdvancedDropdownItem FetchData();
 
         public void RebuildSearch(string search)
         {
-            m_SearchTree = Search(search);
+            searchTree = Search(search);
         }
 
         protected bool AddMatchItem(AdvancedDropdownItem e, string name, string[] searchWords, List<AdvancedDropdownItem> matchesStart, List<AdvancedDropdownItem> matchesWithin)
@@ -37,7 +33,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var didMatchAll = true;
             var didMatchStart = false;
 
-            // See if we match ALL the seaarch words.
+            // See if we match ALL the search words.
             for (var w = 0; w < searchWords.Length; w++)
             {
                 var search = searchWords[w];
@@ -66,6 +62,11 @@ namespace UnityEngine.Experimental.Input.Editor
             return didMatchAll;
         }
 
+        protected virtual AdvancedDropdownItem PerformCustomSearch(string searchString)
+        {
+            return null;
+        }
+
         protected virtual AdvancedDropdownItem Search(string searchString)
         {
             if (m_SearchableElements == null)
@@ -75,44 +76,50 @@ namespace UnityEngine.Experimental.Input.Editor
             if (string.IsNullOrEmpty(searchString))
                 return null;
 
-            // Support multiple search words separated by spaces.
-            var searchWords = searchString.ToLower().Split(' ');
-
-            // We keep two lists. Matches that matches the start of an item always get first priority.
-            var matchesStart = new List<AdvancedDropdownItem>();
-            var matchesWithin = new List<AdvancedDropdownItem>();
-
-            foreach (var e in m_SearchableElements)
+            var searchTree = PerformCustomSearch(searchString);
+            if (searchTree == null)
             {
-                var name = e.searchableName.ToLower().Replace(" ", "");
-                AddMatchItem(e, name, searchWords, matchesStart, matchesWithin);
+                // Support multiple search words separated by spaces.
+                var searchWords = searchString.ToLower().Split(' ');
+
+                // We keep two lists. Matches that matches the start of an item always get first priority.
+                var matchesStart = new List<AdvancedDropdownItem>();
+                var matchesWithin = new List<AdvancedDropdownItem>();
+
+                foreach (var e in m_SearchableElements)
+                {
+                    var name = e.searchableName.ToLower().Replace(" ", "");
+                    AddMatchItem(e, name, searchWords, matchesStart, matchesWithin);
+                }
+
+                searchTree = new AdvancedDropdownItem(kSearchHeader);
+                matchesStart.Sort();
+                foreach (var element in matchesStart)
+                {
+                    searchTree.AddChild(element);
+                }
+                matchesWithin.Sort();
+                foreach (var element in matchesWithin)
+                {
+                    searchTree.AddChild(element);
+                }
             }
 
-            var searchTree = new AdvancedDropdownItem(kSearchHeader);
-            matchesStart.Sort();
-            foreach (var element in matchesStart)
-            {
-                searchTree.AddChild(element);
-            }
-            matchesWithin.Sort();
-            foreach (var element in matchesWithin)
-            {
-                searchTree.AddChild(element);
-            }
             return searchTree;
         }
 
-        void BuildSearchableElements()
+        private void BuildSearchableElements()
         {
             m_SearchableElements = new List<AdvancedDropdownItem>();
             BuildSearchableElements(root);
         }
 
-        void BuildSearchableElements(AdvancedDropdownItem item)
+        private void BuildSearchableElements(AdvancedDropdownItem item)
         {
             if (!item.children.Any())
             {
-                m_SearchableElements.Add(item);
+                if (!item.IsSeparator())
+                    m_SearchableElements.Add(item);
                 return;
             }
             foreach (var child in item.children)

@@ -37,106 +37,105 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onSettingsChange += OnSettingsChange;
         }
 
+        public override void OnTitleBarGUI()
+        {
+            if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
+                menu.AddSeparator("");
+                for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
+                    menu.AddItem(new GUIContent(m_AvailableSettingsAssetsOptions[i]), m_CurrentSelectedInputSettingsAsset == i, (path) => {
+                        InputSystem.settings = AssetDatabase.LoadAssetAtPath<InputSettings>((string)path);
+                    }, m_AvailableInputSettingsAssets[i]);
+                menu.AddSeparator("");
+                menu.AddItem(new GUIContent("New Settings Asset…"), false, CreateNewSettingsAsset);
+                menu.ShowAsContext();
+                Event.current.Use();
+            }
+        }
+
         public override void OnGUI(string searchContext)
         {
             if (m_Settings == null)
                 InitializeWithCurrentSettings();
 
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-            var selectedSettingsAsset = EditorGUILayout.Popup(m_CurrentSelectedInputSettingsAsset,
-                m_AvailableSettingsAssetsOptions, EditorStyles.toolbarPopup);
-            if (selectedSettingsAsset != m_CurrentSelectedInputSettingsAsset)
+            if (m_AvailableInputSettingsAssets.Length == 0)
             {
-                // If we selected an asset and the current settings are not coming from an asset,
-                // remove the "<No Asset>" entry we added to the dropdown.
-                if (selectedSettingsAsset != 0 && m_AvailableInputSettingsAssets[m_CurrentSelectedInputSettingsAsset] == "<No Asset>")
-                    ArrayHelpers.EraseAt(ref m_AvailableInputSettingsAssets, m_CurrentSelectedInputSettingsAsset);
-
-                m_CurrentSelectedInputSettingsAsset = selectedSettingsAsset;
-                var settings =
-                    AssetDatabase.LoadAssetAtPath<InputSettings>(
-                        m_AvailableInputSettingsAssets[selectedSettingsAsset]);
-
-                // Install. This will automatically cause us to re-initialize through InputSystem.onSettingsChange.
-                InputSystem.settings = settings;
-            }
-
-            // Style can only be initialized after skin has been initialized. Settings providers are
-            // pulled up earlier than that so we do it lazily from here.
-            if (m_NewAssetButtonStyle == null)
-            {
-                m_NewAssetButtonStyle = new GUIStyle("toolbarButton");
-                m_NewAssetButtonStyle.fixedWidth = 40;
-            }
-
-            if (GUILayout.Button(m_NewAssetButtonText, m_NewAssetButtonStyle))
-                CreateNewSettingsAsset();
-
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-
-            if (m_AvailableInputSettingsAssets[m_CurrentSelectedInputSettingsAsset] == "<No Asset>")
-            {
-                EditorGUILayout.HelpBox("Input settings can only be edited when stored in an asset.\n\n"
-                    + "Choose an existing asset (if any) from the dropdown or create a new asset by pressing the 'New' button. "
-                    + "Input settings can be placed anywhere in your project.",
+                EditorGUILayout.HelpBox(
+                    "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
                     MessageType.Info);
+                if (GUILayout.Button("Create settings asset", GUILayout.Height(30)))
+                    CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
+                GUILayout.Space(20);
             }
 
-            EditorGUILayout.HelpBox(
-                "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
-                + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
-                MessageType.Warning);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Separator();
-            EditorGUILayout.Space();
-
-            Debug.Assert(m_Settings != null);
-
-            EditorGUI.BeginChangeCheck();
-
-            EditorGUILayout.PropertyField(m_UpdateMode);
-            var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
-            if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
+            using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
-                // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
-                // when we have both dynamic and fixed updates in the picture.
-                ////TODO: enable when action update mode is properly sorted
-                //EditorGUILayout.PropertyField(m_ActionUpdateMode);
+                EditorGUILayout.HelpBox(
+                    "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
+                    + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
+                    MessageType.Warning);
+
+                EditorGUILayout.Space();
+                EditorGUILayout.Separator();
+                EditorGUILayout.Space();
+
+                Debug.Assert(m_Settings != null);
+
+                EditorGUI.BeginChangeCheck();
+
+                EditorGUILayout.PropertyField(m_UpdateMode);
+                var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
+                if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
+                {
+                    // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
+                    // when we have both dynamic and fixed updates in the picture.
+                    ////TODO: enable when action update mode is properly sorted
+                    //EditorGUILayout.PropertyField(m_ActionUpdateMode);
+                }
+
+                ////TODO: enable when backported
+                //EditorGUILayout.PropertyField(m_TimesliceEvents);
+
+                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
+                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
+
+                EditorGUILayout.Space();
+                EditorGUILayout.Separator();
+                EditorGUILayout.Space();
+
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin);
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax);
+                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint);
+                EditorGUILayout.PropertyField(m_DefaultTapTime);
+                EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
+                EditorGUILayout.PropertyField(m_DefaultHoldTime);
+
+                EditorGUILayout.Space();
+                EditorGUILayout.Separator();
+                EditorGUILayout.Space();
+
+                EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
+                    + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
+                    + "and avoid picking up input from devices not relevant to the project.", MessageType.None);
+
+                m_SupportedDevices.DoLayoutList();
+
+                if (EditorGUI.EndChangeCheck())
+                    Apply();
             }
+        }
 
-            ////TODO: enable when backported
-            //EditorGUILayout.PropertyField(m_TimesliceEvents);
-
-            EditorGUILayout.PropertyField(m_RunInBackground);
-            EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
-            EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Separator();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(m_DefaultDeadzoneMin);
-            EditorGUILayout.PropertyField(m_DefaultDeadzoneMax);
-            EditorGUILayout.PropertyField(m_DefaultButtonPressPoint);
-            EditorGUILayout.PropertyField(m_DefaultTapTime);
-            EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
-            EditorGUILayout.PropertyField(m_DefaultHoldTime);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Separator();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
-                + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                + "and avoid picking up input from devices not relevant to the project.", MessageType.None);
-
-            m_SupportedDevices.DoLayoutList();
-
-            if (EditorGUI.EndChangeCheck())
-                Apply();
+        private static void CreateNewSettingsAsset(string relativePath)
+        {
+            // Create settings file.
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            AssetDatabase.CreateAsset(settings, relativePath);
+            EditorGUIUtility.PingObject(settings);
+            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
+            // will cause us to re-initialize.
+            InputSystem.settings = settings;
         }
 
         private static void CreateNewSettingsAsset()
@@ -164,13 +163,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 path += ".asset";
 
             // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
             var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            AssetDatabase.CreateAsset(settings, relativePath);
-
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
-            // will cause us to re-initialize.
-            InputSystem.settings = settings;
+            CreateNewSettingsAsset(relativePath);
         }
 
         /// <summary>
@@ -186,11 +180,12 @@ namespace UnityEngine.Experimental.Input.Editor
             var currentSettingsPath = AssetDatabase.GetAssetPath(m_Settings);
             if (string.IsNullOrEmpty(currentSettingsPath))
             {
-                // The current settings aren't coming from an asset. These won't be editable
-                // in the UI but we still have to show something.
-
-                m_CurrentSelectedInputSettingsAsset = ArrayHelpers.Append(ref m_AvailableInputSettingsAssets, "<No Asset>");
-                EditorBuildSettings.RemoveConfigObject(kEditorBuildSettingsConfigKey);
+                if (m_AvailableInputSettingsAssets.Length != 0)
+                {
+                    m_CurrentSelectedInputSettingsAsset = 0;
+                    m_Settings = AssetDatabase.LoadAssetAtPath<InputSettings>(m_AvailableInputSettingsAssets[0]);
+                    InputSystem.settings = m_Settings;
+                }
             }
             else
             {
@@ -217,7 +212,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     name = name.Substring(0, name.Length - ".asset".Length);
                 if (name.EndsWith(".inputsettings"))
                     name = name.Substring(0, name.Length - ".inputsettings".Length);
-                m_AvailableSettingsAssetsOptions[i] = new GUIContent(name);
+
+                // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+                m_AvailableSettingsAssetsOptions[i] = new GUIContent(name.Replace("/", "\u29f8"));
             }
 
             // Look up properties.
@@ -225,7 +222,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
             m_ActionUpdateMode = m_SettingsObject.FindProperty("m_ActionUpdateMode");
             m_TimesliceEvents = m_SettingsObject.FindProperty("m_TimesliceEvents");
-            m_RunInBackground = m_SettingsObject.FindProperty("m_RunInBackground");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
@@ -246,8 +242,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 onAddDropdownCallback =
                     (rect, list) =>
                 {
-                    var state = new AdvancedDropdownState();
-                    var dropdown = new InputControlPickerDropdown(state,
+                    var dropdown = new InputControlPickerDropdown(
+                        new InputControlPickerState(),
                         path =>
                         {
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
@@ -256,7 +252,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             supportedDevicesProperty.GetArrayElementAtIndex(numDevices)
                                 .stringValue = layoutName;
                             Apply();
-                        }, InputControlPicker.Mode.PickDevice);
+                        },
+                        mode: InputControlPicker.Mode.PickDevice);
                     dropdown.Show(rect);
                 },
                 drawElementCallback =
@@ -316,7 +313,6 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_ActionUpdateMode;
         [NonSerialized] private SerializedProperty m_TimesliceEvents;
-        [NonSerialized] private SerializedProperty m_RunInBackground;
         [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
@@ -347,6 +343,32 @@ namespace UnityEngine.Experimental.Input.Editor
                 #if UNITY_2019_1_OR_NEWER
                 s_Instance.Repaint();
                 #endif
+            }
+        }
+    }
+
+    [CustomEditor(typeof(InputSettings))]
+    internal class InputSettingsEditor : UnityEditor.Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            GUILayout.Space(10);
+            if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
+                InputSettingsProvider.Open();
+            GUILayout.Space(10);
+
+            if (InputSystem.settings == target)
+                EditorGUILayout.HelpBox("This asset contains the currently active settings for the Input System.", MessageType.Info);
+            else
+            {
+                string currentlyActiveAssetsPath = null;
+                if (InputSystem.settings != null)
+                    currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(InputSystem.settings);
+                if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
+                    currentlyActiveAssetsPath = $"The currently active settings are stored in {currentlyActiveAssetsPath}. ";
+                EditorGUILayout.HelpBox($"Note that this asset does not contain the currently active settings for the Input System. {currentlyActiveAssetsPath??""}Click \"Make Active\" below to make {target.name} the active one.", MessageType.Warning);
+                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
+                    InputSystem.settings = (InputSettings)target;
             }
         }
     }

@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// Combine a single pointer with buttons and a scroll wheel.
     /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
-    [StructLayout(LayoutKind.Explicit, Size = 28)]
+    [StructLayout(LayoutKind.Explicit, Size = 30)]
     public struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
@@ -54,6 +54,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(26)]
         public ushort displayIndex;
 
+        [InputControl(layout = "Digital")]
+        [FieldOffset(28)]
+        public ushort clickCount;
+
         ////REVIEW: move this and the same methods in other states to extension methods?
         public MouseState WithButton(MouseButton button, bool state = true)
         {
@@ -92,7 +96,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(MouseState))]
+    [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
@@ -119,6 +123,7 @@ namespace UnityEngine.Experimental.Input
 
         public ButtonControl backButton { get; private set; }
 
+        public IntegerControl clickCount { get; private set;  }
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
         /// connected to the system.
@@ -161,6 +166,7 @@ namespace UnityEngine.Experimental.Input
             rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
             forwardButton = builder.GetControl<ButtonControl>(this, "forwardButton");
             backButton = builder.GetControl<ButtonControl>(this, "backButton");
+            clickCount = builder.GetControl<IntegerControl>(this, "clickCount");
             base.FinishSetup(builder);
         }
 

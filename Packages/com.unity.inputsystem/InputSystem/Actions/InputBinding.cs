@@ -57,6 +57,11 @@ namespace UnityEngine.Experimental.Input
                     m_Guid = new Guid(m_Id);
                 return m_Guid;
             }
+            set
+            {
+                m_Guid = value;
+                m_Id = m_Guid.ToString();
+            }
         }
 
         /// <summary>
@@ -155,7 +160,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Name of the action triggered by the binding.
+        /// Name or ID of the action triggered by the binding.
         /// </summary>
         /// <remarks>
         /// This is null if the binding does not trigger an action.
@@ -163,13 +168,16 @@ namespace UnityEngine.Experimental.Input
         /// For InputBindings that are used as filters, this can be a "mapName/actionName" combination
         /// or "mapName/*" to match all actions in the given map.
         /// </remarks>
+        /// <seealso cref="InputAction.name"/>
+        /// <seealso cref="InputAction.id"/>
         public string action
         {
             get => m_Action;
             set => m_Action = value;
         }
 
-        public bool chainWithPrevious
+        ////TODO: make public when chained bindings are implemented fully
+        internal bool chainWithPrevious
         {
             get => (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine;
             set
@@ -327,6 +335,7 @@ namespace UnityEngine.Experimental.Input
             {
                 ////TODO: handle "map/action" format
                 ////TODO: handle "map/*" format
+                ////REVIEW: this will not be able to handle cases where one binding references an action by ID and the other by name but both do mean the same action
                 if (other.action == null
                     || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, kSeparator))
                     return false;
@@ -336,6 +345,12 @@ namespace UnityEngine.Experimental.Input
             {
                 if (other.groups == null
                     || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, kSeparator))
+                    return false;
+            }
+
+            if (!string.IsNullOrEmpty(m_Id))
+            {
+                if (other.id != id)
                     return false;
             }
 

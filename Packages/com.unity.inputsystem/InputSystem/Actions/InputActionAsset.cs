@@ -118,6 +118,17 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public InputAction this[string actionNameOrId]
+        {
+            get
+            {
+                var action = FindAction(actionNameOrId);
+                if (action == null)
+                    throw new KeyNotFoundException($"Cannot find action '{actionNameOrId}' in '{this}'");
+                return action;
+            }
+        }
+
         /// <summary>
         /// Return a JSON representation of the asset.
         /// </summary>
@@ -169,13 +180,15 @@ namespace UnityEngine.Experimental.Input
         /// Find an <see cref="InputAction">action</see> by its name in of of the <see cref="InputActionMap">
         /// action maps</see> in the asset.
         /// </summary>
-        /// <param name="name">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
+        /// <param name="actionNameOrId">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
         /// a simple name. In the former case, the name is split at the '/' slash and the first part is used to find
         /// a map with that name and the second part is used to find an action with that name inside the map. In the
         /// latter case, all maps are searched in order and the first action that has the given name in any of the maps
-        /// is returned. Note that name comparisons are case-insensitive.</param>
+        /// is returned. Note that name comparisons are case-insensitive.
+        ///
+        /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
         /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is null or empty.</exception>
         /// <remarks>
         /// Does not allocate.
         /// </remarks>
@@ -203,28 +216,28 @@ namespace UnityEngine.Experimental.Input
         /// asset.FindAction("map2/action2") // Returns action2.
         /// asset.FindAction("map3/action3") // Returns action3.
         ///
-        /// Search by unique action ID. The GUID needs to be surrounded by "{...}".
-        /// asset.FindAction($"{{{action1.id.ToString()}}}") // Returns action1.
-        /// asset.FindAction($"{{{action2.id.ToString()}}}") // Returns action2.
-        /// asset.FindAction($"{{{action3.id.ToString()}}}") // Returns action3.
+        /// Search by unique action ID.
+        /// asset.FindAction(action1.id.ToString()) // Returns action1.
+        /// asset.FindAction(action2.id.ToString()) // Returns action2.
+        /// asset.FindAction(action3.id.ToString()) // Returns action3.
         /// </code>
         /// </example>
-        public InputAction FindAction(string name)
+        public InputAction FindAction(string actionNameOrId)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
+            if (string.IsNullOrEmpty(actionNameOrId))
+                throw new ArgumentNullException(nameof(actionNameOrId));
 
             if (m_ActionMaps == null)
                 return null;
 
             // Check if we have a "map/action" path.
-            var indexOfSlash = name.IndexOf('/');
+            var indexOfSlash = actionNameOrId.IndexOf('/');
             if (indexOfSlash == -1)
             {
                 // No slash so it's just a simple action name.
                 for (var i = 0; i < m_ActionMaps.Length; ++i)
                 {
-                    var action = m_ActionMaps[i].TryGetAction(name);
+                    var action = m_ActionMaps[i].TryGetAction(actionNameOrId);
                     if (action != null)
                         return action;
                 }
@@ -232,11 +245,11 @@ namespace UnityEngine.Experimental.Input
             else
             {
                 // Have a path. First search for the map, then for the action.
-                var mapName = new Substring(name, 0, indexOfSlash);
-                var actionName = new Substring(name, indexOfSlash + 1);
+                var mapName = new Substring(actionNameOrId, 0, indexOfSlash);
+                var actionName = new Substring(actionNameOrId, indexOfSlash + 1);
 
                 if (mapName.isEmpty || actionName.isEmpty)
-                    throw new ArgumentException("Malformed action path: " + name, "name");
+                    throw new ArgumentException("Malformed action path: " + actionNameOrId, nameof(actionNameOrId));
 
                 for (var i = 0; i < m_ActionMaps.Length; ++i)
                 {
@@ -297,42 +310,41 @@ namespace UnityEngine.Experimental.Input
             map.m_Asset = null;
         }
 
-        public void RemoveActionMap(string name)
+        public void RemoveActionMap(string nameOrId)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
+            if (string.IsNullOrEmpty(nameOrId))
+                throw new ArgumentNullException(nameof(nameOrId));
 
-            var map = TryGetActionMap(name);
+            var map = TryGetActionMap(nameOrId);
             if (map != null)
                 RemoveActionMap(map);
         }
 
-        public InputActionMap TryGetActionMap(string name)
+        public InputActionMap TryGetActionMap(string nameOrId)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
+            if (string.IsNullOrEmpty(nameOrId))
+                throw new ArgumentException("Name cannot be null or empty", nameof(nameOrId));
 
             if (m_ActionMaps == null)
                 return null;
 
-            if (name.Length > 1 && name[0] == '{' && name[name.Length - 1] == '}')
+            // If the name contains a hyphen, it may be a GUID.
+            if (nameOrId.Contains('-') && Guid.TryParse(nameOrId, out var id))
             {
-                var idLength = name.Length - 2;
                 for (var i = 0; i < m_ActionMaps.Length; ++i)
                 {
                     var map = m_ActionMaps[i];
-                    if (string.Compare(name, 1, map.m_Id, 0, idLength, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    if (map.idDontGenerate == id)
                         return map;
                 }
             }
-            else
+
+            // Default lookup is by name (case-insensitive).
+            for (var i = 0; i < m_ActionMaps.Length; ++i)
             {
-                for (var i = 0; i < m_ActionMaps.Length; ++i)
-                {
-                    var map = m_ActionMaps[i];
-                    if (string.Compare(name, map.name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                        return map;
-                }
+                var map = m_ActionMaps[i];
+                if (string.Compare(nameOrId, map.name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return map;
             }
 
             return null;
@@ -520,6 +532,7 @@ namespace UnityEngine.Experimental.Input
 
         private void OnDestroy()
         {
+            Disable();
             if (m_SharedStateForAllMaps != null)
             {
                 m_SharedStateForAllMaps.Dispose(); // Will clean up InputActionMap state.

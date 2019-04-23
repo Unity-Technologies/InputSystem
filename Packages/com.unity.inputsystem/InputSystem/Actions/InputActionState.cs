@@ -8,6 +8,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
+
 ////TODO: remove direct references to InputManager
 
 ////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)
@@ -361,7 +363,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Enable all controls on the binding.
-                EnableControls(actionState->mapIndex, bindingState->controlStartIndex, bindingState->controlCount);
+                // NOTE: We force an initial state check on actions here regardless of whether the action has
+                //       it enabled or not. The reason is that we use this path to temporarily disable actions
+                //       and re-enabling them should have the actions resume where they left off (where applicable).
+                EnableControls(actionState->mapIndex, bindingState->controlStartIndex, bindingState->controlCount,
+                    forceStateCheck: true);
             }
 
             // Make sure we get an initial state check.
@@ -656,7 +662,7 @@ namespace UnityEngine.Experimental.Input
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
 
-        private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
+        private void EnableControls(int mapIndex, int controlStartIndex, int numControls, bool forceStateCheck = false)
         {
             Debug.Assert(controls != null, "State must have controls");
             Debug.Assert(controlStartIndex >= 0 && (controlStartIndex < totalControlCount || numControls == 0),
@@ -670,7 +676,8 @@ namespace UnityEngine.Experimental.Input
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                bindingStates[bindingIndex].needsInitialStateCheck = true;
+                if (forceStateCheck || bindingStates[bindingIndex].wantsInitialStateCheck)
+                    bindingStates[bindingIndex].initialStateCheckPending = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
         }
@@ -689,7 +696,8 @@ namespace UnityEngine.Experimental.Input
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                bindingStates[bindingIndex].needsInitialStateCheck = false;
+                if (bindingStates[bindingIndex].wantsInitialStateCheck)
+                    bindingStates[bindingIndex].initialStateCheckPending = false;
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
         }
@@ -725,7 +733,7 @@ namespace UnityEngine.Experimental.Input
         {
             ////TODO: deal with update type
 
-            // Remove us from the callback.
+            // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
 
             Profiler.BeginSample("InitialActionStateCheck");
@@ -745,10 +753,10 @@ namespace UnityEngine.Experimental.Input
             // that the control just got actuated.
             for (var bindingIndex = 0; bindingIndex < totalBindingCount; ++bindingIndex)
             {
-                if (!bindingStates[bindingIndex].needsInitialStateCheck)
+                if (!bindingStates[bindingIndex].initialStateCheckPending)
                     continue;
 
-                bindingStates[bindingIndex].needsInitialStateCheck = false;
+                bindingStates[bindingIndex].initialStateCheckPending = false;
 
                 var mapIndex = bindingStates[bindingIndex].mapIndex;
                 var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
@@ -845,7 +853,7 @@ namespace UnityEngine.Experimental.Input
                 count: m_ContinuousActionCount);
             Debug.Assert(index != -1, "Action not found in list of continuous actions");
 
-            ArrayHelpers.EraseAtWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, index);
+            ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
             actionStates[actionIndex].onContinuousList = false;
 
             // If the action was in the part of the list that continuous actions we have carried
@@ -877,7 +885,7 @@ namespace UnityEngine.Experimental.Input
             if (index < m_ContinuousActionCountFromPreviousUpdate)
             {
                 // Move to end of list.
-                ArrayHelpers.EraseAtWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, index);
+                ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
                 --m_ContinuousActionCountFromPreviousUpdate;
                 ArrayHelpers.AppendWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, actionIndex);
             }
@@ -1157,7 +1165,7 @@ namespace UnityEngine.Experimental.Input
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
                     ////        first actuates; the current solution will occasionally run conflict resolution when it doesn't have to
-                    ////        but won't require the extra bookkepping)
+                    ////        but won't require the extra bookkeeping)
                     // Do NOT let this control state change affect the action.
                     // NOTE: We do not update hasMultipleConcurrentActuations here which means that it may
                     //       temporarily be wrong. If that happens, we will end up eventually running the
@@ -1582,6 +1590,7 @@ namespace UnityEngine.Experimental.Input
         private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
             InputActionPhase phaseAfterPerformedOrCancelled = InputActionPhase.Waiting)
         {
+            Debug.Assert(newPhase != InputActionPhase.Disabled, "Should not disable an action using this method");
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount, "Map index out of range");
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < totalBindingCount, "Binding index out of range");
@@ -1590,8 +1599,12 @@ namespace UnityEngine.Experimental.Input
             if (actionIndex == kInvalidIndex)
                 return; // No action associated with binding.
 
-            // Update action state.
+            // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
+            if (actionState->phase == InputActionPhase.Disabled)
+                return;
+
+            // Update action state.
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
             var newState = trigger;
@@ -1618,16 +1631,19 @@ namespace UnityEngine.Experimental.Input
                 case InputActionPhase.Performed:
                 {
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
-                    actionState->phase = phaseAfterPerformedOrCancelled;
-
-                    // If the action is continuous and remains in performed or started state, make sure the action
-                    // is on the list of continuous actions that we check every update.
-                    if ((phaseAfterPerformedOrCancelled == InputActionPhase.Started ||
-                         phaseAfterPerformedOrCancelled == InputActionPhase.Performed) &&
-                        actionState->continuous &&
-                        !actionState->onContinuousList)
+                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
                     {
-                        AddContinuousAction(actionIndex);
+                        actionState->phase = phaseAfterPerformedOrCancelled;
+
+                        // If the action is continuous and remains in performed or started state, make sure the action
+                        // is on the list of continuous actions that we check every update.
+                        if ((phaseAfterPerformedOrCancelled == InputActionPhase.Started ||
+                             phaseAfterPerformedOrCancelled == InputActionPhase.Performed) &&
+                            actionState->continuous &&
+                            !actionState->onContinuousList)
+                        {
+                            AddContinuousAction(actionIndex);
+                        }
                     }
                     break;
                 }
@@ -1635,11 +1651,14 @@ namespace UnityEngine.Experimental.Input
                 case InputActionPhase.Cancelled:
                 {
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCancelled);
-                    actionState->phase = phaseAfterPerformedOrCancelled;
+                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
+                    {
+                        actionState->phase = phaseAfterPerformedOrCancelled;
 
-                    // Remove from list of continuous actions, if necessary.
-                    if (actionState->onContinuousList)
-                        RemoveContinuousAction(actionIndex);
+                        // Remove from list of continuous actions, if necessary.
+                        if (actionState->onContinuousList)
+                            RemoveContinuousAction(actionIndex);
+                    }
                     break;
                 }
 
@@ -2057,7 +2076,7 @@ namespace UnityEngine.Experimental.Input
         /// </code>
         /// </example>
         /// </remarks>
-        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber)
+        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue)
             where TValue : struct, IComparable<TValue>
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
@@ -2066,6 +2085,8 @@ namespace UnityEngine.Experimental.Input
             var result = default(TValue);
             var firstChildBindingIndex = bindingIndex + 1;
             var isFirstValue = true;
+
+            buttonValue = false;
 
             // Find the binding in the composite that both has the given part number and
             // the greatest value.
@@ -2093,10 +2114,14 @@ namespace UnityEngine.Experimental.Input
                     {
                         result = value;
                         isFirstValue = false;
+                        if (controls[controlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
                     else if (value.CompareTo(result) > 0)
                     {
                         result = value;
+                        if (controls[controlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
                 }
             }
@@ -2237,7 +2262,8 @@ namespace UnityEngine.Experimental.Input
                 EndOfChain = 1 << 1,
                 Composite = 1 << 2,
                 PartOfComposite = 1 << 3,
-                NeedsInitialStateCheck = 1 << 4,
+                InitialStateCheckPending = 1 << 4,
+                WantsInitialStateCheck = 1 << 5,
             }
 
             /// <summary>
@@ -2480,15 +2506,27 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public bool needsInitialStateCheck
+            public bool initialStateCheckPending
             {
-                get => (flags & Flags.NeedsInitialStateCheck) != 0;
+                get => (flags & Flags.InitialStateCheckPending) != 0;
                 set
                 {
                     if (value)
-                        flags |= Flags.NeedsInitialStateCheck;
+                        flags |= Flags.InitialStateCheckPending;
                     else
-                        flags &= ~Flags.NeedsInitialStateCheck;
+                        flags &= ~Flags.InitialStateCheckPending;
+                }
+            }
+
+            public bool wantsInitialStateCheck
+            {
+                get => (flags & Flags.WantsInitialStateCheck) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.WantsInitialStateCheck;
+                    else
+                        flags &= ~Flags.WantsInitialStateCheck;
                 }
             }
 

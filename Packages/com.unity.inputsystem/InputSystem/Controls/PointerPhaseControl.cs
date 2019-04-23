@@ -1,3 +1,4 @@
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 // Unfortunately, C# (at least up to version 6) does not support enum type constraints. There's
@@ -8,6 +9,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Controls
 {
+    [InputControlLayout(hideInUI = true)]
     public class PointerPhaseControl : InputControl<PointerPhase>
     {
         public PointerPhaseControl()

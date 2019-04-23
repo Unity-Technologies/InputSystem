@@ -188,6 +188,22 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public bool initialStateCheck
+        {
+            get => (m_Flags & ActionFlags.InitialStateCheck) != 0;
+            set
+            {
+                if (enabled)
+                    throw new InvalidOperationException(
+                        $"Cannot change the 'initialStateCheck' flag of action '{this} while the action is enabled");
+
+                if (value)
+                    m_Flags |= ActionFlags.InitialStateCheck;
+                else
+                    m_Flags &= ~ActionFlags.InitialStateCheck;
+            }
+        }
+
         /// <summary>
         /// If true, the action will continuously trigger <see cref="performed"/> on every input update
         /// while the action is in the <see cref="InputActionPhase.Performed"/> phase.
@@ -427,6 +443,7 @@ namespace UnityEngine.Experimental.Input
             if (m_Name == null)
                 return "<Unnamed>";
 
+            ////REVIEW: should we cache this?
             if (m_ActionMap != null && !isSingletonAction && !String.IsNullOrEmpty(m_ActionMap.name))
                 return $"{m_ActionMap.name}/{m_Name}";
 
@@ -480,6 +497,7 @@ namespace UnityEngine.Experimental.Input
             None = 0,
             Continuous = 1 << 1,
             PassThrough = 1 << 2,
+            InitialStateCheck = 1 << 3,
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
@@ -598,6 +616,40 @@ namespace UnityEngine.Experimental.Input
             if (GetOrCreateActionMap().enabled)
                 throw new InvalidOperationException(
                     $"Cannot modify bindings on action '{this}' while its action map is enabled");
+        }
+
+        internal int BindingIndexOnActionToBindingIndexOnMap(int indexOfBindingOnAction)
+        {
+            // We don't want to hit InputAction.bindings here as this requires setting up per-action
+            // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
+            // repeatedly with an index would thus cause the same data to be computed and thrown away
+            // over and over.
+            // Instead we manually search through the map's bindings to find the right binding index
+            // in the map.
+
+            var actionMap = GetOrCreateActionMap();
+            var bindingsInMap = actionMap.m_Bindings;
+            var bindingCountInMap = bindingsInMap.LengthSafe();
+            var actionName = name;
+
+            var currentBindingIndexOnAction = -1;
+            for (var i = 0; i < bindingCountInMap; ++i)
+            {
+                ref var binding = ref bindingsInMap[i];
+
+                // Match both name and ID on binding.
+                if (string.Compare(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0 &&
+                    binding.action != m_Id)
+                    continue;
+
+                ++currentBindingIndexOnAction;
+                if (currentBindingIndexOnAction == indexOfBindingOnAction)
+                    return i;
+            }
+
+            throw new ArgumentOutOfRangeException(
+                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings",
+                nameof(indexOfBindingOnAction));
         }
 
         /// <summary>
@@ -742,6 +794,11 @@ namespace UnityEngine.Experimental.Input
                 throw new NotImplementedException();
             }
             */
+
+            public override string ToString()
+            {
+                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+            }
         }
     }
 }

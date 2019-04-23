@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
-
-#if UNITY_EDITOR
-using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.HID.Editor;
-#endif
 
 ////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
 ////        have better mechanism to do that without requiring to replace the entire process wholesale
@@ -94,6 +89,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Read HID descriptor.
             var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
 
+            // Check callbacks to see whether we should actually create a device for this specific HID.
+            // If no callback says yes or one says no, we ignore the device.
+            if (HIDSupport.s_ShouldCreateHID.All(f => f(hidDeviceDescriptor) != true) ||
+                HIDSupport.s_ShouldCreateHID.Any(f => f(hidDeviceDescriptor) == false))
+                return null;
+
             // Determine if there's any usable elements on the device.
             var hasUsableElements = false;
             if (hidDeviceDescriptor.elements != null)
@@ -113,11 +114,11 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 return null;
 
             // Determine base layout.
-            Type baseType = null;
+            var baseType = typeof(HID);
             var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                if ((hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick) || (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad))
+                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick || hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
                 {
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
@@ -142,15 +143,15 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             var usageName = hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop ? ((GenericDesktop)hidDeviceDescriptor.usage).ToString() : hidDeviceDescriptor.usagePage.ToString();
             if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
             {
-                layoutName = string.Format("{0}::{1} {2} {3}", kHIDNamespace, description.manufacturer, description.product, usageName);
+                layoutName = $"{kHIDNamespace}::{description.manufacturer} {description.product} {usageName}";
             }
             else
             {
                 // Sanity check to make sure we really have the data we expect.
                 if (hidDeviceDescriptor.vendorId == 0)
                     return null;
-                layoutName = string.Format("{0}::{1:X}-{2:X} {3}", kHIDNamespace, hidDeviceDescriptor.vendorId,
-                    hidDeviceDescriptor.productId, usageName);
+                layoutName =
+                    $"{kHIDNamespace}::{hidDeviceDescriptor.vendorId:X}-{hidDeviceDescriptor.productId:X} {usageName}";
 
                 deviceMatcher = deviceMatcher
                     .WithCapability("productId", hidDeviceDescriptor.productId)
@@ -177,13 +178,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         public static HIDDeviceDescriptor ReadHIDDeviceDescriptor(InputDevice device, IInputRuntime runtime)
         {
             if (device == null)
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
 
             var deviceDescription = device.description;
             if (deviceDescription.interfaceName != kHIDInterface)
                 throw new ArgumentException(
-                    string.Format("Device '{0}' is not a HID (interface is '{1}')", device,
-                        deviceDescription.interfaceName), "device");
+                    $"Device '{device}' is not a HID (interface is '{deviceDescription.interfaceName}')", nameof(device));
 
             return ReadHIDDeviceDescriptor(device.id, ref deviceDescription, runtime);
         }
@@ -192,7 +192,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         {
             if (deviceDescription.interfaceName != kHIDInterface)
                 throw new ArgumentException(
-                    string.Format("Device '{0}' is not a HID", deviceDescription));
+                    $"Device '{deviceDescription}' is not a HID");
 
             // See if we have to request a HID descriptor from the device.
             // We support having the descriptor directly as a JSON string in the `capabilities`
@@ -212,7 +212,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError(string.Format("Could not parse HID descriptor of device '{0}'", deviceDescription));
+                    Debug.LogError($"Could not parse HID descriptor of device '{deviceDescription}'");
                     Debug.LogException(exception);
                 }
             }
@@ -238,7 +238,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     using (var buffer =
                                InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
                     {
-                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
                         if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
                             return new HIDDeviceDescriptor();
 
@@ -263,7 +263,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     using (var buffer =
                                InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
                     {
-                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
                         var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
                         if (utf8Length < 0)
                             return new HIDDeviceDescriptor();
@@ -284,7 +284,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         }
                         catch (Exception exception)
                         {
-                            Debug.LogError(string.Format("Could not parse HID descriptor of device '{0}'", deviceDescription));
+                            Debug.LogError($"Could not parse HID descriptor of device '{deviceDescription}'");
                             Debug.LogException(exception);
                             return new HIDDeviceDescriptor();
                         }
@@ -511,40 +511,19 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             public int? usageMin;
             public int? usageMax;
 
-            public bool hasNullState
-            {
-                get { return (flags & HIDElementFlags.NullState) == HIDElementFlags.NullState; }
-            }
+            public bool hasNullState => (flags & HIDElementFlags.NullState) == HIDElementFlags.NullState;
 
-            public bool hasPreferredState
-            {
-                get { return (flags & HIDElementFlags.NoPreferred) != HIDElementFlags.NoPreferred; }
-            }
+            public bool hasPreferredState => (flags & HIDElementFlags.NoPreferred) != HIDElementFlags.NoPreferred;
 
-            public bool isArray
-            {
-                get { return (flags & HIDElementFlags.Variable) != HIDElementFlags.Variable; }
-            }
+            public bool isArray => (flags & HIDElementFlags.Variable) != HIDElementFlags.Variable;
 
-            public bool isNonLinear
-            {
-                get { return (flags & HIDElementFlags.NonLinear) == HIDElementFlags.NonLinear; }
-            }
+            public bool isNonLinear => (flags & HIDElementFlags.NonLinear) == HIDElementFlags.NonLinear;
 
-            public bool isRelative
-            {
-                get { return (flags & HIDElementFlags.Relative) == HIDElementFlags.Relative; }
-            }
+            public bool isRelative => (flags & HIDElementFlags.Relative) == HIDElementFlags.Relative;
 
-            public bool isConstant
-            {
-                get { return (flags & HIDElementFlags.Constant) == HIDElementFlags.Constant; }
-            }
+            public bool isConstant => (flags & HIDElementFlags.Constant) == HIDElementFlags.Constant;
 
-            public bool isWrapping
-            {
-                get { return (flags & HIDElementFlags.Wrap) == HIDElementFlags.Wrap; }
-            }
+            public bool isWrapping => (flags & HIDElementFlags.Wrap) == HIDElementFlags.Wrap;
 
             public float resolution
             {
@@ -563,10 +542,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 }
             }
 
-            internal bool isSigned
-            {
-                get { return logicalMin < 0; }
-            }
+            internal bool isSigned => logicalMin < 0;
 
             internal float minFloat
             {
@@ -619,7 +595,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 switch (usagePage)
                 {
                     case UsagePage.Button:
-                        return string.Format("button{0}", usage);
+                        return $"button{usage}";
                     case UsagePage.GenericDesktop:
                         if (usage == (int)GenericDesktop.HatSwitch)
                             return "dpad";
@@ -630,7 +606,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 }
 
                 // Fallback that generates a somewhat useless but at least very informative name.
-                return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
+                return $"UsagePage({usagePage:X}) Usage({usage:X})";
             }
 
             internal bool IsUsableElement()
@@ -970,9 +946,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             continue;
 
                         if (element.usagePage == usagePage && element.usage == usage)
-                            throw new InvalidOperationException(string.Format(
-                                "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
-                                usagePage, usage));
+                            throw new InvalidOperationException(
+                                $"Cannot add two elements with the same usage page '{usagePage}' and usage '0x{usage:X} the to same device");
                     }
                 }
 
@@ -1029,8 +1004,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 {
                     usage = usage,
                     usagePage = usagePage,
-                    elements = m_Elements != null ? m_Elements.ToArray() : null,
-                    collections = m_Collections != null ? m_Collections.ToArray() : null,
+                    elements = m_Elements?.ToArray(),
+                    collections = m_Collections?.ToArray(),
                 };
 
                 return descriptor;

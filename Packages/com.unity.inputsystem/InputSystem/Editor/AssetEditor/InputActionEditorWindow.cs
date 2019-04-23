@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Make sure we have an action selected.
             var actionItems = m_ActionsTree.GetSelectedItems().OfType<ActionTreeItem>();
-            if (actionItems.Count() == 0)
+            if (!actionItems.Any())
             {
                 EditorApplication.Beep();
                 return;
@@ -159,6 +159,36 @@ namespace UnityEngine.Experimental.Input.Editor
                 window.ReloadAssetFromFileIfNotDirty();
         }
 
+        private bool ConfirmSaveChangesIfNeeded()
+        {
+            // Ask for confirmation if we have unsaved changes.
+            if (!m_ForceQuit && m_ActionAssetManager.dirty)
+            {
+                var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified",
+                    $"Do you want to save the changes you made in:\n{m_ActionAssetManager.path}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+                switch (result)
+                {
+                    case 0: // Save
+                        m_ActionAssetManager.SaveChangesToAsset();
+                        m_ActionAssetManager.Cleanup();
+                        break;
+                    case 1: // Cancel
+                        Instantiate(this).Show();
+                        // Cancel editor quit.
+                        return false;
+                    case 2: // Don't save, don't ask again.
+                        m_ForceQuit = true;
+                        break;
+                }
+            }
+            return true;
+        }
+
+        private bool EditorWantsToQuit()
+        {
+            return ConfirmSaveChangesIfNeeded();
+        }
+
         private void OnEnable()
         {
             minSize = new Vector2(600, 300);
@@ -172,11 +202,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Toolbar.onSelectedDeviceChanged = OnControlSchemeSelectionChanged;
             m_Toolbar.onSave = SaveChangesToAsset;
             m_Toolbar.onControlSchemesChanged = OnControlSchemesModified;
+            EditorApplication.wantsToQuit += EditorWantsToQuit;
 
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
             {
-                m_ActionAssetManager.InitializeObjectReferences();
+                m_ActionAssetManager.Initialize();
                 m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
 
                 InitializeTrees();
@@ -185,31 +216,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnDestroy()
         {
-            // Ask for confirmation if we have unsaved changes.
-            if (!m_ForceQuit && m_ActionAssetManager.dirty)
-            {
-                var result = EditorUtility.DisplayDialogComplex("Unsaved changes",
-                    "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
-                switch (result)
-                {
-                    case 0: // Save
-                        m_ActionAssetManager.SaveChangesToAsset();
-                        m_ActionAssetManager.Cleanup();
-                        break;
-                    case 1: // Cancel
-                        Instantiate(this).Show();
-                        break;
-                    case 2: // Don't save
-                        break;
-                }
-            }
+            ConfirmSaveChangesIfNeeded();
+            EditorApplication.wantsToQuit -= EditorWantsToQuit;
         }
 
         // Set asset would usually only be called when the window is open
         private void SetAsset(InputActionAsset asset)
         {
             m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
-            m_ActionAssetManager.InitializeObjectReferences();
+            m_ActionAssetManager.Initialize();
 
             InitializeTrees();
             LoadControlSchemes();
@@ -290,7 +305,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onSelectionChanged = OnActionTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
-                title = "Action",
+                title = "Actions",
             };
 
             // Create tree in left pane showing action maps.
@@ -300,8 +315,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     InputActionTreeView.BuildWithJustActionMapsFromAsset(m_ActionAssetManager.serializedObject),
                 onSelectionChanged = OnActionMapTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
+                onHandleAddNewAction = m_ActionsTree.AddNewAction,
                 drawMinusButton = false,
-                title = "Actions Maps",
+                title = "Action Maps",
             };
             m_ActionMapsTree.Reload();
             m_ActionMapsTree.ExpandAll();
@@ -333,17 +349,19 @@ namespace UnityEngine.Experimental.Input.Editor
             // Filter by binding group of selected control scheme.
             if (m_Toolbar.selectedControlScheme != null)
             {
-                searchStringBuffer.Append(' ');
+                searchStringBuffer.Append(" \"");
                 searchStringBuffer.Append(InputActionTreeView.FilterCriterion.k_BindingGroupTag);
                 searchStringBuffer.Append(m_Toolbar.selectedControlScheme.Value.bindingGroup);
+                searchStringBuffer.Append('\"');
             }
 
             // Filter by device layout.
             if (m_Toolbar.selectedDeviceRequirement != null)
             {
-                searchStringBuffer.Append(' ');
+                searchStringBuffer.Append(" \"");
                 searchStringBuffer.Append(InputActionTreeView.FilterCriterion.k_DeviceLayoutTag);
                 searchStringBuffer.Append(InputControlPath.TryGetDeviceLayout(m_Toolbar.selectedDeviceRequirement.Value.controlPath));
+                searchStringBuffer.Append('\"');
             }
 
             var searchString = searchStringBuffer.ToString();
@@ -544,7 +562,23 @@ namespace UnityEngine.Experimental.Input.Editor
             var columnAreaWidth = position.width - InputActionTreeView.Styles.backgroundWithBorder.margin.left -
                 InputActionTreeView.Styles.backgroundWithBorder.margin.left -
                 InputActionTreeView.Styles.backgroundWithBorder.margin.right;
+
+            var oldType = Event.current.type;
             DrawActionMapsColumn(columnAreaWidth * 0.22f);
+            if (Event.current.type == EventType.Used && oldType != Event.current.type)
+            {
+                // When renaming an item, TreeViews will capture all mouse Events, and process any clicks outside the item
+                // being renamed to end the renaming process. However, since we have two TreeViews, if the action column is
+                // renaming an item, and then you double click on an item in the action map column, the action map column will
+                // get to use the mouse event before the action collumn gets to see it, which would cause the action map column
+                // to enter rename mode and use the event, before the action column gets a chance to see it and exit rename mode.
+                // Then we end up with two active renaming sessions, which does not work correctly.
+                // (See https://fogbugz.unity3d.com/f/cases/1140869/).
+                // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see
+                // that the action map column had processed the current event. This is not particularly elegant, but I cannot think
+                // of a better solution as we are limited by the public APIs exposed by TreeView.
+                m_ActionsTree.EndRename(forceAccept: true);
+            }
             DrawActionsColumn(columnAreaWidth * 0.38f);
             DrawPropertiesColumn(columnAreaWidth * 0.40f);
             EditorGUILayout.EndHorizontal();
@@ -630,13 +664,20 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ActionAssetManager.dirty)
                 return;
 
-            m_ActionAssetManager.CreateWorkingCopyAsset();
+            // Don't touch the UI state if the serialized data is still the same.
+            if (!m_ActionAssetManager.ReInitializeIfAssetHasChanged())
+                return;
+
+            // Unfortunately, on this path we lose the selection state of the interactions and processors lists
+            // in the properties view.
+
             InitializeTrees();
             LoadPropertiesForSelection();
             Repaint();
         }
 
-        #if UNITY_2019_1_OR_NEWER
+        ////TODO: add shortcut to focus search box
+
         ////TODO: show shortcuts in tooltips
         ////FIXME: the shortcuts seem to have focus problems; often requires clicking away and then back to the window
         [Shortcut("Input Action Editor/Save", typeof(InputActionEditorWindow), KeyCode.S, ShortcutModifiers.Alt)]
@@ -667,18 +708,10 @@ namespace UnityEngine.Experimental.Input.Editor
             window.AddNewBinding();
         }
 
-        #endif
-
         private void OnDirtyChanged(bool dirty)
         {
             titleContent = dirty ? m_DirtyTitle : m_Title;
             m_Toolbar.isDirty = dirty;
-        }
-
-        internal void CloseWithoutSaving()
-        {
-            m_ForceQuit = true;
-            Close();
         }
 
         [SerializeField] private TreeViewState m_ActionMapsTreeState;

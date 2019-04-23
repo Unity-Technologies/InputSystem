@@ -1,44 +1,66 @@
-    ////NOTE: This is fairly outdated and in the process of getting a complete overhaul.
+# How Do I...?
 
-# ... check if the space key has been pressed this frame?
+Devices:
 
-```C#
+* [... check if the space key has been pressed this frame?](#check-if-the-space-key-has-been-pressed-this-frame)
+* [... find all connected gamepads?](#find-all-connected-gamepads)
+* [... find the gamepad currently used by the player?](#find-the-gamepad-currently-used-by-the-player)
+* [... know when a new device has been plugged in?](#know-when-a-new-device-has-been-plugged-in)
+
+Actions:
+
+UIs:
+
+## ... check if the space key has been pressed this frame?
+
+```CSharp
     Keyboard.current.space.wasPressedThisFrame
 ```
 
 Same deal works for other devices.
 
-```C#
+```CSharp
     Gamepad.current.aButton.wasPressedThisFrame
 ```
 
-# ... find all connected gamepads?
+## ... find all connected gamepads?
 
 You can ask `Gamepad`.
 
-```C#
+```CSharp
     var allGamepads = Gamepad.all;
+
+    // Or more specific versions.
+    var allPS4Gamepads = DualShockGamepadPS4.all;
 ```
 
 Or you have some more involved options:
 
-```C#
+```CSharp
 
     // Go through all devices and select gamepads.
     InputSystem.devices.Select(x => x is Gamepad);
 
     // Query everything that is using the gamepad template or based on that template.
-    InputSystem.GetControls("/<gamepad>");
+    // NOTE: Don't forget to Dispose() the result.
+    InputSystem.FindControls("<gamepad>");
+```
 
-    // Fetch all devices with "gamepad" in their names (not a good idea; no guarantee
-    // a gamepad is actually named that way).
-    InputSystem.GetControls("/gamepad*");
+The last solution uses [control paths](Controls.md#control-paths).
 
+## ... find the gamepad currently used by the player?
+
+```CSharp
+    var gamepad = Gamepad.current;
+
+    // This works for other types of devices, too.
+    var keyboard = Keyboar.current;
+    var mouse = Mouse.current;
 ```
 
 # ... know when a new device has been plugged in?
 
-```C#
+```CSharp
     InputSystem.onDeviceChange +=
         (device, change) =>
         {
@@ -52,6 +74,10 @@ Or you have some more involved options:
                 /* Remove from input system entirely; by default, devices stay in the system once discovered */;
         }
 ```
+
+For more details, see ["Monitoring Devices"](Devices.md#monitoring-devices).
+
+-----------
 
 # ... create a simple fire-type action?
 
@@ -191,14 +217,18 @@ To display UI feedback when the button starts being held, use the `started` call
 
 Again, setting this up with the inspector in the editor is an alternative to dealing with the path strings directly.
 
-# ... use a "positive" and a "negative" key to drive an axis?
+# ... use a "positive" and a "negative" button to drive an axis?
 
-    ////TODO: working on this
-    ////      ATM you can do this at the control level by, for example, customizing
-    ////      the Keyboard template to add a custom AxisControl that reads its state
-    ////      from two buttons.
-    ////      Figuring out how this could be done more easily on the fly and at the
-    ////      action level. Do we really need it though?
+Use a "1D-Axis" (or just "Axis") composite binding in the UI or in code and bind its parts to the respective buttons.
+
+```CSharp
+var accelerateAction = new InputAction("Accelerate");
+accelerateAction.AddCompositeBinding("Axis")
+    .With("Positive", "<Gamepad>/rightTrigger")
+    .With("Negative", "<Gamepad>/leftTrigger");
+```
+
+There are parameters available to tweak the axis' behavior. See [here](ActionBindings.md#1d-axis) for details.
 
 # ... separate the actions in my game from user-overridable bindings?
 
@@ -216,10 +246,8 @@ Put your actions in one JSON file and put your default bindings in another JSON 
 
 # ... set up an action to specifically target the left-hand XRController?
 
-```C#
-
+```CSharp
     var action = new InputAction(binding: "/<XRController>{leftHand}/position");
-
 ```
 
 Again, the inspector allows setting this up without having to deal with paths directly.
@@ -230,7 +258,7 @@ Again, the inspector allows setting this up without having to deal with paths di
 
 One way is to use actions.
 
-```C#
+```CSharp
     var myAction = new InputAction(binding: "/*/<button>");
     myAction.onPerformed += (action, control) => Debug.Log($"Button {control.name} pressed!");
     myAction.Enable();
@@ -513,8 +541,11 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 
 ```
 
+# ... create an initial-engagement kind of screen?
+
+
 # ... see what devices I have and what state they are in?
 
-Go to `Windows >> Input Debugger`.
+Go to `Windows >> Analysis >> Input Debugger`.
 
     ////TODO: working on having device setups from players mirrored 1:1 into the running input system in the editor (including having their input available in the editor)

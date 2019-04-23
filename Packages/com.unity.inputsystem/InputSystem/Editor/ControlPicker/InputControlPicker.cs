@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public InputControlPicker(Mode mode, Action<string> onPick, InputControlPickerState state)
         {
             m_State = state ?? new InputControlPickerState();
-            m_Dropdown = new InputControlPickerDropdown(state.advancedDropdownState, onPick, mode);
+            m_Dropdown = new InputControlPickerDropdown(state, onPick, mode: mode);
         }
 
         public void Show(Rect rect)

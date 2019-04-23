@@ -7,9 +7,7 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: For some of the parameters (like SlowTap.duration) it is confusing to see any value at all while not yet having
-////        entered a value and seeing a value that doesn't seem to make sense (0 in this case means "no value, use default").
-////        Can we do this better? Maybe display "<default>" as text while the control is at default value?
+////TODO: show description of interaction or processor when selected
 
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
@@ -21,6 +19,10 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     ///
     /// Call <see cref="Initialize"/> to set up (can be done repeatedly on the same instance). Call
     /// <see cref="OnGUI"/> to render.
+    ///
+    /// Custom parameter GUIs can be defined by deriving from <see cref="InputParameterEditor{TObject}"/>.
+    /// This class will automatically incorporate custom GUIs and fall back to default GUIs where no custom
+    /// ones are defined.
     /// </remarks>
     internal class ParameterListView
     {
@@ -29,13 +31,15 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         /// </summary>
         public Action onChange { get; set; }
 
-        public bool hasUIToShow => (m_Parameters != null && m_Parameters.Length > 0)|| m_ParameterEditor != null;
+        public bool hasUIToShow => (m_Parameters != null && m_Parameters.Length > 0) || m_ParameterEditor != null;
+        public bool visible { get; set; }
+        public string name { get; set; }
 
         /// <summary>
         /// Get the current parameter values according to the editor state.
         /// </summary>
         /// <returns>An array of parameter values.</returns>
-        public InputControlLayout.ParameterValue[] GetParameters()
+        public NamedValue[] GetParameters()
         {
             if (m_Parameters == null)
                 return null;
@@ -53,7 +57,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 return null;
 
             // Collect non-default parameter values.
-            var result = new InputControlLayout.ParameterValue[countOfParametersNotAtDefaultValue];
+            var result = new NamedValue[countOfParametersNotAtDefaultValue];
             var index = 0;
             for (var i = 0; i < m_Parameters.Length; ++i)
             {
@@ -75,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         /// We need this to be able to determine the possible set of parameters and their possible values. This
         /// can be a class implementing <see cref="IInputInteraction"/>, for example.</param>
         /// <param name="existingParameters">List of existing parameters. Can be empty.</param>
-        public void Initialize(Type registeredType, ReadOnlyArray<InputControlLayout.ParameterValue> existingParameters)
+        public void Initialize(Type registeredType, ReadOnlyArray<NamedValue> existingParameters)
         {
             if (registeredType == null)
             {
@@ -86,6 +90,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 Clear();
                 return;
             }
+
+            visible = true;
 
             // Try to instantiate object so that we can determine defaults.
             object instance = null;
@@ -118,47 +124,44 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
                 // Determine parameter type from field.
                 var fieldType = field.FieldType;
-                if (fieldType == typeof(bool))
+                if (fieldType.IsEnum)
                 {
-                    parameter.value.type = InputControlLayout.ParameterType.Boolean;
+                    // For enums, we want the underlying integer type.
+                    var underlyingType = fieldType.GetEnumUnderlyingType();
+                    var underlyingTypeCode = Type.GetTypeCode(underlyingType);
 
-                    // Determine default.
-                    if (instance != null)
-                        parameter.defaultValue = new InputControlLayout.ParameterValue(name, (bool)field.GetValue(instance));
-                }
-                else if (fieldType == typeof(int))
-                {
-                    parameter.value.type = InputControlLayout.ParameterType.Integer;
+                    parameter.value = parameter.value.ConvertTo(underlyingTypeCode);
 
-                    // Determine default.
-                    if (instance != null)
-                        parameter.defaultValue = new InputControlLayout.ParameterValue(name, (int)field.GetValue(instance));
-                }
-                else if (fieldType == typeof(float))
-                {
-                    parameter.value.type = InputControlLayout.ParameterType.Float;
-
-                    // Determine default.
-                    if (instance != null)
-                        parameter.defaultValue = new InputControlLayout.ParameterValue(name, (float)field.GetValue(instance));
-                }
-                else if (fieldType.IsEnum)
-                {
-                    parameter.value.type = InputControlLayout.ParameterType.Integer;
+                    // Read enum names and values.
                     parameter.enumNames = Enum.GetNames(fieldType).Select(x => new GUIContent(x)).ToArray();
-
                     ////REVIEW: this probably falls apart if multiple members have the same value
                     var list = new List<int>();
                     foreach (var value in Enum.GetValues(fieldType))
                         list.Add((int)value);
                     parameter.enumValues = list.ToArray();
+                }
+                else
+                {
+                    var typeCode = Type.GetTypeCode(fieldType);
+                    parameter.value = parameter.value.ConvertTo(typeCode);
+                }
 
-                    // Determine default.
-                    if (instance != null)
+                // Determine default value.
+                if (instance != null)
+                {
+                    try
                     {
-                        var defaultValue = field.GetValue(instance);
-                        var defaultValueInt = Convert.ToInt32(defaultValue);
-                        parameter.defaultValue = new InputControlLayout.ParameterValue(name, defaultValueInt);
+                        var value = field.GetValue(instance);
+                        parameter.defaultValue = new NamedValue
+                        {
+                            name = name,
+                            value = PrimitiveValue.FromObject(value)
+                        };
+                    }
+                    catch
+                    {
+                        // If the getter throws, ignore. All we lose is the actual default value from
+                        // the field.
                     }
                 }
 
@@ -191,31 +194,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 // the parameter values. So on this path, we actually need to update the object to reflect
                 // the current parameter values.
 
-                foreach (var parameter in m_Parameters)
-                {
-                    if (parameter.isEnum)
-                    {
-                        var enumValue = Enum.ToObject(parameter.field.FieldType, parameter.value.GetIntValue());
-                        parameter.field.SetValue(instance, enumValue);
-                    }
-                    else
-                    {
-                        switch (parameter.value.type)
-                        {
-                            case InputControlLayout.ParameterType.Float:
-                                parameter.field.SetValue(instance, parameter.value.GetFloatValue());
-                                break;
-
-                            case InputControlLayout.ParameterType.Boolean:
-                                parameter.field.SetValue(instance, parameter.value.GetBoolValue());
-                                break;
-
-                            case InputControlLayout.ParameterType.Integer:
-                                parameter.field.SetValue(instance, parameter.value.GetIntValue());
-                                break;
-                        }
-                    }
-                }
+                NamedValue.ApplyAllToObject(instance, m_Parameters.Select(x => x.value));
 
                 m_ParameterEditor = (InputParameterEditor)Activator.CreateInstance(parameterEditorType);
                 m_ParameterEditor.SetTarget(instance);
@@ -273,31 +252,41 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
                 EditorGUI.BeginChangeCheck();
 
-                string result = null;
+                object result = null;
                 if (parameter.isEnum)
                 {
-                    var intValue = parameter.value.GetIntValue();
-                    result = EditorGUILayout.IntPopup(label, intValue, parameter.enumNames, parameter.enumValues).ToString();
+                    var intValue = parameter.value.value.ToInt32();
+                    result = EditorGUILayout.IntPopup(label, intValue, parameter.enumNames, parameter.enumValues);
                 }
-                else if (parameter.value.type == InputControlLayout.ParameterType.Integer)
+                else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
                 {
-                    var intValue = parameter.value.GetIntValue();
-                    result = EditorGUILayout.IntField(label, intValue).ToString();
+                    var longValue = parameter.value.value.ToInt64();
+                    result = EditorGUILayout.LongField(label, longValue);
                 }
-                else if (parameter.value.type == InputControlLayout.ParameterType.Float)
+                else if (parameter.value.type.IsInt())
                 {
-                    var floatValue = parameter.value.GetFloatValue();
-                    result = EditorGUILayout.FloatField(label, floatValue).ToString();
+                    var intValue = parameter.value.value.ToInt32();
+                    result = EditorGUILayout.IntField(label, intValue);
                 }
-                else if (parameter.value.type == InputControlLayout.ParameterType.Boolean)
+                else if (parameter.value.type == TypeCode.Single)
                 {
-                    var boolValue = parameter.value.GetBoolValue();
-                    result = EditorGUILayout.Toggle(label, boolValue).ToString();
+                    var floatValue = parameter.value.value.ToSingle();
+                    result = EditorGUILayout.FloatField(label, floatValue);
+                }
+                else if (parameter.value.type == TypeCode.Double)
+                {
+                    var floatValue = parameter.value.value.ToDouble();
+                    result = EditorGUILayout.DoubleField(label, floatValue);
+                }
+                else if (parameter.value.type == TypeCode.Boolean)
+                {
+                    var boolValue = parameter.value.value.ToBoolean();
+                    result = EditorGUILayout.Toggle(label, boolValue);
                 }
 
                 if (EditorGUI.EndChangeCheck())
                 {
-                    parameter.value.SetValue(result);
+                    parameter.value.value = PrimitiveValue.FromObject(result).ConvertTo(parameter.value.type);
                     m_Parameters[i] = parameter;
                     onChange?.Invoke();
                 }
@@ -318,43 +307,17 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             {
                 var parameter = m_Parameters[i];
 
-                var newValue = new InputControlLayout.ParameterValue();
-                newValue.name = parameter.value.name;
-
-                var value = parameter.field.GetValue(target);
-                if (parameter.isEnum)
+                object value = null;
+                try
                 {
-                    var intValue = Convert.ToInt32(value);
-                    newValue.SetValue(intValue);
+                    value = parameter.field.GetValue(target);
                 }
-                else
+                catch
                 {
-                    switch (parameter.value.type)
-                    {
-                        case InputControlLayout.ParameterType.Float:
-                        {
-                            var floatValue = Convert.ToSingle(value);
-                            newValue.SetValue(floatValue);
-                            break;
-                        }
-
-                        case InputControlLayout.ParameterType.Boolean:
-                        {
-                            var intValue = Convert.ToInt32(value);
-                            newValue.SetValue(intValue);
-                            break;
-                        }
-
-                        case InputControlLayout.ParameterType.Integer:
-                        {
-                            var boolValue = Convert.ToBoolean(value);
-                            newValue.SetValue(boolValue);
-                            break;
-                        }
-                    }
+                    // Ignore exceptions from getters.
                 }
 
-                m_Parameters[i].value = newValue;
+                m_Parameters[i].value.value = PrimitiveValue.FromObject(value).ConvertTo(parameter.value.type);
             }
         }
 
@@ -364,8 +327,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         private struct EditableParameterValue
         {
-            public InputControlLayout.ParameterValue value;
-            public InputControlLayout.ParameterValue? defaultValue;
+            public NamedValue value;
+            public NamedValue? defaultValue;
             public int[] enumValues;
             public GUIContent[] enumNames;
             public FieldInfo field;

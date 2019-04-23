@@ -19,7 +19,18 @@ namespace UnityEngine.Experimental.Input
             if (m_State == null)
                 return default;
 
-            return m_State.ReadCompositePartValue<TValue>(m_BindingIndex, partNumber);
+            bool buttonValue;
+            return m_State.ReadCompositePartValue<TValue>(m_BindingIndex, partNumber, out buttonValue);
+        }
+
+        public bool ReadValueAsButton(int partNumber)
+        {
+            if (m_State == null)
+                return default;
+
+            bool buttonValue;
+            m_State.ReadCompositePartValue<float>(m_BindingIndex, partNumber, out buttonValue);
+            return buttonValue;
         }
     }
 }

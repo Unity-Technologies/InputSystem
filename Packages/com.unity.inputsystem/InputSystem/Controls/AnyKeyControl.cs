@@ -9,10 +9,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </summary>
     public class AnyKeyControl : InputControl<float>////TODO: this should be a ButtonControl
     {
-        public bool isPressed
-        {
-            get { return ReadValue() > 0.0f; }
-        }
+        public bool isPressed => ReadValue() > 0.0f;
 
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame
 

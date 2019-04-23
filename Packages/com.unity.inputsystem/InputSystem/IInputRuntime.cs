@@ -2,6 +2,10 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 ////TODO: add API to send events in bulk rather than one by one
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -135,22 +139,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTime { get; }
 
         /// <summary>
+        /// The current time on the same timeline that input events are delivered on, for the current FixedUpdate.
+        /// </summary>
+        /// <remarks>
+        /// This should be used inside FixedUpdate calls instead of currentTime, as FixedUpdates are simulated at times
+        /// not matching the real time the simulation corresponds to.
+        /// </remarks>
+        double currentTimeForFixedUpdate { get; }
+
+        /// <summary>
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
-
-        /// <summary>
-        /// Frequency at which fixed updates are being run.
-        /// </summary>
-        double fixedUpdateIntervalInSeconds { get; }
-
-        /// <summary>
-        /// Flag which tells runtime whether to process input events when in the background.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to turn on or off event processing for background windows.
-        /// </remarks>
-        bool shouldRunInBackground { set; }
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }
@@ -161,6 +161,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
         #if UNITY_ANALYTICS || UNITY_EDITOR
         void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
         void SendAnalyticsEvent(string name, object data);
+        #endif
+
+        bool isInBatchMode { get; }
+
+        #if UNITY_EDITOR
+        Action<PlayModeStateChange> onPlayModeChanged { set; }
+        Action onProjectChange { set; }
+        bool isInPlayMode { get;  }
+        bool isPaused { get; }
         #endif
     }
 

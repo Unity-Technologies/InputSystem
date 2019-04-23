@@ -140,7 +140,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 updateBeforeRender = true
             };
 
-            var inherittedLayout = InputSystem.TryLoadLayout(parentLayout);
+            var inherittedLayout = InputSystem.LoadLayout(parentLayout);
 
             var currentUsages = new List<string>();
 

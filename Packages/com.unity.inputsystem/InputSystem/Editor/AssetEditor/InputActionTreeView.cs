@@ -14,6 +14,8 @@ using UnityEngine.Experimental.Input.Utilities;
 // not for the convenience of editing operations. This means that editing operations have to constantly jump through
 // hoops to map themselves onto the persistence model of the data.
 
+////FIXME: context menu cannot be brought up when there's no items in the tree
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -46,6 +48,7 @@ namespace UnityEngine.Experimental.Input.Editor
             drawHeader = true;
             drawPlusButton = true;
             drawMinusButton = true;
+            m_ForceAcceptRename = false;
             m_Title = new GUIContent("");
         }
 
@@ -361,7 +364,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // If a rename is already in progress, force it to end first.
             EndRename();
-
             onBeginRename?.Invoke((ActionTreeItemBase)item);
             base.BeginRename(item);
         }
@@ -376,13 +378,20 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!(FindItem(args.itemID, rootItem) is ActionTreeItemBase actionItem))
                 return;
 
-            if (!args.acceptedRename || args.originalName == args.newName)
+            if (!(args.acceptedRename || m_ForceAcceptRename) || args.originalName == args.newName)
                 return;
 
             Debug.Assert(actionItem.canRename, "Cannot rename " + actionItem);
 
             actionItem.Rename(args.newName);
             OnSerializedObjectModified();
+        }
+
+        public void EndRename(bool forceAccept)
+        {
+            m_ForceAcceptRename = forceAccept;
+            EndRename();
+            m_ForceAcceptRename = false;
         }
 
         protected override void DoubleClickedItem(int id)
@@ -453,17 +462,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 var items = itemIds.Select(id => (ActionTreeItemBase)sourceTree.FindItem(id, sourceTree.rootItem));
                 CopyItems(items, copyBuffer);
 
-                ////FIXME: doing this *before* the move probably has the potential of losing reference points we need to insert the data
-                // If alt isn't down (i.e. we're not duplicating), delete old items.
-                // Do this *before* pasting so that assigning new names will not cause names to
-                // change when just moving items around.
-                if (isMove)
-                {
-                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
-                    foreach (var item in items)
-                        item.DeleteData();
-                }
-
                 // If we're moving items within the same tree, no need to generate new IDs.
                 var assignNewIDs = !(isMove && sourceTree == this);
 
@@ -472,6 +470,24 @@ namespace UnityEngine.Experimental.Input.Editor
                 int? childIndex = null;
                 if (args.dragAndDropPosition == DragAndDropPosition.BetweenItems)
                     childIndex = args.insertAtIndex;
+
+                // If alt isn't down (i.e. we're not duplicating), delete old items.
+                // Do this *before* pasting so that assigning new names will not cause names to
+                // change when just moving items around.
+                if (isMove)
+                {
+                    // Don't use DeleteDataOfSelectedItems() as that will record as a separate operation.
+                    foreach (var item in items)
+                    {
+                        // If we're dropping *between* items on the same parent as the current item and the
+                        // index we're dropping at (in the parent, NOT in the array) is coming *after* this item,
+                        // then deleting the item will shift the target index down by one.
+                        if (item.parent == target && childIndex != null && childIndex > target.children.IndexOf(item))
+                            --childIndex;
+
+                        item.DeleteData();
+                    }
+                }
 
                 // Paste items onto target.
                 PasteItems(copyBuffer.ToString(),
@@ -510,7 +526,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
 
                     case k_PasteCommand:
-                        var systemCopyBuffer = EditorGUIUtility.systemCopyBuffer;
+                        var systemCopyBuffer = EditorHelpers.GetSystemCopyBufferContents();
                         if (systemCopyBuffer != null && systemCopyBuffer.StartsWith(k_CopyPasteMarker))
                             uiEvent.Use();
                         break;
@@ -532,8 +548,8 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
                     case k_DuplicateCommand:
                         var buffer = new StringBuilder();
-                        CopySelectedItems(buffer);
-                        PasteData(buffer.ToString());
+                        CopySelectedItemsTo(buffer);
+                        PasteDataFrom(buffer.ToString());
                         break;
                     case k_DeleteCommand:
                         DeleteDataOfSelectedItems();
@@ -558,11 +574,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public void CopySelectedItemsToClipboard()
         {
             var copyBuffer = new StringBuilder();
-            CopySelectedItems(copyBuffer);
-            EditorGUIUtility.systemCopyBuffer = copyBuffer.ToString();
+            CopySelectedItemsTo(copyBuffer);
+            EditorHelpers.SetSystemCopyBufferContents(copyBuffer.ToString());
         }
 
-        private void CopySelectedItems(StringBuilder buffer)
+        public void CopySelectedItemsTo(StringBuilder buffer)
         {
             CopyItems(GetSelectedItemsWithChildrenFilteredOut(), buffer);
         }
@@ -630,10 +646,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void PasteDataFromClipboard()
         {
-            PasteData(EditorGUIUtility.systemCopyBuffer);
+            PasteDataFrom(EditorHelpers.GetSystemCopyBufferContents());
         }
 
-        private void PasteData(string copyBufferString)
+        public void PasteDataFrom(string copyBufferString)
         {
             if (!copyBufferString.StartsWith(k_CopyPasteMarker))
                 return;
@@ -670,7 +686,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // We may have pasted into a different tree view. Only select the items if we can find them in
                 // our current tree view.
                 var newItems = newItemPropertyPaths.Select(FindItemByPropertyPath).Where(x => x != null);
-                if (newItems.Count() > 0)
+                if (newItems.Any())
                     SelectItems(newItems);
             }
         }
@@ -730,16 +746,16 @@ namespace UnityEngine.Experimental.Input.Editor
             if (arrayIndex == -1)
                 arrayIndex = array.arraySize;
 
+            var actionForNewBindings = location.item is ActionTreeItem actionItem ? actionItem.name : null;
+
             // Paste new element.
-            var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs,
-                actionForNewBindings: location.item is ActionTreeItem actionItem ? actionItem.name : null);
+            var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs, actionForNewBindings);
             newItemPropertyPaths.Add(newElement.propertyPath);
 
             // If the element can have children, read whatever blocks are following the current one (if any).
             if ((tag == k_ActionTag || tag == k_CompositeBindingTag) && blocks.Length > 1)
             {
                 var bindingArray = array;
-                var actionForNewBindings = (string)null;
 
                 if (tag == k_ActionTag)
                 {
@@ -937,9 +953,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void AddNewAction(SerializedProperty actionMapProperty)
         {
-            var actionProperty = InputActionSerializationHelpers.AddAction(actionMapProperty);
-            InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty, groups: bindingGroupForNewBindings);
-            OnNewItemAdded(actionProperty);
+            if (onHandleAddNewAction != null)
+                onHandleAddNewAction(actionMapProperty);
+            else
+            {
+                var actionProperty = InputActionSerializationHelpers.AddAction(actionMapProperty);
+                InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty, groups: bindingGroupForNewBindings);
+                OnNewItemAdded(actionProperty);
+            }
         }
 
         public void AddNewBinding()
@@ -1113,11 +1134,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 var text = item.displayName;
                 var textRect = GetTextRect(args.rowRect, item);
 
-                if (args.selected)
-                    Styles.selectedText.Draw(textRect, text, false, false, args.selected,
-                        args.focused);
-                else
-                    Styles.text.Draw(textRect, text, false, false, args.selected, args.focused);
+                var style = args.selected ? Styles.selectedText : Styles.text;
+                style.Draw(textRect, text, false, false, args.selected,
+                    args.focused);
             }
 
             // Bottom line.
@@ -1225,6 +1244,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public bool drawMinusButton { get; set; }
         public float foldoutOffset { get; set; }
 
+        public Action<SerializedProperty> onHandleAddNewAction { get; set; }
         public string title
         {
             get => m_Title?.text;
@@ -1271,6 +1291,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private FilterCriterion[] m_ItemFilterCriteria;
         private GUIContent m_Title;
         private bool m_InitiateContextMenuOnNextRepaint;
+        private bool m_ForceAcceptRename;
         private int m_SerializedObjectDirtyCount;
 
         private static readonly GUIContent s_AddBindingLabel = EditorGUIUtility.TrTextContent("Add Binding");
@@ -1418,14 +1439,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     return null;
 
                 var list = new List<FilterCriterion>();
-                foreach (var substring in criteria.Split(char.IsWhiteSpace))
+                foreach (var substring in criteria.Tokenize())
                 {
                     if (substring.StartsWith(k_DeviceLayoutTag))
-                        list.Add(ByDeviceLayout(substring.Substring(2)));
+                        list.Add(ByDeviceLayout(substring.Substr(2).Unescape()));
                     else if (substring.StartsWith(k_BindingGroupTag))
-                        list.Add(ByBindingGroup(substring.Substring(2)));
+                        list.Add(ByBindingGroup(substring.Substr(2).Unescape()));
                     else
-                        list.Add(ByName(substring));
+                        list.Add(ByName(substring.ToString().Unescape()));
                 }
 
                 return list;
@@ -1452,7 +1473,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static class Styles
         {
-            public static readonly GUIStyle line = new GUIStyle("TV Line");
             public static readonly GUIStyle text = new GUIStyle("Label");
             public static readonly GUIStyle selectedText = new GUIStyle("Label");
             public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label");

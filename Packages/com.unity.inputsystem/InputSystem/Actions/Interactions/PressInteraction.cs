@@ -45,20 +45,20 @@ namespace UnityEngine.Experimental.Input.Interactions
                 case PressBehavior.PressOnly:
                     if (m_WaitingForRelease)
                     {
-                        if (context.continuous)
+                        if (isActuated)
                         {
-                            if (isActuated)
+                            if (context.continuous)
                                 context.PerformedAndStayPerformed();
-                            else
-                            {
-                                // We need to reset the action to waiting state in order to stop it from triggering
-                                // continuously. However, we do not want to cancel here as that will trigger the action.
-                                // So go back directly to waiting here.
-                                context.Waiting();
-                            }
+                        }
+                        else
+                        {
+                            m_WaitingForRelease = false;
+                            // We need to reset the action to waiting state in order to stop it from triggering
+                            // continuously. However, we do not want to cancel here as that will trigger the action.
+                            // So go back directly to waiting here.
+                            context.Waiting();
                         }
 
-                        m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
@@ -81,6 +81,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                     }
                     else if (isActuated)
                     {
+                        context.Started();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -88,24 +89,16 @@ namespace UnityEngine.Experimental.Input.Interactions
                 case PressBehavior.PressAndRelease:
                     if (m_WaitingForRelease)
                     {
-                        if (context.continuous)
-                        {
-                            if (isActuated)
-                                context.PerformedAndStayPerformed();
-                            else
-                                context.PerformedAndGoBackToWaiting();
-                        }
-                        else if (!isActuated)
+                        if (!isActuated)
                             context.PerformedAndGoBackToWaiting();
+                        // No support for continuous mode.
 
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
-                        if (context.continuous)
-                            context.PerformedAndStayPerformed();
-                        else
-                            context.PerformedAndStayStarted();
+                        context.PerformedAndGoBackToWaiting();
+                        // No support for continuous mode.
 
                         m_WaitingForRelease = true;
                     }

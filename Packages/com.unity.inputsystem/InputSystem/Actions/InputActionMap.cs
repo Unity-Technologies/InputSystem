@@ -210,20 +210,18 @@ namespace UnityEngine.Experimental.Input
                 return InputActionState.kInvalidIndex;
             var actionCount = m_Actions.Length;
 
-            var isReferenceById = nameOrId[0] == '{';
-            if (isReferenceById)
+            // If it contains hyphens, it may be a GUID so try looking up that way.
+            if (nameOrId.Contains('-') && Guid.TryParse(nameOrId, out var id))
             {
-                var id = new Guid(nameOrId);
                 for (var i = 0; i < actionCount; ++i)
                     if (m_Actions[i].idDontGenerate == id)
                         return i;
             }
-            else
-            {
-                for (var i = 0; i < actionCount; ++i)
-                    if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
-                        return i;
-            }
+
+            // Default search goes by name (case insensitive).
+            for (var i = 0; i < actionCount; ++i)
+                if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return i;
 
             return InputActionState.kInvalidIndex;
         }
@@ -451,7 +449,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// GUID converted from <see cref="m_Id"/>.
         /// </summary>
-        [NonSerialized] internal Guid m_Guid;
+        [NonSerialized] private Guid m_Guid;
 
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
@@ -495,9 +493,9 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         internal ReadOnlyArray<InputBinding> GetBindingsForSingleAction(InputAction action)
         {
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap == this);
-            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
+            Debug.Assert(action != null, "Action cannot be null");
+            Debug.Assert(action.m_ActionMap == this, "Action must be in action map");
+            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action, "Action is not a singleton action");
 
             // See if we need to refresh.
             if (m_BindingsForEachAction == null)
@@ -888,6 +886,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        internal int FindBinding(InputBinding match)
+        {
+            var numBindings = m_Bindings.LengthSafe();
+            for (var i = 0; i < numBindings; ++i)
+            {
+                ref var binding = ref m_Bindings[i];
+                if (match.Matches(ref binding))
+                    return i;
+            }
+            return -1;
+        }
+
         #region Serialization
 
         // Action maps are serialized in two different ways. For storage as imported assets in Unity's Library/ folder
@@ -905,7 +915,8 @@ namespace UnityEngine.Experimental.Input
             public string processors;
             public string groups;
             public string action;
-            public bool chainWithPrevious;
+            ////TODO: re-enable when chained bindings are implemented
+            //public bool chainWithPrevious;
             public bool isComposite;
             public bool isPartOfComposite;
 
@@ -924,7 +935,7 @@ namespace UnityEngine.Experimental.Input
                     interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
                     processors = string.IsNullOrEmpty(processors) ? null : processors,
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
-                    chainWithPrevious = chainWithPrevious,
+                    //chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
                 };
@@ -941,7 +952,7 @@ namespace UnityEngine.Experimental.Input
                     interactions = binding.interactions,
                     processors = binding.processors,
                     groups = binding.groups,
-                    chainWithPrevious = binding.chainWithPrevious,
+                    //chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
                 };
@@ -956,6 +967,7 @@ namespace UnityEngine.Experimental.Input
             public string expectedControlLayout;
             public bool continuous;
             public bool passThrough;
+            public bool initialStateCheck;
             public string processors;
             public string interactions;
 
@@ -973,6 +985,7 @@ namespace UnityEngine.Experimental.Input
                     expectedControlLayout = action.m_ExpectedControlLayout,
                     continuous = action.continuous,
                     passThrough = action.passThrough,
+                    initialStateCheck = action.initialStateCheck,
                     processors = action.processors,
                     interactions = action.interactions,
                 };
@@ -1126,6 +1139,7 @@ namespace UnityEngine.Experimental.Input
                             : null,
                         continuous = jsonAction.continuous,
                         passThrough = jsonAction.passThrough,
+                        initialStateCheck = jsonAction.initialStateCheck,
                         m_Processors = jsonAction.processors,
                         m_Interactions = jsonAction.interactions,
                     };
@@ -1198,6 +1212,7 @@ namespace UnityEngine.Experimental.Input
                                 : null,
                             continuous = jsonAction.continuous,
                             passThrough = jsonAction.passThrough,
+                            initialStateCheck = jsonAction.initialStateCheck,
                             m_Processors = jsonAction.processors,
                             m_Interactions = jsonAction.interactions,
                         };
