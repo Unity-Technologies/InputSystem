@@ -21,7 +21,6 @@ public class DemoGameTestFixture
 {
     public DemoGame game { get; set; }
     public InputTestFixture input { get; set; }
-    public SteamTestFixture steam { get; set; }
     public RuntimePlatform platform { get; private set; }
 
     public Mouse mouse { get; set; }
@@ -225,7 +224,6 @@ public class DemoGameTestFixture
 
         game = null;
         input = null;
-        steam = null;
 
         mouse = null;
         keyboard = null;

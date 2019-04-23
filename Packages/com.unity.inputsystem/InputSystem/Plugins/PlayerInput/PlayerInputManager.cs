@@ -18,6 +18,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
     /// This is a singleton component. Only one instance is meant to be active in a game
     /// at any one time. To retrieve the current instance, use <see cref="instance"/>.
     /// </remarks>
+    [AddComponentMenu("Input/Player Input Manager")]
     public class PlayerInputManager : MonoBehaviour
     {
         public const string PlayerJoinedMessage = "OnPlayerJoined";
