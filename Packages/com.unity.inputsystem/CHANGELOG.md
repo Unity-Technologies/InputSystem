@@ -4,6 +4,183 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.3-preview] - TBD
+
+### Added
+
+- Added a `clickCount` control to the `Mouse` class, which specifies the click count for the last mouse click (to allow distinguishing between single-, double- and multi-clicks).
+- Support for Bluetooth Xbox One controllers on macOS.
+
+#### Actions
+
+- New API for changing bindings on actions
+```
+    // Several variations exist that allow to look up bindings in various ways.
+    myAction.ChangeBindingWithPath("<Gamepad>/buttonSouth")
+        .WithPath("<Keyboard>/space");
+
+    // Can also replace the binding wholesale.
+    myAction.ChangeBindingWithPath("<Keyboard>/space")
+        .To(new InputBinding { ... });
+
+    // Can also remove bindings programmatically now.
+    myAction.ChangeBindingWithPath("<Keyboard>/space").Erase();
+```
+
+### Changed
+
+- `Joystick.axes` and `Joystick.buttons` have been removed.
+- Generated wrapper code for Input Action Assets are now self-contained, generating all the data from code and not needing a reference to the asset; `InputActionAssetReference` has been removed.
+- The option to generate interfaces on wrappers has been removed, instead we always do this now.
+- The option to generate events on wrappers has been removed, we felt that this no longer made sense.
+- Will now show default values in Input Action inspector if no custom values for file path, class name or namespace have been provided.
+- `InputSettings.runInBackground` has been removed. This should now be supported or not on a per-device level. Most devices never supported it in the first place, so a global setting did not seem to be useful.
+- Several new `Sensor`-based classes have been added. Various existing Android sensor implementations are now based on them.
+- `InputControlLayoutAttribute` is no longer inherited.
+  * Rationale: A class marked as a layout will usually be registered using `RegisterLayout`. A class derived from it will usually be registered the same way. Because of layout inheritance, properties applied to the base class through `InputControlLayoutAttribute` will affect the subclass as intended. Not inheriting the attribute itself, however, now allows having properties such as `isGenericTypeOfDevice` which should not be inherited.
+- Removed `acceleration`, `orientation`, and `angularVelocity` controls from `DualShockGamepad` base class.
+  * They are still on `DualShockGamepadPS4`.
+  * The reason is that ATM we do not yet support these controls other than on the PS4. The previous setup pretended that these controls work when in fact they don't.
+- Marking a control as noisy now also marks all child controls as noisy.
+- The input system now defaults to ignoring any HID devices with usage types not known to map to game controllers. You can use `HIDSupport.supportedUsages` to enable specific usage types.
+- In the Input Settings window, asset selection has now been moved to the "gear" popup menu. If no asset is created, we now automatically create one.
+- In the inspector for Input Settings assets, we now show a button to go to the Input Settings window, and a button to make the asset active if it isn't.
+- Tests are now no longer part of the com.unity.inputsystem package. The `InputTestFixture` class still is for when you want to write input-related tests for your project. You can reference the `Unity.InputSystem.TestFixture` assembly when you need to do that.
+
+#### Actions
+
+- A number of changes have been made to the control picker UI in the editor. \
+  ![Input Control Picker](Documentation~/Images/InputControlPicker.png)
+  * The button to pick controls interactively (e.g. by pressing a button on a gamepad) has been moved inside the picker and renamed to "Listen". It now works as a toggle that puts the picker into a special kind of 'search' mode. While listening, suitable controls that are actuated will be listed in the picker and can then be picked from.
+  * Controls are now displayed with their nice names (e.g. "Cross" instead of "buttonSouth" in the case of the PS4 controller).
+  * Child controls are indented instead of listed in "parent/child" format.
+  * The hierarchy of devices has been rearranged for clarity. The toplevel groups of "Specific Devices" and "Abstract Devices" are now merged into one hierarchy that progressively groups devices into more specific groups.
+  * Controls now have icons displayed for them.
+- There is new support for binding to keys on the keyboard by their generated character rather than by their location. \
+  ![Keyboard Binding](Documentation~/Images/KeyboardBindByLocationVsCharacter.png)
+  * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
+  * Binding by location shows differences between the local keyboard layout and the US reference layout.
+  * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
+- `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
+- Reacting to controls that are already actuated when an action is enabled is now an __optional__ behavior rather than the default behavior. This is a __breaking__ change.
+  * Essentially, this change reverts back to the behavior before 0.2-preview.
+  * To reenable the behavior, toggle "Initial State Check" on in the UI or set the `initialStateCheck` property in code.
+  ![Inital State Check](Documentation~/Images/InitialStateCheck.png)
+  * The reason for the change is that having the behavior on by default made certain setups hard to achieve. For example, if `<Keyboard>/escape` is used in one action map to toggle *into* the main menu and in another action map to toggle *out* of it, then the previous behavior would immediately exit out of the menu if `escape` was still pressed from going into the menu. \
+  We have come to believe that wanting to react to the current state of a control right away is the less often desirable behavior and so have made it optional with a separate toggle.
+- Processors and Interactions are now shown in a component-inspector-like fashion in the Input Action editor window, allowing you to see the properties of all items at once.
+
+### Fixed
+
+- Input Settings configured in the editor are now transferred to the built player correctly.
+- Time slicing for fixed updates now works correctly, even when pausing or dropping frames.
+- Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
+- DualShock sensors on PS4 are now marked as noisy (#494).
+- IL2CPP causing issues with XInput on windows and osx desktops.
+- Fixed a bug where the event buffer used by `InputEventTrace` could get corrupted.
+
+#### Actions
+
+- Actions and bindings disappearing when control schemes have spaces in their names.
+- `InputActionRebindingExceptions.RebindOperation` can now be reused as intended; used to stop working properly the first time a rebind completed or was cancelled.
+- `PlayerInput` no longer fails to find actions when using UnityEvents (#500).
+- The `"{...}"` format for referencing action maps and actions using GUIDs as strings has been obsoleted. It will still work but adding the extra braces is no longer necessary.
+- Drag&dropping bindings between other bindings that came before them in the list no longer drops the items at a location one higher up in the list than intended.
+- Editing name of control scheme in editor not taking effect *except* if hitting enter key.
+- Saving no longer causes the selection of the current processor or interaction to be lost.
+  * This was especially annoying when having "Auto-Save" on as it made editing parameters on interactions and processors very tedious.
+- In locales that use decimal separators other than '.', floating-point parameters on composites, interactions, and processors no longer lead to invalid serialized data being generated.
+- Fix choosing "Add Action" in action map context menu throwing an exception.
+- The input action asset editor window will no longer fail saving if the asset has been moved.
+- The input action asset editor window will now show the name of the asset being edited when asking for saving changes. 
+- Clicking "Cancel" in the save changes dialog for the input action asset editor window will now cancel quitting the editor.
+- Fixed pasting or dragging a composite binding from one action into another.
+- In the action map editor window, switching from renaming an action to renaming an action map will no longer break the UI.
+- Fixed calling Enable/Disable from within action callbacks sometimes leading to corruption of state which would then lead to actions not getting triggered (#472).
+- Fixed setting of "Auto-Save" toggle in action editor getting lost on domain reload.
+- Fixed blurry icons in editor for imported .inputactions assets and actions in them.
+- `Press` and `Release` interactions will now work correctly if they have multiple bound controls.
+- `Release` interactions will now invoke a `Started` callback when the control is pressed.
+- Made Vector2 composite actions respect the press points of button controls used to compose the value.
+
+## [0.2.6-preview] - 2019-03-20
+
+>NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
+>NOTE: The minimum version requirement for the new input system has been bumped
+       to 2019.1
+
+### Added
+
+- Support gamepad vibration on Switch.
+- Added support for Joysticks on Linux.
+
+#### Actions
+
+- Added ability to change which part of a composite a binding that is part of the composite is assigned to.
+  * Part bindings can now be freely duplicated or copy-pasted. This allows having multiple bindings for "up", for example. Changing part assignments retroactively allows to freely edit the composite makeup.
+- Can now drag&drop multiple items as well as drop items onto others (equivalent to cut&paste). Holding ALT copies data instead of moving it.
+- Edits to control schemes are now undoable.
+- Control schemes are now sorted alphabetically.
+- Can now search by binding group (control scheme) or devices directly from search box.
+  * `g:Gamepad` filters bindings to those in the "Gamepad" group.
+  * `d:Gamepad` filters bindings to those from Gamepad-compatible devices.
+
+### Changed
+
+- The input debugger will no longer automatically show remote devices when the profiler is connected. Instead, use the new menu in debugger toolbar to connect to players or to enable/disable remote input debugging.
+- "Press and Release" interactions will now invoke the `performed` callback on both press and release (instead of invoking `performed` and `cancel`, which was inconsistent with other behaviors).
+
+#### Actions
+
+- Bindings have GUIDs now like actions and maps already did. This allows to persistently and uniquely identify individual bindings.
+- Replaced UI overlay while rebinding interactively with cancellable progress bar. Interactive rebinding now cancels automatically after 4 seconds without suitable input.
+- Bindings that are not assigned to any control scheme are now visible when a particular control scheme is selected.
+  * Bindings not assigned to any control scheme are active in *ALL* control schemes.
+  * The change makes this visible in the UI now.
+  * When a specific control scheme is selected, these bindings are affixed with `{GLOBAL}` for added visibility.
+- When filtering by devices from a control scheme, the filtering now takes layout inheritance into account. So, a binding to a control on `Pointer` will now be shown when the filter is `Mouse`.
+- The public control picker API has been revised.
+  * The simplest way to add control picker UI to a control path is to add an `InputControlAttribute` to the field.
+    ```
+    // In the inspector, shows full UI to select a control interactively
+    // (including interactive picking through device input).
+    [InputControl(layout = "Button")]
+    private string buttonControlPath;
+    ```
+- Processors of incompatible types will now be ignored instead of throwing an exception.
+
+### Fixed
+
+- Remote connections in input debugger now remain connected across domain reloads.
+- Don't incorrectly create non-functioning devices if a physical device implements multiple incompatible logical HID devices (such as the MacBook keyboard/touch pad and touch bar).
+- Removed non-functioning sort triangles in event list in Input Debugger device windows.
+- Sort events in input debugger window by id rather then by timestamp.
+- Make parsing of float parameters support floats represented in "e"-notation and "Infinity".
+- Input device icons in input debugger window now render in appropriate resolution on retina displays.
+- Fixed Xbox Controller on macOS reporting negative values for the sticks when represented as dpad buttons.
+- `InputSettings.UpdateMode.ProcessEventsManually` now correctly triggers updates when calling `InputSystem.Update(InputUpdateType.Manual)`.
+
+#### Actions
+
+- Pasting or duplicating an action in an action map asset will now assign a new and unique ID to the action.
+- "Add Action" button being active and triggering exceptions when no action map had been added yet.
+- Fixed assert when generating C# class and make sure it gets imported correctly.
+- Generate directories as needed when generating C# class, and allow path names without "Assets/" path prefix.
+- Allow binding dpad controls to actions of type "Vector2".
+- Fixed old name of action appearing underneath rename overlay.
+- Fixed inspector UIs for on-screen controls throwing exceptions and being non-functional.
+- Fixed deleting multiple items at same time in action editor leading to wrong items being deleted.
+- Fixed copy-pasting actions not preserving action properties other than name.
+- Fixed memory corruptions coming from binding resolution of actions.
+- InputActionAssetReferences in ScriptableObjects will continue to work after domain reloads in the editor.
+- Fixed `startTime` and `duration` properties of action callbacks.
+
+## [0.2.1-preview] - 2019-03-11
+
+### Changed
+
+ - NativeUpdateCallback API update to match Unity 2018.3.8f1
+
 ## [0.2.0-preview] - 2019-02-12
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
@@ -23,6 +200,7 @@ This release contains a number of fairly significant changes. The focus has been
 - State monitors no longer have their timeouts removed automatically when they fire. This makes it possible to have a timeout that is removed only in response to a specific state change.
 - Events for devices that implement `IInputStateCallbacks` (such as `Touchscreen`) are allowed to go back in time. Avoids the problem of having to order events between multiple fingers correctly or seeing events getting rejected.
 - `PenState.Button` is now `PenButton`.
+- Removed TouchPositionTransformProcessor, was used only by Android, the position transformation will occur in native backend in 2019.x
 
 #### Actions:
 - Bindings that have no interactions on them will trigger differently now. __This is a breaking change__.

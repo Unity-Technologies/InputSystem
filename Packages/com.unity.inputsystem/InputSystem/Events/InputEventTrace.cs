@@ -211,6 +211,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     m_EventBufferTail = m_EventBuffer;
                     newTail = new IntPtr(m_EventBuffer.ToInt64() + eventSize);
 
+                    // If the tail overtook both the head and the end of the buffer, 
+                    // we need to make sure the head is wrapped around as well.
+                    if (newTailOvertakesHead)
+                        m_EventBufferHead = m_EventBuffer;
+
                     // Recheck whether we're overtaking head.
                     newTailOvertakesHead = newTail.ToInt64() > m_EventBufferHead.ToInt64();
                 }

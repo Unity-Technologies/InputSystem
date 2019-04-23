@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                         var asset = (InputActionAsset)serializedObject.FindProperty("m_Actions").objectReferenceValue;
                         var actionMap = asset.TryGetActionMap(m_ActionMapOptions[selected].text);
                         if (actionMap != null)
-                            defaultActionMapProperty.stringValue = $"{{{actionMap.id}}}";
+                            defaultActionMapProperty.stringValue = actionMap.id.ToString();
                     }
                     m_SelectedDefaultActionMap = selected;
                 }
@@ -404,7 +404,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 // Add any new actions.
                 foreach (var action in asset)
                 {
-                    newActionEvents.Add(new PlayerInput.ActionEvent(action.id));
+                    newActionEvents.Add(new PlayerInput.ActionEvent(action.id, action.ToString()));
                     newActionNames.Add(new GUIContent(action + " Action"));
                 }
 

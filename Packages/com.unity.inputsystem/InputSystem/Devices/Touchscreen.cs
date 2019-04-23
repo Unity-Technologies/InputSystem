@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A multi-touch surface.
     /// </summary>
-    [InputControlLayout(stateType = typeof(TouchscreenState))]
+    [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
         public TouchControl primaryTouch => allTouchControls[0];
@@ -237,7 +237,7 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: find a better way to manage memory allocation for touches
         ////      (we really don't want to crawl through the entire state here like we do now;
-        ////      whatever the solution, it'll likely be complicated by fixed vs dymamic updates)
+        ////      whatever the solution, it'll likely be complicated by fixed vs dynamic updates)
 
         ////TODO: primary touch handling
 

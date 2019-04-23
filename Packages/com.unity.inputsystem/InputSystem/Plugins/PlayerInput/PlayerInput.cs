@@ -14,6 +14,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: handle required actions ahead of time so that we catch it if a device matches by type but doesn't otherwise
 
+////TODO: handle case of control scheme not having any devices in its requirements
+
 ////FIXME: why can't I join with a mouse left click?
 
 //pairing with specific devices requires PlayerInputManager
@@ -137,6 +139,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
     /// can be reimplemented on top of the same API.
     /// </remarks>
     /// <seealso cref="PlayerInputManager"/>
+    [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
     {
@@ -912,6 +915,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 }
                 else
                 {
+                    ////TODO: support action sets that don't have control schemes when player isn't joining through PlayerInputManager
                     throw new NotImplementedException();
                 }
             }
@@ -1070,7 +1074,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             // Remove from global list.
             var index = ArrayHelpers.IndexOfReference(s_AllActivePlayers, this, s_AllActivePlayersCount);
             if (index != -1)
-                ArrayHelpers.EraseAtWithCapacity(ref s_AllActivePlayers, ref s_AllActivePlayersCount, index);
+                ArrayHelpers.EraseAtWithCapacity(s_AllActivePlayers, ref s_AllActivePlayersCount, index);
 
             // Unhook from change notifications if we're the last player.
             if (s_AllActivePlayersCount == 0 && s_UserChangeDelegate != null)
@@ -1090,6 +1094,14 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             UninitializeActions();
 
             m_PlayerIndex = -1;
+        }
+
+        /// <summary>
+        /// Debug helper method that can be hooked up to actions when using <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// </summary>
+        public void DebugLogAction(InputAction.CallbackContext context)
+        {
+            Debug.Log(context.ToString());
         }
 
         private void HandleDeviceLost()
@@ -1203,7 +1215,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 if (action.actionMap.asset == null)
                     throw new ArgumentException($"Action must be part of an asset (given action '{action}' is not)");
 
-                m_ActionId = $"{{{action.id.ToString()}}}";
+                m_ActionId = action.id.ToString();
                 m_ActionName = $"{action.actionMap.name}/{action.name}";
             }
 

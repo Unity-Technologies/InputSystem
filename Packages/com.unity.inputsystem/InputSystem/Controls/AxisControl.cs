@@ -23,14 +23,20 @@ namespace UnityEngine.Experimental.Input.Controls
         public float clampMin;
         public float clampMax;
         public float clampConstant;
+        ////REVIEW: why not just roll this into scaleFactor?
         public bool invert; // If true, multiply by -1.
         public bool normalize;
         public float normalizeMin;
         public float normalizeMax;
         public float normalizeZero;
+        ////REVIEW: why not just have a default scaleFactor of 1?
+        public bool scale;
+        public float scaleFactor;
 
         protected float Preprocess(float value)
         {
+            if (scale)
+                value *= scaleFactor;
             if (clampToConstant)
             {
                 if (value < clampMin || value > clampMax)
@@ -79,8 +85,8 @@ namespace UnityEngine.Experimental.Input.Controls
                 return -1;
 
             var value = ReadValueFromState(statePtr);
-            var min = m_MinValue.ToFloat();
-            var max = m_MaxValue.ToFloat();
+            var min = m_MinValue.ToSingle();
+            var max = m_MaxValue.ToSingle();
 
             value = Mathf.Clamp(value, min, max);
 

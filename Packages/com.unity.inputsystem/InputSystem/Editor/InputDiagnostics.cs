@@ -12,19 +12,19 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnEventTimestampOutdated(InputEventPtr eventPtr, InputDevice device)
         {
-            Debug.LogError(string.Format("'{0}' input event for device '{1}' is outdated (event time: {2}, device time: {3})", eventPtr.type, device, eventPtr.time, device.lastUpdateTime));
+            Debug.LogError(
+                $"'{eventPtr.type}' input event for device '{device}' is outdated (event time: {eventPtr.time}, device time: {device.lastUpdateTime})");
         }
 
         public void OnEventFormatMismatch(InputEventPtr eventPtr, InputDevice device)
         {
-            Debug.LogError(string.Format("'{0}' input event for device '{1}' has incorrect format (event format: '{2}', device format: '{3}')",
-                eventPtr.type, device, eventPtr.type, device.stateBlock.format));
+            Debug.LogError(
+                $"'{eventPtr.type}' input event for device '{device}' has incorrect format (event format: '{eventPtr.type}', device format: '{device.stateBlock.format}')");
         }
 
         public void OnEventForDisabledDevice(InputEventPtr eventPtr, InputDevice device)
         {
-            Debug.LogError(string.Format("Device '{1}' received input event '{0}' but the device is disabled",
-                eventPtr, device));
+            Debug.LogError($"Device '{device}' received input event '{eventPtr}' but the device is disabled");
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Haptics;
@@ -379,13 +380,13 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="name">Name of the layout to load. Note that layout names are case-insensitive.</param>
         /// <returns>The constructed layout instance or null if no layout of the given name could be found.</returns>
-        public static InputControlLayout TryLoadLayout(string name)
+        public static InputControlLayout LoadLayout(string name)
         {
             ////FIXME: this will intern the name even if the operation fails
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
-        public static InputControlLayout TryLoadLayout<TControl>()
+        public static InputControlLayout LoadLayout<TControl>()
             where TControl : InputControl
         {
             return s_Manager.TryLoadControlLayout(typeof(TControl));
@@ -394,6 +395,8 @@ namespace UnityEngine.Experimental.Input
         #endregion
 
         #region Processors
+
+        ////TODO: rename to RegisterProcessor
 
         /// <summary>
         /// Register an <see cref="InputProcessor{TValue}"/> with the system.
@@ -960,7 +963,7 @@ namespace UnityEngine.Experimental.Input
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
             if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new ArgumentException(message: string.Format("Device for control '{0}' has not been added to system"), nameof(control));
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"), nameof(control));
 
             s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
@@ -1218,6 +1221,8 @@ namespace UnityEngine.Experimental.Input
             var inputEvent = TextEvent.Create(device.id, character, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
+
+        ////REVIEW: this should run the "natural" update according to what's configured in the input systems (e.g. manual if manual is chosen there)
 
         public static void Update()
         {
@@ -1497,14 +1502,14 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(s_Manager != null);
 
-            s_Remote = new InputRemoting(s_Manager);
-
             #if UNITY_EDITOR
+            s_Remote = new InputRemoting(s_Manager);
             // NOTE: We use delayCall as our initial startup will run in editor initialization before
             //       PlayerConnection is itself ready. If we call Bind() directly here, we won't
             //       see any errors but the callbacks we register for will not trigger.
             EditorApplication.delayCall += SetUpRemotingInternal;
             #else
+            s_Remote = new InputRemoting(s_Manager);
             SetUpRemotingInternal();
             #endif
         }
@@ -1513,10 +1518,11 @@ namespace UnityEngine.Experimental.Input
         {
             if (s_RemoteConnection == null)
             {
-                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
                 #if UNITY_EDITOR
+                s_RemoteConnection = RemoteInputPlayerConnection.instance;
                 s_RemoteConnection.Bind(EditorConnection.instance, false);
                 #else
+                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
                 s_RemoteConnection.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
                 #endif
             }
@@ -1572,6 +1578,7 @@ namespace UnityEngine.Experimental.Input
 
         private static void InitializeInEditor()
         {
+            Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
             Reset();
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -1609,9 +1616,8 @@ namespace UnityEngine.Experimental.Input
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                InputSettings settingsAsset;
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
-                    out settingsAsset))
+                    out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
                         ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
@@ -1634,22 +1640,25 @@ namespace UnityEngine.Experimental.Input
             EditorApplication.projectChanged += OnProjectChange;
 
             // If native backends for new input system aren't enabled, ask user whether we should
-            // enable them (requires restart). We only ask once per session.
+            // enable them (requires restart). We only ask once per session and don't ask when
+            // running in batch mode.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettings.newSystemBackendsEnabled)
+                !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
                     "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
-                    EditorPlayerSettings.newSystemBackendsEnabled = true;
+                    EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
             // Send an initial Update so that user methods such as Start and Awake
             // can access the input devices.
             Update();
+            Profiling.Profiler.EndSample();
         }
 
         private static void OnPlayModeChange(PlayModeStateChange change)
@@ -1703,8 +1712,7 @@ namespace UnityEngine.Experimental.Input
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            ////TODO: figure out bring settings into player
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance, settings);
 
@@ -1765,6 +1773,10 @@ namespace UnityEngine.Experimental.Input
             Plugins.XR.XRSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
+            Plugins.Linux.LinuxSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
             Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
@@ -1784,6 +1796,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
+            Profiling.Profiler.BeginSample("InputSystem.Reset");
             #if UNITY_EDITOR
 
             // Some devices keep globals. Get rid of them by pretending the devices
@@ -1816,6 +1829,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             InputUser.ResetGlobals();
+            Profiling.Profiler.EndSample();
         }
 
         /// <summary>
