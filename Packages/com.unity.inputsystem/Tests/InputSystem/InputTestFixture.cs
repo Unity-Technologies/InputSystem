@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.SceneManagement;
 
@@ -151,6 +153,39 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public ActionConstraint Started(InputAction action, InputControl control = null)
+        {
+            return new ActionConstraint(InputActionPhase.Started, action, control);
+        }
+
+        public ActionConstraint Performed(InputAction action, InputControl control = null)
+        {
+            return new ActionConstraint(InputActionPhase.Performed, action, control);
+        }
+
+        public ActionConstraint Cancelled(InputAction action, InputControl control = null)
+        {
+            return new ActionConstraint(InputActionPhase.Cancelled, action, control);
+        }
+
+        public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null)
+            where TInteraction : IInputInteraction
+        {
+            return new ActionConstraint(InputActionPhase.Started, action, control, interaction: typeof(TInteraction));
+        }
+
+        public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null)
+            where TInteraction : IInputInteraction
+        {
+            return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction));
+        }
+
+        public ActionConstraint Cancelled<TInteraction>(InputAction action, InputControl control = null)
+            where TInteraction : IInputInteraction
+        {
+            return new ActionConstraint(InputActionPhase.Cancelled, action, control, interaction: typeof(TInteraction));
+        }
+
         // ReSharper disable once MemberCanBeProtected.Global
         public void Press(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
         {
@@ -251,8 +286,7 @@ namespace UnityEngine.Experimental.Input
             // See if we have an axis we can slide a bit.
             for (var i = 0; i < controls.Count; ++i)
             {
-                var axis = controls[i] as AxisControl;
-                if (axis == null)
+                if (!(controls[i] is AxisControl axis))
                     continue;
 
                 // We do, so nudge its value a bit.
@@ -269,5 +303,94 @@ namespace UnityEngine.Experimental.Input
         /// The input runtime used during testing.
         /// </summary>
         public InputTestRuntime runtime { get; private set; }
+
+        public class ActionConstraint : Constraint
+        {
+            public InputActionPhase phase { get; set; }
+            public InputAction action { get; set; }
+            public InputControl control { get; set; }
+            public object value { get; set; }
+            public Type interaction { get; set; }
+
+            private readonly List<ActionConstraint> m_AndThen = new List<ActionConstraint>();
+
+            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null)
+            {
+                this.phase = phase;
+                this.action = action;
+                this.control = control;
+                this.value = value;
+                this.interaction = interaction;
+
+                var interactionText = string.Empty;
+                if (interaction != null)
+                    interactionText = $"{InputInteraction.s_Interactions.FindNameForType(interaction).ToLower()} of ";
+
+                Description = $"{phase} {interactionText}'{action}'";
+                if (control != null)
+                    Description += $" from '{control}'";
+                if (value != null)
+                    Description += $" with value {value}";
+
+                foreach (var constraint in m_AndThen)
+                {
+                    Description += " and\n";
+                    Description += constraint.Description;
+                }
+            }
+
+            public override ConstraintResult ApplyTo(object actual)
+            {
+                var trace = (InputActionTrace)actual;
+                var actions = trace.ToArray();
+
+                if (actions.Length == 0)
+                    return new ConstraintResult(this, actual, false);
+
+                if (!Verify(actions[0]))
+                    return new ConstraintResult(this, actual, false);
+
+                var i = 1;
+                foreach (var constraint in m_AndThen)
+                {
+                    if (!constraint.Verify(actions[i]))
+                        return new ConstraintResult(this, actual, false);
+                    ++i;
+                }
+
+                if (i != actions.Length)
+                    return new ConstraintResult(this, actual, false);
+
+                return new ConstraintResult(this, actual, true);
+            }
+
+            private bool Verify(InputActionTrace.ActionEventPtr eventPtr)
+            {
+                if (eventPtr.action != action ||
+                    eventPtr.phase != phase)
+                    return false;
+
+                // Check control.
+                if (control != null && eventPtr.control != control)
+                    return false;
+
+                // Check interaction.
+                if (interaction != null && (eventPtr.interaction == null ||
+                                            !interaction.IsInstanceOfType(eventPtr.interaction)))
+                    return false;
+
+                // Check value.
+                if (value != null && !value.Equals(eventPtr.control.ReadValueAsObject()))
+                    return false;
+
+                return true;
+            }
+
+            public ActionConstraint AndThen(ActionConstraint constraint)
+            {
+                m_AndThen.Add(constraint);
+                return this;
+            }
+        }
     }
 }

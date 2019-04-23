@@ -2148,6 +2148,65 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCustomizeButtonPressPoints()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var pressAction = new InputAction("PressAction", binding: "<Gamepad>/leftTrigger", interactions: "press(pressPoint=0.234)");
+        var tapAction = new InputAction("TapAction", binding: "<Gamepad>/leftTrigger", interactions: "tap(pressPoint=0.345)");
+        var slowTapAction = new InputAction("SlowTapAction", binding: "<Gamepad>/leftTrigger", interactions: "slowtap(pressPoint=0.456)");
+        var multiTapAction = new InputAction("MultiTapAction", binding: "<Gamepad>/leftTrigger", interactions: "multitap(pressPoint=0.567)");
+        var holdAction = new InputAction("HoldAction", binding: "<Gamepad>/leftTrigger", interactions: "hold(pressPoint=0.678)");
+
+        pressAction.Enable();
+        tapAction.Enable();
+        slowTapAction.Enable();
+        multiTapAction.Enable();
+        holdAction.Enable();
+
+        // Render the global default inactive.
+        InputSystem.settings.defaultButtonPressPoint = 0;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Set(gamepad.leftTrigger, 0.123f);
+
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.3f);
+
+            Assert.That(trace, Performed<PressInteraction>(pressAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.4f);
+
+            Assert.That(trace, Started<TapInteraction>(tapAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.5f);
+
+            Assert.That(trace, Started<SlowTapInteraction>(slowTapAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(trace, Started<MultiTapInteraction>(multiTapAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.7f);
+
+            Assert.That(trace, Started<HoldInteraction>(holdAction));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanAddActionsToMap()
     {
         var map = new InputActionMap();
