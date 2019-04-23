@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
     ///
     /// This class is only available in the editor (when <c>UNITY_EDITOR</c> is true).
     /// </remarks>
-    public static class EditorInputControlLayoutCache
+    internal static class EditorInputControlLayoutCache
     {
         /// <summary>
         /// Iterate over all control layouts in the system.
@@ -162,7 +162,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // No, so see if we have an icon on disk for exactly the layout
             // we're looking at (i.e. with the same name).
-            icon = LoadIcon(layoutName);
+            icon = GUIHelpers.LoadIcon(layoutName);
             if (icon != null)
             {
                 s_Icons.Add(internedName, icon);
@@ -184,7 +184,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // If it's a control and there's no specific icon, return a generic one.
                 if (layout.isControlLayout)
                 {
-                    var genericIcon = LoadIcon("InputControl");
+                    var genericIcon = GUIHelpers.LoadIcon("InputControl");
                     if (genericIcon != null)
                     {
                         s_Icons.Add(internedName, genericIcon);
@@ -195,15 +195,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // No icon for anything in this layout's chain.
             return null;
-        }
-
-        private static Texture2D LoadIcon(string name)
-        {
-            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-            var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
-            var scalePostFix = scale > 1 ? $"@{scale}x" : "";
-            var path = Path.Combine(kIconPath, skinPrefix + name + scalePostFix + ".png");
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         public struct ControlSearchResult
@@ -295,9 +286,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 foreach (var listener in s_RefreshListeners)
                     listener();
         }
-
-        ////REVIEW: is this affected by how the package is installed?
-        internal const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
 
         private static int s_LayoutRegistrationVersion;
         private static InputControlLayout.Cache s_Cache;

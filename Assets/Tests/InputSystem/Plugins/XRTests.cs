@@ -34,7 +34,7 @@ internal class XRTests : InputTestFixture
 
         Assert.That(createdDevice, Is.TypeOf(expectedType));
 
-        var generatedLayout = InputSystem.TryLoadLayout(
+        var generatedLayout = InputSystem.LoadLayout(
             $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
@@ -123,7 +123,7 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var generatedLayout = InputSystem.TryLoadLayout(createdDevice.layout);
+        var generatedLayout = InputSystem.LoadLayout(createdDevice.layout);
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(1));
 
@@ -141,7 +141,7 @@ internal class XRTests : InputTestFixture
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::Device");
+        var generatedLayout = InputSystem.LoadLayout("XRInput::Manufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
         Assert.That(InputSystem.devices, Is.Empty);
 
@@ -150,7 +150,7 @@ internal class XRTests : InputTestFixture
 
         InputSystem.Update();
 
-        generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::Device");
+        generatedLayout = InputSystem.LoadLayout("XRInput::XRManufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
         Assert.That(InputSystem.devices, Is.Empty);
     }
@@ -252,7 +252,7 @@ internal class XRTests : InputTestFixture
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInputV1::XRManufacturer::XRDevice");
+        var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(7));
 
@@ -317,7 +317,7 @@ internal class XRTests : InputTestFixture
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInputV1::XRManufacturer::XRDevice");
+        var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(8));
 
