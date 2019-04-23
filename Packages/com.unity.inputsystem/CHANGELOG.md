@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Make sure we Disable any InputActionAsset when it is being destroyed. Otherwise, callbacks which were not cleaned up would could cause exceptions.
 - DualShock sensors on PS4 are now marked as noisy (#494).
 - IL2CPP causing issues with XInput on windows and osx desktops.
+- Devices not being available yet in `MonoBehavior.Awake`, `MonoBehaviour.Start`, and `MonoBehaviour.OnEnable` in player or when entering play mode in editor.
 - Fixed a bug where the event buffer used by `InputEventTrace` could get corrupted.
 
 #### Actions
