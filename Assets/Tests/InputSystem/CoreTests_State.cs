@@ -447,6 +447,9 @@ partial class CoreTests
     [Category("State")]
     public void State_CanListenForInputUpdates()
     {
+        // Bypass InputManager.ShouldRunUpdate().
+        runtime.onShouldRunUpdate = _ => true;
+
         var receivedUpdate = false;
         InputUpdateType? receivedUpdateType = null;
         InputSystem.onBeforeUpdate +=

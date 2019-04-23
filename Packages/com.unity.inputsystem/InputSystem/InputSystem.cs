@@ -1574,12 +1574,12 @@ namespace UnityEngine.Experimental.Input
         }
 
 #if UNITY_EDITOR
-        private static InputSystemObject s_SystemObject;
+        internal static InputSystemObject s_SystemObject;
 
-        private static void InitializeInEditor()
+        internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
-            Reset();
+            Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
@@ -1636,15 +1636,12 @@ namespace UnityEngine.Experimental.Input
                 "InputSettings has lost its native object");
             #endif
 
-            EditorApplication.playModeStateChanged += OnPlayModeChange;
-            EditorApplication.projectChanged += OnProjectChange;
-
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !Application.isBatchMode)
+                !s_Manager.m_Runtime.isInBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -1655,9 +1652,8 @@ namespace UnityEngine.Experimental.Input
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices.
-            Update();
+            RunInitialUpdate();
+
             Profiling.Profiler.EndSample();
         }
 
@@ -1727,12 +1723,22 @@ namespace UnityEngine.Experimental.Input
                 SetUpRemoting();
 #endif
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices prior to their Update methods.
-            Update();
+            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
+
+        private static void RunInitialUpdate()
+        {
+            // Request an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            //
+            // NOTE: We use InputUpdateType.None here to run a "null" update. InputManager.OnBeforeUpdate()
+            //       and InputManager.OnUpdate() will both early out when comparing this to their update
+            //       mask but will still restore devices. This means we're not actually processing input,
+            //       but we will force the runtime to push its devices.
+            Update(InputUpdateType.None);
+        }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
@@ -1814,6 +1820,9 @@ namespace UnityEngine.Experimental.Input
 
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
+            s_Manager.m_Runtime.onProjectChange = OnProjectChange;
 
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
@@ -1935,6 +1944,7 @@ namespace UnityEngine.Experimental.Input
 
             InputUpdate.Restore(state.managerState.updateState);
 
+            s_Manager.InstallRuntime(s_Manager.m_Runtime);
             s_Manager.InstallGlobals();
 
             #if UNITY_EDITOR
