@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 
+////REVIEW: should this throw if you try to assign an action that is not a singleton?
+
 ////REVIEW: akin to this, also have an InputActionMapReference?
 
 namespace UnityEngine.Experimental.Input

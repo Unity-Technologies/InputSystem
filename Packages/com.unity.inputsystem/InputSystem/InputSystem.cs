@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Haptics;
@@ -18,6 +17,7 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEditor.Networking.PlayerConnection;
 #else
+using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
@@ -1567,10 +1567,10 @@ namespace UnityEngine.Experimental.Input
             // IL2CPP has a bug that causes the class constructor to not be run when
             // the RuntimeInitializeOnLoadMethod is invoked. So we need an explicit check
             // here until that is fixed (case 1014293).
-#if !UNITY_EDITOR
+            #if !UNITY_EDITOR
             if (s_Manager == null)
                 InitializeInPlayer();
-#endif
+            #endif
         }
 
 #if UNITY_EDITOR
@@ -1704,19 +1704,20 @@ namespace UnityEngine.Experimental.Input
         }
 
 #else
-        private static void InitializeInPlayer()
+        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
         {
+            if (settings == null)
+                settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
+
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
-            s_Manager.Initialize(NativeInputRuntime.instance, settings);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
 #endif
 
-            ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
 #if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
@@ -1741,7 +1742,7 @@ namespace UnityEngine.Experimental.Input
         }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-        internal static void PerformDefaultPluginInitialization()
+        private static void PerformDefaultPluginInitialization()
         {
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE || UNITY_WSA
             XInputSupport.Initialize();
@@ -1800,10 +1801,9 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Return the input system to its default state.
         /// </summary>
-        internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
+        private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.Reset");
-            #if UNITY_EDITOR
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -1818,6 +1818,7 @@ namespace UnityEngine.Experimental.Input
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
 
+            #if UNITY_EDITOR
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
@@ -1834,7 +1835,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #else
-            InitializeInPlayer();
+            InitializeInPlayer(runtime, settings);
             #endif
 
             InputUser.ResetGlobals();
@@ -1847,7 +1848,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// NOTE: This also de-allocates data we're keeping in unmanaged memory!
         /// </remarks>
-        internal static void Destroy()
+        private static void Destroy()
         {
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
@@ -1917,7 +1918,7 @@ namespace UnityEngine.Experimental.Input
                 remote = s_Remote,
                 remoteConnection = s_RemoteConnection,
                 managerState = s_Manager.SaveState(),
-                remotingState = s_Remote.SaveState(),
+                remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 #endif

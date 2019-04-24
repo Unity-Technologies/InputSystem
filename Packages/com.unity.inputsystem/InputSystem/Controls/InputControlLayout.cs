@@ -1221,7 +1221,6 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string variant;
             public bool isGenericTypeOfDevice;
             public bool hideInUI;
-            public InputDeviceMatcher.MatcherJson device;
             public ControlItemJson[] controls;
 
             // ReSharper restore MemberCanBePrivate.Local

@@ -14,6 +14,10 @@ using UnityEngine.Profiling;
 
 ////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)
 
+////REVIEW: should the default interaction be an *explicit* interaction?
+
+////REVIEW: should "pass-through" be an interaction instead of a setting on actions?
+
 ////REVIEW: allow setup where state monitor is enabled but action is disabled?
 
 namespace UnityEngine.Experimental.Input
@@ -1129,6 +1133,14 @@ namespace UnityEngine.Experimental.Input
                 memory.controlMagnitudes[trigger.controlIndex] = trigger.magnitude;
             }
 
+            // Never ignore state changes for actions that aren't currently driven by
+            // anything.
+            if (actionState->controlIndex == kInvalidIndex)
+            {
+                Profiler.EndSample();
+                return false;
+            }
+
             // If the control is actuated *more* than the current level of actuation we recorded for the
             // action, we process the state change normally. If this isn't the control that is already
             // driving the action, it will become the one now.
@@ -1668,6 +1680,14 @@ namespace UnityEngine.Experimental.Input
                         RemoveContinuousAction(actionIndex);
                     break;
                 }
+            }
+
+            // If we're now waiting, reset control state. This is important for the disambiguation code
+            // to not consider whatever control actuation happened on the action last.
+            if (actionState->phase == InputActionPhase.Waiting)
+            {
+                actionState->controlIndex = kInvalidIndex;
+                actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
             }
         }
 

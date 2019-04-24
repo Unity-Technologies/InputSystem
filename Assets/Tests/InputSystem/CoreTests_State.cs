@@ -494,6 +494,7 @@ partial class CoreTests
         Assert.That(receivedUpdate, Is.True);
         Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
 
+#if UNITY_EDITOR
         receivedUpdate = false;
         receivedUpdateType = null;
 
@@ -502,6 +503,7 @@ partial class CoreTests
 
         Assert.That(receivedUpdate, Is.True);
         Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
+#endif
     }
 
     // To build systems that can respond to inputs changing value, there's support for setting
@@ -911,6 +913,13 @@ partial class CoreTests
     [Category("State")]
     public unsafe void State_CanGetMetrics()
     {
+        // Make sure we start out with blank data.
+        var metrics = InputSystem.GetMetrics();
+
+        Assert.That(metrics.totalEventCount, Is.Zero);
+        Assert.That(metrics.totalEventBytes, Is.Zero);
+        Assert.That(metrics.totalUpdateCount, Is.Zero);
+
         var device1 = InputSystem.AddDevice<Gamepad>();
         var device2 = InputSystem.AddDevice<Keyboard>();
 
@@ -922,7 +931,7 @@ partial class CoreTests
         var device3 = InputSystem.AddDevice<Mouse>();
         InputSystem.RemoveDevice(device3);
 
-        var metrics = InputSystem.GetMetrics();
+        metrics = InputSystem.GetMetrics();
 
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
@@ -949,8 +958,10 @@ partial class CoreTests
         Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo((kDoubleBufferCount * sizePerBuffer) + (sizeOfSingleBuffer * 2)));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
+        Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
+        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.0000001));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
-        Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.000001));
+        Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.0000001));
     }
 
     [Test]
