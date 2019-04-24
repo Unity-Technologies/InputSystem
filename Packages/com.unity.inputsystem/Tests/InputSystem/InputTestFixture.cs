@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using Unity.Collections;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.SceneManagement;
 
@@ -82,6 +83,10 @@ namespace UnityEngine.Experimental.Input
                 var testProperties = TestContext.CurrentContext.Test.Properties;
                 if (testProperties.ContainsKey("TimesliceEvents") && testProperties["TimesliceEvents"][0].Equals("Off"))
                     InputSystem.settings.timesliceEvents = false;
+
+                // We use native collections in a couple places. We when leak them, we want to know where exactly
+                // the allocation came from so enable full leak detection in tests.
+                NativeLeakDetection.Mode = NativeLeakDetectionMode.EnabledWithStackTrace;
             }
             catch (Exception exception)
             {
