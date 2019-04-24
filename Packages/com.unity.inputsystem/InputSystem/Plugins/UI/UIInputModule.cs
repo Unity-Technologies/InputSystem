@@ -442,6 +442,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public float repeatRate = 0.1f;
 
         [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
+        [HideInInspector] // Hide this while we still have to figure out what to do with this.
         public float trackedDeviceDragThresholdMultiplier = 2.0f;
 
         private AxisEventData m_CachedAxisEvent;

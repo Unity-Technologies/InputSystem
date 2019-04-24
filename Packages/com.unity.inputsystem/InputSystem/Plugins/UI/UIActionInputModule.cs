@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine;
 
 ////REVIEW: should each of the actions be *lists* of actions?
 
@@ -226,15 +227,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         /// <summary>
-        /// This enables background event processing, so that the Input Module can continue sending UI events even in the background.
-        /// </summary>
-        public bool sendEventsWhenInBackground
-        {
-            get => m_SendEventsWhenInBackground;
-            set => m_SendEventsWhenInBackground = value;
-        }
-
-        /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
@@ -376,26 +368,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             DisableAllActions();
             UnhookActions();
-        }
-
-        private bool ShouldIgnoreEventsOnNoFocus()
-        {
-            if (m_SendEventsWhenInBackground)
-                return true;
-
-            switch (SystemInfo.operatingSystemFamily)
-            {
-                case OperatingSystemFamily.Windows:
-                case OperatingSystemFamily.Linux:
-                case OperatingSystemFamily.MacOSX:
-#if UNITY_EDITOR
-                    if (UnityEditor.EditorApplication.isRemoteConnected)
-                        return false;
-#endif
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         /// <summary>
@@ -654,7 +626,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private void DoProcess()
         {
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
-            if (!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+            if (!eventSystem.isFocused)
             {
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
@@ -830,9 +802,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        [Tooltip("Enables UI events regardless of focus state.")]
-        [SerializeField] private bool m_SendEventsWhenInBackground;
-
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
@@ -859,8 +828,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [SerializeField] private InputActionProperty m_RightClickAction;
         [Tooltip("Vector2 action that represents horizontal and vertical scrolling.")]
         [SerializeField] private InputActionProperty m_ScrollWheelAction;
-        [SerializeField] private List<TouchResponder> m_Touches;
-        [SerializeField] private List<TrackedDeviceResponder> m_TrackedDevices;
+
+        // Hide these while we still have to figure out what to do with these.
+        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches;
+        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices;
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
