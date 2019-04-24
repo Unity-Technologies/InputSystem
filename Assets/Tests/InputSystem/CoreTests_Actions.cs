@@ -126,6 +126,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_WhenDisabled_CancelAllStartedInteractions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -622,6 +623,7 @@ partial class CoreTests
     // to the action system and spell out what exactly happens when we progress from one kind of setup to another.
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2028,6 +2030,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformDoubleTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2869,6 +2872,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanAddInteractionsToActions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3235,6 +3239,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanTriggerActionContinuously()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3320,6 +3325,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformContinuousHold()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3395,6 +3401,7 @@ partial class CoreTests
     // even if the control wiggles around.
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldOnTrigger()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

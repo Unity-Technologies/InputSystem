@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-
 namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 {
     // Xbox one controller on OSX. State layout can be found here:
