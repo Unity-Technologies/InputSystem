@@ -333,7 +333,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 var moveVector = joystickState.move;
 
                 var moveDirection = MoveDirection.None;
-                if (moveVector.sqrMagnitude > moveDeadzone * moveDeadzone)
+                if (moveVector.sqrMagnitude > 0)
                 {
                     if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
                         moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
@@ -434,9 +434,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         [Tooltip("The maximum time (in seconds) between two mouse presses for it to be consecutive click.")]
         public float clickSpeed = 0.3f;
-
-        [Tooltip("The absolute value required by a move action on either axis required to trigger a move event.")]
-        public float moveDeadzone = 0.6f;
 
         [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
         public float repeatDelay = 0.5f;
