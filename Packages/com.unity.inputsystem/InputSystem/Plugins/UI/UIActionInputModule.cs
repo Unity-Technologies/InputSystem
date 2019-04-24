@@ -367,12 +367,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             base.OnEnable();
 
             HookActions();
+            EnableAllActions();
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
 
+            DisableAllActions();
             UnhookActions();
         }
 
