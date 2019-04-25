@@ -408,7 +408,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
                 void AddEntry(InputAction action, PlayerInput.ActionEvent actionEvent)
                 {
-                    newActionNames.Add(new GUIContent(action.name + " Action"));
+                    newActionNames.Add(new GUIContent(action.name));
                     newActionEvents.Add(actionEvent);
 
                     var actionMapIndex = asset.actionMaps.IndexOfReference(action.actionMap);
@@ -558,10 +558,18 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         [NonSerialized] private readonly GUIContent m_AddInputModuleText = EditorGUIUtility.TrTextContent("Add UI Input Module");
         [NonSerialized] private readonly GUIContent m_OpenSettingsText = EditorGUIUtility.TrTextContent("Open Input Settings");
         [NonSerialized] private readonly GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
-        [NonSerialized] private readonly GUIContent m_EventsGroupText = EditorGUIUtility.TrTextContent("Events");
-        [NonSerialized] private readonly GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
-        [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
-        [NonSerialized] private readonly GUIContent m_DefaultActionMapText = EditorGUIUtility.TrTextContent("Default Action Map");
+        [NonSerialized] private readonly GUIContent m_EventsGroupText =
+            EditorGUIUtility.TrTextContent("Events", "UnityEvents triggered by the PlayerInput component");
+        [NonSerialized] private readonly GUIContent m_NotificationBehaviorText =
+            EditorGUIUtility.TrTextContent("Behavior",
+                "Determine how notifications should be sent when an input-related event associated with the player happens.");
+        [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText =
+            EditorGUIUtility.TrTextContent("Default Control Scheme", "Which control scheme to try by default. If not set, PlayerInput "
+                + "will simply go through all control schemes in the action asset and try one after the other. If set, PlayerInput will try "
+                + "the given scheme first but if using that fails (e.g. when not required devices are missing) will fall back to trying the other "
+                + "control schemes in order.");
+        [NonSerialized] private readonly GUIContent m_DefaultActionMapText =
+            EditorGUIUtility.TrTextContent("Default Action Map", "Action map to enable by default. If not set, no actions will be enabled by default.");
         [NonSerialized] private readonly GUIContent m_DebugText = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
