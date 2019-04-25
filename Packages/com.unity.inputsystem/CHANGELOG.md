@@ -4,6 +4,14 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.3-preview] - TBD
+
+### Fixed
+
+#### Actions
+
+- Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
+
 ## [0.2.8-preview] - 2019-4-23
 
 ### Added
