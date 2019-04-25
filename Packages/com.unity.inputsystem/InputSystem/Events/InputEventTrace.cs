@@ -6,8 +6,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
 
-////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
-
 ////TODO: Use InputEventBuffer
 
 namespace UnityEngine.Experimental.Input.LowLevel

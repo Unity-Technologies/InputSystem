@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.Experimental.Input.Utilities;
@@ -26,13 +26,15 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_Property = property;
             m_Apply = applyAction;
             m_ListOptions = GetOptions();
+
             m_ExpectedControlLayout = expectedControlLayout;
             if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
                 m_ExpectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
 
             m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
             m_EditableParametersForEachListItem = new ParameterListView[m_ParametersForEachListItem.Length];
-            for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
+
+            for (var i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
                 m_EditableParametersForEachListItem[i] = new ParameterListView { onChange = OnParametersChanged };
                 var typeName = m_ParametersForEachListItem[i].name;
@@ -63,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             // Add only original names to the menu and not aliases.
             var menu = new GenericMenu();
-            foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
+            foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
             {
                 // Skip if not compatible with value type.
                 if (m_ExpectedValueType != null)
@@ -100,7 +102,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         private void OnParametersChanged()
         {
-            for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
+            for (var i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
                 m_ParametersForEachListItem[i] = new NameAndParameters
                 {
@@ -137,7 +139,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             if (m_EditableParametersForEachListItem == null || m_EditableParametersForEachListItem.Length == 0)
             {
-                using (var scope = new EditorGUI.DisabledScope(true))
+                using (new EditorGUI.DisabledScope(true))
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.LabelField($"No {itemName}s have been added.");
@@ -157,12 +159,12 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                         EditorGUILayout.LabelField(editableParams.name, EditorStyles.boldLabel);
                     }
                     GUILayout.FlexibleSpace();
-                    using (var scope = new EditorGUI.DisabledScope(i == 0))
+                    using (new EditorGUI.DisabledScope(i == 0))
                     {
                         if (GUILayout.Button(m_UpButton, Styles.s_UpDownButtonStyle))
                             SwapEntry(i, i - 1);
                     }
-                    using (var scope = new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
+                    using (new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
                     {
                         if (GUILayout.Button(m_DownButton, Styles.s_UpDownButtonStyle))
                             SwapEntry(i, i + 1);

@@ -20,6 +20,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
                     .WithDeviceClass("XboxOneGamepad")
                     .WithInterface("Xbox"));
 #endif
+            ////FIXME: layouts should always be available in the editor (mac/win/linux)
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             InputSystem.RegisterLayout<XInputControllerWindows>(
                 matches: new InputDeviceMatcher().WithInterface("XInput"));

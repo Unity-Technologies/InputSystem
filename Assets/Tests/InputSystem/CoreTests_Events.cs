@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
@@ -25,13 +26,12 @@ partial class CoreTests
     public void Events_CanUpdateStateOfDeviceWithEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
+        var newState = new GamepadState {leftTrigger = 0.234f};
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123f));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.456f));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.234f).Within(0.000001));
     }
 
     [Test]
@@ -70,10 +70,11 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f))));
+        Assert.That(gamepad.rightStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(1, 1))));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
     }
 
     [Test]
@@ -117,8 +118,8 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(secondGamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
-        Assert.That(secondGamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(secondGamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(secondGamepad.leftStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f))));
     }
 
     [Test]
