@@ -450,6 +450,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             cancelAction?.Enable();
 
+            var scrollAction = m_ScrollWheelAction.action;
+            scrollAction?.Enable();
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
@@ -504,6 +507,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             cancelAction?.Disable();
 
+            var scrollAction = m_ScrollWheelAction.action;
+            scrollAction?.Disable();
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
@@ -540,7 +546,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
             else if (action == m_ScrollWheelAction)
             {
-                mouseState.scrollPosition = context.ReadValue<Vector2>();
+                // The old input system reported scroll deltas in lines, we report pixels.
+                // Need to scale as the UI system expects lines.
+                const float kPixelPerLine = 20;
+                mouseState.scrollPosition = context.ReadValue<Vector2>() * (1.0f/kPixelPerLine);
             }
             else if (action == m_LeftClickAction)
             {
@@ -719,6 +728,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 cancelAction.cancelled += m_OnActionDelegate;
             }
 
+            var scrollAction = m_ScrollWheelAction.action;
+            if (scrollAction != null)
+            {
+                scrollAction.performed += m_OnActionDelegate;
+                scrollAction.cancelled += m_OnActionDelegate;
+            }
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
@@ -788,6 +804,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 cancelAction.performed -= m_OnActionDelegate;
                 cancelAction.cancelled -= m_OnActionDelegate;
+            }
+
+            var scrollAction = m_ScrollWheelAction.action;
+            if (scrollAction != null)
+            {
+                scrollAction.performed += m_OnActionDelegate;
+                scrollAction.cancelled += m_OnActionDelegate;
             }
 
             for (var i = 0; i < m_Touches.Count; i++)
