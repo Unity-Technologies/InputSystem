@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
             var buttonState = mouseState.leftButton;
             buttonState.CopyTo(eventData);
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
 
             ProcessMouseMovement(eventData);
             ProcessMouseScroll(eventData);
@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             buttonState = mouseState.rightButton;
             buttonState.CopyTo(eventData);
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
             ProcessMouseButtonDrag(eventData);
 
             buttonState.CopyFrom(eventData);
@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             buttonState = mouseState.middleButton;
             buttonState.CopyTo(eventData);
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
             ProcessMouseButtonDrag(eventData);
 
             buttonState.CopyFrom(eventData);
@@ -144,7 +144,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData)
+        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData, bool hasNativeClickCount)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
 
@@ -174,10 +174,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 var time = Time.unscaledTime;
 
-                if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
-                    ++eventData.clickCount;
-                else
-                    eventData.clickCount = 1;
+                if (!hasNativeClickCount)
+                {
+                    const float clickSpeed = 0.3f;
+                    if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
+                        ++eventData.clickCount;
+                    else
+                        eventData.clickCount = 1;
+                }
 
                 eventData.clickTime = time;
 
@@ -274,7 +278,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             eventData.button = PointerEventData.InputButton.Left;
 
-            ProcessMouseButton(touchState.selectDelta, eventData);
+            ProcessMouseButton(touchState.selectDelta, eventData, false);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData);
 
@@ -295,7 +299,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.button = PointerEventData.InputButton.Left;
             eventData.pointerCurrentRaycast = PerformRaycast(eventData);
 
-            ProcessMouseButton(deviceState.selectDelta, eventData);
+            ProcessMouseButton(deviceState.selectDelta, eventData, false);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
 
@@ -431,9 +435,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             return result;
         }
-
-        [Tooltip("The maximum time (in seconds) between two mouse presses for it to be consecutive click.")]
-        public float clickSpeed = 0.3f;
 
         [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
         public float repeatDelay = 0.5f;

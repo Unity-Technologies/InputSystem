@@ -546,18 +546,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 var buttonState = mouseState.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
+                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.leftButton = buttonState;
             }
             else if (action == m_RightClickAction)
             {
                 var buttonState = mouseState.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
+                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.rightButton = buttonState;
             }
             else if (action == m_MiddleClickAction)
             {
                 var buttonState = mouseState.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
+                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.middleButton = buttonState;
             }
             else if (action == m_MoveAction)
