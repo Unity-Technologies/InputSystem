@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+
+#if UNITY_EDITOR
+using System.ComponentModel;
+#endif
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -65,5 +70,20 @@ namespace UnityEngine.Experimental.Input.Utilities
                 return type;
             return null;
         }
+
+        #if UNITY_EDITOR
+        public bool ShouldHideInUI(string name)
+        {
+            // Always hide aliases.
+            if (aliases.Contains(new InternedString(name)))
+                return true;
+
+            // Hide entries that have [DesignTimeVisible(false)] on the type.
+            var type = LookupTypeRegistration(name);
+            var attribute = type?.GetCustomAttribute<DesignTimeVisibleAttribute>();
+            return attribute?.Visible ?? false;
+        }
+
+        #endif
     }
 }

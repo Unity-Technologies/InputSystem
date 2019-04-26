@@ -1,9 +1,11 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.iOS;
 using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 
 internal class iOSTests : InputTestFixture
 {
@@ -32,12 +34,13 @@ internal class iOSTests : InputTestFixture
 
         InputSystem.Update();
 
+        var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.789f, 0.987f))));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.654f, 0.321f))));
         Assert.That(controller.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(controller.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
-        Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.000001));
-        Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(0.987).Within(0.000001));
-        Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.654).Within(0.000001));
-        Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(0.321).Within(0.000001));
 
         AssertButtonPress(controller, new iOSGameControllerState().WithButton(iOSButton.A), controller.buttonSouth);
         AssertButtonPress(controller, new iOSGameControllerState().WithButton(iOSButton.X), controller.buttonWest);
