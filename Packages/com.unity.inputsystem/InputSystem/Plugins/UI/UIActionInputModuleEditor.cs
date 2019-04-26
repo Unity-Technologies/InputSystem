@@ -89,6 +89,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                         module.cancel = GetActionReferenceFromAssets(actions, assets, module.cancel, "Cancel", "Esc", "Escape");
 
                         serializedObject.Update();
+
+                        // reinitialize action types
+                        OnEnable();
                     }
                 }
             }
