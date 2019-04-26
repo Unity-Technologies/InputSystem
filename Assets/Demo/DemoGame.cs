@@ -263,6 +263,7 @@ public class DemoGame : MonoBehaviour
         Debug.Assert(state == State.InMainMenu);
 
         ////TODO: this should be something that UIActionInputModule can give us without us querying the action directly
+        /*
         // Find out which device clicked the "Start Game" button. We use this to
         // automatically join the player instead of requiring the player who clicked to
         // then issue an explicit join.
@@ -280,6 +281,7 @@ public class DemoGame : MonoBehaviour
         // picker. If the user cancels, we do nothing and just stay in the main menu. If the user
         // picks an account, we end up in OnUserChange().
         InputUser.PerformPairingWithDevice(playerDevice);
+        */
     }
 
     /// <summary>

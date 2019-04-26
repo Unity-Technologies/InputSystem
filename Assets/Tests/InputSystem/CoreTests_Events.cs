@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
@@ -25,13 +26,12 @@ partial class CoreTests
     public void Events_CanUpdateStateOfDeviceWithEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
+        var newState = new GamepadState {leftTrigger = 0.234f};
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123f));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.456f));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.234f).Within(0.000001));
     }
 
     [Test]
@@ -70,10 +70,11 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f))));
+        Assert.That(gamepad.rightStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(1, 1))));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
     }
 
     [Test]
@@ -117,8 +118,8 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(secondGamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
-        Assert.That(secondGamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(secondGamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(secondGamepad.leftStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f))));
     }
 
     [Test]
@@ -142,7 +143,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
 
-        Assert.That(receivedTime.HasValue);
+        Assert.That(receivedTime.HasValue, Is.True);
         Assert.That(receivedTime.Value, Is.EqualTo(111).Within(0.00001));
         Assert.That(receivedInternalTime.Value, Is.EqualTo(1234).Within(0.00001));
     }
@@ -284,14 +285,11 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.True);
     }
 
-    ////TODO: temporary; remove when the native changes have landed in publc 2019.1
-    #if false
-    //#if UNITY_2019_1_OR_NEWER
     [Test]
     [Category("Events")]
     public unsafe void Events_AreTimeslicedByDefault()
     {
-        runtime.fixedUpdateIntervalInSeconds = 1.0 / 60; // 60 FPS.
+        runtime.currentTimeForFixedUpdate = 1;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -304,7 +302,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 2);
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 2.9);
 
-        runtime.currentTime = 3;
+        runtime.currentTimeForFixedUpdate = 3;
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -315,15 +313,16 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.3456).Within(0.00001));
 
         Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
-        Assert.That(InputUpdate.s_LastFixedUpdateTime, Is.EqualTo(3).Within(0.0001));
 
         receivedEvents.Clear();
+
+        runtime.currentTimeForFixedUpdate += 1 / 60.0f;
 
         // From now on, fixed updates should only take what falls in their slice.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 3 + 0.001);
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 3 + 0.002);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.3456f}, 3 + 1.0 / 60 + 0.001);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.4567f}, 3 + 2 * (1.0 / 60) + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3 + 1.0 / 60 + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.4567f }, 3 + 2 * (1.0 / 60) + 0.001);
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -333,9 +332,10 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.2345).Within(0.00001));
 
         Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.EqualTo(2));
-        Assert.That(InputUpdate.s_LastFixedUpdateTime, Is.EqualTo(3 + 1.0 / 60).Within(0.0001));
 
         receivedEvents.Clear();
+
+        runtime.currentTimeForFixedUpdate += 1 / 60.0f;
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -344,9 +344,10 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.3456).Within(0.00001));
 
         Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.EqualTo(1));
-        Assert.That(InputUpdate.s_LastFixedUpdateTime, Is.EqualTo(3 + 2 * (1.0 / 60)).Within(0.0001));
 
         receivedEvents.Clear();
+
+        runtime.currentTimeForFixedUpdate += 1 / 60.0f;
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -355,9 +356,10 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
 
         Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
-        Assert.That(InputUpdate.s_LastFixedUpdateTime, Is.EqualTo(3 + 3 * (1.0 / 60)).Within(0.0001));
 
         receivedEvents.Clear();
+
+        runtime.currentTimeForFixedUpdate += 1 / 60.0f;
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -365,10 +367,7 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
 
         Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
-        Assert.That(InputUpdate.s_LastFixedUpdateTime, Is.EqualTo(3 + 4 * (1.0 / 60)).Within(0.0001));
     }
-
-    #endif
 
     [Test]
     [Category("Events")]

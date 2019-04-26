@@ -6,8 +6,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
 
-////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
-
 ////TODO: Use InputEventBuffer
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -211,7 +209,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     m_EventBufferTail = m_EventBuffer;
                     newTail = new IntPtr(m_EventBuffer.ToInt64() + eventSize);
 
-                    // If the tail overtook both the head and the end of the buffer, 
+                    // If the tail overtook both the head and the end of the buffer,
                     // we need to make sure the head is wrapped around as well.
                     if (newTailOvertakesHead)
                         m_EventBufferHead = m_EventBuffer;

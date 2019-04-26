@@ -380,7 +380,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (!(args.acceptedRename || m_ForceAcceptRename) || args.originalName == args.newName)
                 return;
-                
+
             Debug.Assert(actionItem.canRename, "Cannot rename " + actionItem);
 
             actionItem.Rename(args.newName);

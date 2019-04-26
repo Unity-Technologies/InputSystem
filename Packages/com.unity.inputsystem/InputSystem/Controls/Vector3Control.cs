@@ -26,12 +26,16 @@ namespace UnityEngine.Experimental.Input.Controls
             x = builder.GetControl<AxisControl>(this, "x");
             y = builder.GetControl<AxisControl>(this, "y");
             z = builder.GetControl<AxisControl>(this, "z");
+
             base.FinishSetup(builder);
         }
 
         public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector3(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr), z.ReadValueFromState(statePtr));
+            return new Vector3(
+                x.ReadUnprocessedValueFromState(statePtr),
+                y.ReadUnprocessedValueFromState(statePtr),
+                z.ReadUnprocessedValueFromState(statePtr));
         }
 
         public override unsafe void WriteValueIntoState(Vector3 value, void* statePtr)

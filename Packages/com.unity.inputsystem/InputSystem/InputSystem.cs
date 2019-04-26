@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Haptics;
@@ -18,6 +17,7 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEditor.Networking.PlayerConnection;
 #else
+using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
@@ -1567,19 +1567,19 @@ namespace UnityEngine.Experimental.Input
             // IL2CPP has a bug that causes the class constructor to not be run when
             // the RuntimeInitializeOnLoadMethod is invoked. So we need an explicit check
             // here until that is fixed (case 1014293).
-#if !UNITY_EDITOR
+            #if !UNITY_EDITOR
             if (s_Manager == null)
                 InitializeInPlayer();
-#endif
+            #endif
         }
 
 #if UNITY_EDITOR
-        private static InputSystemObject s_SystemObject;
+        internal static InputSystemObject s_SystemObject;
 
-        private static void InitializeInEditor()
+        internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
-            Reset();
+            Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
@@ -1636,15 +1636,12 @@ namespace UnityEngine.Experimental.Input
                 "InputSettings has lost its native object");
             #endif
 
-            EditorApplication.playModeStateChanged += OnPlayModeChange;
-            EditorApplication.projectChanged += OnProjectChange;
-
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !Application.isBatchMode)
+                !s_Manager.m_Runtime.isInBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -1655,9 +1652,8 @@ namespace UnityEngine.Experimental.Input
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices.
-            Update();
+            RunInitialUpdate();
+
             Profiling.Profiler.EndSample();
         }
 
@@ -1708,34 +1704,45 @@ namespace UnityEngine.Experimental.Input
         }
 
 #else
-        private static void InitializeInPlayer()
+        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
         {
+            if (settings == null)
+                settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
+
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
-            s_Manager.Initialize(NativeInputRuntime.instance, settings);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
 #endif
 
-            ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
 #if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices prior to their Update methods.
-            Update();
+            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
 
+        private static void RunInitialUpdate()
+        {
+            // Request an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            //
+            // NOTE: We use InputUpdateType.None here to run a "null" update. InputManager.OnBeforeUpdate()
+            //       and InputManager.OnUpdate() will both early out when comparing this to their update
+            //       mask but will still restore devices. This means we're not actually processing input,
+            //       but we will force the runtime to push its devices.
+            Update(InputUpdateType.None);
+        }
+
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-        internal static void PerformDefaultPluginInitialization()
+        private static void PerformDefaultPluginInitialization()
         {
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE || UNITY_WSA
             XInputSupport.Initialize();
@@ -1794,10 +1801,9 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Return the input system to its default state.
         /// </summary>
-        internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
+        private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.Reset");
-            #if UNITY_EDITOR
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -1812,8 +1818,12 @@ namespace UnityEngine.Experimental.Input
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
 
+            #if UNITY_EDITOR
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
+            s_Manager.m_Runtime.onProjectChange = OnProjectChange;
 
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
@@ -1825,7 +1835,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #else
-            InitializeInPlayer();
+            InitializeInPlayer(runtime, settings);
             #endif
 
             InputUser.ResetGlobals();
@@ -1838,7 +1848,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// NOTE: This also de-allocates data we're keeping in unmanaged memory!
         /// </remarks>
-        internal static void Destroy()
+        private static void Destroy()
         {
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
@@ -1908,7 +1918,7 @@ namespace UnityEngine.Experimental.Input
                 remote = s_Remote,
                 remoteConnection = s_RemoteConnection,
                 managerState = s_Manager.SaveState(),
-                remotingState = s_Remote.SaveState(),
+                remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 #endif
@@ -1935,6 +1945,7 @@ namespace UnityEngine.Experimental.Input
 
             InputUpdate.Restore(state.managerState.updateState);
 
+            s_Manager.InstallRuntime(s_Manager.m_Runtime);
             s_Manager.InstallGlobals();
 
             #if UNITY_EDITOR
