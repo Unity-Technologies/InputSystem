@@ -65,8 +65,6 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 var result = m_Metrics;
-                if (m_Runtime != null)
-                    result.totalFrameCount = m_Runtime.frameCount;
 
                 result.currentNumDevices = m_DevicesCount;
                 result.currentStateSizeInBytes = (int)m_StateBuffers.totalSize;
@@ -2280,6 +2278,7 @@ namespace UnityEngine.Experimental.Input
             // Update metrics.
             m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
             m_Metrics.totalEventBytes += (int)eventBuffer.sizeInBytes - (int)InputUpdate.s_LastUpdateRetainedEventBytes;
+            ++m_Metrics.totalUpdateCount;
 
             InputUpdate.s_LastUpdateRetainedEventCount = 0;
             InputUpdate.s_LastUpdateRetainedEventBytes = 0;
@@ -2312,10 +2311,8 @@ namespace UnityEngine.Experimental.Input
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
-            #endif
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
@@ -2342,10 +2339,8 @@ namespace UnityEngine.Experimental.Input
             // for later processing. We do this by compacting the event buffer and moving events down such
             // that the events we leave in the buffer form one contiguous chunk of memory at the beginning
             // of the buffer.
-            #if UNITY_2019_2_OR_NEWER
             var currentEventWritePtr = currentEventReadPtr;
             var numEventsRetainedInBuffer = 0;
-            #endif
 
             var totalEventLag = 0.0;
 
@@ -2354,7 +2349,6 @@ namespace UnityEngine.Experimental.Input
             {
                 InputDevice device = null;
 
-                #if UNITY_2019_2_OR_NEWER
                 Debug.Assert(!currentEventReadPtr->handled);
 
                 // In before render updates, we only take state events and only those for devices
@@ -2375,33 +2369,9 @@ namespace UnityEngine.Experimental.Input
                             ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     }
                 }
-                #else
-                // Bump firstEvent up to the next unhandled event (in before-render updates
-                // the event needs to be *both* unhandled *and* for a device with before
-                // render updates enabled).
-                while (remainingEventCount > 0)
-                {
-                    if (isBeforeRenderUpdate)
-                    {
-                        if (!currentEventReadPtr->handled)
-                        {
-                            device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                            if (device != null && device.updateBeforeRender)
-                                break;
-                        }
-                    }
-                    else if (!currentEventReadPtr->handled)
-                        break;
-
-                    if (remainingEventCount > 1)
-                        currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                    --remainingEventCount;
-                }
-                #endif
                 if (remainingEventCount == 0)
                     break;
 
-                #if UNITY_2019_2_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
                 {
@@ -2409,7 +2379,6 @@ namespace UnityEngine.Experimental.Input
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     continue;
                 }
-                #endif
 
                 if (currentEventReadPtr->time <= currentTime)
                     totalEventLag += currentTime - currentEventReadPtr->time;
@@ -2424,10 +2393,8 @@ namespace UnityEngine.Experimental.Input
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
                     {
-                        #if UNITY_2019_2_OR_NEWER
                         eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                             ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        #endif
                         continue;
                     }
                 }
@@ -2442,12 +2409,8 @@ namespace UnityEngine.Experimental.Input
                     m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
                     #endif
 
-                    #if UNITY_2019_2_OR_NEWER
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                    #else
-                    currentEventReadPtr->handled = true;
-                    #endif
 
                     // No device found matching event. Ignore it.
                     continue;
@@ -2782,23 +2745,14 @@ namespace UnityEngine.Experimental.Input
                         break;
                 }
 
-                #if UNITY_2019_2_OR_NEWER
                 eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                     ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                #else
-                // Mark as processed.
-                currentEventReadPtr->handled = true;
-                if (remainingEventCount > 1)
-                    currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                --remainingEventCount;
-                #endif
             }
 
             m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
             m_Metrics.totalEventLagTime += totalEventLag;
 
             ////REVIEW: This was moved to 2019.2 while the timeslice code was wrong; should probably be reenabled now
-            #if UNITY_2019_2_OR_NEWER
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
             InputUpdate.s_LastUpdateRetainedEventCount = (uint)numEventsRetainedInBuffer;
@@ -2821,10 +2775,6 @@ namespace UnityEngine.Experimental.Input
             {
                 eventBuffer.Reset();
             }
-            #else
-            if (updateType != InputUpdateType.BeforeRender)
-                eventBuffer.Reset();
-            #endif
 
             if (gameIsPlayingAndHasFocus)
                 ProcessStateChangeMonitorTimeouts();

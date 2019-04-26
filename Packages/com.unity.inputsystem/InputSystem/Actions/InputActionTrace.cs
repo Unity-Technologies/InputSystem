@@ -262,10 +262,16 @@ namespace UnityEngine.Experimental.Input
 
         ~InputActionTrace()
         {
-            Dispose();
+            DisposeInternal();
         }
 
         public void Dispose()
+        {
+            UnsubscribeFromAll();
+            DisposeInternal();
+        }
+
+        private void DisposeInternal()
         {
             // Nuke clones we made of InputActionMapStates.
             for (var i = 0; i < m_ActionMapStateClones.length; ++i)

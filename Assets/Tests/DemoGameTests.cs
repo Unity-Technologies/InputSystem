@@ -12,7 +12,8 @@ public partial class DemoGameTests : DemoGameTestFixture
 {
     [Test]
     [Category("Demo")]
-    public void Demo_StartsWithMainMenuActiveAndStartGameButtonSelected()
+    [Ignore("TODO")]
+    public void TODO_Demo_StartsWithMainMenuActiveAndStartGameButtonSelected()
     {
         Assert.That(game.state, Is.EqualTo(DemoGame.State.InMainMenu));
         Assert.That(game.mainMenuCamera.gameObject.activeSelf, Is.True);

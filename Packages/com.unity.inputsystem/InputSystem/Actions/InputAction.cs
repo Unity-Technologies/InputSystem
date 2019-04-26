@@ -297,67 +297,6 @@ namespace UnityEngine.Experimental.Input
         public InputActionPhase phase => currentState.phase;
 
         ////REVIEW: expose these as a struct?
-        ////REVIEW: do we need/want the lastTrigger stuff at all?
-
-        ////REVIEW: when looking at this, you're probably interested in the last value more than anything
-        public InputControl lastTriggerControl
-        {
-            get
-            {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
-                    return null;
-                var controlIndex = currentState.controlIndex;
-                if (controlIndex == InputActionState.kInvalidIndex)
-                    return null;
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.controls[controlIndex];
-            }
-        }
-
-        public double lastTriggerTime => currentState.time;
-
-        public double lastTriggerStartTime => currentState.startTime;
-
-        public double lastTriggerDuration
-        {
-            get
-            {
-                var state = currentState;
-                return state.time - state.startTime;
-            }
-        }
-
-        public unsafe InputBinding lastTriggerBinding
-        {
-            get
-            {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
-                    return default;
-                var bindingIndex = currentState.bindingIndex;
-                if (bindingIndex == InputActionState.kInvalidIndex)
-                    return default;
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
-                var bindingStartIndex = m_ActionMap.m_State.mapIndices[m_ActionMap.m_MapIndexInState].bindingStartIndex;
-                return m_ActionMap.m_Bindings[bindingIndex - bindingStartIndex];
-            }
-        }
-
-        public IInputInteraction lastTriggerInteraction
-        {
-            get
-            {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
-                    return null;
-                var interactionIndex = currentState.interactionIndex;
-                if (interactionIndex == InputActionState.kInvalidIndex)
-                    return null;
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.interactions[interactionIndex];
-            }
-        }
 
         /// <summary>
         /// Whether the action is currently enabled or not.

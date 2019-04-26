@@ -6,7 +6,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Runtime.InteropServices;
 
-#if UNITY_EDITOR || UNITY_XBOXONE
+#if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 #endif
 
