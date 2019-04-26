@@ -830,7 +830,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private void OnBeforeSerializeActionProperty(InputActionProperty prop, ref InputActionReference reference, ref InputAction data)
         {
-            if (prop.action != null)
+            if (prop.reference != null)
                 reference = prop.reference;
             data = reference != null ? new InputAction() : prop.action;
         }
