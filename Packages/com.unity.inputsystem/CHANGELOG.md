@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
+
 #### Actions
 
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
