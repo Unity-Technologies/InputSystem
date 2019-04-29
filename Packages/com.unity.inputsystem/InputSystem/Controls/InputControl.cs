@@ -863,20 +863,19 @@ namespace UnityEngine.Experimental.Input
         {
             if (m_ProcessorStack.length > 0)
             {
-                if (m_ProcessorStack.firstValue is TProcessor)
-                    return (TProcessor)m_ProcessorStack.firstValue;
+                if (m_ProcessorStack.firstValue is TProcessor processor)
+                    return processor;
                 if (m_ProcessorStack.additionalValues != null)
                     for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
-                        if (m_ProcessorStack.additionalValues[i] is TProcessor)
-                            return (TProcessor)m_ProcessorStack.additionalValues[i];
+                        if (m_ProcessorStack.additionalValues[i] is TProcessor result)
+                            return result;
             }
             return default;
         }
 
         internal override void AddProcessor(object processor)
         {
-            var processorOfType = processor as InputProcessor<TValue>;
-            if (processorOfType == null)
+            if (!(processor is InputProcessor<TValue> processorOfType))
                 throw new Exception(
                     $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
             m_ProcessorStack.Append(processorOfType);

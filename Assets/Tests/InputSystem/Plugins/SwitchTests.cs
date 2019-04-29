@@ -6,6 +6,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 
 internal class SwitchTests : InputTestFixture
 {
@@ -35,10 +36,11 @@ internal class SwitchTests : InputTestFixture
             });
         InputSystem.Update();
 
-        Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
-        Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(0.456).Within(0.00001));
-        Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.00001));
-        Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(0.987).Within(0.00001));
+        var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.789f, 0.987f))));
 
         Assert.That(controller.acceleration.x.ReadValue(), Is.EqualTo(0.987).Within(0.00001));
         Assert.That(controller.acceleration.y.ReadValue(), Is.EqualTo(0.654).Within(0.00001));

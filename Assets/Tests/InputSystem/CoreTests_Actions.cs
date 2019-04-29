@@ -2948,7 +2948,7 @@ partial class CoreTests
         Set(gamepad.leftStick, Vector2.one);
 
         Assert.That(receivedFloat, Is.Not.Null);
-        Assert.That(receivedFloat.Value, Is.EqualTo(1).Within(0.00001));
+        Assert.That(receivedFloat.Value, Is.EqualTo(new AxisDeadzoneProcessor().Process(1)));
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -6868,7 +6868,7 @@ partial class CoreTests
             if (context.control.CheckStateIsAtDefault())
             {
                 Debug.Log("TestInteractionCheckingDefaultState.Process(default)");
-                Assert.That(context.control.ReadValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
+                Assert.That(context.control.ReadValueAsObject(), Is.EqualTo(new AxisDeadzoneProcessor().Process(0.1234f)).Within(0.00001));
             }
         }
 

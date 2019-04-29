@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools.Utils;
 
 internal class AndroidTests : InputTestFixture
@@ -77,12 +78,15 @@ internal class AndroidTests : InputTestFixture
 
         InputSystem.Update();
 
+        var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        // Y is upside down on Android.
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.789f, -0.987f))));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.654f, -0.321f))));
+
         Assert.That(controller.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(controller.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
-        Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.000001));
-        Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(-0.987).Within(0.000001)); // Y is upside down on Android.
-        Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.654).Within(0.000001));
-        Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(-0.321).Within(0.000001)); // Y is upside down on Android.
 
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonA), controller.buttonSouth);
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonX), controller.buttonWest);
@@ -228,10 +232,11 @@ internal class AndroidTests : InputTestFixture
 
         InputSystem.Update();
 
+        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
+
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
-        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.123f).Within(0.000001));
-        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.456f).Within(0.000001));
     }
 
     [Test]

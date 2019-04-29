@@ -1468,7 +1468,6 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("ScaleVector3", typeof(ScaleVector3Processor));
             processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
-            //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 

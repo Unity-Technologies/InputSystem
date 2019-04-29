@@ -5,8 +5,8 @@ namespace UnityEngine.Experimental.Input.Processors
         public float min;
         public float max;
 
-        public float minOrDefault => min == 0.0f ? InputSystem.settings.defaultDeadzoneMin : min;
-        public float maxOrDefault => max == 0.0f ? InputSystem.settings.defaultDeadzoneMax : max;
+        private float minOrDefault => min == default ? InputSystem.settings.defaultDeadzoneMin : min;
+        private float maxOrDefault => max == default ? InputSystem.settings.defaultDeadzoneMax : max;
 
         public override float Process(float value, InputControl<float> control = null)
         {
