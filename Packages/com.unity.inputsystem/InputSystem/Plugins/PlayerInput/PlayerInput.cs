@@ -607,11 +607,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             return playerInput;
         }
 
-        [Tooltip("Input actions associated with the player. TODO")]
+        [Tooltip("Input actions associated with the player.")]
         [SerializeField] internal InputActionAsset m_Actions;
+        [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [Tooltip("UI EventSystem that should receive input from the actions associated with the player. TODO")]
         [SerializeField] internal EventSystem m_UIEventSystem;
+        [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
         [SerializeField] internal ActionEvent[] m_ActionEvents;
@@ -619,6 +621,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal string m_DefaultControlScheme;////REVIEW: should we have IDs for these so we can rename safely?
         [SerializeField] internal string m_DefaultActionMap;
         [SerializeField] internal int m_SplitScreenIndex = -1;
+        [Tooltip("Reference to the player's view camera. Note that this is only required when using split-screen and/or "
+            + "per-player UIs. Otherwise it is safe to leave this property uninitialized.")]
         [SerializeField] internal Camera m_Camera;
 
         // Value object we use when sending messages via SendMessage() or BroadcastMessage(). Can be ignored
