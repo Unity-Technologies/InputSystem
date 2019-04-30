@@ -255,10 +255,12 @@ public class SimpleControls : IInputActionCollection
         m_gameplay_look = m_gameplay.GetAction("look");
         m_gameplay_jump = m_gameplay.GetAction("jump");
     }
+
     ~SimpleControls()
     {
         UnityEngine.Object.Destroy(asset);
     }
+
     public InputBinding? bindingMask
     {
         get => asset.bindingMask;
@@ -277,22 +279,27 @@ public class SimpleControls : IInputActionCollection
     {
         return asset.Contains(action);
     }
+
     public IEnumerator<InputAction> GetEnumerator()
     {
         return asset.GetEnumerator();
     }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+
     public void Enable()
     {
         asset.Enable();
     }
+
     public void Disable()
     {
         asset.Disable();
     }
+
     // gameplay
     private InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
