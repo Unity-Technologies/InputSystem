@@ -2,8 +2,8 @@
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Users;
 
-public class TankMovement : MonoBehaviour
-    {
+public class TankMovement : MonoBehaviour, TanksInputActions.IPlayerActions
+{
         public int m_PlayerNumber = 1;              // Used to identify which tank belongs to which player.  This is set by this tank's manager.
         public float m_Speed = 12f;                 // How fast the tank moves forward and back.
         public float m_TurnSpeed = 180f;            // How fast the tank turns in degrees per second.
@@ -20,36 +20,27 @@ public class TankMovement : MonoBehaviour
         private float m_OriginalPitch;              // The pitch of the audio source at the start of the scene.
         private ParticleSystem[] m_particleSystems; // References to all the particles systems used by the Tanks
 
+        public TanksInputActions inputActions;
+        private Vector2 movementInput;
 
-    public TanksInputActions inputActions;
-    private Vector2 movementInput;
-
-
-    public void Awake()
-    {
-
-        
-
-
-
-            m_Rigidbody = GetComponent<Rigidbody>();
-
-
-        inputActions.Player.Move.performed += ctx => movementInput = ctx.ReadValue<Vector2>();
-        inputActions.Player.Move.cancelled += ctx => movementInput = Vector2.zero;
-
-
-    }
-
-
-
-
-        private void OnEnable ()
+        public void Awake()
         {
 
-        Debug.Log("Player: " + m_PlayerNumber);
-        // When the tank is turned on, make sure it's not kinematic.
-        m_Rigidbody.isKinematic = false;
+        inputActions = new TanksInputActions();
+        inputActions.Player.SetCallbacks(this);
+        //inputActions.Player.Move.performed += ctx => movementInput = ctx.ReadValue<Vector2>();
+           // inputActions.Player.Move.cancelled += ctx => movementInput = Vector2.zero;
+
+            m_Rigidbody = GetComponent<Rigidbody>();
+        }
+
+
+    private void OnEnable ()
+        {
+            inputActions.Player.Move.Enable();
+
+            // When the tank is turned on, make sure it's not kinematic.
+            m_Rigidbody.isKinematic = false;
 
             // Also reset the input values.
             m_MovementInputValue = 0f;
@@ -63,29 +54,24 @@ public class TankMovement : MonoBehaviour
             {
                 m_particleSystems[i].Play();
             }
-
-        inputActions.Player.Move.Enable();
-        inputActions.Player.Fire.Enable();
-    }
+        }
 
 
  
 
         private void OnDisable ()
         {
+            inputActions.Player.Move.Disable();
 
-
-        // When the tank is turned off, set it to kinematic so it stops moving.
-        m_Rigidbody.isKinematic = true;
+             // When the tank is turned off, set it to kinematic so it stops moving.
+             m_Rigidbody.isKinematic = true;
 
             // Stop all particle system so it "reset" it's position to the actual one instead of thinking we moved when spawning
             for(int i = 0; i < m_particleSystems.Length; ++i)
             {
                 m_particleSystems[i].Stop();
             }
-        inputActions.Player.Move.Disable();
-        inputActions.Player.Fire.Disable();
-    }
+        }
 
 
         private void Start ()
@@ -103,19 +89,13 @@ public class TankMovement : MonoBehaviour
         private void Update ()
         {
 
+            // Store the value of both input axes.
+            // m_MovementInputValue = Input.GetAxis (m_MovementAxisName);
+            m_MovementInputValue = movementInput.x;
+            m_TurnInputValue = Input.GetAxis (m_TurnAxisName);
 
-        // Store the value of both input axes.
-        // m_MovementInputValue = Input.GetAxis (m_MovementAxisName);
-            m_MovementInputValue = movementInput.y;
-        // m_TurnInputValue = Input.GetAxis (m_TurnAxisName);
-
-        m_TurnInputValue = movementInput.x;
-
-
-        EngineAudio();
-
+            EngineAudio();
         }
-
 
         private void EngineAudio ()
         {
@@ -144,18 +124,18 @@ public class TankMovement : MonoBehaviour
             }
         }
 
+    public bool OnJoin(InputUser user)
+    {
+        Debug.Log("Doug player Joined.");
+        return true;
+    }
+
 
         private void FixedUpdate ()
         {
             // Adjust the rigidbodies position and orientation in FixedUpdate.
             Move ();
             Turn ();
-        }
-
-
-        public void OnMove()
-        {
-        Debug.Log("OnMove");
         }
 
         private void Move ()
@@ -179,4 +159,20 @@ public class TankMovement : MonoBehaviour
             // Apply this rotation to the rigidbody's rotation.
             m_Rigidbody.MoveRotation (m_Rigidbody.rotation * turnRotation);
         }
+
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        movementInput = context.ReadValue<Vector2>();
+        // throw new System.NotImplementedException();
     }
+
+    public void OnLook(InputAction.CallbackContext context)
+    {
+       // throw new System.NotImplementedException();
+    }
+
+    public void OnFire(InputAction.CallbackContext context)
+    {
+       // throw new System.NotImplementedException();
+    }
+}

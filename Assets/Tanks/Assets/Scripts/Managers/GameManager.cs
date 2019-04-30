@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
     public TankManager[] m_Tanks;               // A collection of managers for enabling and disabling different aspects of the tanks.
 
-        
+
     private int m_RoundNumber;                  // Which round the game is currently on.
     private WaitForSeconds m_StartWait;         // Used to have a delay whilst the round starts.
     private WaitForSeconds m_EndWait;           // Used to have a delay whilst the round or game ends.
@@ -26,14 +26,14 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         // Create the delays so they only have to be made once.
-        m_StartWait = new WaitForSeconds (m_StartDelay);
-        m_EndWait = new WaitForSeconds (m_EndDelay);
+        m_StartWait = new WaitForSeconds(m_StartDelay);
+        m_EndWait = new WaitForSeconds(m_EndDelay);
 
         SpawnAllTanks();
         SetCameraTargets();
 
         // Once the tanks have been created and the camera is using them as targets, start the game.
-        StartCoroutine (GameLoop ());
+        StartCoroutine(GameLoop());
     }
 
 
@@ -50,6 +50,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void OnPlayerJoined()
+    {
+        Debug.Log("Doug On PLayer Joined.");
+    }
 
     private void SetCameraTargets()
     {
@@ -172,7 +176,8 @@ public class GameManager : MonoBehaviour
         }
 
         // If there are one or fewer tanks remaining return true, otherwise return false.
-        return numTanksLeft <= 1;
+        // return numTanksLeft <= 1;
+        return false;
     }
         
         
