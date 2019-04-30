@@ -29,7 +29,7 @@ platforms:
     image: {{ platform.image }}
     flavor: {{ platform.flavor}}
   commands:
-    - hg clone -b stable https://ono.unity3d.com/unity-extra/unity-meta
+    - hg clone -b stable http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta
     - perl unity-meta/Tools/Format/format.pl Assets Packages --dry-run
     - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
