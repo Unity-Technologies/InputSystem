@@ -19,6 +19,19 @@ platforms:
     image: buildfarm/mac:stable
     flavor: m1.mac
     runtime: StandaloneOSX
+check_formatting:
+  name : Check formatting
+  agent:
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+  commands:
+    - hg clone -b stable http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta
+    - perl unity-meta/Tools/Format/format.pl Assets Packages --dry-run
+  triggers:
+    branches:
+      only:
+        - "/.*/"    
 ---
 {% for editor in editors %}
 {% for platform in platforms %}
@@ -43,17 +56,3 @@ platforms:
         - "upm-ci~/test-results/**/*"
 {% endfor %}
 {% endfor %}
----
-check_formatting:
-  name : Check formatting
-  agent:
-    type: Unity::VM::osx
-    image: buildfarm/mac:stable
-    flavor: m1.mac
-  commands:
-    - hg clone -b stable http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta
-    - perl unity-meta/Tools/Format/format.pl Assets Packages --dry-run
-  triggers:
-    branches:
-      only:
-        - "/.*/"
