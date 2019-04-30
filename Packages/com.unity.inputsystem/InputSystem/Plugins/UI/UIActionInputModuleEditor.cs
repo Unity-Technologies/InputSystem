@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
             if (m_ActionsFoldout)
             {
-                const string buttonLabel = "Read Actions from Asset…";
+                const string buttonLabel = "Link Actions from Asset…";
                 EditorGUILayout.HelpBox($"You can assign input actions to generate UI events here. Actions can either be stored as serialized data on this component, or as references to actions in an Input Action Asset. Click '{buttonLabel}' below to automatically assign all actions from an input action asset if they match common names for the UI actions.", MessageType.Info);
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(EditorGUIUtility.labelWidth);

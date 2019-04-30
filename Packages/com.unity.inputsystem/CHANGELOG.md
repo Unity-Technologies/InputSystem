@@ -4,6 +4,24 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.3.0-preview] - TBD
+
+### Changed
+
+- Redesigned `UIActionInputModule`
+ * Added a button in the inspector to automatically assign actions from an input action asset based on commonly used action names.
+ * Will now populate actions with useful defaults.
+ * Removed `clickSpeed` property - will use native click counts from the OS where available instead.
+ * Removed `sendEventsWhenInBackground` property.
+ * Hiding `Touches` and `TrackedDevices` until we decide how to handle them.
+ * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
+ * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
+- Changed default button press point to 0.5.
+
+### Fixed
+
+- Fixed scrolling in `UIActionInputModule`.
+
 ## [0.2.8-preview] - 2019-4-23
 
 ### Added
@@ -46,15 +64,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - In the Input Settings window, asset selection has now been moved to the "gear" popup menu. If no asset is created, we now automatically create one.
 - In the inspector for Input Settings assets, we now show a button to go to the Input Settings window, and a button to make the asset active if it isn't.
 - Tests are now no longer part of the com.unity.inputsystem package. The `InputTestFixture` class still is for when you want to write input-related tests for your project. You can reference the `Unity.InputSystem.TestFixture` assembly when you need to do that.
-- Redesigned `UIActionInputModule`
- * Added a button in the inspector to automatically assign actions from an input action asset based on commonly used action names.
- * Will now populate actions with useful defaults.
- * Removed `clickSpeed` property - will use native click counts from the OS where available instead.
- * Removed `sendEventsWhenInBackground` property.
- * Hiding `Touches` and `TrackedDevices` until we decide how to handle them.
- * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
- * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
-- Changed default button press point to 0.5.
 
 #### Actions
 
@@ -92,7 +101,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - IL2CPP causing issues with XInput on windows and osx desktops.
 - Devices not being available yet in `MonoBehavior.Awake`, `MonoBehaviour.Start`, and `MonoBehaviour.OnEnable` in player or when entering play mode in editor.
 - Fixed a bug where the event buffer used by `InputEventTrace` could get corrupted.
-- Fixed scrolling in `UIActionInputModule`.
 
 #### Actions
 

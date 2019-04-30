@@ -3404,7 +3404,6 @@ partial class CoreTests
     [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldOnTrigger()
     {
-        var oldPressPoint = InputSystem.settings.defaultButtonPressPoint;
         InputSystem.settings.defaultButtonPressPoint = 0.1f;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3443,8 +3442,6 @@ partial class CoreTests
             Assert.That(actions[0].ReadValue<float>, Is.EqualTo(0.345).Within(0.00001));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
         }
-
-        InputSystem.settings.defaultButtonPressPoint = oldPressPoint;
     }
 
     [Test]
