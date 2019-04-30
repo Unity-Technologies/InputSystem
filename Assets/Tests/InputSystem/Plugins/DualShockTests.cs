@@ -40,10 +40,18 @@ internal class DualShockTests : InputTestFixture
             });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-NormalizeProcessor.Normalize(64 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(128 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(-NormalizeProcessor.Normalize(255 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
+        var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(gamepad.leftStick.ReadValue(),
+            Is.EqualTo(leftStickDeadzone.Process(
+                new Vector2(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f),
+                    -NormalizeProcessor.Normalize(64 / 255.0f, 0f, 1f, 0.5f)))));
+
+        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(
+            new Vector2(NormalizeProcessor.Normalize(128 / 255.0f, 0f, 1f, 0.5f),
+                -NormalizeProcessor.Normalize(255 / 255.0f, 0f, 1f, 0.5f)))));
+
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(20 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(40 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
         ////TODO: test button presses individually

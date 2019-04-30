@@ -85,7 +85,7 @@ internal class HIDTests : InputTestFixture
         var hidDescriptor = new HID.HIDDeviceDescriptor
         {
             usage = 1234,
-            usagePage = (HID.UsagePage)5678,
+            usagePage = (HID.UsagePage) 5678,
             // need at least one valid element for the device not to be ignored
             elements = new[]
             {

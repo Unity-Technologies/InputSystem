@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 }
             }
             return null;
-        }        
+        }
 
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             };
             #endif
         }
-        
+
         #if UNITY_EDITOR
         private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
         #endif

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine.EventSystems;
@@ -147,12 +148,31 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                     m_EventsGroupUnfolded = EditorGUILayout.Foldout(m_EventsGroupUnfolded, m_EventsGroupText);
                     if (m_EventsGroupUnfolded)
                     {
-                        // Action events.
+                        // Action events. Group by action map.
                         if (m_ActionNames != null)
                         {
-                            var actionEvents = serializedObject.FindProperty("m_ActionEvents");
-                            for (var i = 0; i < m_ActionNames.Length; ++i)
-                                EditorGUILayout.PropertyField(actionEvents.GetArrayElementAtIndex(i), m_ActionNames[i]);
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                var actionEvents = serializedObject.FindProperty("m_ActionEvents");
+                                for (var n = 0; n < m_NumActionMaps; ++n)
+                                {
+                                    m_ActionMapEventsUnfolded[n] = EditorGUILayout.Foldout(m_ActionMapEventsUnfolded[n],
+                                        m_ActionMapNames[n]);
+                                    using (new EditorGUI.IndentLevelScope())
+                                    {
+                                        if (m_ActionMapEventsUnfolded[n])
+                                        {
+                                            for (var i = 0; i < m_ActionNames.Length; ++i)
+                                            {
+                                                if (m_ActionMapIndices[i] != n)
+                                                    continue;
+
+                                                EditorGUILayout.PropertyField(actionEvents.GetArrayElementAtIndex(i), m_ActionNames[i]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // Misc events.
@@ -381,6 +401,25 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 ////FIXME: this should preserve the same order that we have in the asset
                 var newActionNames = new List<GUIContent>();
                 var newActionEvents = new List<PlayerInput.ActionEvent>();
+                var newActionMapIndices = new List<int>();
+
+                m_NumActionMaps = 0;
+                m_ActionMapNames = null;
+
+                void AddEntry(InputAction action, PlayerInput.ActionEvent actionEvent)
+                {
+                    newActionNames.Add(new GUIContent(action.name));
+                    newActionEvents.Add(actionEvent);
+
+                    var actionMapIndex = asset.actionMaps.IndexOfReference(action.actionMap);
+                    newActionMapIndices.Add(actionMapIndex);
+
+                    if (actionMapIndex >= m_NumActionMaps)
+                        m_NumActionMaps = actionMapIndex + 1;
+
+                    ArrayHelpers.PutAtIfNotSet(ref m_ActionMapNames, actionMapIndex,
+                        () => new GUIContent(action.actionMap.name));
+                }
 
                 ////REVIEW: this is destructive; we may be losing connections here that the user has set up
                 ////        if the action goes missing
@@ -394,21 +433,23 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                         var guid = entry.actionId;
                         var action = asset.FindAction(guid);
                         if (action != null)
-                        {
-                            newActionEvents.Add(entry);
-                            newActionNames.Add(new GUIContent(action + " Action"));
-                        }
+                            AddEntry(action, entry);
                     }
                 }
 
                 // Add any new actions.
                 foreach (var action in asset)
                 {
-                    newActionEvents.Add(new PlayerInput.ActionEvent(action.id, action.ToString()));
-                    newActionNames.Add(new GUIContent(action + " Action"));
+                    // Skip if it was already in there.
+                    if (oldActionEvents.Any(x => x.actionId == action.id.ToString()))
+                        continue;
+
+                    AddEntry(action, new PlayerInput.ActionEvent(action.id, action.ToString()));
                 }
 
                 m_ActionNames = newActionNames.ToArray();
+                m_ActionMapIndices = newActionMapIndices.ToArray();
+                Array.Resize(ref m_ActionMapEventsUnfolded, m_NumActionMaps);
                 playerInput.m_ActionEvents = newActionEvents.ToArray();
             }
 
@@ -511,20 +552,32 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         }
 
         [SerializeField] private bool m_EventsGroupUnfolded;
+        [SerializeField] private bool[] m_ActionMapEventsUnfolded;
 
         [NonSerialized] private readonly GUIContent m_CreateActionsText = EditorGUIUtility.TrTextContent("Create Actions...");
         [NonSerialized] private readonly GUIContent m_AddInputModuleText = EditorGUIUtility.TrTextContent("Add UI Input Module");
         [NonSerialized] private readonly GUIContent m_OpenSettingsText = EditorGUIUtility.TrTextContent("Open Input Settings");
         [NonSerialized] private readonly GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
-        [NonSerialized] private readonly GUIContent m_EventsGroupText = EditorGUIUtility.TrTextContent("Events");
-        [NonSerialized] private readonly GUIContent m_NotificationBehaviorText = EditorGUIUtility.TrTextContent("Behavior");
-        [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText = EditorGUIUtility.TrTextContent("Default Control Scheme");
-        [NonSerialized] private readonly GUIContent m_DefaultActionMapText = EditorGUIUtility.TrTextContent("Default Action Map");
+        [NonSerialized] private readonly GUIContent m_EventsGroupText =
+            EditorGUIUtility.TrTextContent("Events", "UnityEvents triggered by the PlayerInput component");
+        [NonSerialized] private readonly GUIContent m_NotificationBehaviorText =
+            EditorGUIUtility.TrTextContent("Behavior",
+                "Determine how notifications should be sent when an input-related event associated with the player happens.");
+        [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText =
+            EditorGUIUtility.TrTextContent("Default Control Scheme", "Which control scheme to try by default. If not set, PlayerInput "
+                + "will simply go through all control schemes in the action asset and try one after the other. If set, PlayerInput will try "
+                + "the given scheme first but if using that fails (e.g. when not required devices are missing) will fall back to trying the other "
+                + "control schemes in order.");
+        [NonSerialized] private readonly GUIContent m_DefaultActionMapText =
+            EditorGUIUtility.TrTextContent("Default Action Map", "Action map to enable by default. If not set, no actions will be enabled by default.");
         [NonSerialized] private readonly GUIContent m_DebugText = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
         [NonSerialized] private GUIContent m_SendMessagesHelpText;
         [NonSerialized] private GUIContent[] m_ActionNames;
+        [NonSerialized] private GUIContent[] m_ActionMapNames;
+        [NonSerialized] private int[] m_ActionMapIndices;
+        [NonSerialized] private int m_NumActionMaps;
         [NonSerialized] private int m_SelectedDefaultControlScheme;
         [NonSerialized] private GUIContent[] m_ControlSchemeOptions;
         [NonSerialized] private int m_SelectedDefaultActionMap;

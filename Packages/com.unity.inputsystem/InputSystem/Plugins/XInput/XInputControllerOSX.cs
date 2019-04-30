@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-
 namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 {
     // Xbox one controller on OSX. State layout can be found here:
@@ -25,10 +24,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct XInputControllerOSXState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('H', 'I', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('H', 'I', 'D');
 
         public enum Button
         {

@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input
                 max_state_size_in_bytes = metrics.maxStateSizeInBytes,
                 total_event_bytes = metrics.totalEventBytes,
                 total_event_count = metrics.totalEventCount,
-                total_frame_count = metrics.totalFrameCount,
+                total_frame_count = metrics.totalUpdateCount,
                 total_event_processing_time = (float)metrics.totalEventProcessingTime,
             };
 

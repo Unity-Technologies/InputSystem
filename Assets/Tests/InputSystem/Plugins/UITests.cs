@@ -154,6 +154,8 @@ internal class UITests : InputTestFixture
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+        Assert.That(leftChildReceiver.events[0].data, Is.TypeOf<PointerEventData>());
+        Assert.That((leftChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Left));
         Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
         Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
         Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
@@ -167,6 +169,8 @@ internal class UITests : InputTestFixture
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+        Assert.That(leftChildReceiver.events[0].data, Is.TypeOf<PointerEventData>());
+        Assert.That((leftChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Right));
         Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
         leftChildReceiver.Reset();
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
@@ -183,7 +187,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Move children
-        InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(400, 200));
+        InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(350, 200));
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -196,7 +200,7 @@ internal class UITests : InputTestFixture
         rightChildReceiver.Reset();
 
         // Release button
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 200), buttons = 0 });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(350, 200), buttons = 0 });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 

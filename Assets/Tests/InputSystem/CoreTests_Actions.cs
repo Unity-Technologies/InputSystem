@@ -126,6 +126,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_WhenDisabled_CancelAllStartedInteractions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -622,6 +623,7 @@ partial class CoreTests
     // to the action system and spell out what exactly happens when we progress from one kind of setup to another.
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1185,13 +1187,123 @@ partial class CoreTests
         }
     }
 
-    // There can be situations where two different controls are driven from the state. Most prominently, this is
+    private class ReleaseOnlyTestInteraction : IInputInteraction<float>
+    {
+        private bool m_WaitingForRelease;
+        public void Process(ref InputInteractionContext context)
+        {
+            var actuated = context.ControlIsActuated();
+            if (!actuated && m_WaitingForRelease)
+                context.PerformedAndGoBackToWaiting();
+            else if (actuated)
+                m_WaitingForRelease = true;
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterInteraction<ReleaseOnlyTestInteraction>();
+
+        var action = new InputAction(interactions: "releaseOnlyTest");
+
+        action.AddBinding("<Keyboard>/a");
+        action.AddBinding("<Gamepad>/buttonNorth");
+
+        action.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Press(gamepad.buttonNorth);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(gamepad.buttonNorth);
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+
+            trace.Clear();
+
+            // Test same button again with full press and release cycle to make sure
+            // there's no state that's gotten stuck on the button.
+            Press(gamepad.buttonNorth);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(gamepad.buttonNorth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+
+            trace.Clear();
+
+            // Make sure that using the other binding is unaffected by the previous use of buttonSouth.
+            Press(keyboard.aKey);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(keyboard.aKey);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+
+            trace.Clear();
+
+            // Make sure that if we press both buttonSouth *and* the key and then release them both,
+            // we get two releases on the action.
+            //
+            // NOTE: This differs very slightly from what one might expect from the built-in disambiguation
+            //       code that basically dictates that the control with the largest actuation is being tracked
+            //       and "locked on". However, PressInteraction never *starts* an interaction on a button press
+            //       when it is set to "ReleaseOnly". This means that from the perspective of the disambiguation
+            //       code, there is nothing in progress when the second button goes down.
+            Press(keyboard.aKey);
+            Press(gamepad.buttonNorth);
+
+            Assert.That(trace, Is.Empty);
+
+            Release(keyboard.aKey);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+
+            trace.Clear();
+
+            Release(gamepad.buttonNorth);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+        }
+    }
+
+    // There can be situations where two different controls are driven from the same state. Most prominently, this is
     // the case with the Pointer.button control that subclasses usually rewrite to whatever their primary button is.
     [Test]
     [Category("Actions")]
     [Property("TimesliceEvents", "Off")]
     [Ignore("TODO")]
-    public void TODO_Actions_WithMultipleActuationsFromStateState_()
+    public void TODO_Actions_WithMultipleActuationsFromSameState_()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var action = new InputAction(binding: "<Mouse>/*button");
@@ -1336,9 +1448,6 @@ partial class CoreTests
             }
 
             receivedChanges.Add(c);
-
-            // lastXXX state on action must have been updated.
-            Assert.That(((InputAction)a).lastTriggerControl, Is.SameAs(gamepad.leftTrigger));
         };
 
         Set(gamepad.leftTrigger, 0.5f);
@@ -1628,21 +1737,21 @@ partial class CoreTests
     public void Actions_CanPerformPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        // we add a second input device (and bind to it), to test that the binding 
+
+        // We add a second input device (and bind to it), to test that the binding
         // conflict resolution will not interfere with the interaction handling.
-        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Keyboard>();
 
         // Test all three press behaviors concurrently.
-        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
-        pressAction.AddBinding("<Keyboard>/a");
-        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
-        releaseAction.AddBinding("<Keyboard>/s");
+        var pressOnlyAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        pressOnlyAction.AddBinding("<Keyboard>/a");
+        var releaseOnlyAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        releaseOnlyAction.AddBinding("<Keyboard>/s");
         var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
         pressAndReleaseAction.AddBinding("<Keyboard>/d");
 
-
-        pressAction.Enable();
-        releaseAction.Enable();
+        pressOnlyAction.Enable();
+        releaseOnlyAction.Enable();
         pressAndReleaseAction.Enable();
 
         using (var trace = new InputActionTrace())
@@ -1654,13 +1763,13 @@ partial class CoreTests
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Started));
 
             trace.Clear();
@@ -1670,7 +1779,7 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
@@ -1683,13 +1792,13 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Performed));
             Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
+                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
                     .EqualTo(InputActionPhase.Started));
         }
     }
@@ -1699,7 +1808,7 @@ partial class CoreTests
     public void Actions_CanPerformContinuousPressInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        // we add a second input device (and bind to it), to test that the binding 
+        // we add a second input device (and bind to it), to test that the binding
         // conflict resolution will not interfere with the interaction handling.
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -1921,6 +2030,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformDoubleTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2036,6 +2146,65 @@ partial class CoreTests
             Assert.That(actions[1].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[1].time, Is.EqualTo(7.75).Within(0.00001));
             Assert.That(actions[1].ReadValue<float>(), Is.Zero.Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCustomizeButtonPressPoints()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var pressAction = new InputAction("PressAction", binding: "<Gamepad>/leftTrigger", interactions: "press(pressPoint=0.234)");
+        var tapAction = new InputAction("TapAction", binding: "<Gamepad>/leftTrigger", interactions: "tap(pressPoint=0.345)");
+        var slowTapAction = new InputAction("SlowTapAction", binding: "<Gamepad>/leftTrigger", interactions: "slowtap(pressPoint=0.456)");
+        var multiTapAction = new InputAction("MultiTapAction", binding: "<Gamepad>/leftTrigger", interactions: "multitap(pressPoint=0.567)");
+        var holdAction = new InputAction("HoldAction", binding: "<Gamepad>/leftTrigger", interactions: "hold(pressPoint=0.678)");
+
+        pressAction.Enable();
+        tapAction.Enable();
+        slowTapAction.Enable();
+        multiTapAction.Enable();
+        holdAction.Enable();
+
+        // Render the global default inactive.
+        InputSystem.settings.defaultButtonPressPoint = 0;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            Set(gamepad.leftTrigger, 0.123f);
+
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.3f);
+
+            Assert.That(trace, Performed<PressInteraction>(pressAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.4f);
+
+            Assert.That(trace, Started<TapInteraction>(tapAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.5f);
+
+            Assert.That(trace, Started<SlowTapInteraction>(slowTapAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(trace, Started<MultiTapInteraction>(multiTapAction));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.7f);
+
+            Assert.That(trace, Started<HoldInteraction>(holdAction));
         }
     }
 
@@ -2703,6 +2872,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanAddInteractionsToActions()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2778,7 +2948,7 @@ partial class CoreTests
         Set(gamepad.leftStick, Vector2.one);
 
         Assert.That(receivedFloat, Is.Not.Null);
-        Assert.That(receivedFloat.Value, Is.EqualTo(1).Within(0.00001));
+        Assert.That(receivedFloat.Value, Is.EqualTo(new AxisDeadzoneProcessor().Process(1)));
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -3069,6 +3239,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanTriggerActionContinuously()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3154,6 +3325,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformContinuousHold()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3229,6 +3401,7 @@ partial class CoreTests
     // even if the control wiggles around.
     [Test]
     [Category("Actions")]
+    [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldOnTrigger()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3532,10 +3705,18 @@ partial class CoreTests
         Assert.That(action.controls[0], Is.SameAs(gamepad1.leftTrigger));
 
         // Make sure it actually triggers correctly.
-        InputSystem.QueueStateEvent(gamepad1, new GamepadState {leftTrigger = 0.5f});
-        InputSystem.Update();
+        using (var trace = new InputActionTrace(action))
+        {
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState {leftTrigger = 0.5f});
+            InputSystem.Update();
 
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad1.leftTrigger));
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].control, Is.SameAs(gamepad1.leftTrigger));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].control, Is.SameAs(gamepad1.leftTrigger));
+        }
 
         // Also make sure that this device creation path gets it right.
         runtime.ReportNewInputDevice(
@@ -4324,15 +4505,23 @@ partial class CoreTests
 
         action.bindingMask = new InputBinding {groups = "b"};
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-        InputSystem.Update();
+        using (var trace = new InputActionTrace(action))
+        {
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+            InputSystem.Update();
 
-        Assert.That(action.lastTriggerControl, Is.Null);
+            Assert.That(trace, Is.Empty);
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-        InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
+            InputSystem.Update();
 
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.buttonNorth));
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(actions[1].control, Is.SameAs(gamepad.buttonNorth));
+        }
     }
 
     [Test]
@@ -4432,34 +4621,6 @@ partial class CoreTests
         map2.Enable();
 
         Assert.That(map1.m_State, Is.SameAs(map2.m_State));
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Property("TimesliceEvents", "Off")]
-    public void Actions_CanQueryLastTrigger()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/rightTrigger", interactions: "slowTap(duration=1)");
-        action.Enable();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1}, 2);
-        InputSystem.Update();
-
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
-        Assert.That(action.lastTriggerTime, Is.EqualTo(2).Within(0.0000001));
-        Assert.That(action.lastTriggerStartTime, Is.EqualTo(2).Within(0.0000001));
-        Assert.That(action.lastTriggerInteraction, Is.TypeOf<SlowTapInteraction>());
-        Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0}, 4);
-        InputSystem.Update();
-
-        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
-        Assert.That(action.lastTriggerTime, Is.EqualTo(4).Within(0.0000001));
-        Assert.That(action.lastTriggerStartTime, Is.EqualTo(2).Within(0.0000001));
-        Assert.That(action.lastTriggerInteraction, Is.TypeOf<SlowTapInteraction>());
-        Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
     }
 
     ////TODO: add tests for new matching of InputBindings against one another (e.g. separated lists of paths and actions)
@@ -6707,7 +6868,7 @@ partial class CoreTests
             if (context.control.CheckStateIsAtDefault())
             {
                 Debug.Log("TestInteractionCheckingDefaultState.Process(default)");
-                Assert.That(context.control.ReadValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
+                Assert.That(context.control.ReadValueAsObject(), Is.EqualTo(new AxisDeadzoneProcessor().Process(0.1234f)).Within(0.00001));
             }
         }
 
