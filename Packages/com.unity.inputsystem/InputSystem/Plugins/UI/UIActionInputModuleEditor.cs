@@ -6,7 +6,7 @@ using UnityEngine.Experimental.Input.Editor;
 namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 {
     [CustomEditor(typeof(UIActionInputModule))]
-    internal class UIActionInputModuleEditor: UnityEditor.Editor
+    internal class UIActionInputModuleEditor : UnityEditor.Editor
     {
         private InputActionProperty GetActionReferenceFromAssets(InputActionAsset actions, object[] childAssets, InputActionProperty defaultValue, params string[] actionNames)
         {
@@ -29,7 +29,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
             return defaultValue;
         }
 
-        private enum ActionReferenceType {
+        private enum ActionReferenceType
+        {
             Reference,
             SerializedData
         };
@@ -51,13 +52,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
         private SerializedProperty[] m_DataProperties;
         private bool m_ActionsFoldout;
 
-        public void OnEnable() 
+        public void OnEnable()
         {
             var numActions = m_ActionNames.Length;
             m_ActionTypes = new ActionReferenceType[numActions];
             m_ReferenceProperties = new SerializedProperty[numActions];
             m_DataProperties = new SerializedProperty[numActions];
-            for (var i=0; i<numActions;i++)
+            for (var i = 0; i < numActions; i++)
             {
                 m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}ActionReference");
                 m_DataProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}ActionData");
@@ -66,7 +67,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
         }
 
         public override void OnInspectorGUI()
-        { 
+        {
             base.OnInspectorGUI();
             if (Event.current.type == EventType.ExecuteCommand)
             {
@@ -144,7 +145,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 s_FoldoutStyle.fontStyle = FontStyle.Bold;
             }
         }
-
     }
 }
 #endif

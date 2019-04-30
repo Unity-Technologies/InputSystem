@@ -323,7 +323,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 responder.state = new TouchModel(m_RollingPointerId++);
 
                 var newIndex = i;
-                responder.actionCallback = delegate (InputAction.CallbackContext context)
+                responder.actionCallback = delegate(InputAction.CallbackContext context)
                 {
                     OnTouchAction(newIndex, context);
                 };
@@ -339,7 +339,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 responder.state = new TrackedDeviceModel(m_RollingPointerId++);
 
                 var newIndex = i;
-                responder.actionCallback = delegate (InputAction.CallbackContext context)
+                responder.actionCallback = delegate(InputAction.CallbackContext context)
                 {
                     OnTrackedDeviceAction(newIndex, context);
                 };
@@ -383,7 +383,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var newResponder = new TouchResponder(id, position, phase);
 
             var index = m_Touches.Count;
-            newResponder.actionCallback = delegate (InputAction.CallbackContext context)
+            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
             {
                 OnTouchAction(index, context);
             };
@@ -410,7 +410,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var newResponder = new TrackedDeviceResponder(id, position, orientation, select);
 
             var index = m_TrackedDevices.Count;
-            newResponder.actionCallback = delegate (InputAction.CallbackContext context)
+            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
             {
                 OnTrackedDeviceAction(index, context);
             };
