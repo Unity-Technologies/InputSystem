@@ -28,10 +28,10 @@ namespace UnityEngine.PostProcessing
             get
             {
                 return model.enabled
-                       && model.settings.method == AntialiasingModel.Method.Taa
-                       && SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
-                       && SystemInfo.supportsMotionVectors
-                       && !context.interrupted;
+                    && model.settings.method == AntialiasingModel.Method.Taa
+                    && SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
+                    && SystemInfo.supportsMotionVectors
+                    && !context.interrupted;
             }
         }
 
@@ -134,8 +134,8 @@ namespace UnityEngine.PostProcessing
         Vector2 GenerateRandomOffset()
         {
             var offset = new Vector2(
-                    GetHaltonValue(m_SampleIndex & 1023, 2),
-                    GetHaltonValue(m_SampleIndex & 1023, 3));
+                GetHaltonValue(m_SampleIndex & 1023, 2),
+                GetHaltonValue(m_SampleIndex & 1023, 3));
 
             if (++m_SampleIndex >= k_SampleCount)
                 m_SampleIndex = 0;

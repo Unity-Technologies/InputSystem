@@ -18,7 +18,7 @@ groupshared uint4 gs_histogram[256];
 void KHistogramGather(uint2 dispatchThreadId : SV_DispatchThreadID, uint2 groupThreadId : SV_GroupThreadID)
 {
     const uint localThreadId = groupThreadId.y * GROUP_SIZE + groupThreadId.x;
-    
+
     if (localThreadId < 256)
         gs_histogram[localThreadId] = uint4(0, 0, 0, 0);
 
@@ -30,11 +30,11 @@ void KHistogramGather(uint2 dispatchThreadId : SV_DispatchThreadID, uint2 groupT
         float3 color = saturate(_Source[dispatchThreadId].xyz);
         if (_IsLinear > 0)
             color = LinearToGammaSpace(color);
-        
+
         // Convert color & luminance to histogram bin
         uint3 idx_c = (uint3)(round(color * 255.0));
         uint idx_l = (uint)(round(dot(color.rgb, float3(0.2125, 0.7154, 0.0721)) * 255.0));
-    
+
         // Fill the group shared histogram
         if (_Channels.x > 0u) InterlockedAdd(gs_histogram[idx_c.x].x, 1); // Red
         if (_Channels.y > 0u) InterlockedAdd(gs_histogram[idx_c.y].y, 1); // Green

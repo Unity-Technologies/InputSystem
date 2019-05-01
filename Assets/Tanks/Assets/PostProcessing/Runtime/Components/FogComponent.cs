@@ -21,9 +21,9 @@ namespace UnityEngine.PostProcessing
             get
             {
                 return model.enabled
-                       && context.isGBufferAvailable // In forward fog is already done at shader level
-                       && RenderSettings.fog
-                       && !context.interrupted;
+                    && context.isGBufferAvailable    // In forward fog is already done at shader level
+                    && RenderSettings.fog
+                    && !context.interrupted;
             }
         }
 

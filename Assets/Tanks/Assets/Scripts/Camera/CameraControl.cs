@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 
 public class CameraControl : MonoBehaviour
@@ -15,35 +15,32 @@ public class CameraControl : MonoBehaviour
     private Vector3 m_DesiredPosition;              // The position the camera is moving towards.
 
 
-    private void Awake ()
+    private void Awake()
     {
-        m_Camera = GetComponentInChildren<Camera> ();
+        m_Camera = GetComponentInChildren<Camera>();
     }
 
-
-    private void FixedUpdate ()
+    private void FixedUpdate()
     {
         // Move the camera towards a desired position.
-        Move ();
+        Move();
 
         // Change the size of the camera based.
-        Zoom ();
+        Zoom();
     }
 
-
-    private void Move ()
+    private void Move()
     {
         // Find the average position of the targets.
-        FindAveragePosition ();
+        FindAveragePosition();
 
         // Smoothly transition to that position.
         transform.position = Vector3.SmoothDamp(transform.position, m_DesiredPosition, ref m_MoveVelocity, m_DampTime);
     }
 
-
-    private void FindAveragePosition ()
+    private void FindAveragePosition()
     {
-        Vector3 averagePos = new Vector3 ();
+        Vector3 averagePos = new Vector3();
         int numTargets = 0;
 
         // Go through all the targets and add their positions together.
@@ -69,16 +66,14 @@ public class CameraControl : MonoBehaviour
         m_DesiredPosition = averagePos;
     }
 
-
-    private void Zoom ()
+    private void Zoom()
     {
         // Find the required size based on the desired position and smoothly transition to that size.
         float requiredSize = FindRequiredSize();
-        m_Camera.orthographicSize = Mathf.SmoothDamp (m_Camera.orthographicSize, requiredSize, ref m_ZoomSpeed, m_DampTime);
+        m_Camera.orthographicSize = Mathf.SmoothDamp(m_Camera.orthographicSize, requiredSize, ref m_ZoomSpeed, m_DampTime);
     }
 
-
-    private float FindRequiredSize ()
+    private float FindRequiredSize()
     {
         // Find the position the camera rig is moving towards in its local space.
         Vector3 desiredLocalPos = transform.InverseTransformPoint(m_DesiredPosition);
@@ -110,21 +105,20 @@ public class CameraControl : MonoBehaviour
         size += m_ScreenEdgeBuffer;
 
         // Make sure the camera's size isn't below the minimum.
-        size = Mathf.Max (size, m_MinSize);
+        size = Mathf.Max(size, m_MinSize);
 
         return size;
     }
 
-
-    public void SetStartPositionAndSize ()
+    public void SetStartPositionAndSize()
     {
         // Find the desired position.
-        FindAveragePosition ();
+        FindAveragePosition();
 
         // Set the camera's position to the desired position without damping.
         transform.position = m_DesiredPosition;
 
         // Find and set the required size of the camera.
-        m_Camera.orthographicSize = FindRequiredSize ();
+        m_Camera.orthographicSize = FindRequiredSize();
     }
 }

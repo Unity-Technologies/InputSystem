@@ -473,10 +473,12 @@ public class DemoControls : IInputActionCollection
         m_menu_submit = m_menu.GetAction("submit");
         m_menu_point = m_menu.GetAction("point");
     }
+
     ~DemoControls()
     {
         UnityEngine.Object.Destroy(asset);
     }
+
     public InputBinding? bindingMask
     {
         get => asset.bindingMask;
@@ -495,22 +497,27 @@ public class DemoControls : IInputActionCollection
     {
         return asset.Contains(action);
     }
+
     public IEnumerator<InputAction> GetEnumerator()
     {
         return asset.GetEnumerator();
     }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+
     public void Enable()
     {
         asset.Enable();
     }
+
     public void Disable()
     {
         asset.Disable();
     }
+
     // gameplay
     private InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;

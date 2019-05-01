@@ -39,7 +39,7 @@ namespace UnityEngine.PostProcessing
             get
             {
                 return model.enabled
-                       && !context.interrupted;
+                    && !context.interrupted;
             }
         }
 
@@ -91,12 +91,12 @@ namespace UnityEngine.PostProcessing
                 return new Color(1f, 1f, 1f, c.a);
 
             return new Color
-                   {
-                       r = c.r / sum,
-                       g = c.g / sum,
-                       b = c.b / sum,
-                       a = c.a
-                   };
+            {
+                r = c.r / sum,
+                g = c.g / sum,
+                b = c.b / sum,
+                a = c.a
+            };
         }
 
         static Vector3 ClampVector(Vector3 v, float min, float max)
@@ -105,7 +105,7 @@ namespace UnityEngine.PostProcessing
                 Mathf.Clamp(v.x, min, max),
                 Mathf.Clamp(v.y, min, max),
                 Mathf.Clamp(v.z, min, max)
-                );
+            );
         }
 
         public static Vector3 GetLiftValue(Color lift)
@@ -292,11 +292,11 @@ namespace UnityEngine.PostProcessing
 
             var lutMaterial = context.materialFactory.Get("Hidden/Post FX/Lut Generator");
             lutMaterial.SetVector(Uniforms._LutParams, new Vector4(
-                    k_InternalLogLutSize,
-                    0.5f / (k_InternalLogLutSize * k_InternalLogLutSize),
-                    0.5f / k_InternalLogLutSize,
-                    k_InternalLogLutSize / (k_InternalLogLutSize - 1f))
-                );
+                k_InternalLogLutSize,
+                0.5f / (k_InternalLogLutSize * k_InternalLogLutSize),
+                0.5f / k_InternalLogLutSize,
+                k_InternalLogLutSize / (k_InternalLogLutSize - 1f))
+            );
 
             // Tonemapping
             lutMaterial.shaderKeywords = null;
@@ -350,7 +350,7 @@ namespace UnityEngine.PostProcessing
                 settings.colorWheels.linear.gamma,
                 settings.colorWheels.linear.gain,
                 out lift, out gamma, out gain
-                );
+            );
 
             lutMaterial.SetVector(Uniforms._Lift, lift);
             lutMaterial.SetVector(Uniforms._InvGamma, gamma);
@@ -363,7 +363,7 @@ namespace UnityEngine.PostProcessing
                 settings.colorWheels.log.power,
                 settings.colorWheels.log.offset,
                 out slope, out power, out offset
-                );
+            );
 
             lutMaterial.SetVector(Uniforms._Slope, slope);
             lutMaterial.SetVector(Uniforms._Power, power);
@@ -393,7 +393,7 @@ namespace UnityEngine.PostProcessing
                 context.profile.debugViews.IsModeActive(DebugMode.PreGradingLog)
                 ? "COLOR_GRADING_LOG_VIEW"
                 : "COLOR_GRADING"
-                );
+            );
 
             var bakedLut = model.bakedLut;
             uberMaterial.SetTexture(Uniforms._LogLut, bakedLut);

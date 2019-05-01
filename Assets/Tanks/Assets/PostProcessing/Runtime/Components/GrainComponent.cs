@@ -15,9 +15,9 @@ namespace UnityEngine.PostProcessing
             get
             {
                 return model.enabled
-                       && model.settings.intensity > 0f
-                       && SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
-                       && !context.interrupted;
+                    && model.settings.intensity > 0f
+                    && SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
+                    && !context.interrupted;
             }
         }
 

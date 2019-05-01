@@ -181,16 +181,16 @@ namespace UnityEngine.PostProcessing
             }
         }
 
-	    public enum ColorWheelMode
-	    {
-		    Linear,
-			Log
-	    }
+        public enum ColorWheelMode
+        {
+            Linear,
+            Log
+        }
 
         [Serializable]
         public struct ColorWheelsSettings
         {
-	        public ColorWheelMode mode;
+            public ColorWheelMode mode;
 
             [TrackballGroup]
             public LogWheelsSettings log;
@@ -204,7 +204,7 @@ namespace UnityEngine.PostProcessing
                 {
                     return new ColorWheelsSettings
                     {
-						mode = ColorWheelMode.Log,
+                        mode = ColorWheelMode.Log,
                         log = LogWheelsSettings.defaultSettings,
                         linear = LinearWheelsSettings.defaultSettings
                     };

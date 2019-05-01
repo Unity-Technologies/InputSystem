@@ -24,7 +24,7 @@ float3 UberSecondPass(half3 color, float2 uv)
     }
     #endif
 
-    // Blue noise dithering 
+    // Blue noise dithering
     #if DITHERING
     {
         // Symmetric triangular distribution on [-1,1] with maximal density at 0
