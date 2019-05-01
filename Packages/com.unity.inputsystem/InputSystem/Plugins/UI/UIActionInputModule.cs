@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine;
 
 ////REVIEW: should each of the actions be *lists* of actions?
 
@@ -20,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    public class UIActionInputModule : UIInputModule
+    public class UIActionInputModule : UIInputModule, ISerializationCallbackReceiver
     {
         private static void SwapAction(ref InputActionProperty property, InputActionProperty newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
@@ -226,15 +227,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         /// <summary>
-        /// This enables background event processing, so that the Input Module can continue sending UI events even in the background.
-        /// </summary>
-        public bool sendEventsWhenInBackground
-        {
-            get => m_SendEventsWhenInBackground;
-            set => m_SendEventsWhenInBackground = value;
-        }
-
-        /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
@@ -367,33 +359,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             base.OnEnable();
 
             HookActions();
+            EnableAllActions();
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
 
+            DisableAllActions();
             UnhookActions();
-        }
-
-        private bool ShouldIgnoreEventsOnNoFocus()
-        {
-            if (m_SendEventsWhenInBackground)
-                return true;
-
-            switch (SystemInfo.operatingSystemFamily)
-            {
-                case OperatingSystemFamily.Windows:
-                case OperatingSystemFamily.Linux:
-                case OperatingSystemFamily.MacOSX:
-#if UNITY_EDITOR
-                    if (UnityEditor.EditorApplication.isRemoteConnected)
-                        return false;
-#endif
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         /// <summary>
@@ -476,6 +450,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             cancelAction?.Enable();
 
+            var scrollAction = m_ScrollWheelAction.action;
+            scrollAction?.Enable();
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
@@ -530,6 +507,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             var cancelAction = m_CancelAction.action;
             cancelAction?.Disable();
 
+            var scrollAction = m_ScrollWheelAction.action;
+            scrollAction?.Disable();
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var touch = m_Touches[i];
@@ -566,24 +546,30 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
             else if (action == m_ScrollWheelAction)
             {
-                mouseState.scrollPosition = context.ReadValue<Vector2>();
+                // The old input system reported scroll deltas in lines, we report pixels.
+                // Need to scale as the UI system expects lines.
+                const float kPixelPerLine = 20;
+                mouseState.scrollPosition = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
             }
             else if (action == m_LeftClickAction)
             {
                 var buttonState = mouseState.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
+                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.leftButton = buttonState;
             }
             else if (action == m_RightClickAction)
             {
                 var buttonState = mouseState.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
+                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.rightButton = buttonState;
             }
             else if (action == m_MiddleClickAction)
             {
                 var buttonState = mouseState.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
+                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.middleButton = buttonState;
             }
             else if (action == m_MoveAction)
@@ -652,7 +638,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private void DoProcess()
         {
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
-            if (!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+            if (!eventSystem.isFocused)
             {
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
@@ -742,6 +728,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 cancelAction.cancelled += m_OnActionDelegate;
             }
 
+            var scrollAction = m_ScrollWheelAction.action;
+            if (scrollAction != null)
+            {
+                scrollAction.performed += m_OnActionDelegate;
+                scrollAction.cancelled += m_OnActionDelegate;
+            }
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
@@ -813,6 +806,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 cancelAction.cancelled -= m_OnActionDelegate;
             }
 
+            var scrollAction = m_ScrollWheelAction.action;
+            if (scrollAction != null)
+            {
+                scrollAction.performed += m_OnActionDelegate;
+                scrollAction.cancelled += m_OnActionDelegate;
+            }
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
@@ -828,37 +828,86 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        [Tooltip("Enables UI events regardless of focus state.")]
-        [SerializeField] private bool m_SendEventsWhenInBackground;
+        private void OnBeforeSerializeActionProperty(InputActionProperty prop, ref InputActionReference reference, ref InputAction data)
+        {
+            if (prop.reference != null)
+                reference = prop.reference;
+            data = reference != null ? new InputAction() : prop.action;
+        }
+
+        private InputActionProperty OnAfterSerializeActionProperty(InputActionReference reference, InputAction data)
+        {
+            return reference != null ? new InputActionProperty(reference) : new InputActionProperty(data);
+        }
+
+        public void OnBeforeSerialize()
+        {
+            OnBeforeSerializeActionProperty(m_PointAction, ref m_PointActionReference, ref m_PointActionData);
+            OnBeforeSerializeActionProperty(m_MoveAction, ref m_MoveActionReference, ref m_MoveActionData);
+            OnBeforeSerializeActionProperty(m_SubmitAction, ref m_SubmitActionReference, ref m_SubmitActionData);
+            OnBeforeSerializeActionProperty(m_CancelAction, ref m_CancelActionReference, ref m_CancelActionData);
+            OnBeforeSerializeActionProperty(m_LeftClickAction, ref m_LeftClickActionReference, ref m_LeftClickActionData);
+            OnBeforeSerializeActionProperty(m_MiddleClickAction, ref m_MiddleClickActionReference, ref m_MiddleClickActionData);
+            OnBeforeSerializeActionProperty(m_RightClickAction, ref m_RightClickActionReference, ref m_RightClickActionData);
+            OnBeforeSerializeActionProperty(m_ScrollWheelAction, ref m_ScrollWheelActionReference, ref m_ScrollWheelActionData);
+        }
+
+        public void OnAfterDeserialize()
+        {
+            m_PointAction = OnAfterSerializeActionProperty(m_PointActionReference, m_PointActionData);
+            m_MoveAction = OnAfterSerializeActionProperty(m_MoveActionReference, m_MoveActionData);
+            m_SubmitAction = OnAfterSerializeActionProperty(m_SubmitActionReference, m_SubmitActionData);
+            m_CancelAction = OnAfterSerializeActionProperty(m_CancelActionReference, m_CancelActionData);
+            m_LeftClickAction = OnAfterSerializeActionProperty(m_LeftClickActionReference, m_LeftClickActionData);
+            m_MiddleClickAction = OnAfterSerializeActionProperty(m_MiddleClickActionReference, m_MiddleClickActionData);
+            m_RightClickAction = OnAfterSerializeActionProperty(m_RightClickActionReference, m_RightClickActionData);
+            m_ScrollWheelAction = OnAfterSerializeActionProperty(m_ScrollWheelActionReference, m_ScrollWheelActionData);
+        }
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
-        [Tooltip("Action that delivers a Vector2 of screen coordinates.")]
-        [SerializeField] private InputActionProperty m_PointAction;
+
+        private InputActionProperty m_PointAction;
+        [SerializeField, HideInInspector] private InputActionReference m_PointActionReference;
+        [SerializeField, HideInInspector] private InputAction m_PointActionData;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
-        [Tooltip("Action that delivers a relative motion Vector2 for navigation.")]
-        [SerializeField] private InputActionProperty m_MoveAction;
+        private InputActionProperty m_MoveAction;
+        [SerializeField, HideInInspector] private InputActionReference m_MoveActionReference;
+        [SerializeField, HideInInspector] private InputAction m_MoveActionData;
 
-        [Tooltip("Button action that represents a 'Submit' navigation action.")]
-        [SerializeField] private InputActionProperty m_SubmitAction;
-        [Tooltip("Button action that represents a 'Cancel' navigation action.")]
-        [SerializeField] private InputActionProperty m_CancelAction;
-        [Tooltip("Button action that represents a left click.")]
-        [SerializeField] private InputActionProperty m_LeftClickAction;
-        [Tooltip("Button action that represents a middle click.")]
-        [SerializeField] private InputActionProperty m_MiddleClickAction;
-        [Tooltip("Button action that represents a right click.")]
-        [SerializeField] private InputActionProperty m_RightClickAction;
-        [Tooltip("Vector2 action that represents horizontal and vertical scrolling.")]
-        [SerializeField] private InputActionProperty m_ScrollWheelAction;
-        [SerializeField] private List<TouchResponder> m_Touches;
-        [SerializeField] private List<TrackedDeviceResponder> m_TrackedDevices;
+        private InputActionProperty m_SubmitAction;
+        [SerializeField, HideInInspector] private InputActionReference m_SubmitActionReference;
+        [SerializeField, HideInInspector] private InputAction m_SubmitActionData;
+
+        private InputActionProperty m_CancelAction;
+        [SerializeField, HideInInspector] private InputActionReference m_CancelActionReference;
+        [SerializeField, HideInInspector] private InputAction m_CancelActionData;
+
+        private InputActionProperty m_LeftClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_LeftClickActionReference;
+        [SerializeField, HideInInspector] private InputAction m_LeftClickActionData = new InputAction();
+
+        private InputActionProperty m_MiddleClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_MiddleClickActionReference;
+        [SerializeField, HideInInspector] private InputAction m_MiddleClickActionData;
+
+        private InputActionProperty m_RightClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_RightClickActionReference;
+        [SerializeField, HideInInspector] private InputAction m_RightClickActionData;
+
+        private InputActionProperty m_ScrollWheelAction;
+        [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelActionReference;
+        [SerializeField, HideInInspector] private InputAction m_ScrollWheelActionData;
+
+        // Hide these while we still have to figure out what to do with these.
+        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches;
+        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices;
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;

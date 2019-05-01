@@ -38,7 +38,6 @@ internal class UITests : InputTestFixture
         var systemObject = new GameObject("System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
         var uiModule = systemObject.AddComponent<UIActionInputModule>();
-        uiModule.sendEventsWhenInBackground = true;
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
         objects.eventSystem.InvokeUpdate(); // Initial update only sets current module.

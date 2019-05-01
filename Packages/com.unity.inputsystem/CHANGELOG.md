@@ -12,9 +12,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * __NOTE:__ The deadzoning is __independent__ of the stick. Whereas the stack has a radial deadzones, `x` and `y` have linear deadzones. This means that `leftStick.ReadValue().x` is __not__ necessary equal to `leftStick.x.ReadValue()`.
   * This change also fixes the problem of noise from sticks not getting filtered out and causing devices such as the PS4 controller to constantly make itself `Gamepad.current`.
 
+- Redesigned `UIActionInputModule`
+ * Added a button in the inspector to automatically assign actions from an input action asset based on commonly used action names.
+ * Will now populate actions with useful defaults.
+ * Removed `clickSpeed` property - will use native click counts from the OS where available instead.
+ * Removed `sendEventsWhenInBackground` property.
+ * Hiding `Touches` and `TrackedDevices` until we decide how to handle them.
+ * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
+ * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
+- Changed default button press point to 0.5.
+
 ### Fixed
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
+- Fixed scrolling in `UIActionInputModule`.
 
 #### Actions
 

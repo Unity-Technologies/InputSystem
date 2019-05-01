@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             buttonState.CopyTo(eventData);
             eventData.button = PointerEventData.InputButton.Left;
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
 
             ProcessMouseMovement(eventData);
             ProcessMouseScroll(eventData);
@@ -67,7 +67,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             buttonState.CopyTo(eventData);
             eventData.button = PointerEventData.InputButton.Right;
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
             ProcessMouseButtonDrag(eventData);
 
             buttonState.CopyFrom(eventData);
@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             buttonState.CopyTo(eventData);
             eventData.button = PointerEventData.InputButton.Middle;
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
             ProcessMouseButtonDrag(eventData);
 
             buttonState.CopyFrom(eventData);
@@ -148,7 +148,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData)
+        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData, bool hasNativeClickCount)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
 
@@ -178,10 +178,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 var time = Time.unscaledTime;
 
-                if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
-                    ++eventData.clickCount;
-                else
-                    eventData.clickCount = 1;
+                if (!hasNativeClickCount)
+                {
+                    const float clickSpeed = 0.3f;
+                    if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
+                        ++eventData.clickCount;
+                    else
+                        eventData.clickCount = 1;
+                }
 
                 eventData.clickTime = time;
 
@@ -278,7 +282,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             eventData.button = PointerEventData.InputButton.Left;
 
-            ProcessMouseButton(touchState.selectDelta, eventData);
+            ProcessMouseButton(touchState.selectDelta, eventData, false);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData);
 
@@ -299,7 +303,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.button = PointerEventData.InputButton.Left;
             eventData.pointerCurrentRaycast = PerformRaycast(eventData);
 
-            ProcessMouseButton(deviceState.selectDelta, eventData);
+            ProcessMouseButton(deviceState.selectDelta, eventData, false);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
 
@@ -337,7 +341,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 var moveVector = joystickState.move;
 
                 var moveDirection = MoveDirection.None;
-                if (moveVector.sqrMagnitude > moveDeadzone * moveDeadzone)
+                if (moveVector.sqrMagnitude > 0)
                 {
                     if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
                         moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
@@ -436,12 +440,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return result;
         }
 
-        [Tooltip("The maximum time (in seconds) between two mouse presses for it to be consecutive click.")]
-        public float clickSpeed = 0.3f;
-
-        [Tooltip("The absolute value required by a move action on either axis required to trigger a move event.")]
-        public float moveDeadzone = 0.6f;
-
         [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
         public float repeatDelay = 0.5f;
 
@@ -449,6 +447,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         public float repeatRate = 0.1f;
 
         [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
+        [HideInInspector] // Hide this while we still have to figure out what to do with this.
         public float trackedDeviceDragThresholdMultiplier = 2.0f;
 
         private AxisEventData m_CachedAxisEvent;

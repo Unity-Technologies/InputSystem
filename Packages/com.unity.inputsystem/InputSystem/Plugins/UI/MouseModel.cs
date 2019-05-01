@@ -93,6 +93,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
+        public int clickCount { get; set; }
+
+        public bool hasNativeClickCount => clickCount != 0;
+
         /// <summary>
         /// A set of flags to identify the changes that have occured between calls of <see cref="OnFrameFinished"/>.
         /// </summary>
@@ -130,6 +134,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.pointerPress = m_InternalData.pressedGameObject;
             eventData.rawPointerPress = m_InternalData.pressedGameObjectRaw;
             eventData.pointerDrag = m_InternalData.draggedGameObject;
+            if (hasNativeClickCount)
+                eventData.clickCount = clickCount;
         }
 
         /// <summary>
