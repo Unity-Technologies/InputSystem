@@ -376,8 +376,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 InputSystem.ListEnabledActions(m_EnabledActions);
                 if (m_EnabledActions.Count > 0)
                 {
-                    actionsItem = AddChild(root, $"Actions ({m_EnabledActions.Count})", ref id);
+                    actionsItem = AddChild(root, "", ref id);
                     AddEnabledActions(actionsItem, ref id);
+
+                    if (!actionsItem.hasChildren)
+                    {
+                        // We are culling actions that are assigned to users so we may end up with an empty
+                        // list even if we have enabled actions. If we do, remove the "Actions" item from the tree.
+                        root.children.Remove(actionsItem);
+                    }
+                    else
+                    {
+                        // Update title to include action count.
+                        actionsItem.displayName = $"Actions ({actionsItem.children.Count})";
+                    }
                 }
 
                 // Users.

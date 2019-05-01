@@ -1,6 +1,10 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
 
+////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
+////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
+////       action based on what action the *composite* references.
+
 ////REVIEW: should continuous actions *always* trigger as long as they are enabled? (even if no control is actuated)
 
 ////REVIEW: I think the action system as it is today offers too many ways to shoot yourself in the foot. It has

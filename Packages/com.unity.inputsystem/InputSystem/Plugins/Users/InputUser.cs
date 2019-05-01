@@ -725,7 +725,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             {
                 // If it's in s_AllPairedDevices, there is *some* user that is using the device.
                 // We don't care which one it is here.
-                if (ArrayHelpers.ContainsReferenceTo(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+                if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
                     continue;
 
                 list.Add(device);
@@ -1598,7 +1598,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                         return;
 
                     // See if it's a device not belonging to any user.
-                    if (ArrayHelpers.ContainsReferenceTo(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+                    if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
                     {
                         // No, it's a device already paired to a player so do nothing.
                         return;
