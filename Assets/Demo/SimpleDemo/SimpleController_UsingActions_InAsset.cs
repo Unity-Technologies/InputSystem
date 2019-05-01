@@ -22,7 +22,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     private Rigidbody m_Rigidbody;
 
     private void Start()
-    {		
+    {
         m_Rigidbody = GetComponent<Rigidbody>();
 
         ////FIXME: Solve this properly. ATM, if we have both fixed and dynamic updates enabled, then
@@ -40,7 +40,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     public void Awake()
     {
-		controls = new SimpleControls();
+        controls = new SimpleControls();
         controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
         controls.gameplay.move.cancelled += ctx => m_Move = Vector2.zero;
