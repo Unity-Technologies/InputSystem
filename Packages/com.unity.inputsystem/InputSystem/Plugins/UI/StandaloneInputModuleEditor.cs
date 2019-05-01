@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 {
-    // The only purpose of the Input System suppying a custom editor for the UI StandaloneInputModule is to guide users to using 
+    // The only purpose of the Input System suppying a custom editor for the UI StandaloneInputModule is to guide users to using
     // the Input System's UIActionInputModule instead.
     [CustomEditor(typeof(StandaloneInputModule))]
     internal class StandaloneInputModuleModuleEditor : UnityEditor.Editor
