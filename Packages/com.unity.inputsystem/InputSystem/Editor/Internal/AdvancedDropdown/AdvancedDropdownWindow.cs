@@ -9,41 +9,22 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     internal class AdvancedDropdownWindow : EditorWindow
     {
-        private static class Styles
-        {
-            public static GUIStyle background = "grey_border";
-            public static GUIStyle previewHeader = new GUIStyle(EditorStyles.label);
-            public static GUIStyle previewText = new GUIStyle(EditorStyles.wordWrappedLabel);
-
-            static Styles()
-            {
-                previewText.padding.left += 3;
-                previewText.padding.right += 3;
-                previewHeader.padding.left += 3 - 2;
-                previewHeader.padding.right += 3;
-                previewHeader.padding.top += 3;
-                previewHeader.padding.bottom += 2;
-            }
-        }
         private static readonly float kBorderThickness = 1f;
         private static readonly float kRightMargin = 13f;
 
-        private AdvancedDropdownGUI m_Gui = null;
-        private AdvancedDropdownDataSource m_DataSource = null;
-        private AdvancedDropdownState m_State = null;
+        private AdvancedDropdownGUI m_Gui;
+        private AdvancedDropdownDataSource m_DataSource;
+        private AdvancedDropdownState m_State;
 
         private AdvancedDropdownItem m_CurrentlyRenderedTree;
 
-        protected AdvancedDropdownItem renderedTreeItem
-        {
-            get { return m_CurrentlyRenderedTree; }
-        }
+        protected AdvancedDropdownItem renderedTreeItem => m_CurrentlyRenderedTree;
 
         private AdvancedDropdownItem m_AnimationTree;
-        private float m_NewAnimTarget = 0;
-        private long m_LastTime = 0;
+        private float m_NewAnimTarget;
+        private long m_LastTime;
         private bool m_ScrollToSelected = true;
-        private float m_InitialSelectionPosition = 0f;
+        private float m_InitialSelectionPosition;
         ////FIXME: looks like a bug?
         #pragma warning disable CS0649
         private Rect m_ButtonRectScreenPos;
@@ -51,22 +32,23 @@ namespace UnityEngine.Experimental.Input.Editor
         private bool m_DirtyList = true;
 
         private string m_Search = "";
-        private bool hasSearch { get { return !string.IsNullOrEmpty(m_Search); } }
+        private bool hasSearch => !string.IsNullOrEmpty(m_Search);
+
         protected internal string searchString
         {
-            get { return m_Search; }
+            get => m_Search;
             set
             {
+                var isNewSearch = string.IsNullOrEmpty(m_Search) && !string.IsNullOrEmpty(value);
                 m_Search = value;
                 m_DataSource.RebuildSearch(m_Search);
                 m_CurrentlyRenderedTree = m_DataSource.mainTree;
                 if (hasSearch)
                 {
                     m_CurrentlyRenderedTree = m_DataSource.searchTree;
-                    if (state.GetSelectedIndex(m_CurrentlyRenderedTree) < 0)
-                    {
+                    if (isNewSearch || state.GetSelectedIndex(m_CurrentlyRenderedTree) < 0)
                         state.SetSelectedIndex(m_CurrentlyRenderedTree, 0);
-                    }
+                    m_ViewsStack.Clear();
                 }
             }
         }
@@ -74,49 +56,53 @@ namespace UnityEngine.Experimental.Input.Editor
         internal bool m_ShowHeader = true;
         internal bool showHeader
         {
-            get { return m_ShowHeader;}
-            set { m_ShowHeader = value; }
+            get => m_ShowHeader;
+            set => m_ShowHeader = value;
         }
         internal bool m_Searchable = true;
         internal bool searchable
         {
-            get { return m_Searchable;}
-            set { m_Searchable = value; }
+            get => m_Searchable;
+            set => m_Searchable = value;
         }
         internal bool m_closeOnSelection = true;
         internal bool closeOnSelection
         {
-            get { return m_closeOnSelection;}
-            set { m_closeOnSelection = value; }
+            get => m_closeOnSelection;
+            set => m_closeOnSelection = value;
         }
 
         protected virtual bool isSearchFieldDisabled { get; set; }
 
         protected bool m_SetInitialSelectionPosition = true;
-        protected virtual bool setInitialSelectionPosition
+
+        public AdvancedDropdownWindow()
         {
-            get { return m_SetInitialSelectionPosition; }
+            m_InitialSelectionPosition = 0f;
         }
+
+        protected virtual bool setInitialSelectionPosition => m_SetInitialSelectionPosition;
 
         protected internal AdvancedDropdownState state
         {
-            get { return m_State; }
-            set { m_State = value; }
+            get => m_State;
+            set => m_State = value;
         }
 
         protected internal AdvancedDropdownGUI gui
         {
-            get { return m_Gui; }
-            set { m_Gui = value; }
+            get => m_Gui;
+            set => m_Gui = value;
         }
 
         protected internal AdvancedDropdownDataSource dataSource
         {
-            get { return m_DataSource; }
-            set { m_DataSource = value; }
+            get => m_DataSource;
+            set => m_DataSource = value;
         }
 
         public event Action<AdvancedDropdownWindow> windowClosed;
+        public event Action windowDestroyed;
         public event Action<AdvancedDropdownItem> selectionChanged;
 
         protected virtual void OnEnable()
@@ -131,6 +117,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // EditorGUI.IsEditingTextField() was returning true after e.g the Add Component Menu closes
             EditorGUIUtility.editingTextField = false;
             GUIUtility.keyboardControl = 0;
+            windowDestroyed?.Invoke();
         }
 
         public static T CreateAndInit<T>(Rect rect, AdvancedDropdownState state) where T : AdvancedDropdownWindow
@@ -161,10 +148,9 @@ namespace UnityEngine.Experimental.Input.Editor
             buttonRect.x = screenPoint.x;
             buttonRect.y = screenPoint.y;
 
-            Vector2 requiredDropdownSize;
             OnDirtyList();
             m_CurrentlyRenderedTree = hasSearch ? m_DataSource.searchTree : m_DataSource.mainTree;
-            ShowAsDropDown(buttonRect, CalculateWindowSize(m_ButtonRectScreenPos, out requiredDropdownSize));
+            ShowAsDropDown(buttonRect, CalculateWindowSize(m_ButtonRectScreenPos, out var requiredDropdownSize));
 
             // If the dropdown is as height as the screen height, give it some margin
             if (position.height  < requiredDropdownSize.y)
@@ -241,6 +227,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal void OnGUI()
         {
+            m_Gui.BeginDraw(this);
+
             GUI.Label(new Rect(0, 0, position.width, position.height), GUIContent.none, Styles.background);
 
             if (m_DirtyList)
@@ -254,8 +242,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (m_NewAnimTarget != 0 && Event.current.type == EventType.Layout)
             {
-                long now = DateTime.Now.Ticks;
-                float deltaTime = (now - m_LastTime) / (float)TimeSpan.TicksPerSecond;
+                var now = DateTime.Now.Ticks;
+                var deltaTime = (now - m_LastTime) / (float)TimeSpan.TicksPerSecond;
                 m_LastTime = now;
 
                 m_NewAnimTarget = Mathf.MoveTowards(m_NewAnimTarget, 0, deltaTime * 4);
@@ -289,6 +277,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 DrawDropdown(anim - 1, m_AnimationTree);
                 DrawDropdown(anim, m_CurrentlyRenderedTree);
             }
+
+            m_Gui.EndDraw(this);
+        }
+
+        public void ReloadData()
+        {
+            OnDirtyList();
         }
 
         private void OnDirtyList()
@@ -389,8 +384,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void CloseWindow()
         {
-            if (windowClosed != null)
-                windowClosed(this);
+            windowClosed?.Invoke(this);
             Close();
         }
 
@@ -432,11 +426,11 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < item.children.Count(); i++)
             {
                 var child = item.children.ElementAt(i);
-                bool selected = m_State.GetSelectedIndex(item) == i;
+                var selected = m_State.GetSelectedIndex(item) == i;
 
                 if (child.IsSeparator())
                 {
-                    m_Gui.DrawLineSeparator();
+                    GUIHelpers.DrawLineSeparator(child.name);
                 }
                 else
                 {
@@ -558,6 +552,23 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     DestroyImmediate(window);
                 }
+            }
+        }
+
+        private static class Styles
+        {
+            public static GUIStyle background = "grey_border";
+            public static GUIStyle previewHeader = new GUIStyle(EditorStyles.label);
+            public static GUIStyle previewText = new GUIStyle(EditorStyles.wordWrappedLabel);
+
+            static Styles()
+            {
+                previewText.padding.left += 3;
+                previewText.padding.right += 3;
+                previewHeader.padding.left += 3 - 2;
+                previewHeader.padding.right += 3;
+                previewHeader.padding.top += 3;
+                previewHeader.padding.bottom += 2;
             }
         }
     }

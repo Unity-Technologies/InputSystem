@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -19,25 +18,13 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow things like "-something" and "+something" for usages, processors, etc
 
-////TODO: change interactions and processors to use kSeparator
-
 ////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
-
-////TODO: turn 'overrides' into feature where layouts can be registered as overrides and they get merged *into* the layout
-////      they are overriding
 
 ////TODO: ensure that if a layout sets a device description, it is indeed a device layout
 
 ////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
-
-////REVIEW: kill layout namespacing for remotes and have remote players instantiate layouts from editor instead?
-////        loses the ability for layouts to be different in the player than in the editor but if we take it as granted that
-////           a) a given layout X always is the same regardless to which player it is deployed, and that
-////           b) the editor always has all layouts
-////        then we can just kill off the entire namespacing. This also makes it much easier to tweak layouts in the
-////        editor.
 
 namespace UnityEngine.Experimental.Input.Layouts
 {
@@ -70,279 +57,10 @@ namespace UnityEngine.Experimental.Input.Layouts
     /// </remarks>
     public class InputControlLayout
     {
-        // String that is used to separate names from namespaces in layout names.
-        public const string kNamespaceQualifier = "::";
-
-        /// <summary>
-        /// The "None" layout is a reserved layout name which signals to the system
-        /// that no layout should be used (and thus no device should be created).
-        /// </summary>
-        public const string kNone = "None";
-
-        public const char kSeparator = ',';
-        public const string kSeparatorString = ",";
-
         private static InternedString s_DefaultVariant = new InternedString("Default");
         public static InternedString DefaultVariant => s_DefaultVariant;
 
-        ////TODO: replace ParameterValue with PrimitiveValueOrArray
-
-        public enum ParameterType
-        {
-            Boolean,
-            Integer,
-            Float,
-        }
-
-        // Both controls and processors can have public fields that can be set
-        // directly from layouts. The values are usually specified in strings
-        // (like "clampMin=-1") but we parse them ahead of time into instances
-        // of this structure that tell us where to store the value in the control.
-        public unsafe struct ParameterValue : IEquatable<ParameterValue>
-        {
-            public const int kMaxValueSize = 4;
-
-            public string name;
-            public ParameterType type;
-            public fixed byte value[kMaxValueSize];
-
-            public int sizeInBytes
-            {
-                get
-                {
-                    switch (type)
-                    {
-                        case ParameterType.Boolean: return sizeof(bool);
-                        case ParameterType.Float: return sizeof(float);
-                        case ParameterType.Integer: return sizeof(int);
-                    }
-                    return 0;
-                }
-            }
-
-            public ParameterValue(string name, bool value)
-                : this()
-            {
-                this.name = name;
-                SetValue(value);
-            }
-
-            public ParameterValue(string name, int value)
-                : this()
-            {
-                this.name = name;
-                SetValue(value);
-            }
-
-            public ParameterValue(string name, float value)
-                : this()
-            {
-                this.name = name;
-                SetValue(value);
-            }
-
-            public bool GetBoolValue()
-            {
-                if (type != ParameterType.Boolean)
-                    throw new InvalidOperationException("Not a bool value");
-                fixed(byte* ptr = value)
-                return *(bool*)ptr;
-            }
-
-            public int GetIntValue()
-            {
-                if (type != ParameterType.Integer)
-                    throw new InvalidOperationException("Not an integer value");
-                fixed(byte* ptr = value)
-                return *(int*)ptr;
-            }
-
-            public float GetFloatValue()
-            {
-                if (type != ParameterType.Float)
-                    throw new InvalidOperationException("Not a float value");
-                fixed(byte* ptr = value)
-                return *(float*)ptr;
-            }
-
-            public void SetValue(bool value)
-            {
-                type = ParameterType.Boolean;
-                fixed(byte* ptr = this.value)
-                * (bool*)ptr = value;
-            }
-
-            public void SetValue(int value)
-            {
-                type = ParameterType.Integer;
-                fixed(byte* ptr = this.value)
-                * (int*)ptr = value;
-            }
-
-            public void SetValue(float value)
-            {
-                type = ParameterType.Float;
-                fixed(byte* ptr = this.value)
-                * (float*)ptr = value;
-            }
-
-            public void SetValue(string value)
-            {
-                fixed(byte* ptr = this.value)
-                {
-                    switch (type)
-                    {
-                        case ParameterType.Boolean:
-                            if (bool.TryParse(value, out var result))
-                            {
-                                *(bool*)ptr = result;
-                            }
-                            break;
-                        case ParameterType.Integer:
-                            if (int.TryParse(value, out var intResult))
-                            {
-                                *(int*)ptr = intResult;
-                            }
-                            break;
-                        case ParameterType.Float:
-                            if (float.TryParse(value, out var floatResult))
-                            {
-                                *(float*)ptr = floatResult;
-                            }
-                            break;
-                    }
-                }
-            }
-
-            public ParameterValue ConvertTo(ParameterType type)
-            {
-                switch (type)
-                {
-                    case ParameterType.Boolean:
-                        if (this.type == ParameterType.Float)
-                            return new ParameterValue(name, GetFloatValue() > 0 || GetFloatValue() < 0);
-                        if (this.type == ParameterType.Integer)
-                            return new ParameterValue(name, GetIntValue() != 0);
-                        return this;
-
-                    case ParameterType.Integer:
-                        if (this.type == ParameterType.Boolean)
-                            return new ParameterValue(name, GetBoolValue() ? 1 : 0);
-                        if (this.type == ParameterType.Float)
-                            return new ParameterValue(name, (int)GetFloatValue());
-                        return this;
-
-                    case ParameterType.Float:
-                        if (this.type == ParameterType.Boolean)
-                            return new ParameterValue(name, GetBoolValue() ? 1f : 0f);
-                        if (this.type == ParameterType.Integer)
-                            return new ParameterValue(name, (float)GetIntValue());
-                        return this;
-                }
-
-                throw new InvalidOperationException("Should not reach here");
-            }
-
-            public string GetValueAsString()
-            {
-                fixed(byte* ptr = value)
-                {
-                    switch (type)
-                    {
-                        case ParameterType.Boolean:
-                            if (*(bool*)ptr)
-                                return "true";
-                            return "false";
-                        case ParameterType.Integer:
-                            var intValue = *(int*)ptr;
-                            return intValue.ToString();
-                        case ParameterType.Float:
-                            var floatValue = *(float*)ptr;
-                            return floatValue.ToString();
-                    }
-                }
-
-                return string.Empty;
-            }
-
-            public override string ToString()
-            {
-                fixed(byte* ptr = value)
-                {
-                    switch (type)
-                    {
-                        case ParameterType.Boolean:
-                            if (*(bool*)ptr)
-                                return name;
-                            return $"{name}=false";
-                        case ParameterType.Integer:
-                            var intValue = *(int*)ptr;
-                            return $"{name}={intValue}";
-                        case ParameterType.Float:
-                            ////FIXME: this needs to be invariant culture
-                            var floatValue = *(float*)ptr;
-                            return $"{name}={floatValue}";
-                    }
-                }
-
-                return string.Empty;
-            }
-
-            public bool Equals(ParameterValue other)
-            {
-                fixed(byte* valuePtr = value)
-                {
-                    return string.Equals(name, other.name, StringComparison.InvariantCultureIgnoreCase)
-                        && type == other.type
-                        && *(int*)valuePtr == *(int*)other.value;
-                }
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj))
-                    return false;
-                return obj is ParameterValue parameterValue && Equals(parameterValue);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    fixed(byte* valuePtr = value)
-                    {
-                        var hashCode = (name != null ? name.GetHashCode() : 0);
-                        hashCode = (hashCode * 397) ^ (int)type;
-                        hashCode = (hashCode * 397) ^ *(int*)valuePtr;
-                        return hashCode;
-                    }
-                }
-            }
-
-            public static bool operator==(ParameterValue left, ParameterValue right)
-            {
-                return left.Equals(right);
-            }
-
-            public static bool operator!=(ParameterValue left, ParameterValue right)
-            {
-                return !left.Equals(right);
-            }
-        }
-
-        public struct NameAndParameters
-        {
-            public string name;
-            public ReadOnlyArray<ParameterValue> parameters;
-
-            public override string ToString()
-            {
-                if (parameters.Count == 0)
-                    return name;
-                var parameterString = string.Join(kSeparatorString, parameters.Select(x => x.ToString()).ToArray());
-                return $"{name}({parameterString})";
-            }
-        }
+        public const string VariantSeparator = ";";
 
         /// <summary>
         /// Specification for the composition of a direct or indirect child control.
@@ -392,7 +110,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             public ReadOnlyArray<InternedString> usages;
             public ReadOnlyArray<InternedString> aliases;
-            public ReadOnlyArray<ParameterValue> parameters;
+            public ReadOnlyArray<NamedValue> parameters;
             public ReadOnlyArray<NameAndParameters> processors;
             public uint offset;
             public uint bit;
@@ -567,6 +285,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         // NOTE: Case-insensitive.
         public InternedString name => m_Name;
 
+        public string displayName => m_DisplayName ?? m_Name;
+
         public Type type => m_Type;
 
         public InternedString variants => m_Variants;
@@ -586,6 +306,30 @@ namespace UnityEngine.Experimental.Input.Layouts
         public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
 
         public bool isControlLayout => !isDeviceLayout;
+
+        public bool isGenericTypeOfDevice
+        {
+            get => (m_Flags & Flags.IsGenericTypeOfDevice) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.IsGenericTypeOfDevice;
+                else
+                    m_Flags &= ~Flags.IsGenericTypeOfDevice;
+            }
+        }
+
+        public bool hideInUI
+        {
+            get => (m_Flags & Flags.HideInUI) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.HideInUI;
+                else
+                    m_Flags &= ~Flags.HideInUI;
+            }
+        }
 
         public ControlItem this[string path]
         {
@@ -648,7 +392,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 public ControlBuilder WithLayout(string layout)
                 {
                     if (string.IsNullOrEmpty(layout))
-                        throw new ArgumentException("Layout name cannot be null or empty", "layout");
+                        throw new ArgumentException("Layout name cannot be null or empty", nameof(layout));
 
                     controls[index].layout = new InternedString(layout);
                     return this;
@@ -711,8 +455,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 public ControlBuilder WithParameters(string parameters)
                 {
-                    var parsed = ParseParameters(parameters);
-                    controls[index].parameters = new ReadOnlyArray<ParameterValue>(parsed);
+                    var parsed = NamedValue.ParseMultiple(parameters);
+                    controls[index].parameters = new ReadOnlyArray<NamedValue>(parsed);
                     return this;
                 }
 
@@ -867,6 +611,10 @@ namespace UnityEngine.Experimental.Input.Layouts
                 m_StateFormat = stateFormat,
                 m_Variants = variants,
                 m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
+                isGenericTypeOfDevice = layoutAttribute?.isGenericTypeOfDevice ?? false,
+                hideInUI = layoutAttribute?.hideInUI ?? false,
+                m_Description = layoutAttribute?.description,
+                m_DisplayName = layoutAttribute?.displayName,
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -903,6 +651,15 @@ namespace UnityEngine.Experimental.Input.Layouts
         private InternedString[] m_CommonUsages;
         internal ControlItem[] m_Controls;
         internal string m_DisplayName;
+        private string m_Description;
+        private Flags m_Flags;
+
+        [Flags]
+        private enum Flags
+        {
+            IsGenericTypeOfDevice = 1 << 0,
+            HideInUI = 1 << 1,
+        }
 
         private InputControlLayout(string name, Type type)
         {
@@ -959,8 +716,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                     if (memberAsField != null)
                     {
                         var fieldOffset = Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
-                        var countrolCountAfter = controlItems.Count;
-                        for (var i = controlCountBefore; i < countrolCountAfter; ++i)
+                        var controlCountAfter = controlItems.Count;
+                        for (var i = controlCountBefore; i < controlCountAfter; ++i)
                         {
                             var controlLayout = controlItems[i];
                             if (controlItems[i].offset != InputStateBlock.kInvalidOffset)
@@ -1092,14 +849,14 @@ namespace UnityEngine.Experimental.Input.Layouts
             }
 
             // Determine parameters.
-            ParameterValue[] parameters = null;
+            NamedValue[] parameters = null;
             if (attribute != null && !string.IsNullOrEmpty(attribute.parameters))
-                parameters = ParseParameters(attribute.parameters);
+                parameters = NamedValue.ParseMultiple(attribute.parameters);
 
             // Determine processors.
             NameAndParameters[] processors = null;
             if (attribute != null && !string.IsNullOrEmpty(attribute.processors))
-                processors = ParseNameAndParameterList(attribute.processors);
+                processors = NameAndParameters.ParseMultiple(attribute.processors).ToArray();
 
             // Determine whether to use state from another control.
             string useStateFrom = null;
@@ -1147,7 +904,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 offset = offset,
                 bit = bit,
                 sizeInBits = sizeInBits,
-                parameters = new ReadOnlyArray<ParameterValue>(parameters),
+                parameters = new ReadOnlyArray<NamedValue>(parameters),
                 processors = new ReadOnlyArray<NameAndParameters>(processors),
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<InternedString>(aliases),
@@ -1160,181 +917,6 @@ namespace UnityEngine.Experimental.Input.Layouts
                 minValue = minValue,
                 maxValue = maxValue,
             };
-        }
-
-        internal static NameAndParameters[] ParseNameAndParameterList(string text)
-        {
-            List<NameAndParameters> list = null;
-            if (!ParseNameAndParameterList(text, ref list))
-                return null;
-            return list.ToArray();
-        }
-
-        internal static bool ParseNameAndParameterList(string text, ref List<NameAndParameters> list)
-        {
-            text = text.Trim();
-            if (string.IsNullOrEmpty(text))
-                return false;
-
-            if (list == null)
-                list = new List<NameAndParameters>();
-            else
-                list.Clear();
-
-            var index = 0;
-            var textLength = text.Length;
-
-            while (index < textLength)
-                list.Add(ParseNameAndParameters(text, ref index));
-
-            return true;
-        }
-
-        ////TODO: switch these methods all to Substring
-
-        internal static NameAndParameters ParseNameAndParameters(string text)
-        {
-            var index = 0;
-            return ParseNameAndParameters(text, ref index);
-        }
-
-        private static NameAndParameters ParseNameAndParameters(string text, ref int index)
-        {
-            var textLength = text.Length;
-
-            // Skip whitespace.
-            while (index < textLength && char.IsWhiteSpace(text[index]))
-                ++index;
-
-            // Parse name.
-            var nameStart = index;
-            while (index < textLength)
-            {
-                var nextChar = text[index];
-                if (nextChar == '(' || nextChar == kSeparator || char.IsWhiteSpace(nextChar))
-                    break;
-                ++index;
-            }
-            if (index - nameStart == 0)
-                throw new Exception($"Expecting name at position {nameStart} in '{text}'");
-            var name = text.Substring(nameStart, index - nameStart);
-
-            // Skip whitespace.
-            while (index < textLength && char.IsWhiteSpace(text[index]))
-                ++index;
-
-            // Parse parameters.
-            ParameterValue[] parameters = null;
-            if (index < textLength && text[index] == '(')
-            {
-                ++index;
-                var closeParenIndex = text.IndexOf(')', index);
-                if (closeParenIndex == -1)
-                    throw new Exception($"Expecting ')' after '(' at position {index} in '{text}'");
-
-                var parameterString = text.Substring(index, closeParenIndex - index);
-                parameters = ParseParameters(parameterString);
-                index = closeParenIndex + 1;
-            }
-
-            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.kSeparator))
-                ++index;
-
-            return new NameAndParameters {name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters)};
-        }
-
-        private static ParameterValue[] ParseParameters(string parameterString)
-        {
-            parameterString = parameterString.Trim();
-            if (string.IsNullOrEmpty(parameterString))
-                return null;
-
-            var parameterCount = parameterString.CountOccurrences(kSeparator) + 1;
-            var parameters = new ParameterValue[parameterCount];
-
-            var index = 0;
-            for (var i = 0; i < parameterCount; ++i)
-            {
-                var parameter = ParseParameter(parameterString, ref index);
-                parameters[i] = parameter;
-            }
-
-            return parameters;
-        }
-
-        private static unsafe ParameterValue ParseParameter(string parameterString, ref int index)
-        {
-            var parameter = new ParameterValue();
-            var parameterStringLength = parameterString.Length;
-
-            // Skip whitespace.
-            while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
-                ++index;
-
-            // Parse name.
-            var nameStart = index;
-            while (index < parameterStringLength)
-            {
-                var nextChar = parameterString[index];
-                if (nextChar == '=' || nextChar == kSeparator || char.IsWhiteSpace(nextChar))
-                    break;
-                ++index;
-            }
-            parameter.name = parameterString.Substring(nameStart, index - nameStart);
-
-            // Skip whitespace.
-            while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
-                ++index;
-
-            if (index == parameterStringLength || parameterString[index] != '=')
-            {
-                // No value given so take "=true" as implied.
-                parameter.type = ParameterType.Boolean;
-                *(bool*)parameter.value = true;
-            }
-            else
-            {
-                ++index; // Skip over '='.
-
-                // Skip whitespace.
-                while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
-                    ++index;
-
-                // Parse value.
-                var valueStart = index;
-                while (index < parameterStringLength &&
-                       !(parameterString[index] == kSeparator || char.IsWhiteSpace(parameterString[index])))
-                    ++index;
-
-                ////TODO: use Substring struct here so that we don't allocate lots of useless strings
-
-                var value = parameterString.Substring(valueStart, index - valueStart);
-                if (string.Compare(value, "true", StringComparison.InvariantCultureIgnoreCase) == 0)
-                {
-                    parameter.type = ParameterType.Boolean;
-                    *(bool*)parameter.value = true;
-                }
-                else if (string.Compare(value, "false", StringComparison.InvariantCultureIgnoreCase) == 0)
-                {
-                    parameter.type = ParameterType.Boolean;
-                    *(bool*)parameter.value = false;
-                }
-                else if (value.IndexOf('.') != -1 || value.IndexOf("e", StringComparison.InvariantCultureIgnoreCase) != -1 || value.IndexOf("Infinity") != -1)
-                {
-                    parameter.type = ParameterType.Float;
-                    float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat, out *(float*)parameter.value);
-                }
-                else
-                {
-                    parameter.type = ParameterType.Integer;
-                    int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture.NumberFormat, out *(int*)parameter.value);
-                }
-            }
-
-            if (index < parameterStringLength && parameterString[index] == kSeparator)
-                ++index;
-
-            return parameter;
         }
 
         ////REVIEW: this tends to cause surprises; is it worth its cost?
@@ -1379,9 +961,6 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             if (m_StateFormat == new FourCC())
                 m_StateFormat = other.m_StateFormat;
-
-            if (string.IsNullOrEmpty(m_DisplayName))
-                m_DisplayName = other.m_DisplayName;
 
             // Combine common usages.
             m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
@@ -1540,9 +1119,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                 if (!itemVariants.IsEmpty() && itemVariants != DefaultVariant)
                 {
                     // If there's multiple variants on the control, we add it to the table multiple times.
-                    if (itemVariants.ToString().IndexOf(kSeparator) != -1)
+                    if (itemVariants.ToString().IndexOf(VariantSeparator[0]) != -1)
                     {
-                        var itemVariantArray = itemVariants.ToLower().Split(kSeparator);
+                        var itemVariantArray = itemVariants.ToLower().Split(VariantSeparator[0]);
                         foreach (var name in itemVariantArray)
                         {
                             variants?.Add(name);
@@ -1571,7 +1150,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             ////REVIEW: does this make sense?
             // Default variant works with any other expected variant.
             if (actual != null &&
-                StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(DefaultVariant, actual, kSeparator))
+                StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(DefaultVariant, actual, VariantSeparator[0]))
                 return true;
 
             // If we don't expect a specific variant, we accept any variant.
@@ -1584,7 +1163,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 return true;
 
             // Match if the two variant sets intersect on at least one element.
-            return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, kSeparator);
+            return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, VariantSeparator[0]);
         }
 
         private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
@@ -1637,8 +1216,11 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string[] commonUsages;
             public string displayName;
+            public string description;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
             public string variant;
+            public bool isGenericTypeOfDevice;
+            public bool hideInUI;
             public InputDeviceMatcher.MatcherJson device;
             public ControlItemJson[] controls;
 
@@ -1673,6 +1255,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                 var layout = new InputControlLayout(name, type)
                 {
                     m_DisplayName = displayName,
+                    m_Description = description,
+                    isGenericTypeOfDevice = isGenericTypeOfDevice,
+                    hideInUI = hideInUI,
                     m_Variants = new InternedString(variant)
                 };
                 if (!string.IsNullOrEmpty(format))
@@ -1727,6 +1312,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                     type = layout.type.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
+                    description = layout.m_Description,
+                    isGenericTypeOfDevice = layout.isGenericTypeOfDevice,
+                    hideInUI = layout.hideInUI,
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
@@ -1828,10 +1416,10 @@ namespace UnityEngine.Experimental.Input.Layouts
                 }
 
                 if (!string.IsNullOrEmpty(parameters))
-                    layout.parameters = new ReadOnlyArray<ParameterValue>(ParseParameters(parameters));
+                    layout.parameters = new ReadOnlyArray<NamedValue>(NamedValue.ParseMultiple(parameters));
 
                 if (!string.IsNullOrEmpty(processors))
-                    layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
+                    layout.processors = new ReadOnlyArray<NameAndParameters>(NameAndParameters.ParseMultiple(processors).ToArray());
 
                 if (defaultState != null)
                     layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
@@ -2035,6 +1623,34 @@ namespace UnityEngine.Experimental.Input.Layouts
                 while (baseLayoutTable.TryGetValue(layoutName, out var baseLayout))
                     layoutName = baseLayout;
                 return layoutName;
+            }
+
+            public InternedString FindLayoutThatIntroducesControl(InputControl control, Cache cache)
+            {
+                // Find the topmost child control on the device. A device layout can only
+                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
+                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
+                // To determine which device contributes the control as a whole, we have to be looking
+                // at the topmost child of the device.
+                var topmostChild = control;
+                while (topmostChild.parent != control.device)
+                    topmostChild = topmostChild.parent;
+
+                // Find the layout in the device's base layout chain that first mentions the given control.
+                // If we don't find it, we know it's first defined directly in the layout of the given device,
+                // i.e. it's not an inherited control.
+                var deviceLayoutName = control.device.m_Layout;
+                var baseLayoutName = deviceLayoutName;
+                while (baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
+                {
+                    var layout = cache.FindOrLoadLayout(baseLayoutName);
+
+                    var controlItem = layout.FindControl(topmostChild.m_Name);
+                    if (controlItem != null)
+                        deviceLayoutName = baseLayoutName;
+                }
+
+                return deviceLayoutName;
             }
 
             // Get the type which will be instantiated for the given layout.

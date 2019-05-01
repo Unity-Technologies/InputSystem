@@ -24,29 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public void Update(InputUpdateType updateType)
         {
-            if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Dynamic);
-            }
-            if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Fixed);
-            }
-            if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
-            }
-            if ((updateType & InputUpdateType.Manual) == InputUpdateType.Manual)
-            {
-                NativeInputSystem.Update((NativeInputUpdateType)InputUpdateType.Manual);
-            }
-
-            #if UNITY_EDITOR
-            if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Editor);
-            }
-            #endif
+            NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
         public void QueueEvent(IntPtr ptr)
@@ -212,14 +190,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double currentTime => NativeInputSystem.currentTime;
 
+        public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
+
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-
-        public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
-
-        public bool shouldRunInBackground
-        {
-            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)(value ? 1 << 31 : 0));
-        }
 
         private Action m_ShutdownMethod;
 
@@ -241,7 +214,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int frameCount => Time.frameCount;
 
-#if UNITY_ANALYTICS || UNITY_EDITOR
+        public bool isInBatchMode => Application.isBatchMode;
+
+        #if UNITY_EDITOR
+
+        public bool isInPlayMode => EditorApplication.isPlaying;
+        public bool isPaused => EditorApplication.isPaused;
+
+        public Action<PlayModeStateChange> onPlayModeChanged
+        {
+            set => EditorApplication.playModeStateChanged += value;
+        }
+
+        public Action onProjectChange
+        {
+            set => EditorApplication.projectChanged += value;
+        }
+
+        #endif // UNITY_EDITOR
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
@@ -262,6 +254,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             #endif
         }
 
-#endif // UNITY_ANALYTICS || UNITY_EDITOR
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

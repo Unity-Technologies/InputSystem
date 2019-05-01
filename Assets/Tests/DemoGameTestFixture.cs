@@ -21,7 +21,6 @@ public class DemoGameTestFixture
 {
     public DemoGame game { get; set; }
     public InputTestFixture input { get; set; }
-    public SteamTestFixture steam { get; set; }
     public RuntimePlatform platform { get; private set; }
 
     public Mouse mouse { get; set; }
@@ -225,7 +224,6 @@ public class DemoGameTestFixture
 
         game = null;
         input = null;
-        steam = null;
 
         mouse = null;
         keyboard = null;
@@ -251,18 +249,6 @@ public class DemoGameTestFixture
         var buttonObject = GameObject.Find(button);
         Assert.That(buttonObject != null);
         buttonObject.GetComponent<Button>().onClick.Invoke();
-    }
-
-    public void Trigger(string action, int playerIndex = 0)
-    {
-        // Look up action.
-        var controls = game.players[playerIndex].controls;
-        var actionInstance = controls.asset.FindAction(action);
-        if (actionInstance == null)
-            throw new ArgumentException("action");
-
-        // And trigger it.
-        Trigger(actionInstance);
     }
 
     public void Trigger(InputAction action)

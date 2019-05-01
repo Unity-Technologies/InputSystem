@@ -17,10 +17,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('K', 'E', 'Y', 'S'); }
-        }
+        public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
         // Number of keys rounded up to nearest size of 4.
         private const int kSizeInBytesUnrounded = Keyboard.KeyCount / 8 + (Keyboard.KeyCount % 8 > 0 ? 1 : 0);
@@ -323,7 +320,7 @@ namespace UnityEngine.Experimental.Input
     /// <see cref="InputControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(KeyboardState))]
+    [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
         public const int KeyCount = (int)Key.OEM5;
@@ -333,8 +330,8 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public event Action<char> onTextInput
         {
-            add { m_TextInputListeners.Append(value); }
-            remove { m_TextInputListeners.Remove(value); }
+            add => m_TextInputListeners.Append(value);
+            remove => m_TextInputListeners.Remove(value);
         }
 
         /// <summary>
@@ -349,8 +346,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
-            add { m_ImeCompositionListeners.Append(value); }
-            remove { m_ImeCompositionListeners.Remove(value); }
+            add => m_ImeCompositionListeners.Append(value);
+            remove => m_ImeCompositionListeners.Remove(value);
         }
 
         /// <summary>
@@ -373,7 +370,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        /// <summary>
+
         /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
         /// </summary>
         /// <remarks>
@@ -411,7 +408,7 @@ namespace UnityEngine.Experimental.Input
                 RefreshConfigurationIfNeeded();
                 return m_KeyboardLayoutName;
             }
-            protected set { m_KeyboardLayoutName = value; }
+            protected set => m_KeyboardLayoutName = value;
         }
 
 
@@ -599,7 +596,7 @@ namespace UnityEngine.Experimental.Input
                 var index = (int)key;
                 if (index <= 0 || index >= m_Keys.Length)
                     throw new ArgumentOutOfRangeException(nameof(key));
-                return m_Keys[(int)key];
+                return m_Keys[(int)key - 1];
             }
         }
 
@@ -736,15 +733,16 @@ namespace UnityEngine.Experimental.Input
                 "oem5",
             };
             m_Keys = new KeyControl[keyStrings.Length];
-            for (var i = 1; i < keyStrings.Length; i++)
+            for (var i = 0; i < keyStrings.Length; ++i)
             {
-                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i - 1]);
+                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
-                m_Keys[i].keyCode = (Key)i;
+                m_Keys[i].keyCode = (Key)(i + 1);
             }
-            Debug.Assert(keyStrings[((int)Key.OEM5) - 1] == "oem5", "keyString array layout doe not match Key enum layout");
+            Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
+                "keyString array layout doe not match Key enum layout");
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");
             imeSelected = builder.GetControl<ButtonControl>("IMESelected");
 
@@ -778,5 +776,84 @@ namespace UnityEngine.Experimental.Input
         private string m_KeyboardLayoutName;
 
         internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
+    }
+
+    public static class KeyboardExtensions
+    {
+        public static bool IsModifierKey(this Key key)
+        {
+            switch (key)
+            {
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                case Key.LeftShift:
+                case Key.RightShift:
+                case Key.LeftMeta:
+                case Key.RightMeta:
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                    return true;
+            }
+            return false;
+        }
+
+        ////REVIEW: Is this a good idea? Ultimately it's up to any one keyboard layout to define this however it wants.
+        public static bool IsTextInputKey(this Key key)
+        {
+            switch (key)
+            {
+                case Key.LeftShift:
+                case Key.RightShift:
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                case Key.LeftCtrl:
+                case Key.RightCtrl:
+                case Key.LeftMeta:
+                case Key.RightMeta:
+                case Key.ContextMenu:
+                case Key.Escape:
+                case Key.LeftArrow:
+                case Key.RightArrow:
+                case Key.UpArrow:
+                case Key.DownArrow:
+                case Key.Backspace:
+                case Key.PageDown:
+                case Key.PageUp:
+                case Key.Home:
+                case Key.End:
+                case Key.Insert:
+                case Key.Delete:
+                case Key.CapsLock:
+                case Key.NumLock:
+                case Key.PrintScreen:
+                case Key.ScrollLock:
+                case Key.Pause:
+                case Key.None:
+                case Key.Space:
+                case Key.Enter:
+                case Key.Tab:
+                case Key.NumpadEnter:
+                case Key.F1:
+                case Key.F2:
+                case Key.F3:
+                case Key.F4:
+                case Key.F5:
+                case Key.F6:
+                case Key.F7:
+                case Key.F8:
+                case Key.F9:
+                case Key.F10:
+                case Key.F11:
+                case Key.F12:
+                case Key.OEM1:
+                case Key.OEM2:
+                case Key.OEM3:
+                case Key.OEM4:
+                case Key.OEM5:
+                case Key.IMESelected:
+                    return false;
+            }
+            return true;
+        }
     }
 }

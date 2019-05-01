@@ -7,7 +7,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: remove incorrect gyro wiring
+////TODO: figure out sensor formats and add support for acceleration, angularVelocity, and orientation (also add to base layout then)
 
 namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 {
@@ -66,26 +66,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(8)] public byte leftTrigger;
         [InputControl(name = "rightTrigger", format = "BYTE")]
         [FieldOffset(9)] public byte rightTrigger;
-
-        ////FIXME: gyro and accelerometer aren't read out correctly yet
-        [InputControl(name = "acceleration", layout = "Vector3", format = "VC3S")]
-        [InputControl(name = "acceleration/x", format = "USHT", offset = 0)]
-        [InputControl(name = "acceleration/y", format = "USHT", offset = 2)]
-        [InputControl(name = "acceleration/z", format = "USHT", offset = 4)]
-        [InputControl(name = "angularVelocity", layout = "Vector3", offset = InputStateBlock.kInvalidOffset)] ////TODO: figure out where this one is
-        [FieldOffset(14)] public short accelerationX;
-        [FieldOffset(16)] public short accelerationY;
-        [FieldOffset(18)] public short accelerationZ;
-
-        [InputControl(name = "orientation", layout = "Quaternion")]
-        [InputControl(name = "orientation/x", format = "USHT", offset = 0)]
-        [InputControl(name = "orientation/y", format = "USHT", offset = 2)]
-        [InputControl(name = "orientation/z", format = "USHT", offset = 4)]
-        [InputControl(name = "orientation/w", format = "USHT", offset = 6)]
-        [FieldOffset(20)] public short gyroX;
-        [FieldOffset(22)] public short gyroY;
-        [FieldOffset(24)] public short gyroZ;
-        [FieldOffset(26)] public short gyroW;
 
         [FieldOffset(30)] public byte batteryLevel;
 
@@ -163,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputControlLayout(stateType = typeof(DualShockHIDInputReport))]
+    [InputControlLayout(stateType = typeof(DualShockHIDInputReport), hideInUI = true)]
     public class DualShockGamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; private set; }

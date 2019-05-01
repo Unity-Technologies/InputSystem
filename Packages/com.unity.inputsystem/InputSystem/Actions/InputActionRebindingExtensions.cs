@@ -11,7 +11,11 @@ using UnityEngine.Experimental.Input.Utilities;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
+////TODO: allow rebinding by GUIDs now that we have IDs on bindings
+
 ////FIXME: properly work with composites
+
+////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
 
 namespace UnityEngine.Experimental.Input
 {
@@ -36,12 +40,6 @@ namespace UnityEngine.Experimental.Input
 
             ApplyBindingOverride(action, new InputBinding {overridePath = newPath, groups = group, path = path});
         }
-
-        // Apply the given override to the action.
-        //
-        // NOTE: Ignores the action name in the override.
-        // NOTE: Action must be disabled while applying overrides.
-        // NOTE: If there's already an override on the respective binding, replaces the override.
 
         /// <summary>
         ///
@@ -69,35 +67,9 @@ namespace UnityEngine.Experimental.Input
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            // We don't want to hit InputAction.bindings here as this requires setting up per-action
-            // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
-            // repeatedly with an index would thus cause the same data to be computed and thrown away
-            // over and over.
-            // Instead we manually search through the map's bindings to find the right binding index
-            // in the map.
-
-            var actionMap = action.GetOrCreateActionMap();
-            var bindingsInMap = actionMap.m_Bindings;
-            var bindingCountInMap = bindingsInMap?.Length ?? 0;
-            var actionName = action.name;
-
-            var currentBindingIndexOnAction = -1;
-            for (var i = 0; i < bindingCountInMap; ++i)
-            {
-                if (string.Compare(bindingsInMap[i].action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0)
-                    continue;
-
-                ++currentBindingIndexOnAction;
-                if (currentBindingIndexOnAction == bindingIndex)
-                {
-                    bindingOverride.action = actionName;
-                    ApplyBindingOverride(actionMap, i, bindingOverride);
-                    return;
-                }
-            }
-
-            throw new ArgumentOutOfRangeException(
-                $"Binding index {bindingIndex} is out of range for action '{action}' with {currentBindingIndexOnAction} bindings", "bindingIndex");
+            var indexOnMap = action.BindingIndexOnActionToBindingIndexOnMap(bindingIndex);
+            bindingOverride.action = action.name;
+            ApplyBindingOverride(action.GetOrCreateActionMap(), indexOnMap, bindingOverride);
         }
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
@@ -656,7 +628,11 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 HookOnEvent();
+
                 m_Flags |= Flags.Started;
+                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Completed;
+
                 return this;
             }
 
@@ -712,7 +688,7 @@ namespace UnityEngine.Experimental.Input
 
                 var candidateCount = m_Candidates.Count;
                 m_Candidates.RemoveAt(index);
-                ArrayHelpers.EraseAtWithCapacity(ref m_Scores, ref candidateCount, index);
+                ArrayHelpers.EraseAtWithCapacity(m_Scores, ref candidateCount, index);
             }
 
             public void Dispose()
@@ -775,7 +751,7 @@ namespace UnityEngine.Experimental.Input
                     var control = controls[i];
 
                     // Skip controls that have no state in the event.
-                    var statePtr = (void*)control.GetStatePtrFromStateEvent(eventPtr);
+                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
                     if (statePtr == null)
                         continue;
 
@@ -1065,60 +1041,20 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Based on the chosen control, generate an override path to rebind to.
             /// </summary>
-            /// <param name="control"></param>
-            /// <returns></returns>
             private string GeneratePathForControl(InputControl control)
             {
                 var device = control.device;
-                Debug.Assert(device != control, "Control must not be a device!");
+                Debug.Assert(control != device, "Control must not be a device");
 
-                // Find the topmost child control on the device. A device layout can only
-                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
-                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
-                // To determine which device contributes the control has a whole, we have to be looking
-                // at the topmost child of the device.
-                var topmostChild = control;
-                while (topmostChild.parent != device)
-                    topmostChild = topmostChild.parent;
+                var deviceLayoutName =
+                    InputControlLayout.s_Layouts.FindLayoutThatIntroducesControl(control, m_LayoutCache);
 
-                // Find the layout in the device's base layout chain that first mentions the given control.
-                // If we don't find it, we know it's first defined directly in the layout of the given device,
-                // i.e. it's not an inherited control.
-                var deviceLayoutName = device.m_Layout;
-                var baseLayoutName = deviceLayoutName;
-                while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
-                {
-                    var layout = m_LayoutCache.FindOrLoadLayout(baseLayoutName);
-
-                    var controlItem = layout.FindControl(topmostChild.m_Name);
-                    if (controlItem != null)
-                        deviceLayoutName = baseLayoutName;
-                }
-
-                // Create a path with the given device layout
                 if (m_PathBuilder == null)
                     m_PathBuilder = new StringBuilder();
                 else
                     m_PathBuilder.Length = 0;
 
-                m_PathBuilder.Append('<');
-                m_PathBuilder.Append(deviceLayoutName);
-                m_PathBuilder.Append('>');
-
-                // Add usages of device, if any.
-                var deviceUsages = device.usages;
-                for (var i = 0; i < deviceUsages.Count; ++i)
-                {
-                    m_PathBuilder.Append('{');
-                    m_PathBuilder.Append(deviceUsages[i]);
-                    m_PathBuilder.Append('}');
-                }
-
-                m_PathBuilder.Append('/');
-
-                var devicePath = device.path;
-                var controlPath = control.path;
-                m_PathBuilder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
+                control.BuildPath(deviceLayoutName, m_PathBuilder);
 
                 return m_PathBuilder.ToString();
             }

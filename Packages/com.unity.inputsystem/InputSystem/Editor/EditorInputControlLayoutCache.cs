@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
     ///
     /// This class is only available in the editor (when <c>UNITY_EDITOR</c> is true).
     /// </remarks>
-    public static class EditorInputControlLayoutCache
+    internal static class EditorInputControlLayoutCache
     {
         /// <summary>
         /// Iterate over all control layouts in the system.
@@ -38,12 +38,12 @@ namespace UnityEngine.Experimental.Input.Editor
         /// <summary>
         /// Iterate over all unique usages and their respective lists of layouts that use them.
         /// </summary>
-        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> allUsages
+        public static IEnumerable<Tuple<string, IEnumerable<string>>> allUsages
         {
             get
             {
                 Refresh();
-                return s_Usages.Select(pair => new KeyValuePair<string, IEnumerable<string>>(pair.Key, pair.Value.Select(x => x.ToString())));
+                return s_Usages.Select(pair => new Tuple<string, IEnumerable<string>>(pair.Key, pair.Value.Select(x => x.ToString())));
             }
         }
 
@@ -162,13 +162,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // No, so see if we have an icon on disk for exactly the layout
             // we're looking at (i.e. with the same name).
-            var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
-            int scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
-            var scalePostFix = scale > 1 ? $"@{scale}x" : "";
-            var path = Path.Combine(kIconPath, skinPrefix + layoutName + scalePostFix + ".png");
-            icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            icon = GUIHelpers.LoadIcon(layoutName);
             if (icon != null)
+            {
+                s_Icons.Add(internedName, icon);
                 return icon;
+            }
 
             // No, not that either so start walking up the inheritance chain
             // until we either bump against the ceiling or find an icon.
@@ -177,18 +176,32 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var baseLayoutName in layout.baseLayouts)
                 {
-                    ////FIXME: remove this; looks like HIDs lose their base layout info on domain reloads
-                    if (string.IsNullOrEmpty(baseLayoutName))
-                        continue;
-
                     icon = GetIconForLayout(baseLayoutName);
                     if (icon != null)
                         return icon;
+                }
+
+                // If it's a control and there's no specific icon, return a generic one.
+                if (layout.isControlLayout)
+                {
+                    var genericIcon = GUIHelpers.LoadIcon("InputControl");
+                    if (genericIcon != null)
+                    {
+                        s_Icons.Add(internedName, genericIcon);
+                        return genericIcon;
+                    }
                 }
             }
 
             // No icon for anything in this layout's chain.
             return null;
+        }
+
+        public struct ControlSearchResult
+        {
+            public string controlPath;
+            public InputControlLayout layout;
+            public InputControlLayout.ControlItem item;
         }
 
         internal static void Clear()
@@ -217,21 +230,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Remember which layout maps to which device matchers.
             var layoutMatchers = InputControlLayout.s_Layouts.layoutMatchers;
-            for (var i = 0; i < layoutMatchers.Count; ++i)
+            foreach (var entry in layoutMatchers)
             {
-                var entry = layoutMatchers[i];
-
-                InlinedArray<InputDeviceMatcher> matchers;
-                s_DeviceMatchers.TryGetValue(entry.layoutName, out matchers);
+                s_DeviceMatchers.TryGetValue(entry.layoutName, out var matchers);
 
                 matchers.Append(entry.deviceMatcher);
                 s_DeviceMatchers[entry.layoutName] = matchers;
             }
 
             // Load and store all layouts.
-            for (var i = 0; i < layoutNames.Count; ++i)
+            foreach (var layoutName in layoutNames)
             {
-                var layout = s_Cache.FindOrLoadLayout(layoutNames[i]);
+                var layout = s_Cache.FindOrLoadLayout(layoutName);
                 ScanLayout(layout);
 
                 if (layout.isControlLayout)
@@ -277,9 +287,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     listener();
         }
 
-        ////REVIEW: is this affected by how the package is installed?
-        internal const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
-
         private static int s_LayoutRegistrationVersion;
         private static InputControlLayout.Cache s_Cache;
         private static List<Action> s_RefreshListeners;
@@ -320,6 +327,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Collect unique usages and the layouts used with them.
                 foreach (var usage in control.usages)
                 {
+                    // Empty usages can occur for controls that want to reset inherited usages.
+                    if (string.IsNullOrEmpty(usage))
+                        continue;
+
                     var internedUsage = new InternedString(usage);
                     var internedLayout = new InternedString(control.layout);
 

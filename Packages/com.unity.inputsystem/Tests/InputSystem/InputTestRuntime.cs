@@ -7,6 +7,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -34,9 +38,11 @@ namespace UnityEngine.Experimental.Input
             return result;
         }
 
-        ////REVIEW: this behaves differently from NativeInputRuntime.Update() which allows a mask
         public unsafe void Update(InputUpdateType type)
         {
+            if (!onShouldRunUpdate.Invoke(type))
+                return;
+
             lock (m_Lock)
             {
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
@@ -95,6 +101,7 @@ namespace UnityEngine.Experimental.Input
             lock (m_Lock)
             {
                 eventPtr->eventId = m_NextEventId;
+                eventPtr->handled = false;
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
@@ -320,12 +327,11 @@ namespace UnityEngine.Experimental.Input
         public Action<bool> onFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
+        public double currentTimeForFixedUpdate { get; set; }
         public bool shouldRunInBackground { get; set; }
         public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
-
-        public double fixedUpdateIntervalInSeconds { get; set; } = 1.0 / 30;
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
@@ -356,6 +362,15 @@ namespace UnityEngine.Experimental.Input
                 InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
             }
         }
+
+        public bool isInBatchMode { get; set; }
+
+        #if UNITY_EDITOR
+        public bool isInPlayMode { get; set; } = true;
+        public bool isPaused { get; set; }
+        public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        public Action onProjectChange { get; set; }
+        #endif
 
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;

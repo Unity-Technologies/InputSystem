@@ -1,24 +1,12 @@
 #if UNITY_EDITOR
-using System;
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
     internal abstract class AdvancedDropdown
     {
-        private Vector2 m_MinimumSize;
-        protected Vector2 minimumSize
-        {
-            get { return m_MinimumSize; }
-            set { m_MinimumSize = value; }
-        }
-
-        private Vector2 m_MaximumSize;
-        protected Vector2 maximumSize
-        {
-            get { return m_MaximumSize; }
-            set { m_MaximumSize = value; }
-        }
+        protected Vector2 minimumSize { get; set; }
+        protected Vector2 maximumSize { get; set; }
 
         internal AdvancedDropdownWindow m_WindowInstance;
         internal AdvancedDropdownState m_State;
@@ -39,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             if (m_DataSource == null)
             {
-                m_DataSource = new CallbackDataSource(BuildRoot);
+                m_DataSource = new CallbackDataSource(BuildRoot, BuildCustomSearch);
             }
             if (m_Gui == null)
             {
@@ -47,25 +35,42 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             m_WindowInstance = ScriptableObject.CreateInstance<AdvancedDropdownWindow>();
-            if (m_MinimumSize != Vector2.zero)
-                m_WindowInstance.minSize = m_MinimumSize;
-            if (m_MaximumSize != Vector2.zero)
-                m_WindowInstance.maxSize = m_MaximumSize;
+            if (minimumSize != Vector2.zero)
+                m_WindowInstance.minSize = minimumSize;
+            if (maximumSize != Vector2.zero)
+                m_WindowInstance.maxSize = maximumSize;
             m_WindowInstance.state = m_State;
             m_WindowInstance.dataSource = m_DataSource;
             m_WindowInstance.gui = m_Gui;
-            m_WindowInstance.windowClosed += (w) => ItemSelected(w.GetSelectedItem());
+            m_WindowInstance.windowClosed +=
+                w => { ItemSelected(w.GetSelectedItem()); };
+            m_WindowInstance.windowDestroyed += OnDestroy;
             m_WindowInstance.Init(rect);
         }
 
-        internal void SetFilter(string searchString)
+        public void Reload()
         {
-            m_WindowInstance.searchString = searchString;
+            m_WindowInstance?.ReloadData();
+        }
+
+        public void Repaint()
+        {
+            m_WindowInstance?.Repaint();
         }
 
         protected abstract AdvancedDropdownItem BuildRoot();
 
+        protected virtual AdvancedDropdownItem BuildCustomSearch(string searchString,
+            IEnumerable<AdvancedDropdownItem> elements)
+        {
+            return null;
+        }
+
         protected virtual void ItemSelected(AdvancedDropdownItem item)
+        {
+        }
+
+        protected virtual void OnDestroy()
         {
         }
     }

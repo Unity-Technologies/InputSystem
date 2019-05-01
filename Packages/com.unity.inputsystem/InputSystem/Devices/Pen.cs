@@ -166,7 +166,7 @@ namespace UnityEngine.Experimental.Input
     /// The <see cref="tip"/> acts as a button that is considered pressed as long as the pen is in contact with the
     /// tablet surface.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(PenState))]
+    [InputControlLayout(stateType = typeof(PenState), isGenericTypeOfDevice = true)]
     public class Pen : Pointer
     {
         ////TODO: give the tip and eraser a very low press point

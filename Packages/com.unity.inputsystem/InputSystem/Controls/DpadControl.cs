@@ -17,6 +17,7 @@ namespace UnityEngine.Experimental.Input.Controls
     /// </remarks>
     public class DpadControl : Vector2Control
     {
+        [InputControlLayout(hideInUI = true)]
         internal class DpadAxisControl : AxisControl
         {
             public int component;
@@ -42,8 +43,8 @@ namespace UnityEngine.Experimental.Input.Controls
         // The DpadAxisControl has it's own logic to read state from the parent dpad.
         // The useStateFrom argument here is not actually used by that. The only reason
         // it is set up here is to avoid any state bytes being reserved for the DpadAxisControl.
-        [InputControl(name = "x", layout = "DpadAxis", useStateFrom = "right")]
-        [InputControl(name = "y", layout = "DpadAxis", useStateFrom = "up")]
+        [InputControl(name = "x", layout = "DpadAxis", useStateFrom = "right", synthetic = true)]
+        [InputControl(name = "y", layout = "DpadAxis", useStateFrom = "up", synthetic = true)]
 
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.

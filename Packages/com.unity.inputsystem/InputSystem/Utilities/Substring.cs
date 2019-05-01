@@ -98,6 +98,23 @@ namespace UnityEngine.Experimental.Input.Utilities
                 comparison);
         }
 
+        public bool StartsWith(string str)
+        {
+            if (str.Length > length)
+                return false;
+            for (var i = 0; i < str.Length; ++i)
+                if (m_String[m_Index + i] != str[i])
+                    return false;
+            return true;
+        }
+
+        public string Substr(int index = 0, int length = -1)
+        {
+            if (length < 0)
+                length = this.length - index;
+            return m_String.Substring(m_Index + index, length);
+        }
+
         public override string ToString()
         {
             if (m_String == null)

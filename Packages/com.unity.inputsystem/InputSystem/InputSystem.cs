@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Haptics;
@@ -379,13 +380,13 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="name">Name of the layout to load. Note that layout names are case-insensitive.</param>
         /// <returns>The constructed layout instance or null if no layout of the given name could be found.</returns>
-        public static InputControlLayout TryLoadLayout(string name)
+        public static InputControlLayout LoadLayout(string name)
         {
             ////FIXME: this will intern the name even if the operation fails
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
-        public static InputControlLayout TryLoadLayout<TControl>()
+        public static InputControlLayout LoadLayout<TControl>()
             where TControl : InputControl
         {
             return s_Manager.TryLoadControlLayout(typeof(TControl));
@@ -394,6 +395,8 @@ namespace UnityEngine.Experimental.Input
         #endregion
 
         #region Processors
+
+        ////TODO: rename to RegisterProcessor
 
         /// <summary>
         /// Register an <see cref="InputProcessor{TValue}"/> with the system.
@@ -960,7 +963,7 @@ namespace UnityEngine.Experimental.Input
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
             if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new ArgumentException(message: string.Format("Device for control '{0}' has not been added to system"), nameof(control));
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"), nameof(control));
 
             s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
@@ -1218,6 +1221,8 @@ namespace UnityEngine.Experimental.Input
             var inputEvent = TextEvent.Create(device.id, character, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
+
+        ////REVIEW: this should run the "natural" update according to what's configured in the input systems (e.g. manual if manual is chosen there)
 
         public static void Update()
         {
@@ -1569,12 +1574,12 @@ namespace UnityEngine.Experimental.Input
         }
 
 #if UNITY_EDITOR
-        private static InputSystemObject s_SystemObject;
+        internal static InputSystemObject s_SystemObject;
 
-        private static void InitializeInEditor()
+        internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
-            Reset();
+            Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
@@ -1611,9 +1616,8 @@ namespace UnityEngine.Experimental.Input
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                InputSettings settingsAsset;
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
-                    out settingsAsset))
+                    out InputSettings settingsAsset))
                 {
                     if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
                         ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
@@ -1632,13 +1636,12 @@ namespace UnityEngine.Experimental.Input
                 "InputSettings has lost its native object");
             #endif
 
-            EditorApplication.playModeStateChanged += OnPlayModeChange;
-            EditorApplication.projectChanged += OnProjectChange;
-
             // If native backends for new input system aren't enabled, ask user whether we should
-            // enable them (requires restart). We only ask once per session.
+            // enable them (requires restart). We only ask once per session and don't ask when
+            // running in batch mode.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettingHelpers.newSystemBackendsEnabled)
+                !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
+                !s_Manager.m_Runtime.isInBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -1649,9 +1652,8 @@ namespace UnityEngine.Experimental.Input
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices.
-            Update();
+            RunInitialUpdate();
+
             Profiling.Profiler.EndSample();
         }
 
@@ -1706,8 +1708,7 @@ namespace UnityEngine.Experimental.Input
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            ////TODO: figure out bring settings into player
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance, settings);
 
@@ -1722,12 +1723,22 @@ namespace UnityEngine.Experimental.Input
                 SetUpRemoting();
 #endif
 
-            // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices prior to their Update methods.
-            Update();
+            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
+
+        private static void RunInitialUpdate()
+        {
+            // Request an initial Update so that user methods such as Start and Awake
+            // can access the input devices.
+            //
+            // NOTE: We use InputUpdateType.None here to run a "null" update. InputManager.OnBeforeUpdate()
+            //       and InputManager.OnUpdate() will both early out when comparing this to their update
+            //       mask but will still restore devices. This means we're not actually processing input,
+            //       but we will force the runtime to push its devices.
+            Update(InputUpdateType.None);
+        }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
@@ -1769,7 +1780,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
-            Plugins.Linux.SDLSupport.Initialize();
+            Plugins.Linux.LinuxSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
@@ -1809,6 +1820,9 @@ namespace UnityEngine.Experimental.Input
 
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
+            s_Manager.m_Runtime.onProjectChange = OnProjectChange;
 
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
@@ -1930,6 +1944,7 @@ namespace UnityEngine.Experimental.Input
 
             InputUpdate.Restore(state.managerState.updateState);
 
+            s_Manager.InstallRuntime(s_Manager.m_Runtime);
             s_Manager.InstallGlobals();
 
             #if UNITY_EDITOR

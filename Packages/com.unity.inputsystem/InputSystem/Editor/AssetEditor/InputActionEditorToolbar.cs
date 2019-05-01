@@ -197,8 +197,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var uniqueName = MakeUniqueControlSchemeName("New control scheme");
             ControlSchemePropertiesPopup.Show((Rect)position,
                 new InputControlScheme(uniqueName),
-                (s, _) => AddAndSelectControlScheme(s),
-                MakeUniqueControlSchemeName);
+                (s, _) => AddAndSelectControlScheme(s));
         }
 
         private void OnDeleteControlScheme()
@@ -234,10 +233,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 devices: scheme.deviceRequirements);
 
             ControlSchemePropertiesPopup.Show((Rect)position, scheme,
-                (s, _) => AddAndSelectControlScheme(s),
-                MakeUniqueControlSchemeName);
+                (s, _) => AddAndSelectControlScheme(s));
         }
 
+        ////REVIEW: renaming a control scheme should probably update the binding group (also on all bindings)
         private void OnEditSelectedControlScheme(object position)
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
@@ -245,17 +244,17 @@ namespace UnityEngine.Experimental.Input.Editor
             ControlSchemePropertiesPopup.Show((Rect)position,
                 m_ControlSchemes[m_SelectedControlSchemeIndex],
                 UpdateControlScheme,
-                MakeUniqueControlSchemeName,
                 m_SelectedControlSchemeIndex);
         }
 
         private void AddAndSelectControlScheme(InputControlScheme scheme)
         {
-            Debug.Assert(!string.IsNullOrEmpty(scheme.name), "Control scheme has no name");
-            Debug.Assert(
-                ArrayHelpers.IndexOf(m_ControlSchemes,
-                    x => x.name.Equals(scheme.name, StringComparison.InvariantCultureIgnoreCase)) == -1,
-                "Duplicate control scheme name");
+            // Ensure scheme has a name.
+            if (string.IsNullOrEmpty(scheme.name))
+                scheme.m_Name = "New control scheme";
+
+            // Make sure name is unique.
+            scheme.m_Name = MakeUniqueControlSchemeName(scheme.name);
 
             var index = ArrayHelpers.Append(ref m_ControlSchemes, scheme);
             onControlSchemesChanged?.Invoke();
@@ -266,7 +265,17 @@ namespace UnityEngine.Experimental.Input.Editor
         private void UpdateControlScheme(InputControlScheme scheme, int index)
         {
             Debug.Assert(index >= 0 && index < m_ControlSchemes.LengthSafe(), "Control scheme index out of range");
-            Debug.Assert(!string.IsNullOrEmpty(scheme.name), "Control scheme has no name");
+
+            // If given scheme has no name, preserve the existing one on the control scheme.
+            if (string.IsNullOrEmpty(scheme.name))
+                scheme.m_Name = m_ControlSchemes[index].name;
+
+            // If name is changing, make sure it's unique.
+            else if (scheme.name != m_ControlSchemes[index].name)
+            {
+                m_ControlSchemes[index].m_Name = ""; // Don't want this to interfere with finding a unique name.
+                m_ControlSchemes[index].m_Name = MakeUniqueControlSchemeName(scheme.name);
+            }
 
             m_ControlSchemes[index] = scheme;
             onControlSchemesChanged?.Invoke();
@@ -378,14 +387,13 @@ namespace UnityEngine.Experimental.Input.Editor
         private class ControlSchemePropertiesPopup : PopupWindowContent
         {
             public static void Show(Rect position, InputControlScheme controlScheme, Action<InputControlScheme, int> onApply,
-                Func<string, string> onRename, int controlSchemeIndex = -1)
+                int controlSchemeIndex = -1)
             {
                 var popup = new ControlSchemePropertiesPopup
                 {
                     m_ControlSchemeIndex = controlSchemeIndex,
                     m_ControlScheme = controlScheme,
                     m_OnApply = onApply,
-                    m_OnRename = onRename,
                     m_SetFocus = true,
                 };
 
@@ -507,12 +515,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUILayout.LabelField(s_ControlSchemeNameLabel, GUILayout.Width(labelSize.x));
 
                 GUI.SetNextControlName("ControlSchemeName");
-                var name = EditorGUILayout.DelayedTextField(m_ControlScheme.name);
-                if (name != m_ControlScheme.name)
-                {
-                    m_ControlScheme.m_Name = m_OnRename(name);
-                    editorWindow.Repaint();
-                }
+                ////FIXME: This should be a DelayedTextField but for some reason (maybe because it's in a popup?), this
+                ////       will lead to the text field not working correctly. Hitting enter on the keyboard will apply the
+                ////       change as expected but losing focus will *NOT*. In most cases, this makes the text field seem not
+                ////       to work at all so instead we use a normal text field here and then apply the name change as part
+                ////       of apply the control scheme changes as a whole. The only real downside is that if the name gets
+                ////       adjusted automatically because of a naming conflict, this will only become evident *after* hitting
+                ////       the "Save" button.
+                m_ControlScheme.m_Name = EditorGUILayout.TextField(m_ControlScheme.m_Name);
 
                 if (m_SetFocus)
                 {
@@ -539,9 +549,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 requirementsOption = GUILayout.SelectionGrid(requirementsOption, s_RequiredOptionalChoices, 1, EditorStyles.radioButton);
                 requirementHeights += GUILayoutUtility.GetLastRect().y;
                 if (EditorGUI.EndChangeCheck())
-                {
                     m_DeviceList[m_DeviceView.index].deviceRequirement.isOptional = requirementsOption == 0;
-                }
                 EditorGUI.EndDisabledGroup();
                 EditorGUILayout.EndVertical();
                 return requirementHeights;
@@ -564,7 +572,6 @@ namespace UnityEngine.Experimental.Input.Editor
             private int m_ControlSchemeIndex;
             private InputControlScheme m_ControlScheme;
             private Action<InputControlScheme, int> m_OnApply;
-            private Func<string, string> m_OnRename;
 
             private ReorderableList m_DeviceView;
             private List<DeviceEntry> m_DeviceList = new List<DeviceEntry>();

@@ -7,8 +7,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: Haptics support (!!)
-
 ////REVIEW: The Switch controller can be used to point at things; can we somehow help leverage that?
 
 namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
@@ -51,15 +49,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(12)]
         public Vector2 rightStick;
 
-        [InputControl(name = "acceleration")]
+        [InputControl(name = "acceleration", noisy = true)]
         [FieldOffset(20)]
         public Vector3 acceleration;
 
-        [InputControl(name = "attitude")]
+        [InputControl(name = "attitude", noisy = true)]
         [FieldOffset(32)]
         public Quaternion attitude;
 
-        [InputControl(name = "angularVelocity")]
+        [InputControl(name = "angularVelocity", noisy = true)]
         [FieldOffset(48)]
         public Vector3 angularVelocity;
 
@@ -333,7 +331,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
     /// <seealso cref="NPadInputState"/>
-    [InputControlLayout(stateType = typeof(NPadInputState))]
+    [InputControlLayout(stateType = typeof(NPadInputState), displayName = "Switch Controller (on Switch)")]
     public class NPad : Gamepad, INPadRumble
     {
         public ButtonControl leftSL { get; private set; }
@@ -446,10 +444,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             public float? amplitudeHigh;
             public float? frequencyHigh;
 
-            public bool HasValues
-            {
-                get { return amplitudeLow.HasValue && frequencyLow.HasValue && amplitudeHigh.HasValue && frequencyHigh.HasValue; }
-            }
+            public bool HasValues => amplitudeLow.HasValue && frequencyLow.HasValue && amplitudeHigh.HasValue && frequencyHigh.HasValue;
 
             public void SetRumbleValues(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency)
             {
