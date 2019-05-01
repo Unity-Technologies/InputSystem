@@ -21,8 +21,6 @@ public class GameManager : MonoBehaviour
     private TankManager m_RoundWinner;          // Reference to the winner of the current round.  Used to make an announcement of who won.
     private TankManager m_GameWinner;           // Reference to the winner of the game.  Used to make an announcement of who won.
 
-
-
     private void Start()
     {
         // Create the delays so they only have to be made once.
@@ -36,7 +34,6 @@ public class GameManager : MonoBehaviour
         StartCoroutine(GameLoop());
     }
 
-
     private void SpawnAllTanks()
     {
         // For all the tanks...
@@ -48,11 +45,6 @@ public class GameManager : MonoBehaviour
             m_Tanks[i].m_PlayerNumber = i + 1;
             m_Tanks[i].Setup();
         }
-    }
-
-    private void OnPlayerJoined()
-    {
-        Debug.Log("Doug On PLayer Joined.");
     }
 
     private void SetCameraTargets()
@@ -176,9 +168,9 @@ public class GameManager : MonoBehaviour
         }
 
         // If there are one or fewer tanks remaining return true, otherwise return false.
-        // return numTanksLeft <= 1;
-        return false;
+        return numTanksLeft <= 1;
     }
+   
         
         
     // This function is to find out if there is a winner of the round.
