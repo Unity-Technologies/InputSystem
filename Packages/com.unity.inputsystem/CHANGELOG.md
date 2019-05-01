@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
 
+### Added
+
+#### Actions
+
+- `PlayerInput` can now handle `.inputactions` assets that have no control schemes.
+  * Will pair __all__ devices mentioned by any of the bindings except if already paired to another player.
+
 ## [0.2.8-preview] - 2019-4-23
 
 ### Added
