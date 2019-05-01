@@ -3,6 +3,7 @@
     "com.unity.ads": "2.0.8",
     "com.unity.analytics": "3.3.2",
     "com.unity.collab-proxy": "1.2.16",
+    "com.unity.inputsystem": "0.2.8-preview",
     "com.unity.package-manager-ui": "2.1.2",
     "com.unity.purchasing": "2.0.6",
     "com.unity.textmeshpro": "2.0.0",

@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Plugins.PlayerInput;
 using UnityEngine.UI;
 
 
@@ -15,11 +17,12 @@ public class TankShooting : MonoBehaviour
     public float m_MaxLaunchForce = 30f;            // The force given to the shell if the fire button is held for the max charge time.
     public float m_MaxChargeTime = 0.75f;           // How long the shell can charge for before it is fired at max force.
 
-
-    private string m_FireButton;                    // The input axis that is used for launching shells.
     private float m_CurrentLaunchForce;             // The force that will be given to the shell when the fire button is released.
     private float m_ChargeSpeed;                    // How fast the launch force increases, based on the max charge time.
     private bool m_Fired;                           // Whether or not the shell has been launched with this button press.
+    private bool m_FireButtonPressedThisFrame = false;
+    private bool m_FireButtonReleasedThisFrame = false;
+    private bool m_FireButtonDown = false;
 
 
     private void OnEnable()
@@ -31,9 +34,6 @@ public class TankShooting : MonoBehaviour
 
     private void Start()
     {
-        // The fire axis is based on the player number.
-        m_FireButton = "Fire" + m_PlayerNumber;
-
         // The rate that the launch force charges up is the range of possible forces by the max charge time.
         m_ChargeSpeed = (m_MaxLaunchForce - m_MinLaunchForce) / m_MaxChargeTime;
     }
@@ -51,7 +51,7 @@ public class TankShooting : MonoBehaviour
             Fire();
         }
         // Otherwise, if the fire button has just started being pressed...
-        else if (Input.GetButtonDown(m_FireButton))
+        else if (m_FireButtonPressedThisFrame && !m_FireButtonDown)
         {
             // ... reset the fired flag and reset the launch force.
             m_Fired = false;
@@ -60,9 +60,12 @@ public class TankShooting : MonoBehaviour
             // Change the clip to the charging clip and start it playing.
             m_ShootingAudio.clip = m_ChargingClip;
             m_ShootingAudio.Play();
+
+            m_FireButtonDown = true;
+            m_FireButtonPressedThisFrame = false;
         }
         // Otherwise, if the fire button is being held and the shell hasn't been launched yet...
-        else if (Input.GetButton(m_FireButton) && !m_Fired)
+        else if (!m_FireButtonPressedThisFrame && m_FireButtonDown && !m_Fired && !m_FireButtonReleasedThisFrame)
         {
             // Increment the launch force and update the slider.
             m_CurrentLaunchForce += m_ChargeSpeed * Time.deltaTime;
@@ -70,7 +73,7 @@ public class TankShooting : MonoBehaviour
             m_AimSlider.value = m_CurrentLaunchForce;
         }
         // Otherwise, if the fire button is released and the shell hasn't been launched yet...
-        else if (Input.GetButtonUp(m_FireButton) && !m_Fired)
+        else if (m_FireButtonReleasedThisFrame && !m_Fired)
         {
             // ... launch the shell.
             Fire();
@@ -81,6 +84,9 @@ public class TankShooting : MonoBehaviour
     {
         // Set the fired flag so only Fire is only called once.
         m_Fired = true;
+        m_FireButtonPressedThisFrame = false;
+        m_FireButtonDown = false;
+        m_FireButtonReleasedThisFrame = false;
 
         // Create an instance of the shell and store a reference to it's rigidbody.
         Rigidbody shellInstance =
@@ -95,5 +101,19 @@ public class TankShooting : MonoBehaviour
 
         // Reset the launch force.  This is a precaution in case of missing button events.
         m_CurrentLaunchForce = m_MinLaunchForce;
+    }
+
+    private void OnShoot(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            m_FireButtonPressedThisFrame = true;
+            m_FireButtonReleasedThisFrame = false;
+        }
+        else
+        {
+            m_FireButtonPressedThisFrame = false;
+            m_FireButtonReleasedThisFrame = true;
+        }
     }
 }
