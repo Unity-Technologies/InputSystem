@@ -5,8 +5,8 @@ using UnityEngine.Experimental.Input.Editor;
 
 namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 {
-    [CustomEditor(typeof(UIActionInputModule))]
-    internal class UIActionInputModuleEditor : UnityEditor.Editor
+    [CustomEditor(typeof(InputSystemUIInputModule))]
+    internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
     {
         private InputActionProperty GetActionReferenceFromAssets(InputActionAsset actions, object[] childAssets, InputActionProperty defaultValue, params string[] actionNames)
         {
@@ -75,7 +75,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 {
                     if (EditorGUIUtility.GetObjectPickerControlID() == GetInstanceID())
                     {
-                        var module = target as UIActionInputModule;
+                        var module = target as InputSystemUIInputModule;
                         var actions = (InputActionAsset)EditorGUIUtility.GetObjectPickerObject();
                         var path = AssetDatabase.GetAssetPath(actions);
                         var assets = AssetDatabase.LoadAllAssetsAtPath(path);
