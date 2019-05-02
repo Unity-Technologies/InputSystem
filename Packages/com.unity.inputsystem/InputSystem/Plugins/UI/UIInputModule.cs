@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         // if we are using a MultiplayerEventSystem, ignore any transforms
         // not under the current MultiplayerEventSystem's root.
-        private bool MouseShouldIgnoreTransform(Transform t)
+        private bool PointerShouldIgnoreTransform(Transform t)
         {
             if (eventSystem is MultiplayerEventSystem)
             {
@@ -163,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 var t = currentPointerTarget.transform;
 
-                while (t != null && t.gameObject != commonRoot && !MouseShouldIgnoreTransform(t))
+                while (t != null && t.gameObject != commonRoot && !PointerShouldIgnoreTransform(t))
                 {
                     ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
 
@@ -178,7 +178,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
 
-            if (currentOverGo != null && MouseShouldIgnoreTransform(currentOverGo.transform))
+            if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
                 return;
 
             if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)

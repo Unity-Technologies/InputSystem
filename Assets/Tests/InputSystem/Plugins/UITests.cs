@@ -297,7 +297,7 @@ internal class UITests : InputTestFixture
         foreach (var player in players)
             player.eventSystem.InvokeUpdate();
 
-        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.EqualTo(players[0].leftGameObject));
+        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.Null);
 
         // Click right gameObject of player 1
@@ -309,8 +309,8 @@ internal class UITests : InputTestFixture
         foreach (var player in players)
             player.eventSystem.InvokeUpdate();
 
-        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.EqualTo(players[0].leftGameObject));
-        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.EqualTo(players[1].rightGameObject));
+        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
+        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
 
         // Click right gameObject of player 0
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 100), buttons = 1 << (int)MouseButton.Left });
@@ -320,8 +320,8 @@ internal class UITests : InputTestFixture
         foreach (var player in players)
             player.eventSystem.InvokeUpdate();
 
-        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.EqualTo(players[0].rightGameObject));
-        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.EqualTo(players[1].rightGameObject));
+        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
+        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
     }
 
     [UnityTest]
@@ -360,8 +360,8 @@ internal class UITests : InputTestFixture
         // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
 
-        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.EqualTo(players[0].leftGameObject));
-        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.EqualTo(players[1].leftGameObject));
+        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
+        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
 
         // Reset initial selection
         players[0].leftChildReceiver.Reset();
@@ -378,8 +378,8 @@ internal class UITests : InputTestFixture
             player.eventSystem.InvokeUpdate();
         }
 
-        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.EqualTo(players[0].rightGameObject));
-        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.EqualTo(players[1].leftGameObject));
+        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
+        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
 
         Assert.That(players[0].leftChildReceiver.events, Has.Count.EqualTo(2));
         Assert.That(players[0].leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
@@ -481,6 +481,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         // Check Move Axes
+        // Fixme: replacing this with Set(gamepads[0].leftStick, new Vector2(1, 0)); throws a NRE.
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(1.0f, 0.0f));
         InputSystem.Update();
         eventSystem.InvokeUpdate();
