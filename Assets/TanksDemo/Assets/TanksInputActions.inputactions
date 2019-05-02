@@ -39,7 +39,7 @@
                     "bindings": []
                 },
                 {
-                    "name": "Shoot",
+                    "name": "Fire",
                     "id": "0faccb2c-e5c0-4722-97bf-f41bd00884ce",
                     "expectedControlLayout": "",
                     "continuous": false,
@@ -94,7 +94,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "Shoot",
+                    "action": "Fire",
                     "isComposite": false,
                     "isPartOfComposite": false,
                     "modifiers": ""

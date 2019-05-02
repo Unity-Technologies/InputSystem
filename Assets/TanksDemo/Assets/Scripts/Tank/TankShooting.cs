@@ -20,9 +20,9 @@ public class TankShooting : MonoBehaviour
     private float m_CurrentLaunchForce;             // The force that will be given to the shell when the fire button is released.
     private float m_ChargeSpeed;                    // How fast the launch force increases, based on the max charge time.
     private bool m_Fired;                           // Whether or not the shell has been launched with this button press.
-    private bool m_FireButtonPressedThisFrame = false;
-    private bool m_FireButtonReleasedThisFrame = false;
-    private bool m_FireButtonDown = false;
+    private bool m_FireButtonPressedThisFrame;      // Will be set to true when the fire button is initially pressed.
+    private bool m_FireButtonReleasedThisFrame;     // Will be set to true when the fire button is first released.
+    private bool m_FireButtonDown;                  // Will always be true while the fire button is held down.
 
 
     private void OnEnable()
@@ -84,9 +84,11 @@ public class TankShooting : MonoBehaviour
     {
         // Set the fired flag so only Fire is only called once.
         m_Fired = true;
+
+        // Reset the button flags.
         m_FireButtonPressedThisFrame = false;
-        m_FireButtonDown = false;
         m_FireButtonReleasedThisFrame = false;
+        m_FireButtonDown = false;
 
         // Create an instance of the shell and store a reference to it's rigidbody.
         Rigidbody shellInstance =
@@ -103,11 +105,19 @@ public class TankShooting : MonoBehaviour
         m_CurrentLaunchForce = m_MinLaunchForce;
     }
 
-    private void OnShoot(InputValue value)
+    // The callback from the TanksInputActions Player Input asset that is 
+    // triggered from the "Fire" action.
+    private void OnFire(InputValue value)
     {
+        // We have setup our button press action to be Press and Release
+        // trigger behavior in the Press interaction of the Input Action asset.
+        // The isPressed property will be true 
+        // when OnFire is called during initial button press.
+        // It will be false when OnFire is called during button release.
+
         if (value.isPressed)
         {
-            m_FireButtonPressedThisFrame = true;
+           m_FireButtonPressedThisFrame = true;
             m_FireButtonReleasedThisFrame = false;
         }
         else
