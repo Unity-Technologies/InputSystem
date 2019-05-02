@@ -822,6 +822,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// </summary>
         private void AssignUserAndDevices()
         {
+            // If we already have a user at this point, clear out all its paired devices
+            // to start the pairing process from scratch.
+            if (m_InputUser.valid)
+                m_InputUser.UnpairDevices();
+
             // All our input goes through actions so there's no point setting
             // anything up if we have none.
             if (m_Actions == null)
@@ -900,9 +905,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                             break;
                     }
                 }
-
-                if (!m_InputUser.valid)
-                    return;
             }
             else
             {
@@ -919,13 +921,42 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 }
                 else
                 {
-                    ////TODO: support action sets that don't have control schemes when player isn't joining through PlayerInputManager
-                    throw new NotImplementedException();
+                    using (var availableDevices = InputUser.GetUnpairedInputDevices())
+                    {
+                        foreach (var actionMap in m_Actions.actionMaps)
+                        {
+                            foreach (var binding in actionMap.bindings)
+                            {
+                                // See if the binding matches anything available.
+                                InputDevice matchesDevice = null;
+                                foreach (var device in availableDevices)
+                                {
+                                    if (InputControlPath.TryFindControl(device, binding.effectivePath) != null)
+                                    {
+                                        matchesDevice = device;
+                                        break;
+                                    }
+                                }
+
+                                if (matchesDevice == null)
+                                    continue;
+
+                                if (m_InputUser.valid && m_InputUser.pairedDevices.ContainsReference(matchesDevice))
+                                {
+                                    // Already paired to this device.
+                                    continue;
+                                }
+
+                                m_InputUser = InputUser.PerformPairingWithDevice(matchesDevice, m_InputUser);
+                            }
+                        }
+                    }
                 }
             }
 
-            Debug.Assert(m_InputUser.valid);
-            m_InputUser.AssociateActionsWithUser(m_Actions);
+            // If we don't have a valid user at this point, we don't have any paired devices.
+            if (m_InputUser.valid)
+                m_InputUser.AssociateActionsWithUser(m_Actions);
         }
 
         private void UnassignUserAndDevices()

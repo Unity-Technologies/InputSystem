@@ -3404,6 +3404,8 @@ partial class CoreTests
     [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldOnTrigger()
     {
+        InputSystem.settings.defaultButtonPressPoint = 0.1f;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "hold(duration=0.4)");

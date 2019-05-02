@@ -1613,7 +1613,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     // while concurrently comparing whatever bits make it through to the default
                     // state buffer.
                     if (device.CheckStateIsAtDefaultIgnoringNoise())
+                    {
+                        Profiler.EndSample();
                         return; // No activity at all.
+                    }
 
                     // Go through controls and for any one that isn't noisy or synthetic, find out
                     // if we have a magnitude greater than zero.

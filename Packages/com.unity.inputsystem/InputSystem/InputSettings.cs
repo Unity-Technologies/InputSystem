@@ -286,7 +286,7 @@ namespace UnityEngine.Experimental.Input
 
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
-        [SerializeField] private float m_DefaultButtonPressPoint = 0.1f;
+        [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         //[SerializeField] private float m_DefaultMultiTapMaximumDelay = 0.75f;
