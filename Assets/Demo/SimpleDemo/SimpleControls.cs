@@ -67,7 +67,7 @@ public class SimpleControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""f1d0b692-d044-4536-a447-815c007a4ab2"",
+                    ""id"": ""09c134e4-92b5-4c1e-9b05-582eb78eb92e"",
                     ""path"": ""*/{PrimaryAction}"",
                     ""interactions"": ""Tap,SlowTap"",
                     ""processors"": """",
@@ -79,7 +79,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""043f3e13-66f2-466d-8310-d3e6563a6be7"",
+                    ""id"": ""bf9b1d91-7948-4353-9878-ae277d65f79d"",
                     ""path"": ""<SteamDemoController>/fire"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -91,7 +91,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""44a7678e-b660-494a-811f-89ea4c652cc0"",
+                    ""id"": ""8f1f45b4-15a0-484c-88ae-29d16ac86cef"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -103,7 +103,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""a44b2efa-afa3-4c19-95c5-e3b23895cf3c"",
+                    ""id"": ""f25555b4-378d-4717-b24c-5c5caa7fc5af"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -115,7 +115,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""292947a9-a1aa-4e82-8c66-e17c77b4b678"",
+                    ""id"": ""a980a292-d423-4826-b2ae-c8c9338687ff"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -127,7 +127,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""7e001c50-b0d9-4d14-bbf0-2161d29ac30a"",
+                    ""id"": ""f6c5fd4d-c98a-4fb6-a4d3-3031ca1513a0"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -139,7 +139,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""0de05257-a80b-4616-b362-a1114599d0f7"",
+                    ""id"": ""72aa1192-e011-4dd9-b982-276906c26c6e"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -151,7 +151,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""acd2149c-9894-43c1-9b40-13c140f53f70"",
+                    ""id"": ""4f219e2e-1f87-4309-ad5f-b02fe3a3785a"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -163,7 +163,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""3ed1b7b9-e089-4d56-842d-d4c63fbd5653"",
+                    ""id"": ""d6e54dbd-7201-460e-8911-fa79cad0d147"",
                     ""path"": ""<SteamDemoController>/move"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -175,7 +175,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""15737de1-b696-4f6f-8d1d-3f6d52ef0701"",
+                    ""id"": ""d68bf4a1-76f4-43e5-84ee-09bb91570c47"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -187,7 +187,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""95256c57-b0d4-495b-a244-0377b5242bfb"",
+                    ""id"": ""d6a0c9f4-5ca6-4d2b-ac91-09a9aec7e735"",
                     ""path"": ""<Pointer>/delta"",
                     ""interactions"": """",
                     ""processors"": ""ScaleVector2(x=2,y=2)"",
@@ -199,7 +199,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""69d4e5d1-4362-484a-80b0-7f62a4890994"",
+                    ""id"": ""a8707930-9dd4-492d-bd41-7ff97a2c97c5"",
                     ""path"": ""<SteamDemoController>/look"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -211,7 +211,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""844294b6-dd98-4570-871d-e44a26e24ffc"",
+                    ""id"": ""c4e6e8f2-7bfc-45ee-9cae-4e31e3fa2915"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -223,7 +223,7 @@ public class SimpleControls : IInputActionCollection
                 },
                 {
                     ""name"": """",
-                    ""id"": ""68ee7aba-bce5-4c87-8ff1-b7d003b6dc53"",
+                    ""id"": ""2b589206-67d1-419f-97c0-478fccd8e6b5"",
                     ""path"": ""<Gamepad>/buttonNorth"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -245,54 +245,54 @@ public class SimpleControls : IInputActionCollection
         m_gameplay_look = m_gameplay.GetAction("look");
         m_gameplay_jump = m_gameplay.GetAction("jump");
     }
-    
+
     ~SimpleControls()
     {
         UnityEngine.Object.Destroy(asset);
     }
-    
+
     public InputBinding? bindingMask
     {
         get => asset.bindingMask;
         set => asset.bindingMask = value;
     }
-    
+
     public ReadOnlyArray<InputDevice>? devices
     {
         get => asset.devices;
         set => asset.devices = value;
     }
-    
+
     public ReadOnlyArray<InputControlScheme> controlSchemes
     {
         get => asset.controlSchemes;
     }
-    
+
     public bool Contains(InputAction action)
     {
         return asset.Contains(action);
     }
-    
+
     public IEnumerator<InputAction> GetEnumerator()
     {
         return asset.GetEnumerator();
     }
-    
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
-    
+
     public void Enable()
     {
         asset.Enable();
     }
-    
+
     public void Disable()
     {
         asset.Disable();
     }
-    
+
     // gameplay
     private InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
