@@ -3,8 +3,8 @@ using UnityEngine.EventSystems;
 
 public class MultiplayerEventSystem : EventSystem
 {
-    [Tooltip("If set, only process mouse events for any game objects which are children of this transform.")]
-    public Transform playerRootTransform;
+    [Tooltip("If set, only process mouse events for any game objects which are children of this game object.")]
+    public GameObject playerRoot;
 
     protected override void Update()
     {

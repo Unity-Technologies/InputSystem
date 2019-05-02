@@ -104,7 +104,7 @@ internal class UITests : InputTestFixture
         rightChildTransform.anchoredPosition = new Vector2(640 / 4, 0); //(maxY + minY) / 2 - 240);
         rightChildTransform.sizeDelta = new Vector2(320, maxY - minY);
 
-        objects.eventSystem.playerRootTransform = parentTransform;
+        objects.eventSystem.playerRoot = parentGameObject;
         objects.eventSystem.firstSelectedGameObject = leftChildGameObject;
         objects.eventSystem.InvokeUpdate(); // Initial update only sets current module.
 
@@ -248,7 +248,7 @@ internal class UITests : InputTestFixture
     [UnityTest]
     [Category("Actions")]
     // Check that two players can have separate UI, and that both selections will stay active when clicking on UI with the mouse,
-    // using MultiPlayerEventSystem.playerRootTransform to match UI to the players.
+    // using MultiPlayerEventSystem.playerRoot to match UI to the players.
     public IEnumerator MouseActions_MultiplayerEventSystemKeepsPerPlayerSelection()
     {
         // Create devices.

@@ -106,8 +106,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 var mes = eventSystem as MultiplayerEventSystem;
 
-                if (mes.playerRootTransform != null)
-                    if (!t.IsChildOf(mes.playerRootTransform))
+                if (mes.playerRoot != null)
+                    if (!t.IsChildOf(mes.playerRoot.transform))
                         return true;
             }
             return false;
