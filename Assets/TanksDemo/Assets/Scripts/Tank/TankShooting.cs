@@ -117,7 +117,7 @@ public class TankShooting : MonoBehaviour
 
         if (value.isPressed)
         {
-           m_FireButtonPressedThisFrame = true;
+            m_FireButtonPressedThisFrame = true;
             m_FireButtonReleasedThisFrame = false;
         }
         else
