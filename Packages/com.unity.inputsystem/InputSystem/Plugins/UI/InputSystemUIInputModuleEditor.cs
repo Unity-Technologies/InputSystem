@@ -1,32 +1,39 @@
 #if UNITY_EDITOR
 
+using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.Experimental.Input.Editor;
 
 namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 {
-    /*[CustomEditor(typeof(InputSystemUIInputModule))]
+    [CustomEditor(typeof(InputSystemUIInputModule))]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
     {
-        private InputActionProperty GetActionReferenceFromAssets(InputActionAsset actions, object[] childAssets, InputActionProperty defaultValue, params string[] actionNames)
+        private InputActionProperty GetActionReferenceFromAssets(InputActionReference[] actions, params string[] actionNames)
         {
-            InputAction action = null;
             foreach (var actionName in actionNames)
             {
-                action = actions.FindAction(actionName);
-                if (action != null)
+                foreach (var action in actions)
                 {
-                    foreach (var asset in childAssets)
-                    {
-                        if (asset is InputActionReference reference)
-                        {
-                            if (reference.m_ActionId == action.m_Id)
-                                return new InputActionProperty(reference);
-                        }
-                    }
+                    if (action.name == actionName) // Todo case insensitive check
+                        return new InputActionProperty(action);
                 }
             }
-            return defaultValue;
+            return null;
+        }
+
+        private InputActionReference[] GetAllActionsFromAsset()
+        {
+            var actions = m_Actions.objectReferenceValue as InputActionAsset;
+            if (actions != null)
+            {
+                var module = target as InputSystemUIInputModule;
+                var path = AssetDatabase.GetAssetPath(actions);
+                var assets = AssetDatabase.LoadAllAssetsAtPath(path);
+                return assets.Where(asset => asset is InputActionReference).Cast<InputActionReference>().ToArray();
+            }
+            return null;
         }
 
         private enum ActionReferenceType
@@ -35,7 +42,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
             SerializedData
         };
 
-        private string[] m_ActionNames = new[]
+        static private string[] m_ActionNames = new[]
         {
             "Point",
             "LeftClick",
@@ -51,6 +58,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
         private SerializedProperty[] m_ReferenceProperties;
         private SerializedProperty[] m_DataProperties;
         private bool m_ActionsFoldout;
+        private SerializedProperty m_Actions;
+        private InputActionReference[] m_AvailableActionsInAsset;
+        private string[] m_AvailableActionsInAssetNames;
 
         public void OnEnable()
         {
@@ -64,38 +74,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 m_DataProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}ActionData");
                 m_ActionTypes[i] = m_ReferenceProperties[i].objectReferenceValue != null ? ActionReferenceType.Reference : ActionReferenceType.SerializedData;
             }
+            m_Actions = serializedObject.FindProperty("m_Actions");
+            m_AvailableActionsInAsset = GetAllActionsFromAsset();
+            // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+            m_AvailableActionsInAssetNames = m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215"))?.Concat(new[] { "None" })?.ToArray();
         }
 
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            if (Event.current.type == EventType.ExecuteCommand)
-            {
-                if (Event.current.commandName == "ObjectSelectorUpdated")
-                {
-                    if (EditorGUIUtility.GetObjectPickerControlID() == GetInstanceID())
-                    {
-                        var module = target as InputSystemUIInputModule;
-                        var actions = (InputActionAsset)EditorGUIUtility.GetObjectPickerObject();
-                        var path = AssetDatabase.GetAssetPath(actions);
-                        var assets = AssetDatabase.LoadAllAssetsAtPath(path);
-
-                        module.point = GetActionReferenceFromAssets(actions, assets, module.point, "Point", "MousePosition", "Mouse Position");
-                        module.leftClick = GetActionReferenceFromAssets(actions, assets, module.leftClick, "Click", "LeftClick", "Left Click");
-                        module.rightClick = GetActionReferenceFromAssets(actions, assets, module.rightClick, "RightClick", "Right Click", "ContextClick", "Context Click", "ContextMenu", "Context Menu");
-                        module.middleClick = GetActionReferenceFromAssets(actions, assets, module.middleClick, "MiddleClick", "Middle Click");
-                        module.scrollWheel = GetActionReferenceFromAssets(actions, assets, module.scrollWheel, "ScrollWheel", "Scroll Wheel", "Scroll", "Wheel");
-                        module.move = GetActionReferenceFromAssets(actions, assets, module.move, "Navigate", "Move");
-                        module.submit = GetActionReferenceFromAssets(actions, assets, module.submit, "Submit");
-                        module.cancel = GetActionReferenceFromAssets(actions, assets, module.cancel, "Cancel", "Esc", "Escape");
-
-                        serializedObject.Update();
-
-                        // reinitialize action types
-                        OnEnable();
-                    }
-                }
-            }
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUI.indentLevel++;
@@ -104,14 +91,31 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
             if (m_ActionsFoldout)
             {
-                const string buttonLabel = "Link Actions from Asset…";
-                EditorGUILayout.HelpBox($"You can assign input actions to generate UI events here. Actions can either be stored as serialized data on this component, or as references to actions in an Input Action Asset. Click '{buttonLabel}' below to automatically assign all actions from an input action asset if they match common names for the UI actions.", MessageType.Info);
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(EditorGUIUtility.labelWidth);
-                if (GUILayout.Button(buttonLabel, EditorStyles.miniButton))
-                    EditorGUIUtility.ShowObjectPicker<InputActionAsset>(null, false, "", GetInstanceID());
-                GUILayout.EndHorizontal();
-                GUILayout.Space(5);
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.PropertyField(m_Actions);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    var assets = GetAllActionsFromAsset();
+                    if (assets != null)
+                    {
+                        serializedObject.ApplyModifiedProperties();
+
+                        var module = target as InputSystemUIInputModule;
+                        module.point = GetActionReferenceFromAssets(assets, module.point.action.name, "Point", "MousePosition", "Mouse Position");
+                        module.leftClick = GetActionReferenceFromAssets(assets, module.leftClick.action.name, "Click", "LeftClick", "Left Click");
+                        module.rightClick = GetActionReferenceFromAssets(assets, module.rightClick.action.name, "RightClick", "Right Click", "ContextClick", "Context Click", "ContextMenu", "Context Menu");
+                        module.middleClick = GetActionReferenceFromAssets(assets, module.middleClick.action.name, "MiddleClick", "Middle Click");
+                        module.scrollWheel = GetActionReferenceFromAssets(assets, module.scrollWheel.action.name, "ScrollWheel", "Scroll Wheel", "Scroll", "Wheel");
+                        module.move = GetActionReferenceFromAssets(assets, module.move.action.name, "Navigate", "Move");
+                        module.submit = GetActionReferenceFromAssets(assets, module.submit.action.name, "Submit");
+                        module.cancel = GetActionReferenceFromAssets(assets, module.cancel.action.name, "Cancel", "Esc", "Escape");
+
+                        serializedObject.Update();
+                    }
+
+                    // reinitialize action types
+                    OnEnable();
+                }
 
                 var numActions = m_ActionNames.Length;
                 for (var i = 0; i < numActions; i++)
@@ -122,13 +126,27 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(m_ActionNames[i], EditorStyles.boldLabel, GUILayout.Width(EditorGUIUtility.labelWidth));
-                    m_ActionTypes[i] = (ActionReferenceType)EditorGUILayout.EnumPopup(m_ActionTypes[i]);
+                    if (m_AvailableActionsInAssetNames == null)
+                        m_ActionTypes[i] = (ActionReferenceType)EditorGUILayout.EnumPopup(m_ActionTypes[i]);
+                    else
+                    {
+                        int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue);
+                        if (index == -1) 
+                            index = m_AvailableActionsInAsset.Length;
+                        EditorGUI.BeginChangeCheck();
+                        index = EditorGUILayout.Popup(index, m_AvailableActionsInAssetNames);
+                        if (EditorGUI.EndChangeCheck())
+                            m_ReferenceProperties[i].objectReferenceValue = index < m_AvailableActionsInAsset.Length ? m_AvailableActionsInAsset[index] : null;
+                    }
                     GUILayout.EndHorizontal();
                     GUILayout.Space(5);
 
-                    EditorGUILayout.PropertyField(m_ActionTypes[i] == ActionReferenceType.Reference ? m_ReferenceProperties[i] : m_DataProperties[i], GUIContent.none);
-                    if (m_ActionTypes[i] == ActionReferenceType.SerializedData)
-                        m_ReferenceProperties[i].objectReferenceValue = null;
+                    if (m_AvailableActionsInAssetNames == null)
+                    {
+                        EditorGUILayout.PropertyField(m_ActionTypes[i] == ActionReferenceType.Reference ? m_ReferenceProperties[i] : m_DataProperties[i], GUIContent.none);
+                        if (m_ActionTypes[i] == ActionReferenceType.SerializedData)
+                            m_ReferenceProperties[i].objectReferenceValue = null;
+                    }
                 }
             }
             GUILayout.EndVertical();
@@ -145,6 +163,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 s_FoldoutStyle.fontStyle = FontStyle.Bold;
             }
         }
-    }*/
+    }
 }
 #endif

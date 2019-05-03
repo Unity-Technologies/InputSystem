@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    public class InputSystemUIInputModule : UIInputModule
+    public class InputSystemUIInputModule : UIInputModule, ISerializationCallbackReceiver
     {
         private static void SwapAction(ref InputActionProperty property, InputActionProperty newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
@@ -675,18 +675,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (m_ActionsHooked)
                 return;
 
-            if (m_Actions != null)
-            {
-                m_PointAction = m_Actions.FindAction(m_PointActionName);
-                m_MoveAction = m_Actions.FindAction(m_MoveActionName);
-                m_LeftClickAction = m_Actions.FindAction(m_LeftClickActionName);
-                m_RightClickAction = m_Actions.FindAction(m_RightClickActionName);
-                m_MiddleClickAction = m_Actions.FindAction(m_MiddleClickActionName);
-                m_SubmitAction = m_Actions.FindAction(m_SubmitActionName);
-                m_CancelAction = m_Actions.FindAction(m_CancelActionName);
-                m_ScrollWheelAction = m_Actions.FindAction(m_ScrollWheelActionName);
-            }
-
             m_ActionsHooked = true;
             if (m_OnActionDelegate == null)
                 m_OnActionDelegate = OnAction;
@@ -851,7 +839,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         {
             return reference != null ? new InputActionProperty(reference) : new InputActionProperty(data);
         }
-/*
+
         public void OnBeforeSerialize()
         {
             OnBeforeSerializeActionProperty(m_PointAction, ref m_PointActionReference, ref m_PointActionData);
@@ -874,8 +862,45 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_MiddleClickAction = OnAfterSerializeActionProperty(m_MiddleClickActionReference, m_MiddleClickActionData);
             m_RightClickAction = OnAfterSerializeActionProperty(m_RightClickActionReference, m_RightClickActionData);
             m_ScrollWheelAction = OnAfterSerializeActionProperty(m_ScrollWheelActionReference, m_ScrollWheelActionData);
-        }*/
-/*
+        }
+
+        [SerializeField, HideInInspector] private InputActionAsset m_Actions;
+        public InputActionAsset actions
+        {
+            get => m_Actions;
+            set
+            {
+                if (value != m_Actions)
+                {
+                    if (point.reference?.asset == m_Actions)
+                        point = value.FindAction(point.action.name);
+
+                    if (move.reference?.asset == m_Actions)
+                        move = value.FindAction(move.action.name);
+
+                    if (leftClick.reference?.asset == m_Actions)
+                        leftClick = value.FindAction(leftClick.action.name);
+
+                    if (rightClick.reference?.asset == m_Actions)
+                        rightClick = value.FindAction(rightClick.action.name);
+
+                    if (middleClick.reference?.asset == m_Actions)
+                        middleClick = value.FindAction(middleClick.action.name);
+
+                    if (scrollWheel.reference?.asset == m_Actions)
+                        scrollWheel = value.FindAction(scrollWheel.action.name);
+
+                    if (submit.reference?.asset == m_Actions)
+                        submit = value.FindAction(submit.action.name);
+
+                    if (cancel.reference?.asset == m_Actions)
+                        cancel = value.FindAction(cancel.action.name);
+
+                    EnableAllActions();
+                    m_Actions = value;
+                }
+            }
+        }
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
@@ -915,41 +940,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         private InputActionProperty m_ScrollWheelAction;
         [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelActionReference;
-        [SerializeField, HideInInspector] private InputAction m_ScrollWheelActionData;*/
-
-        public InputActionAsset m_Actions;
-        public InputActionAsset actions 
-        {
-            get => m_Actions;
-            set {
-                if (value != m_Actions)
-                {
-                    m_Actions = value;
-                    DisableAllActions();
-                    UnhookActions();
-                    HookActions();
-                    EnableAllActions();
-                }
-            }
-        }
-
-        public string m_PointActionName = "Point";
-        public string m_MoveActionName = "Move";
-        public string m_SubmitActionName = "Submit";
-        public string m_CancelActionName = "Cancel";
-        public string m_LeftClickActionName = "Click";
-        public string m_MiddleClickActionName = "MiddleClick";
-        public string m_RightClickActionName = "RightClick";
-        public string m_ScrollWheelActionName = "Scroll";
-        private InputActionProperty m_PointAction;
-        private InputActionProperty m_MoveAction;
-        private InputActionProperty m_SubmitAction;
-        private InputActionProperty m_CancelAction;
-        private InputActionProperty m_LeftClickAction;
-        private InputActionProperty m_MiddleClickAction;
-        private InputActionProperty m_RightClickAction;
-        private InputActionProperty m_ScrollWheelAction;
-
+        [SerializeField, HideInInspector] private InputAction m_ScrollWheelActionData;
 
         // Hide these while we still have to figure out what to do with these.
         [SerializeField, HideInInspector] private List<TouchResponder> m_Touches;
