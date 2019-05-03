@@ -105,13 +105,13 @@ public class TankShooting : MonoBehaviour
         m_CurrentLaunchForce = m_MinLaunchForce;
     }
 
-    // The callback from the TanksInputActions Player Input asset that is 
+    // The callback from the TanksInputActions Player Input asset that is
     // triggered from the "Fire" action.
     private void OnFire(InputValue value)
     {
         // We have setup our button press action to be Press and Release
         // trigger behavior in the Press interaction of the Input Action asset.
-        // The isPressed property will be true 
+        // The isPressed property will be true
         // when OnFire is called during initial button press.
         // It will be false when OnFire is called during button release.
 

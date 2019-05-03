@@ -120,21 +120,21 @@ public class TankMovement : MonoBehaviour
         m_Rigidbody.MoveRotation(m_Rigidbody.rotation * turnRotation);
     }
 
-    // The callback from the TanksInputActions Player Input asset that is 
+    // The callback from the TanksInputActions Player Input asset that is
     // triggered from the "Gas" action.
     private void OnGas(InputValue value)
     {
         m_MovementInputValue = value.Get<float>();
     }
 
-    // The callback from the TanksInputActions Player Input asset that is 
+    // The callback from the TanksInputActions Player Input asset that is
     // triggered from the "Brake" action.
     private void OnBrake(InputValue value)
     {
         m_MovementInputValue = value.Get<float>() * -1.0f;
     }
 
-    // The callback from the TanksInputActions Player Input asset that is 
+    // The callback from the TanksInputActions Player Input asset that is
     // triggered from the "Turret" action.
     private void OnTurret(InputValue value)
     {
