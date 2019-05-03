@@ -5,7 +5,7 @@ using UnityEngine.Experimental.Input.Editor;
 
 namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 {
-    [CustomEditor(typeof(InputSystemUIInputModule))]
+    /*[CustomEditor(typeof(InputSystemUIInputModule))]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
     {
         private InputActionProperty GetActionReferenceFromAssets(InputActionAsset actions, object[] childAssets, InputActionProperty defaultValue, params string[] actionNames)
@@ -145,6 +145,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 s_FoldoutStyle.fontStyle = FontStyle.Bold;
             }
         }
-    }
+    }*/
 }
 #endif
