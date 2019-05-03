@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
             {
                 foreach (var action in actions)
                 {
-                    if (action.name == actionName) // Todo case insensitive check
+                    if (string.Compare(action.action.name, actionName, true) == 0)
                         return new InputActionProperty(action);
                 }
             }
@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 var module = target as InputSystemUIInputModule;
                 var path = AssetDatabase.GetAssetPath(actions);
                 var assets = AssetDatabase.LoadAllAssetsAtPath(path);
-                return assets.Where(asset => asset is InputActionReference).Cast<InputActionReference>().ToArray();
+                return assets.Where(asset => asset is InputActionReference).Cast<InputActionReference>().OrderBy(x => x.name).ToArray();
             }
             return null;
         }
@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
             m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
             m_AvailableActionsInAsset = GetAllActionsFromAsset();
             // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
-            m_AvailableActionsInAssetNames = m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215"))?.Concat(new[] { "None" })?.ToArray();
+            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215")) ?? new string[0]).ToArray();
         }
 
         public override void OnInspectorGUI()
@@ -91,6 +91,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
             if (m_ActionsFoldout)
             {
+                EditorGUILayout.HelpBox("You can optionally specify an Input Action Asset here. Then all actions will be taken from that asset, and if there is a `PlayerInput` component on this game object using the same Input Action Asset, it will keep the actions on the UI modules synched to the same player.", MessageType.Info);
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.PropertyField(m_ActionsAsset);
                 if (EditorGUI.EndChangeCheck())
@@ -126,22 +127,20 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(m_ActionNames[i], EditorStyles.boldLabel, GUILayout.Width(EditorGUIUtility.labelWidth));
-                    if (m_AvailableActionsInAssetNames == null)
+                    if (m_AvailableActionsInAsset == null)
                         m_ActionTypes[i] = (ActionReferenceType)EditorGUILayout.EnumPopup(m_ActionTypes[i]);
                     else
                     {
-                        int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue);
-                        if (index == -1) 
-                            index = m_AvailableActionsInAsset.Length;
+                        int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
                         EditorGUI.BeginChangeCheck();
                         index = EditorGUILayout.Popup(index, m_AvailableActionsInAssetNames);
                         if (EditorGUI.EndChangeCheck())
-                            m_ReferenceProperties[i].objectReferenceValue = index < m_AvailableActionsInAsset.Length ? m_AvailableActionsInAsset[index] : null;
+                            m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
                     }
                     GUILayout.EndHorizontal();
                     GUILayout.Space(5);
 
-                    if (m_AvailableActionsInAssetNames == null)
+                    if (m_AvailableActionsInAsset == null)
                     {
                         EditorGUILayout.PropertyField(m_ActionTypes[i] == ActionReferenceType.Reference ? m_ReferenceProperties[i] : m_DataProperties[i], GUIContent.none);
                         if (m_ActionTypes[i] == ActionReferenceType.SerializedData)

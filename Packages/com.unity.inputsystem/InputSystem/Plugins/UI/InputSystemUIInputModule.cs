@@ -872,6 +872,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (value != m_ActionsAsset)
                 {
+                    DisableAllActions();
+
                     if (point.reference?.asset == m_ActionsAsset)
                         point = value.FindAction(point.action.name);
 
