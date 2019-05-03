@@ -658,23 +658,15 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             if (m_Actions == null)
                 return;
 
-            ////REVIEW: should we *always* Instantiate()?
-            // Check if we need to duplicate our actions by looking at all other players. If any
-            // has the same actions, duplicate.
-//            for (var i = 0; i < s_AllActivePlayersCount; ++i)
-  //              if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
-                {
-                    var uiModule = GetComponent<InputSystemUIInputModule>();
-                    if (uiModule != null)
-                    {
-                        if (uiModule.actions != m_Actions)
-                            uiModule = null;
-                    }
-                    m_Actions = Instantiate(m_Actions);
-                    if (uiModule != null)
-                        uiModule.actions = m_Actions;
-                  //  break;
-                }
+            var uiModule = GetComponent<InputSystemUIInputModule>();
+            if (uiModule != null)
+            {
+                if (uiModule.actionsAsset != m_Actions)
+                    uiModule = null;
+            }
+            m_Actions = Instantiate(m_Actions);
+            if (uiModule != null)
+                uiModule.actionsAsset = m_Actions;
 
             switch (m_NotificationBehavior)
             {

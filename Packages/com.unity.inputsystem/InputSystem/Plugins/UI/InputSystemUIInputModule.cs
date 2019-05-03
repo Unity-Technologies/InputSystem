@@ -864,40 +864,40 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_ScrollWheelAction = OnAfterSerializeActionProperty(m_ScrollWheelActionReference, m_ScrollWheelActionData);
         }
 
-        [SerializeField, HideInInspector] private InputActionAsset m_Actions;
-        public InputActionAsset actions
+        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
+        public InputActionAsset actionsAsset
         {
-            get => m_Actions;
+            get => m_ActionsAsset;
             set
             {
-                if (value != m_Actions)
+                if (value != m_ActionsAsset)
                 {
-                    if (point.reference?.asset == m_Actions)
+                    if (point.reference?.asset == m_ActionsAsset)
                         point = value.FindAction(point.action.name);
 
-                    if (move.reference?.asset == m_Actions)
+                    if (move.reference?.asset == m_ActionsAsset)
                         move = value.FindAction(move.action.name);
 
-                    if (leftClick.reference?.asset == m_Actions)
+                    if (leftClick.reference?.asset == m_ActionsAsset)
                         leftClick = value.FindAction(leftClick.action.name);
 
-                    if (rightClick.reference?.asset == m_Actions)
+                    if (rightClick.reference?.asset == m_ActionsAsset)
                         rightClick = value.FindAction(rightClick.action.name);
 
-                    if (middleClick.reference?.asset == m_Actions)
+                    if (middleClick.reference?.asset == m_ActionsAsset)
                         middleClick = value.FindAction(middleClick.action.name);
 
-                    if (scrollWheel.reference?.asset == m_Actions)
+                    if (scrollWheel.reference?.asset == m_ActionsAsset)
                         scrollWheel = value.FindAction(scrollWheel.action.name);
 
-                    if (submit.reference?.asset == m_Actions)
+                    if (submit.reference?.asset == m_ActionsAsset)
                         submit = value.FindAction(submit.action.name);
 
-                    if (cancel.reference?.asset == m_Actions)
+                    if (cancel.reference?.asset == m_ActionsAsset)
                         cancel = value.FindAction(cancel.action.name);
 
                     EnableAllActions();
-                    m_Actions = value;
+                    m_ActionsAsset = value;
                 }
             }
         }

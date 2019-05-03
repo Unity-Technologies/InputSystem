@@ -4,7 +4,7 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - m_Actions: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018,
+  - m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018,
       type: 3}
   - m_PointActionReference: {fileID: 1054132383583890850, guid: ca9f5fa95ffab41fb9a615ab714db018,
       type: 3}

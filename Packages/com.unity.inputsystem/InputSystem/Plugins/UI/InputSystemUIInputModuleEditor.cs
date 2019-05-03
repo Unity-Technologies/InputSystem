@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
         private InputActionReference[] GetAllActionsFromAsset()
         {
-            var actions = m_Actions.objectReferenceValue as InputActionAsset;
+            var actions = m_ActionsAsset.objectReferenceValue as InputActionAsset;
             if (actions != null)
             {
                 var module = target as InputSystemUIInputModule;
@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
         private SerializedProperty[] m_ReferenceProperties;
         private SerializedProperty[] m_DataProperties;
         private bool m_ActionsFoldout;
-        private SerializedProperty m_Actions;
+        private SerializedProperty m_ActionsAsset;
         private InputActionReference[] m_AvailableActionsInAsset;
         private string[] m_AvailableActionsInAssetNames;
 
@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
                 m_DataProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}ActionData");
                 m_ActionTypes[i] = m_ReferenceProperties[i].objectReferenceValue != null ? ActionReferenceType.Reference : ActionReferenceType.SerializedData;
             }
-            m_Actions = serializedObject.FindProperty("m_Actions");
+            m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
             m_AvailableActionsInAsset = GetAllActionsFromAsset();
             // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
             m_AvailableActionsInAssetNames = m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215"))?.Concat(new[] { "None" })?.ToArray();
@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
             if (m_ActionsFoldout)
             {
                 EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(m_Actions);
+                EditorGUILayout.PropertyField(m_ActionsAsset);
                 if (EditorGUI.EndChangeCheck())
                 {
                     var assets = GetAllActionsFromAsset();
