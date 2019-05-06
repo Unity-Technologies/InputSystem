@@ -114,7 +114,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command, " + commandPtr->type);
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
@@ -153,7 +153,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.SetOrientationToSingleJoyCon(NPad.Orientation.Horizontal);
@@ -188,7 +188,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.StartSixAxisSensor();
@@ -216,7 +216,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.StopSixAxisSensor();
@@ -244,7 +244,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.SetMotorSpeeds(0.1234f, 0.5678f);

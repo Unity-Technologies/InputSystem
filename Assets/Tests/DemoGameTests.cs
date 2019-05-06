@@ -349,7 +349,7 @@ public partial class DemoGameTests : DemoGameTestFixture
                         lowFreqMotor = rumbleCommand->lowFrequencyMotorSpeed;
                     }
                 }
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         Assert.Fail();

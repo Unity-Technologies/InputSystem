@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             NotSupported = 1 << 63, // Same as -1.
 
-            // Leave bit #0 unused so as to not lead to possible confusion with kGenericSuccess.
+            // Leave bit #0 unused so as to not lead to possible confusion with GenericSuccess.
 
             /// <summary>
             /// The device is currently paired to a user account.

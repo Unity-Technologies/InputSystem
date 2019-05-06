@@ -162,10 +162,10 @@ namespace UnityEngine.Experimental.Input
                             receivedCommand = true;
                             UnsafeUtility.MemCpy(commandPtr, UnsafeUtility.AddressOf(ref result),
                                 UnsafeUtility.SizeOf<TCommand>());
-                            return InputDeviceCommand.kGenericSuccess;
+                            return InputDeviceCommand.GenericSuccess;
                         }
 
-                        return InputDeviceCommand.kGenericFailure;
+                        return InputDeviceCommand.GenericFailure;
                     });
             }
         }
@@ -189,7 +189,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                var result = InputDeviceCommand.kGenericFailure;
+                var result = InputDeviceCommand.GenericFailure;
                 if (m_DeviceCommandCallbacks != null)
                     foreach (var entry in m_DeviceCommandCallbacks)
                     {

@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             /// <summary>
             /// System does not support application-invoked user pairing.
             /// </summary>
-            ErrorNotSupported = InputDeviceCommand.kGenericFailure,
+            ErrorNotSupported = InputDeviceCommand.GenericFailure,
 
             /// <summary>
             /// There already is a pairing operation in progress and the system does not support

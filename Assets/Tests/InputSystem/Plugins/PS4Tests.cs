@@ -118,7 +118,7 @@ public class PS4Tests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -264,7 +264,7 @@ public class PS4Tests : InputTestFixture
                 }
 
                 Assert.Fail("Received wrong type of command");
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         InputSystem.Update();
@@ -345,7 +345,7 @@ public class PS4Tests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         move.SetMotorSpeed(0.1234f);

@@ -161,7 +161,7 @@ internal class UserTests : InputTestFixture
                 if (command->type == QueryPairedUserAccountCommand.Type)
                 {
                     receivedUserIdRequest = true;
-                    var result = InputDeviceCommand.kGenericSuccess;
+                    var result = InputDeviceCommand.GenericSuccess;
                     if (returnUserAccountHandle != 0)
                     {
                         var queryPairedUser = (QueryPairedUserAccountCommand*)command;
@@ -182,7 +182,7 @@ internal class UserTests : InputTestFixture
                     return (long)InitiateUserAccountPairingCommand.Result.SuccessfullyInitiated;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         runtime.ReportNewInputDevice<Gamepad>(gamepadId);
