@@ -728,7 +728,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.kExtension;
+        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;

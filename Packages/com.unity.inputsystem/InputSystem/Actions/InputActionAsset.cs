@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable, IInputActionCollection
     {
-        public const string kExtension = "inputactions";
+        public const string Extension = "inputactions";
 
         /// <summary>
         /// True if any action in the asset is currently enabled.

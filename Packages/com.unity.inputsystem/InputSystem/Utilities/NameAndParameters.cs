@@ -100,7 +100,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 index = closeParenIndex + 1;
             }
 
-            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.kSeparator))
+            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.Separator))
                 ++index;
 
             return new NameAndParameters {name = name, parameters = new ReadOnlyArray<NamedValue>(parameters)};
