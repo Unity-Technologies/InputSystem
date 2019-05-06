@@ -226,7 +226,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 // If the device has no assigned ID yet, we can't perform IOCTLs on the
                 // device so no way to get a report descriptor.
-                if (deviceId == kInvalidDeviceId)
+                if (deviceId == InvalidDeviceId)
                     return new HIDDeviceDescriptor();
 
                 // Try to get the size of the HID descriptor from the device.

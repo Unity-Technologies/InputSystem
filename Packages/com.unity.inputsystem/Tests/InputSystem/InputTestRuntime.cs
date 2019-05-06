@@ -219,11 +219,11 @@ namespace UnityEngine.Experimental.Input
             InvokeFocusChanged(true);
         }
 
-        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
+        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
         {
             lock (m_Lock)
             {
-                if (deviceId == InputDevice.kInvalidDeviceId)
+                if (deviceId == InputDevice.InvalidDeviceId)
                     deviceId = AllocateDeviceId();
                 if (m_NewDeviceDiscoveries == null)
                     m_NewDeviceDiscoveries = new List<KeyValuePair<int, string>>();
@@ -232,7 +232,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId,
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.InvalidDeviceId,
             ulong userHandle = 0, string userName = null, string userId = null)
         {
             deviceId = ReportNewInputDevice(description.ToJson(), deviceId);
@@ -244,7 +244,7 @@ namespace UnityEngine.Experimental.Input
             return deviceId;
         }
 
-        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.kInvalidDeviceId,
+        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.InvalidDeviceId,
             ulong userHandle = 0, string userName = null, string userId = null)
             where TDevice : InputDevice
         {

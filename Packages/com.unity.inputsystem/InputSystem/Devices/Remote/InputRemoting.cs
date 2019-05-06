@@ -308,7 +308,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            return InputDevice.kInvalidDeviceId;
+            return InputDevice.InvalidDeviceId;
         }
 
         private InputDevice TryGetDeviceByRemoteId(int remoteDeviceId, int senderIndex)
@@ -619,7 +619,7 @@ namespace UnityEngine.Experimental.Input
                         var localDeviceId = receiver.FindLocalDeviceId(remoteDeviceId, senderIndex);
                         eventPtr.deviceId = localDeviceId;
 
-                        if (localDeviceId != InputDevice.kInvalidDeviceId)
+                        if (localDeviceId != InputDevice.InvalidDeviceId)
                         {
                             ////TODO: add API to send events in bulk rather than one by one
                             manager.QueueEvent(eventPtr);

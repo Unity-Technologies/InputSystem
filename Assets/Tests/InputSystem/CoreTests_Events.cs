@@ -578,7 +578,7 @@ partial class CoreTests
         // Device IDs are looked up only *after* the system shows the event to us.
 
         var receivedCalls = 0;
-        var receivedDeviceId = InputDevice.kInvalidDeviceId;
+        var receivedDeviceId = InputDevice.InvalidDeviceId;
         InputSystem.onEvent +=
             eventPtr =>
         {

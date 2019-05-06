@@ -40,8 +40,8 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputDevice : InputControl
     {
-        public const int kInvalidDeviceId = 0;
-        public const int kLocalParticipantId = 0;
+        public const int InvalidDeviceId = 0;
+        public const int LocalParticipantId = 0;
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
@@ -247,8 +247,8 @@ namespace UnityEngine.Experimental.Input
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
         {
-            m_Id = kInvalidDeviceId;
-            m_ParticipantId = kLocalParticipantId;
+            m_Id = InvalidDeviceId;
+            m_ParticipantId = LocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
         }
 

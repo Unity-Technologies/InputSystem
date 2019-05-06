@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get
             {
                 if (!valid)
-                    return InputDevice.kInvalidDeviceId;
+                    return InputDevice.InvalidDeviceId;
                 return m_EventPtr->deviceId;
             }
             set

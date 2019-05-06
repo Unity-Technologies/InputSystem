@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
 
-        [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
+        [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private TreeViewState m_EventTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;

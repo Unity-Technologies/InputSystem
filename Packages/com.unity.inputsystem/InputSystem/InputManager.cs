@@ -674,7 +674,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
-        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
+        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
             Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
@@ -1023,7 +1023,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
-            int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+            int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
@@ -1036,7 +1036,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
 
                 // If it's a device coming from the runtime, disable it.
-                if (deviceId != InputDevice.kInvalidDeviceId)
+                if (deviceId != InputDevice.InvalidDeviceId)
                 {
                     var command = DisableDeviceCommand.Create();
                     m_Runtime.DeviceCommand(deviceId, ref command);
@@ -1753,7 +1753,7 @@ namespace UnityEngine.Experimental.Input
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.kInvalidDeviceId)
+            if (device.id != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine

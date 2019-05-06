@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Allocate a new unique device ID.
         /// </summary>
-        /// <returns>A numeric device ID that is not <see cref="InputDevice.kInvalidDeviceId"/>.</returns>
+        /// <returns>A numeric device ID that is not <see cref="InputDevice.InvalidDeviceId"/>.</returns>
         /// <remarks>
         /// Device IDs are managed by the runtime. This method allows creating devices that
         /// can use the same ID system but are not known to the underlying runtime.

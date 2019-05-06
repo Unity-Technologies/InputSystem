@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [NonSerialized] private int m_ChangeCounter;
         [NonSerialized] private bool m_Enabled;
 
-        [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
+        [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private InlinedArray<Action<InputEventPtr>> m_EventListeners;
 
         // Buffer for storing event trace. Allocated in native so that we can survive a
@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         private unsafe void OnInputEvent(InputEventPtr inputEvent)
         {
             // Ignore if the event isn't for our device.
-            if (m_DeviceId != InputDevice.kInvalidDeviceId && inputEvent.deviceId != m_DeviceId)
+            if (m_DeviceId != InputDevice.InvalidDeviceId && inputEvent.deviceId != m_DeviceId)
                 return;
 
             // This shouldn't happen but ignore the event if we're not tracing.
