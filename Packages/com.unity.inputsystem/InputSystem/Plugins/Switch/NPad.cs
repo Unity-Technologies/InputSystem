@@ -284,8 +284,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public static FourCC Type { get { return new FourCC('N', 'P', 'G', 'O'); } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 20;
-        public const float kDefaultFrequencyLow = 160.0f;
-        public const float kDefaultFrequencyHigh = 320.0f;
+        public const float DefaultFrequencyLow = 160.0f;
+        public const float DefaultFrequencyHigh = 320.0f;
 
         public enum NPadRumblePostion : byte
         {
@@ -317,9 +317,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
                 baseCommand = new InputDeviceCommand(Type, kSize),
                 positionFlags = (byte)NPadRumblePostion.None,
                 amplitudeLow = 0,
-                frequencyLow = kDefaultFrequencyLow,
+                frequencyLow = DefaultFrequencyLow,
                 amplitudeHigh = 0,
-                frequencyHigh = kDefaultFrequencyHigh
+                frequencyHigh = DefaultFrequencyHigh
             };
         }
     }
@@ -585,7 +585,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         /// <param name="highFrequency">High frequency motor's vibration intensity, 0..1 range</param>
         public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
-            SetMotorSpeeds(lowFrequency, NPadDeviceIOCTLOutputCommand.kDefaultFrequencyLow, highFrequency, NPadDeviceIOCTLOutputCommand.kDefaultFrequencyHigh);
+            SetMotorSpeeds(lowFrequency, NPadDeviceIOCTLOutputCommand.DefaultFrequencyLow, highFrequency, NPadDeviceIOCTLOutputCommand.DefaultFrequencyHigh);
         }
 
         /// <summary>

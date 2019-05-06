@@ -59,7 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// </remarks>
     public abstract class SteamController : InputDevice
     {
-        public const string kSteamInterface = "Steam";
+        internal const string kSteamInterface = "Steam";
 
         /// <summary>
         /// Handle in the <see cref="ISteamControllerAPI">Steam API</see> for the controller.

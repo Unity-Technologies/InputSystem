@@ -550,8 +550,8 @@ internal class UserTests : InputTestFixture
         var user1 = InputUser.PerformPairingWithDevice(gamepad1);
         var user2 = InputUser.PerformPairingWithDevice(gamepad2);
 
-        Assert.That(user1.id, Is.Not.EqualTo(InputUser.kInvalidId));
-        Assert.That(user2.id, Is.Not.EqualTo(InputUser.kInvalidId));
+        Assert.That(user1.id, Is.Not.EqualTo(InputUser.InvalidId));
+        Assert.That(user2.id, Is.Not.EqualTo(InputUser.InvalidId));
         Assert.That(user1.id, Is.Not.EqualTo(user2.id));
 
         user1.UnpairDevicesAndRemoveUser();

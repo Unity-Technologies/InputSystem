@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
         /// <summary>
         /// Where the settings are stored in the user's project.
         /// </summary>
-        public const string kSavePath = "Library/InputUserSettings.json";
+        private const string kSavePath = "Library/InputUserSettings.json";
 
         public static bool lockInputToGameView
         {

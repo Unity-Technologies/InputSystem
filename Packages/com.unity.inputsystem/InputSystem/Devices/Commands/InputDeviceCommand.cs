@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kBaseCommandSize)]
     public struct InputDeviceCommand : IInputDeviceCommandInfo
     {
-        public const int kBaseCommandSize = 8;
+        internal const int kBaseCommandSize = 8;
 
         /// <summary>
         /// Generic failure code for <see cref="IOCTL"/> calls.
