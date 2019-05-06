@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Linq;
 using NUnit.Framework;
@@ -42,3 +43,4 @@ partial class APIVerification
         Assert.That(incorrectlyNamespacedTypes, Is.Empty);
     }
 }
+#endif
