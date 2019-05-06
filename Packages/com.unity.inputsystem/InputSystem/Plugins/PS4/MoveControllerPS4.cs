@@ -68,7 +68,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     {
         public static FourCC Type => new FourCC('P', 'S', 'M', 'C');
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
 
         [Flags]
         public enum Flags

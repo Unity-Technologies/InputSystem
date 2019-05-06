@@ -112,7 +112,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     {
         public static FourCC Type { get { return new FourCC('X', '1', 'G', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 16;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 16;
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
@@ -151,7 +151,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     {
         public static FourCC Type { get { return new FourCC('I', 'N', 'F', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('S', 'S', 'P', 'L'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

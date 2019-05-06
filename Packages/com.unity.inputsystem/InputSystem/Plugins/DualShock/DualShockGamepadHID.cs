@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
     {
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         public const int kReportId = 5;
 
         [Flags]

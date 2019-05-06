@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public const int kMaxIdLength = 256;
 
         ////REVIEW: is this too heavy to allocate on the stack?
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;
 
         [Flags]
         public enum Result : long

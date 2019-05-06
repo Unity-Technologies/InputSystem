@@ -120,7 +120,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     {
         public static FourCC Type => new FourCC('N', 'P', 'D', 'S');
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 24;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 24;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -161,7 +161,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     {
         public static FourCC Type => new FourCC('N', 'P', 'D', 'U');
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 8;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 8;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -199,7 +199,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     public struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("NSUI");
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -218,7 +218,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     public struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("NSOR");
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     public struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("SXST");
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -260,7 +260,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     public struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("SXSP");
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -283,7 +283,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     {
         public static FourCC Type { get { return new FourCC('N', 'P', 'G', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 20;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 20;
         public const float kDefaultFrequencyLow = 160.0f;
         public const float kDefaultFrequencyHigh = 320.0f;
 
