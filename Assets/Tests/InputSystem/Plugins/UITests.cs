@@ -21,7 +21,7 @@ internal class UITests : InputTestFixture
 {
     private struct TestObjects
     {
-        internal UIActionInputModule uiModule;
+        internal InputSystemUIInputModule uiModule;
         internal TestEventSystem eventSystem;
         internal RectTransform parentTransform;
         internal GameObject leftGameObject;
@@ -30,7 +30,7 @@ internal class UITests : InputTestFixture
         internal UICallbackReceiver rightChildReceiver;
     }
 
-    // Set up a UIActionInputModule with a full roster of actions and inputs
+    // Set up a InputSystemUIInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI
     // from activity on input devices.
     private static TestObjects CreateScene(int minY = 0 , int maxY = 480)
@@ -40,7 +40,7 @@ internal class UITests : InputTestFixture
         // Set up GameObject with EventSystem.
         var systemObject = new GameObject("System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
-        var uiModule = systemObject.AddComponent<UIActionInputModule>();
+        var uiModule = systemObject.AddComponent<InputSystemUIInputModule>();
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
 
