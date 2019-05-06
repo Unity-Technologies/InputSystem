@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 namespace UnityEngine.InputSystem.Plugins.UI.Editor
 {
     // The only purpose of the Input System suppying a custom editor for the UI StandaloneInputModule is to guide users to using
-    // the Input System's UIActionInputModule instead.
+    // the Input System's InputSystemUIInputModule instead.
     [CustomEditor(typeof(StandaloneInputModule))]
     internal class StandaloneInputModuleModuleEditor : UnityEditor.Editor
     {
@@ -31,12 +31,12 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
             if (enableNativePlatformBackendsForNewInputSystem == null || enableNativePlatformBackendsForNewInputSystem.boolValue)
             {
                 if (disableOldInputManagerSupport == null || disableOldInputManagerSupport.boolValue)
-                    EditorGUILayout.HelpBox("You are using StandaloneInputModule, which uses the old InputManager. You are using the new InputSystem, and have the old InputManager disabled. StandaloneInputModule will not work. Click the button below to replace this component with a UIActionInputModule, which uses the new InputSystem.", MessageType.Error);
+                    EditorGUILayout.HelpBox("You are using StandaloneInputModule, which uses the old InputManager. You are using the new InputSystem, and have the old InputManager disabled. StandaloneInputModule will not work. Click the button below to replace this component with a InputSystemUIInputModule, which uses the new InputSystem.", MessageType.Error);
                 else
-                    EditorGUILayout.HelpBox("You are using StandaloneInputModule, which uses the old InputManager. You also have the new InputSystem enabled in your project. Click the button below to replace this component with a UIActionInputModule, which uses the new InputSystem (recommended).", MessageType.Info);
-                if (GUILayout.Button("Replace with UIActionInputModule"))
+                    EditorGUILayout.HelpBox("You are using StandaloneInputModule, which uses the old InputManager. You also have the new InputSystem enabled in your project. Click the button below to replace this component with a InputSystemUIInputModule, which uses the new InputSystem (recommended).", MessageType.Info);
+                if (GUILayout.Button("Replace with InputSystemUIInputModule"))
                 {
-                    ((StandaloneInputModule)target).gameObject.AddComponent<UIActionInputModule>();
+                    ((StandaloneInputModule)target).gameObject.AddComponent<InputSystemUIInputModule>();
                     DestroyImmediate(target);
                     return;
                 }

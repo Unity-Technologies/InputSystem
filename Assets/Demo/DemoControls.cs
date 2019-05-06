@@ -25,6 +25,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -35,6 +36,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Vector2"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -45,6 +47,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Vector2"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -55,6 +58,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -65,6 +69,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -73,195 +78,180 @@ public class DemoControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""c5de64a3-60dd-48f9-a79e-e957aaec816e"",
+                    ""id"": ""0993c048-cd43-4d6e-af74-1af4f9c50572"",
                     ""path"": ""*/{PrimaryAction}"",
                     ""interactions"": ""Tap,SlowTap"",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse;Gamepad"",
                     ""action"": ""fire"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""1ed197af-20d0-4779-95a0-53a8066cf1f3"",
+                    ""id"": ""be5b4a59-fe67-49ee-8a1d-8413b1e63165"",
                     ""path"": ""<SteamDemoController>/fire"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Steam"",
                     ""action"": ""fire"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""f3f591c2-fc4f-4aec-88b5-4af72d05da0c"",
+                    ""id"": ""c64fa16f-8ae9-4b16-b8e8-86e8a7ebd595"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""02b33304-f826-4615-b4b3-4060848ab75c"",
+                    ""id"": ""b263829c-51f4-441a-bf8d-d58ca183635b"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": true,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""c398a92b-4237-407a-83cc-e3d8af6cddd3"",
+                    ""id"": ""3f9c2554-d418-49d0-ab3c-1fa8a073e6c2"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""cd93c9c0-75ad-4189-b9c7-2a320bdc8815"",
+                    ""id"": ""5018d6f1-bfeb-4f6a-bac7-cb3066382e47"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""49459206-9bef-4a8f-9195-1770359f1d36"",
+                    ""id"": ""b6c799de-cef3-403b-8832-64af055de874"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""a1227436-225e-4c54-b64f-c166712b3cf5"",
+                    ""id"": ""60ebf3f3-d610-48ba-b8ed-82fa0c496830"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""1d3133b3-d618-42f2-9020-1dfb01663c87"",
+                    ""id"": ""8e4297d2-4918-475d-90f5-5a716c1da98d"",
                     ""path"": ""<SteamDemoController>/move"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Steam"",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d7141a9a-b710-4b7a-b284-ca9c813f0cdc"",
+                    ""id"": ""25260116-79c3-4ce7-b8e9-9cd95589a3f8"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""look"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""3647ef49-bb9b-4ea8-b1b0-71fd43e60060"",
+                    ""id"": ""125cf265-dedc-4f43-95db-c3abd7990734"",
                     ""path"": ""<Pointer>/delta"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""look"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""62276afc-737f-4b3e-ba4b-fbb8748c1b51"",
+                    ""id"": ""6c99392b-dfb8-469b-bf37-689418a4df57"",
                     ""path"": ""<SteamDemoController>/look"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Steam"",
                     ""action"": ""look"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""e686da91-9e57-4dc1-bfd0-891ba4980c30"",
+                    ""id"": ""fd9b237e-7139-49a0-a020-6ddbc5034ee1"",
                     ""path"": ""<Keyboard>/escape"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""menu"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""0a2f68f1-b5b3-4e35-bb9e-7a6652a050cd"",
+                    ""id"": ""6b342285-e4e2-4cc7-88d1-a4df05770a6c"",
                     ""path"": ""<Gamepad>/{Menu}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
                     ""action"": ""menu"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""e06ec89c-142f-44d3-8181-f669e89ccc6a"",
+                    ""id"": ""dcf781b1-0d27-4f75-a1ee-7d948f260eff"",
                     ""path"": ""<SteamDemoController>/steamEnterMenu"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Steam"",
                     ""action"": ""steamEnterMenu"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
@@ -278,6 +268,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Vector2"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -288,6 +279,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -298,6 +290,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -308,6 +301,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": """",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -318,6 +312,7 @@ public class DemoControls : IInputActionCollection
                     ""expectedControlLayout"": """",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -326,65 +321,60 @@ public class DemoControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""7f431a52-58c2-4c9a-88db-b90df1546d7c"",
+                    ""id"": ""9e6e9b60-3e95-4b48-b0eb-91f848309ac7"",
                     ""path"": ""<Gamepad>/{submit}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""submit"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""a42bd582-111c-4110-9f0d-d68533d488a0"",
+                    ""id"": ""5f0eba74-fead-47d7-a643-ae2c5161b07d"",
                     ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""click"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""91991801-7cee-48c8-9511-c131a0436852"",
+                    ""id"": ""fbe2448c-33dc-4cf7-b369-965ea2051d53"",
                     ""path"": ""<Mouse>/position"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""point"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""7ef8ee0c-363c-45ad-8be0-be00a73caa08"",
+                    ""id"": ""fd928860-b400-46cd-aa0a-22a0a49e4412"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""navigate"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""5c50e7b8-de72-4aca-ad94-f836592cd1fe"",
+                    ""id"": ""a0be606c-44eb-40aa-9cc9-7a71535414d6"",
                     ""path"": ""<Gamepad>/dpad"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""navigate"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
@@ -484,15 +474,18 @@ public class DemoControls : IInputActionCollection
         get => asset.bindingMask;
         set => asset.bindingMask = value;
     }
+
     public ReadOnlyArray<InputDevice>? devices
     {
         get => asset.devices;
         set => asset.devices = value;
     }
+
     public ReadOnlyArray<InputControlScheme> controlSchemes
     {
         get => asset.controlSchemes;
     }
+
     public bool Contains(InputAction action)
     {
         return asset.Contains(action);
@@ -589,6 +582,7 @@ public class DemoControls : IInputActionCollection
             return new GameplayActions(this);
         }
     }
+
     // menu
     private InputActionMap m_menu;
     private IMenuActions m_MenuActionsCallbackInterface;

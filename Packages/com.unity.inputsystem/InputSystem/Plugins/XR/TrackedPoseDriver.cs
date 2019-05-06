@@ -1,5 +1,7 @@
 using System;
+#if ENABLE_VR
 using UnityEngine.XR;
+#endif
 
 namespace UnityEngine.InputSystem.Plugins.XR
 {

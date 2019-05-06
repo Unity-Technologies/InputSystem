@@ -185,7 +185,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// map. This means that if additional maps are manually enabled and disabled,
         ///
         /// There is one exception to this, however. For any action from the asset that is also referenced
-        /// by an <see cref="UIActionInputModule"/> sitting on the <see cref="GameObject"/> of
+        /// by an <see cref="InputSystemUIInputModule"/> sitting on the <see cref="GameObject"/> of
         /// <see cref="uiEventSystem"/>, no notification will be triggered when the action is fired.
         /// </remarks>
         /// <seealso cref="InputUser.actions"/>

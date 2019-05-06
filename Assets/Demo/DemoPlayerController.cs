@@ -39,7 +39,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
     /// We feed input from <see cref="controls"/> into this module thus making the player's UI responsive
     /// to the player's devices only.
     /// </remarks>
-    public UIActionInputModule uiActions;
+    public InputSystemUIInputModule uiActions;
 
     /// <summary>
     /// GameObject hierarchy inside <see cref="ui"/> that represents the menu UI.

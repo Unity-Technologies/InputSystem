@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Plugins.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    public class UIActionInputModule : UIInputModule, ISerializationCallbackReceiver
+    public class InputSystemUIInputModule : UIInputModule, ISerializationCallbackReceiver
     {
         private static void SwapAction(ref InputActionProperty property, InputActionProperty newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {

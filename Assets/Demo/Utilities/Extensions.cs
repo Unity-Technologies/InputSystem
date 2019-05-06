@@ -54,7 +54,7 @@ public static class Extensions
             action(element);
     }
 
-    public static void BindUIActions(this UIActionInputModule uiInputModule, DemoControls.MenuActions menuActions)
+    public static void BindUIActions(this InputSystemUIInputModule uiInputModule, DemoControls.MenuActions menuActions)
     {
         uiInputModule.move = new InputActionProperty(menuActions.navigate);
         uiInputModule.leftClick = new InputActionProperty(menuActions.click);
