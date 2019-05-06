@@ -18,8 +18,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('P', 'A', 'C', 'C'); } }
 
-        public const int kMaxNameLength = 256;
-        public const int kMaxIdLength = 256;
+        internal const int kMaxNameLength = 256;
+        internal const int kMaxIdLength = 256;
 
         ////REVIEW: is this too heavy to allocate on the stack?
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;

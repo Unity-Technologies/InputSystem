@@ -2280,7 +2280,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Touchscreen>();
 
         Assert.That(device.activeTouches.Count, Is.Zero);
-        Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
+        Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.MaxTouches));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState

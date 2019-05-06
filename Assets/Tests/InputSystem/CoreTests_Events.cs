@@ -801,8 +801,8 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new GamepadState());
 
         var receivedCalls = 0;
-        var firstId = InputEvent.kInvalidId;
-        var secondId = InputEvent.kInvalidId;
+        var firstId = InputEvent.InvalidId;
+        var secondId = InputEvent.InvalidId;
 
         InputSystem.onEvent +=
             eventPtr =>
@@ -1033,7 +1033,7 @@ partial class CoreTests
             using (var buffer = new InputEventBuffer(eventPtr, 1))
             {
                 Assert.That(buffer.eventCount, Is.EqualTo(1));
-                Assert.That(buffer.sizeInBytes, Is.EqualTo(InputEventBuffer.kBufferSizeUnknown));
+                Assert.That(buffer.sizeInBytes, Is.EqualTo(InputEventBuffer.BufferSizeUnknown));
                 Assert.That(buffer.capacityInBytes, Is.Zero);
                 Assert.That(buffer.bufferPtr, Is.EqualTo(eventPtr));
 

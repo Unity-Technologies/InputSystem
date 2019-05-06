@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = 36;
+        internal const int kSizeInBytes = 36;
 
         public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// only specific fingers.
     /// </remarks>
     // IMPORTANT: Must match TouchInputState in native code.
-    [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * TouchState.kSizeInBytes)]
+    [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
@@ -82,9 +82,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// than this number, having a larger pool of touch states to work with makes it possible to
         /// track short-lived touches better.
         /// </remarks>
-        public const int kMaxTouches = 64;
+        public const int MaxTouches = 64;
 
-        [InputControl(layout = "Touch", name = "touch", arraySize = kMaxTouches)]
+        [InputControl(layout = "Touch", name = "touch", arraySize = MaxTouches)]
         // Add controls compatible with what Pointer expects and redirect their
         // state to the state of touch0 so that this essentially becomes our
         // pointer control.
@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         ////TODO: we want to the button to be pressed when there is a primary touch
         [InputControl(name = "button", offset = InputStateBlock.kInvalidOffset)]
         [FieldOffset(0)]
-        public fixed byte touchData[kMaxTouches * TouchState.kSizeInBytes];
+        public fixed byte touchData[MaxTouches * TouchState.kSizeInBytes];
 
         public TouchState* touches
         {
@@ -198,7 +198,7 @@ namespace UnityEngine.Experimental.Input
         /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
         /// </summary>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries regardless of
+        /// Will always contain <see cref="TouchscreenState.MaxTouches"/> entries regardless of
         /// which touches (if any) are currently in progress.
         /// </remarks>
         public ReadOnlyArray<TouchControl> allTouchControls { get; private set; }
@@ -224,13 +224,13 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            var touchArray = new TouchControl[TouchscreenState.kMaxTouches];
+            var touchArray = new TouchControl[TouchscreenState.MaxTouches];
 
-            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i)
+            for (var i = 0; i < TouchscreenState.MaxTouches; ++i)
                 touchArray[i] = builder.GetControl<TouchControl>(this, "touch" + i);
 
             allTouchControls = new ReadOnlyArray<TouchControl>(touchArray);
-            m_ActiveTouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
+            m_ActiveTouchesArray = new TouchControl[TouchscreenState.MaxTouches];
 
             base.FinishSetup(builder);
         }
@@ -278,7 +278,7 @@ namespace UnityEngine.Experimental.Input
             // Reset all touches that have ended last frame to being unused.
             // Also mark any ongoing touches as stationary.
             var touchStatePtr = (TouchState*)((byte*)statePtr + stateBlock.byteOffset);
-            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+            for (var i = 0; i < TouchscreenState.MaxTouches; ++i, ++touchStatePtr)
             {
                 var phase = touchStatePtr->phase;
                 switch (phase)
@@ -328,7 +328,7 @@ namespace UnityEngine.Experimental.Input
             if (phase != PointerPhase.Began)
             {
                 var touchId = newTouchState->touchId;
-                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
+                for (var i = 0; i < TouchscreenState.MaxTouches; ++i, ++currentTouchState)
                 {
                     if (currentTouchState->touchId == touchId)
                     {
@@ -350,7 +350,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // It's a new touch. Try to find an unused TouchState.
-            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
+            for (var i = 0; i < TouchscreenState.MaxTouches; ++i, ++currentTouchState)
             {
                 if (currentTouchState->phase == PointerPhase.None)
                 {

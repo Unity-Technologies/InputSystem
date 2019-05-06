@@ -697,8 +697,6 @@ internal class UITests : InputTestFixture
 
     private struct TestTouchLayout : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = TouchState.kSizeInBytes;
-
         [InputControl(name = "touch", layout = "Touch")]
         public TouchState touch;
 

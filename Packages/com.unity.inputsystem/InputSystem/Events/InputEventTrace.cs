@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [Serializable]
     public class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
-        public const int kDefaultBufferSize = 1024 * 1024;
+        private const int kDefaultBufferSize = 1024 * 1024;
 
         // Set device to record events for. Set to kInvalidDeviceId by default
         // in which case events from all devices are recorded.
