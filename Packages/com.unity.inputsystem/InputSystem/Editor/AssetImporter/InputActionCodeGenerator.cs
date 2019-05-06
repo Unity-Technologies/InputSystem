@@ -109,48 +109,58 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine($"~{options.className}()");
             writer.BeginBlock();
             writer.WriteLine("UnityEngine.Object.Destroy(asset);");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public InputBinding? bindingMask");
             writer.BeginBlock();
             writer.WriteLine("get => asset.bindingMask;");
             writer.WriteLine("set => asset.bindingMask = value;");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public ReadOnlyArray<InputDevice>? devices");
             writer.BeginBlock();
             writer.WriteLine("get => asset.devices;");
             writer.WriteLine("set => asset.devices = value;");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes");
             writer.BeginBlock();
             writer.WriteLine("get => asset.controlSchemes;");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public bool Contains(InputAction action)");
             writer.BeginBlock();
             writer.WriteLine("return asset.Contains(action);");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public IEnumerator<InputAction> GetEnumerator()");
             writer.BeginBlock();
             writer.WriteLine("return asset.GetEnumerator();");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("IEnumerator IEnumerable.GetEnumerator()");
             writer.BeginBlock();
             writer.WriteLine("return GetEnumerator();");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public void Enable()");
             writer.BeginBlock();
             writer.WriteLine("asset.Enable();");
             writer.EndBlock();
+            writer.WriteLine();
+
             writer.WriteLine("public void Disable()");
             writer.BeginBlock();
             writer.WriteLine("asset.Disable();");
@@ -159,6 +169,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Action map accessors.
             foreach (var map in maps)
             {
+                writer.WriteLine();
                 writer.WriteLine($"// {map.name}");
 
                 var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
@@ -314,6 +325,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 --indentLevel;
                 WriteIndent();
                 buffer.Append("}\n");
+            }
+
+            public void WriteLine()
+            {
+                buffer.Append('\n');
             }
 
             public void WriteLine(string text)

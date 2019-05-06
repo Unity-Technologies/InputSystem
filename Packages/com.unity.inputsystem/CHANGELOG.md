@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
  * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
 - Changed default button press point to 0.5.
+- Generated wrapper code now has nicer formatting.
 - Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
 
 ### Fixed
