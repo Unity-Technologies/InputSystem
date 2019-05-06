@@ -16,6 +16,17 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public abstract class UIInputModule : BaseInputModule
     {
+        public override void ActivateModule()
+        {
+            base.ActivateModule();
+
+            var toSelect = eventSystem.currentSelectedGameObject;
+            if (toSelect == null)
+                toSelect = eventSystem.firstSelectedGameObject;
+
+            eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
+        }
+
         private RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
@@ -87,6 +98,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             mouseState.OnFrameFinished();
         }
 
+        // if we are using a MultiplayerEventSystem, ignore any transforms
+        // not under the current MultiplayerEventSystem's root.
+        private bool PointerShouldIgnoreTransform(Transform t)
+        {
+            if (eventSystem is MultiplayerEventSystem)
+            {
+                var mes = eventSystem as MultiplayerEventSystem;
+
+                if (mes.playerRoot != null)
+                    if (!t.IsChildOf(mes.playerRoot.transform))
+                        return true;
+            }
+            return false;
+        }
+
         private void ProcessMouseMovement(PointerEventData eventData)
         {
             var currentPointerTarget = eventData.pointerCurrentRaycast.gameObject;
@@ -137,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 var t = currentPointerTarget.transform;
 
-                while (t != null && t.gameObject != commonRoot)
+                while (t != null && t.gameObject != commonRoot && !PointerShouldIgnoreTransform(t))
                 {
                     ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
 
@@ -151,6 +177,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData, bool hasNativeClickCount)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
+
+            if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
+                return;
 
             if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)
             {
