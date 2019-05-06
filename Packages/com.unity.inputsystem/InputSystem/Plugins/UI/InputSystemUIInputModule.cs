@@ -865,15 +865,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
-        public InputActionAsset actionsAsset
+        internal InputActionAsset actionsAssetNoEnable
         {
             get => m_ActionsAsset;
             set
             {
                 if (value != m_ActionsAsset)
                 {
-                    DisableAllActions();
-
                     if (point.reference?.asset == m_ActionsAsset)
                         point = value.FindAction(point.action.name);
 
@@ -898,8 +896,21 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     if (cancel.reference?.asset == m_ActionsAsset)
                         cancel = value.FindAction(cancel.action.name);
 
-                    EnableAllActions();
                     m_ActionsAsset = value;
+                }
+            }
+        }
+
+        public InputActionAsset actionsAsset
+        {
+            get => m_ActionsAsset;
+            set
+            {
+                if (value != m_ActionsAsset)
+                {
+                    DisableAllActions();
+                    actionsAssetNoEnable = value;
+                    EnableAllActions();
                 }
             }
         }

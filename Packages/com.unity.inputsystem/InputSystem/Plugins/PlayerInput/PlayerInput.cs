@@ -455,15 +455,20 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public void ActivateInput()
         {
             // Enable default action map, if set.
-            if (m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
+            if (m_Actions != null)
             {
-                var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
-                if (actionMap != null)
-                    actionMap.Enable();
-                else
-                    Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
+                if (!string.IsNullOrEmpty(m_DefaultActionMap))
+                {
+                    var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
+                    if (actionMap != null)
+                        actionMap.Enable();
+                    else
+                        Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
+                }
+                var uiModule = GetComponent<InputSystemUIInputModule>();
+                if (uiModule != null && uiModule.actionsAsset == m_Actions)
+                    uiModule.EnableAllActions();          
             }
-
             m_InputActive = true;
         }
 
@@ -502,6 +507,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
             m_Actions.Disable();
             actionMap.Enable();
+            var uiModule = GetComponent<InputSystemUIInputModule>();
+            if (uiModule != null && uiModule.actionsAsset == m_Actions)
+                uiModule.EnableAllActions();
         }
 
         public static PlayerInput GetPlayerByIndex(int playerIndex)
@@ -664,9 +672,16 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 if (uiModule.actionsAsset != m_Actions)
                     uiModule = null;
             }
-            m_Actions = Instantiate(m_Actions);
+
+            ////REVIEW: should we *always* Instantiate()?
+            // Check if we need to duplicate our actions by looking at all other players. If any
+            // has the same actions, duplicate.
+            for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
+                    m_Actions = Instantiate(m_Actions);
+
             if (uiModule != null)
-                uiModule.actionsAsset = m_Actions;
+                uiModule.actionsAssetNoEnable = m_Actions;
 
             switch (m_NotificationBehavior)
             {
