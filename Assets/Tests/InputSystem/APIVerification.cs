@@ -11,6 +11,11 @@ partial class APIVerification
         return char.IsUpper(name[0]);
     }
 
+    private bool TypeHasValidNamespace(TypeReference type)
+    {
+        return type.Namespace.StartsWith("UnityEngine.Experimental.Input") || type.Name == "<Module>";
+    }
+
     private Collection<TypeDefinition> GetInputSystemTypes()
     {
         var codeBase = typeof(UnityEngine.Experimental.Input.InputSystem).Assembly.CodeBase;
@@ -27,5 +32,13 @@ partial class APIVerification
         var incorrectlyNamedConstants = GetInputSystemTypes().SelectMany(t => t.Resolve().Fields)
             .Where(field => field.HasConstant && field.IsPublic && field.DeclaringType.IsPublic && !IsValidNameForConstant(field.Name));
         Assert.That(incorrectlyNamedConstants, Is.Empty);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_TypesHaveAnAppropriateNamespace()
+    {
+        var incorrectlyNamespacedTypes = GetInputSystemTypes().Where(t => !TypeHasValidNamespace(t));
+        Assert.That(incorrectlyNamespacedTypes, Is.Empty);
     }
 }
