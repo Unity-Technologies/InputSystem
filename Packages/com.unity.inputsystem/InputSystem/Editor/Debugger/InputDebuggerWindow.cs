@@ -670,9 +670,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, $"Short Display Name: {control.shortDisplayName}", ref id);
                 if (control.format != 0)
                     AddChild(item, $"Format: {control.format}", ref id);
-                if (control.offset != InputStateBlock.kInvalidOffset)
+                if (control.offset != InputStateBlock.InvalidOffset)
                     AddChild(item, $"Offset: {control.offset}", ref id);
-                if (control.bit != InputStateBlock.kInvalidOffset)
+                if (control.bit != InputStateBlock.InvalidOffset)
                     AddChild(item, $"Bit: {control.bit}", ref id);
                 if (control.sizeInBits != 0)
                     AddChild(item, $"Size In Bits: {control.sizeInBits}", ref id);

@@ -98,10 +98,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "radius", useStateFrom = "touch0/radius")]
         [InputControl(name = "phase", useStateFrom = "touch0/phase")]
         [InputControl(name = "displayIndex", useStateFrom = "touch0/displayIndex")]
-        [InputControl(name = "twist", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "tilt", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "twist", offset = InputStateBlock.InvalidOffset)]
+        [InputControl(name = "tilt", offset = InputStateBlock.InvalidOffset)]
         ////TODO: we want to the button to be pressed when there is a primary touch
-        [InputControl(name = "button", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "button", offset = InputStateBlock.InvalidOffset)]
         [FieldOffset(0)]
         public fixed byte touchData[MaxTouches * TouchState.kSizeInBytes];
 

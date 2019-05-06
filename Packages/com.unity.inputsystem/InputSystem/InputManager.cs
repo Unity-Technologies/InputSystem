@@ -965,7 +965,7 @@ namespace UnityEngine.Experimental.Input
             m_DevicesById[device.id] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
-            device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+            device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
 
             // Update state buffers.
             ReallocateStateBuffers();
@@ -1863,7 +1863,7 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(device != null);
             Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
             Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
 
             var controls = device.allControls;
@@ -1888,9 +1888,9 @@ namespace UnityEngine.Experimental.Input
                     throw new NotImplementedException("default value arrays");
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);

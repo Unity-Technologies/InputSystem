@@ -510,7 +510,7 @@ namespace UnityEngine.Experimental.Input
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
-            m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
+            m_StateBlock.byteOffset = InputStateBlock.InvalidOffset; // Request automatic layout by default.
         }
 
         ////REVIEW: replace InputDeviceBuilder here with an interface?

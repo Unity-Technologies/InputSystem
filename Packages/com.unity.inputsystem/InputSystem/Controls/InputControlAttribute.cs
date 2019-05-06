@@ -43,8 +43,8 @@ namespace UnityEngine.Experimental.Input.Layouts
         public string alias;
         public string[] aliases;
         public string useStateFrom;
-        public uint bit = InputStateBlock.kInvalidOffset;
-        public uint offset = InputStateBlock.kInvalidOffset;
+        public uint bit = InputStateBlock.InvalidOffset;
+        public uint offset = InputStateBlock.InvalidOffset;
         public uint sizeInBits;
         public int arraySize;
         public string displayName;

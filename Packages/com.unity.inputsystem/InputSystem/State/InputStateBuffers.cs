@@ -348,7 +348,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 var device = devices[i];
                 var oldOffset = device.m_StateBlock.byteOffset;
 
-                if (oldOffset == InputStateBlock.kInvalidOffset)
+                if (oldOffset == InputStateBlock.InvalidOffset)
                 {
                     device.m_StateBlock.byteOffset = 0;
                     if (newOffset != 0)
@@ -386,7 +386,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(device.m_DeviceIndex == i);
 
                 // Skip device if it's a newly added device.
-                if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                if (device.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset)
                     continue;
 
                 ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
@@ -417,7 +417,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 Debug.Assert(device.m_DeviceIndex == i);
 
                 // Skip device if it's a newly added device.
-                if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                if (device.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset)
                     continue;
 
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
