@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
 - Changed default button press point to 0.5.
 - Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
+- Nicer icons for `InputActionAssets` and `InputActions`.
 
 ### Fixed
 
