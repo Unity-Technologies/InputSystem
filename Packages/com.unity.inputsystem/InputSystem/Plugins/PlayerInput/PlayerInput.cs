@@ -467,7 +467,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 }
                 var uiModule = GetComponent<InputSystemUIInputModule>();
                 if (uiModule != null && uiModule.actionsAsset == m_Actions)
-                    uiModule.EnableAllActions();          
+                    uiModule.EnableAllActions();
             }
             m_InputActive = true;
         }
