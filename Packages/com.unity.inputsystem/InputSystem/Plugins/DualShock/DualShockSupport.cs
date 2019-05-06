@@ -1,6 +1,6 @@
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock
+namespace UnityEngine.InputSystem.Plugins.DualShock
 {
     /// <summary>
     /// Adds support for PS4 DualShock controllers.

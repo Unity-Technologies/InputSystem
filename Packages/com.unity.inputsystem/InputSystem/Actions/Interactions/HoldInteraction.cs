@@ -1,8 +1,8 @@
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Interactions
+namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
     /// Performs the action if the control is pressed and held for at least the

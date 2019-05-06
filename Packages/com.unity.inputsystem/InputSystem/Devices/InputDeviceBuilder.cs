@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add ability to add to existing arrays rather than creating per-device arrays
 
@@ -16,7 +16,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingChildControlByPath
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.

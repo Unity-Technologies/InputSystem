@@ -1,11 +1,11 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.iOS.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
 {
     public enum iOSButton
     {
@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.iOS
+namespace UnityEngine.InputSystem.Plugins.iOS
 {
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
     public class iOSGameController : Gamepad

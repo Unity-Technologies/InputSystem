@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Experimental.PlayerLoop;
 
 ////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
@@ -22,7 +22,7 @@ using UnityEngine.Experimental.PlayerLoop;
 
 ////REVIEW: put default gamepad polling frequency here?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Project-wide input settings.

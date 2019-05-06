@@ -1,12 +1,12 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics
     {

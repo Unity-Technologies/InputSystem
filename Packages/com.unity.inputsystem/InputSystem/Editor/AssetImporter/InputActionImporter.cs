@@ -3,14 +3,14 @@ using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
 ////       not yet have been imported when the project is imported from scratch; this results in errors in the log and in generic
 ////       icons showing up for the assets
 
 #pragma warning disable 0649
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Imports an <see cref="InputActionAsset"/> from JSON.

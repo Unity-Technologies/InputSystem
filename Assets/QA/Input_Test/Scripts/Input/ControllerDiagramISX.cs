@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class ControllerDiagramISX : GamepadISX
 {

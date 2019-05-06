@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: expose whether pen actually has eraser and which barrel buttons it has
 
@@ -13,7 +13,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: does it make sense to have orientation support for pen, too?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state layout for pen devices.
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Enumeration of buttons on a <see cref="Pen"/>.

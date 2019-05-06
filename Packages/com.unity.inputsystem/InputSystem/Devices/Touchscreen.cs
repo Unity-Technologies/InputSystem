@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////TODO: property that tells whether a Touchscreen is multi-touch capable
@@ -27,7 +27,7 @@ using UnityEngine.Profiling;
 //// - High frequency touches
 //// - Touch prediction
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     // IMPORTANT: Must match TouchInputState in native code.
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
@@ -123,7 +123,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     [Flags]
     public enum TouchFlags

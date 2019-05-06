@@ -1,6 +1,6 @@
 using NUnit.Framework;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 // Platform-specific tests for the demo game.
 

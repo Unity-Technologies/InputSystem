@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 ////FIXME: will not work properly when there are multiple keyboards

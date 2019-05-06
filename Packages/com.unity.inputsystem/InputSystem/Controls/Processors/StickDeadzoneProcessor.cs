@@ -2,7 +2,7 @@
 
 ////TODO: add different deadzone shapes and/or option to min/max X and Y separately
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather

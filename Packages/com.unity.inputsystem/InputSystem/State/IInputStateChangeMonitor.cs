@@ -1,7 +1,7 @@
 ////REVIEW: could have a monitor path where if there's multiple state monitors on the same control with
 ////        the same listener, the monitor is notified only once but made aware of the multiple triggers
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     public interface IInputStateChangeMonitor
     {

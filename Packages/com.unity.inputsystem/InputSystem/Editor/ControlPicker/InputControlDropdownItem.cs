@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal abstract class InputControlDropdownItem : AdvancedDropdownItem
     {

@@ -2,7 +2,7 @@
 
 ////TODO
 
-namespace UnityEngine.Experimental.Input.Plugins.WebGL
+namespace UnityEngine.InputSystem.Plugins.WebGL
 {
     public class WebGLJoystick : Joystick
     {

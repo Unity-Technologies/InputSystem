@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: motion data support
 
@@ -26,7 +26,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: polling in background
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
+namespace UnityEngine.InputSystem.Plugins.Steam.Editor
 {
     /// <summary>
     /// Converts input actions to and from Steam IGA file format.
@@ -79,11 +79,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("// THIS FILE HAS BEEN AUTO-GENERATED\n");
             builder.Append("#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT\n");
             builder.Append("using UnityEngine;\n");
-            builder.Append("using UnityEngine.Experimental.Input;\n");
-            builder.Append("using UnityEngine.Experimental.Input.Controls;\n");
-            builder.Append("using UnityEngine.Experimental.Input.Layouts;\n");
-            builder.Append("using UnityEngine.Experimental.Input.Utilities;\n");
-            builder.Append("using UnityEngine.Experimental.Input.Plugins.Steam;\n");
+            builder.Append("using UnityEngine.InputSystem;\n");
+            builder.Append("using UnityEngine.InputSystem.Controls;\n");
+            builder.Append("using UnityEngine.InputSystem.Layouts;\n");
+            builder.Append("using UnityEngine.InputSystem.Utilities;\n");
+            builder.Append("using UnityEngine.InputSystem.Plugins.Steam;\n");
             builder.Append("#if UNITY_EDITOR\n");
             builder.Append("using UnityEditor;\n");
             builder.Append("#endif\n");

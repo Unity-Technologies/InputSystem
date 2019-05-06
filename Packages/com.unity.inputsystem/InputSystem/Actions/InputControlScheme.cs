@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: allow associating control schemes with platforms, too?
 
 ////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
 ////        (and thus support it only input assets only)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A named set of zero or more device requirements along an associated binding group.

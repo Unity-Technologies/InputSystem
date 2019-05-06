@@ -1,12 +1,12 @@
 #if UNITY_WEBGL || UNITY_EDITOR
 using System;
 using System.ComponentModel;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.WebGL.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel
+namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
 {
     public unsafe struct WebGLGamepadState : IInputStateTypeInfo
     {
@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.WebGL
+namespace UnityEngine.InputSystem.Plugins.WebGL
 {
     /// <summary>
     /// Gamepad on WebGL that uses the "standard" mapping.

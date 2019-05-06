@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A two-axis thumbstick control that can act as both a vector and a four-way dpad.

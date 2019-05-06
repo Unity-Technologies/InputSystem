@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using System;
 
-namespace UnityEngine.Experimental.Input.Plugins.Linux
+namespace UnityEngine.InputSystem.Plugins.Linux
 {
     // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
 #pragma warning disable 0649

@@ -1,15 +1,15 @@
 using System;
 using UnityEngine.Events;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// Manages joining and leaving of players.

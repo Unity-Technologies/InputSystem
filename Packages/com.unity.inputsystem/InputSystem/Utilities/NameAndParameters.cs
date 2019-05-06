@@ -7,7 +7,7 @@ using System.Linq;
 
 ////TODO: switch parsing to use to Substring
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A combination of a name and an optional list of named parameter values. For example, "Clamp(min=1,max=2)".

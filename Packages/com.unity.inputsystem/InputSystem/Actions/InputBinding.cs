@@ -1,7 +1,7 @@
 using System;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: do we really need overridable processors and interactions?
 
@@ -11,7 +11,7 @@ using UnityEngine.Experimental.Input.Utilities;
 //   in quite a few areas. There's quite a few bits in InputActionState that could be simplified if a
 //   binding simply maps to a control.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mapping of control input to an action.

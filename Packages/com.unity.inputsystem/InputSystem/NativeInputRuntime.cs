@@ -8,7 +8,7 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Implements <see cref="IInputRuntime"/> based on <see cref="NativeInputSystem"/>.

@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     ////TODO: pass IInputRuntime to this as well
     public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);

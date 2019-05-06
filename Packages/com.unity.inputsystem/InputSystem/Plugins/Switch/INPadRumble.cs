@@ -1,6 +1,6 @@
-using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.InputSystem.Haptics;
 
-namespace UnityEngine.Experimental.Input.Plugins.Switch
+namespace UnityEngine.InputSystem.Plugins.Switch
 {
     /// <summary>
     /// Extended dual motor gamepad that adds seperate controls for rumble frequency and amplitude.

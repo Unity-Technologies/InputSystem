@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     // Work with substrings without actually allocating strings.
     internal struct Substring : IComparable<Substring>, IEquatable<Substring>

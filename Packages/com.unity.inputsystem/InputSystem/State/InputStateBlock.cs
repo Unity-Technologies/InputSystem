@@ -1,6 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: the Debug.Asserts here should be also be made as checks ahead of time (on the layout)
 
@@ -15,7 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: kAutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
 ////        controls for which a more elegant and robust mechanism can surely be devised
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Information about a memory region storing state.

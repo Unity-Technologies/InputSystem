@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     public enum InputControlLayoutChange
     {

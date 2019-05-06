@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.XR;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.Plugins.XR
 {
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]
