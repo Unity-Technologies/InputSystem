@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Plugins.Android
     /// </summary>
     public static class AndroidSupport
     {
-        public const string kAndroidInterface = "Android";
+        internal const string kAndroidInterface = "Android";
 
         public static void Initialize()
         {

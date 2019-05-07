@@ -17,9 +17,9 @@ namespace UnityEngine.InputSystem.LowLevel
         private const uint kHandledMask = 0x80000000;
         private const uint kIdMask = 0x7FFFFFFF;
 
-        public const int kBaseEventSize = 20;
-        public const int kInvalidId = 0;
-        public const int kAlignment = 4;
+        internal const int kBaseEventSize = 20;
+        public const int InvalidId = 0;
+        internal const int kAlignment = 4;
 
         [FieldOffset(0)]
         private NativeInputEvent m_Event;
@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_Event.sizeInBytes = (ushort)sizeInBytes;
             m_Event.deviceId = (ushort)deviceId;
             m_Event.time = time;
-            m_Event.eventId = kInvalidId;
+            m_Event.eventId = InvalidId;
         }
 
         // We internally use bits inside m_EventId as flags. IDs are linearly counted up by the

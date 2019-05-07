@@ -189,7 +189,7 @@ internal class HIDTests : InputTestFixture
                         }
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         // Report device.

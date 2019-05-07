@@ -117,7 +117,7 @@ namespace UnityEngine.InputSystem.Plugins.Linux
         /// <summary>
         /// The current interface code sent with devices to identify as Linux SDL devices.
         /// </summary>
-        public const string kInterfaceName = "Linux";
+        internal const string kInterfaceName = "Linux";
 
         public static string GetAxisNameFromUsage(SDLAxisUsage usage)
         {

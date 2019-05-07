@@ -564,7 +564,7 @@ namespace UnityEngine.InputSystem
         /// where more information has to be fetched from the runtime in order to generate a
         /// layout, this allows issuing <see cref="IInputRuntime.DeviceCommand"/> calls for the device.
         /// Note that for devices that are not coming from the runtime (i.e. devices created
-        /// directly in script code), the device ID will be <see cref="InputDevice.kInvalidDeviceId"/>.
+        /// directly in script code), the device ID will be <see cref="InputDevice.InvalidDeviceId"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1185,7 +1185,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.kInvalidDeviceId)
+            if (device.id == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1210,7 +1210,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.kInvalidDeviceId)
+            if (device.id == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)

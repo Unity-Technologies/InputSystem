@@ -162,10 +162,10 @@ namespace UnityEngine.InputSystem
                             receivedCommand = true;
                             UnsafeUtility.MemCpy(commandPtr, UnsafeUtility.AddressOf(ref result),
                                 UnsafeUtility.SizeOf<TCommand>());
-                            return InputDeviceCommand.kGenericSuccess;
+                            return InputDeviceCommand.GenericSuccess;
                         }
 
-                        return InputDeviceCommand.kGenericFailure;
+                        return InputDeviceCommand.GenericFailure;
                     });
             }
         }
@@ -189,7 +189,7 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                var result = InputDeviceCommand.kGenericFailure;
+                var result = InputDeviceCommand.GenericFailure;
                 if (m_DeviceCommandCallbacks != null)
                     foreach (var entry in m_DeviceCommandCallbacks)
                     {
@@ -219,11 +219,11 @@ namespace UnityEngine.InputSystem
             InvokeFocusChanged(true);
         }
 
-        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
+        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
         {
             lock (m_Lock)
             {
-                if (deviceId == InputDevice.kInvalidDeviceId)
+                if (deviceId == InputDevice.InvalidDeviceId)
                     deviceId = AllocateDeviceId();
                 if (m_NewDeviceDiscoveries == null)
                     m_NewDeviceDiscoveries = new List<KeyValuePair<int, string>>();
@@ -232,7 +232,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId,
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.InvalidDeviceId,
             ulong userHandle = 0, string userName = null, string userId = null)
         {
             deviceId = ReportNewInputDevice(description.ToJson(), deviceId);
@@ -244,7 +244,7 @@ namespace UnityEngine.InputSystem
             return deviceId;
         }
 
-        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.kInvalidDeviceId,
+        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.InvalidDeviceId,
             ulong userHandle = 0, string userName = null, string userId = null)
             where TDevice : InputDevice
         {

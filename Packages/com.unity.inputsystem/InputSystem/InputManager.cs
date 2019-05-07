@@ -674,7 +674,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
-        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
+        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
             Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
@@ -965,7 +965,7 @@ namespace UnityEngine.InputSystem
             m_DevicesById[device.id] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
-            device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+            device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
 
             // Update state buffers.
             ReallocateStateBuffers();
@@ -1023,7 +1023,7 @@ namespace UnityEngine.InputSystem
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
-            int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+            int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
@@ -1036,7 +1036,7 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
 
                 // If it's a device coming from the runtime, disable it.
-                if (deviceId != InputDevice.kInvalidDeviceId)
+                if (deviceId != InputDevice.InvalidDeviceId)
                 {
                     var command = DisableDeviceCommand.Create();
                     m_Runtime.DeviceCommand(deviceId, ref command);
@@ -1753,7 +1753,7 @@ namespace UnityEngine.InputSystem
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.kInvalidDeviceId)
+            if (device.id != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine
@@ -1863,7 +1863,7 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(device != null);
             Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
             Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
 
             var controls = device.allControls;
@@ -1888,9 +1888,9 @@ namespace UnityEngine.InputSystem
                     throw new NotImplementedException("default value arrays");
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);

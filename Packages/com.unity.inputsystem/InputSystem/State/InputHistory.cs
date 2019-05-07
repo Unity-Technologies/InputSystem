@@ -11,8 +11,6 @@ namespace UnityEngine.InputSystem
 {
     public class InputHistory : IDisposable, IEnumerable<InputHistory.Value>
     {
-        public const int kDefaultHistorySize = 100;
-
         public InputHistory(string path)
         {
         }

@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
     /// <seealso cref="InputUserChange"/>
     public struct InputUser : IEquatable<InputUser>
     {
-        public const uint kInvalidId = 0;
+        public const uint InvalidId = 0;
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId)
+                if (m_Id == InvalidId)
                     return false;
 
                 // See if there's a currently active user with the given ID.
@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId)
+                if (m_Id == InvalidId)
                     throw new InvalidOperationException("Invalid user");
 
                 var userIndex = TryFindUserIndex(m_Id);
@@ -1078,7 +1078,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
 
         private static int TryFindUserIndex(uint userId)
         {
-            Debug.Assert(userId != kInvalidId);
+            Debug.Assert(userId != InvalidId);
 
             for (var i = 0; i < s_AllUserCount; ++i)
             {

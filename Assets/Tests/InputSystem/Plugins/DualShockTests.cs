@@ -177,7 +177,7 @@ internal class DualShockTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         ////REVIEW: This illustrates a weekness of the current haptics API; each call results in a separate output command whereas

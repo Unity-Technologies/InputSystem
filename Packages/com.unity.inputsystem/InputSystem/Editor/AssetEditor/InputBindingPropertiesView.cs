@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
             m_BindingProperty = bindingProperty;
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
-            m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
+            m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.Separator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
             m_ControlSchemes = controlSchemes;
 

@@ -210,7 +210,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                 // Request save file location.
                 var defaultFileName = Application.productName;
                 var fileName = EditorUtility.SaveFilePanel("Create Input Actions Asset", "Assets", defaultFileName,
-                    InputActionAsset.kExtension);
+                    InputActionAsset.Extension);
 
                 ////TODO: take current Supported Devices into account when creating this
 
@@ -224,8 +224,8 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                         return;
                     }
 
-                    if (!fileName.EndsWith("." + InputActionAsset.kExtension))
-                        fileName += "." + InputActionAsset.kExtension;
+                    if (!fileName.EndsWith("." + InputActionAsset.Extension))
+                        fileName += "." + InputActionAsset.Extension;
 
                     // Load default actions and update all GUIDs.
                     var defaultActionsText = File.ReadAllText(kDefaultInputActionsAssetPath);

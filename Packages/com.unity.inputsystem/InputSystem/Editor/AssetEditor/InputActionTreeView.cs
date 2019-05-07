@@ -1376,7 +1376,7 @@ namespace UnityEngine.InputSystem.Editor
                             if (string.IsNullOrEmpty(bindingItem.groups))
                                 return Match.Success;
 
-                            var groups = bindingItem.groups.Split(InputBinding.kSeparator);
+                            var groups = bindingItem.groups.Split(InputBinding.Separator);
                             var bindingGroup = text;
                             return groups.Any(x => x.Equals(bindingGroup, StringComparison.InvariantCultureIgnoreCase))
                                 ? Match.Success

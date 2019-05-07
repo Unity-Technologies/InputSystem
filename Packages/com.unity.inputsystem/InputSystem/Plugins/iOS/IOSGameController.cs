@@ -43,8 +43,8 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
     public unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
-        public const int kMaxButtons = (int)iOSButton.Select + 1;
-        public const int kMaxAxis = (int)iOSAxis.RightStickY + 1;
+        public const int MaxButtons = (int)iOSButton.Select + 1;
+        public const int MaxAxis = (int)iOSAxis.RightStickY + 1;
 
         [InputControl(name = "dpad")]
         [InputControl(name = "dpad/up", bit = (uint)iOSButton.DpadUp)]
@@ -65,12 +65,12 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
 
         [InputControl(name = "leftTrigger", offset = sizeof(uint) + sizeof(float) * (uint)iOSButton.LeftTrigger)]
         [InputControl(name = "rightTrigger", offset = sizeof(uint) + sizeof(float) * (uint)iOSButton.RightTrigger)]
-        public fixed float buttonValues[kMaxButtons];
+        public fixed float buttonValues[MaxButtons];
 
-        private const uint kAxisOffset = sizeof(uint) + sizeof(float) * kMaxButtons;
+        private const uint kAxisOffset = sizeof(uint) + sizeof(float) * MaxButtons;
         [InputControl(name = "leftStick", offset = (uint)iOSAxis.LeftStickX * sizeof(float) + kAxisOffset)]
         [InputControl(name = "rightStick", offset = (uint)iOSAxis.RightStickX * sizeof(float) + kAxisOffset)]
-        public fixed float axisValues[kMaxAxis];
+        public fixed float axisValues[MaxAxis];
 
         public FourCC GetFormat()
         {

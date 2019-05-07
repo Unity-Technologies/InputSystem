@@ -35,8 +35,8 @@ namespace UnityEngine.InputSystem.Plugins.HID
     /// </remarks>
     public class HID : InputDevice
     {
-        public const string kHIDInterface = "HID";
-        public const string kHIDNamespace = "HID";
+        internal const string kHIDInterface = "HID";
+        internal const string kHIDNamespace = "HID";
 
         /// <summary>
         /// Command code for querying the HID report descriptor from a device.
@@ -226,7 +226,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             {
                 // If the device has no assigned ID yet, we can't perform IOCTLs on the
                 // device so no way to get a report descriptor.
-                if (deviceId == kInvalidDeviceId)
+                if (deviceId == InvalidDeviceId)
                     return new HIDDeviceDescriptor();
 
                 // Try to get the size of the HID descriptor from the device.

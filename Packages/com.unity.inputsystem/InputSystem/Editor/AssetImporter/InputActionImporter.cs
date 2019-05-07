@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
     /// Can generate code wrappers for the contained action sets as a convenience.
     /// Will not overwrite existing wrappers except if the generated code actually differs.
     /// </remarks>
-    [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
+    [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     public class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 6;
@@ -172,7 +172,7 @@ namespace UnityEngine.InputSystem.Editor
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
-            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.kExtension,
+            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
                 kDefaultAssetLayout);
         }
     }

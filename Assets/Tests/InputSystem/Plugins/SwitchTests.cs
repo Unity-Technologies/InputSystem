@@ -114,7 +114,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command, " + commandPtr->type);
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
@@ -153,7 +153,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.SetOrientationToSingleJoyCon(NPad.Orientation.Horizontal);
@@ -188,7 +188,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.StartSixAxisSensor();
@@ -216,7 +216,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.StopSixAxisSensor();
@@ -244,7 +244,7 @@ internal class SwitchTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         controller.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -252,9 +252,9 @@ internal class SwitchTests : InputTestFixture
         Assert.That(receivedCommand.HasValue, Is.True);
         Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0xFF));
         Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
-        Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(NPadDeviceIOCTLOutputCommand.kDefaultFrequencyLow));
+        Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(NPadDeviceIOCTLOutputCommand.DefaultFrequencyLow));
         Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.5678f));
-        Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(NPadDeviceIOCTLOutputCommand.kDefaultFrequencyHigh));
+        Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(NPadDeviceIOCTLOutputCommand.DefaultFrequencyHigh));
 
         receivedCommand = null;
         controller.SetMotorSpeeds(0.1234f, 56.78f, 0.9012f, 345.6f);
