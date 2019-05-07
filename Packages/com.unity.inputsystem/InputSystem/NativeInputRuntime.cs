@@ -27,9 +27,9 @@ namespace UnityEngine.InputSystem.LowLevel
             NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
-        public void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* ptr)
         {
-            NativeInputSystem.QueueInputEvent(ptr);
+            NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)

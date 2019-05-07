@@ -1320,7 +1320,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public void QueueEvent(InputEventPtr ptr)
+        public unsafe void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
         }
@@ -1330,7 +1330,7 @@ namespace UnityEngine.InputSystem
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            m_Runtime.QueueEvent((IntPtr)UnsafeUtility.AddressOf(ref inputEvent));
+            m_Runtime.QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()

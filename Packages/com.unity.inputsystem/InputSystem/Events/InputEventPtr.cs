@@ -127,9 +127,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public IntPtr data
+        public InputEvent* data
         {
-            get { return new IntPtr(m_EventPtr); }
+            get { return m_EventPtr; }
         }
 
         public InputEvent* ToPointer()

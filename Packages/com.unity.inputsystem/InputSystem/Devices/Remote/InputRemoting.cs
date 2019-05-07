@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem
             Send(message);
         }
 
-        private void SendEvent(InputEventPtr eventPtr)
+        private unsafe void SendEvent(InputEventPtr eventPtr)
         {
             if (m_Subscribers == null)
                 return;
@@ -574,7 +574,7 @@ namespace UnityEngine.InputSystem
         // Tell remote system there's new input events.
         private static class NewEventsMsg
         {
-            public static unsafe Message Create(InputRemoting sender, IntPtr events, int eventCount)
+            public static unsafe Message Create(InputRemoting sender, InputEvent* events, int eventCount)
             {
                 // Find total size of event buffer we need.
                 var totalSize = 0u;
@@ -590,7 +590,7 @@ namespace UnityEngine.InputSystem
                 var data = new byte[totalSize];
                 fixed(byte* dataPtr = data)
                 {
-                    UnsafeUtility.MemCpy(dataPtr, events.ToPointer(), totalSize);
+                    UnsafeUtility.MemCpy(dataPtr, events, totalSize);
                 }
 
                 // Done.
@@ -612,7 +612,7 @@ namespace UnityEngine.InputSystem
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
                     var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
 
-                    while (eventPtr.data.ToInt64() < dataEndPtr.ToInt64())
+                    while ((Int64)eventPtr.data < dataEndPtr.ToInt64())
                     {
                         // Patch up device ID to refer to local device and send event.
                         var remoteDeviceId = eventPtr.deviceId;

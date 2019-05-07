@@ -675,7 +675,7 @@ partial class CoreTests
     // What we do now is to simply align event pointers to 4 byte boundaries as we read and write events.
     [Test]
     [Category("Events")]
-    public void Events_CanHandleStateNotAlignedTo4ByteBoundary()
+    public unsafe void Events_CanHandleStateNotAlignedTo4ByteBoundary()
     {
         Debug.Assert(UnsafeUtility.SizeOf<StateWith2Bytes>() == 2);
 
@@ -688,7 +688,7 @@ partial class CoreTests
             eventPtr =>
         {
             // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
-            Assert.That(eventPtr.data.ToInt64() % 4, Is.EqualTo(0));
+            Assert.That((Int64)eventPtr.data % 4, Is.EqualTo(0));
             Assert.That(eventPtr.sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<StateWith2Bytes>()));
         };
 
