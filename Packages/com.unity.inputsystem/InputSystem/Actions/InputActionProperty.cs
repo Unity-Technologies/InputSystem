@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A serializable property type that can either reference an action externally defined

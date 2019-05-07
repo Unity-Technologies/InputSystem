@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 // This script specifically prints out debug statements for
 // a handful of keys that have been identified as functioning

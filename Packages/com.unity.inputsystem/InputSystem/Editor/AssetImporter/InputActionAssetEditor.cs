@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // We want an empty editor in the inspector. Editing happens in a dedicated window.
     [CustomEditor(typeof(InputActionAsset))]

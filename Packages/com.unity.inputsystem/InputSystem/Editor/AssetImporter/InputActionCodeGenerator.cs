@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
 ////TODO: unify the generated events so that performed, cancelled, and started all go into a single event
@@ -25,7 +25,7 @@ using UnityEditor;
 
 ////REVIEW: allow putting *all* of the data from the inputactions asset into the generated class?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Utility to generate code that makes it easier to work with action sets.
@@ -71,8 +71,8 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("using System.Collections;");
             writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine("using UnityEngine;");
-            writer.WriteLine("using UnityEngine.Experimental.Input;");
-            writer.WriteLine("using UnityEngine.Experimental.Input.Utilities;");
+            writer.WriteLine("using UnityEngine.InputSystem;");
+            writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
             writer.WriteLine("");
 
             // Begin namespace.

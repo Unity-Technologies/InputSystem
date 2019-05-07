@@ -1,7 +1,7 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     internal static unsafe class MemoryHelpers
     {

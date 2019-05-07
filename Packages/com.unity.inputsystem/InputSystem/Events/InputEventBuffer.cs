@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: batch append method
 
@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: can we get rid of kBufferSizeUnknown and force size to always be known? (think this would have to wait until
 ////        the native changes have landed in 2018.3)
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A buffer of raw memory holding a sequence of <see cref="InputEvent">input events</see>.

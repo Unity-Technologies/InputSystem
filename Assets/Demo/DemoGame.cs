@@ -1,15 +1,15 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 #if ENABLE_VR
 using UnityEngine.XR;
 #endif
-using InputDevice = UnityEngine.Experimental.Input.InputDevice;
+using InputDevice = UnityEngine.InputSystem.InputDevice;
 
 #if UNITY_EDITOR
 using UnityEditor;

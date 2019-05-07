@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
+namespace UnityEngine.InputSystem.Plugins.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor

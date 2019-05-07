@@ -1,12 +1,12 @@
 #if UNITY_EDITOR || UNITY_SWITCH
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.Switch;
-using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.Switch;
+using UnityEngine.InputSystem.Plugins.Switch.LowLevel;
+using UnityEngine.InputSystem.Processors;
 
 internal class SwitchTests : InputTestFixture
 {

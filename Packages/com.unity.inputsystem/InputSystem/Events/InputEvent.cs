@@ -1,11 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 ////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A chunk of memory signaling a data transfer in the input system.

@@ -1,8 +1,8 @@
 using System;
 using System.Text;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow stuff like "/gamepad/**/<button>"
 ////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: rename to `InputPath`?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Functions to working with control path specs (like "/gamepad/*stick").

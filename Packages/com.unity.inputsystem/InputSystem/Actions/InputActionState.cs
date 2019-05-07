@@ -4,8 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
@@ -20,7 +20,7 @@ using UnityEngine.Profiling;
 
 ////REVIEW: allow setup where state monitor is enabled but action is disabled?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using InputActionListener = Action<InputAction.CallbackContext>;
 

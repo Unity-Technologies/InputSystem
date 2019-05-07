@@ -1,10 +1,10 @@
-using UnityEngine.Experimental.Input.Interactions;
+using UnityEngine.InputSystem.Interactions;
 
 ////REVIEW: this goes beyond just actions; is there a better name? just InputPhase?
 
 ////REVIEW: what about opening up phases completely to interactions and allow them to come up with whatever custom phases?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Trigger phase of an <see cref="InputAction">action</see>.

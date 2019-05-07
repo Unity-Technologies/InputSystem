@@ -2,14 +2,14 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
 
 ////TODO: reordering support for interactions
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
     // presents an interface that allows to automatically construct the path

@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A complete state snapshot for an entire input device.

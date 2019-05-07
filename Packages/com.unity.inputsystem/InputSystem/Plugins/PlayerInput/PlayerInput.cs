@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
@@ -41,7 +41,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 // if it's coming from a press interaction, send OnXXXDown and OnXXXUp?
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// A wrapper around the input system that takes care of managing input actions

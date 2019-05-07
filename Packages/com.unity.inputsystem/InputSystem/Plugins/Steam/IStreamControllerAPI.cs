@@ -1,6 +1,6 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Plugins.Steam
 {
     /// <summary>
     /// This is a wrapper around the Steamworks SDK controller API.

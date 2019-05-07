@@ -1,5 +1,5 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
@@ -42,7 +42,7 @@ using UnityEngine.Experimental.Input.Utilities;
 // the callbacks is very tedious and requires a lot of duct tape. What if instead the setup was trivial and something you never have
 // to worry about? Would the need for a polling-based API still be there? That's what I would like to find out first.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A named input signal that can flexibly decide which input data to tap.

@@ -1,9 +1,9 @@
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenButton component
 
-namespace UnityEngine.Experimental.Input.Plugins.OnScreen
+namespace UnityEngine.InputSystem.Plugins.OnScreen
 {
     /// <summary>
     /// A button that is visually represented on-screen and triggered by touch or other pointer
