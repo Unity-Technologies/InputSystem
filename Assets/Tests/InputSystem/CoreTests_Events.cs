@@ -295,7 +295,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.ToPointer());
+            eventPtr => receivedEvents.Add(*eventPtr.data);
 
         // First fixed update should just take everything.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
@@ -381,7 +381,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.ToPointer());
+            eventPtr => receivedEvents.Add(*eventPtr.data);
 
         bool? receivedOnSettingsChange = null;
         InputSystem.onSettingsChange += () => receivedOnSettingsChange = true;

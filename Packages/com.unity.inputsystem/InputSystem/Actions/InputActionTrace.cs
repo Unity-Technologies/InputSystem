@@ -488,7 +488,7 @@ namespace UnityEngine.InputSystem
             public Enumerator(InputActionTrace trace)
             {
                 m_Trace = trace;
-                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.ToPointer();
+                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.data;
                 m_EventCount = trace.m_EventBuffer.eventCount;
                 m_CurrentEvent = null;
                 m_CurrentIndex = 0;

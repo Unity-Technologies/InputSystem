@@ -132,11 +132,6 @@ namespace UnityEngine.InputSystem.LowLevel
             get { return m_EventPtr; }
         }
 
-        public InputEvent* ToPointer()
-        {
-            return m_EventPtr;
-        }
-
         public bool IsA<TOtherEvent>()
             where TOtherEvent : struct, IInputEventTypeInfo
         {
@@ -207,7 +202,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
         {
-            return eventPtr.ToPointer();
+            return eventPtr.data;
         }
     }
 }
