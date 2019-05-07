@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
 - Changed default button press point to 0.5.
 - Changed all constants in public API to match Unity naming conventions ("Constant" instead of "kConstant").
+- Changed namespace from `UnityEngine.Experimental.Input` to `UnityEngine.InputSystem`.
+- Generated wrapper code now has nicer formatting.
+- Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
 
 ### Fixed
 

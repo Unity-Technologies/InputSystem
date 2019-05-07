@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.Experimental.Input.Composites;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEditor;
 #endif
 
@@ -37,7 +37,7 @@ using UnityEditor;
 ////REVIEW: do we want to filter out state events that result in no state change?
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;

@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: should timer expiration be a separate method on IInputInteraction?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Information passed to <see cref="IInputInteraction">interactions</see>

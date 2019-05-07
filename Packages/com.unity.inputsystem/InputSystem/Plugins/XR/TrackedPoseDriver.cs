@@ -1,7 +1,9 @@
 using System;
+#if ENABLE_VR
 using UnityEngine.XR;
+#endif
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.Plugins.XR
 {
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]

@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.XR;
 
 ////TODO: runtime remapping of usages on a per-device basis
 
@@ -26,7 +26,7 @@ using UnityEngine.Experimental.Input.Plugins.XR;
 // Ideally, these would *not* be virtual methods on InputDevice but use a different process (which?)
 // for associating responses with devices
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// The root of a control hierarchy.

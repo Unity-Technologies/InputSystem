@@ -1,12 +1,12 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Can we change this into a setup where the buffering depth isn't fixed to 2 but rather
 ////        can be set on a per device basis?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     // The raw memory blocks which are indexed by InputStateBlocks.
     //

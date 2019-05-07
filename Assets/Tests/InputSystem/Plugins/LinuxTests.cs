@@ -1,11 +1,11 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using NUnit.Framework;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.Linux;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.Plugins.Linux;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 
 internal class LinuxTests : InputTestFixture
 {

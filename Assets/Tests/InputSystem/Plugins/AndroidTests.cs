@@ -1,14 +1,14 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.Android;
-using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Plugins.Android;
+using UnityEngine.InputSystem.Plugins.Android.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
 using UnityEngine.TestTools.Utils;
 
 internal class AndroidTests : InputTestFixture

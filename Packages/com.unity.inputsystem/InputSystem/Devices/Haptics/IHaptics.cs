@@ -3,7 +3,7 @@
 
 ////REVIEW: Do we need a mute in addition to a pause?
 
-namespace UnityEngine.Experimental.Input.Haptics
+namespace UnityEngine.InputSystem.Haptics
 {
     /// <summary>
     /// Base interface for haptics on input devices.

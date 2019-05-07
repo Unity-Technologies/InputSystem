@@ -3,7 +3,7 @@ using System;
 
 ////REVIEW: should this be a PopupWindowContent?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A popup that allows picking input controls graphically.

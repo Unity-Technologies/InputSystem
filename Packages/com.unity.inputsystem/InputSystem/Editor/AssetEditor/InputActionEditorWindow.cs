@@ -17,7 +17,7 @@ using UnityEditor.ShortcutManagement;
 
 ////FIXME: when saving, processor/interaction selection is cleared
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// An editor window to edit .inputactions assets.

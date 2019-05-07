@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.
@@ -507,22 +507,22 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             m_UIIsMissingInputModule = false;
             var eventSystem = FindUIEventSystem();
             if (eventSystem != null)
-                m_UIIsMissingInputModule = eventSystem.gameObject.GetComponent<UIActionInputModule>() == null;
+                m_UIIsMissingInputModule = eventSystem.gameObject.GetComponent<InputSystemUIInputModule>() == null;
         }
 
         private void AddInputModuleToUI()
         {
             var eventSystem = FindUIEventSystem();
             Debug.Assert(eventSystem != null);
-            Debug.Assert(eventSystem.GetComponent<UIActionInputModule>() == null);
-            if (eventSystem == null || eventSystem.GetComponent<UIActionInputModule>() != null)
+            Debug.Assert(eventSystem.GetComponent<InputSystemUIInputModule>() == null);
+            if (eventSystem == null || eventSystem.GetComponent<InputSystemUIInputModule>() != null)
                 return;
 
             ////REVIEW: undo probably needs to be grouped
 
             // Add input module for new input system.
             var go = eventSystem.gameObject;
-            Undo.AddComponent<UIActionInputModule>(go);
+            Undo.AddComponent<InputSystemUIInputModule>(go);
 
             // Remove input module for old input system.
             var oldInputModule = go.GetComponent<StandaloneInputModule>();

@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Profiling;
 
@@ -13,7 +13,7 @@ using UnityEngine.Profiling;
 
 ////TODO: make controls that have different `value` and `previous` in bold
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Multi-column TreeView that shows control tree of device.
     internal class InputControlTreeView : TreeView

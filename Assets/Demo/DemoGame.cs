@@ -1,15 +1,15 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 #if ENABLE_VR
 using UnityEngine.XR;
 #endif
-using InputDevice = UnityEngine.Experimental.Input.InputDevice;
+using InputDevice = UnityEngine.InputSystem.InputDevice;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -40,7 +40,7 @@ public class DemoGame : MonoBehaviour
     public Canvas mainMenuCanvas;
     public Camera mainMenuCamera;
     public GameObject startGameButton;
-    public UIActionInputModule uiInputModule;
+    public InputSystemUIInputModule uiInputModule;
 
     /// <summary>
     /// The possible states that the game can be in as a whole.
@@ -262,7 +262,7 @@ public class DemoGame : MonoBehaviour
     {
         Debug.Assert(state == State.InMainMenu);
 
-        ////TODO: this should be something that UIActionInputModule can give us without us querying the action directly
+        ////TODO: this should be something that InputSystemUIInputModule can give us without us querying the action directly
         /*
         // Find out which device clicked the "Start Game" button. We use this to
         // automatically join the player instead of requiring the player who clicked to
@@ -599,7 +599,7 @@ public class DemoGame : MonoBehaviour
     private void ShowMainMenu(bool value = true)
     {
         // Enabling or disabling the main menu canvas automatically enables or disables
-        // the actions referenced by the UIActionInputModule sitting on the canvas. We've not
+        // the actions referenced by the InputSystemUIInputModule sitting on the canvas. We've not
         // restricted them by a set of devices or set a binding mask on them so the actions will
         // go and grab whatever devices are present and matching the bindings we have. This means
         // that every local device can be used to drive the main menu.

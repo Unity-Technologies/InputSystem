@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow correlating history to frames/updates
 
 #pragma warning disable 0649
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     public class InputHistory : IDisposable, IEnumerable<InputHistory.Value>
     {

@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// Determines how <see cref="PlayerInputManager"/> joins new players.

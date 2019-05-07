@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.HID.Editor;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Plugins.HID.Editor;
 #endif
-using UnityEngine.Experimental.Input.Utilities;
-using ShouldCreateHIDCallback = System.Func<UnityEngine.Experimental.Input.Plugins.HID.HID.HIDDeviceDescriptor, bool?>;
+using UnityEngine.InputSystem.Utilities;
+using ShouldCreateHIDCallback = System.Func<UnityEngine.InputSystem.Plugins.HID.HID.HIDDeviceDescriptor, bool?>;
 
-namespace UnityEngine.Experimental.Input.Plugins.HID
+namespace UnityEngine.InputSystem.Plugins.HID
 {
     /// <summary>
     /// Adds support for generic HID devices to the input system.

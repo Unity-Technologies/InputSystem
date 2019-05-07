@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
 ////TODO: keywords (2019.1+)
 #pragma warning disable CS0414
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSettingsProvider : SettingsProvider
     {

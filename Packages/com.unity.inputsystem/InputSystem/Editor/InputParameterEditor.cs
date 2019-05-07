@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: generalize this to something beyond just parameters?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     public abstract class InputParameterEditor
     {

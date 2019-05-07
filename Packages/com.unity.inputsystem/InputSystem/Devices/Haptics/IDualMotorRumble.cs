@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Haptics
+namespace UnityEngine.InputSystem.Haptics
 {
     /// <summary>
     /// A simple haptics interface that allows to control two motors individually.

@@ -1,12 +1,12 @@
 using System;
-using UnityEngine.Experimental.Input.Composites;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.LowLevel;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Mark a field or property as representing/identifying an input control in some form.

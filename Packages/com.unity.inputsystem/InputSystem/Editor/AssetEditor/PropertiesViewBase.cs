@@ -1,12 +1,12 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor.Lists;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Editor.Lists;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: show parameters for selected interaction or processor inline in list rather than separately underneath list
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Base class for views that show the properties of actions or bindings.

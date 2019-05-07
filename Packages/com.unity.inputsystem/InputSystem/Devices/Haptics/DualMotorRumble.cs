@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: should we keep an explicit playback status? ATM calling ResumeHaptics() will re-issue last set motor speed regardless of pause state
 
-namespace UnityEngine.Experimental.Input.Haptics
+namespace UnityEngine.InputSystem.Haptics
 {
     /// <summary>
     /// Common implementation of dual motor rumbling.

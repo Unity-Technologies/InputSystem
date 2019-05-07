@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Plugins.Users
+namespace UnityEngine.InputSystem.Plugins.Users
 {
     /// <summary>
     /// Options to modify the behavior on <see cref="InputUser.PerformPairingWithDevice"/>.

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     internal static class CSharpCodeHelpers
     {

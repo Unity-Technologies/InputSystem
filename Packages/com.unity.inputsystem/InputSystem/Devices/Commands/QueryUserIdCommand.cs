@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: remove this one; superseded by QueryPairedUserAccountCommand
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal unsafe struct QueryUserIdCommand : IInputDeviceCommandInfo
