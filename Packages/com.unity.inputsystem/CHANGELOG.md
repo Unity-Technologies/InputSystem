@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Generated wrapper code now has nicer formatting.
 - Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
 - Nicer icons for `InputActionAssets` and `InputActions`.
+- Change all public API using `IntPtr` to use unsafe pointer types instead.
 
 ### Fixed
 
