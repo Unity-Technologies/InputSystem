@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel
     {
         public const int NumAxes = 4;
         public const int NumButtons = 16;
-        public const int ButtonOffset = NumAxes * 4;
+        private const int ButtonOffset = NumAxes * 4;
 
         // Stick default format is already two floats so all we need to do is move the sticks and
         // put inverts on Y.
