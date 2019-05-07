@@ -24,10 +24,8 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const int kVersion = 6;
 
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action@4x.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap@4x.png";
-        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action@4x.png";
-        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap@4x.png";
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -78,9 +76,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-            var isDarkSkin = EditorGUIUtility.isProSkin;
-            var assetIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kAssetIconDark : kAssetIcon);
-            var actionIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kActionIconDark : kActionIcon);
+            var assetIcon = (Texture2D)EditorGUIUtility.Load(kAssetIcon);
+            var actionIcon = (Texture2D)EditorGUIUtility.Load(kActionIcon);
 
             // Add asset.
             ctx.AddObjectToAsset("<root>", asset, assetIcon);

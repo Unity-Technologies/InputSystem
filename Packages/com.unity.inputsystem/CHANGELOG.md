@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Changed namespace from `UnityEngine.Experimental.Input` to `UnityEngine.InputSystem`.
 - Generated wrapper code now has nicer formatting.
 - Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
+- Nicer icons for `InputActionAssets` and `InputActions`.
 
 ### Fixed
 
