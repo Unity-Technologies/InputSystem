@@ -14,12 +14,12 @@ partial class APIVerification
 
     private bool TypeHasValidNamespace(TypeReference type)
     {
-        return type.Namespace.StartsWith("UnityEngine.Experimental.Input") || type.Name == "<Module>";
+        return type.Namespace.StartsWith("UnityEngine.InputSystem") || type.Name == "<Module>";
     }
 
     private Collection<TypeDefinition> GetInputSystemTypes()
     {
-        var codeBase = typeof(UnityEngine.Experimental.Input.InputSystem).Assembly.CodeBase;
+        var codeBase = typeof(UnityEngine.InputSystem.InputSystem).Assembly.CodeBase;
         var uri = new UriBuilder(codeBase);
         var path = Uri.UnescapeDataString(uri.Path);
         var asmDef = AssemblyDefinition.ReadAssembly(path);
