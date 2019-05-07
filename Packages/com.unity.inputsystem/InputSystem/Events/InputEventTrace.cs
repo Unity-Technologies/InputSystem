@@ -86,8 +86,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
             // Otherwise feel our way forward.
 
-            var nextEvent = new IntPtr(current.data.ToInt64() + current.sizeInBytes);
-            var endOfBuffer = new IntPtr(m_EventBuffer.ToInt64() + m_EventBufferSize);
+            var nextEvent = new IntPtr((Int64)current.data + current.sizeInBytes);
+            var endOfBuffer = new IntPtr((Int64)m_EventBuffer + m_EventBufferSize);
 
             // If we've run into our tail, there's no more events.
             if (nextEvent.ToInt64() == m_EventBufferTail.ToInt64())
@@ -244,7 +244,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
 
             // Copy data to buffer.
-            UnsafeUtility.MemCpy(buffer.ToPointer(), eventData.ToPointer(), eventSize);
+            UnsafeUtility.MemCpy(buffer.ToPointer(), eventData, eventSize);
             ++m_ChangeCounter;
 
             // Notify listeners.

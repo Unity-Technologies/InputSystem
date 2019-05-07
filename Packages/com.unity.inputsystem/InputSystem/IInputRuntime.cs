@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Events are copied into an internal buffer. Thus the memory referenced by this method does
         /// not have to persist until the event is processed.
         /// </remarks>
-        void QueueEvent(IntPtr ptr);
+        void QueueEvent(InputEvent* ptr);
 
         //NOTE: This method takes an IntPtr instead of a generic ref type parameter (like InputDevice.ExecuteCommand)
         //      to avoid issues with AOT where generic interface methods can lead to problems. Il2cpp can handle it here

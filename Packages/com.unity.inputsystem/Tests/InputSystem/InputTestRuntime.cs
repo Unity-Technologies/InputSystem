@@ -92,9 +92,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public unsafe void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* eventPtr)
         {
-            var eventPtr = (InputEvent*)ptr;
             var eventSize = eventPtr->sizeInBytes;
             var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
 
@@ -115,7 +114,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Copy event.
-                UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
+                UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, eventPtr, eventSize);
                 m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
@@ -257,7 +256,7 @@ namespace UnityEngine.InputSystem
         {
             var removeEvent = DeviceRemoveEvent.Create(deviceId);
             var removeEventPtr = UnsafeUtility.AddressOf(ref removeEvent);
-            QueueEvent(new IntPtr(removeEventPtr));
+            QueueEvent((InputEvent*)removeEventPtr);
         }
 
         public void ReportInputDeviceRemoved(InputDevice device)

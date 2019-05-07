@@ -27,11 +27,6 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventPtr = eventPtr;
         }
 
-        public InputEventPtr(IntPtr eventPtr)
-            : this((InputEvent*)eventPtr)
-        {
-        }
-
         public bool valid
         {
             get { return m_EventPtr != null; }
@@ -127,14 +122,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public IntPtr data
+        public InputEvent* data
         {
-            get { return new IntPtr(m_EventPtr); }
-        }
-
-        public InputEvent* ToPointer()
-        {
-            return m_EventPtr;
+            get { return m_EventPtr; }
         }
 
         public bool IsA<TOtherEvent>()
@@ -158,7 +148,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr(new IntPtr(new IntPtr(m_EventPtr).ToInt64() + sizeInBytes));
+            return new InputEventPtr((InputEvent*)((Int64)m_EventPtr + sizeInBytes));
         }
 
         public override string ToString()
@@ -207,7 +197,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
         {
-            return eventPtr.ToPointer();
+            return eventPtr.data;
         }
     }
 }
