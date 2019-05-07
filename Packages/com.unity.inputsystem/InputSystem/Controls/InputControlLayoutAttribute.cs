@@ -19,16 +19,16 @@ namespace UnityEngine.InputSystem.Layouts
         /// state layout and you want the device layout to automatically take offsets from
         /// the fields annotated with <see cref="InputControlAttribute"/>.
         /// </remarks>
-        public Type stateType;
+        public Type stateType { get; set; }
 
-        public string stateFormat;
+        public string stateFormat { get; set; }
 
         ////TODO: rename this to just "usages"; "commonUsages" is such a weird name
-        public string[] commonUsages;
+        public string[] commonUsages { get; set; }
 
-        public string variants;
+        public string variants { get; set; }
 
-        public bool? updateBeforeRender;
+        internal bool? updateBeforeRender;
 
         public bool beforeRender
         {
@@ -44,15 +44,15 @@ namespace UnityEngine.InputSystem.Layouts
         /// that are marked as generic kinds of devices are displayed with their own entry at the root level of
         /// the control picker (<see cref="UnityEngine.InputSystem.Editor.InputControlPicker"/>), for example.
         /// </remarks>
-        public bool isGenericTypeOfDevice;
+        public bool isGenericTypeOfDevice { get; set; }
 
         /// <summary>
         /// Gives a name to display in the UI. By default, the name is the same as the class the attribute
         /// is applied to.
         /// </summary>
-        public string displayName;
+        public string displayName { get; set; }
 
-        public string description;
+        public string description { get; set; }
 
         /// <summary>
         /// If true, don't include the layout when presenting picking options in the UI.
@@ -61,6 +61,6 @@ namespace UnityEngine.InputSystem.Layouts
         /// This will keep device layouts out of the control picker and will keep control layouts out of
         /// action type dropdowns.
         /// </remarks>
-        public bool hideInUI;
+        public bool hideInUI { get; set; }
     }
 }

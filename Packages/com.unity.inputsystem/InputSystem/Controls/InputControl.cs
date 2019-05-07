@@ -58,7 +58,8 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Characters that may not appear in control names.
         /// </summary>
-        public static string ReservedCharacters = "/;{}[]<>";
+        /// TODO: these are currently not used. Check against these if we think this is useful.
+        // internal const string ReservedCharacters = "/;{}[]<>";
 
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
