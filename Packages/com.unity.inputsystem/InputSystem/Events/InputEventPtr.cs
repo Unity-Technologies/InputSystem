@@ -27,11 +27,6 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventPtr = eventPtr;
         }
 
-        public InputEventPtr(IntPtr eventPtr)
-            : this((InputEvent*)eventPtr)
-        {
-        }
-
         public bool valid
         {
             get { return m_EventPtr != null; }
@@ -153,7 +148,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr(new IntPtr(new IntPtr(m_EventPtr).ToInt64() + sizeInBytes));
+            return new InputEventPtr((InputEvent*)((Int64)m_EventPtr + sizeInBytes));
         }
 
         public override string ToString()
