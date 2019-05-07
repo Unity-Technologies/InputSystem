@@ -95,6 +95,60 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     [InputControlLayout]
+    public class KnucklesController : XRControllerWithRumble
+    {
+ 
+        [InputControl(aliases = new[] { "B",  "Primary"})]
+        public ButtonControl primaryButton { get; private set; }
+
+        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]        
+        public ButtonControl trackpadPressed { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
+        public ButtonControl trackpadTouched { get; private set; }
+        [InputControl(aliases = new[] { "Primary2DAxis" })]
+        public Vector2Control trackpad { get; private set; }
+
+        public AxisControl grip { get; private set; }
+
+        [InputControl(aliases = new[] { "A",  "GripButton" })]
+        public ButtonControl gripPressed { get; private set; }
+
+
+        public AxisControl trigger { get; private set; }
+        public ButtonControl triggerPressed { get; private set; }
+
+        public IntegerControl trackingState { get; private set; }
+        public ButtonControl isTracked { get; private set; }
+        public Vector3Control devicePosition { get; private set; }
+        public QuaternionControl deviceRotation { get; private set; }
+        public Vector3Control deviceVelocity { get; private set; }
+        public Vector3Control deviceAngularVelocity { get; private set; }
+
+
+
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+                    
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
+            primaryButton = builder.GetControl<ButtonControl>("primary");            
+            trackpadPressed = builder.GetControl<ButtonControl>("trackpadPressed");
+            trackpadTouched = builder.GetControl<ButtonControl>("trackpadTouched");
+            trackpad = builder.GetControl<Vector2Control>("trackpad");
+            trigger = builder.GetControl<AxisControl>("trigger");
+            triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");
+
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
+        }
+    }
+
+    [InputControlLayout]
     public class ViveLighthouse : InputDevice
     {
         public IntegerControl trackingState { get; private set; }
