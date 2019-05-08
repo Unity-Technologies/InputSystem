@@ -142,11 +142,11 @@ internal class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.point = new InputActionProperty(pointAction);
-        uiModule.leftClick = new InputActionProperty(leftClickAction);
-        uiModule.middleClick = new InputActionProperty(middleClickAction);
-        uiModule.rightClick = new InputActionProperty(rightClickAction);
-        uiModule.scrollWheel = new InputActionProperty(scrollAction);
+        uiModule.point = InputActionReference.Create(pointAction);
+        uiModule.leftClick = InputActionReference.Create(leftClickAction);
+        uiModule.middleClick = InputActionReference.Create(middleClickAction);
+        uiModule.rightClick = InputActionReference.Create(rightClickAction);
+        uiModule.scrollWheel = InputActionReference.Create(scrollAction);
 
         // Enable the whole thing.
         map.Enable();
@@ -274,11 +274,11 @@ internal class UITests : InputTestFixture
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
         foreach (var player in players)
         {
-            player.uiModule.point = new InputActionProperty(pointAction);
-            player.uiModule.leftClick = new InputActionProperty(leftClickAction);
-            player.uiModule.middleClick = new InputActionProperty(middleClickAction);
-            player.uiModule.rightClick = new InputActionProperty(rightClickAction);
-            player.uiModule.scrollWheel = new InputActionProperty(scrollAction);
+            player.uiModule.point = InputActionReference.Create(pointAction);
+            player.uiModule.leftClick = InputActionReference.Create(leftClickAction);
+            player.uiModule.middleClick = InputActionReference.Create(middleClickAction);
+            player.uiModule.rightClick = InputActionReference.Create(rightClickAction);
+            player.uiModule.scrollWheel = InputActionReference.Create(scrollAction);
             player.eventSystem.SetSelectedGameObject(null);
         }
 
@@ -345,9 +345,9 @@ internal class UITests : InputTestFixture
             cancelAction.AddBinding(gamepads[i].buttonEast);
 
             // Wire up actions.
-            players[i].uiModule.move = new InputActionProperty(moveAction);
-            players[i].uiModule.submit = new InputActionProperty(submitAction);
-            players[i].uiModule.cancel = new InputActionProperty(cancelAction);
+            players[i].uiModule.move = InputActionReference.Create(moveAction);
+            players[i].uiModule.submit = InputActionReference.Create(submitAction);
+            players[i].uiModule.cancel = InputActionReference.Create(cancelAction);
 
             players[i].leftChildReceiver.moveTo = players[i].rightGameObject;
             players[i].rightChildReceiver.moveTo = players[i].leftGameObject;
@@ -460,9 +460,9 @@ internal class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.move = new InputActionProperty(moveAction);
-        uiModule.submit = new InputActionProperty(submitAction);
-        uiModule.cancel = new InputActionProperty(cancelAction);
+        uiModule.move = InputActionReference.Create(moveAction);
+        uiModule.submit = InputActionReference.Create(submitAction);
+        uiModule.cancel = InputActionReference.Create(cancelAction);
 
         // Enable the whole thing.
         map.Enable();
