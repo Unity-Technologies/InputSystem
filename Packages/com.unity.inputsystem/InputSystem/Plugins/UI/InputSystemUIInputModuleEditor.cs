@@ -66,7 +66,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
 
         public static void ReassignActions(InputSystemUIInputModule module, InputActionAsset action)
         {
-            module.actionsAssetNoEnable = action;
+            module.actionsAsset = action;
             var assets = GetAllActionsFromAsset(action);
             if (assets != null)
             {

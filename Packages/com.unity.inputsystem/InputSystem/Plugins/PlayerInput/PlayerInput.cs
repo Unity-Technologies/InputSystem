@@ -672,7 +672,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 }
 
             if (uiInputModule != null)
-                uiInputModule.actionsAssetNoEnable = m_Actions;
+                uiInputModule.actionsAsset = m_Actions;
 
             switch (m_NotificationBehavior)
             {

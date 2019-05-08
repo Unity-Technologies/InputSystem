@@ -441,20 +441,37 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return id;
         }
 
+        bool IsAnyActionEnabled()
+        {
+            return (m_PointAction?.action?.enabled ?? true) &&
+                (m_LeftClickAction?.action?.enabled ?? true) &&
+                (m_RightClickAction?.action?.enabled ?? true) &&
+                (m_MiddleClickAction?.action?.enabled ?? true) &&
+                (m_MoveAction?.action?.enabled ?? true) &&
+                (m_SubmitAction?.action?.enabled ?? true) &&
+                (m_CancelAction?.action?.enabled ?? true) &&
+                (m_ScrollWheelAction?.action?.enabled ?? true);
+        }
+
+        bool m_OwnsEnabledState;
         /// <summary>
         /// This is a quick accessor for enabling all actions.  Currently, action ownership is ambiguous,
         /// and we need a way to enable/disable inspector-set actions.
         /// </summary>
         public void EnableAllActions()
         {
-            m_PointAction?.action?.Enable();
-            m_LeftClickAction?.action?.Enable();
-            m_RightClickAction?.action?.Enable();
-            m_MiddleClickAction?.action?.Enable();
-            m_MoveAction?.action?.Enable();
-            m_SubmitAction?.action?.Enable();
-            m_CancelAction?.action?.Enable();
-            m_ScrollWheelAction?.action?.Enable();
+            if (!IsAnyActionEnabled())
+            {
+                m_PointAction?.action?.Enable();
+                m_LeftClickAction?.action?.Enable();
+                m_RightClickAction?.action?.Enable();
+                m_MiddleClickAction?.action?.Enable();
+                m_MoveAction?.action?.Enable();
+                m_SubmitAction?.action?.Enable();
+                m_CancelAction?.action?.Enable();
+                m_ScrollWheelAction?.action?.Enable();
+                m_OwnsEnabledState = true;
+            }
 
             for (var i = 0; i < m_Touches.Count; i++)
             {
@@ -489,14 +506,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public void DisableAllActions()
         {
-            m_PointAction?.action?.Disable();
-            m_LeftClickAction?.action?.Disable();
-            m_RightClickAction?.action?.Disable();
-            m_MiddleClickAction?.action?.Disable();
-            m_MoveAction?.action?.Disable();
-            m_SubmitAction?.action?.Disable();
-            m_CancelAction?.action?.Disable();
-            m_ScrollWheelAction?.action?.Disable();
+            if (m_OwnsEnabledState)
+            {
+                m_OwnsEnabledState = false;
+                m_PointAction?.action?.Disable();
+                m_LeftClickAction?.action?.Disable();
+                m_RightClickAction?.action?.Disable();
+                m_MiddleClickAction?.action?.Disable();
+                m_MoveAction?.action?.Disable();
+                m_SubmitAction?.action?.Disable();
+                m_CancelAction?.action?.Disable();
+                m_ScrollWheelAction?.action?.Disable();
+            }
 
             for (var i = 0; i < m_Touches.Count; i++)
             {
@@ -816,27 +837,15 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
-        internal InputActionAsset actionsAssetNoEnable
+        private InputActionReference UpdateReferenceForNewAsset(InputActionReference actionReference)
         {
-            get => m_ActionsAsset;
-            set
-            {
-                if (value != m_ActionsAsset)
-                {
-                    point = InputActionReference.Create(value.FindAction(point.action.name));
-                    move = InputActionReference.Create(value.FindAction(move.action.name));
-                    leftClick = InputActionReference.Create(value.FindAction(leftClick.action.name));
-                    rightClick = InputActionReference.Create(value.FindAction(rightClick.action.name));
-                    middleClick = InputActionReference.Create(value.FindAction(middleClick.action.name));
-                    scrollWheel = InputActionReference.Create(value.FindAction(scrollWheel.action.name));
-                    submit = InputActionReference.Create(value.FindAction(submit.action.name));
-                    cancel = InputActionReference.Create(value.FindAction(cancel.action.name));
+            if (actionReference?.action == null)
+                return null;
 
-                    m_ActionsAsset = value;
-                }
-            }
+            return InputActionReference.Create(m_ActionsAsset.FindAction(actionReference.action.name));
         }
+
+        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
 
         public InputActionAsset actionsAsset
         {
@@ -845,9 +854,20 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (value != m_ActionsAsset)
                 {
+                    var wasEnabled = IsAnyActionEnabled();
                     DisableAllActions();
-                    actionsAssetNoEnable = value;
-                    EnableAllActions();
+                    m_ActionsAsset = value;
+
+                    point = UpdateReferenceForNewAsset(point);
+                    move = UpdateReferenceForNewAsset(move);
+                    leftClick = UpdateReferenceForNewAsset(leftClick);
+                    rightClick = UpdateReferenceForNewAsset(rightClick);
+                    middleClick = UpdateReferenceForNewAsset(middleClick);
+                    scrollWheel = UpdateReferenceForNewAsset(scrollWheel);
+                    submit = UpdateReferenceForNewAsset(submit);
+                    cancel = UpdateReferenceForNewAsset(cancel);
+                    if (wasEnabled)
+                        EnableAllActions();
                 }
             }
         }
@@ -876,7 +896,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
-        [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
         [NonSerialized] private MouseModel mouseState;
