@@ -28,7 +28,8 @@ partial class APIVerificationTests
         // This is the base type of all structs
         if (type.FullName == typeof(ValueType).FullName)
             return false;
-
+        if (type.FullName == typeof(Object).FullName)
+            return false;
 
         if (
             // MonoBehaviour uses public fields for serialization

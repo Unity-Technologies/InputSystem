@@ -4,106 +4,76 @@ namespace UnityEngine.InputSystem
 {
     public static class CommonUsages
     {
-        static CommonUsages()
-        {
-            Accept = new InternedString("Accept");
-            Back = new InternedString("Back");
-            BatteryStrength = new InternedString("BatteryStrength");
-            Cancel = new InternedString("Cancel");
-            Forward = new InternedString("Forward");
-            Hatswitch = new InternedString("Hatswitch");
-            HighFreqMotor = new InternedString("HighFreqMotor");
-            Horizontal = new InternedString("Horizontal");
-            LeftHand = new InternedString("LeftHand");
-            LowFreqMotor = new InternedString("LowFreqMotor");
-            Menu = new InternedString("Menu");
-            Modifier = new InternedString("Modifier"); 
-            Orientation = new InternedString("Orientation");
-            Point = new InternedString("Point");
-            Position = new InternedString("Position");
-            Pressure = new InternedString("Pressure");
-            Primary2DMotion = new InternedString("Primary2DMotion");
-            PrimaryAction = new InternedString("PrimaryAction");
-            PrimaryTrigger = new InternedString("PrimaryTrigger");
-            RightHand = new InternedString("RightHand");
-            ScrollHorizontal = new InternedString("ScrollHorizontal");
-            ScrollVertical = new InternedString("ScrollVertical");
-            Secondary2DMotion = new InternedString("Secondary2DMotion");
-            SecondaryAction = new InternedString("SecondaryAction");
-            SecondaryTrigger = new InternedString("SecondaryTrigger");
-            Twist = new InternedString("Twist");
-            Vertical = new InternedString("Vertical");
-        }
         // Primary 2D motion control.
         // Example: left stick on gamepad.
-        public static InternedString Primary2DMotion { get; }
+        public static readonly InternedString Primary2DMotion = new InternedString("Primary2DMotion");
 
         // Secondary 2D motion control.
         // Example: right stick on gamepad.
-        public static InternedString Secondary2DMotion { get; }
+        public static readonly InternedString Secondary2DMotion = new InternedString("Secondary2DMotion");
 
-        public static InternedString PrimaryAction { get; }
-        public static InternedString SecondaryAction { get; }
-        public static InternedString PrimaryTrigger { get; }
-        public static InternedString SecondaryTrigger { get; }
-        public static InternedString Modifier { get; } // Stuff like CTRL
-        public static InternedString Position { get; }
-        public static InternedString Orientation { get; }
-        public static InternedString Hatswitch { get; }
+        public static readonly InternedString PrimaryAction = new InternedString("PrimaryAction");
+        public static readonly InternedString SecondaryAction = new InternedString("SecondaryAction");
+        public static readonly InternedString PrimaryTrigger = new InternedString("PrimaryTrigger");
+        public static readonly InternedString SecondaryTrigger = new InternedString("SecondaryTrigger");
+        public static readonly InternedString Modifier = new InternedString("Modifier"); // Stuff like CTRL
+        public static readonly InternedString Position = new InternedString("Position");
+        public static readonly InternedString Orientation = new InternedString("Orientation");
+        public static readonly InternedString Hatswitch = new InternedString("Hatswitch");
 
         // Button to navigate to previous location.
         // Example: Escape on keyboard, B button on gamepad.
-        public static InternedString Back { get; }
+        public static readonly InternedString Back = new InternedString("Back");
 
         // Button to navigate to next location.
-        public static InternedString Forward { get; }
+        public static readonly InternedString Forward = new InternedString("Forward");
 
         // Button to bring up menu.
-        public static InternedString Menu { get; }
+        public static readonly InternedString Menu = new InternedString("Menu");
 
         // Button to confirm the current choice.
-        public static InternedString Accept { get; }
+        public static readonly InternedString Accept = new InternedString("Accept");
 
         ////REVIEW: isn't this the same as "Back"?
         // Button to not accept the current choice.
-        public static InternedString Cancel { get; }
+        public static readonly InternedString Cancel = new InternedString("Cancel");
 
         // Horizontal motion axis.
         // Example: X axis on mouse.
-        public static InternedString Horizontal { get; }
+        public static readonly InternedString Horizontal = new InternedString("Horizontal");
 
         // Vertical motion axis.
         // Example: Y axis on mouse.
-        public static InternedString Vertical { get; }
+        public static readonly InternedString Vertical = new InternedString("Vertical");
 
         // Rotation around single, fixed axis.
         // Example: twist on joystick or twist of pen (few pens support that).
-        public static InternedString Twist { get; }
+        public static readonly InternedString Twist = new InternedString("Twist");
 
         // Pressure level axis.
         // Example: pen pressure.
-        public static InternedString Pressure { get; }
+        public static readonly InternedString Pressure = new InternedString("Pressure");
 
         // Axis to scroll horizontally.
-        public static InternedString ScrollHorizontal { get; }
+        public static readonly InternedString ScrollHorizontal = new InternedString("ScrollHorizontal");
 
         // Axis to scroll vertically.
-        public static InternedString ScrollVertical { get; }
+        public static readonly InternedString ScrollVertical = new InternedString("ScrollVertical");
 
-        public static InternedString Point { get; }
+        public static readonly InternedString Point = new InternedString("Point");
 
-        public static InternedString LowFreqMotor { get; }
-        public static InternedString HighFreqMotor { get; }
+        public static readonly InternedString LowFreqMotor = new InternedString("LowFreqMotor");
+        public static readonly InternedString HighFreqMotor = new InternedString("HighFreqMotor");
 
         // Device in left hand.
         // Example: left hand XR controller.
-        public static InternedString LeftHand { get; }
+        public static readonly InternedString LeftHand = new InternedString("LeftHand");
 
         // Device in right hand.
         // Example: right hand XR controller.
-        public static InternedString RightHand { get; }
+        public static readonly InternedString RightHand = new InternedString("RightHand");
 
         // Axis representing charge of battery (1=full, 0=empty).
-        public static InternedString BatteryStrength { get; }
+        public static readonly InternedString BatteryStrength = new InternedString("BatteryStrength");
     }
 }
