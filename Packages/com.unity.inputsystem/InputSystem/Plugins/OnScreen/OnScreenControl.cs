@@ -1,14 +1,14 @@
 using System;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we make this ExecuteInEditMode?
 
 ////TODO: make this survive domain reloads
 
-namespace UnityEngine.Experimental.Input.Plugins.OnScreen
+namespace UnityEngine.InputSystem.Plugins.OnScreen
 {
     /// <summary>
     /// Base class for on-screen controls.

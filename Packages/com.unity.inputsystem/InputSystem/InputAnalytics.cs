@@ -1,12 +1,12 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics
     {
@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input
                 max_state_size_in_bytes = metrics.maxStateSizeInBytes,
                 total_event_bytes = metrics.totalEventBytes,
                 total_event_count = metrics.totalEventCount,
-                total_frame_count = metrics.totalFrameCount,
+                total_frame_count = metrics.totalUpdateCount,
                 total_event_processing_time = (float)metrics.totalEventProcessingTime,
             };
 

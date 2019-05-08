@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     public class CurveProcessor : InputProcessor<float>
     {

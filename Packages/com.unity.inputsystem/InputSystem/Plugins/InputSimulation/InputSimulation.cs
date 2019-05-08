@@ -1,5 +1,5 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 //step1: need to be able to feed events from onAfterUpdate
 //step2: need to have event processing pass on new events fed from onAfterUpdate
@@ -9,7 +9,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 //need to figure out what to do about simulation that feeds into other simulation
 
-namespace UnityEngine.Experimental.Input.Plugins.InputSimulation
+namespace UnityEngine.InputSystem.Plugins.InputSimulation
 {
     /// <summary>
     /// Simulates input one or more devices from input on one or more other devices.

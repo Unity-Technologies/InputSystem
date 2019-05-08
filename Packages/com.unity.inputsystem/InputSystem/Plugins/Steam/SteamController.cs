@@ -2,14 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Plugins.Steam.Editor;
+using UnityEngine.InputSystem.Plugins.Steam.Editor;
 #endif
 
 ////TODO: support action set layers
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Plugins.Steam
 {
     /// <summary>
     /// Base class for controllers made available through the Steam controller API.
@@ -59,7 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// </remarks>
     public abstract class SteamController : InputDevice
     {
-        public const string kSteamInterface = "Steam";
+        internal const string kSteamInterface = "Steam";
 
         /// <summary>
         /// Handle in the <see cref="ISteamControllerAPI">Steam API</see> for the controller.

@@ -1,15 +1,15 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: figure out sensor formats and add support for acceleration, angularVelocity, and orientation (also add to base layout then)
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
+namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
@@ -85,8 +85,8 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
     {
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
-        public const int kReportId = 5;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
+        internal const int kReportId = 5;
 
         [Flags]
         public enum Flags
@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock
+namespace UnityEngine.InputSystem.Plugins.DualShock
 {
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.

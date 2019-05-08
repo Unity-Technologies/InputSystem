@@ -1,12 +1,12 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Editor.Lists
+namespace UnityEngine.InputSystem.Editor.Lists
 {
     /// <summary>
     /// A <see cref="ReorderableList"/> to manage a set of name-and-parameter pairs and a <see cref="ParameterListView"/>
@@ -26,15 +26,17 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
             m_Property = property;
             m_Apply = applyAction;
             m_ListOptions = GetOptions();
+
             m_ExpectedControlLayout = expectedControlLayout;
             if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
                 m_ExpectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
 
             m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
             m_EditableParametersForEachListItem = new ParameterListView[m_ParametersForEachListItem.Length];
-            for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
+
+            for (var i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
-                m_EditableParametersForEachListItem[i] = new ParameterListView{ onChange = OnParametersChanged };
+                m_EditableParametersForEachListItem[i] = new ParameterListView { onChange = OnParametersChanged };
                 var typeName = m_ParametersForEachListItem[i].name;
                 var rowType = m_ListOptions.LookupTypeRegistration(typeName);
                 m_EditableParametersForEachListItem[i].Initialize(rowType, m_ParametersForEachListItem[i].parameters);
@@ -63,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             // Add only original names to the menu and not aliases.
             var menu = new GenericMenu();
-            foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
+            foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
             {
                 // Skip if not compatible with value type.
                 if (m_ExpectedValueType != null)
@@ -100,7 +102,7 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
 
         private void OnParametersChanged()
         {
-            for (int i = 0; i < m_ParametersForEachListItem.Length; i++)
+            for (var i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
                 m_ParametersForEachListItem[i] = new NameAndParameters
                 {
@@ -137,51 +139,52 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         {
             if (m_EditableParametersForEachListItem == null || m_EditableParametersForEachListItem.Length == 0)
             {
-                using (var scope = new EditorGUI.DisabledScope(true))
+                using (new EditorGUI.DisabledScope(true))
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.LabelField($"No {itemName}s have been added.");
                     EditorGUI.indentLevel--;
                 }
             }
-            else for (var i = 0; i < m_EditableParametersForEachListItem.Length; i++)
-            {
-                var editableParams = m_EditableParametersForEachListItem[i];
-                EditorGUILayout.BeginHorizontal();
-                if (editableParams.hasUIToShow)
-                    editableParams.visible = EditorGUILayout.Foldout(editableParams.visible, editableParams.name, Styles.s_FoldoutStyle);
-                else
+            else
+                for (var i = 0; i < m_EditableParametersForEachListItem.Length; i++)
                 {
-                    GUILayout.Space(16);
-                    EditorGUILayout.LabelField(editableParams.name, EditorStyles.boldLabel);
+                    var editableParams = m_EditableParametersForEachListItem[i];
+                    EditorGUILayout.BeginHorizontal();
+                    if (editableParams.hasUIToShow)
+                        editableParams.visible = EditorGUILayout.Foldout(editableParams.visible, editableParams.name, Styles.s_FoldoutStyle);
+                    else
+                    {
+                        GUILayout.Space(16);
+                        EditorGUILayout.LabelField(editableParams.name, EditorStyles.boldLabel);
+                    }
+                    GUILayout.FlexibleSpace();
+                    using (new EditorGUI.DisabledScope(i == 0))
+                    {
+                        if (GUILayout.Button(m_UpButton, Styles.s_UpDownButtonStyle))
+                            SwapEntry(i, i - 1);
+                    }
+                    using (new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
+                    {
+                        if (GUILayout.Button(m_DownButton, Styles.s_UpDownButtonStyle))
+                            SwapEntry(i, i + 1);
+                    }
+                    if (GUILayout.Button(m_DeleteButton, EditorStyles.label))
+                    {
+                        ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, i);
+                        ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, i);
+                        m_Apply();
+                        GUIUtility.ExitGUI();
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    if (editableParams.visible)
+                    {
+                        EditorGUI.indentLevel++;
+                        editableParams.OnGUI();
+                        EditorGUI.indentLevel--;
+                    }
+                    GUIHelpers.DrawLineSeparator();
                 }
-                GUILayout.FlexibleSpace();
-                using (var scope = new EditorGUI.DisabledScope(i == 0))
-                {
-                    if (GUILayout.Button(m_UpButton, Styles.s_UpDownButtonStyle))
-                        SwapEntry(i, i - 1);
-                }
-                using (var scope = new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
-                {
-                    if (GUILayout.Button(m_DownButton, Styles.s_UpDownButtonStyle))
-                        SwapEntry(i, i + 1);
-                }
-                if (GUILayout.Button(m_DeleteButton, EditorStyles.label))
-                {
-                    ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, i);
-                    ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, i);
-                    m_Apply();
-                    GUIUtility.ExitGUI();
-                }
-                EditorGUILayout.EndHorizontal();
-                if (editableParams.visible)
-                {
-                    EditorGUI.indentLevel++;
-                    editableParams.OnGUI();
-                    EditorGUI.indentLevel--;
-                }
-                GUIHelpers.DrawLineSeparator();
-            }
         }
 
         public string ToSerializableString()

@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+guid: 01614664b831546d2ae94a42149d80ac
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_PointActionReference: {fileID: 1054132383583890850, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_MoveActionReference: {fileID: 3710738434707379630, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_SubmitActionReference: {fileID: 2064916234097673511, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_CancelActionReference: {fileID: -1967631576421560919, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_LeftClickActionReference: {fileID: 8056856818456041789, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_MiddleClickActionReference: {fileID: 8056856818456041789, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_RightClickActionReference: {fileID: 3279352641294131588, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  - m_ScrollWheelActionReference: {fileID: 4502412055082496612, guid: ca9f5fa95ffab41fb9a615ab714db018,
+      type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

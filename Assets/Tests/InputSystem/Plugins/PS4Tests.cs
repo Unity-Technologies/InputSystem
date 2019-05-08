@@ -1,11 +1,12 @@
 #if UNITY_EDITOR || UNITY_PS4
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.PS4;
-using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.PS4;
+using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.Processors;
 
 public class PS4Tests : InputTestFixture
 {
@@ -59,10 +60,11 @@ public class PS4Tests : InputTestFixture
         Assert.That(gamepad.L3.isPressed);
         Assert.That(gamepad.R3.isPressed);
 
-        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.456).Within(0.00001));
-        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.00001));
-        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.234).Within(0.00001));
+        var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
+        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.789f, 0.234f))));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.567).Within(0.00001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.891).Within(0.00001));
 
@@ -116,7 +118,7 @@ public class PS4Tests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -262,7 +264,7 @@ public class PS4Tests : InputTestFixture
                 }
 
                 Assert.Fail("Received wrong type of command");
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         InputSystem.Update();
@@ -343,7 +345,7 @@ public class PS4Tests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         move.SetMotorSpeed(0.1234f);

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add commands to event trace (also clickable)
 
@@ -29,7 +29,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: provide ability to save and load event traces; also ability to record directly to a file
 ////TODO: provide ability to scrub back and forth through history
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
 
-        [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
+        [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private TreeViewState m_EventTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;

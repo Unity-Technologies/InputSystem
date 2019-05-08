@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A collection of input actions (<see cref="InputAction"/>).

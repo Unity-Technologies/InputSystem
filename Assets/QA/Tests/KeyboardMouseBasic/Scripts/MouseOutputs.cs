@@ -1,7 +1,7 @@
 using UnityEngine;
 
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 // Updates images and text based on the state of the most current mouse.
 //

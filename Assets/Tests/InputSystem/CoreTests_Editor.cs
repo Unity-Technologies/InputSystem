@@ -5,20 +5,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.CodeDom.Compiler;
-using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Composites;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.HID;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
 #pragma warning disable CS0649
@@ -152,6 +151,28 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_DomainReload_FirstPlayerLoopUpdateCausesDevicesToBeRecreated()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        // This test quite invasively goes into InputSystem internals. Unfortunately, we
+        // have no proper way of simulating domain reloads ATM. So we directly call various
+        // internal methods here in a sequence similar to what we'd get during a domain reload.
+
+        InputSystem.s_SystemObject.OnBeforeSerialize();
+        runtime.onPlayModeChanged(PlayModeStateChange.ExitingEditMode);
+        runtime.isInPlayMode = false;
+        InputSystem.s_SystemObject = null;
+        InputSystem.InitializeInEditor(runtime);
+        runtime.isInPlayMode = true;
+        runtime.onPlayModeChanged(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
+    }
+
+    [Test]
+    [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
     {
@@ -161,7 +182,7 @@ partial class CoreTests
     [Test]
     [Category("Editor")]
     [Ignore("TODO")]
-    public void TODO_Editor_DomainReload_PreservesCurrentDevices()
+    public void TODO_Editor_DomainReload_PreservesCurrentStatusOfDevices()
     {
         Assert.Fail();
     }
@@ -1726,6 +1747,7 @@ partial class CoreTests
 
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
+
 #endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it

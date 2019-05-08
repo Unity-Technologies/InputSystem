@@ -2,7 +2,7 @@ using System;
 
 ////TODO: provide total metric for amount of unmanaged memory (device state + action state)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Provides information on the level of throughput going through the system.
@@ -35,12 +35,12 @@ namespace UnityEngine.Experimental.Input
 
         public int totalEventBytes;
         public int totalEventCount;
-        public int totalFrameCount;
+        public int totalUpdateCount;
 
         public double totalEventProcessingTime;
         public double totalEventLagTime;
 
-        public float averageEventBytesPerFrame => (float)totalEventBytes / totalFrameCount;
+        public float averageEventBytesPerFrame => (float)totalEventBytes / totalUpdateCount;
 
         ////REVIEW: we probably want better averaging than we get with this method; ideally, we should take averages
         ////        each frame and then compute weighted averages as we go; the current method disregards updating spacing

@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Interactions
+namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
     /// Performs the action when a control is actuated past the button press point and then does not perform
@@ -58,10 +58,10 @@ namespace UnityEngine.Experimental.Input.Interactions
                             // So go back directly to waiting here.
                             context.Waiting();
                         }
-
                     }
                     else if (isActuated)
                     {
+                        ////REVIEW: should this trigger Started?
                         if (context.continuous)
                             context.PerformedAndStayPerformed();
                         else

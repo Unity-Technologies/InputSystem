@@ -8,7 +8,7 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Implements <see cref="IInputRuntime"/> based on <see cref="NativeInputSystem"/>.
@@ -24,34 +24,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public void Update(InputUpdateType updateType)
         {
-            if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Dynamic);
-            }
-            if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Fixed);
-            }
-            if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
-            }
-            if ((updateType & InputUpdateType.Manual) == InputUpdateType.Manual)
-            {
-                NativeInputSystem.Update((NativeInputUpdateType)InputUpdateType.Manual);
-            }
-
-            #if UNITY_EDITOR
-            if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Editor);
-            }
-            #endif
+            NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
-        public void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* ptr)
         {
-            NativeInputSystem.QueueInputEvent(ptr);
+            NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
@@ -64,9 +42,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (value != null)
-                // This is 2019.2 (i.e. trunk at this point in time) only while we figure out how to get this
-                // working properly.
-                    #if UNITY_2019_2_OR_NEWER
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
@@ -102,34 +77,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                             eventBufferPtr->sizeInBytes = 0;
                         }
                     };
-                    #else
-                    // 2019.1 has the native API change but we need to fix the code in InputManager first
-                    // before we can fully migrate to the new update code. For now, just manually reset
-                    // the buffer here every time.
-                    NativeInputSystem.onUpdate =
-                        (updateType, eventBufferPtr) =>
-                    {
-                        var buffer = new InputEventBuffer((InputEvent*)eventBufferPtr->eventBuffer,
-                            eventBufferPtr->eventCount,
-                            sizeInBytes: eventBufferPtr->sizeInBytes,
-                            capacityInBytes: eventBufferPtr->capacityInBytes);
-
-                        try
-                        {
-                            value((InputUpdateType)updateType, ref buffer);
-                        }
-                        finally
-                        {
-                            // Need to account for the oddity of before render updates. This all goes
-                            // away once we have the kinks worked out in InputManager.OnUpdate().
-                            if (updateType != NativeInputUpdateType.BeforeRender)
-                            {
-                                eventBufferPtr->eventCount = 0;
-                                eventBufferPtr->sizeInBytes = 0;
-                            }
-                        }
-                    };
-                    #endif
                 else
                     NativeInputSystem.onUpdate = null;
             }
@@ -236,7 +183,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int frameCount => Time.frameCount;
 
-#if UNITY_ANALYTICS || UNITY_EDITOR
+        public bool isInBatchMode => Application.isBatchMode;
+
+        #if UNITY_EDITOR
+
+        public bool isInPlayMode => EditorApplication.isPlaying;
+        public bool isPaused => EditorApplication.isPaused;
+
+        public Action<PlayModeStateChange> onPlayModeChanged
+        {
+            set => EditorApplication.playModeStateChanged += value;
+        }
+
+        public Action onProjectChange
+        {
+            set => EditorApplication.projectChanged += value;
+        }
+
+        #endif // UNITY_EDITOR
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
@@ -257,6 +223,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             #endif
         }
 
-#endif // UNITY_ANALYTICS || UNITY_EDITOR
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

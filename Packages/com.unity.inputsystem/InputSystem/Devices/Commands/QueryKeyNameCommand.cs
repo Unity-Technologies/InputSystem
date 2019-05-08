@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Command to query the current name of a key according to the current keyboard layout.
@@ -12,8 +12,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('K', 'Y', 'C', 'F'); } }
 
-        public const int kMaxNameLength = 256;
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + kMaxNameLength + 4;
+        internal const int kMaxNameLength = 256;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + kMaxNameLength + 4;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

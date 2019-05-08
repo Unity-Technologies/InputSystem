@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
 
@@ -19,7 +19,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: move this to .LowLevel? this one is pretty peculiar to use and doesn't really work like what you'd expect given C#'s List<>
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Keep a list of <see cref="InputControl">input controls</see> without allocating

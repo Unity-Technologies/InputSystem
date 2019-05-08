@@ -1,8 +1,8 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: this or the layout system needs to detect when the format isn't supported by the control
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     ////TODO: allow format to be any integer format
     public class IntegerControl : InputControl<int>

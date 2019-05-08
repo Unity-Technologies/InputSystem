@@ -6,7 +6,7 @@ using System;
 ////      (this will probably also be useful for jobs)
 ////      when this is implemented, also allow interning directly from Substrings
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Wraps around a string to allow for faster case-insensitive

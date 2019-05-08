@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.PlayerInput;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.PlayerInput;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Processors;
 using Object = UnityEngine.Object;
-using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
+using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
@@ -107,6 +107,67 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(instance.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
         Assert.That(instance.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(instance.actions["gameplay/fire"].controls, Has.Count.EqualTo(1));
+        Assert.That(instance.actions["gameplay/fire"].controls[0], Is.SameAs(mouse.leftButton));
+        Assert.That(instance.actions["gameplay/look"].controls, Has.Count.EqualTo(1));
+        Assert.That(instance.actions["gameplay/look"].controls[0], Is.SameAs(mouse.delta));
+        Assert.That(instance.actions["gameplay/move"].controls, Has.Count.EqualTo(4));
+        Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.wKey));
+        Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.sKey));
+        Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.dKey));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanBeUsedWithoutControlSchemes()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var playActions = new InputActionMap("play");
+        var fireAction = playActions.AddAction("fire");
+        fireAction.AddBinding("<Gamepad>/<Button>"); // Match multiple controls in single binding to make sure that isn't throwing PlayerInput off.
+        fireAction.AddBinding("<Keyboard>/space");
+        actions.AddActionMap(playActions);
+
+        var go = new GameObject();
+        go.SetActive(false);
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.actions = actions;
+        go.SetActive(true);
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(2));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanChangeActionsWhileEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var go = new GameObject();
+        go.SetActive(false);
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] {gamepad}));
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var playActions = new InputActionMap("play");
+        var fireAction = playActions.AddAction("fire");
+        fireAction.AddBinding("<Keyboard>/space");
+        actions.AddActionMap(playActions);
+
+        playerInput.actions = actions;
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { keyboard }));
     }
 
     [Test]
@@ -271,14 +332,25 @@ internal class PlayerInputTests : InputTestFixture
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var go = new GameObject();
+        go.SetActive(false);
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.defaultControlScheme = "Keyboard&Mouse";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
 
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
         Assert.That(playerInput.actions.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
         Assert.That(playerInput.user, Is.Not.Null);
         Assert.That(playerInput.user.pairedDevices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+        Assert.That(playerInput.actions["gameplay/fire"].controls, Has.Count.EqualTo(1));
+        Assert.That(playerInput.actions["gameplay/fire"].controls[0], Is.SameAs(mouse.leftButton));
+        Assert.That(playerInput.actions["gameplay/look"].controls, Has.Count.EqualTo(1));
+        Assert.That(playerInput.actions["gameplay/look"].controls[0], Is.SameAs(mouse.delta));
+        Assert.That(playerInput.actions["gameplay/move"].controls, Has.Count.EqualTo(4));
+        Assert.That(playerInput.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.wKey));
+        Assert.That(playerInput.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.sKey));
+        Assert.That(playerInput.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(playerInput.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.dKey));
     }
 
     // If PlayerInputManager has joining disabled (or does not even exist) and there is
@@ -995,11 +1067,12 @@ internal class PlayerInputTests : InputTestFixture
                         { ""path"" : ""<Gamepad>/leftStick"", ""action"" : ""move"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""<Gamepad>/rightStick"", ""action"" : ""look"", ""groups"" : ""Gamepad"" },
                         { ""path"" : ""dpad"", ""action"" : ""move"", ""groups"" : ""Gamepad"", ""isComposite"" : true },
-                        { ""path"" : ""<Keyboard>/a"", ""name"" : ""left"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
-                        { ""path"" : ""<Keyboard>/d"", ""name"" : ""right"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
-                        { ""path"" : ""<Keyboard>/w"", ""name"" : ""up"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
-                        { ""path"" : ""<Keyboard>/s"", ""name"" : ""down"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
-                        { ""path"" : ""<Mouse>/delta"", ""action"" : ""look"", ""groups"" : ""Keyboard&Mouse"" }
+                        { ""path"" : ""<Keyboard>/a"", ""name"" : ""left"", ""action"" : ""move"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
+                        { ""path"" : ""<Keyboard>/d"", ""name"" : ""right"", ""action"" : ""move"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
+                        { ""path"" : ""<Keyboard>/w"", ""name"" : ""up"", ""action"" : ""move"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
+                        { ""path"" : ""<Keyboard>/s"", ""name"" : ""down"", ""action"" : ""move"", ""groups"" : ""Keyboard&Mouse"", ""isPartOfComposite"" : true },
+                        { ""path"" : ""<Mouse>/delta"", ""action"" : ""look"", ""groups"" : ""Keyboard&Mouse"" },
+                        { ""path"" : ""<Mouse>/leftButton"", ""action"" : ""fire"", ""groups"" : ""Keyboard&Mouse"" }
                     ]
                 },
                 {
