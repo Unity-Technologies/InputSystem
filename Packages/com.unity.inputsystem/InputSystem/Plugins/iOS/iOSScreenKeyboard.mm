@@ -75,13 +75,13 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         NSLog(@"ScreenKeyboardShowParams size mismatch, expected %lu was %d", sizeof(iOSScreenKeyboardShowParams), sizeOfShowParams);
         return;
     }
-    
+
     if (sizeof(iOSScreenKeyboardCallbacks) != sizeOfCallbacks)
     {
         NSLog(@"iOSScreenKeyboardCallbacks size mismatch, expected %lu was %d", sizeof(iOSScreenKeyboardCallbacks), sizeOfCallbacks);
         return;
     }
-    
+
     iOSScreenKeyboardShowParamsNative param =
     {
         GetUIKeyboardType(showParams->type),
@@ -96,8 +96,8 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         (BOOL)showParams->secure,
         *callbacks
     };
-    
-    [[iOSScreenKeyboardDelegate GetInstanceOrCreate] Show :param :showParams->initialText :showParams->placeholderText];
+
+    [[iOSScreenKeyboardDelegate GetInstanceOrCreate] Show: param: showParams->initialText: showParams->placeholderText];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
@@ -112,4 +112,3 @@ extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
     UnityRect unityRC = {(float)rc.origin.x, (float)rc.origin.y, (float)rc.size.width, (float)rc.size.height};
     return unityRC;
 }
-

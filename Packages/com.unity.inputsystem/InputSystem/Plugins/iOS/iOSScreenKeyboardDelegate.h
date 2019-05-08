@@ -14,12 +14,11 @@ struct iOSScreenKeyboardShowParamsNative
     UIKeyboardType              keyboardType;
     UITextAutocorrectionType    autocorrectionType;
     UIKeyboardAppearance        appearance;
-    
+
     BOOL multiline;
     BOOL secure;
     iOSScreenKeyboardCallbacks  callbacks;
 };
-
 
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
@@ -27,7 +26,7 @@ struct iOSScreenKeyboardShowParamsNative
 + (iOSScreenKeyboardDelegate*)GetInstanceOrCreate;
 + (iOSScreenKeyboardDelegate*)GetInstance;
 
-- (void)Show:(iOSScreenKeyboardShowParamsNative)param :(const char*)initialTextCStr :(const char*)placeholderTextCStr;
+- (void)Show:(iOSScreenKeyboardShowParamsNative)param:(const char*)initialTextCStr:(const char*)placeholderTextCStr;
 - (void)Hide;
 
 // These are all privates
@@ -66,4 +65,3 @@ struct iOSScreenKeyboardShowParamsNative
 //@property (nonatomic, getter = querySelection, setter = assignSelection:)  NSRange   selection;
 
 @end
-

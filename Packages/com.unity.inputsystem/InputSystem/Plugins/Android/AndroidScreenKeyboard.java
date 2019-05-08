@@ -104,11 +104,11 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             boolean multiline,
             boolean secure,
             boolean alert,
-			boolean inputFieldHidden)
+            boolean inputFieldHidden)
     {
         m_Callbacks = callbacks;
 
-		setHideInputField(inputFieldHidden);
+        setHideInputField(inputFieldHidden);
 
         setContentView (createSoftInputView ());
         EditText txtInput = (EditText) findViewById (id.txtInput);
@@ -142,7 +142,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
     }
 
-	public void setHideInputField(boolean isInputFieldHidden)
+    public void setHideInputField(boolean isInputFieldHidden)
     {
         Window window = getWindow();
         WindowManager.LayoutParams param = window.getAttributes();
@@ -180,7 +180,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         EditText txtInput = (EditText) findViewById (id.txtInput);
         Log.v("Unity", MessageFormat.format("afterTextChanged: {0} Start {1} End {2} Lang {3}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd(), currentLanguage));
 
-		// TODO: For IME SelectionEnd and Start doesn't return what you would expect
+        // TODO: For IME SelectionEnd and Start doesn't return what you would expect
         m_Callbacks.OnTextChanged(s.toString());
     }
 

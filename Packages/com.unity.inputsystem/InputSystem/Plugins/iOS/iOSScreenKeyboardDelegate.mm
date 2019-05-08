@@ -32,23 +32,23 @@ enum iOSScreenKeyboardStatus
     UIToolbar*          m_FieldToolbar;
     NSArray*            m_FieldToolbarItems;
 #endif
-    
+
     UITextField*        m_TextField;
-    
+
     // inputView is view used for actual input (it will be responder): UITextField [single-line] or UITextView [multi-line]
     // editView is the "root" view for keyboard: UIToolbar [single-line] or UITextView [multi-line]
     UIView*             m_InputView;
     UIView*             m_EditView;
-    
+
     iOSScreenKeyboardShowParamsNative m_ShowParams;
-    
+
     CGRect              m_Area;
     NSString*           m_InitialText;
-    
+
     BOOL                m_InputHidden;
     BOOL                m_Active;
     iOSScreenKeyboardStatus      m_Status;
-    
+
     // not pretty but seems like easiest way to keep "we are rotating" status
     BOOL                m_Rotating;
     bool                m_ShouldHideInput;
@@ -125,11 +125,11 @@ enum iOSScreenKeyboardStatus
 {
     if (notification.userInfo == nil || m_InputView == nil)
         return;
-    
+
     CGRect srcRect  = [[notification.userInfo objectForKey: UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect rect     = [UnityGetGLView() convertRect: srcRect fromView: nil];
     rect.origin.y = [UnityGetGLView() frame].size.height - rect.size.height; // iPhone X sometimes reports wrong y value for keyboard
-    
+
     [self positionInput: rect x: rect.origin.x y: rect.origin.y];
 }
 
@@ -146,10 +146,10 @@ enum iOSScreenKeyboardStatus
 - (void)keyboardDidChangeFrame:(NSNotification*)notification
 {
     m_Active = true;
-    
+
     CGRect srcRect  = [[notification.userInfo objectForKey: UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect rect     = [UnityGetGLView() convertRect: srcRect fromView: nil];
-    
+
     if (rect.origin.y >= [UnityGetGLView() bounds].size.height)
         [self systemHideKeyboard];
     else
@@ -169,7 +169,7 @@ enum iOSScreenKeyboardStatus
         s_Keyboard->m_ShouldHideInput = false;
         s_Keyboard->m_ShouldHideInputChanged = false;
     }
-    
+
     return s_Keyboard;
 }
 
@@ -178,7 +178,7 @@ enum iOSScreenKeyboardStatus
     return s_Keyboard;
 }
 
-- (void)Show:(iOSScreenKeyboardShowParamsNative)param :(const char*)initialTextCStr :(const char*)placeholderTextCStr
+- (void)Show:(iOSScreenKeyboardShowParamsNative)param:(const char*)initialTextCStr:(const char*)placeholderTextCStr
 {
     if (!m_EditView.hidden)
     {
@@ -193,25 +193,25 @@ enum iOSScreenKeyboardStatus
         }
     }
     m_ShowParams = param;
-    
+
     if (m_Active)
         [self Hide];
-    
+
     m_InitialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
-    
+
     // TODO
     //_characterLimit = param.characterLimit;
-    
+
     UITextAutocapitalizationType capitalization = UITextAutocapitalizationTypeSentences;
     if (param.keyboardType == UIKeyboardTypeURL || param.keyboardType == UIKeyboardTypeEmailAddress || param.keyboardType == UIKeyboardTypeWebSearch)
         capitalization = UITextAutocapitalizationTypeNone;
-    
+
 #if PLATFORM_IOS
     if (m_ShowParams.multiline)
     {
         m_TextView.text = m_InitialText;
         [self setTextInputTraits: m_TextView withParam: param withCap: capitalization];
-        
+
         UITextPosition* end = [m_TextView endOfDocument];
         UITextRange* endTextRange = [m_TextView textRangeFromPosition: end toPosition: end];
         [m_TextView setSelectedTextRange: endTextRange];
@@ -221,33 +221,33 @@ enum iOSScreenKeyboardStatus
         m_TextField.text = m_InitialText;
         [self setTextInputTraits: m_TextField withParam: param withCap: capitalization];
         m_TextField.placeholder = placeholderTextCStr ? [NSString stringWithUTF8String: placeholderTextCStr] : @"";
-        
+
         UITextPosition* end = [m_TextField endOfDocument];
         UITextRange* endTextRange = [m_TextField textRangeFromPosition: end toPosition: end];
         [m_TextField setSelectedTextRange: endTextRange];
     }
     m_InputView = m_ShowParams.multiline ? m_TextView : m_TextField;
     m_EditView = m_ShowParams.multiline ? m_TextView : m_FieldToolbar;
-    
+
 #else // PLATFORM_TVOS
     m_TextField.text = m_InitialText;
     [self setTextInputTraits: m_TextField withParam: param withCap: capitalization];
     m_TextField.placeholder = [NSString stringWithUTF8String: param.placeholder];
     m_InputView = m_TextField;
     m_EditView = m_TextField;
-    
+
     UITextPosition* end = [m_TextField endOfDocument];
     UITextRange* endTextRange = [m_TextField textRangeFromPosition: end toPosition: end];
     [m_TextField setSelectedTextRange: endTextRange];
 #endif
-    
+
     // TODO
     //[self shouldHideInput: m_ShouldHideInput];
-    
+
     m_Status     = StatusVisible;
     m_ShowParams.callbacks.statusChangedCallback(m_Status);
     m_Active     = YES;
-    
+
     [self showUI];
 }
 
@@ -268,18 +268,18 @@ struct CreateToolbarResult
     UIToolbar* toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, 840, 320, kToolBarHeight)];
     UnitySetViewTouchProcessing(toolbar, touchesIgnored);
     toolbar.hidden = NO;
-    
+
     UIBarButtonItem* inputItem  = view ? [[UIBarButtonItem alloc] initWithCustomView: view] : nil;
     UIBarButtonItem* doneItem   = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(textInputDone:)];
     UIBarButtonItem* cancelItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target: self action: @selector(textInputCancel:)];
-    
+
     NSArray* items = view ? @[inputItem, doneItem, cancelItem] : @[doneItem, cancelItem];
     toolbar.items = items;
-    
+
     inputItem = nil;
     doneItem = nil;
     cancelItem = nil;
-    
+
     CreateToolbarResult ret = {toolbar, items};
     return ret;
 }
@@ -298,49 +298,49 @@ struct CreateToolbarResult
         m_TextView.font = [UIFont systemFontOfSize: 18.0];
         m_TextView.hidden = YES;
 #endif
-        
+
         m_TextField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, 120, 30)];
         m_TextField.delegate = self;
         m_TextField.borderStyle = UITextBorderStyleRoundedRect;
         m_TextField.font = [UIFont systemFontOfSize: 20.0];
         m_TextField.clearButtonMode = UITextFieldViewModeWhileEditing;
-        
+
 #if PLATFORM_IOS
         m_WidthConstraint = [NSLayoutConstraint constraintWithItem: m_TextField attribute: NSLayoutAttributeWidth relatedBy: NSLayoutRelationEqual toItem: nil attribute: NSLayoutAttributeNotAnAttribute multiplier: 1.0 constant: m_TextField.frame.size.width];
         [m_TextField addConstraint: m_WidthConstraint];
 #endif
         [m_TextField addTarget: self action: @selector(textFieldDidChange:) forControlEvents: UIControlEventEditingChanged];
-        
+
 #define CREATE_TOOLBAR(t, i, v)                                 \
 do {                                                            \
 CreateToolbarResult res = [self createToolbarWithView:v];   \
 t = res.toolbar;                                            \
 i = res.items;                                              \
 } while(0)
-        
+
 #if PLATFORM_IOS
         CREATE_TOOLBAR(m_ViewToolbar, m_ViewToolbarItems, nil);
         CREATE_TOOLBAR(m_FieldToolbar, m_FieldToolbarItems, m_TextField);
 #endif
-        
+
 #undef CREATE_TOOLBAR
-        
+
 #if PLATFORM_IOS
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillShow:) name: UIKeyboardWillShowNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidShow:) name: UIKeyboardDidShowNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardWillHide:) name: UIKeyboardWillHideNotification object: nil];
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyboardDidChangeFrame:) name: UIKeyboardDidChangeFrameNotification object: nil];
 #endif
-        
+
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(textInputDone:) name: UITextFieldTextDidEndEditingNotification object: nil];
     }
-    
+
     return self;
 }
 
 - (void)setTextInputTraits:(id<UITextInputTraits>)traits
-                 withParam:(iOSScreenKeyboardShowParamsNative)param
-                   withCap:(UITextAutocapitalizationType)capitalization
+    withParam:(iOSScreenKeyboardShowParamsNative)param
+    withCap:(UITextAutocapitalizationType)capitalization
 {
     traits.keyboardType = param.keyboardType;
     traits.autocorrectionType = param.autocorrectionType;
@@ -355,12 +355,12 @@ i = res.items;                                              \
 {
     // if we unhide everything now the input will be shown smaller then needed quickly (and resized later)
     // so unhide only when keyboard is actually shown (we will update it when reacting to ios notifications)
-    
+
     [NSObject cancelPreviousPerformRequestsWithTarget: self];
     if (!m_InputView.isFirstResponder)
     {
         m_EditView.hidden = YES;
-        
+
         [UnityGetGLView() addSubview: m_EditView];
         [m_InputView becomeFirstResponder];
     }
@@ -375,7 +375,7 @@ i = res.items;                                              \
 - (void)hideUIDelayed
 {
     [m_InputView resignFirstResponder];
-    
+
     [m_EditView removeFromSuperview];
     m_EditView.hidden = YES;
 }
@@ -386,10 +386,10 @@ i = res.items;                                              \
     // ignore all of them (we do it here only to simplify code: we call systemHideKeyboard only from these notification handlers)
     if (m_Rotating)
         return;
-    
+
     m_Active = m_EditView.isFirstResponder;
     m_EditView.hidden = YES;
-    
+
     m_Area = CGRectMake(0, 0, 0, 0);
 }
 
@@ -400,9 +400,9 @@ i = res.items;                                              \
         [self shouldHideInput: m_ShouldHideInput];
         m_ShouldHideInputChanged = false;
     }
-    
+
     m_TextField.returnKeyType = m_InputHidden ? UIReturnKeyDone : UIReturnKeyDefault;
-    
+
     m_EditView.hidden     = m_InputHidden ? YES : NO;
     m_InputView.hidden    = m_InputHidden ? YES : NO;
 }
@@ -412,7 +412,7 @@ i = res.items;                                              \
 {
     float safeAreaInsetLeft = 0;
     float safeAreaInsetRight = 0;
-    
+
 #if UNITY_HAS_IOSSDK_11_0
     if (@available(iOS 11.0, *))
     {
@@ -420,31 +420,31 @@ i = res.items;                                              \
         safeAreaInsetRight = [UnityGetGLView() safeAreaInsets].right;
     }
 #endif
-    
+
     if (m_ShowParams.multiline)
     {
         // use smaller area for iphones and bigger one for ipads
         int height = UnityDeviceDPI() > 300 ? 75 : 100;
-        
+
         m_EditView.frame  = CGRectMake(safeAreaInsetLeft, y - height, kbRect.size.width - safeAreaInsetLeft - safeAreaInsetRight, height);
     }
     else
     {
         m_EditView.frame  = CGRectMake(0, y - kToolBarHeight, kbRect.size.width, kToolBarHeight);
-        
+
         // old constraint must be removed, changing value while constraint is active causes conflict when changing m_InputView.frame
         [m_InputView removeConstraint: m_WidthConstraint];
-        
+
         m_InputView.frame = CGRectMake(m_InputView.frame.origin.x,
-                                     m_InputView.frame.origin.y,
-                                     kbRect.size.width - safeAreaInsetLeft - safeAreaInsetRight - kSystemButtonsSpace,
-                                     m_InputView.frame.size.height);
-        
+            m_InputView.frame.origin.y,
+            kbRect.size.width - safeAreaInsetLeft - safeAreaInsetRight - kSystemButtonsSpace,
+            m_InputView.frame.size.height);
+
         // required to avoid auto-resizing on iOS 11 in case if input text is too long
         m_WidthConstraint.constant = m_InputView.frame.size.width;
         [m_InputView addConstraint: m_WidthConstraint];
     }
-    
+
     m_Area = CGRectMake(x, y, kbRect.size.width, kbRect.size.height);
     [self updateInputHidden];
 }
@@ -459,40 +459,40 @@ i = res.items;                                              \
 - (NSRange)querySelection
 {
     UIView<UITextInput>* textInput;
-    
+
 #if PLATFORM_TVOS
     textInput = m_TextField;
 #else
     textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
 #endif
-    
+
     UITextPosition* beginning = textInput.beginningOfDocument;
-    
+
     UITextRange* selectedRange = textInput.selectedTextRange;
     UITextPosition* selectionStart = selectedRange.start;
     UITextPosition* selectionEnd = selectedRange.end;
-    
+
     const NSInteger location = [textInput offsetFromPosition: beginning toPosition: selectionStart];
     const NSInteger length = [textInput offsetFromPosition: selectionStart toPosition: selectionEnd];
-    
+
     return NSMakeRange(location, length);
 }
 
 - (void)assignSelection:(NSRange)range
 {
     UIView<UITextInput>* textInput;
-    
+
 #if PLATFORM_TVOS
     textInput = m_TextField;
 #else
     textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
 #endif
-    
+
     UITextPosition* begin = [textInput beginningOfDocument];
     UITextPosition* caret = [textInput positionFromPosition: begin offset: range.location];
     UITextPosition* select = [textInput positionFromPosition: caret offset: range.length];
     UITextRange* textRange = [textInput textRangeFromPosition: caret toPosition: select];
-    
+
     [textInput setSelectedTextRange: textRange];
 }
 
@@ -557,7 +557,7 @@ i = res.items;                                              \
             default:                                    hide = NO;  break;
         }
     }
-    
+
     m_InputHidden = hide;
 }
 
@@ -568,7 +568,7 @@ static bool StringContainsEmoji(NSString *string);
 {
     if (range.length + range.location > textField.text.length)
         return NO;
-    
+
     return [self currentText: textField.text shouldChangeInRange: range replacementText: string_] && !StringContainsEmoji(string_);
 }
 
@@ -576,7 +576,7 @@ static bool StringContainsEmoji(NSString *string);
 {
     if (range.length + range.location > textView.text.length)
         return NO;
-    
+
     return [self currentText: textView.text shouldChangeInRange: range replacementText: text_] && !StringContainsEmoji(text_);
 }
 
@@ -586,7 +586,7 @@ static bool StringContainsEmoji(NSString *string);
 {
     if (range.length + range.location > textField.text.length)
         return NO;
-    
+
     return [self currentText: textField.text shouldChangeInRange: range replacementText: string_];
 }
 
@@ -594,7 +594,7 @@ static bool StringContainsEmoji(NSString *string);
 {
     if (range.length + range.location > textView.text.length)
         return NO;
-    
+
     return [self currentText: textView.text shouldChangeInRange: range replacementText: text_];
 }
 
@@ -611,9 +611,9 @@ static bool StringContainsEmoji(NSString *string);
         NSString* newReplacementText = @"";
         if ((currentText.length - range.length) < _characterLimit)
             newReplacementText = [text_ substringWithRange: NSMakeRange(0, _characterLimit - (currentText.length - range.length))];
-        
+
         NSString* newText = [currentText stringByReplacingCharactersInRange: range withString: newReplacementText];
-        
+
 #if PLATFORM_IOS
         if (m_ShowParams.multiline)
             [m_TextView setText: newText];
@@ -622,7 +622,7 @@ static bool StringContainsEmoji(NSString *string);
 #else
         [m_TextField setText: newText];
 #endif
-        
+
         return NO;
     }
     else
@@ -633,4 +633,3 @@ static bool StringContainsEmoji(NSString *string);
 }
 
 @end
-
