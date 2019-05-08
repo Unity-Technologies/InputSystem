@@ -32,11 +32,12 @@ namespace UnityEngine.InputSystem.Layouts
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public class InputControlAttribute : PropertyAttribute
     {
-        public InputControlAttribute ()
+        public InputControlAttribute()
         {
             bit = InputStateBlock.InvalidOffset;
             offset = InputStateBlock.InvalidOffset;
         }
+
         public string layout { get; set; }
         public string variants { get; set; }
         public string name { get; set; }

@@ -47,7 +47,7 @@ partial class APIVerificationTests
         var resolved = type.Resolve();
         if (resolved == null)
             return false;
-            
+
         if (
             // Interactions have fields populated by reflection in the Input System
             resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputInteraction).FullName) ||
