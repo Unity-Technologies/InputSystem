@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Plugins.UI;
+using UnityEngine.Experimental.Input.Plugins.UI.Editor;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -117,6 +118,17 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             EditorGUILayout.PropertyField(uiModuleProperty, m_UIPropertyText);
             if (EditorGUI.EndChangeCheck())
                 serializedObject.ApplyModifiedProperties();
+
+            if (uiModuleProperty.objectReferenceValue != null)
+            {
+                var uiModule = uiModuleProperty.objectReferenceValue as InputSystemUIInputModule;
+                if (actionsProperty.objectReferenceValue != null && uiModule.actionsAsset != actionsProperty.objectReferenceValue)
+                {
+                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using differnet input actions then this PlayerInput. They should match if you want to synch PlayerInput actions to the UI input.", MessageType.Warning);
+                    if (GUILayout.Button(m_FixInputModuleText))
+                        InputSystemUIInputModuleEditor.ReassignActions(uiModule, actionsProperty.objectReferenceValue as InputActionAsset);
+                }
+            }
 
             // Camera section.
             var cameraProperty = serializedObject.FindProperty("m_Camera");
@@ -478,7 +490,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         [SerializeField] private bool[] m_ActionMapEventsUnfolded;
 
         [NonSerialized] private readonly GUIContent m_CreateActionsText = EditorGUIUtility.TrTextContent("Create Actions...");
-        [NonSerialized] private readonly GUIContent m_AddInputModuleText = EditorGUIUtility.TrTextContent("Add UI Input Module");
+        [NonSerialized] private readonly GUIContent m_FixInputModuleText = EditorGUIUtility.TrTextContent("Fix UI Input Module");
         [NonSerialized] private readonly GUIContent m_OpenSettingsText = EditorGUIUtility.TrTextContent("Open Input Settings");
         [NonSerialized] private readonly GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
         [NonSerialized] private readonly GUIContent m_EventsGroupText =
@@ -508,8 +520,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
-        [NonSerialized] private bool m_UIConnectionInitialized;
-        [NonSerialized] private bool m_UIIsMissingInputModule;
     }
 }
 #endif // UNITY_EDITOR
