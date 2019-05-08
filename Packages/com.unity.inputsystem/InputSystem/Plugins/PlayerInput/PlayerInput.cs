@@ -678,7 +678,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             // has the same actions, duplicate.
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
+                {
                     m_Actions = Instantiate(m_Actions);
+                    break;
+                }
 
             if (uiModule != null)
                 uiModule.actionsAssetNoEnable = m_Actions;
