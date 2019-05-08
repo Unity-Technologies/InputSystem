@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: use two columns for treeview and separate name and value
 
-namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
+namespace UnityEngine.InputSystem.Plugins.HID.Editor
 {
     /// <summary>
     /// A window that dumps a raw HID descriptor in a tree view.

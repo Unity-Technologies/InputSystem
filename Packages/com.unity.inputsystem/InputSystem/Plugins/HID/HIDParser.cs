@@ -5,7 +5,8 @@ using System.Collections.Generic;
 ////TODO: delimiter support
 ////TODO: designator support
 
-namespace UnityEngine.Experimental.Input.Plugins.HID
+#pragma warning disable CS0649
+namespace UnityEngine.InputSystem.Plugins.HID
 {
     /// <summary>
     /// Turns binary HID descriptors into <see cref="HID.HIDDeviceDescriptor"/> instances.

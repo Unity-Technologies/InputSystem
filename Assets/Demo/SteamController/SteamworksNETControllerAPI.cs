@@ -4,7 +4,7 @@ using Steamworks;
 ////REVIEW: this should ideally be part of the itself system itself but we can't reference the Steamworks.NET
 ////        API from there; find another packaging solution?
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Plugins.Steam
 {
     /// <summary>
     /// Implementation of <see cref="ISteamControllerAPI"/> for <see href="https://steamworks.github.io/">
@@ -75,7 +75,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             throw new System.NotImplementedException();
         }
 
-        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle, out SteamHandle<InputActionMap> handlesOut)
+        public int GetActiveActionSetLayers(SteamHandle<SteamController> controllerHandle,
+            out SteamHandle<InputActionMap> handlesOut)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public SteamAnalogActionData GetAnalogActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> analogActionHandle)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public SteamDigitalActionData GetDigitalActionData(SteamHandle<SteamController> controllerHandle,
+            SteamHandle<InputAction> digitalActionHandle)
         {
             throw new System.NotImplementedException();
         }

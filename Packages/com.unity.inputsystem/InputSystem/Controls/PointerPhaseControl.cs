@@ -1,5 +1,5 @@
-using System;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 // Unfortunately, C# (at least up to version 6) does not support enum type constraints. There's
 // ways to work around it in some situations (https://stackoverflow.com/questions/79126/create-generic-method-constraining-t-to-an-enum)
@@ -7,8 +7,9 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: allow this to be stored in less than 32bits
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
+    [InputControlLayout(hideInUI = true)]
     public class PointerPhaseControl : InputControl<PointerPhase>
     {
         public PointerPhaseControl()
@@ -16,15 +17,15 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
-        public override unsafe PointerPhase ReadUnprocessedValueFrom(IntPtr statePtr)
+        public override unsafe PointerPhase ReadUnprocessedValueFromState(void* statePtr)
         {
             var intValue = stateBlock.ReadInt(statePtr);
             return (PointerPhase)intValue;
         }
 
-        protected override unsafe void WriteUnprocessedValueInto(IntPtr statePtr, PointerPhase value)
+        public override unsafe void WriteValueIntoState(PointerPhase value, void* statePtr)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             *(PointerPhase*)valuePtr = value;
         }
     }

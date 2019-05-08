@@ -2,22 +2,22 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
     {
-        public const int kMaxAndroidAxes = 48;
-        public const int kMaxAndroidButtons = 220;
+        public const int MaxAxes = 48;
+        public const int MaxButtons = 220;
 
-        public const string kVariantGamepad = "Gamepad";
-        public const string kVariantJoystick = "Joystick";
+        internal const string kVariantGamepad = "Gamepad";
+        internal const string kVariantJoystick = "Joystick";
 
-        public const uint kAxisOffset = sizeof(uint) * (uint)((kMaxAndroidButtons + 31) / 32);
+        internal const uint kAxisOffset = sizeof(uint) * (uint)((MaxButtons + 31) / 32);
 
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "rightShoulder", bit = (uint)AndroidKeyCode.ButtonR1, variants = kVariantGamepad)]
         [InputControl(name = "start", bit = (uint)AndroidKeyCode.ButtonStart, variants = kVariantGamepad)]
         [InputControl(name = "select", bit = (uint)AndroidKeyCode.ButtonSelect, variants = kVariantGamepad)]
-        public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
+        public fixed uint buttons[(MaxButtons + 31) / 32];
 
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Brake * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
@@ -41,7 +41,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variants = kVariantGamepad)]
         [InputControl(name = "rightStick/x", variants = kVariantGamepad)]
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
-        public fixed float axis[kMaxAndroidAxes];
+        public fixed float axis[MaxAxes];
 
         public FourCC GetFormat()
         {
@@ -103,25 +103,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         public static AndroidDeviceCapabilities FromJson(string json)
         {
             if (json == null)
-                throw new ArgumentNullException("json");
+                throw new ArgumentNullException(nameof(json));
             return JsonUtility.FromJson<AndroidDeviceCapabilities>(json);
         }
 
         public override string ToString()
         {
-            return string.Format(
-                "deviceDescriptor = {0}, productId = {1}, vendorId = {2}, isVirtual = {3}, motionAxes = {4}, inputSources = {5}",
-                deviceDescriptor,
-                productId,
-                vendorId,
-                isVirtual,
-                motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()),
-                inputSources);
+            return
+                $"deviceDescriptor = {deviceDescriptor}, productId = {productId}, vendorId = {vendorId}, isVirtual = {isVirtual}, motionAxes = {(motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()))}, inputSources = {inputSources}";
         }
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.Android
+namespace UnityEngine.InputSystem.Plugins.Android
 {
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantGamepad)]
     public class AndroidGamepad : Gamepad

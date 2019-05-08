@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Internal interface that allows monitoring the system for problems.

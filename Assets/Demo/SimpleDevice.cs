@@ -1,9 +1,9 @@
 using System.Linq;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 public struct MyDeviceState : IInputStateTypeInfo
 {
@@ -26,19 +26,11 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
     public ButtonControl button1 { get; private set; }
     public AxisControl axis1 { get; private set; }
 
-    public static MyDevice current { get; private set; }
-
     protected override void FinishSetup(InputDeviceBuilder builder)
     {
         button1 = builder.GetControl<ButtonControl>(this, "button1");
         axis1 = builder.GetControl<AxisControl>(this, "axis1");
         base.FinishSetup(builder);
-    }
-
-    public override void MakeCurrent()
-    {
-        base.MakeCurrent();
-        current = this;
     }
 
     public void OnUpdate(InputUpdateType updateType)

@@ -1,7 +1,9 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+////REVIEW: should this have optional data that identifies *what* has changed?
+
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Indicates that the configuration of a device has changed.

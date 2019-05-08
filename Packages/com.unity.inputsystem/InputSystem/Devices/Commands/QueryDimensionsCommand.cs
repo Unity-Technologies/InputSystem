@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Query dimensions of a device.
@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('D', 'I', 'M', 'S'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

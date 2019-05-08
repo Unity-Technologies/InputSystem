@@ -1,7 +1,6 @@
-using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Struct replacement for System.Collections.Bitfield.
@@ -14,8 +13,8 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     internal struct DynamicBitfield
     {
-        internal InlinedArray<ulong> array;
-        internal int length;
+        public InlinedArray<ulong> array;
+        public int length;
 
         public void SetLength(int newLength)
         {

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Notifies about the removal of an input device.
@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public static DeviceRemoveEvent Create(int deviceId, double time)
+        public static DeviceRemoveEvent Create(int deviceId, double time = -1)
         {
             var inputEvent =
                 new DeviceRemoveEvent {baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize, deviceId, time)};

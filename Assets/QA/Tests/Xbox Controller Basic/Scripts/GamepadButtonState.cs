@@ -1,8 +1,8 @@
 using UnityEngine;
-
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.XInput;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.XInput;
 
 public class GamepadButtonState : MonoBehaviour
 {
@@ -24,10 +24,9 @@ public class GamepadButtonState : MonoBehaviour
         if (stateImage == null) { stateImage = GetComponent<Image>(); }
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        m_CurrentController = (XInputController)XInputController.current;
+        m_CurrentController = InputSystem.GetDevice<XInputController>();
 
         if (m_CurrentController == null) { return; }
 

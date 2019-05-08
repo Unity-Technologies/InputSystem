@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A single character text input event.
@@ -37,7 +37,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return (TextEvent*)eventPtr.data;
         }
 
-        public static TextEvent Create(int deviceId, char character, double time)
+        public static TextEvent Create(int deviceId, char character, double time = -1)
         {
             ////TODO: detect and throw when if character is surrogate
             var inputEvent = new TextEvent
@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return inputEvent;
         }
 
-        public static TextEvent Create(int deviceId, int character, double time)
+        public static TextEvent Create(int deviceId, int character, double time = -1)
         {
             var inputEvent = new TextEvent
             {

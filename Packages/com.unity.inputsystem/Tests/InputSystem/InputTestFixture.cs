@@ -1,17 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem.Controls;
 using NUnit.Framework;
-using UnityEngine.Experimental.Input.LowLevel;
+using NUnit.Framework.Constraints;
+using Unity.Collections;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
+
+////TODO: must allow running UnityTests which means we have to be able to get per-frame updates yet not receive input from native
 
 ////TODO: when running tests in players, make sure that remoting is turned off
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A test fixture for writing tests that use the input system. Can be derived from
@@ -30,14 +35,14 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterLayout<MyDevice>();
+    ///         InputSystem.RegisterLayout&lt;MyDevice&gt;();
     ///     }
     ///
     ///     [Test]
     ///     public void CanCreateMyDevice()
     ///     {
-    ///         InputSystem.AddDevice<MyDevice>();
-    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<MyDevice>());
+    ///         InputSystem.AddDevice&lt;MyDevice&gt;();
+    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf&lt;MyDevice&gt;());
     ///     }
     /// }
     /// </code>
@@ -72,8 +77,16 @@ namespace UnityEngine.Experimental.Input
                 #if UNITY_EDITOR
                 // Make sure we're not affected by the user giving focus away from the
                 // game view.
-                InputConfiguration.LockInputToGame = true;
+                InputEditorUserSettings.lockInputToGameView = true;
                 #endif
+
+                var testProperties = TestContext.CurrentContext.Test.Properties;
+                if (testProperties.ContainsKey("TimesliceEvents") && testProperties["TimesliceEvents"][0].Equals("Off"))
+                    InputSystem.settings.timesliceEvents = false;
+
+                // We use native collections in a couple places. We when leak them, we want to know where exactly
+                // the allocation came from so enable full leak detection in tests.
+                NativeLeakDetection.Mode = NativeLeakDetectionMode.EnabledWithStackTrace;
             }
             catch (Exception exception)
             {
@@ -121,7 +134,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
+        // ReSharper disable once MemberCanBeProtected.Global
+        public static void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
             where TState : struct, IInputStateTypeInfo
         {
             // Update state.
@@ -131,18 +145,68 @@ namespace UnityEngine.Experimental.Input
             // Now verify that only the buttons we expect to be pressed are pressed.
             foreach (var control in device.allControls)
             {
-                var controlAsButton = control as ButtonControl;
-                if (controlAsButton == null)
+                if (!(control is ButtonControl controlAsButton))
                     continue;
 
                 var isInList = buttons.Contains(controlAsButton);
                 if (!isInList)
                     Assert.That(controlAsButton.isPressed, Is.False,
-                        string.Format("Expected button {0} to NOT be pressed", controlAsButton));
+                        $"Expected button {controlAsButton} to NOT be pressed");
                 else
                     Assert.That(controlAsButton.isPressed, Is.True,
-                        string.Format("Expected button {0} to be pressed", controlAsButton));
+                        $"Expected button {controlAsButton} to be pressed");
             }
+        }
+
+        public ActionConstraint Started(InputAction action, InputControl control = null)
+        {
+            return new ActionConstraint(InputActionPhase.Started, action, control);
+        }
+
+        public ActionConstraint Performed(InputAction action, InputControl control = null)
+        {
+            return new ActionConstraint(InputActionPhase.Performed, action, control);
+        }
+
+        public ActionConstraint Cancelled(InputAction action, InputControl control = null)
+        {
+            return new ActionConstraint(InputActionPhase.Cancelled, action, control);
+        }
+
+        public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null)
+            where TInteraction : IInputInteraction
+        {
+            return new ActionConstraint(InputActionPhase.Started, action, control, interaction: typeof(TInteraction));
+        }
+
+        public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null)
+            where TInteraction : IInputInteraction
+        {
+            return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction));
+        }
+
+        public ActionConstraint Cancelled<TInteraction>(InputAction action, InputControl control = null)
+            where TInteraction : IInputInteraction
+        {
+            return new ActionConstraint(InputActionPhase.Cancelled, action, control, interaction: typeof(TInteraction));
+        }
+
+        // ReSharper disable once MemberCanBeProtected.Global
+        public void Press(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Set(button, 1, absoluteTime, timeOffset);
+        }
+
+        // ReSharper disable once MemberCanBeProtected.Global
+        public void Release(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Set(button, 0, absoluteTime, timeOffset);
+        }
+
+        public void PressAndRelease(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        {
+            Press(button, absoluteTime, timeOffset);
+            Release(button, absoluteTime, timeOffset);
         }
 
         /// <summary>
@@ -158,19 +222,22 @@ namespace UnityEngine.Experimental.Input
         /// Set(gamepad.leftButton, 1);
         /// </code>
         /// </example>
-        public void Set<TValue>(InputControl<TValue> control, TValue state)
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double absoluteTime = -1, double timeOffset = 0)
             where TValue : struct
         {
             if (control == null)
-                throw new ArgumentNullException("control");
+                throw new ArgumentNullException(nameof(control));
             if (!control.device.added)
                 throw new ArgumentException(
-                    string.Format("Device of control '{0}' has not been added to the system", control), "control");
+                    $"Device of control '{control}' has not been added to the system", nameof(control));
 
-            InputEventPtr eventPtr;
-            using (StateEvent.From(control.device, out eventPtr))
+            using (StateEvent.From(control.device, out var eventPtr))
             {
-                control.WriteValueInto(eventPtr, state);
+                ////REVIEW: should we by default take the time from the device here?
+                if (absoluteTime >= 0)
+                    eventPtr.time = absoluteTime;
+                eventPtr.time += timeOffset;
+                control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
 
@@ -197,33 +264,26 @@ namespace UnityEngine.Experimental.Input
         public void Trigger(InputAction action)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             if (!action.enabled)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' must be enabled in order to be able to trigger it", action), "action");
+                    $"Action '{action}' must be enabled in order to be able to trigger it", nameof(action));
 
             var controls = action.controls;
             if (controls.Count == 0)
                 throw new ArgumentException(
-                    string.Format("Action '{0}' must be bound to controls in order to be able to trigger it", action), "action");
+                    $"Action '{action}' must be bound to controls in order to be able to trigger it", nameof(action));
 
             // See if we have a button we can trigger.
             for (var i = 0; i < controls.Count; ++i)
             {
-                var button = controls[i] as ButtonControl;
-                if (button == null)
+                if (!(controls[i] is ButtonControl button))
                     continue;
 
-                // We do, so flip its state and we're done.
-                var device = button.device;
-                InputEventPtr inputEvent;
-                using (StateEvent.From(device, out inputEvent))
-                {
-                    button.WriteValueInto(inputEvent, button.isPressed ? 0 : 1);
-                    InputSystem.QueueEvent(inputEvent);
-                    InputSystem.Update();
-                }
+                // Press and release button.
+                Set(button, 1);
+                Set(button, 0);
 
                 return;
             }
@@ -231,25 +291,11 @@ namespace UnityEngine.Experimental.Input
             // See if we have an axis we can slide a bit.
             for (var i = 0; i < controls.Count; ++i)
             {
-                var axis = controls[i] as AxisControl;
-                if (axis == null)
+                if (!(controls[i] is AxisControl axis))
                     continue;
 
                 // We do, so nudge its value a bit.
-                var device = axis.device;
-                InputEventPtr inputEvent;
-                using (StateEvent.From(device, out inputEvent))
-                {
-                    var currentValue = axis.ReadValue();
-                    var newValue = currentValue + 0.01f;
-
-                    if (axis.clamp && newValue > axis.clampMax)
-                        newValue = axis.clampMin;
-
-                    axis.WriteValueInto(inputEvent, newValue);
-                    InputSystem.QueueEvent(inputEvent);
-                    InputSystem.Update();
-                }
+                Set(axis, axis.ReadValue() + 0.01f);
 
                 return;
             }
@@ -262,5 +308,94 @@ namespace UnityEngine.Experimental.Input
         /// The input runtime used during testing.
         /// </summary>
         public InputTestRuntime runtime { get; private set; }
+
+        public class ActionConstraint : Constraint
+        {
+            public InputActionPhase phase { get; set; }
+            public InputAction action { get; set; }
+            public InputControl control { get; set; }
+            public object value { get; set; }
+            public Type interaction { get; set; }
+
+            private readonly List<ActionConstraint> m_AndThen = new List<ActionConstraint>();
+
+            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null)
+            {
+                this.phase = phase;
+                this.action = action;
+                this.control = control;
+                this.value = value;
+                this.interaction = interaction;
+
+                var interactionText = string.Empty;
+                if (interaction != null)
+                    interactionText = $"{InputInteraction.s_Interactions.FindNameForType(interaction).ToLower()} of ";
+
+                Description = $"{phase} {interactionText}'{action}'";
+                if (control != null)
+                    Description += $" from '{control}'";
+                if (value != null)
+                    Description += $" with value {value}";
+
+                foreach (var constraint in m_AndThen)
+                {
+                    Description += " and\n";
+                    Description += constraint.Description;
+                }
+            }
+
+            public override ConstraintResult ApplyTo(object actual)
+            {
+                var trace = (InputActionTrace)actual;
+                var actions = trace.ToArray();
+
+                if (actions.Length == 0)
+                    return new ConstraintResult(this, actual, false);
+
+                if (!Verify(actions[0]))
+                    return new ConstraintResult(this, actual, false);
+
+                var i = 1;
+                foreach (var constraint in m_AndThen)
+                {
+                    if (!constraint.Verify(actions[i]))
+                        return new ConstraintResult(this, actual, false);
+                    ++i;
+                }
+
+                if (i != actions.Length)
+                    return new ConstraintResult(this, actual, false);
+
+                return new ConstraintResult(this, actual, true);
+            }
+
+            private bool Verify(InputActionTrace.ActionEventPtr eventPtr)
+            {
+                if (eventPtr.action != action ||
+                    eventPtr.phase != phase)
+                    return false;
+
+                // Check control.
+                if (control != null && eventPtr.control != control)
+                    return false;
+
+                // Check interaction.
+                if (interaction != null && (eventPtr.interaction == null ||
+                                            !interaction.IsInstanceOfType(eventPtr.interaction)))
+                    return false;
+
+                // Check value.
+                if (value != null && !value.Equals(eventPtr.control.ReadValueAsObject()))
+                    return false;
+
+                return true;
+            }
+
+            public ActionConstraint AndThen(ActionConstraint constraint)
+            {
+                m_AndThen.Add(constraint);
+                return this;
+            }
+        }
     }
 }

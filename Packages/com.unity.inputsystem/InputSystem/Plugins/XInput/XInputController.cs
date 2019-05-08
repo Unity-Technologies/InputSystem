@@ -1,12 +1,12 @@
 using System;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: expose user index
 
 ////TODO: set displayNames of the controls according to Xbox controller standards
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.InputSystem.Plugins.XInput
 {
     /// <summary>
     /// An XInput compatible game controller.
@@ -17,13 +17,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     /// interface with Xbox controlllers. In those cases, XInput-specific functionality (like <see cref="Capabilities"/>)
     /// will not be available.
     /// </remarks>
+    [InputControlLayout(displayName = "Xbox Controller")]
     public class XInputController : Gamepad
     {
-        public ButtonControl aButton { get; private set; }
-        public ButtonControl bButton { get; private set; }
-        public ButtonControl xButton { get; private set; }
-        public ButtonControl yButton { get; private set; }
-
         public ButtonControl menu { get; private set; }
         public ButtonControl view { get; private set; }
 
@@ -48,11 +44,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-
-            aButton = buttonSouth;
-            bButton = buttonEast;
-            xButton = buttonWest;
-            yButton = buttonNorth;
 
             menu = startButton;
             view = selectButton;

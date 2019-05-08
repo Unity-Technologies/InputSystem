@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Plugins.XR;
 
 using UnityEngine.UI;
 
@@ -11,45 +8,85 @@ public class XRHaptics : MonoBehaviour
 {
     public Image leftHapticDetected;
     public Image leftTryingToRumble;
+    public Image leftTryingToRumbleHalf;
     public Image rightHapticDetected;
     public Image rightTryingToRumble;
+    public Image rightTryingToRumbleHalf;
 
-    bool m_LeftHandRumbling = false;
-    float m_RumblePeriod = 1f;
-    float m_Timer = 0f;
+    public float m_RumblePeriod = 1f;
 
-    void Update()
+    private RumbleState state;
+    private float m_Timer = 0f;
+
+    private enum RumbleState
     {
-        XRControllerWithRumble leftHandController = XRController.leftHand as XRControllerWithRumble;
-        leftHapticDetected.color = (leftHandController != null) ? Color.red : Color.white;
-        if (leftHandController != null)
-        {
-            leftHandController.SetIntensity(1f);
+        Left,
+        LeftHalf,
+        Right,
+        RightHalf
+    }
 
-            leftTryingToRumble.color = (m_LeftHandRumbling ? Color.red : Color.white);
-        }
-
-        XRControllerWithRumble rightHandController = XRController.rightHand as XRControllerWithRumble;
-        rightHapticDetected.color = (rightHandController != null) ? Color.red : Color.white;
-        if (rightHandController != null)
-        {
-            rightHandController.SetIntensity(1f);
-
-            rightTryingToRumble.color = !m_LeftHandRumbling ? Color.red : Color.white;
-        }
+    public void Update()
+    {
+        var leftHandController = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
+        leftHapticDetected.color = leftHandController != null ? Color.red : Color.white;
+        var rightHandController = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
+        rightHapticDetected.color = rightHandController != null ? Color.red : Color.white;
 
         UpdateTimer();
     }
 
     // Swap rumble between left and right hand controllers about once per period.
-    void UpdateTimer()
+    private void UpdateTimer()
     {
         m_Timer += Time.deltaTime;
 
         if (m_Timer >= m_RumblePeriod)
         {
-            m_Timer = 0f;
-            m_LeftHandRumbling = !m_LeftHandRumbling;
+            m_Timer -= m_RumblePeriod;
+
+            XRControllerWithRumble controller;
+
+            switch (state)
+            {
+                case RumbleState.Left:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
+                    controller.SendImpulse(1f, m_RumblePeriod);
+                    leftTryingToRumble.color = Color.red;
+                    leftTryingToRumbleHalf.color = Color.white;
+                    rightTryingToRumble.color = Color.white;
+                    rightTryingToRumbleHalf.color = Color.white;
+                    state = RumbleState.LeftHalf;
+                    break;
+                case RumbleState.LeftHalf:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
+                    controller.SendImpulse(0.5f, m_RumblePeriod);
+
+                    leftTryingToRumble.color = Color.white;
+                    leftTryingToRumbleHalf.color = Color.red;
+                    rightTryingToRumble.color = Color.white;
+                    rightTryingToRumbleHalf.color = Color.white;
+                    state = RumbleState.Right;
+                    break;
+                case RumbleState.Right:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
+                    controller.SendImpulse(1f, m_RumblePeriod);
+                    leftTryingToRumble.color = Color.white;
+                    leftTryingToRumbleHalf.color = Color.white;
+                    rightTryingToRumble.color = Color.red;
+                    rightTryingToRumbleHalf.color = Color.white;
+                    state = RumbleState.RightHalf;
+                    break;
+                case RumbleState.RightHalf:
+                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
+                    controller.SendImpulse(0.5f, m_RumblePeriod);
+                    leftTryingToRumble.color = Color.white;
+                    leftTryingToRumbleHalf.color = Color.white;
+                    rightTryingToRumble.color = Color.white;
+                    rightTryingToRumbleHalf.color = Color.red;
+                    state = RumbleState.Left;
+                    break;
+            }
         }
     }
 }

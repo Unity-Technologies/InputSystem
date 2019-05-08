@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Partial state update for an input device.
@@ -26,13 +26,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8); }
         }
 
-        public IntPtr deltaState
+        public void* deltaState
         {
             get
             {
                 fixed(byte* data = stateData)
                 {
-                    return new IntPtr((void*)data);
+                    return data;
                 }
             }
         }

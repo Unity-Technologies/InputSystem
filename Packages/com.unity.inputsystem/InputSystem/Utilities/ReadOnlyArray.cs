@@ -2,15 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA)
-using UnityEngine.Experimental.Input.Net35Compatibility;
-#endif
-
 ////REVIEW: switch to something that doesn't require the backing store to be an actual array?
 ////  (maybe switch m_Array to an InlinedArray and extend InlinedArray to allow having three configs:
 ////  1. firstValue only, 2. firstValue + additionalValues, 3. everything in additionalValues)
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Read-only access to an array or to a slice of an array.
@@ -35,10 +31,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         {
             m_Array = array;
             m_StartIndex = 0;
-            if (array != null)
-                m_Length = array.Length;
-            else
-                m_Length = 0;
+            m_Length = array?.Length ?? 0;
         }
 
         /// <summary>
@@ -61,11 +54,22 @@ namespace UnityEngine.Experimental.Input.Utilities
         /// <returns>A new array containing a copy of the contents of the read-only array.</returns>
         public TValue[] ToArray()
         {
-            if (m_Length == 0)
-                return null;
             var result = new TValue[m_Length];
-            Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
+            if (m_Length > 0)
+                Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
             return result;
+        }
+
+        public int IndexOf(Predicate<TValue> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            for (var i = 0; i < m_Length; ++i)
+                if (predicate(m_Array[m_StartIndex + i]))
+                    return i;
+
+            return -1;
         }
 
         public IEnumerator<TValue> GetEnumerator()
@@ -78,13 +82,15 @@ namespace UnityEngine.Experimental.Input.Utilities
             return GetEnumerator();
         }
 
+        public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
+        {
+            return new ReadOnlyArray<TValue>(array);
+        }
+
         /// <summary>
         /// Number of elements in the array.
         /// </summary>
-        public int Count
-        {
-            get { return m_Length; }
-        }
+        public int Count => m_Length;
 
         /// <summary>
         /// Return the element at the given index.
@@ -108,10 +114,10 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         internal class Enumerator<T> : IEnumerator<T>
         {
-            private T[] m_Array;
+            private readonly T[] m_Array;
+            private readonly int m_IndexStart;
+            private readonly int m_IndexEnd;
             private int m_Index;
-            private int m_IndexStart;
-            private int m_IndexEnd;
 
             public Enumerator(T[] array, int index, int length)
             {
@@ -147,10 +153,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 
@@ -163,6 +166,21 @@ namespace UnityEngine.Experimental.Input.Utilities
                 if (array.m_Array[array.m_StartIndex + i].CompareTo(value) == 0)
                     return true;
             return false;
+        }
+
+        public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            return IndexOfReference(array, value) != -1;
+        }
+
+        public static int IndexOfReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
+            for (var i = 0; i < array.m_Length; ++i)
+                if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
+                    return i;
+            return -1;
         }
     }
 }

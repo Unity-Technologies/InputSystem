@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
@@ -7,8 +8,11 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
+    /// <summary>
+    /// Implements <see cref="IInputRuntime"/> based on <see cref="NativeInputSystem"/>.
+    /// </summary>
     internal class NativeInputRuntime : IInputRuntime
     {
         public static NativeInputRuntime instance = new NativeInputRuntime();
@@ -20,29 +24,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public void Update(InputUpdateType updateType)
         {
-            if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Dynamic);
-            }
-            if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Fixed);
-            }
-            if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
-            }
-#if UNITY_EDITOR
-            if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Editor);
-            }
-#endif
+            NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
-        public void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* ptr)
         {
-            NativeInputSystem.QueueInputEvent(ptr);
+            NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
@@ -50,15 +37,46 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return NativeInputSystem.IOCTL(deviceId, commandPtr->type, new IntPtr(commandPtr->payloadPtr), commandPtr->payloadSizeInBytes);
         }
 
-        public Action<InputUpdateType, int, IntPtr> onUpdate
+        public unsafe InputUpdateDelegate onUpdate
         {
             set
             {
-                // This is stupid but the enum prevents us from jacking the delegate in directly.
-                // This means we get a double dispatch here :(
                 if (value != null)
-                    NativeInputSystem.onUpdate = (updateType, eventCount, eventPtr) =>
-                        value((InputUpdateType)updateType, eventCount, eventPtr);
+                    NativeInputSystem.onUpdate =
+                        (updateType, eventBufferPtr) =>
+                    {
+                        var buffer = new InputEventBuffer((InputEvent*)eventBufferPtr->eventBuffer,
+                            eventBufferPtr->eventCount,
+                            sizeInBytes: eventBufferPtr->sizeInBytes,
+                            capacityInBytes: eventBufferPtr->capacityInBytes);
+
+                        try
+                        {
+                            value((InputUpdateType)updateType, ref buffer);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError(string.Format(
+                                "{0} during event processing of {1} update; resetting event buffer",
+                                e.GetType().Name, updateType));
+                            Debug.LogException(e);
+                            buffer.Reset();
+                        }
+
+                        if (buffer.eventCount > 0)
+                        {
+                            eventBufferPtr->eventCount = buffer.eventCount;
+                            eventBufferPtr->sizeInBytes = (int)buffer.sizeInBytes;
+                            eventBufferPtr->capacityInBytes = (int)buffer.capacityInBytes;
+                            eventBufferPtr->eventBuffer =
+                                NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data);
+                        }
+                        else
+                        {
+                            eventBufferPtr->eventCount = 0;
+                            eventBufferPtr->sizeInBytes = 0;
+                        }
+                    };
                 else
                     NativeInputSystem.onUpdate = null;
             }
@@ -77,9 +95,22 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        public Func<InputUpdateType, bool> onShouldRunUpdate
+        {
+            set
+            {
+                // This is stupid but the enum prevents us from jacking the delegate in directly.
+                // This means we get a double dispatch here :(
+                if (value != null)
+                    NativeInputSystem.onShouldRunUpdate = updateType => value((InputUpdateType)updateType);
+                else
+                    NativeInputSystem.onShouldRunUpdate = null;
+            }
+        }
+
         public Action<int, string> onDeviceDiscovered
         {
-            set { NativeInputSystem.onDeviceDiscovered = value; }
+            set => NativeInputSystem.onDeviceDiscovered = value;
         }
 
         public Action onShutdown
@@ -107,34 +138,30 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public float pollingFrequency
-        {
-            set { NativeInputSystem.SetPollingFrequency(value); }
-        }
-
-        public double currentTime
-        {
-            get
-            {
-                return NativeInputSystem.currentTime;
-            }
-        }
-
-        public double currentTimeOffsetToRealtimeSinceStartup
-        {
-            get
-            {
-                return NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-            }
-        }
-
-        public InputUpdateType updateMask
+        public Action<bool> onFocusChanged
         {
             set
             {
-                NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
+                if (value == null)
+                #if UNITY_2019_1_OR_NEWER
+                    Application.focusChanged -= OnFocusChanged;
+                else if (m_FocusChangedMethod == null)
+                    Application.focusChanged += OnFocusChanged;
+                #endif
+                    m_FocusChangedMethod = value;
             }
         }
+
+        public float pollingFrequency
+        {
+            set => NativeInputSystem.SetPollingFrequency(value);
+        }
+
+        public double currentTime => NativeInputSystem.currentTime;
+
+        public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
+
+        public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
 
         private Action m_ShutdownMethod;
 
@@ -143,31 +170,45 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_ShutdownMethod();
         }
 
-        public ScreenOrientation screenOrientation
+        private Action<bool> m_FocusChangedMethod;
+
+        private void OnFocusChanged(bool focus)
         {
-            get
-            {
-                return Screen.orientation;
-            }
+            m_FocusChangedMethod(focus);
         }
 
-        public Vector2 screenSize
+        public ScreenOrientation screenOrientation => Screen.orientation;
+
+        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
+
+        public int frameCount => Time.frameCount;
+
+        public bool isInBatchMode => Application.isBatchMode;
+
+        #if UNITY_EDITOR
+
+        public bool isInPlayMode => EditorApplication.isPlaying;
+        public bool isPaused => EditorApplication.isPaused;
+
+        public Action<PlayModeStateChange> onPlayModeChanged
         {
-            get { return new Vector2(Screen.width, Screen.height); }
+            set => EditorApplication.playModeStateChanged += value;
         }
 
-        public int frameCount
+        public Action onProjectChange
         {
-            get { return Time.frameCount; }
+            set => EditorApplication.projectChanged += value;
         }
 
-#if UNITY_ANALYTICS || UNITY_EDITOR
+        #endif // UNITY_EDITOR
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
             const string vendorKey = "unity.input";
             #if UNITY_EDITOR
-            UnityEditor.EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
             #else
             Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
             #endif
@@ -176,7 +217,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public void SendAnalyticsEvent(string name, object data)
         {
             #if UNITY_EDITOR
-            UnityEditor.EditorAnalytics.SendEventWithLimit(name, data);
+            EditorAnalytics.SendEventWithLimit(name, data);
             #else
             Analytics.Analytics.SendEvent(name, data);
             #endif

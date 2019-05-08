@@ -1,6 +1,4 @@
-using UnityEngine.Experimental.Input.LowLevel;
-
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Interface for <see cref="InputDevice">devices</see> that can receive text input events.

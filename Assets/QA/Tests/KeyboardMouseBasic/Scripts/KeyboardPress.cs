@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // This updates the color of a single image based on a specified Key enum.
@@ -31,7 +31,7 @@ public class KeyboardPress : MonoBehaviour
 
     void Update()
     {
-        m_Keyboard = Keyboard.current;
+        m_Keyboard = InputSystem.GetDevice<Keyboard>();
 
         if (m_Keyboard == null) { return; }
 

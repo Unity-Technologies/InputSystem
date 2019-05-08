@@ -1,5 +1,5 @@
 #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
-namespace UnityEngine.Experimental.Input.Plugins.OnScreen
+namespace UnityEngine.InputSystem.Plugins.OnScreen
 {
     /// <summary>
     /// Support for various forms of on-screen controls.
@@ -13,7 +13,8 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     {
         public static void Initialize()
         {
-            InputSystem.RegisterLayout<OnScreenKeyboard>();
+            ////TODO: OnScreenKeyboard support
+            //InputSystem.RegisterLayout<OnScreenKeyboard>();
         }
     }
 }

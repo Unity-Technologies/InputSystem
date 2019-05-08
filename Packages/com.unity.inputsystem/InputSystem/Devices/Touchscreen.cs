@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////TODO: property that tells whether a Touchscreen is multi-touch capable
@@ -27,21 +27,19 @@ using UnityEngine.Profiling;
 //// - High frequency touches
 //// - Touch prediction
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     // IMPORTANT: Must match TouchInputState in native code.
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = 36;
+        internal const int kSizeInBytes = 36;
 
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'O', 'U', 'C'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
         [InputControl(layout = "Integer")][FieldOffset(0)] public int touchId;
-        [InputControl(processors = "TouchPositionTransform")][FieldOffset(4)] public Vector2 position;
+        ////TODO: kill the processor here
+        [InputControl][FieldOffset(4)] public Vector2 position;
         [InputControl][FieldOffset(12)] public Vector2 delta;
         [InputControl(layout = "Axis")][FieldOffset(20)] public float pressure;
         [InputControl][FieldOffset(24)] public Vector2 radius;
@@ -51,8 +49,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public PointerPhase phase
         {
-            get { return (PointerPhase)phaseId; }
-            set { phaseId = (ushort)value; }
+            get => (PointerPhase)phaseId;
+            set => phaseId = (ushort)value;
         }
 
         public FourCC GetFormat()
@@ -60,21 +58,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
-
-    public class TouchPositionTransformProcessor : IInputControlProcessor<Vector2>
-    {
-        public Vector2 Process(Vector2 value, InputControl control)
-        {
-#if UNITY_EDITOR
-            return value;
-#elif PLATFORM_ANDROID
-            return new Vector2(value.x, InputRuntime.s_Instance.screenSize.y - value.y);
-#else
-            return value;
-#endif
-        }
-    }
-
 
     /// <summary>
     /// Default state layout for touch devices.
@@ -86,13 +69,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// only specific fingers.
     /// </remarks>
     // IMPORTANT: Must match TouchInputState in native code.
-    [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * TouchState.kSizeInBytes)]
+    [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'S', 'C', 'R'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
 
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.
@@ -102,9 +82,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// than this number, having a larger pool of touch states to work with makes it possible to
         /// track short-lived touches better.
         /// </remarks>
-        public const int kMaxTouches = 64;
+        public const int MaxTouches = 64;
 
-        [InputControl(layout = "Touch", name = "touch", arraySize = kMaxTouches)]
+        [InputControl(layout = "Touch", name = "touch", arraySize = MaxTouches)]
         // Add controls compatible with what Pointer expects and redirect their
         // state to the state of touch0 so that this essentially becomes our
         // pointer control.
@@ -118,12 +98,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "radius", useStateFrom = "touch0/radius")]
         [InputControl(name = "phase", useStateFrom = "touch0/phase")]
         [InputControl(name = "displayIndex", useStateFrom = "touch0/displayIndex")]
-        [InputControl(name = "twist", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "tilt", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "twist", offset = InputStateBlock.InvalidOffset)]
+        [InputControl(name = "tilt", offset = InputStateBlock.InvalidOffset)]
         ////TODO: we want to the button to be pressed when there is a primary touch
-        [InputControl(name = "button", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "button", offset = InputStateBlock.InvalidOffset)]
         [FieldOffset(0)]
-        public fixed byte touchData[kMaxTouches * TouchState.kSizeInBytes];
+        public fixed byte touchData[MaxTouches * TouchState.kSizeInBytes];
 
         public TouchState* touches
         {
@@ -143,7 +123,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     [Flags]
     public enum TouchFlags
@@ -156,13 +136,10 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A multi-touch surface.
     /// </summary>
-    [InputControlLayout(stateType = typeof(TouchscreenState))]
+    [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
-        public TouchControl primaryTouch
-        {
-            get { return allTouchControls[0]; }
-        }
+        public TouchControl primaryTouch => allTouchControls[0];
 
         /// <summary>
         /// Array of currently active touches.
@@ -200,7 +177,7 @@ namespace UnityEngine.Experimental.Input
                             hadActivityThisFrame = device.wasUpdatedThisFrame;
                         if (hadActivityThisFrame.Value)
                         {
-                            var previousPhase = phaseControl.ReadPreviousValue();
+                            var previousPhase = phaseControl.ReadValueFromPreviousFrame();
                             if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Cancelled)
                                 isActive = true;
                         }
@@ -221,7 +198,7 @@ namespace UnityEngine.Experimental.Input
         /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
         /// </summary>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries regardless of
+        /// Will always contain <see cref="TouchscreenState.MaxTouches"/> entries regardless of
         /// which touches (if any) are currently in progress.
         /// </remarks>
         public ReadOnlyArray<TouchControl> allTouchControls { get; private set; }
@@ -247,20 +224,20 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            var touchArray = new TouchControl[TouchscreenState.kMaxTouches];
+            var touchArray = new TouchControl[TouchscreenState.MaxTouches];
 
-            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i)
+            for (var i = 0; i < TouchscreenState.MaxTouches; ++i)
                 touchArray[i] = builder.GetControl<TouchControl>(this, "touch" + i);
 
             allTouchControls = new ReadOnlyArray<TouchControl>(touchArray);
-            m_ActiveTouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
+            m_ActiveTouchesArray = new TouchControl[TouchscreenState.MaxTouches];
 
             base.FinishSetup(builder);
         }
 
         ////TODO: find a better way to manage memory allocation for touches
         ////      (we really don't want to crawl through the entire state here like we do now;
-        ////      whatever the solution, it'll likely be complicated by fixed vs dymamic updates)
+        ////      whatever the solution, it'll likely be complicated by fixed vs dynamic updates)
 
         ////TODO: primary touch handling
 
@@ -290,7 +267,7 @@ namespace UnityEngine.Experimental.Input
         //       sending state to any other device. The code here only presents an alternate path for sending
         //       state to a Touchscreen and have it perform touch allocation internally.
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
@@ -300,8 +277,8 @@ namespace UnityEngine.Experimental.Input
 
             // Reset all touches that have ended last frame to being unused.
             // Also mark any ongoing touches as stationary.
-            var touchStatePtr = (TouchState*)((byte*)statePtr.ToPointer() + stateBlock.byteOffset);
-            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+            var touchStatePtr = (TouchState*)((byte*)statePtr + stateBlock.byteOffset);
+            for (var i = 0; i < TouchscreenState.MaxTouches; ++i, ++touchStatePtr)
             {
                 var phase = touchStatePtr->phase;
                 switch (phase)
@@ -330,7 +307,7 @@ namespace UnityEngine.Experimental.Input
             return haveChangedState;
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             if (stateFormat != TouchState.kFormat)
@@ -343,7 +320,7 @@ namespace UnityEngine.Experimental.Input
             // unlike other devices, is hardwired to a single memory layout only.
 
             var newTouchState = (TouchState*)statePtr;
-            var currentTouchState = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
+            var currentTouchState = (TouchState*)((byte*)currentStatePtr + stateBlock.byteOffset);
 
             // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
             // previously.
@@ -351,7 +328,7 @@ namespace UnityEngine.Experimental.Input
             if (phase != PointerPhase.Began)
             {
                 var touchId = newTouchState->touchId;
-                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
+                for (var i = 0; i < TouchscreenState.MaxTouches; ++i, ++currentTouchState)
                 {
                     if (currentTouchState->touchId == touchId)
                     {
@@ -373,7 +350,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // It's a new touch. Try to find an unused TouchState.
-            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
+            for (var i = 0; i < TouchscreenState.MaxTouches; ++i, ++currentTouchState)
             {
                 if (currentTouchState->phase == PointerPhase.None)
                 {
@@ -390,7 +367,7 @@ namespace UnityEngine.Experimental.Input
             return false;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 
@@ -400,50 +377,5 @@ namespace UnityEngine.Experimental.Input
     public class Touch
     {
         private List<TouchState> m_History;
-    }
-
-    /// <summary>
-    /// Helper to make tracking of touches easier.
-    /// </summary>
-    /// <remarks>
-    /// This class obsoletes the need to manually track touches by ID and provides
-    /// various helpers such as making history data of touches available.
-    /// </remarks>
-    public class TouchManager
-    {
-        /// <summary>
-        /// The amount of history kept for each single touch.
-        /// </summary>
-        /// <remarks>
-        /// By default, this is zero meaning that no history information is kept for
-        /// touches. Setting this to <c>Int32.maxValue</c> will cause all history from
-        /// the beginning to the end of a touch being kept.
-        /// </remarks>
-        public int maxHistoryLengthPerTouch
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public Action<Touch> onTouch
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public static TouchManager instance
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        private Touch[] m_TouchPool;
-    }
-
-    public class TouchSimulation
-    {
-        public static TouchSimulation instance
-        {
-            get { throw new NotImplementedException(); }
-        }
     }
 }

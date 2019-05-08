@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: add ability to single-step through events
 
@@ -20,7 +20,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
     internal class InputStateWindow : EditorWindow
@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Must be an event carrying state.
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be state or delta event", "eventPtr");
+                throw new ArgumentException("Event must be state or delta event", nameof(eventPtr));
 
             // Get state data.
             void* dataPtr;
@@ -68,14 +68,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 var deltaEventPtr = DeltaStateEvent.From(eventPtr);
                 stateSize = control.stateBlock.alignedSizeInBytes;
                 stateOffset = deltaEventPtr->stateOffset;
-                dataPtr = deltaEventPtr->deltaState.ToPointer();
+                dataPtr = deltaEventPtr->deltaState;
                 dataSize = deltaEventPtr->deltaStateSizeInBytes;
             }
             else
             {
                 var stateEventPtr = StateEvent.From(eventPtr);
                 dataSize = stateSize = stateEventPtr->stateSizeInBytes;
-                dataPtr = stateEventPtr->state.ToPointer();
+                dataPtr = stateEventPtr->state;
             }
 
             // Copy event data.
@@ -105,13 +105,13 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var selector = (BufferSelector)i;
                 var deviceState = TryGetDeviceState(device, selector);
-                if (deviceState == IntPtr.Zero)
+                if (deviceState == null)
                     continue;
 
                 var buffer = new byte[stateSize];
                 fixed(byte* stateDataPtr = buffer)
                 {
-                    UnsafeUtility.MemCpy(stateDataPtr, (void*)(deviceState.ToInt64() + (int)stateOffset), stateSize);
+                    UnsafeUtility.MemCpy(stateDataPtr, (byte*)deviceState + (int)stateOffset, stateSize);
                 }
                 m_StateBuffers[i] = buffer;
 
@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_BufferChoiceValues = bufferChoiceValues.ToArray();
         }
 
-        private static IntPtr TryGetDeviceState(InputDevice device, BufferSelector selector)
+        private static unsafe void* TryGetDeviceState(InputDevice device, BufferSelector selector)
         {
             var manager = InputSystem.s_Manager;
             var deviceIndex = device.m_DeviceIndex;
@@ -159,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     break;
             }
 
-            return IntPtr.Zero;
+            return null;
         }
 
         public void OnGUI()
@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////TODO: support dumping multiple state side-by-side when comparing
-        public void DrawHexDump()
+        private void DrawHexDump()
         {
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 

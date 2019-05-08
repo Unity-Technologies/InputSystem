@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A serializable property type that can either reference an action externally defined
@@ -12,15 +12,8 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The action held on to by the property.
         /// </summary>
-        public InputAction action
-        {
-            get
-            {
-                if (m_UseReference)
-                    return m_Reference.action;
-                return m_Action;
-            }
-        }
+        public InputAction action => m_UseReference ? m_Reference.action : m_Action;
+        public InputActionReference reference => m_UseReference ? m_Reference : null;
 
         public InputActionProperty(InputAction action)
         {
@@ -53,6 +46,20 @@ namespace UnityEngine.Experimental.Input
             return m_Reference == other;
         }
 
+        public override bool Equals(object o)
+        {
+            if (m_UseReference)
+                return Equals(o as InputActionReference);
+            return Equals(o as InputAction);
+        }
+
+        public override int GetHashCode()
+        {
+            if (m_UseReference)
+                return m_Reference.GetHashCode();
+            return m_Action.GetHashCode();
+        }
+
         public static bool operator==(InputActionProperty left, InputActionProperty right)
         {
             return left.Equals(right);
@@ -81,6 +88,11 @@ namespace UnityEngine.Experimental.Input
         public static bool operator!=(InputAction left, InputActionProperty right)
         {
             return !ReferenceEquals(left, right.action);
+        }
+
+        public static implicit operator InputActionProperty(InputAction action)
+        {
+            return new InputActionProperty(action);
         }
 
         [SerializeField] private bool m_UseReference;

@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Sets the position for IME dialogs.  This is in pixels, from the upper left corner going down and to the right.
@@ -12,13 +12,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('I', 'M', 'E', 'P'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(float) * 2);
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(float) * 2);
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        public Vector2 position
+        {
+            get { return m_Position; }
+        }
+
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        Vector2 position;
+        Vector2 m_Position;
 
         public FourCC GetTypeStatic()
         {
@@ -30,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return new SetIMECursorPositionCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                position = cursorPosition
+                m_Position = cursorPosition
             };
         }
     }
