@@ -6,11 +6,10 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Text.Core;
 #endif
 
-namespace UnityEngine.Experimental.Input.Plugins.WSA
+namespace UnityEngine.InputSystem.Plugins.WSA
 {
     public class WSAScreenKeyboard : ScreenKeyboard
     {
-
 #if ENABLE_WINMD_SUPPORT
         InputPane m_InputPane;
         CoreTextEditContext m_CoreTextEditContext;
@@ -57,6 +56,7 @@ namespace UnityEngine.Experimental.Input.Plugins.WSA
                     return CoreTextInputScope.Text;
             }
         }
+
 #endif
         public override void Show(ScreenKeyboardShowParams showParams)
         {
@@ -88,7 +88,6 @@ namespace UnityEngine.Experimental.Input.Plugins.WSA
 
             set
             {
-
             }
         }
 

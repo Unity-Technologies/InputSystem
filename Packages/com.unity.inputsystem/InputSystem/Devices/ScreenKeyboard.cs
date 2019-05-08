@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
 
-namespace UnityEngine.Experimental.Input
+
+namespace UnityEngine.InputSystem
 {
     public enum ScreenKeyboardType
     {
@@ -68,19 +68,18 @@ namespace UnityEngine.Experimental.Input
             if (m_ScreenKeyboard != null)
                 return m_ScreenKeyboard;
 #if UNITY_ANDROID
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.Android.AndroidScreenKeyboard>();
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Plugins.Android.AndroidScreenKeyboard>();
 #elif UNITY_WSA
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.WSA.WSAScreenKeyboard>();
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Plugins.WSA.WSAScreenKeyboard>();
 #elif UNITY_IOS || UNITY_TVOS
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.Experimental.Input.Plugins.iOS.iOSScreenKeyboard>();
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Plugins.iOS.iOSScreenKeyboard>();
 #elif UNITY_EDITOR
             // ToDo: Should we show something for Editor?
             m_ScreenKeyboard = new ScreenKeyboard();
 #else
-            throw new NotImplementedException("ScreenKeyboard is not implemented for this platform."); 
+            throw new NotImplementedException("ScreenKeyboard is not implemented for this platform.");
 #endif
             return m_ScreenKeyboard;
-
         }
 
         protected ScreenKeyboard()
@@ -116,7 +115,6 @@ namespace UnityEngine.Experimental.Input
 
         public virtual void Show(ScreenKeyboardShowParams showParams)
         {
-            
         }
 
         public void Show()

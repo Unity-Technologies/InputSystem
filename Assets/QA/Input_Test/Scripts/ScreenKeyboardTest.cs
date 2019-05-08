@@ -3,12 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 #if UNITY_ANDROID
-using UnityEngine.Experimental.Input.Plugins.Android;
+using UnityEngine.InputSystem.Plugins.Android;
 #elif UNITY_WSA
-using UnityEngine.Experimental.Input.Plugins.WSA;
+using UnityEngine.InputSystem.Plugins.WSA;
 #endif
 
 public enum AutomaticOperation
@@ -57,7 +57,6 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextChanged;
 
 
-
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
         {
             m_KeyboardTypeDropDown.options.Add(new Dropdown.OptionData(t.ToString()));
@@ -71,15 +70,13 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_AutomaticOperation.RefreshShownValue();
 
         m_LogText.text = "";
-
-
     }
 
     private void InputFieldTextChanged(InputFieldEventArgs args)
     {
         var oldText = args.text;
-        AutomaticOperation op = (AutomaticOperation) Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
-        switch(op)
+        AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
+        switch (op)
         {
             case AutomaticOperation.CharacterLimit:
                 if (args.text.Length > 5)
@@ -134,7 +131,6 @@ public class ScreenKeyboardTest : MonoBehaviour
             alert = m_KeyboardAlert.isOn,
             inputFieldHidden = m_KeyboardInputFieldHidden.isOn,
             type = ToScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text)
-
         };
 
         m_ScreenKeyboard.Show(showParams);
@@ -173,7 +169,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     {
         m_ScreenKeyboard.Hide();
     }
-    
+
     public void HideMobileInputField()
     {
         m_InputField.shouldHideMobileInput = m_KeyboardInputFieldHidden.isOn;

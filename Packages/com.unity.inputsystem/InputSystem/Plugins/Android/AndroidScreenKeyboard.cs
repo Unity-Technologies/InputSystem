@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
 
-namespace UnityEngine.Experimental.Input.Plugins.Android
+namespace UnityEngine.InputSystem.Plugins.Android
 {
     public class AndroidScreenKeyboard : ScreenKeyboard
     {
@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             if (m_KeyboardObject == null)
                 m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard");
 
-            m_KeyboardObject.Call("show", 
+            m_KeyboardObject.Call("show",
                 new ScreenKeyboardCallbacks(this),
                 (int)showParams.type,
                 showParams.initialText,
