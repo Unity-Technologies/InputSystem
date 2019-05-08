@@ -402,14 +402,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             set => m_Camera = value;
         }
 
-        //nuke?
         /// <summary>
         /// The event system that should be fed with UI events from the player's inputs.
         /// </summary>
-        public EventSystem uiEventSystem
+        public InputSystemUIInputModule uiInputModule
         {
-            get { return m_UIEventSystem; }
-            set { throw new NotImplementedException(); }
+            get { return m_UIInputModule; }
+            set { m_UIInputModule = value; }
         }
 
         /// <summary>
@@ -465,9 +464,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                     else
                         Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
                 }
-                var uiModule = GetComponent<InputSystemUIInputModule>();
-                if (uiModule != null && uiModule.actionsAsset == m_Actions)
-                    uiModule.EnableAllActions();
+                uiInputModule?.EnableAllActions();
             }
             m_InputActive = true;
         }
@@ -507,9 +504,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
             m_Actions.Disable();
             actionMap.Enable();
-            var uiModule = GetComponent<InputSystemUIInputModule>();
-            if (uiModule != null && uiModule.actionsAsset == m_Actions)
-                uiModule.EnableAllActions();
+            uiInputModule?.EnableAllActions();
         }
 
         public static PlayerInput GetPlayerByIndex(int playerIndex)
@@ -619,8 +614,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal InputActionAsset m_Actions;
         [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
-        [Tooltip("UI EventSystem that should receive input from the actions associated with the player. TODO")]
-        [SerializeField] internal EventSystem m_UIEventSystem;
+        [Tooltip("UI InputModule that should have it's input actions synched to this PlayerInput's actions.")]
+        [SerializeField] internal InputSystemUIInputModule m_UIInputModule;
         [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
@@ -665,14 +660,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         {
             if (m_Actions == null)
                 return;
-
-            var uiModule = GetComponent<InputSystemUIInputModule>();
-            if (uiModule != null)
-            {
-                if (uiModule.actionsAsset != m_Actions)
-                    uiModule = null;
-            }
-
+                
             ////REVIEW: should we *always* Instantiate()?
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
@@ -683,8 +671,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                     break;
                 }
 
-            if (uiModule != null)
-                uiModule.actionsAssetNoEnable = m_Actions;
+            if (uiInputModule != null)
+                uiInputModule.actionsAssetNoEnable = m_Actions;
 
             switch (m_NotificationBehavior)
             {
