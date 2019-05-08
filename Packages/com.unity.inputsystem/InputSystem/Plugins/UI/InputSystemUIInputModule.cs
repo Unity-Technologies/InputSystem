@@ -549,47 +549,47 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
-            if (action == m_PointAction.action)
+            if (action == m_PointAction?.action)
             {
                 mouseState.position = context.ReadValue<Vector2>();
             }
-            else if (action == m_ScrollWheelAction.action)
+            else if (action == m_ScrollWheelAction?.action)
             {
                 // The old input system reported scroll deltas in lines, we report pixels.
                 // Need to scale as the UI system expects lines.
                 const float kPixelPerLine = 20;
                 mouseState.scrollPosition = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
             }
-            else if (action == m_LeftClickAction.action)
+            else if (action == m_LeftClickAction?.action)
             {
                 var buttonState = mouseState.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.leftButton = buttonState;
             }
-            else if (action == m_RightClickAction.action)
+            else if (action == m_RightClickAction?.action)
             {
                 var buttonState = mouseState.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.rightButton = buttonState;
             }
-            else if (action == m_MiddleClickAction.action)
+            else if (action == m_MiddleClickAction?.action)
             {
                 var buttonState = mouseState.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.middleButton = buttonState;
             }
-            else if (action == m_MoveAction.action)
+            else if (action == m_MoveAction?.action)
             {
                 joystickState.move = context.ReadValue<Vector2>();
             }
-            else if (action == m_SubmitAction.action)
+            else if (action == m_SubmitAction?.action)
             {
                 joystickState.submitButtonDown = context.ReadValue<float>() > 0;
             }
-            else if (action == m_CancelAction.action)
+            else if (action == m_CancelAction?.action)
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() > 0;
             }

@@ -125,8 +125,12 @@ internal class UITests : InputTestFixture
         var rightChildGameObject = objects.rightGameObject;
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         // Create actions.
-        var map = new InputActionMap();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
         var pointAction = map.AddAction("point");
         var leftClickAction = map.AddAction("leftClick");
         var rightClickAction = map.AddAction("rightClick");
@@ -255,8 +259,12 @@ internal class UITests : InputTestFixture
 
         var players = new[] { CreateScene(0, 240), CreateScene(240, 480) };
 
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         // Create actions.
-        var map = new InputActionMap();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
         var pointAction = map.AddAction("point");
         var leftClickAction = map.AddAction("leftClick");
         var rightClickAction = map.AddAction("rightClick");
@@ -334,7 +342,12 @@ internal class UITests : InputTestFixture
 
         for (var i = 0; i < 2; i++)
         {
-            var map = new InputActionMap();
+            // Create asset
+            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+            // Create actions.
+            var map = new InputActionMap("map");
+            asset.AddActionMap(map);
             var moveAction = map.AddAction("move");
             var submitAction = map.AddAction("submit");
             var cancelAction = map.AddAction("cancel");
@@ -447,8 +460,12 @@ internal class UITests : InputTestFixture
         var rightChildGameObject = objects.rightGameObject;
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         // Create actions.
-        var map = new InputActionMap();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
         var moveAction = map.AddAction("move");
         var submitAction = map.AddAction("submit");
         var cancelAction = map.AddAction("cancel");
