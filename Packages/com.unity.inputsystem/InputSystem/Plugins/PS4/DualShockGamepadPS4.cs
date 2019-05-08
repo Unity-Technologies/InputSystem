@@ -231,8 +231,14 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 
     // IMPORTANT: State layout must match with GamepadInputTouchStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 12)]
-    public struct PS4Touch
+    public struct PS4Touch : IInputStateTypeInfo
     {
+        public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+
         [FieldOffset(0)] public int touchId;
         [FieldOffset(4)] public Vector2 position;
     }

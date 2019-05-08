@@ -18,30 +18,53 @@ partial class APIVerificationTests
         return type.Namespace.StartsWith("UnityEngine.InputSystem") || type.Name == "<Module>";
     }
 
+    // Generally, public API should always expose values as properties, and not as fields.
+    // We currently have quite a few exceptions, which are handled here.
     private bool IsTypeWhichCanHavePublicFields(TypeReference type)
     {
         if (type == null)
             return false;
 
-        // MonoBehaviour uses public fields for serialization
-        if (type.FullName == "UnityEngine.MonoBehaviour" ||
+        // This is the base type of all structs
+        if (type.FullName == typeof(ValueType).FullName)
+            return false;
+
+
+        if (
+            // MonoBehaviour uses public fields for serialization
+            type.FullName == typeof(UnityEngine.MonoBehaviour).FullName ||
             // MonoBehaviour-derived, but listed explicitly, as Cecil may not have the path to resolve the UI assembly.
-            type.FullName == "UnityEngine.EventSystems.BaseInputModule" || 
-            type.FullName == "UnityEngine.EventSystems.EventSystem" ||
+            type.FullName == typeof(UnityEngine.EventSystems.BaseInputModule).FullName ||
+            type.FullName == typeof(UnityEngine.EventSystems.EventSystem).FullName ||
             // These have fields popuplated by reflection in the Input System
-            type.FullName == "UnityEngine.InputSystem.InputProcessor" ||
-            type.FullName == "UnityEngine.InputSystem.InputControl" ||
-            type.FullName == "UnityEngine.InputSystem.InputBindingComposite")
+            type.FullName == typeof(UnityEngine.InputSystem.InputProcessor).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.InputControl).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.InputBindingComposite).FullName
+        )
             return true;
-        var res = type.Resolve();
-        if (res != null)
-        {
-            if (res.IsValueType ||
-                res.Interfaces.Any(i => i.InterfaceType.FullName == "UnityEngine.InputSystem.IInputInteraction") ||
-                IsTypeWhichCanHavePublicFields(res.BaseType))
-                return true;
-        }
-        return false;
+
+        var resolved = type.Resolve();
+        if (resolved == null)
+            return false;
+            
+        if (
+            // Interactions have fields populated by reflection in the Input System
+            resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputInteraction).FullName) ||
+
+            // Input state structures use fields for the memory layout and construct Input Controls from the fields.
+            resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputStateTypeInfo).FullName) ||
+
+            // These use fields for the explicit memory layout, and have a member for the base type. If we exposed that via a property,
+            // base type values could not be written individually.
+            resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo).FullName) ||
+            resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.LowLevel.IInputEventTypeInfo).FullName) ||
+
+            // serializable types may depend on the field names to match serialized data (eg. Json)
+            resolved.Attributes.HasFlag(TypeAttributes.Serializable)
+        )
+            return true;
+
+        return IsTypeWhichCanHavePublicFields(resolved.BaseType);
     }
 
     private IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
@@ -60,6 +83,7 @@ partial class APIVerificationTests
     [Category("API")]
     public void API_ConstantsAreAppropriatelyNamed()
     {
+        // TODO: also check for static readonly types
         var incorrectlyNamedConstants = GetInputSystemPublicFields().Where(field => field.HasConstant && !IsValidNameForConstant(field.Name));
         Assert.That(incorrectlyNamedConstants, Is.Empty);
     }
@@ -101,7 +125,7 @@ partial class APIVerificationTests
     [Category("API")]
     public void API_NoDisallowedPublicFields()
     {
-        var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !IsTypeWhichCanHavePublicFields(field.DeclaringType));
+        var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !(field.IsInitOnly && field.IsStatic) && !IsTypeWhichCanHavePublicFields(field.DeclaringType));
         Assert.That(disallowedPublicFields, Is.Empty);
     }
 }
