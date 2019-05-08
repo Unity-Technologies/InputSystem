@@ -47,7 +47,6 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
         };
 
         private SerializedProperty[] m_ReferenceProperties;
-        private bool m_ActionsFoldout = true;
         private SerializedProperty m_ActionsAsset;
         private InputActionReference[] m_AvailableActionsInAsset;
         private string[] m_AvailableActionsInAssetNames;
@@ -86,53 +85,38 @@ namespace UnityEngine.Experimental.Input.Plugins.UI.Editor
         {
             base.OnInspectorGUI();
 
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUI.indentLevel++;
-            m_ActionsFoldout = EditorGUILayout.Foldout(m_ActionsFoldout, "Actions", Styles.s_FoldoutStyle);
-            EditorGUI.indentLevel--;
-
-            if (m_ActionsFoldout)
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_ActionsAsset);
+            if (EditorGUI.EndChangeCheck())
             {
-                EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(m_ActionsAsset);
-                if (EditorGUI.EndChangeCheck())
+                var actions = m_ActionsAsset.objectReferenceValue as InputActionAsset;
+                if (actions != null)
                 {
-                    var actions = m_ActionsAsset.objectReferenceValue as InputActionAsset;
-                    if (actions != null)
-                    {
-                        serializedObject.ApplyModifiedProperties();
+                    serializedObject.ApplyModifiedProperties();
 
-                        ReassignActions(target as InputSystemUIInputModule, actions);
+                    ReassignActions(target as InputSystemUIInputModule, actions);
 
-                        serializedObject.Update();
-                    }
-
-                    // reinitialize action types
-                    OnEnable();
+                    serializedObject.Update();
                 }
 
-                var numActions = m_ActionNames.Length;
-                for (var i = 0; i < numActions; i++)
-                {
-                    GUILayout.Space(2);
-                    GUIHelpers.DrawLineSeparator();
-                    GUILayout.Space(2);
+                // reinitialize action types
+                OnEnable();
+            }
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(m_ActionNames[i], EditorStyles.boldLabel, GUILayout.Width(EditorGUIUtility.labelWidth));
-                    if (m_AvailableActionsInAsset != null)
-                    {
-                        int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
-                        EditorGUI.BeginChangeCheck();
-                        index = EditorGUILayout.Popup(index, m_AvailableActionsInAssetNames);
-                        if (EditorGUI.EndChangeCheck())
-                            m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
-                    }
-                    GUILayout.EndHorizontal();
-                    GUILayout.Space(5);
+            var numActions = m_ActionNames.Length;
+            for (var i = 0; i < numActions; i++)
+            {
+                if (m_AvailableActionsInAsset != null)
+                {
+                    int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
+                    EditorGUI.BeginChangeCheck();
+                    index = EditorGUILayout.Popup(m_ActionNames[i], index, m_AvailableActionsInAssetNames);
+
+                    if (EditorGUI.EndChangeCheck())
+                        m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
                 }
             }
-            GUILayout.EndVertical();
+
             if (GUI.changed)
                 serializedObject.ApplyModifiedProperties();
         }
