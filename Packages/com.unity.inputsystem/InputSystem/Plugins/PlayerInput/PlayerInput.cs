@@ -460,20 +460,20 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 {
                     var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
                     if (actionMap != null)
+                    {
                         actionMap.Enable();
+                        m_EnabledActionMap = actionMap;
+                    }
                     else
                         Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
                 }
-                uiInputModule?.EnableAllActions();
             }
             m_InputActive = true;
         }
 
         public void PassivateInput()
         {
-            // Disable all enabled action maps.
-            if (m_Actions != null)
-                m_Actions.Disable();
+            m_EnabledActionMap?.Disable();
 
             m_InputActive = false;
         }
@@ -502,9 +502,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 return;
             }
 
-            m_Actions.Disable();
+            m_EnabledActionMap?.Disable();
             actionMap.Enable();
-            uiInputModule?.EnableAllActions();
+            m_EnabledActionMap = actionMap;
         }
 
         public static PlayerInput GetPlayerByIndex(int playerIndex)
@@ -631,6 +631,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         // Value object we use when sending messages via SendMessage() or BroadcastMessage(). Can be ignored
         // by the receiver. We reuse the same object over and over to avoid allocating garbage.
         [NonSerialized] private InputValue m_InputValueObject;
+
+        [NonSerialized] internal InputActionMap m_EnabledActionMap;
 
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
