@@ -2,7 +2,7 @@ using System;
 
 ////TODO: ToString()
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// Wraps around values provided by input actions.

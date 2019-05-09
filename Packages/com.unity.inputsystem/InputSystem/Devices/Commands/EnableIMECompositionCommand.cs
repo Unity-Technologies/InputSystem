@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Device Command that enables IME Composition within the application.  Primarily handled by Keyboard devices.
@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('I', 'M', 'E', 'M'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + +sizeof(uint);
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + +sizeof(uint);
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

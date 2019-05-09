@@ -1,8 +1,8 @@
 ////TODO: add support for Windows.Gaming.Input.Gamepad (including the trigger motors)
 
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.InputSystem.Plugins.XInput
 {
     /// <summary>
     /// Adds support for XInput controllers.

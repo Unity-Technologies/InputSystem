@@ -1,7 +1,7 @@
 using System.Collections;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Interactions;
+using UnityEngine.InputSystem.Interactions;
 
 // Using simple actions with callbacks.
 public class SimpleController_UsingActions : MonoBehaviour

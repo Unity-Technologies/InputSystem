@@ -3,14 +3,14 @@ using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
 ////       not yet have been imported when the project is imported from scratch; this results in errors in the log and in generic
 ////       icons showing up for the assets
 
 #pragma warning disable 0649
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Imports an <see cref="InputActionAsset"/> from JSON.
@@ -19,15 +19,13 @@ namespace UnityEngine.Experimental.Input.Editor
     /// Can generate code wrappers for the contained action sets as a convenience.
     /// Will not overwrite existing wrappers except if the generated code actually differs.
     /// </remarks>
-    [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
+    [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     public class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 6;
 
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action@4x.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap@4x.png";
-        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action@4x.png";
-        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap@4x.png";
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -78,9 +76,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-            var isDarkSkin = EditorGUIUtility.isProSkin;
-            var assetIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kAssetIconDark : kAssetIcon);
-            var actionIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kActionIconDark : kActionIcon);
+            var assetIcon = (Texture2D)EditorGUIUtility.Load(kAssetIcon);
+            var actionIcon = (Texture2D)EditorGUIUtility.Load(kActionIcon);
 
             // Add asset.
             ctx.AddObjectToAsset("<root>", asset, assetIcon);
@@ -175,7 +172,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
-            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.kExtension,
+            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
                 kDefaultAssetLayout);
         }
     }

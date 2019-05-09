@@ -3,12 +3,12 @@ using System;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: resolving bindings to actions needs to take "{id}" form into account
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Helpers for doctoring around in InputActions using SerializedProperties.
     internal static class InputActionSerializationHelpers

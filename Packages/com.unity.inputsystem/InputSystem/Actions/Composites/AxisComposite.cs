@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.Experimental.Input.Composites
+namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
     /// A single axis value computed from a "negative" and a "positive" button.

@@ -26,7 +26,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
  * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
 - Changed default button press point to 0.5.
+- Changed all constants in public API to match Unity naming conventions ("Constant" instead of "kConstant").
+- Changed namespace from `UnityEngine.Experimental.Input` to `UnityEngine.InputSystem`.
+- Generated wrapper code now has nicer formatting.
 - Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
+- Nicer icons for `InputActionAssets` and `InputActions` and for `Button` and generic controls.
+- Change all public API using `IntPtr` to use unsafe pointer types instead.
 
 ### Fixed
 

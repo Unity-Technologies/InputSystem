@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     public class AxisDeadzoneProcessor : InputProcessor<float>
     {

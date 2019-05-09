@@ -6,15 +6,15 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.UI.Editor;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.UI.Editor;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                 // Request save file location.
                 var defaultFileName = Application.productName;
                 var fileName = EditorUtility.SaveFilePanel("Create Input Actions Asset", "Assets", defaultFileName,
-                    InputActionAsset.kExtension);
+                    InputActionAsset.Extension);
 
                 ////TODO: take current Supported Devices into account when creating this
 
@@ -233,8 +233,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
                         return;
                     }
 
-                    if (!fileName.EndsWith("." + InputActionAsset.kExtension))
-                        fileName += "." + InputActionAsset.kExtension;
+                    if (!fileName.EndsWith("." + InputActionAsset.Extension))
+                        fileName += "." + InputActionAsset.Extension;
 
                     // Load default actions and update all GUIDs.
                     var defaultActionsText = File.ReadAllText(kDefaultInputActionsAssetPath);
@@ -485,7 +485,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
             serializedObject.Update();
         }
-
+        
         [SerializeField] private bool m_EventsGroupUnfolded;
         [SerializeField] private bool[] m_ActionMapEventsUnfolded;
 

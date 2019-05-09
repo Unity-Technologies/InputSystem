@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Property drawer for <see cref="InputAction"/>.

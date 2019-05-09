@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Plugins.UI;
 
 public static class Extensions
 {

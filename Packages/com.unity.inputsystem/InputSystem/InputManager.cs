@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.Experimental.Input.Composites;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEditor;
 #endif
 
@@ -37,7 +37,7 @@ using UnityEditor;
 ////REVIEW: do we want to filter out state events that result in no state change?
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
@@ -674,7 +674,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
-        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
+        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
             Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
@@ -965,7 +965,7 @@ namespace UnityEngine.Experimental.Input
             m_DevicesById[device.id] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
-            device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+            device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
 
             // Update state buffers.
             ReallocateStateBuffers();
@@ -1023,7 +1023,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
-            int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+            int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
@@ -1036,7 +1036,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
 
                 // If it's a device coming from the runtime, disable it.
-                if (deviceId != InputDevice.kInvalidDeviceId)
+                if (deviceId != InputDevice.InvalidDeviceId)
                 {
                     var command = DisableDeviceCommand.Create();
                     m_Runtime.DeviceCommand(deviceId, ref command);
@@ -1320,7 +1320,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void QueueEvent(InputEventPtr ptr)
+        public unsafe void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
         }
@@ -1330,7 +1330,7 @@ namespace UnityEngine.Experimental.Input
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            m_Runtime.QueueEvent((IntPtr)UnsafeUtility.AddressOf(ref inputEvent));
+            m_Runtime.QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()
@@ -1753,7 +1753,7 @@ namespace UnityEngine.Experimental.Input
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.kInvalidDeviceId)
+            if (device.id != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine
@@ -1863,7 +1863,7 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(device != null);
             Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
             Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
 
             var controls = device.allControls;
@@ -1888,9 +1888,9 @@ namespace UnityEngine.Experimental.Input
                     throw new NotImplementedException("default value arrays");
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);

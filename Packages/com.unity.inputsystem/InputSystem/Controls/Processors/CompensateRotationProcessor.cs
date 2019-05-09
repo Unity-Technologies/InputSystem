@@ -1,6 +1,6 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     public class CompensateRotationProcessor : InputProcessor<Quaternion>
     {

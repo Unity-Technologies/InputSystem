@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: remove this one; superseded by QueryPairedUserAccountCommand
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal unsafe struct QueryUserIdCommand : IInputDeviceCommandInfo
@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public static FourCC Type { get { return new FourCC('U', 'S', 'E', 'R'); } }
 
         public const int kMaxIdLength = 256;
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + kMaxIdLength * 2;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + kMaxIdLength * 2;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

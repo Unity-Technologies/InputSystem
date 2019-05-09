@@ -4,12 +4,12 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
@@ -714,8 +714,6 @@ internal class UITests : InputTestFixture
 
     private struct TestTouchLayout : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = TouchState.kSizeInBytes;
-
         [InputControl(name = "touch", layout = "Touch")]
         public TouchState touch;
 

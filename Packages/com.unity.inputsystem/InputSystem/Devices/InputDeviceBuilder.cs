@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add ability to add to existing arrays rather than creating per-device arrays
 
@@ -16,7 +16,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingChildControlByPath
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
@@ -362,7 +362,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             return control;
         }
 
-        private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.kInvalidOffset;
+        private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.InvalidOffset;
 
         private void AddChildControls(InputControlLayout layout, InternedString variants, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
         {
@@ -438,7 +438,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                             ref controlLayout, ref childIndex, nameOverride: name);
 
                         // Adjust offset, if the control uses explicit offsets.
-                        if (control.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                        if (control.m_StateBlock.byteOffset != InputStateBlock.InvalidOffset)
                             control.m_StateBlock.byteOffset = (uint)n * control.m_StateBlock.alignedSizeInBytes;
                     }
                 }
@@ -584,7 +584,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             else
             {
                 // Mark controls that don't have state blocks of their own but rather get their
-                // blocks from other controls by setting their state size to kInvalidOffset.
+                // blocks from other controls by setting their state size to InvalidOffset.
                 control.m_StateBlock.sizeInBits = kSizeForControlUsingStateFromOtherControl;
                 haveChildrenUsingStateFromOtherControls = true;
             }
@@ -696,9 +696,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                 ////        both leftStick/x and leftStick/y, leftStick itself should move only once and
                 ////        not at all if there indeed is a leftStick control layout with an offset;
                 ////        so, it'd get quite complicated)
-                if (controlItem.offset != InputStateBlock.kInvalidOffset)
+                if (controlItem.offset != InputStateBlock.InvalidOffset)
                     child.m_StateBlock.byteOffset = controlItem.offset;
-                if (controlItem.bit != InputStateBlock.kInvalidOffset)
+                if (controlItem.bit != InputStateBlock.InvalidOffset)
                     child.m_StateBlock.bitOffset = controlItem.bit;
                 if (controlItem.processors.Count > 0)
                     AddProcessors(child, ref controlItem, layout.name);
@@ -910,17 +910,17 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
-                if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.kInvalidOffset)
+                if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.InvalidOffset)
                     throw new Exception(
                         $"Child '{child.name}' of '{control.name}' has no size set!");
 
                 // Skip children that don't have fixed offsets.
-                if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset ||
-                    child.m_StateBlock.byteOffset == InputStateBlock.kAutomaticOffset)
+                if (child.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset ||
+                    child.m_StateBlock.byteOffset == InputStateBlock.AutomaticOffset)
                     continue;
 
                 // At this point, if the child has no valid bit offset, put it at #0 now.
-                if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                if (child.m_StateBlock.bitOffset == InputStateBlock.InvalidOffset)
                     child.m_StateBlock.bitOffset = 0;
 
                 // See if the control bumps our fixed layout size.
@@ -943,8 +943,8 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var child in children)
             {
                 // Skip children with fixed offsets.
-                if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset &&
-                    child.m_StateBlock.byteOffset != InputStateBlock.kAutomaticOffset)
+                if (child.m_StateBlock.byteOffset != InputStateBlock.InvalidOffset &&
+                    child.m_StateBlock.byteOffset != InputStateBlock.AutomaticOffset)
                     continue;
 
                 // Skip children using state from other controls.
@@ -960,8 +960,8 @@ namespace UnityEngine.Experimental.Input.Layouts
                         firstBitAddressingChild = child;
 
                     // Keep a running count of the size of the bitfield.
-                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset ||
-                        child.m_StateBlock.bitOffset == InputStateBlock.kAutomaticOffset)
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.InvalidOffset ||
+                        child.m_StateBlock.bitOffset == InputStateBlock.AutomaticOffset)
                     {
                         // Put child at current bit offset.
                         child.m_StateBlock.bitOffset = bitfieldSizeInBits;
@@ -986,7 +986,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                         firstBitAddressingChild = null;
                     }
 
-                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.InvalidOffset)
                         child.m_StateBlock.bitOffset = 0;
                 }
 

@@ -2,10 +2,10 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
 {
     public enum AndroidKeyCode
     {

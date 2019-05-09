@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Interactions;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 
 // Use action set asset instead of lose InputActions directly on component.
 public class SimpleController_UsingActions_InAsset : MonoBehaviour

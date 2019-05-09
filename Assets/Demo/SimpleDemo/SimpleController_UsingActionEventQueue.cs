@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Interactions;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 
 public class SimpleController_UsingActionQueue : MonoBehaviour
 {

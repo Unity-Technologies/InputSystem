@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class CallbackDataSource : AdvancedDropdownDataSource
     {

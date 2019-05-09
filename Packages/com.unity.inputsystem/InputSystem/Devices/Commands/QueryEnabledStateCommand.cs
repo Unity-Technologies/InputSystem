@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Command to find out whether a device is currently enabled or not.
@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('Q', 'E', 'N', 'B'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool);
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool);
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

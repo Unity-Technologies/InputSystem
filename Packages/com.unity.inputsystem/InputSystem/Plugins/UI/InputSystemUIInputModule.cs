@@ -11,7 +11,7 @@ using UnityEngine;
 
 ////TODO: touch vs mouse will need refinement in both the action and the device stuff
 
-namespace UnityEngine.Experimental.Input.Plugins.UI
+namespace UnityEngine.InputSystem.Plugins.UI
 {
     /// <summary>
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.

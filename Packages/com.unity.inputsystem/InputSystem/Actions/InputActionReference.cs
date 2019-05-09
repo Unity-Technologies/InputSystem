@@ -5,7 +5,7 @@ using System.Linq;
 
 ////REVIEW: akin to this, also have an InputActionMapReference?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// References a specific <see cref="InputAction">action</see> in an <see cref="InputActionMap">

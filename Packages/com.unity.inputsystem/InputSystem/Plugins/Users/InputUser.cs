@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////REVIEW: do we need to handle the case where devices are added to a user that are each associated with a different user account
@@ -14,7 +14,7 @@ using UnityEngine.Profiling;
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
 
 
-namespace UnityEngine.Experimental.Input.Plugins.Users
+namespace UnityEngine.InputSystem.Plugins.Users
 {
     /// <summary>
     /// Represents a specific user/player interacting with one or more devices and input actions.
@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     /// <seealso cref="InputUserChange"/>
     public struct InputUser : IEquatable<InputUser>
     {
-        public const uint kInvalidId = 0;
+        public const uint InvalidId = 0;
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId)
+                if (m_Id == InvalidId)
                     return false;
 
                 // See if there's a currently active user with the given ID.
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId)
+                if (m_Id == InvalidId)
                     throw new InvalidOperationException("Invalid user");
 
                 var userIndex = TryFindUserIndex(m_Id);
@@ -1078,7 +1078,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
         private static int TryFindUserIndex(uint userId)
         {
-            Debug.Assert(userId != kInvalidId);
+            Debug.Assert(userId != InvalidId);
 
             for (var i = 0; i < s_AllUserCount; ++i)
             {
