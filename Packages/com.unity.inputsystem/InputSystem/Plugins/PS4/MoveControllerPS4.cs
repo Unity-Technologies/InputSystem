@@ -1,16 +1,16 @@
 #if UNITY_EDITOR || UNITY_PS4
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Haptics;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.Haptics;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
 
 ////TODO: player ID
 
-namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -68,7 +68,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     {
         public static FourCC Type => new FourCC('P', 'S', 'M', 'C');
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
 
         [Flags]
         public enum Flags
@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.PS4
+namespace UnityEngine.InputSystem.Plugins.PS4
 {
     //Sync to PS4MoveDeviceDefinition in sixaxis.cpp
     [Serializable]

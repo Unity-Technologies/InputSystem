@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
     /// If Unity is currently in an <see cref="EditorWindow"/> callback, transforms a 2D coordinate from

@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A collection of utility functions for working with arrays.
@@ -76,26 +76,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             return false;
         }
 
-        public static bool ContainsReferenceTo<TValue>(TValue[] array, TValue value)
+        public static bool ContainsReference<TValue>(TValue[] array, TValue value)
             where TValue : class
         {
             if (array == null)
                 return false;
 
-            return ContainsReferenceTo(array, array.Length, value);
+            return ContainsReference(array, array.Length, value);
         }
 
-        public static bool ContainsReferenceTo<TValue>(TValue[] array, int count, TValue value)
+        public static bool ContainsReference<TValue>(TValue[] array, int count, TValue value)
             where TValue : class
         {
-            if (array == null)
-                return false;
-
-            for (var i = 0; i < count; ++i)
-                if (ReferenceEquals(array[i], value))
-                    return true;
-
-            return false;
+            return IndexOfReference(array, value, count) != -1;
         }
 
         public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
@@ -355,6 +348,15 @@ namespace UnityEngine.Experimental.Input.Utilities
                 Array.Copy(array, index, array, index + 1, oldLength - index);
 
             array[index] = value;
+        }
+
+        public static void PutAtIfNotSet<TValue>(ref TValue[] array, int index, Func<TValue> valueFn)
+        {
+            if (array.LengthSafe() < index + 1)
+                Array.Resize(ref array, index + 1);
+
+            if (EqualityComparer<TValue>.Default.Equals(array[index], default(TValue)))
+                array[index] = valueFn();
         }
 
         // Adds 'count' entries to the array. Returns first index of newly added entries.

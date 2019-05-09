@@ -1,6 +1,6 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     // Allows to generically query information from a state struct.
     public interface IInputStateTypeInfo

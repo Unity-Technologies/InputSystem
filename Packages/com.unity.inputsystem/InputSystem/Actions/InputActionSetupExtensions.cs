@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Extensions to set up <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">
@@ -404,9 +404,9 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(group))
                     throw new ArgumentException("Group name cannot be null or empty", nameof(group));
-                if (group.IndexOf(InputBinding.kSeparator) != -1)
+                if (group.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Group name cannot contain separator character '{InputBinding.kSeparator}'", nameof(group));
+                        $"Group name cannot contain separator character '{InputBinding.Separator}'", nameof(group));
 
                 return WithGroups(group);
             }
@@ -432,9 +432,9 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(interaction))
                     throw new ArgumentException("Interaction cannot be null or empty", nameof(interaction));
-                if (interaction.IndexOf(InputBinding.kSeparator) != -1)
+                if (interaction.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Interaction string cannot contain separator character '{InputBinding.kSeparator}'", nameof(interaction));
+                        $"Interaction string cannot contain separator character '{InputBinding.Separator}'", nameof(interaction));
 
                 return WithInteractions(interaction);
             }
@@ -472,9 +472,9 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(processor))
                     throw new ArgumentException("Processor cannot be null or empty", nameof(processor));
-                if (processor.IndexOf(InputBinding.kSeparator) != -1)
+                if (processor.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Interaction string cannot contain separator character '{InputBinding.kSeparator}'", nameof(processor));
+                        $"Interaction string cannot contain separator character '{InputBinding.Separator}'", nameof(processor));
 
                 return WithProcessors(processor);
             }

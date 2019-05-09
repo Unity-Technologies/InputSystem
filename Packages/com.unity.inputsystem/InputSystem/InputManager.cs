@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.Experimental.Input.Composites;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEditor;
 #endif
 
@@ -37,7 +37,7 @@ using UnityEditor;
 ////REVIEW: do we want to filter out state events that result in no state change?
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
@@ -65,8 +65,6 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 var result = m_Metrics;
-                if (m_Runtime != null)
-                    result.totalFrameCount = m_Runtime.frameCount;
 
                 result.currentNumDevices = m_DevicesCount;
                 result.currentStateSizeInBytes = (int)m_StateBuffers.totalSize;
@@ -240,7 +238,7 @@ namespace UnityEngine.Experimental.Input
 
         private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-                     EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
 #else
             true;
 #endif
@@ -676,7 +674,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
-        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
+        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
             Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
@@ -990,7 +988,7 @@ namespace UnityEngine.Experimental.Input
             m_DevicesById[device.id] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
-            device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+            device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
 
             // Update state buffers.
             ReallocateStateBuffers();
@@ -1048,7 +1046,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
-            int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+            int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
@@ -1061,7 +1059,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
 
                 // If it's a device coming from the runtime, disable it.
-                if (deviceId != InputDevice.kInvalidDeviceId)
+                if (deviceId != InputDevice.InvalidDeviceId)
                 {
                     var command = DisableDeviceCommand.Create();
                     m_Runtime.DeviceCommand(deviceId, ref command);
@@ -1345,7 +1343,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void QueueEvent(InputEventPtr ptr)
+        public unsafe void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
         }
@@ -1355,11 +1353,12 @@ namespace UnityEngine.Experimental.Input
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            m_Runtime.QueueEvent((IntPtr)UnsafeUtility.AddressOf(ref inputEvent));
+            m_Runtime.QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()
         {
+            ////FIXME: This is nonsense; dynamic updates may not even be enabled; make a more appropriate choice here
             Update(InputUpdateType.Dynamic);
         }
 
@@ -1492,7 +1491,6 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("ScaleVector3", typeof(ScaleVector3Processor));
             processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
-            //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 
@@ -1778,7 +1776,7 @@ namespace UnityEngine.Experimental.Input
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.kInvalidDeviceId)
+            if (device.id != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine
@@ -1888,7 +1886,7 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(device != null);
             Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
             Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
 
             var controls = device.allControls;
@@ -1913,9 +1911,9 @@ namespace UnityEngine.Experimental.Input
                     throw new NotImplementedException("default value arrays");
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
@@ -2028,11 +2026,12 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
+            // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
+            RestoreDevicesAfterDomainReloadIfNecessary();
+
             ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
             if ((updateType & m_UpdateMask) == 0)
                 return;
-
-            RestoreDevicesAfterDomainReloadIfNecessary();
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
@@ -2237,12 +2236,19 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
+            // We perform a "null" update after domain reloads and on startup to get our devices
+            // in place before the runtime calls MonoBehaviour callbacks. See InputSystem.RunInitialUpdate().
+            if (updateType == InputUpdateType.None)
+                return true;
+
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
+            // Ignore editor updates when the game is playing and has focus. All input goes to player.
             if (gameIsPlayingAndHasFocus)
                 mask &= ~InputUpdateType.Editor;
-            else
-                mask &= ~(InputUpdateType.Dynamic | InputUpdateType.Fixed);
+            // If the player isn't running, the only thing we run is editor updates.
+            else if (updateType != InputUpdateType.Editor)
+                return false;
 #endif
             return (updateType & mask) != 0;
         }
@@ -2265,16 +2271,20 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
-            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
-            if ((updateType & m_UpdateMask) == 0)
-                return;
-
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
+            // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
+
+            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
+            if ((updateType & m_UpdateMask) == 0)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -2290,6 +2300,7 @@ namespace UnityEngine.Experimental.Input
             // Update metrics.
             m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
             m_Metrics.totalEventBytes += (int)eventBuffer.sizeInBytes - (int)InputUpdate.s_LastUpdateRetainedEventBytes;
+            ++m_Metrics.totalUpdateCount;
 
             InputUpdate.s_LastUpdateRetainedEventCount = 0;
             InputUpdate.s_LastUpdateRetainedEventBytes = 0;
@@ -2322,10 +2333,8 @@ namespace UnityEngine.Experimental.Input
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
-            #endif
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
@@ -2352,10 +2361,8 @@ namespace UnityEngine.Experimental.Input
             // for later processing. We do this by compacting the event buffer and moving events down such
             // that the events we leave in the buffer form one contiguous chunk of memory at the beginning
             // of the buffer.
-            #if UNITY_2019_2_OR_NEWER
             var currentEventWritePtr = currentEventReadPtr;
             var numEventsRetainedInBuffer = 0;
-            #endif
 
             var totalEventLag = 0.0;
 
@@ -2364,7 +2371,6 @@ namespace UnityEngine.Experimental.Input
             {
                 InputDevice device = null;
 
-                #if UNITY_2019_2_OR_NEWER
                 Debug.Assert(!currentEventReadPtr->handled);
 
                 // In before render updates, we only take state events and only those for devices
@@ -2385,33 +2391,9 @@ namespace UnityEngine.Experimental.Input
                             ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     }
                 }
-                #else
-                // Bump firstEvent up to the next unhandled event (in before-render updates
-                // the event needs to be *both* unhandled *and* for a device with before
-                // render updates enabled).
-                while (remainingEventCount > 0)
-                {
-                    if (isBeforeRenderUpdate)
-                    {
-                        if (!currentEventReadPtr->handled)
-                        {
-                            device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                            if (device != null && device.updateBeforeRender)
-                                break;
-                        }
-                    }
-                    else if (!currentEventReadPtr->handled)
-                        break;
-
-                    if (remainingEventCount > 1)
-                        currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                    --remainingEventCount;
-                }
-                #endif
                 if (remainingEventCount == 0)
                     break;
 
-                #if UNITY_2019_2_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
                 {
@@ -2419,7 +2401,6 @@ namespace UnityEngine.Experimental.Input
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     continue;
                 }
-                #endif
 
                 if (currentEventReadPtr->time <= currentTime)
                     totalEventLag += currentTime - currentEventReadPtr->time;
@@ -2434,10 +2415,8 @@ namespace UnityEngine.Experimental.Input
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
                     {
-                        #if UNITY_2019_2_OR_NEWER
                         eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                             ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        #endif
                         continue;
                     }
                 }
@@ -2452,12 +2431,8 @@ namespace UnityEngine.Experimental.Input
                     m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
                     #endif
 
-                    #if UNITY_2019_2_OR_NEWER
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                    #else
-                    currentEventReadPtr->handled = true;
-                    #endif
 
                     // No device found matching event. Ignore it.
                     continue;
@@ -2792,23 +2767,14 @@ namespace UnityEngine.Experimental.Input
                         break;
                 }
 
-                #if UNITY_2019_2_OR_NEWER
                 eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                     ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                #else
-                // Mark as processed.
-                currentEventReadPtr->handled = true;
-                if (remainingEventCount > 1)
-                    currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                --remainingEventCount;
-                #endif
             }
 
             m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
             m_Metrics.totalEventLagTime += totalEventLag;
 
             ////REVIEW: This was moved to 2019.2 while the timeslice code was wrong; should probably be reenabled now
-            #if UNITY_2019_2_OR_NEWER
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
             InputUpdate.s_LastUpdateRetainedEventCount = (uint)numEventsRetainedInBuffer;
@@ -2831,10 +2797,6 @@ namespace UnityEngine.Experimental.Input
             {
                 eventBuffer.Reset();
             }
-            #else
-            if (updateType != InputUpdateType.BeforeRender)
-                eventBuffer.Reset();
-            #endif
 
             if (gameIsPlayingAndHasFocus)
                 ProcessStateChangeMonitorTimeouts();
@@ -3370,7 +3332,7 @@ namespace UnityEngine.Experimental.Input
             // before. This can be the case if there's new layout information that wasn't available
             // before.
             m_AvailableDevices = m_SavedAvailableDevices;
-            m_AvailableDeviceCount = m_SavedAvailableDevices.Length;
+            m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
                 var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);

@@ -5,10 +5,20 @@ platforms:
     type: Unity::VM
     image: package-ci/win10:latest
     flavor: m1.large
+  - name: win_standalone
+    type: Unity::VM
+    image: package-ci/win10:latest
+    flavor: m1.large
+    runtime: StandaloneWindows64
   - name: mac
     type: Unity::VM::osx
     image: buildfarm/mac:stable
     flavor: m1.mac
+  - name: mac_standalone
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+    runtime: StandaloneOSX
 ---
 {% for editor in editors %}
 {% for platform in platforms %}
@@ -22,7 +32,7 @@ platforms:
     - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
-    - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --stdout-filter=minimal --suite=editor --suite=playmode
+    - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} 
   triggers:
     branches:
       only:

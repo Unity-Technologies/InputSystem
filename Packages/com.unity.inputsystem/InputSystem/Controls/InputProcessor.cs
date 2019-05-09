@@ -1,13 +1,13 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: cache processors globally; there's no need to instantiate the same processor with the same parameters multiple times
 
 ////TODO: make processor effects visible on children (e.g. leftStick/x should reflect deadzoning of leftStick)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A processor that conditions/transforms input values.

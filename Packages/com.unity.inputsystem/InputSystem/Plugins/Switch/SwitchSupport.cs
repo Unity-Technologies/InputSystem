@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_SWITCH
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.Switch
+namespace UnityEngine.InputSystem.Plugins.Switch
 {
     /// <summary>
     /// Adds support for Switch NPad controllers.

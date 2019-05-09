@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// An implementation of <see cref="IInputRuntime"/> for use during tests.
@@ -34,9 +38,11 @@ namespace UnityEngine.Experimental.Input
             return result;
         }
 
-        ////REVIEW: this behaves differently from NativeInputRuntime.Update() which allows a mask
         public unsafe void Update(InputUpdateType type)
         {
+            if (!onShouldRunUpdate.Invoke(type))
+                return;
+
             lock (m_Lock)
             {
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
@@ -86,9 +92,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public unsafe void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* eventPtr)
         {
-            var eventPtr = (InputEvent*)ptr;
             var eventSize = eventPtr->sizeInBytes;
             var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
 
@@ -109,7 +114,7 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Copy event.
-                UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
+                UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, eventPtr, eventSize);
                 m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
@@ -156,10 +161,10 @@ namespace UnityEngine.Experimental.Input
                             receivedCommand = true;
                             UnsafeUtility.MemCpy(commandPtr, UnsafeUtility.AddressOf(ref result),
                                 UnsafeUtility.SizeOf<TCommand>());
-                            return InputDeviceCommand.kGenericSuccess;
+                            return InputDeviceCommand.GenericSuccess;
                         }
 
-                        return InputDeviceCommand.kGenericFailure;
+                        return InputDeviceCommand.GenericFailure;
                     });
             }
         }
@@ -183,7 +188,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                var result = InputDeviceCommand.kGenericFailure;
+                var result = InputDeviceCommand.GenericFailure;
                 if (m_DeviceCommandCallbacks != null)
                     foreach (var entry in m_DeviceCommandCallbacks)
                     {
@@ -213,11 +218,11 @@ namespace UnityEngine.Experimental.Input
             InvokeFocusChanged(true);
         }
 
-        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
+        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
         {
             lock (m_Lock)
             {
-                if (deviceId == InputDevice.kInvalidDeviceId)
+                if (deviceId == InputDevice.InvalidDeviceId)
                     deviceId = AllocateDeviceId();
                 if (m_NewDeviceDiscoveries == null)
                     m_NewDeviceDiscoveries = new List<KeyValuePair<int, string>>();
@@ -226,7 +231,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.kInvalidDeviceId,
+        public int ReportNewInputDevice(InputDeviceDescription description, int deviceId = InputDevice.InvalidDeviceId,
             ulong userHandle = 0, string userName = null, string userId = null)
         {
             deviceId = ReportNewInputDevice(description.ToJson(), deviceId);
@@ -238,7 +243,7 @@ namespace UnityEngine.Experimental.Input
             return deviceId;
         }
 
-        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.kInvalidDeviceId,
+        public int ReportNewInputDevice<TDevice>(int deviceId = InputDevice.InvalidDeviceId,
             ulong userHandle = 0, string userName = null, string userId = null)
             where TDevice : InputDevice
         {
@@ -251,7 +256,7 @@ namespace UnityEngine.Experimental.Input
         {
             var removeEvent = DeviceRemoveEvent.Create(deviceId);
             var removeEventPtr = UnsafeUtility.AddressOf(ref removeEvent);
-            QueueEvent(new IntPtr(removeEventPtr));
+            QueueEvent((InputEvent*)removeEventPtr);
         }
 
         public void ReportInputDeviceRemoved(InputDevice device)
@@ -356,6 +361,15 @@ namespace UnityEngine.Experimental.Input
                 InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
             }
         }
+
+        public bool isInBatchMode { get; set; }
+
+        #if UNITY_EDITOR
+        public bool isInPlayMode { get; set; } = true;
+        public bool isPaused { get; set; }
+        public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        public Action onProjectChange { get; set; }
+        #endif
 
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;

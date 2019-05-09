@@ -1,5 +1,5 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add way for parameters on interactions and processors to be driven from global value source that is NOT InputSettings
 ////      (ATM it's very hard to e.g. have a scale value on gamepad stick bindings which is determined dynamically from player
@@ -11,7 +11,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: have a default interaction so that there *always* is an interaction object when processing triggers?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Interface for interaction patterns that drive actions.

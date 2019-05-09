@@ -4,15 +4,15 @@ using System.Linq;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 #pragma warning disable CS0649
@@ -1497,7 +1497,7 @@ partial class CoreTests
         [InputControl(offset = 4, sizeInBits = 32)]
         public ButtonControl button1;
 
-        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public ButtonControl button2 { get; set; }
     }
 
@@ -1521,7 +1521,7 @@ partial class CoreTests
 
     private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
     {
-        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public new ButtonControl control;
     }
 
@@ -2092,7 +2092,7 @@ partial class CoreTests
 
     ////REVIEW: This one seems like it adds quite a bit of complexity for somewhat minor gain.
     ////        May even be safer to *not* support this as it may inject controls at offsets where you don't expect them.
-    //[InputControl(name = "axis", offset = InputStateBlock.kInvalidOffset)]
+    //[InputControl(name = "axis", offset = InputStateBlock.InvalidOffset)]
     private struct BaseInputState : IInputStateTypeInfo
     {
         [InputControl(layout = "Axis")] public float axis;

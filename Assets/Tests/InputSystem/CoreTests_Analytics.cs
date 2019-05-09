@@ -4,12 +4,12 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 ////TODO: restricting startup event to first run after installation (in player only)
@@ -192,7 +192,7 @@ partial class CoreTests
         Assert.That(shutdownData.max_state_size_in_bytes, Is.EqualTo(metrics.maxStateSizeInBytes));
         Assert.That(shutdownData.total_event_bytes, Is.EqualTo(metrics.totalEventBytes));
         Assert.That(shutdownData.total_event_count, Is.EqualTo(metrics.totalEventCount));
-        Assert.That(shutdownData.total_frame_count, Is.EqualTo(metrics.totalFrameCount));
+        Assert.That(shutdownData.total_frame_count, Is.EqualTo(metrics.totalUpdateCount));
         Assert.That(shutdownData.total_event_processing_time, Is.EqualTo(metrics.totalEventProcessingTime).Within(0.00001));
     }
 

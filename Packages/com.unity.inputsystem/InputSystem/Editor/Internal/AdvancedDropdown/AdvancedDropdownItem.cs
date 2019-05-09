@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class AdvancedDropdownItem : IComparable
     {
-        readonly List<AdvancedDropdownItem> m_Children = new List<AdvancedDropdownItem>();
+        internal readonly List<AdvancedDropdownItem> m_Children = new List<AdvancedDropdownItem>();
 
         public string name { get; set; }
         public Texture2D icon { get; set; }

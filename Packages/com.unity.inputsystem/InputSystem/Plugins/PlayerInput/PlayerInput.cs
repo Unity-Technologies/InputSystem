@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
@@ -41,7 +41,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 // if it's coming from a press interaction, send OnXXXDown and OnXXXUp?
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// A wrapper around the input system that takes care of managing input actions
@@ -185,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// map. This means that if additional maps are manually enabled and disabled,
         ///
         /// There is one exception to this, however. For any action from the asset that is also referenced
-        /// by an <see cref="UIActionInputModule"/> sitting on the <see cref="GameObject"/> of
+        /// by an <see cref="InputSystemUIInputModule"/> sitting on the <see cref="GameObject"/> of
         /// <see cref="uiEventSystem"/>, no notification will be triggered when the action is fired.
         /// </remarks>
         /// <seealso cref="InputUser.actions"/>
@@ -607,11 +607,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             return playerInput;
         }
 
-        [Tooltip("Input actions associated with the player. TODO")]
+        [Tooltip("Input actions associated with the player.")]
         [SerializeField] internal InputActionAsset m_Actions;
+        [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [Tooltip("UI EventSystem that should receive input from the actions associated with the player. TODO")]
         [SerializeField] internal EventSystem m_UIEventSystem;
+        [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
         [SerializeField] internal ActionEvent[] m_ActionEvents;
@@ -619,6 +621,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal string m_DefaultControlScheme;////REVIEW: should we have IDs for these so we can rename safely?
         [SerializeField] internal string m_DefaultActionMap;
         [SerializeField] internal int m_SplitScreenIndex = -1;
+        [Tooltip("Reference to the player's view camera. Note that this is only required when using split-screen and/or "
+            + "per-player UIs. Otherwise it is safe to leave this property uninitialized.")]
         [SerializeField] internal Camera m_Camera;
 
         // Value object we use when sending messages via SendMessage() or BroadcastMessage(). Can be ignored
@@ -818,6 +822,11 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// </summary>
         private void AssignUserAndDevices()
         {
+            // If we already have a user at this point, clear out all its paired devices
+            // to start the pairing process from scratch.
+            if (m_InputUser.valid)
+                m_InputUser.UnpairDevices();
+
             // All our input goes through actions so there's no point setting
             // anything up if we have none.
             if (m_Actions == null)
@@ -896,9 +905,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                             break;
                     }
                 }
-
-                if (!m_InputUser.valid)
-                    return;
             }
             else
             {
@@ -915,13 +921,42 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 }
                 else
                 {
-                    ////TODO: support action sets that don't have control schemes when player isn't joining through PlayerInputManager
-                    throw new NotImplementedException();
+                    using (var availableDevices = InputUser.GetUnpairedInputDevices())
+                    {
+                        foreach (var actionMap in m_Actions.actionMaps)
+                        {
+                            foreach (var binding in actionMap.bindings)
+                            {
+                                // See if the binding matches anything available.
+                                InputDevice matchesDevice = null;
+                                foreach (var device in availableDevices)
+                                {
+                                    if (InputControlPath.TryFindControl(device, binding.effectivePath) != null)
+                                    {
+                                        matchesDevice = device;
+                                        break;
+                                    }
+                                }
+
+                                if (matchesDevice == null)
+                                    continue;
+
+                                if (m_InputUser.valid && m_InputUser.pairedDevices.ContainsReference(matchesDevice))
+                                {
+                                    // Already paired to this device.
+                                    continue;
+                                }
+
+                                m_InputUser = InputUser.PerformPairingWithDevice(matchesDevice, m_InputUser);
+                            }
+                        }
+                    }
                 }
             }
 
-            Debug.Assert(m_InputUser.valid);
-            m_InputUser.AssociateActionsWithUser(m_Actions);
+            // If we don't have a valid user at this point, we don't have any paired devices.
+            if (m_InputUser.valid)
+                m_InputUser.AssociateActionsWithUser(m_Actions);
         }
 
         private void UnassignUserAndDevices()

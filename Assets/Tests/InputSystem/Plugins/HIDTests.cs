@@ -4,14 +4,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
@@ -85,7 +85,7 @@ internal class HIDTests : InputTestFixture
         var hidDescriptor = new HID.HIDDeviceDescriptor
         {
             usage = 1234,
-            usagePage = (HID.UsagePage)5678,
+            usagePage = (HID.UsagePage) 5678,
             // need at least one valid element for the device not to be ignored
             elements = new[]
             {
@@ -189,7 +189,7 @@ internal class HIDTests : InputTestFixture
                         }
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         // Report device.

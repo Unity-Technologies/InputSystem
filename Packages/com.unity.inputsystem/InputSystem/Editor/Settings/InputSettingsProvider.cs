@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
 ////TODO: keywords (2019.1+)
 #pragma warning disable CS0414
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSettingsProvider : SettingsProvider
     {
@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 GenericMenu menu = new GenericMenu();
                 menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
                 menu.AddSeparator("");
-                for (var i =0; i< m_AvailableSettingsAssetsOptions.Length; i++)
+                for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
                     menu.AddItem(new GUIContent(m_AvailableSettingsAssetsOptions[i]), m_CurrentSelectedInputSettingsAsset == i, (path) => {
                         InputSystem.settings = AssetDatabase.LoadAssetAtPath<InputSettings>((string)path);
                     }, m_AvailableInputSettingsAssets[i]);
@@ -63,8 +63,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_AvailableInputSettingsAssets.Length == 0)
             {
                 EditorGUILayout.HelpBox(
-                        "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
-                        MessageType.Info);
+                    "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
+                    MessageType.Info);
                 if (GUILayout.Button("Create settings asset", GUILayout.Height(30)))
                     CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
                 GUILayout.Space(20);
@@ -72,11 +72,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
-
                 EditorGUILayout.HelpBox(
-                        "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
-                        + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
-                        MessageType.Warning);
+                    "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
+                    + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
+                    MessageType.Warning);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -349,7 +348,7 @@ namespace UnityEngine.Experimental.Input.Editor
     }
 
     [CustomEditor(typeof(InputSettings))]
-    internal class InputSettingsEditor : UnityEditor.Editor 
+    internal class InputSettingsEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
@@ -371,7 +370,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (GUILayout.Button($"Make active", EditorStyles.miniButton))
                     InputSystem.settings = (InputSettings)target;
             }
-
         }
     }
 }

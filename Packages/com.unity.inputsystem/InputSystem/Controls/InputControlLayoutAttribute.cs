@@ -2,7 +2,7 @@ using System;
 
 ////REVIEW: should this *not* be inherited? inheritance can lead to surprises
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Attribute to control layout settings of a type used to generate an <see cref="InputControlLayout"/>.
@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// <remarks>
         /// This property also determines how the layout is presented in the UI. All the device layouts
         /// that are marked as generic kinds of devices are displayed with their own entry at the root level of
-        /// the control picker (<see cref="UnityEngine.Experimental.Input.Editor.InputControlPicker"/>), for example.
+        /// the control picker (<see cref="UnityEngine.InputSystem.Editor.InputControlPicker"/>), for example.
         /// </remarks>
         public bool isGenericTypeOfDevice;
 

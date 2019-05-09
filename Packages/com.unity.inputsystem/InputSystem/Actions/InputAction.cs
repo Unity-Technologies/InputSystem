@@ -1,5 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
+
+////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
+////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
+////       action based on what action the *composite* references.
 
 ////REVIEW: should continuous actions *always* trigger as long as they are enabled? (even if no control is actuated)
 
@@ -38,7 +42,7 @@ using UnityEngine.Experimental.Input.Utilities;
 // the callbacks is very tedious and requires a lot of duct tape. What if instead the setup was trivial and something you never have
 // to worry about? Would the need for a polling-based API still be there? That's what I would like to find out first.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A named input signal that can flexibly decide which input data to tap.
@@ -297,67 +301,6 @@ namespace UnityEngine.Experimental.Input
         public InputActionPhase phase => currentState.phase;
 
         ////REVIEW: expose these as a struct?
-        ////REVIEW: do we need/want the lastTrigger stuff at all?
-
-        ////REVIEW: when looking at this, you're probably interested in the last value more than anything
-        public InputControl lastTriggerControl
-        {
-            get
-            {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
-                    return null;
-                var controlIndex = currentState.controlIndex;
-                if (controlIndex == InputActionState.kInvalidIndex)
-                    return null;
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.controls[controlIndex];
-            }
-        }
-
-        public double lastTriggerTime => currentState.time;
-
-        public double lastTriggerStartTime => currentState.startTime;
-
-        public double lastTriggerDuration
-        {
-            get
-            {
-                var state = currentState;
-                return state.time - state.startTime;
-            }
-        }
-
-        public unsafe InputBinding lastTriggerBinding
-        {
-            get
-            {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
-                    return default;
-                var bindingIndex = currentState.bindingIndex;
-                if (bindingIndex == InputActionState.kInvalidIndex)
-                    return default;
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
-                var bindingStartIndex = m_ActionMap.m_State.mapIndices[m_ActionMap.m_MapIndexInState].bindingStartIndex;
-                return m_ActionMap.m_Bindings[bindingIndex - bindingStartIndex];
-            }
-        }
-
-        public IInputInteraction lastTriggerInteraction
-        {
-            get
-            {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
-                    return null;
-                var interactionIndex = currentState.interactionIndex;
-                if (interactionIndex == InputActionState.kInvalidIndex)
-                    return null;
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.interactions[interactionIndex];
-            }
-        }
 
         /// <summary>
         /// Whether the action is currently enabled or not.

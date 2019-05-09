@@ -1,8 +1,8 @@
 ////TODO: add support for Windows.Gaming.Input.Gamepad (including the trigger motors)
 
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.InputSystem.Plugins.XInput
 {
     /// <summary>
     /// Adds support for XInput controllers.
@@ -20,6 +20,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
                     .WithDeviceClass("XboxOneGamepad")
                     .WithInterface("Xbox"));
 #endif
+            ////FIXME: layouts should always be available in the editor (mac/win/linux)
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             InputSystem.RegisterLayout<XInputControllerWindows>(
                 matches: new InputDeviceMatcher().WithInterface("XInput"));
