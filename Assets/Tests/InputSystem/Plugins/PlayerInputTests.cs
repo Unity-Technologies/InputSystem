@@ -356,6 +356,83 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_PassivatingActionsWillOnlyDisableActionsPlayerInputEnabledItself()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+    
+        var moveAction = playerInput.actions.FindAction("move");
+        var navigateAction = playerInput.actions.FindAction("navigate");
+        var gameplayActions = playerInput.actions.GetActionMap("gameplay");
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(navigateAction.enabled, Is.False);
+
+        navigateAction.Enable();
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(navigateAction.enabled, Is.True);
+
+        playerInput.PassivateInput();
+
+        Assert.That(playerInput.active, Is.False);
+        Assert.That(gameplayActions.enabled, Is.False);
+        Assert.That(moveAction.enabled, Is.False);
+        Assert.That(navigateAction.enabled, Is.True);
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_SwitchingActionMapWillOnlyDisableActionsPlayerInputEnabledItself()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+    
+        var moveAction = playerInput.actions.FindAction("move");
+        var navigateAction = playerInput.actions.FindAction("navigate");
+        var gameplayActions = playerInput.actions.GetActionMap("gameplay");
+        var otherActions = playerInput.actions.GetActionMap("other");
+
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(otherActions.enabled, Is.False);
+        Assert.That(navigateAction.enabled, Is.False);
+
+        navigateAction.Enable();
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(otherActions.enabled, Is.False);
+        Assert.That(navigateAction.enabled, Is.True);
+
+        playerInput.SwitchActions("other");
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.False);
+        Assert.That(moveAction.enabled, Is.False);
+        Assert.That(otherActions.enabled, Is.True);
+        Assert.That(navigateAction.enabled, Is.True);
+    }
+    
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_PairsFirstAvailableDeviceByDefault()
     {
         InputSystem.AddDevice<Gyroscope>(); // Noise. We don't have Gyroscope support so this should get ignored.
