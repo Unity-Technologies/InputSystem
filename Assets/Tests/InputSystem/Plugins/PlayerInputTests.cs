@@ -6,6 +6,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.PlayerInput;
+using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
 using UnityEngine.Experimental.Input.Processors;
 using Object = UnityEngine.Object;
@@ -88,6 +89,31 @@ internal class PlayerInputTests : InputTestFixture
         var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanLinkSpecificDeviceToUI()
+    {
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        var player = prefab.AddComponent<PlayerInput>();
+        var ui = prefab.AddComponent<InputSystemUIInputModule>();
+        player.uiInputModule = ui;
+        player.actions = InputActionAsset.FromJson(kActions);
+        ui.actionsAsset = player.actions;
+
+        InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
+
+        Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
+
     }
 
     [Test]
@@ -280,6 +306,32 @@ internal class PlayerInputTests : InputTestFixture
         playerInput2.actions = actions;
 
         Assert.That(playerInput1.actions, Is.Not.SameAs(playerInput2.actions));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_DuplicatingActions_AssignsNewInstanceToUI()
+    {
+        var go1 = new GameObject();
+        var playerInput1 = go1.AddComponent<PlayerInput>();
+        var ui1 = go1.AddComponent<InputSystemUIInputModule>();
+        playerInput1.uiInputModule = ui1;
+
+        var go2 = new GameObject();
+        var playerInput2 = go2.AddComponent<PlayerInput>();
+        var ui2 = go1.AddComponent<InputSystemUIInputModule>();
+        playerInput2.uiInputModule = ui2;
+
+        var actions = InputActionAsset.FromJson(kActions);
+
+        ui1.actionsAsset = actions;
+        playerInput1.actions = actions;
+        ui2.actionsAsset = actions;
+        playerInput2.actions = actions;
+
+        Assert.That(playerInput1.actions, Is.Not.SameAs(playerInput2.actions));
+        Assert.That(playerInput1.actions, Is.SameAs(ui1.actionsAsset));
+        Assert.That(playerInput2.actions, Is.SameAs(ui2.actionsAsset));
     }
 
     [Test]
