@@ -6,11 +6,49 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Added
+
+- Added a `MultiplayerEventSystem` class, which allows you use multiple UI event systems to control different parts of the UI by different players.
+
+
 ### Changed
 
 - `StickControl.x` and `StickControl.y` are now deadzoned, i.e. have `AxisDeadzone` processors on them. This affects all gamepads and joysticks.
   * __NOTE:__ The deadzoning is __independent__ of the stick. Whereas the stack has a radial deadzones, `x` and `y` have linear deadzones. This means that `leftStick.ReadValue().x` is __not__ necessary equal to `leftStick.x.ReadValue()`.
   * This change also fixes the problem of noise from sticks not getting filtered out and causing devices such as the PS4 controller to constantly make itself `Gamepad.current`.
+
+- Redesigned `UIActionInputModule`
+ * Added a button in the inspector to automatically assign actions from an input action asset based on commonly used action names.
+ * Will now populate actions with useful defaults.
+ * Removed `clickSpeed` property - will use native click counts from the OS where available instead.
+ * Removed `sendEventsWhenInBackground` property.
+ * Hiding `Touches` and `TrackedDevices` until we decide how to handle them.
+ * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
+ * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
+- Changed default button press point to 0.5.
+- Changed all constants in public API to match Unity naming conventions ("Constant" instead of "kConstant").
+- Changed namespace from `UnityEngine.Experimental.Input` to `UnityEngine.InputSystem`.
+- Generated wrapper code now has nicer formatting.
+- Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
+- Nicer icons for `InputActionAssets` and `InputActions` and for `Button` and generic controls.
+- Change all public API using `IntPtr` to use unsafe pointer types instead.
+
+### Fixed
+
+- Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
+- Fixed scrolling in `UIActionInputModule`.
+
+#### Actions
+
+- Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
+- Fixed `Hold` interactions firing immediately before the duration has passed.
+
+### Added
+
+#### Actions
+
+- `PlayerInput` can now handle `.inputactions` assets that have no control schemes.
+  * Will pair __all__ devices mentioned by any of the bindings except if already paired to another player.
 
 ## [0.2.8-preview] - 2019-4-23
 

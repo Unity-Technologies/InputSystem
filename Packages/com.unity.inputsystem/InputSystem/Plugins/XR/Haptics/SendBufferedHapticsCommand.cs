@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.Plugins.XR.Haptics
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct SendBufferedHapticCommand : IInputDeviceCommandInfo

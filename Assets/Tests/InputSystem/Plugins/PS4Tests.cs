@@ -1,12 +1,12 @@
 #if UNITY_EDITOR || UNITY_PS4
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.PS4;
-using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.PS4;
+using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.Processors;
 
 public class PS4Tests : InputTestFixture
 {
@@ -118,7 +118,7 @@ public class PS4Tests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -264,7 +264,7 @@ public class PS4Tests : InputTestFixture
                 }
 
                 Assert.Fail("Received wrong type of command");
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         InputSystem.Update();
@@ -345,7 +345,7 @@ public class PS4Tests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         move.SetMotorSpeed(0.1234f);

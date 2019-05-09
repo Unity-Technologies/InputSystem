@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: nuke this and force raw pointers on all code using events?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
@@ -25,11 +25,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEventPtr(InputEvent* eventPtr)
         {
             m_EventPtr = eventPtr;
-        }
-
-        public InputEventPtr(IntPtr eventPtr)
-            : this((InputEvent*)eventPtr)
-        {
         }
 
         public bool valid
@@ -94,7 +89,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get
             {
                 if (!valid)
-                    return InputDevice.kInvalidDeviceId;
+                    return InputDevice.InvalidDeviceId;
                 return m_EventPtr->deviceId;
             }
             set
@@ -127,14 +122,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public IntPtr data
+        public InputEvent* data
         {
-            get { return new IntPtr(m_EventPtr); }
-        }
-
-        public InputEvent* ToPointer()
-        {
-            return m_EventPtr;
+            get { return m_EventPtr; }
         }
 
         public bool IsA<TOtherEvent>()
@@ -158,7 +148,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr(new IntPtr(new IntPtr(m_EventPtr).ToInt64() + sizeInBytes));
+            return new InputEventPtr((InputEvent*)((Int64)m_EventPtr + sizeInBytes));
         }
 
         public override string ToString()
@@ -207,7 +197,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
         {
-            return eventPtr.ToPointer();
+            return eventPtr.data;
         }
     }
 }

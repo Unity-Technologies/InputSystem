@@ -4,9 +4,9 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Editor.Lists
+namespace UnityEngine.InputSystem.Editor.Lists
 {
     /// <summary>
     /// A <see cref="ReorderableList"/> to manage a set of name-and-parameter pairs and a <see cref="ParameterListView"/>

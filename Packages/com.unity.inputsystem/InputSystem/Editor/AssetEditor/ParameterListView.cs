@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: show description of interaction or processor when selected
 
-namespace UnityEngine.Experimental.Input.Editor.Lists
+namespace UnityEngine.InputSystem.Editor.Lists
 {
     /// <summary>
     /// Inspector-like functionality for editing parameter lists as used in <see cref="InputControlLayout"/>.

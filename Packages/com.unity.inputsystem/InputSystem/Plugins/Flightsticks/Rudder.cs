@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Flightsticks
+namespace UnityEngine.InputSystem.Flightsticks
 {
     public class Rudder
     {

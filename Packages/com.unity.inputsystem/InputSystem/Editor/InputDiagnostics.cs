@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class InputDiagnostics : IInputDiagnostics
     {

@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 // The action tree view illustrates one of the weaknesses of Unity's editing model. While operating directly
 // on serialized data does have a number of advantages (the built-in undo system being one of them), making the
@@ -16,7 +16,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////FIXME: context menu cannot be brought up when there's no items in the tree
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A tree view showing action maps, actions, and bindings. This is the core piece around which the various
@@ -1376,7 +1376,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             if (string.IsNullOrEmpty(bindingItem.groups))
                                 return Match.Success;
 
-                            var groups = bindingItem.groups.Split(InputBinding.kSeparator);
+                            var groups = bindingItem.groups.Split(InputBinding.Separator);
                             var bindingGroup = text;
                             return groups.Any(x => x.Equals(bindingGroup, StringComparison.InvariantCultureIgnoreCase))
                                 ? Match.Success

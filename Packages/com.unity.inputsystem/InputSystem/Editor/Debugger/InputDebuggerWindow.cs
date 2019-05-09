@@ -3,14 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: refresh metrics on demand
 
@@ -31,7 +31,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      layouts: copy as json, remove layout
 ////      actions: disable action
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Allows looking at input activity in the editor.
     internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
@@ -376,8 +376,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 InputSystem.ListEnabledActions(m_EnabledActions);
                 if (m_EnabledActions.Count > 0)
                 {
-                    actionsItem = AddChild(root, $"Actions ({m_EnabledActions.Count})", ref id);
+                    actionsItem = AddChild(root, "", ref id);
                     AddEnabledActions(actionsItem, ref id);
+
+                    if (!actionsItem.hasChildren)
+                    {
+                        // We are culling actions that are assigned to users so we may end up with an empty
+                        // list even if we have enabled actions. If we do, remove the "Actions" item from the tree.
+                        root.children.Remove(actionsItem);
+                    }
+                    else
+                    {
+                        // Update title to include action count.
+                        actionsItem.displayName = $"Actions ({actionsItem.children.Count})";
+                    }
                 }
 
                 // Users.
@@ -527,7 +539,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
 
-            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.kLocalParticipantId)
+            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.LocalParticipantId)
             {
                 foreach (var device in devices)
                 {
@@ -658,9 +670,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, $"Short Display Name: {control.shortDisplayName}", ref id);
                 if (control.format != 0)
                     AddChild(item, $"Format: {control.format}", ref id);
-                if (control.offset != InputStateBlock.kInvalidOffset)
+                if (control.offset != InputStateBlock.InvalidOffset)
                     AddChild(item, $"Offset: {control.offset}", ref id);
-                if (control.bit != InputStateBlock.kInvalidOffset)
+                if (control.bit != InputStateBlock.InvalidOffset)
                     AddChild(item, $"Bit: {control.bit}", ref id);
                 if (control.sizeInBits != 0)
                     AddChild(item, $"Size In Bits: {control.sizeInBits}", ref id);

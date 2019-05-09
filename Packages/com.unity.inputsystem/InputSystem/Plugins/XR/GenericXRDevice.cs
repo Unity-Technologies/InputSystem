@@ -1,8 +1,8 @@
-using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
-using UnityEngine.Experimental.Input.Haptics;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Plugins.XR.Haptics;
+using UnityEngine.InputSystem.Haptics;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.Plugins.XR
 {
     /// <summary>
     /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.

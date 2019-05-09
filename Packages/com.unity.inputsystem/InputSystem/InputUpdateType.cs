@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: ManualThreaded
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     [Flags]
     public enum InputUpdateType

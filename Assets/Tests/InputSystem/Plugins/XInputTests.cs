@@ -1,14 +1,14 @@
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.XInput;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Processors;
 
 #if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
-using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
 #endif
 
 internal class XInputTests : InputTestFixture

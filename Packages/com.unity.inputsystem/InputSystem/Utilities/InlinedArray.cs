@@ -5,7 +5,7 @@ using System.Linq;
 
 ////REVIEW: what about ignoring 'firstValue' entirely in case length > 1 and putting everything into an array in that case
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Helper to avoid array allocations if there's only a single value in the array.

@@ -1,6 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: the Debug.Asserts here should be also be made as checks ahead of time (on the layout)
 
@@ -12,10 +12,10 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow bitOffset to be non-zero for byte-aligned control as long as result is byte-aligned
 
-////REVIEW: kAutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
+////REVIEW: AutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
 ////        controls for which a more elegant and robust mechanism can surely be devised
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Information about a memory region storing state.
@@ -38,8 +38,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </remarks>
     public unsafe struct InputStateBlock
     {
-        public const uint kInvalidOffset = 0xffffffff;
-        public const uint kAutomaticOffset = 0xfffffffe;
+        public const uint InvalidOffset = 0xffffffff;
+        public const uint AutomaticOffset = 0xfffffffe;
 
         // Primitive state type codes.
         public static FourCC kTypeBit = new FourCC('B', 'I', 'T');
@@ -140,7 +140,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         // Offset into state buffer. After a device is added to the system, this is relative
         // to the global buffers; otherwise it is relative to the device root.
-        // During setup, this can be kInvalidOffset to indicate a control that should be placed
+        // During setup, this can be InvalidOffset to indicate a control that should be placed
         // at an offset automatically; otherwise it denotes a fixed offset relative to the
         // parent control.
         public uint byteOffset;

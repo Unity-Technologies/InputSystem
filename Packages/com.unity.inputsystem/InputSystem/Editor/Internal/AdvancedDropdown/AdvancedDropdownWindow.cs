@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class AdvancedDropdownWindow : EditorWindow
     {

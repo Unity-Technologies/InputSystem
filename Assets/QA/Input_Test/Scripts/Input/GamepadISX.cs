@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 //---------------------------------------------------------------------------
 // Parent Class for All Gamepad/Controller Input from New Input System.

@@ -5,7 +5,7 @@ using UnityEditor;
 
 ////TODO: survive domain reload properly
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     public class InputActionDebuggerWindow : EditorWindow
     {

@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     public class InvertVector2Processor : InputProcessor<Vector2>
     {

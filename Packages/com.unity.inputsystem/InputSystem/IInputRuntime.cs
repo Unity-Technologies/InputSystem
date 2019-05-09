@@ -1,6 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -8,7 +8,7 @@ using UnityEditor;
 
 ////TODO: add API to send events in bulk rather than one by one
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
 
@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Allocate a new unique device ID.
         /// </summary>
-        /// <returns>A numeric device ID that is not <see cref="InputDevice.kInvalidDeviceId"/>.</returns>
+        /// <returns>A numeric device ID that is not <see cref="InputDevice.InvalidDeviceId"/>.</returns>
         /// <remarks>
         /// Device IDs are managed by the runtime. This method allows creating devices that
         /// can use the same ID system but are not known to the underlying runtime.
@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Events are copied into an internal buffer. Thus the memory referenced by this method does
         /// not have to persist until the event is processed.
         /// </remarks>
-        void QueueEvent(IntPtr ptr);
+        void QueueEvent(InputEvent* ptr);
 
         //NOTE: This method takes an IntPtr instead of a generic ref type parameter (like InputDevice.ExecuteCommand)
         //      to avoid issues with AOT where generic interface methods can lead to problems. Il2cpp can handle it here

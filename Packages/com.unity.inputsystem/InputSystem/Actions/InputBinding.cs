@@ -1,7 +1,7 @@
 using System;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: do we really need overridable processors and interactions?
 
@@ -11,7 +11,7 @@ using UnityEngine.Experimental.Input.Utilities;
 //   in quite a few areas. There's quite a few bits in InputActionState that could be simplified if a
 //   binding simply maps to a control.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mapping of control input to an action.
@@ -32,8 +32,8 @@ namespace UnityEngine.Experimental.Input
     [Serializable]
     public struct InputBinding : IEquatable<InputBinding>
     {
-        public const char kSeparator = ';';
-        public const string kSeparatorString = ";";
+        public const char Separator = ';';
+        internal const string kSeparatorString = ";";
 
         /// <summary>
         /// Optional name for the binding.
@@ -327,7 +327,7 @@ namespace UnityEngine.Experimental.Input
             {
                 ////TODO: handle things like ignoring leading '/'
                 if (other.path == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, other.path, kSeparator))
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, other.path, Separator))
                     return false;
             }
 
@@ -337,14 +337,14 @@ namespace UnityEngine.Experimental.Input
                 ////TODO: handle "map/*" format
                 ////REVIEW: this will not be able to handle cases where one binding references an action by ID and the other by name but both do mean the same action
                 if (other.action == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, kSeparator))
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, Separator))
                     return false;
             }
 
             if (groups != null)
             {
                 if (other.groups == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, kSeparator))
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, Separator))
                     return false;
             }
 

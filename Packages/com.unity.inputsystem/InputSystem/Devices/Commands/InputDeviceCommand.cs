@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     ////TODO: pass IInputRuntime to this as well
     public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kBaseCommandSize)]
     public struct InputDeviceCommand : IInputDeviceCommandInfo
     {
-        public const int kBaseCommandSize = 8;
+        internal const int kBaseCommandSize = 8;
 
         /// <summary>
         /// Generic failure code for <see cref="IOCTL"/> calls.
@@ -32,9 +32,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <remarks>
         /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
         /// </remarks>
-        public const long kGenericFailure = -1;
+        public const long GenericFailure = -1;
 
-        public const long kGenericSuccess = 1;
+        public const long GenericSuccess = 1;
 
         [FieldOffset(0)] public FourCC type;
         [FieldOffset(4)] public int sizeInBytes;

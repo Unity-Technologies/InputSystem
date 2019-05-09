@@ -1,7 +1,7 @@
 #if UNITY_WEBGL || UNITY_EDITOR
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.WebGL
+namespace UnityEngine.InputSystem.Plugins.WebGL
 {
     public static class WebGLSupport
     {

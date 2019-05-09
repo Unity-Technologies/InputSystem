@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: have tooltips on each entry in the picker
 
 ////TODO: find better way to present controls when filtering to specific devices
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class InputControlPickerDropdown : AdvancedDropdown
     {
@@ -127,7 +127,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // We have devices that are based directly on InputDevice but are not marked as generic types
             // of devices (e.g. Vive Lighthouses). We do not want them to clutter the list at the root so we
             // all of them in a group called "Other" at the end of the list.
-            AdvancedDropdownItem otherGroup = new AdvancedDropdownItem("Other");
+            var otherGroup = new AdvancedDropdownItem("Other");
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
                      .Where(x => x.isDeviceLayout && !x.isGenericTypeOfDevice && x.type.BaseType == typeof(InputDevice) &&
                          !x.hideInUI && !x.baseLayouts.Any()).OrderBy(a => a.displayName))
@@ -212,6 +212,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 isFirstChild = false;
 
                 AddDeviceTreeItemRecursive(childLayout, deviceItem, searchable && !childLayout.isGenericTypeOfDevice);
+            }
+
+            // When picking devices, it must be possible to select a device that itself has more specific types
+            // of devices underneath it. However in the dropdown, such a device will be a foldout and not itself
+            // be selectable. We solve this problem by adding an entry for the device underneath the device
+            // itself (e.g. "Gamepad >> Gamepad").
+            if (m_Mode == InputControlPicker.Mode.PickDevice && deviceItem.m_Children.Count > 0)
+            {
+                var item = new DeviceDropdownItem(layout);
+                deviceItem.m_Children.Insert(0, item);
             }
         }
 
@@ -469,27 +479,31 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var isListening = false;
 
-                    using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(42)))
+                    // When picking controls, have a "Listen" button that allows listening for input.
+                    if (m_Owner.m_Mode == InputControlPicker.Mode.PickControl)
                     {
-                        GUILayout.Space(4);
-                        var isListeningOld = m_Owner.isListening;
-                        var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
-                            EditorStyles.miniButton, GUILayout.MaxWidth(40));
-
-                        if (isListeningOld != isListeningNew)
+                        using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(42)))
                         {
-                            if (isListeningNew)
-                            {
-                                m_Owner.StartListening();
-                            }
-                            else
-                            {
-                                m_Owner.StopListening();
-                                searchString = string.Empty;
-                            }
-                        }
+                            GUILayout.Space(4);
+                            var isListeningOld = m_Owner.isListening;
+                            var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
+                                EditorStyles.miniButton, GUILayout.MaxWidth(40));
 
-                        isListening = isListeningNew;
+                            if (isListeningOld != isListeningNew)
+                            {
+                                if (isListeningNew)
+                                {
+                                    m_Owner.StartListening();
+                                }
+                                else
+                                {
+                                    m_Owner.StopListening();
+                                    searchString = string.Empty;
+                                }
+                            }
+
+                            isListening = isListeningNew;
+                        }
                     }
 
                     ////FIXME: the search box doesn't clear out when listening; no idea why the new string isn't taking effect
