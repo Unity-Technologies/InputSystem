@@ -13,6 +13,9 @@ public class TouchISX : MonoBehaviour
 
     private InputAction m_touchAction;
 
+    [Header("Script to Show More Info")]
+    public TouchDebugInfo m_touchInfo;
+
     // Use this for initialization
     void Start()
     {
@@ -35,10 +38,20 @@ public class TouchISX : MonoBehaviour
     void Update()
     {
         Touchscreen touchscreen = Touchscreen.current;
-        if (touchscreen != null)
+        if (touchscreen != null && m_touchInfo != null)
         {
             for (int i = 0; i < touchscreen.activeTouches.Count; i++)
-                ;
+            {
+                TouchControl touch = touchscreen.activeTouches[i];
+                string touchInfo = touch.touchId.ReadValue() + "\n"
+                                 + touch.phase.ReadValue().ToString() + "\n"
+                                 + touch.position.ReadValue().ToString() + "\n"
+                                 + touch.pressure.ReadValue().ToString() + "\n"
+                                 + touch.radius.ReadValue().ToString() + "\n"
+                                 + touch.delta.ReadValue().ToString();
+                m_touchInfo.AddNewInputInfo(touchInfo, i);
+            }
+                
         }
         
     }

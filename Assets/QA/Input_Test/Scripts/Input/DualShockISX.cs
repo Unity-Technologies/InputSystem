@@ -9,8 +9,6 @@ public class DualShockISX : GamepadISX
     public Text m_leftStickText;
     public Text m_rightStickText;
 
-    private Gamepad m_dualShock;
-
     //private InputAction m_discreteButtonAction;
 
     // Start is called before the first frame update
@@ -53,29 +51,12 @@ public class DualShockISX : GamepadISX
 
     private void Update()
     {
+        Gamepad m_dualShock = Gamepad.current;
         if (m_dualShock != null)
         {
             m_leftStickText.text = m_dualShock.leftStick.ReadValue().ToString("F2");
             m_rightStickText.text = m_dualShock.rightStick.ReadValue().ToString("F2");
         }
         
-    }
-
-    protected override void OnControllerButtonPress(ButtonControl control, string dpadName = null, bool isXbox = false, bool isPS = false)
-    {
-        base.OnControllerButtonPress(control, dpadName, isXbox, isPS);
-        m_dualShock = control.device as Gamepad;
-    }
-
-    protected override void OnDpadPress(DpadControl control)
-    {
-        base.OnDpadPress(control);
-        m_dualShock = control.device as Gamepad;
-    }
-
-    protected override void StickMove(StickControl control)
-    {
-        base.StickMove(control);
-        m_dualShock = control.device as Gamepad;
     }
 }

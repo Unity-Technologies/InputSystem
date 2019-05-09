@@ -9,8 +9,6 @@ public class XboxISX : GamepadISX
     public Text m_leftStickText;
     public Text m_rightStickText;
 
-    private Gamepad m_xbox;
-
     // Use this for initialization
     void Start()
     {
@@ -48,29 +46,12 @@ public class XboxISX : GamepadISX
 
     private void Update()
     {
+        Gamepad m_xbox = Gamepad.current;
         if (m_xbox != null)
         {
             m_leftStickText.text = m_xbox.leftStick.ReadValue().ToString("F2");
             m_rightStickText.text = m_xbox.rightStick.ReadValue().ToString("F2");
         }
 
-    }
-
-    protected override void OnControllerButtonPress(ButtonControl control, string dpadName = null, bool isXbox = false, bool isPS = false)
-    {
-        base.OnControllerButtonPress(control, dpadName, isXbox, isPS);
-        m_xbox = control.device as Gamepad;
-    }
-
-    protected override void OnDpadPress(DpadControl control)
-    {
-        base.OnDpadPress(control);
-        m_xbox = control.device as Gamepad;
-    }
-
-    protected override void StickMove(StickControl control)
-    {
-        base.StickMove(control);
-        m_xbox = control.device as Gamepad;
-    }
+    }    
 }

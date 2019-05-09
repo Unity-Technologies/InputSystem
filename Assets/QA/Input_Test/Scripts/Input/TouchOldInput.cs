@@ -14,7 +14,7 @@ public class TouchOldInput : MonoBehaviour
 
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
-
+        
     // The old input manager does not support touch input for Standalone build, even when the device does.
 
     // Use this for initialization
@@ -30,15 +30,15 @@ public class TouchOldInput : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.touchCount > 0)
-        {
-            foreach (Touch touch in Input.touches)
+        Touch[] m_touches = Input.touches;
+        if (m_touches.Length > 0)
+        {            
+            foreach (Touch touch in m_touches)
             {
                 switch (touch.phase)
                 {
                     case TouchPhase.Began:
-                        NewTouchInput(touch);
-                        UpdateTouchInput(touch);
+                        NewTouchInput(touch);                        
                         break;
                     case TouchPhase.Moved:
                         UpdateTouchInput(touch);
@@ -70,7 +70,7 @@ public class TouchOldInput : MonoBehaviour
     }
 
     private void NewTouchInput(Touch touch)
-    {
+    {        
         if (touch.fingerId < 10)
         {
             Transform highlight = m_HighlightPool.GetChild(touch.fingerId);
@@ -79,6 +79,8 @@ public class TouchOldInput : MonoBehaviour
             Transform idText = highlight.Find("ID");
             if (idText != null)
                 idText.GetComponent<TextMesh>().text = "ID: " + touch.fingerId;
+
+            UpdateTouchInput(touch);
         }
         else
             ShowMessage("Touch " + touch.fingerId + " Detected.");

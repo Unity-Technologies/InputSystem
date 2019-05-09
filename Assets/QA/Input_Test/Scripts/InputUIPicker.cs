@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class InputUIPicker : MonoBehaviour
 {
@@ -143,5 +144,5 @@ public class InputUIPicker : MonoBehaviour
             m_currentDisplay = newDiagram;
             m_currentDisplay.SetActive(true);
         }
-    }
+    }       
 }
