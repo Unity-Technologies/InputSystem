@@ -6073,6 +6073,27 @@ partial class CoreTests
         }
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_IfDeviceHasMultipleUsages_UsagesAreAppliedToOverridePath()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        var rightHandVertical = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.SetDeviceUsage(rightHandVertical, CommonUsages.RightHand);
+        InputSystem.AddDeviceUsage(rightHandVertical, CommonUsages.Vertical);
+
+        using (var rebind = action.PerformInteractiveRebinding().Start())
+        {
+            InputSystem.QueueStateEvent(rightHandVertical, new GamepadState().WithButton(GamepadButton.South));
+            InputSystem.Update();
+
+            Assert.That(rebind.completed, Is.True);
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>{RightHand}{Vertical}/buttonSouth"));
+        }
+    }
+
     // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
     // machinery allows specifying a binding mask to respect.
     [Test]

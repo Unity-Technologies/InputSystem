@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
@@ -96,7 +97,7 @@ namespace UnityEngine.Experimental.Input
             return buffer.ToString();
         }
 
-        public static string TryGetDeviceUsage(string path)
+        public static string[] TryGetDeviceUsages(string path)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -105,8 +106,10 @@ namespace UnityEngine.Experimental.Input
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.usage.length > 0)
-                return parser.current.usage.ToString();
+            if (parser.current.usages != null && parser.current.usages.Length > 0)
+            {
+                return Array.ConvertAll<Substring, string>(parser.current.usages, i => { return i.ToString(); });
+            }
 
             return null;
         }
@@ -272,22 +275,30 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Match usage.
-            var usage = parser.current.usage;
-            if (usage.length > 0)
+            if (parser.current.usages != null)
             {
-                var usageCount = controlItem.usages.Count;
-                var anyUsageMatches = false;
-                for (var i = 0; i < usageCount; ++i)
+                // All of usages should match to the one of usage in the control
+                for (int usageIndex = 0; usageIndex < parser.current.usages.Length; ++usageIndex)
                 {
-                    if (StringMatches(usage, controlItem.usages[i]))
+                    var usage = parser.current.usages[usageIndex];
+
+                    if (usage.length > 0)
                     {
-                        anyUsageMatches = true;
-                        break;
+                        var usageCount = controlItem.usages.Count;
+                        var anyUsageMatches = false;
+                        for (var i = 0; i < usageCount; ++i)
+                        {
+                            if (StringMatches(usage, controlItem.usages[i]))
+                            {
+                                anyUsageMatches = true;
+                                break;
+                            }
+                        }
+
+                        if (!anyUsageMatches)
+                            return false;
                     }
                 }
-
-                if (!anyUsageMatches)
-                    return false;
             }
 
             // Match name.
@@ -554,7 +565,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Match by usage.
-            if (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
+            while (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
             {
                 ++indexInPath;
 
@@ -871,7 +882,7 @@ namespace UnityEngine.Experimental.Input
         internal struct ParsedPathComponent
         {
             public Substring layout;
-            public Substring usage;
+            public Substring[] usages;
             public Substring name;
             public Substring displayName;
 
@@ -884,12 +895,28 @@ namespace UnityEngine.Experimental.Input
                 var result = string.Empty;
                 if (isWildcard)
                     result += "Any";
-                if (!usage.isEmpty)
+
+                if (usages != null)
                 {
-                    if (result != string.Empty)
-                        result += ' ' + ToHumanReadableString(usage);
-                    else
-                        result += ToHumanReadableString(usage);
+                    var combinedUsages = string.Empty;
+
+                    for (int i = 0; i < usages.Length; ++i)
+                    {
+                        if (usages[i].isEmpty)
+                            continue;
+
+                        if (combinedUsages != string.Empty)
+                            combinedUsages += " & " + ToHumanReadableString(usages[i]);
+                        else
+                            combinedUsages = ToHumanReadableString(usages[i]);
+                    }
+                    if (combinedUsages != string.Empty)
+                    {
+                        if (result != string.Empty)
+                            result += ' ' + combinedUsages;
+                        else
+                            result += combinedUsages;
+                    }
                 }
 
                 if (!layout.isEmpty)
@@ -954,19 +981,25 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Match usage.
-                if (!usage.isEmpty)
+                if (usages != null)
                 {
-                    var usages = control.usages;
-                    var haveUsageMatch = false;
-                    for (var i = 0; i < usages.Count; ++i)
-                        if (Substring.Compare(usages[i].ToString(), usage, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    for (int i = 0; i < usages.Length; ++i)
+                    {
+                        if (!usages[i].isEmpty)
                         {
-                            haveUsageMatch = true;
-                            break;
-                        }
+                            var controlUsages = control.usages;
+                            var haveUsageMatch = false;
+                            for (var ci = 0; ci < controlUsages.Count; ++ci)
+                                if (Substring.Compare(controlUsages[ci].ToString(), usages[i], StringComparison.InvariantCultureIgnoreCase) == 0)
+                                {
+                                    haveUsageMatch = true;
+                                    break;
+                                }
 
-                    if (!haveUsageMatch)
-                        return false;
+                            if (!haveUsageMatch)
+                                return false;
+                        }
+                    }
                 }
 
                 // Match name.
@@ -1038,9 +1071,9 @@ namespace UnityEngine.Experimental.Input
                     layout = ParseComponentPart('>');
 
                 // Parse {...} usage part, if present.
-                var usage = new Substring();
-                if (rightIndexInPath < length && path[rightIndexInPath] == '{')
-                    usage = ParseComponentPart('}');
+                var usages = new List<Substring>();
+                while (rightIndexInPath < length && path[rightIndexInPath] == '{')
+                    usages.Add(ParseComponentPart('}'));
 
                 // Parse display name part, if present.
                 var displayName = new Substring();
@@ -1058,7 +1091,7 @@ namespace UnityEngine.Experimental.Input
                 current = new ParsedPathComponent
                 {
                     layout = layout,
-                    usage = usage,
+                    usages = usages.ToArray(),
                     name = name,
                     displayName = displayName
                 };

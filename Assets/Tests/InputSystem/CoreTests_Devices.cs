@@ -308,6 +308,44 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanFindDeviceByMultipleUsages()
+    {
+        InputSystem.AddDevice<Gamepad>();
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
+        InputSystem.AddDeviceUsage(device, CommonUsages.Vertical);
+
+        // Device should be found even if the one of the usages is specified
+        using (var controls = InputSystem.FindControls("/{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
+
+        using (var controls = InputSystem.FindControls("/{Vertical}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
+
+        // And with both of the usages
+        using (var controls = InputSystem.FindControls("/{LeftHand}{Vertical}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
+
+        // Even with any order of usages
+        using (var controls = InputSystem.FindControls("/{Vertical}{LeftHand}"))
+        {
+            Assert.That(controls, Has.Count.EqualTo(1));
+            Assert.That(controls, Has.Exactly(1).SameAs(device));
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanFindDeviceByUsageAndLayout()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
