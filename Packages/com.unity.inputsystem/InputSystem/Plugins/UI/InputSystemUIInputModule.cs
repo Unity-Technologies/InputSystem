@@ -891,8 +891,8 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelAction;
 
         // Hide these while we still have to figure out what to do with these.
-        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches;
-        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices;
+        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches = new List<TouchResponder>();
+        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices = new List<TrackedDeviceResponder>();
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
