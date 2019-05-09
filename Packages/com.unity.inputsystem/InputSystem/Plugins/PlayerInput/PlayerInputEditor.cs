@@ -485,7 +485,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 
             serializedObject.Update();
         }
-        
+
         [SerializeField] private bool m_EventsGroupUnfolded;
         [SerializeField] private bool[] m_ActionMapEventsUnfolded;
 

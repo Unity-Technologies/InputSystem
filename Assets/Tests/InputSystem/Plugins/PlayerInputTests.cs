@@ -113,7 +113,6 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
-
     }
 
     [Test]
@@ -364,7 +363,7 @@ internal class PlayerInputTests : InputTestFixture
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
-    
+
         var moveAction = playerInput.actions.FindAction("move");
         var navigateAction = playerInput.actions.FindAction("navigate");
         var gameplayActions = playerInput.actions.GetActionMap("gameplay");
@@ -400,7 +399,7 @@ internal class PlayerInputTests : InputTestFixture
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
-    
+
         var moveAction = playerInput.actions.FindAction("move");
         var navigateAction = playerInput.actions.FindAction("navigate");
         var gameplayActions = playerInput.actions.GetActionMap("gameplay");
@@ -430,7 +429,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(otherActions.enabled, Is.True);
         Assert.That(navigateAction.enabled, Is.True);
     }
-    
+
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_PairsFirstAvailableDeviceByDefault()

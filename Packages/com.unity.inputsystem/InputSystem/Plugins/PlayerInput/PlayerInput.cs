@@ -458,7 +458,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             {
                 var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
                 if (actionMap != null)
-                { 
+                {
                     actionMap.Enable();
                     m_EnabledActionMap = actionMap;
                 }
@@ -659,7 +659,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         {
             if (m_Actions == null)
                 return;
-                
+
             ////REVIEW: should we *always* Instantiate()?
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
