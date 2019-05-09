@@ -454,19 +454,16 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         public void ActivateInput()
         {
             // Enable default action map, if set.
-            if (m_Actions != null)
+            if (m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
             {
-                if (!string.IsNullOrEmpty(m_DefaultActionMap))
-                {
-                    var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
-                    if (actionMap != null)
-                    {
-                        actionMap.Enable();
-                        m_EnabledActionMap = actionMap;
-                    }
-                    else
-                        Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
+                var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
+                if (actionMap != null)
+                { 
+                    actionMap.Enable();
+                    m_EnabledActionMap = actionMap;
                 }
+                else
+                    Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
             }
             m_InputActive = true;
         }
