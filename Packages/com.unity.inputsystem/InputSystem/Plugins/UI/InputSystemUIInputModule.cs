@@ -871,6 +871,7 @@ namespace UnityEngine.InputSystem.Plugins.UI
                 }
             }
         }
+
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
         /// </see> used as a cursor for pointing at UI elements.
