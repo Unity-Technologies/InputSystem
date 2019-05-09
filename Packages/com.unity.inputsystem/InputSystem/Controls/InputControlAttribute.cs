@@ -32,12 +32,6 @@ namespace UnityEngine.InputSystem.Layouts
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public class InputControlAttribute : PropertyAttribute
     {
-        public InputControlAttribute()
-        {
-            bit = InputStateBlock.InvalidOffset;
-            offset = InputStateBlock.InvalidOffset;
-        }
-
         public string layout { get; set; }
         public string variants { get; set; }
         public string name { get; set; }
@@ -49,8 +43,8 @@ namespace UnityEngine.InputSystem.Layouts
         public string alias { get; set; }
         public string[] aliases { get; set; }
         public string useStateFrom { get; set; }
-        public uint bit { get; set; }// = InputStateBlock.InvalidOffset
-        public uint offset { get; set; }// = InputStateBlock.InvalidOffset
+        public uint bit { get; set; } = InputStateBlock.InvalidOffset;
+        public uint offset { get; set; } = InputStateBlock.InvalidOffset;
         public uint sizeInBits { get; set; }
         public int arraySize { get; set; }
         public string displayName { get; set; }
