@@ -120,16 +120,6 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
             if (GUI.changed)
                 serializedObject.ApplyModifiedProperties();
         }
-
-        private static class Styles
-        {
-            public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout");
-
-            static Styles()
-            {
-                s_FoldoutStyle.fontStyle = FontStyle.Bold;
-            }
-        }
     }
 }
 #endif
