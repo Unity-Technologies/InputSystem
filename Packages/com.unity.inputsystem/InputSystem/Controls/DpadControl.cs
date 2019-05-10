@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Controls
         public DpadControl()
         {
             m_StateBlock.sizeInBits = 4;
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.TypeBit;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

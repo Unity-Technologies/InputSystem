@@ -291,7 +291,7 @@ partial class CoreTests
         var setup = new InputDeviceBuilder("CustomGamepad");
         var device = (Gamepad)setup.Finish();
 
-        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
+        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.TypeShort));
     }
 
     [Test]

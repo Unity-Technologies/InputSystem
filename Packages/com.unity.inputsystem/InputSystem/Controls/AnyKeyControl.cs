@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Controls
         public AnyKeyControl()
         {
             m_StateBlock.sizeInBits = 1; // Should be overridden by whoever uses the control.
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.TypeBit;
         }
 
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)

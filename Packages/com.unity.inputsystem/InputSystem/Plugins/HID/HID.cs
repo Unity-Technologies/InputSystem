@@ -371,41 +371,41 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
 
                     builder.AddControl(stickName + "/x")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.TypeSBit)
                         .WithLayout("Axis")
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/y")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.TypeSBit)
                         .WithLayout("Axis")
                         .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     //Need to handle Up/Down/Left/Right
                     builder.AddControl(stickName + "/up")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.TypeSBit)
                         .WithLayout("Button")
                         .WithParameters("clampMin=0,clampMax=1")
                         .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/down")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.TypeSBit)
                         .WithLayout("Button")
                         .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
                         .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/left")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.TypeSBit)
                         .WithLayout("Button")
                         .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/right")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.TypeSBit)
                         .WithLayout("Button")
                         .WithParameters("clampMin=0,clampMax=1")
                         .WithBitOffset(0)
@@ -678,19 +678,19 @@ namespace UnityEngine.InputSystem.Plugins.HID
                 {
                     case 8:
                         if (isSigned)
-                            return InputStateBlock.kTypeSByte;
-                        return InputStateBlock.kTypeByte;
+                            return InputStateBlock.TypeSByte;
+                        return InputStateBlock.TypeByte;
                     case 16:
                         if (isSigned)
-                            return InputStateBlock.kTypeShort;
-                        return InputStateBlock.kTypeUShort;
+                            return InputStateBlock.TypeShort;
+                        return InputStateBlock.TypeUShort;
                     case 32:
                         if (isSigned)
-                            return InputStateBlock.kTypeInt;
-                        return InputStateBlock.kTypeUInt;
+                            return InputStateBlock.TypeInt;
+                        return InputStateBlock.TypeUInt;
                     default:
                         // Generic bitfield value.
-                        return InputStateBlock.kTypeBit;
+                        return InputStateBlock.TypeBit;
                 }
             }
 
@@ -794,7 +794,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                     ////REVIEW: this probably only works with hatswitches that have their null value at logicalMax+1
 
                     builder.AddControl(controlName + "/up")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.TypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1},nullValue={2},wrapAtValue={3}",
@@ -803,7 +803,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/right")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.TypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
@@ -812,7 +812,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/down")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.TypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
@@ -821,7 +821,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/left")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.TypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",

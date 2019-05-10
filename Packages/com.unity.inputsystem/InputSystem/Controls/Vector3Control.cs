@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Controls
 
         public Vector3Control()
         {
-            m_StateBlock.format = InputStateBlock.kTypeVector3;
+            m_StateBlock.format = InputStateBlock.TypeVector3;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

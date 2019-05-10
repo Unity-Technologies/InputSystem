@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
     ///
     /// State memory is bit-addressable, meaning that it can be offset from a byte address in bits (<see cref="bitOffset"/>)
     /// and is sized in bits instead of bytes (<see cref="sizeInBits"/>). However, in practice, bit-addressing
-    /// memory reads and writes are only supported on the <see cref="kTypeBit">bitfield primitive format</see>.
+    /// memory reads and writes are only supported on the <see cref="TypeBit">bitfield primitive format</see>.
     ///
     /// Input state memory is restricted to a maximum of 4GB in size. Offsets are recorded in 32 bits.
     /// </remarks>
@@ -42,57 +42,57 @@ namespace UnityEngine.InputSystem.LowLevel
         public const uint AutomaticOffset = 0xfffffffe;
 
         // Primitive state type codes.
-        public static readonly FourCC kTypeBit = new FourCC('B', 'I', 'T');
-        public static readonly FourCC kTypeSBit = new FourCC('S', 'B', 'I', 'T');
-        public static readonly FourCC kTypeInt = new FourCC('I', 'N', 'T');
-        public static readonly FourCC kTypeUInt = new FourCC('U', 'I', 'N', 'T');
-        public static readonly FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
-        public static readonly FourCC kTypeUShort = new FourCC('U', 'S', 'H', 'T');
-        public static readonly FourCC kTypeByte = new FourCC('B', 'Y', 'T', 'E');
-        public static readonly FourCC kTypeSByte = new FourCC('S', 'B', 'Y', 'T');
-        public static readonly FourCC kTypeLong = new FourCC('L', 'N', 'G');
-        public static readonly FourCC kTypeULong = new FourCC('U', 'L', 'N', 'G');
-        public static readonly FourCC kTypeFloat = new FourCC('F', 'L', 'T');
-        public static readonly FourCC kTypeDouble = new FourCC('D', 'B', 'L');
+        public static readonly FourCC TypeBit = new FourCC('B', 'I', 'T');
+        public static readonly FourCC TypeSBit = new FourCC('S', 'B', 'I', 'T');
+        public static readonly FourCC TypeInt = new FourCC('I', 'N', 'T');
+        public static readonly FourCC TypeUInt = new FourCC('U', 'I', 'N', 'T');
+        public static readonly FourCC TypeShort = new FourCC('S', 'H', 'R', 'T');
+        public static readonly FourCC TypeUShort = new FourCC('U', 'S', 'H', 'T');
+        public static readonly FourCC TypeByte = new FourCC('B', 'Y', 'T', 'E');
+        public static readonly FourCC TypeSByte = new FourCC('S', 'B', 'Y', 'T');
+        public static readonly FourCC TypeLong = new FourCC('L', 'N', 'G');
+        public static readonly FourCC TypeULong = new FourCC('U', 'L', 'N', 'G');
+        public static readonly FourCC TypeFloat = new FourCC('F', 'L', 'T');
+        public static readonly FourCC TypeDouble = new FourCC('D', 'B', 'L');
 
         ////REVIEW: are these really useful?
-        public static readonly FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
-        public static readonly FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '3');
-        public static readonly FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
-        public static readonly FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
-        public static readonly FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
-        public static readonly FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');
-        public static readonly FourCC kTypeVector3Byte = new FourCC('V', 'C', '3', 'B');
+        public static readonly FourCC TypeVector2 = new FourCC('V', 'E', 'C', '2');
+        public static readonly FourCC TypeVector3 = new FourCC('V', 'E', 'C', '3');
+        public static readonly FourCC TypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
+        public static readonly FourCC TypeVector2Short = new FourCC('V', 'C', '2', 'S');
+        public static readonly FourCC TypeVector3Short = new FourCC('V', 'C', '3', 'S');
+        public static readonly FourCC TypeVector2Byte = new FourCC('V', 'C', '2', 'B');
+        public static readonly FourCC TypeVector3Byte = new FourCC('V', 'C', '3', 'B');
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
-            if (type == kTypeBit || type == kTypeSBit)
+            if (type == TypeBit || type == TypeSBit)
                 return 1;
-            if (type == kTypeInt || type == kTypeUInt)
+            if (type == TypeInt || type == TypeUInt)
                 return 4 * 8;
-            if (type == kTypeShort || type == kTypeUShort)
+            if (type == TypeShort || type == TypeUShort)
                 return 2 * 8;
-            if (type == kTypeByte || type == kTypeSByte)
+            if (type == TypeByte || type == TypeSByte)
                 return 1 * 8;
-            if (type == kTypeFloat)
+            if (type == TypeFloat)
                 return 4 * 8;
-            if (type == kTypeDouble)
+            if (type == TypeDouble)
                 return 8 * 8;
-            if (type == kTypeLong || type == kTypeULong)
+            if (type == TypeLong || type == TypeULong)
                 return 8 * 8;
-            if (type == kTypeVector2)
+            if (type == TypeVector2)
                 return 2 * 4 * 8;
-            if (type == kTypeVector3)
+            if (type == TypeVector3)
                 return 3 * 4 * 8;
-            if (type == kTypeQuaternion)
+            if (type == TypeQuaternion)
                 return 4 * 4 * 8;
-            if (type == kTypeVector2Short)
+            if (type == TypeVector2Short)
                 return 2 * 2 * 8;
-            if (type == kTypeVector3Short)
+            if (type == TypeVector3Short)
                 return 3 * 2 * 8;
-            if (type == kTypeVector2Byte)
+            if (type == TypeVector2Byte)
                 return 2 * 1 * 8;
-            if (type == kTypeVector3Byte)
+            if (type == TypeVector3Byte)
                 return 3 * 1 * 8;
             return -1;
         }
@@ -100,31 +100,31 @@ namespace UnityEngine.InputSystem.LowLevel
         public static FourCC GetPrimitiveFormatFromType(Type type)
         {
             if (ReferenceEquals(type, typeof(int)))
-                return kTypeInt;
+                return TypeInt;
             if (ReferenceEquals(type, typeof(uint)))
-                return kTypeUInt;
+                return TypeUInt;
             if (ReferenceEquals(type, typeof(short)))
-                return kTypeShort;
+                return TypeShort;
             if (ReferenceEquals(type, typeof(ushort)))
-                return kTypeUShort;
+                return TypeUShort;
             if (ReferenceEquals(type, typeof(byte)))
-                return kTypeByte;
+                return TypeByte;
             if (ReferenceEquals(type, typeof(sbyte)))
-                return kTypeSByte;
+                return TypeSByte;
             if (ReferenceEquals(type, typeof(float)))
-                return kTypeFloat;
+                return TypeFloat;
             if (ReferenceEquals(type, typeof(double)))
-                return kTypeDouble;
+                return TypeDouble;
             if (ReferenceEquals(type, typeof(long)))
-                return kTypeLong;
+                return TypeLong;
             if (ReferenceEquals(type, typeof(ulong)))
-                return kTypeULong;
+                return TypeULong;
             if (ReferenceEquals(type, typeof(Vector2)))
-                return kTypeVector2;
+                return TypeVector2;
             if (ReferenceEquals(type, typeof(Vector3)))
-                return kTypeVector3;
+                return TypeVector3;
             if (ReferenceEquals(type, typeof(Quaternion)))
-                return kTypeQuaternion;
+                return TypeQuaternion;
             return new FourCC();
         }
 
@@ -165,20 +165,20 @@ namespace UnityEngine.InputSystem.LowLevel
             var valuePtr = (byte*)statePtr + (int)byteOffset;
 
             int value;
-            if (format == kTypeInt || format == kTypeUInt)
+            if (format == TypeInt || format == TypeUInt)
             {
                 Debug.Assert(sizeInBits == 32, "INT and UINT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "INT and UINT state must be byte-aligned");
                 value = *(int*)valuePtr;
             }
-            else if (format == kTypeBit)
+            else if (format == TypeBit)
             {
                 if (sizeInBits == 1)
                     value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : 0;
                 else
                     value = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
             }
-            else if (format == kTypeSBit)
+            else if (format == TypeSBit)
             {
                 if (sizeInBits == 1)
                 {
@@ -191,25 +191,25 @@ namespace UnityEngine.InputSystem.LowLevel
                     value = unsignedValue - halfMax;
                 }
             }
-            else if (format == kTypeByte)
+            else if (format == TypeByte)
             {
                 Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "BYTE state must be byte-aligned");
                 value = *valuePtr;
             }
-            else if (format == kTypeSByte)
+            else if (format == TypeSByte)
             {
                 Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
                 value = *(sbyte*)valuePtr;
             }
-            else if (format == kTypeShort)
+            else if (format == TypeShort)
             {
                 Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
                 value = *(short*)valuePtr;
             }
-            else if (format == kTypeUShort)
+            else if (format == TypeUShort)
             {
                 Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
@@ -235,23 +235,23 @@ namespace UnityEngine.InputSystem.LowLevel
             var valuePtr = (byte*)statePtr + (int)byteOffset;
 
             float value;
-            if (format == kTypeFloat)
+            if (format == TypeFloat)
             {
                 Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
                 value = *(float*)valuePtr;
             }
-            else if (format == kTypeBit || format == kTypeSBit)
+            else if (format == TypeBit || format == TypeSBit)
             {
                 if (sizeInBits == 1)
                 {
-                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == kTypeSBit ? -1.0f : 0.0f);
+                    value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == TypeSBit ? -1.0f : 0.0f);
                 }
                 else if (sizeInBits != 31)
                 {
                     var maxValue = (float)(1 << (int)sizeInBits);
                     var rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
-                    if (format == kTypeSBit)
+                    if (format == TypeSBit)
                     {
                         var unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
                         value = Mathf.Clamp(unclampedValue, -1.0f, 1.0f);
@@ -269,7 +269,7 @@ namespace UnityEngine.InputSystem.LowLevel
             // If a control with an integer-based representation does not use the full range
             // of its integer size (e.g. only goes from [0..128]), processors or the parameters
             // above have to be used to re-process the resulting float values.
-            else if (format == kTypeShort)
+            else if (format == TypeShort)
             {
                 Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
@@ -277,32 +277,32 @@ namespace UnityEngine.InputSystem.LowLevel
                 ////        Should we cut off at -32767? Or just live with the fact that 0.999 is as high as it gets?
                 value = *(short*)valuePtr / 32768.0f;
             }
-            else if (format == kTypeUShort)
+            else if (format == TypeUShort)
             {
                 Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
                 value = *(ushort*)valuePtr / 65535.0f;
             }
-            else if (format == kTypeByte)
+            else if (format == TypeByte)
             {
                 Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "BYTE state must be byte-aligned");
                 value = *valuePtr / 255.0f;
             }
-            else if (format == kTypeSByte)
+            else if (format == TypeSByte)
             {
                 Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
                 ////REVIEW: Same problem here as with 'short'
                 value = *(sbyte*)valuePtr / 128.0f;
             }
-            else if (format == kTypeInt)
+            else if (format == TypeInt)
             {
                 Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
                 value = *(Int32*)valuePtr / 2147483647.0f;
             }
-            else if (format == kTypeUInt)
+            else if (format == TypeUInt)
             {
                 Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
@@ -320,13 +320,13 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             var valuePtr = (byte*)statePtr + (int)byteOffset;
 
-            if (format == kTypeFloat)
+            if (format == TypeFloat)
             {
                 Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
                 *(float*)valuePtr = value;
             }
-            else if (format == kTypeBit)
+            else if (format == TypeBit)
             {
                 if (sizeInBits == 1)
                 {
@@ -339,25 +339,25 @@ namespace UnityEngine.InputSystem.LowLevel
                     MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
                 }
             }
-            else if (format == kTypeShort)
+            else if (format == TypeShort)
             {
                 Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
                 *(short*)valuePtr = (short)(value * 32768.0f);
             }
-            else if (format == kTypeUShort)
+            else if (format == TypeUShort)
             {
                 Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
                 Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
                 *(ushort*)valuePtr = (ushort)(value * 65535.0f);
             }
-            else if (format == kTypeByte)
+            else if (format == TypeByte)
             {
                 Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "BYTE state must be byte-aligned");
                 *valuePtr = (byte)(value * 255.0f);
             }
-            else if (format == kTypeSByte)
+            else if (format == TypeSByte)
             {
                 Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
                 Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
@@ -378,7 +378,7 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             var valuePtr = (byte*)statePtr + (int)byteOffset;
 
-            if (format == kTypeBit || format == kTypeSBit)
+            if (format == TypeBit || format == TypeSBit)
             {
                 if (sizeInBits > 32)
                     throw new NotImplementedException(
@@ -389,7 +389,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 else
                     MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt32());
             }
-            else if (format == kTypeFloat)
+            else if (format == TypeFloat)
             {
                 Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");

@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Controls
     {
         public IntegerControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeInt;
+            m_StateBlock.format = InputStateBlock.TypeInt;
         }
 
         public override unsafe int ReadUnprocessedValueFromState(void* statePtr)

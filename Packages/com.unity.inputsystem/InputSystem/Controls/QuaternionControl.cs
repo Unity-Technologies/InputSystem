@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Controls
         public QuaternionControl()
         {
             m_StateBlock.sizeInBits = sizeof(float) * 4 * 8;
-            m_StateBlock.format = InputStateBlock.kTypeQuaternion;
+            m_StateBlock.format = InputStateBlock.TypeQuaternion;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

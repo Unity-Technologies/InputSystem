@@ -84,11 +84,19 @@ partial class APIVerificationTests
     [Category("API")]
     public void API_ConstantsAreAppropriatelyNamed()
     {
-        // TODO: also check for static readonly types
         var incorrectlyNamedConstants = GetInputSystemPublicFields().Where(field => field.HasConstant && !IsValidNameForConstant(field.Name));
         Assert.That(incorrectlyNamedConstants, Is.Empty);
     }
 
+    [Test]
+    [Category("API")]
+    public void API_StaticReadonlyFieldsAreAppropriatelyNamed()
+    {
+        var incorrectlyNamedConstants = GetInputSystemPublicFields().Where(field => field.IsInitOnly && field.IsStatic && !IsValidNameForConstant(field.Name));
+        Assert.That(incorrectlyNamedConstants, Is.Empty);
+    }
+
+    
     [Test]
     [Category("API")]
     public void API_TypesHaveAnAppropriateNamespace()

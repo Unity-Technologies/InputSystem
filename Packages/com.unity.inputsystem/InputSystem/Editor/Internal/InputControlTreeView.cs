@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem.Editor
                 var format = control.m_StateBlock.format;
 
                 object value = null;
-                if (format == InputStateBlock.kTypeBit)
+                if (format == InputStateBlock.TypeBit)
                 {
                     if (control.valueSizeInBytes == 1)
                     {
@@ -332,7 +332,7 @@ namespace UnityEngine.InputSystem.Editor
                         value = MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits);
                     }
                 }
-                else if (format == InputStateBlock.kTypeSBit)
+                else if (format == InputStateBlock.TypeSBit)
                 {
                     if (control.valueSizeInBytes == 1)
                     {
@@ -345,31 +345,31 @@ namespace UnityEngine.InputSystem.Editor
                         value = fullValue - halfMaxValue;
                     }
                 }
-                else if (format == InputStateBlock.kTypeByte || format == InputStateBlock.kTypeSByte)
+                else if (format == InputStateBlock.TypeByte || format == InputStateBlock.TypeSByte)
                 {
                     value = *ptr;
                 }
-                else if (format == InputStateBlock.kTypeShort)
+                else if (format == InputStateBlock.TypeShort)
                 {
                     value = *(short*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeUShort)
+                else if (format == InputStateBlock.TypeUShort)
                 {
                     value = *(ushort*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeInt)
+                else if (format == InputStateBlock.TypeInt)
                 {
                     value = *(int*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeUInt)
+                else if (format == InputStateBlock.TypeUInt)
                 {
                     value = *(uint*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeFloat)
+                else if (format == InputStateBlock.TypeFloat)
                 {
                     value = *(float*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeDouble)
+                else if (format == InputStateBlock.TypeDouble)
                 {
                     value = *(double*)ptr;
                 }

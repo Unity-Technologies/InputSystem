@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.Controls
     {
         public PointerPhaseControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeInt;
+            m_StateBlock.format = InputStateBlock.TypeInt;
         }
 
         public override unsafe PointerPhase ReadUnprocessedValueFromState(void* statePtr)

@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Controls
 
         public Vector2Control()
         {
-            m_StateBlock.format = InputStateBlock.kTypeVector2;
+            m_StateBlock.format = InputStateBlock.TypeVector2;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
