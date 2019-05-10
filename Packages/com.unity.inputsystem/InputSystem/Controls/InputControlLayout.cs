@@ -610,7 +610,7 @@ namespace UnityEngine.InputSystem.Layouts
                 m_Controls = controlLayouts.ToArray(),
                 m_StateFormat = stateFormat,
                 m_Variants = variants,
-                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
+                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRenderInternal,
                 isGenericTypeOfDevice = layoutAttribute?.isGenericTypeOfDevice ?? false,
                 hideInUI = layoutAttribute?.hideInUI ?? false,
                 m_Description = layoutAttribute?.description,

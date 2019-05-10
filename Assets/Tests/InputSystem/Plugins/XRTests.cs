@@ -354,7 +354,7 @@ internal class XRTests : InputTestFixture
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 
-    [InputControlLayout(beforeRender = true)]
+    [InputControlLayout(updateBeforeRender = true)]
     private class TestHMD : InputDevice
     {
         public QuaternionControl quaternion { get; private set; }
