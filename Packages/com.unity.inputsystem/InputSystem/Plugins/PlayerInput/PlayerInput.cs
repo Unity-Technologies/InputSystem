@@ -403,7 +403,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         }
 
         /// <summary>
-        /// The event system that should be fed with UI events from the player's inputs.
+        /// UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.
         /// </summary>
         public InputSystemUIInputModule uiInputModule
         {
@@ -611,7 +611,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         [SerializeField] internal InputActionAsset m_Actions;
         [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
-        [Tooltip("UI InputModule that should have it's input actions synched to this PlayerInput's actions.")]
+        [Tooltip("UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.")]
         [SerializeField] internal InputSystemUIInputModule m_UIInputModule;
         [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
