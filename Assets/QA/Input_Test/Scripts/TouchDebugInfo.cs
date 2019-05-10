@@ -10,6 +10,28 @@ public class TouchDebugInfo : InputDebugInfo
     public Transform m_ISXInfoPool;
 
     private Vector3 m_startPos;
+    private int m_maxISXCount = 0;
+    private int m_maxOldCount = 0;
+
+    public int MaxOldInputCount
+    {
+        get { return m_maxOldCount; }
+        set
+        {
+            m_maxOldCount = value;
+            ChangeUIPanelSize(m_oldInputInfoPool, value);
+        }
+    }
+
+    public int MaxISXCount
+    {
+        get { return m_maxISXCount; }
+        set
+        {
+            m_maxISXCount = value;
+            ChangeUIPanelSize(m_ISXInfoPool, value);
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -20,7 +42,7 @@ public class TouchDebugInfo : InputDebugInfo
     // Update is called once per frame
     void Update()
     {
-        CheckShortcut();
+        CheckShortcut();            
     }
 
     public void AddOldInputInfo(string content, int index = 0)
@@ -35,31 +57,56 @@ public class TouchDebugInfo : InputDebugInfo
 
     private void AddInputInfo(string content, Transform infoPool, int index = 0)
     {        
-        RectTransform infoSection;
-        // Add a new section
-        if (index + 1 > infoPool.childCount)
-        {
-            RectTransform template = infoPool.GetChild(0).GetComponent<RectTransform>();
-            Vector3 pos = template.localPosition + new Vector3(template.rect.width, 0, 0);
+        Transform infoSection = infoPool.GetChild(index);
 
-            infoSection = Instantiate(template, infoPool);
-            infoSection.localPosition = pos;
-            infoSection.GetComponent<Text>().text = content;
-        }
-        //use an existing one
-        else
+        // Enable new section to display info
+        if (infoSection != null)
         {
-            infoSection = infoPool.GetChild(index).GetComponent<RectTransform>();
+            if (!infoSection.gameObject.activeSelf)
+                infoSection.gameObject.SetActive(true);
             infoSection.GetComponent<Text>().text = content;
-        }
+        }       
 
-        // Remove the extra ones
+        // Disable the ones not used
         for (int i = index + 1; i < infoPool.childCount; i++)
-            Destroy(infoPool.GetChild(i)?.gameObject);
+            infoPool.GetChild(i)?.gameObject.SetActive(false);                
+                    
 
-        // Adjust UI width and position
-        m_info.sizeDelta = new Vector2(infoPool.localPosition.x + infoSection.rect.width * infoPool.childCount, m_info.sizeDelta.y);
+        //// Add a new section
+        //if (index + 1 > infoPool.childCount)
+        //{
+        //    RectTransform template = infoPool.GetChild(0).GetComponent<RectTransform>();
+        //    Vector3 pos = template.localPosition + new Vector3(template.rect.width * index, 0, 0);
+
+        //    infoSection = Instantiate(template, infoPool);
+        //    infoSection.localPosition = pos;
+        //    infoSection.GetComponent<Text>().text = content;
+        //}
+        ////use an existing one
+        //else
+        //{
+        //    infoSection = infoPool.GetChild(index).GetComponent<RectTransform>();
+        //    infoSection.GetComponent<Text>().text = content;
+        //}
+
+        //// Remove the extra ones
+        //for (int i = index + 1; i < infoPool.childCount; i++)
+        //    Destroy(infoPool.GetChild(i)?.gameObject);       
         
+    }
+
+    // Adjust UI width and position
+    private void ChangeUIPanelSize(Transform infoPool, int count = 0)
+    {
+        int max = Mathf.Max(m_maxISXCount, m_maxOldCount);
+        max = Mathf.Max(max, 1);                    // The first section always shows
+        max = Mathf.Min(max, infoPool.childCount);  // No need to be bigger than the child objects need
+
+        // Clear the content in the first section when there is no touch input
+        if (count == 0)
+            infoPool.GetChild(0).GetComponent<Text>().text = "";
+
+        m_info.sizeDelta = new Vector2(infoPool.localPosition.x + infoPool.GetChild(0).GetComponent<RectTransform>().rect.width * max, m_info.sizeDelta.y);
         if (m_isShowing)
             SetPositionByX(m_startPos.x - CalculateInfoContainerWidth());
     }

@@ -14,7 +14,10 @@ public class TouchOldInput : MonoBehaviour
 
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
-        
+
+    [Header("Script to Show More Info")]
+    public TouchDebugInfo m_touchInfo;
+
     // The old input manager does not support touch input for Standalone build, even when the device does.
 
     // Use this for initialization
@@ -25,34 +28,46 @@ public class TouchOldInput : MonoBehaviour
 
         if (!Input.touchPressureSupported)
             ShowMessage("Touch Pressue is not supported.");
+
+        Input.simulateMouseWithTouches = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        Touch[] m_touches = Input.touches;
-        if (m_touches.Length > 0)
-        {            
-            foreach (Touch touch in m_touches)
+        m_touchInfo.MaxOldInputCount = Input.touchCount;
+                    
+        for (int i = 0; i < Input.touchCount; i++)
+        {
+            Touch touch = Input.GetTouch(i);
+            // Handling highlight
+            switch (touch.phase)
             {
-                switch (touch.phase)
-                {
-                    case TouchPhase.Began:
-                        NewTouchInput(touch);                        
-                        break;
-                    case TouchPhase.Moved:
-                        UpdateTouchInput(touch);
-                        break;
-                    case TouchPhase.Canceled:
-                    case TouchPhase.Ended:
-                        RemoveTouchInput(touch);
-                        break;
-                    case TouchPhase.Stationary:
-                    default:
-                        break;
-                }
+                case TouchPhase.Began:
+                    NewTouchInput(touch);                        
+                    break;
+                case TouchPhase.Moved:
+                    UpdateTouchInput(touch);
+                    break;
+                case TouchPhase.Canceled:
+                case TouchPhase.Ended:
+                    RemoveTouchInput(touch);
+                    break;
+                case TouchPhase.Stationary:
+                default:
+                    break;
             }
-        }
+
+            // Handling information
+            string touchInfo = touch.fingerId + "\n"
+                             + touch.type.ToString() + "\n"
+                             + touch.phase.ToString() + "\n"
+                             + touch.position.ToString() + "\n"
+                             + touch.pressure.ToString() + "\n"
+                             + touch.radius.ToString() + "\n"
+                             + touch.deltaPosition.ToString();
+            m_touchInfo.AddOldInputInfo(touchInfo, i);
+        }        
     }
 
     private void UpdateTouchInput(Touch touch)
