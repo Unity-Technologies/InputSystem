@@ -28,12 +28,12 @@ namespace UnityEngine.InputSystem.Layouts
 
         public string variants { get; set; }
 
-        internal bool? updateBeforeRender;
+        internal bool? updateBeforeRenderInternal;
 
-        public bool beforeRender
+        public bool updateBeforeRender
         {
-            get => updateBeforeRender.Value;
-            set => updateBeforeRender = value;
+            get => updateBeforeRenderInternal.Value;
+            set => updateBeforeRenderInternal = value;
         }
 
         /// <summary>
