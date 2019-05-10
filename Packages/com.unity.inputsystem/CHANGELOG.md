@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
 - Fixed `Hold` interactions firing immediately before the duration has passed.
+- Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
 
 ### Added
 
