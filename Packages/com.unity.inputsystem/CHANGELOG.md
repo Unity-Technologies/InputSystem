@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
 - Fixed scrolling in `UIActionInputModule`.
+- Fixed compiling the input system package in Unity 19.2 with ugui being moved to a package now.
 
 #### Actions
 
