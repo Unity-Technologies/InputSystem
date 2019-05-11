@@ -3,7 +3,8 @@
     "references": [
         "Unity.InputSystem",
         "Unity.TextMeshPro",
-        "Steamworks.NET"
+        "Steamworks.NET",
+        "Unity.ugui"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

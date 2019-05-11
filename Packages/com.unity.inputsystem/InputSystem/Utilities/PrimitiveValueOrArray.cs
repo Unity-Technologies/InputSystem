@@ -5,8 +5,8 @@ namespace UnityEngine.InputSystem.Utilities
     public struct PrimitiveValueOrArray
     {
         ////REVIEW: use InlinedArray<PrimitiveValue>?
-        public PrimitiveValue primitiveValue;
-        public object arrayValue;
+        public PrimitiveValue primitiveValue { get; set; }
+        public object arrayValue { get; set; }
 
         public TypeCode valueType => primitiveValue.type;
 
