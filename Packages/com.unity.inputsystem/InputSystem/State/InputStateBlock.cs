@@ -42,27 +42,27 @@ namespace UnityEngine.InputSystem.LowLevel
         public const uint AutomaticOffset = 0xfffffffe;
 
         // Primitive state type codes.
-        public static FourCC kTypeBit = new FourCC('B', 'I', 'T');
-        public static FourCC kTypeSBit = new FourCC('S', 'B', 'I', 'T');
-        public static FourCC kTypeInt = new FourCC('I', 'N', 'T');
-        public static FourCC kTypeUInt = new FourCC('U', 'I', 'N', 'T');
-        public static FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
-        public static FourCC kTypeUShort = new FourCC('U', 'S', 'H', 'T');
-        public static FourCC kTypeByte = new FourCC('B', 'Y', 'T', 'E');
-        public static FourCC kTypeSByte = new FourCC('S', 'B', 'Y', 'T');
-        public static FourCC kTypeLong = new FourCC('L', 'N', 'G');
-        public static FourCC kTypeULong = new FourCC('U', 'L', 'N', 'G');
-        public static FourCC kTypeFloat = new FourCC('F', 'L', 'T');
-        public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
+        public static readonly FourCC kTypeBit = new FourCC('B', 'I', 'T');
+        public static readonly FourCC kTypeSBit = new FourCC('S', 'B', 'I', 'T');
+        public static readonly FourCC kTypeInt = new FourCC('I', 'N', 'T');
+        public static readonly FourCC kTypeUInt = new FourCC('U', 'I', 'N', 'T');
+        public static readonly FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
+        public static readonly FourCC kTypeUShort = new FourCC('U', 'S', 'H', 'T');
+        public static readonly FourCC kTypeByte = new FourCC('B', 'Y', 'T', 'E');
+        public static readonly FourCC kTypeSByte = new FourCC('S', 'B', 'Y', 'T');
+        public static readonly FourCC kTypeLong = new FourCC('L', 'N', 'G');
+        public static readonly FourCC kTypeULong = new FourCC('U', 'L', 'N', 'G');
+        public static readonly FourCC kTypeFloat = new FourCC('F', 'L', 'T');
+        public static readonly FourCC kTypeDouble = new FourCC('D', 'B', 'L');
 
         ////REVIEW: are these really useful?
-        public static FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
-        public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '3');
-        public static FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
-        public static FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
-        public static FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
-        public static FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');
-        public static FourCC kTypeVector3Byte = new FourCC('V', 'C', '3', 'B');
+        public static readonly FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
+        public static readonly FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '3');
+        public static readonly FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
+        public static readonly FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
+        public static readonly FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
+        public static readonly FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');
+        public static readonly FourCC kTypeVector3Byte = new FourCC('V', 'C', '3', 'B');
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
@@ -136,25 +136,25 @@ namespace UnityEngine.InputSystem.LowLevel
         /// copies between compatible layouts. If set to a primitive state format, also used to
         /// determine the size of the state block.
         /// </remarks>
-        public FourCC format;
+        public FourCC format { get; set; }
 
         // Offset into state buffer. After a device is added to the system, this is relative
         // to the global buffers; otherwise it is relative to the device root.
         // During setup, this can be InvalidOffset to indicate a control that should be placed
         // at an offset automatically; otherwise it denotes a fixed offset relative to the
         // parent control.
-        public uint byteOffset;
+        public uint byteOffset { get; set; }
 
         // Bit offset from the given byte offset. Also zero-based (i.e. first bit is at bit
         // offset #0).
-        public uint bitOffset;
+        public uint bitOffset { get; set; }
 
         // Size of the state in bits. If this % 8 is not 0, the control is considered a
         // bitfield control.
         // During setup, if this field is 0 it means the size of the control should be automatically
         // computed from either its children (if it has any) or its set format. If it has neither,
         // setup will throw.
-        public uint sizeInBits;
+        public uint sizeInBits { get; set; }
 
         internal uint alignedSizeInBytes => (uint)((sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0));
 

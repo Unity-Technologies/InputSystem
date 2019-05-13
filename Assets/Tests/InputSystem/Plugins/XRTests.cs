@@ -177,6 +177,7 @@ internal class XRTests : InputTestFixture
     [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
     [TestCase("OPenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
+    [TestCase("OpenVR Controller(Knuckles EV3.0 Left) - Left","Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
@@ -354,7 +355,7 @@ internal class XRTests : InputTestFixture
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 
-    [InputControlLayout(beforeRender = true)]
+    [InputControlLayout(updateBeforeRender = true)]
     private class TestHMD : InputDevice
     {
         public QuaternionControl quaternion { get; private set; }

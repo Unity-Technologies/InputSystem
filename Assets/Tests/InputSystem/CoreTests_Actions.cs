@@ -1880,6 +1880,9 @@ partial class CoreTests
     [Property("TimesliceEvents", "Off")]
     public void Actions_CanPerformHoldInteraction()
     {
+        var timeOffset = 123;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = timeOffset;
+        runtime.currentTime = 10 + timeOffset;
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
@@ -1924,7 +1927,7 @@ partial class CoreTests
         };
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 0.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.0);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
@@ -1935,7 +1938,7 @@ partial class CoreTests
 
         startedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 0.25);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 10.25);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
@@ -1947,7 +1950,7 @@ partial class CoreTests
 
         cancelledReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 0.5);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.5);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
@@ -1959,7 +1962,17 @@ partial class CoreTests
 
         startedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 10);
+        runtime.currentTime = 10.75 + timeOffset;
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.Zero);
+        Assert.That(performedReceivedCalls, Is.Zero);
+        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(startedAction, Is.SameAs(action));
+        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+
+        runtime.currentTime = 11 + timeOffset;
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
@@ -1967,7 +1980,7 @@ partial class CoreTests
         Assert.That(cancelledReceivedCalls, Is.Zero);
         Assert.That(performedAction, Is.SameAs(action));
         Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
     }
 
     [Test]

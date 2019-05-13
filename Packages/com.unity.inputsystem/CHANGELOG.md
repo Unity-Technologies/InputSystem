@@ -33,15 +33,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nicer icons for `InputActionAssets` and `InputActions` and for `Button` and generic controls.
 - Change all public API using `IntPtr` to use unsafe pointer types instead.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
+- Change some public fields into properties.
 
 ### Fixed
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
 - Fixed scrolling in `UIActionInputModule`.
+- Fixed compiling the input system package in Unity 19.2 with ugui being moved to a package now.
 
 #### Actions
 
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
+- Fixed `Hold` interactions firing immediately before the duration has passed.
+- Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
 
 ### Added
 

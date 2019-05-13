@@ -3,7 +3,8 @@
     "references": [
         "Demo",
         "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
+        "Unity.InputSystem.TestFramework",
+        "Unity.ugui"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
