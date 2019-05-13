@@ -87,8 +87,23 @@ partial class APIVerificationTests
     [Category("API")]
     public void API_ConstantsAreAppropriatelyNamed()
     {
-        // TODO: also check for static readonly types
         var incorrectlyNamedConstants = GetInputSystemPublicFields().Where(field => field.HasConstant && !IsValidNameForConstant(field.Name));
+        Assert.That(incorrectlyNamedConstants, Is.Empty);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_StaticReadonlyFieldsAreAppropriatelyNamed()
+    {
+        var incorrectlyNamedConstants = GetInputSystemPublicFields().Where(field => field.IsInitOnly && field.IsStatic && !IsValidNameForConstant(field.Name));
+        Assert.That(incorrectlyNamedConstants, Is.Empty);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_EnumValuesAreAppropriatelyNamed()
+    {
+        var incorrectlyNamedConstants = GetInputSystemPublicTypes().Where(t => t.IsEnum).SelectMany(t => t.Fields).Where(f => f.IsStatic && !IsValidNameForConstant(f.Name));
         Assert.That(incorrectlyNamedConstants, Is.Empty);
     }
 
