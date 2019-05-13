@@ -95,7 +95,7 @@ partial class APIVerificationTests
         var incorrectlyNamedConstants = GetInputSystemPublicFields().Where(field => field.IsInitOnly && field.IsStatic && !IsValidNameForConstant(field.Name));
         Assert.That(incorrectlyNamedConstants, Is.Empty);
     }
-    
+
     [Test]
     [Category("API")]
     public void API_EnumValuesAreAppropriatelyNamed()
