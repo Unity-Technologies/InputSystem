@@ -475,7 +475,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             m_InputActive = false;
         }
 
-        public void SwitchActions(string mapNameOrId)
+        public void SwitchCurrentActionMap(string mapNameOrId)
         {
             // Must be enabled.
             if (!m_Enabled)

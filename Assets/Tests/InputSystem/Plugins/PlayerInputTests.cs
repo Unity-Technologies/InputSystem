@@ -550,7 +550,7 @@ internal class PlayerInputTests : InputTestFixture
 
         listener.messages.Clear();
 
-        go.SendMessage("SwitchActions", "other");
+        go.SendMessage("SwitchCurrentActionMap", "other");
 
         Set(gamepad.leftTrigger, 0.345f);
 
