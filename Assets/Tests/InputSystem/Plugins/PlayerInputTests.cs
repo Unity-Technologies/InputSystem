@@ -421,7 +421,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(otherActions.enabled, Is.False);
         Assert.That(navigateAction.enabled, Is.True);
 
-        playerInput.SwitchActions("other");
+        playerInput.currentActionMap = otherActions;
 
         Assert.That(playerInput.active, Is.True);
         Assert.That(gameplayActions.enabled, Is.False);

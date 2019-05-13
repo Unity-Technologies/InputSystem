@@ -499,9 +499,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
                 return;
             }
 
-            m_EnabledActionMap?.Disable();
-            actionMap.Enable();
-            m_EnabledActionMap = actionMap;
+            currentActionMap = actionMap;
         }
 
         public static PlayerInput GetPlayerByIndex(int playerIndex)
@@ -630,6 +628,17 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         [NonSerialized] private InputValue m_InputValueObject;
 
         [NonSerialized] internal InputActionMap m_EnabledActionMap;
+
+        public InputActionMap currentActionMap
+        {
+            get => m_EnabledActionMap;
+            set
+            {
+                m_EnabledActionMap?.Disable();
+                m_EnabledActionMap = value;
+                m_EnabledActionMap?.Enable();
+            }
+        }
 
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;

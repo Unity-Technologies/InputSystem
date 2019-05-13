@@ -33,11 +33,11 @@ To receive input, each player requires an associated set of input actions. When 
 
 `PlayerInput` will handle [enabling and disabling](Actions.md#using-actions) automatically and will also take care of installing [callbacks](Actions.md#responding-to-actions) on the actions. Also, when multiple `PlayerInput` components use the same actions, the components will automatically take care of creating [private copies of the actions](Actions.md#using-actions-with-multiple-players).
 
-When first enabled, `PlayerInput` will enable all actions from the action map identified by `Default Action Map`. If no default action map has been set, no actions will be enabled by default. To manually enable actions, you can simply call `Enable` and `Disable` on the action maps or actions like you would do [without `PlayerInput`](Actions.md#using-actions). To switch action maps, you can also call `PlayerInput.SwitchActions`.
+When first enabled, `PlayerInput` will enable all actions from the action map identified by `Default Action Map`. If no default action map has been set, no actions will be enabled by default. To manually enable actions, you can simply call `Enable` and `Disable` on the action maps or actions like you would do [without `PlayerInput`](Actions.md#using-actions). You can check or switch which action map is currently enabled using the `PlayerInput.currentActionMap` property. To switch action maps by action map name, you can also call `PlayerInput.SwitchActions`.
 
 To disable input on a player, call `PlayerInput.PassivateInput`. To re-enable it, call `PlayerInput.ActivateInput`. The latter will enable the default action map, if set.
 
-When `PlayerInput` is disabled, it will automatically disable all the player's actions and disassociate any devices paired to the player.
+When `PlayerInput` is disabled, it will automatically disable the currently active action map (`PlayerInput.currentActionMap`) and disassociate any devices paired to the player.
 
 See [the following section](#notification-behaviors) for how to be notified when an action is triggered by a player.
 
