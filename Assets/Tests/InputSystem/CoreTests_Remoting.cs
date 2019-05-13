@@ -243,7 +243,7 @@ partial class CoreTests
         {
             m_DisconnectionListeners.RemoveListener(callback);
         }
-        
+
         public void Receive(Guid messageId, byte[] data)
         {
             MessageEvent msgEvent;
