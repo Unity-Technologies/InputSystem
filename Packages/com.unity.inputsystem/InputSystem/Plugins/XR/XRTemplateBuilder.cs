@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Button")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.TypeBit)
+                            .WithFormat(InputStateBlock.FormatBit)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Integer")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.TypeInt)
+                            .WithFormat(InputStateBlock.FormatInt)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -206,7 +206,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.TypeFloat)
+                            .WithFormat(InputStateBlock.FormatFloat)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -215,7 +215,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Vector2")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.TypeVector2)
+                            .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -224,7 +224,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Vector3")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.TypeVector3)
+                            .WithFormat(InputStateBlock.FormatVector3)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -233,7 +233,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Quaternion")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.TypeQuaternion)
+                            .WithFormat(InputStateBlock.FormatQuaternion)
                             .WithUsages(currentUsages);
                         break;
                     }

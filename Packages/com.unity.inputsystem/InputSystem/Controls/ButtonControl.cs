@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Controls
 
         public ButtonControl()
         {
-            m_StateBlock.format = InputStateBlock.TypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
             m_MinValue = 0f;
             m_MaxValue = 1f;
         }

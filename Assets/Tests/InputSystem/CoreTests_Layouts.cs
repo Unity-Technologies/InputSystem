@@ -164,7 +164,7 @@ partial class CoreTests
         var setup = new InputDeviceBuilder("MyDevice");
         var device = (Gamepad)setup.Finish();
 
-        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.TypeByte));
+        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
     }
 
     [Test]
@@ -1126,10 +1126,10 @@ partial class CoreTests
         InputSystem.RegisterLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
         var setup = new InputDeviceBuilder("Test");
 
-        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.TypeByte));
-        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.TypeShort));
-        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.TypeInt));
-        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.TypeDouble));
+        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
+        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
+        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatDouble));
     }
 
     private unsafe struct StateWithFixedArray : IInputStateTypeInfo
@@ -1403,7 +1403,7 @@ partial class CoreTests
         var derivedLayout = InputSystem.LoadLayout<DerivedClassModifyingControlFromBaseClass>();
 
         Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
-        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.TypeShort));
+        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.FormatShort));
 
         // This is probably somewhat counterintuitive but if there's InputControlAttributes on a property or field,
         // there won't be a control generated automatically from the field or property.
