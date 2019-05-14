@@ -1105,6 +1105,9 @@ namespace UnityEngine.InputSystem
             if (!trigger.haveMagnitude)
                 trigger.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
 
+            // We take a local copy of this value, so we can change it to use the starting control of composites
+            // for simpler conflict resolution (so composites always use the same value), but still report the actually
+            // actuated control to the user.
             var triggerControlIndex = trigger.controlIndex;
 
             // Update magnitude stored in state.
