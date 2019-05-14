@@ -2034,7 +2034,7 @@ namespace UnityEngine.InputSystem
                     var compositeType = compositeObject.GetType();
                     while (compositeType != null && !compositeType.IsGenericType)
                         compositeType = compositeType.BaseType;
-                        
+
                     throw new InvalidOperationException(
                         $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(compositeType.GetGenericArguments()[0])}')");
                 }
