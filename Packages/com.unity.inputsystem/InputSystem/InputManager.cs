@@ -2991,7 +2991,7 @@ namespace UnityEngine.InputSystem
             // Go through the list and both trigger expired timers and remove any irrelevant
             // ones by compacting the array.
             // NOTE: We do not actually release any memory we may have allocated.
-            var currentTime = m_Runtime.currentTime;
+            var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
             var remainingTimeoutCount = 0;
             for (var i = 0; i < timeoutCount; ++i)
             {

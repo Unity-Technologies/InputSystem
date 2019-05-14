@@ -118,6 +118,7 @@ namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
         }
     }
 
+    [Serializable]
     public struct WebGLDeviceCapabilities
     {
         public int numAxes;

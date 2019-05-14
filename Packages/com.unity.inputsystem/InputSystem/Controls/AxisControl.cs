@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Controls
 
         public AxisControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeFloat;
+            m_StateBlock.format = InputStateBlock.FormatFloat;
         }
 
         // Read a floating-point value from the given state. Automatically checks

@@ -234,6 +234,16 @@ partial class CoreTests
             m_DisconnectionListeners.AddListener(callback);
         }
 
+        public void UnregisterConnection(UnityAction<int> callback)
+        {
+            m_ConnectionListeners.RemoveListener(callback);
+        }
+
+        public void UnregisterDisconnection(UnityAction<int> callback)
+        {
+            m_DisconnectionListeners.RemoveListener(callback);
+        }
+
         public void Receive(Guid messageId, byte[] data)
         {
             MessageEvent msgEvent;

@@ -4,6 +4,10 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 ////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
+#if !UNITY_2019_2
+// NativeInputEventType/NativeInputEvent are marked obsolete in 19.1, because they are becoming internal in 19.2
+#pragma warning disable 618
+#endif
 
 namespace UnityEngine.InputSystem.LowLevel
 {
