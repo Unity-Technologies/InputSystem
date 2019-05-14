@@ -1101,7 +1101,7 @@ partial class CoreTests
             Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
             // Same as above. Conflict resolution locks us to first control in composite.
-            Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.left));
+            Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.right));
             Assert.That(actions[0].action, Is.SameAs(compositeAction));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
 
@@ -5053,6 +5053,59 @@ partial class CoreTests
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.left));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Vector2Composite_ReportsCorrectControlInCallback()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterInteraction<LogInteraction>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddCompositeBinding("Dpad", interactions: "log")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        InputControl performedControl = null;
+        action.performed += ctx => performedControl = ctx.control;
+
+        // Interaction should be processed only once.
+        LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(performedControl, Is.EqualTo(keyboard.wKey));
+        performedControl = null;
+
+        LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
+        performedControl = null;
+
+        LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
+
+        LogAssert.NoUnexpectedReceived();
     }
 
     [Test]

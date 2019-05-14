@@ -1105,6 +1105,8 @@ namespace UnityEngine.InputSystem
             if (!trigger.haveMagnitude)
                 trigger.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
 
+            var triggerControlIndex = trigger.controlIndex;
+
             // Update magnitude stored in state.
             if (bindingStates[trigger.bindingIndex].isPartOfComposite)
             {
@@ -1119,9 +1121,9 @@ namespace UnityEngine.InputSystem
                 // first control in a composite. Otherwise it becomes much harder to tell if the we have
                 // multiple concurrent actuations or not.
                 // Since composites always evaluate as a whole instead of as single controls, having
-                // trigger.controlIndex differ from the state monitor that fired should be fine.
-                trigger.controlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
-                Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount,
+                // triggerControlIndex differ from the state monitor that fired should be fine.
+                triggerControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
+                Debug.Assert(triggerControlIndex >= 0 && triggerControlIndex < totalControlCount,
                     "Control start index on composite binding out of range");
             }
             else
@@ -1130,7 +1132,7 @@ namespace UnityEngine.InputSystem
                     "Composite should not trigger directly from a control");
 
                 // "Normal" control. Store magnitude in controlMagnitudes.
-                memory.controlMagnitudes[trigger.controlIndex] = trigger.magnitude;
+                memory.controlMagnitudes[triggerControlIndex] = trigger.magnitude;
             }
 
             // Never ignore state changes for actions that aren't currently driven by
@@ -1155,9 +1157,9 @@ namespace UnityEngine.InputSystem
                 // Remember that so that when the controls are released again, we can more
                 // efficiently determine whether we need to take multiple bound controls into
                 // account or not.
-                // NOTE: For composites, we have forced trigger.controlIndex to the first control
+                // NOTE: For composites, we have forced triggerControlIndex to the first control
                 //       in the composite. See above.
-                if (trigger.magnitude > 0 && trigger.controlIndex != actionState->controlIndex && actionState->magnitude > 0)
+                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex && actionState->magnitude > 0)
                     actionState->hasMultipleConcurrentActuations = true;
 
                 Profiler.EndSample();
@@ -1172,7 +1174,7 @@ namespace UnityEngine.InputSystem
             {
                 // If we're not currently driving the action, it's simple. Doesn't matter that we lowered
                 // actuation as we didn't have the highest actuation anyway.
-                if (trigger.controlIndex != actionState->controlIndex)
+                if (triggerControlIndex != actionState->controlIndex)
                 {
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
@@ -1287,7 +1289,7 @@ namespace UnityEngine.InputSystem
             //       before we let it drive the action.
             if (Mathf.Approximately(trigger.magnitude, actionState->magnitude))
             {
-                if (trigger.magnitude > 0 && trigger.controlIndex != actionState->controlIndex)
+                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
             }
