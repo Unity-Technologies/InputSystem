@@ -2030,8 +2030,14 @@ namespace UnityEngine.InputSystem
 
                 var compositeOfType = compositeObject as InputBindingComposite<TValue>;
                 if (compositeOfType == null)
+                {
+                    var compositeType = compositeObject.GetType();
+                    while (compositeType != null && !compositeType.IsGenericType)
+                        compositeType = compositeType.BaseType;
+                        
                     throw new InvalidOperationException(
-                        $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(compositeObject.GetType().GetGenericArguments()[0])}')");
+                        $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(compositeType.GetGenericArguments()[0])}')");
+                }
 
                 var context = new InputBindingCompositeContext
                 {
