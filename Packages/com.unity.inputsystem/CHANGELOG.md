@@ -34,12 +34,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Change all public API using `IntPtr` to use unsafe pointer types instead.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
+- Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
 
 ### Fixed
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
 - Fixed scrolling in `UIActionInputModule`.
 - Fixed compiling the input system package in Unity 19.2 with ugui being moved to a package now.
+- In the Input System project settings window, you can no longer add a supported device twice.
 
 #### Actions
 
