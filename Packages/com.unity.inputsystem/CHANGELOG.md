@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Change all public API using `IntPtr` to use unsafe pointer types instead.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
+- Assigned icons for scripts.
 
 ### Fixed
 
