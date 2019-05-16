@@ -29,7 +29,7 @@ platforms:
     image: {{ platform.image }}
     flavor: {{ platform.flavor}}
   commands:
-    - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} 
