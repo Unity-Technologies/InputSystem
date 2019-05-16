@@ -1,6 +1,5 @@
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.PlayerInput;
+using UnityEngine.InputSystem.Plugins.PlayerInput;
 using UnityEngine.UI;
 
 
