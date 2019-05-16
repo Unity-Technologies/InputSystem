@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     public struct BufferedRumble
     {

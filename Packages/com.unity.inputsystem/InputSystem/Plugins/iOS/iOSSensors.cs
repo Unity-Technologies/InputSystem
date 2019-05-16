@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = 52)]
     public struct MotionDeviceState : IInputStateTypeInfo

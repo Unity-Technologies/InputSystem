@@ -2,7 +2,7 @@
 
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
     /// Adds support for XInput controllers.

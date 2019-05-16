@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.iOS
+namespace UnityEngine.InputSystem.iOS
 {
     public static class iOSSupport
     {

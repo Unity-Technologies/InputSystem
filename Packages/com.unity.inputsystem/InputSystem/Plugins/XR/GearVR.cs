@@ -1,7 +1,7 @@
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
     [InputControlLayout]
     public class OculusStandaloneHMDBase : XRHMD

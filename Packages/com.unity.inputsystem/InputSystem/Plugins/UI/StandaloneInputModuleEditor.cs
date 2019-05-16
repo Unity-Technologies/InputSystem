@@ -3,7 +3,7 @@
 using UnityEditor;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.InputSystem.Plugins.UI.Editor
+namespace UnityEngine.InputSystem.UI.Editor
 {
     // The only purpose of the Input System suppying a custom editor for the UI StandaloneInputModule is to guide users to using
     // the Input System's InputSystemUIInputModule instead.

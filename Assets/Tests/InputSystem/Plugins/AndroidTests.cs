@@ -1,8 +1,8 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Plugins.Android;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android;
+using UnityEngine.InputSystem.Android.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Controls;

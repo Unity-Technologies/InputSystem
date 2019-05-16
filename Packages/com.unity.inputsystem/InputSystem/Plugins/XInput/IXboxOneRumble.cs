@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem.Haptics;
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
     /// Extended dual motor gamepad rumble that adds left and right trigger motors.
