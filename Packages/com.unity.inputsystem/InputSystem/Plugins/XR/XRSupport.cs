@@ -93,7 +93,12 @@ namespace UnityEngine.InputSystem.Plugins.XR
     /// <summary>
     /// A small helper class to aid in initializing and registering XR devices and layout builders.
     /// </summary>
-    public static class XRSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class XRSupport
     {
         /// <summary>
         /// Registers all initial templates and the generalized layout builder with the InputSystem.
