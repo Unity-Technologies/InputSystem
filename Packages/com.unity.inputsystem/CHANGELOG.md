@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
 - Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
+- Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
 
 ### Fixed
 
