@@ -22,7 +22,7 @@ public class ButtonControlActionStatus : MonoBehaviour
     {
         buttonTouchAction.performed += UpdateTouchStatus;
         buttonTouchAction.started += UpdateTouchStatus;
-        buttonTouchAction.cancelled += UpdateTouchStatus;
+        buttonTouchAction.canceled += UpdateTouchStatus;
         buttonTouchAction.Enable();
 
         ReadOnlyArray<InputControl> controls = buttonTouchAction.controls;
@@ -39,7 +39,7 @@ public class ButtonControlActionStatus : MonoBehaviour
 
         buttonPressAction.performed += UpdatePressStatus;
         buttonPressAction.started += UpdatePressStatus;
-        buttonPressAction.cancelled += UpdatePressStatus;
+        buttonPressAction.canceled += UpdatePressStatus;
         buttonPressAction.Enable();
 
         controls = buttonPressAction.controls;
@@ -62,12 +62,12 @@ public class ButtonControlActionStatus : MonoBehaviour
         buttonTouchAction.Disable();
         buttonTouchAction.performed -= UpdateTouchStatus;
         buttonTouchAction.started -= UpdateTouchStatus;
-        buttonTouchAction.cancelled -= UpdateTouchStatus;
+        buttonTouchAction.canceled -= UpdateTouchStatus;
 
         buttonPressAction.Disable();
         buttonPressAction.performed -= UpdatePressStatus;
         buttonPressAction.started -= UpdatePressStatus;
-        buttonPressAction.cancelled -= UpdatePressStatus;
+        buttonPressAction.canceled -= UpdatePressStatus;
     }
 
     private void UpdatePressStatus(InputAction.CallbackContext context)
