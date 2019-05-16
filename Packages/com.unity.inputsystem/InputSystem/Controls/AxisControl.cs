@@ -1,10 +1,10 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A floating-point axis control.
@@ -53,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public AxisControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeFloat;
+            m_StateBlock.format = InputStateBlock.FormatFloat;
         }
 
         // Read a floating-point value from the given state. Automatically checks

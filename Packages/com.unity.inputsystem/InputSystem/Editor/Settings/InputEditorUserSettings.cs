@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Settings that are local to the current user and specific to the input system's use in the editor.
@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
         /// <summary>
         /// Where the settings are stored in the user's project.
         /// </summary>
-        public const string kSavePath = "Library/InputUserSettings.json";
+        private const string kSavePath = "Library/InputUserSettings.json";
 
         public static bool lockInputToGameView
         {

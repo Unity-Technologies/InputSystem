@@ -11,7 +11,7 @@ using UnityEngine;
 
 ////TODO: touch vs mouse will need refinement in both the action and the device stuff
 
-namespace UnityEngine.Experimental.Input.Plugins.UI
+namespace UnityEngine.InputSystem.Plugins.UI
 {
     /// <summary>
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
@@ -21,8 +21,26 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    public class UIActionInputModule : UIInputModule, ISerializationCallbackReceiver
+    public class InputSystemUIInputModule : UIInputModule
     {
+        private static void SwapAction(ref InputActionReference property, InputActionReference newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
+        {
+            if (property != null && actionsHooked)
+            {
+                property.action.performed -= actionCallback;
+                property.action.cancelled -= actionCallback;
+            }
+
+            property = newValue;
+
+            if (newValue != null && actionsHooked)
+            {
+                property.action.performed += actionCallback;
+                property.action.cancelled += actionCallback;
+            }
+        }
+
+        // Todo: Figure out what we will do with touch and tracked devices. Should those actions also become InputActionReference?
         private static void SwapAction(ref InputActionProperty property, InputActionProperty newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
             if (property != null && actionsHooked)
@@ -230,7 +248,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
-        public InputActionProperty point
+        public InputActionReference point
         {
             get => m_PointAction;
             set => SwapAction(ref m_PointAction, value, m_ActionsHooked, OnAction);
@@ -240,7 +258,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector.
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
-        public InputActionProperty move
+        public InputActionReference move
         {
             get => m_MoveAction;
             set => SwapAction(ref m_MoveAction, value, m_ActionsHooked, OnAction);
@@ -250,7 +268,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2"> scroll wheel value.
         /// </see> used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty scrollWheel
+        public InputActionReference scrollWheel
         {
             get => m_ScrollWheelAction;
             set => SwapAction(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction);
@@ -260,7 +278,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
         /// </see> used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty leftClick
+        public InputActionReference leftClick
         {
             get => m_LeftClickAction;
             set => SwapAction(ref m_LeftClickAction, value, m_ActionsHooked, OnAction);
@@ -270,7 +288,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
         /// </see> used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty middleClick
+        public InputActionReference middleClick
         {
             get => m_MiddleClickAction;
             set => SwapAction(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction);
@@ -280,7 +298,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
         /// </see> used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty rightClick
+        public InputActionReference rightClick
         {
             get => m_RightClickAction;
             set => SwapAction(ref m_RightClickAction, value, m_ActionsHooked, OnAction);
@@ -290,7 +308,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
         /// </see> used for sending <see cref="BaseEventData"/> events.
         /// </summary>
-        public InputActionProperty submit
+        public InputActionReference submit
         {
             get => m_SubmitAction;
             set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, OnAction);
@@ -300,7 +318,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
         /// </see> used for sending <see cref="BaseEventData"/> events.
         /// </summary>
-        public InputActionProperty cancel
+        public InputActionReference cancel
         {
             get => m_CancelAction;
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
@@ -423,35 +441,37 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return id;
         }
 
+        bool IsAnyActionEnabled()
+        {
+            return (m_PointAction?.action?.enabled ?? true) &&
+                (m_LeftClickAction?.action?.enabled ?? true) &&
+                (m_RightClickAction?.action?.enabled ?? true) &&
+                (m_MiddleClickAction?.action?.enabled ?? true) &&
+                (m_MoveAction?.action?.enabled ?? true) &&
+                (m_SubmitAction?.action?.enabled ?? true) &&
+                (m_CancelAction?.action?.enabled ?? true) &&
+                (m_ScrollWheelAction?.action?.enabled ?? true);
+        }
+
+        bool m_OwnsEnabledState;
         /// <summary>
         /// This is a quick accessor for enabling all actions.  Currently, action ownership is ambiguous,
         /// and we need a way to enable/disable inspector-set actions.
         /// </summary>
         public void EnableAllActions()
         {
-            var pointAction = m_PointAction.action;
-            pointAction?.Enable();
-
-            var leftClickAction = m_LeftClickAction.action;
-            leftClickAction?.Enable();
-
-            var rightClickAction = m_RightClickAction.action;
-            rightClickAction?.Enable();
-
-            var middleClickAction = m_MiddleClickAction.action;
-            middleClickAction?.Enable();
-
-            var moveAction = m_MoveAction.action;
-            moveAction?.Enable();
-
-            var submitAction = m_SubmitAction.action;
-            submitAction?.Enable();
-
-            var cancelAction = m_CancelAction.action;
-            cancelAction?.Enable();
-
-            var scrollAction = m_ScrollWheelAction.action;
-            scrollAction?.Enable();
+            if (!IsAnyActionEnabled())
+            {
+                m_PointAction?.action?.Enable();
+                m_LeftClickAction?.action?.Enable();
+                m_RightClickAction?.action?.Enable();
+                m_MiddleClickAction?.action?.Enable();
+                m_MoveAction?.action?.Enable();
+                m_SubmitAction?.action?.Enable();
+                m_CancelAction?.action?.Enable();
+                m_ScrollWheelAction?.action?.Enable();
+                m_OwnsEnabledState = true;
+            }
 
             for (var i = 0; i < m_Touches.Count; i++)
             {
@@ -486,29 +506,18 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </summary>
         public void DisableAllActions()
         {
-            var pointAction = m_PointAction.action;
-            pointAction?.Disable();
-
-            var leftClickAction = m_LeftClickAction.action;
-            leftClickAction?.Disable();
-
-            var rightClickAction = m_RightClickAction.action;
-            rightClickAction?.Disable();
-
-            var middleClickAction = m_MiddleClickAction.action;
-            middleClickAction?.Disable();
-
-            var moveAction = m_MoveAction.action;
-            moveAction?.Disable();
-
-            var submitAction = m_SubmitAction.action;
-            submitAction?.Disable();
-
-            var cancelAction = m_CancelAction.action;
-            cancelAction?.Disable();
-
-            var scrollAction = m_ScrollWheelAction.action;
-            scrollAction?.Disable();
+            if (m_OwnsEnabledState)
+            {
+                m_OwnsEnabledState = false;
+                m_PointAction?.action?.Disable();
+                m_LeftClickAction?.action?.Disable();
+                m_RightClickAction?.action?.Disable();
+                m_MiddleClickAction?.action?.Disable();
+                m_MoveAction?.action?.Disable();
+                m_SubmitAction?.action?.Disable();
+                m_CancelAction?.action?.Disable();
+                m_ScrollWheelAction?.action?.Disable();
+            }
 
             for (var i = 0; i < m_Touches.Count; i++)
             {
@@ -540,47 +549,47 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
-            if (action == m_PointAction)
+            if (action == m_PointAction?.action)
             {
                 mouseState.position = context.ReadValue<Vector2>();
             }
-            else if (action == m_ScrollWheelAction)
+            else if (action == m_ScrollWheelAction?.action)
             {
                 // The old input system reported scroll deltas in lines, we report pixels.
                 // Need to scale as the UI system expects lines.
                 const float kPixelPerLine = 20;
                 mouseState.scrollPosition = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
             }
-            else if (action == m_LeftClickAction)
+            else if (action == m_LeftClickAction?.action)
             {
                 var buttonState = mouseState.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.leftButton = buttonState;
             }
-            else if (action == m_RightClickAction)
+            else if (action == m_RightClickAction?.action)
             {
                 var buttonState = mouseState.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.rightButton = buttonState;
             }
-            else if (action == m_MiddleClickAction)
+            else if (action == m_MiddleClickAction?.action)
             {
                 var buttonState = mouseState.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
                 mouseState.middleButton = buttonState;
             }
-            else if (action == m_MoveAction)
+            else if (action == m_MoveAction?.action)
             {
                 joystickState.move = context.ReadValue<Vector2>();
             }
-            else if (action == m_SubmitAction)
+            else if (action == m_SubmitAction?.action)
             {
                 joystickState.submitButtonDown = context.ReadValue<float>() > 0;
             }
-            else if (action == m_CancelAction)
+            else if (action == m_CancelAction?.action)
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() > 0;
             }
@@ -679,56 +688,56 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             if (m_OnActionDelegate == null)
                 m_OnActionDelegate = OnAction;
 
-            var pointAction = m_PointAction.action;
+            var pointAction = m_PointAction?.action;
             if (pointAction != null)
             {
                 pointAction.performed += m_OnActionDelegate;
                 pointAction.cancelled += m_OnActionDelegate;
             }
 
-            var moveAction = m_MoveAction.action;
+            var moveAction = m_MoveAction?.action;
             if (moveAction != null)
             {
                 moveAction.performed += m_OnActionDelegate;
                 moveAction.cancelled += m_OnActionDelegate;
             }
 
-            var leftClickAction = m_LeftClickAction.action;
+            var leftClickAction = m_LeftClickAction?.action;
             if (leftClickAction != null)
             {
                 leftClickAction.performed += m_OnActionDelegate;
                 leftClickAction.cancelled += m_OnActionDelegate;
             }
 
-            var rightClickAction = m_RightClickAction.action;
+            var rightClickAction = m_RightClickAction?.action;
             if (rightClickAction != null)
             {
                 rightClickAction.performed += m_OnActionDelegate;
                 rightClickAction.cancelled += m_OnActionDelegate;
             }
 
-            var middleClickAction = m_MiddleClickAction.action;
+            var middleClickAction = m_MiddleClickAction?.action;
             if (middleClickAction != null)
             {
                 middleClickAction.performed += m_OnActionDelegate;
                 middleClickAction.cancelled += m_OnActionDelegate;
             }
 
-            var submitAction = m_SubmitAction.action;
+            var submitAction = m_SubmitAction?.action;
             if (submitAction != null)
             {
                 submitAction.performed += m_OnActionDelegate;
                 submitAction.cancelled += m_OnActionDelegate;
             }
 
-            var cancelAction = m_CancelAction.action;
+            var cancelAction = m_CancelAction?.action;
             if (cancelAction != null)
             {
                 cancelAction.performed += m_OnActionDelegate;
                 cancelAction.cancelled += m_OnActionDelegate;
             }
 
-            var scrollAction = m_ScrollWheelAction.action;
+            var scrollAction = m_ScrollWheelAction?.action;
             if (scrollAction != null)
             {
                 scrollAction.performed += m_OnActionDelegate;
@@ -757,56 +766,56 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             m_ActionsHooked = false;
 
-            var pointAction = m_PointAction.action;
+            var pointAction = m_PointAction?.action;
             if (pointAction != null)
             {
                 pointAction.performed -= m_OnActionDelegate;
                 pointAction.cancelled -= m_OnActionDelegate;
             }
 
-            var moveAction = m_MoveAction.action;
+            var moveAction = m_MoveAction?.action;
             if (moveAction != null)
             {
                 moveAction.performed -= m_OnActionDelegate;
                 moveAction.cancelled -= m_OnActionDelegate;
             }
 
-            var leftClickAction = m_LeftClickAction.action;
+            var leftClickAction = m_LeftClickAction?.action;
             if (leftClickAction != null)
             {
                 leftClickAction.performed -= m_OnActionDelegate;
                 leftClickAction.cancelled -= m_OnActionDelegate;
             }
 
-            var rightClickAction = m_RightClickAction.action;
+            var rightClickAction = m_RightClickAction?.action;
             if (rightClickAction != null)
             {
                 rightClickAction.performed -= m_OnActionDelegate;
                 rightClickAction.cancelled -= m_OnActionDelegate;
             }
 
-            var middleClickAction = m_MiddleClickAction.action;
+            var middleClickAction = m_MiddleClickAction?.action;
             if (middleClickAction != null)
             {
                 middleClickAction.performed -= m_OnActionDelegate;
                 middleClickAction.cancelled -= m_OnActionDelegate;
             }
 
-            var submitAction = m_SubmitAction.action;
+            var submitAction = m_SubmitAction?.action;
             if (submitAction != null)
             {
                 submitAction.performed -= m_OnActionDelegate;
                 submitAction.cancelled -= m_OnActionDelegate;
             }
 
-            var cancelAction = m_CancelAction.action;
+            var cancelAction = m_CancelAction?.action;
             if (cancelAction != null)
             {
                 cancelAction.performed -= m_OnActionDelegate;
                 cancelAction.cancelled -= m_OnActionDelegate;
             }
 
-            var scrollAction = m_ScrollWheelAction.action;
+            var scrollAction = m_ScrollWheelAction?.action;
             if (scrollAction != null)
             {
                 scrollAction.performed += m_OnActionDelegate;
@@ -828,40 +837,39 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private void OnBeforeSerializeActionProperty(InputActionProperty prop, ref InputActionReference reference, ref InputAction data)
+        private InputActionReference UpdateReferenceForNewAsset(InputActionReference actionReference)
         {
-            if (prop.reference != null)
-                reference = prop.reference;
-            data = reference != null ? new InputAction() : prop.action;
+            if (actionReference?.action == null)
+                return null;
+
+            return InputActionReference.Create(m_ActionsAsset.FindAction(actionReference.action.name));
         }
 
-        private InputActionProperty OnAfterSerializeActionProperty(InputActionReference reference, InputAction data)
-        {
-            return reference != null ? new InputActionProperty(reference) : new InputActionProperty(data);
-        }
+        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
 
-        public void OnBeforeSerialize()
+        public InputActionAsset actionsAsset
         {
-            OnBeforeSerializeActionProperty(m_PointAction, ref m_PointActionReference, ref m_PointActionData);
-            OnBeforeSerializeActionProperty(m_MoveAction, ref m_MoveActionReference, ref m_MoveActionData);
-            OnBeforeSerializeActionProperty(m_SubmitAction, ref m_SubmitActionReference, ref m_SubmitActionData);
-            OnBeforeSerializeActionProperty(m_CancelAction, ref m_CancelActionReference, ref m_CancelActionData);
-            OnBeforeSerializeActionProperty(m_LeftClickAction, ref m_LeftClickActionReference, ref m_LeftClickActionData);
-            OnBeforeSerializeActionProperty(m_MiddleClickAction, ref m_MiddleClickActionReference, ref m_MiddleClickActionData);
-            OnBeforeSerializeActionProperty(m_RightClickAction, ref m_RightClickActionReference, ref m_RightClickActionData);
-            OnBeforeSerializeActionProperty(m_ScrollWheelAction, ref m_ScrollWheelActionReference, ref m_ScrollWheelActionData);
-        }
+            get => m_ActionsAsset;
+            set
+            {
+                if (value != m_ActionsAsset)
+                {
+                    var wasEnabled = IsAnyActionEnabled();
+                    DisableAllActions();
+                    m_ActionsAsset = value;
 
-        public void OnAfterDeserialize()
-        {
-            m_PointAction = OnAfterSerializeActionProperty(m_PointActionReference, m_PointActionData);
-            m_MoveAction = OnAfterSerializeActionProperty(m_MoveActionReference, m_MoveActionData);
-            m_SubmitAction = OnAfterSerializeActionProperty(m_SubmitActionReference, m_SubmitActionData);
-            m_CancelAction = OnAfterSerializeActionProperty(m_CancelActionReference, m_CancelActionData);
-            m_LeftClickAction = OnAfterSerializeActionProperty(m_LeftClickActionReference, m_LeftClickActionData);
-            m_MiddleClickAction = OnAfterSerializeActionProperty(m_MiddleClickActionReference, m_MiddleClickActionData);
-            m_RightClickAction = OnAfterSerializeActionProperty(m_RightClickActionReference, m_RightClickActionData);
-            m_ScrollWheelAction = OnAfterSerializeActionProperty(m_ScrollWheelActionReference, m_ScrollWheelActionData);
+                    point = UpdateReferenceForNewAsset(point);
+                    move = UpdateReferenceForNewAsset(move);
+                    leftClick = UpdateReferenceForNewAsset(leftClick);
+                    rightClick = UpdateReferenceForNewAsset(rightClick);
+                    middleClick = UpdateReferenceForNewAsset(middleClick);
+                    scrollWheel = UpdateReferenceForNewAsset(scrollWheel);
+                    submit = UpdateReferenceForNewAsset(submit);
+                    cancel = UpdateReferenceForNewAsset(cancel);
+                    if (wasEnabled)
+                        EnableAllActions();
+                }
+            }
         }
 
         /// <summary>
@@ -869,49 +877,26 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
 
-        private InputActionProperty m_PointAction;
-        [SerializeField, HideInInspector] private InputActionReference m_PointActionReference;
-        [SerializeField, HideInInspector] private InputAction m_PointActionData;
+        [SerializeField, HideInInspector] private InputActionReference m_PointAction;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
-        private InputActionProperty m_MoveAction;
-        [SerializeField, HideInInspector] private InputActionReference m_MoveActionReference;
-        [SerializeField, HideInInspector] private InputAction m_MoveActionData;
-
-        private InputActionProperty m_SubmitAction;
-        [SerializeField, HideInInspector] private InputActionReference m_SubmitActionReference;
-        [SerializeField, HideInInspector] private InputAction m_SubmitActionData;
-
-        private InputActionProperty m_CancelAction;
-        [SerializeField, HideInInspector] private InputActionReference m_CancelActionReference;
-        [SerializeField, HideInInspector] private InputAction m_CancelActionData;
-
-        private InputActionProperty m_LeftClickAction;
-        [SerializeField, HideInInspector] private InputActionReference m_LeftClickActionReference;
-        [SerializeField, HideInInspector] private InputAction m_LeftClickActionData = new InputAction();
-
-        private InputActionProperty m_MiddleClickAction;
-        [SerializeField, HideInInspector] private InputActionReference m_MiddleClickActionReference;
-        [SerializeField, HideInInspector] private InputAction m_MiddleClickActionData;
-
-        private InputActionProperty m_RightClickAction;
-        [SerializeField, HideInInspector] private InputActionReference m_RightClickActionReference;
-        [SerializeField, HideInInspector] private InputAction m_RightClickActionData;
-
-        private InputActionProperty m_ScrollWheelAction;
-        [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelActionReference;
-        [SerializeField, HideInInspector] private InputAction m_ScrollWheelActionData;
+        [SerializeField, HideInInspector] private InputActionReference m_MoveAction;
+        [SerializeField, HideInInspector] private InputActionReference m_SubmitAction;
+        [SerializeField, HideInInspector] private InputActionReference m_CancelAction;
+        [SerializeField, HideInInspector] private InputActionReference m_LeftClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_MiddleClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_RightClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelAction;
 
         // Hide these while we still have to figure out what to do with these.
-        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches;
-        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices;
+        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches = new List<TouchResponder>();
+        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices = new List<TrackedDeviceResponder>();
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
-        [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
         [NonSerialized] private MouseModel mouseState;

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Networking.PlayerConnection;
 using Property = NUnit.Framework.PropertyAttribute;
 
@@ -232,6 +232,16 @@ partial class CoreTests
         public void RegisterDisconnection(UnityAction<int> callback)
         {
             m_DisconnectionListeners.AddListener(callback);
+        }
+
+        public void UnregisterConnection(UnityAction<int> callback)
+        {
+            m_ConnectionListeners.RemoveListener(callback);
+        }
+
+        public void UnregisterDisconnection(UnityAction<int> callback)
+        {
+            m_DisconnectionListeners.RemoveListener(callback);
         }
 
         public void Receive(Guid messageId, byte[] data)

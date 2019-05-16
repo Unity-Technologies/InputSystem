@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
 ////        have better mechanism to do that without requiring to replace the entire process wholesale
@@ -15,14 +15,14 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////REVIEW: how are we dealing with multiple different input reports on the same device?
 
-////REVIEW: move the enums and structs out of here and into UnityEngine.Experimental.Input.HID? Or remove the "HID" name prefixes from them?
+////REVIEW: move the enums and structs out of here and into UnityEngine.InputSystem.HID? Or remove the "HID" name prefixes from them?
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
 #pragma warning disable CS0649, CS0219
-namespace UnityEngine.Experimental.Input.Plugins.HID
+namespace UnityEngine.InputSystem.Plugins.HID
 {
     /// <summary>
     /// A generic HID input device.
@@ -35,8 +35,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// </remarks>
     public class HID : InputDevice
     {
-        public const string kHIDInterface = "HID";
-        public const string kHIDNamespace = "HID";
+        internal const string kHIDInterface = "HID";
+        internal const string kHIDNamespace = "HID";
 
         /// <summary>
         /// Command code for querying the HID report descriptor from a device.
@@ -226,7 +226,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 // If the device has no assigned ID yet, we can't perform IOCTLs on the
                 // device so no way to get a report descriptor.
-                if (deviceId == kInvalidDeviceId)
+                if (deviceId == InvalidDeviceId)
                     return new HIDDeviceDescriptor();
 
                 // Try to get the size of the HID descriptor from the device.
@@ -371,41 +371,41 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
 
                     builder.AddControl(stickName + "/x")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.FormatSBit)
                         .WithLayout("Axis")
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/y")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.FormatSBit)
                         .WithLayout("Axis")
                         .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     //Need to handle Up/Down/Left/Right
                     builder.AddControl(stickName + "/up")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.FormatSBit)
                         .WithLayout("Button")
                         .WithParameters("clampMin=0,clampMax=1")
                         .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/down")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.FormatSBit)
                         .WithLayout("Button")
                         .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
                         .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/left")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.FormatSBit)
                         .WithLayout("Button")
                         .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)xElement.reportSizeInBits);
 
                     builder.AddControl(stickName + "/right")
-                        .WithFormat(InputStateBlock.kTypeSBit)
+                        .WithFormat(InputStateBlock.FormatSBit)
                         .WithLayout("Button")
                         .WithParameters("clampMin=0,clampMax=1")
                         .WithBitOffset(0)
@@ -678,19 +678,19 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 {
                     case 8:
                         if (isSigned)
-                            return InputStateBlock.kTypeSByte;
-                        return InputStateBlock.kTypeByte;
+                            return InputStateBlock.FormatSByte;
+                        return InputStateBlock.FormatByte;
                     case 16:
                         if (isSigned)
-                            return InputStateBlock.kTypeShort;
-                        return InputStateBlock.kTypeUShort;
+                            return InputStateBlock.FormatShort;
+                        return InputStateBlock.FormatUShort;
                     case 32:
                         if (isSigned)
-                            return InputStateBlock.kTypeInt;
-                        return InputStateBlock.kTypeUInt;
+                            return InputStateBlock.FormatInt;
+                        return InputStateBlock.FormatUInt;
                     default:
                         // Generic bitfield value.
-                        return InputStateBlock.kTypeBit;
+                        return InputStateBlock.FormatBit;
                 }
             }
 
@@ -794,7 +794,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     ////REVIEW: this probably only works with hatswitches that have their null value at logicalMax+1
 
                     builder.AddControl(controlName + "/up")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.FormatBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1},nullValue={2},wrapAtValue={3}",
@@ -803,7 +803,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/right")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.FormatBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
@@ -812,7 +812,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/down")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.FormatBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
@@ -821,7 +821,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/left")
-                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithFormat(InputStateBlock.FormatBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",

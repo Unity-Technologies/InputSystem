@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.HID;
-using UnityEngine.Experimental.Input.Plugins.PS4;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Plugins.XInput;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.Plugins.PS4;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
 #else
 using System.Linq;
@@ -48,7 +48,7 @@ using UnityEngine.Networking.PlayerConnection;
 
 ////TODO: release native allocations when exiting
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using NotifyControlValueChangeAction = Action<InputControl, double, InputEventPtr, long>;
     using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
@@ -564,7 +564,7 @@ namespace UnityEngine.Experimental.Input
         /// where more information has to be fetched from the runtime in order to generate a
         /// layout, this allows issuing <see cref="IInputRuntime.DeviceCommand"/> calls for the device.
         /// Note that for devices that are not coming from the runtime (i.e. devices created
-        /// directly in script code), the device ID will be <see cref="InputDevice.kInvalidDeviceId"/>.
+        /// directly in script code), the device ID will be <see cref="InputDevice.InvalidDeviceId"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -931,7 +931,7 @@ namespace UnityEngine.Experimental.Input
         /// </code>
         /// </example>
         /// <seealso cref="FindControls{TControl}(string)"/>
-        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.InputSystem.InputControlList{TControl})"/>
         public static InputControlList<InputControl> FindControls(string path)
         {
             return FindControls<InputControl>(path);
@@ -1074,7 +1074,7 @@ namespace UnityEngine.Experimental.Input
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: consider moving these out into extension methods in UnityEngine.Experimental.Input.LowLevel
+        ////REVIEW: consider moving these out into extension methods in UnityEngine.InputSystem.LowLevel
 
         ////TODO: find a more elegant solution for this
         // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
@@ -1185,7 +1185,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.kInvalidDeviceId)
+            if (device.id == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1210,7 +1210,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.kInvalidDeviceId)
+            if (device.id == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1439,7 +1439,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <returns>A new list instance containing all currently enabled actions.</returns>
         /// <remarks>
-        /// To avoid allocations, use <see cref="ListEnabledActions(List{UnityEngine.Experimental.Input.InputAction})"/>.
+        /// To avoid allocations, use <see cref="ListEnabledActions(List{UnityEngine.InputSystem.InputAction})"/>.
         /// </remarks>
         /// <seealso cref="InputAction.enabled"/>
         public static List<InputAction> ListEnabledActions()

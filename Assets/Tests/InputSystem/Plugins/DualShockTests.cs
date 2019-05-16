@@ -1,16 +1,16 @@
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.Processors;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.HID;
 using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
-using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.InputSystem.Plugins.HID;
 #endif
 
 internal class DualShockTests : InputTestFixture
@@ -177,7 +177,7 @@ internal class DualShockTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
         ////REVIEW: This illustrates a weekness of the current haptics API; each call results in a separate output command whereas

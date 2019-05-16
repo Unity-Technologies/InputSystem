@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: expose whether pen actually has eraser and which barrel buttons it has
 
@@ -13,7 +13,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: does it make sense to have orientation support for pen, too?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state layout for pen devices.
@@ -53,9 +53,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "barrel3", layout = "Button", bit = (int)PenButton.BarrelThird, alias = "barrelThird")]
         [InputControl(name = "barrel4", layout = "Button", bit = (int)PenButton.BarrelFourth, alias = "barrelFourth")]
         // "Park" unused controls.
-        [InputControl(name = "radius", layout = "Vector2", format = "VEC2", sizeInBits = 64, usage = "Radius", offset = InputStateBlock.kAutomaticOffset)]
-        [InputControl(name = "pointerId", layout = "Digital", format = "UINT", sizeInBits = 32, offset = InputStateBlock.kAutomaticOffset)] ////TODO: this should be used
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BYTE", sizeInBits = 8, offset = InputStateBlock.kAutomaticOffset)] ////TODO: this should be used
+        [InputControl(name = "radius", layout = "Vector2", format = "VEC2", sizeInBits = 64, usage = "Radius", offset = InputStateBlock.AutomaticOffset)]
+        [InputControl(name = "pointerId", layout = "Digital", format = "UINT", sizeInBits = 32, offset = InputStateBlock.AutomaticOffset)] ////TODO: this should be used
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BYTE", sizeInBits = 8, offset = InputStateBlock.AutomaticOffset)] ////TODO: this should be used
         [FieldOffset(32)]
         public ushort buttons;
 
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Enumeration of buttons on a <see cref="Pen"/>.

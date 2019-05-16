@@ -4,11 +4,11 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Property = NUnit.Framework.PropertyAttribute;
@@ -291,7 +291,7 @@ partial class CoreTests
         var setup = new InputDeviceBuilder("CustomGamepad");
         var device = (Gamepad)setup.Finish();
 
-        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
+        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
     }
 
     [Test]
@@ -986,38 +986,6 @@ partial class CoreTests
     public void TODO_State_CanSetUpStateMonitorsUsingControlPath()
     {
         Assert.Fail();
-    }
-
-    // InputHistory helps creating traces of input over time. This is useful, for example, to track
-    // the motion curve of a tracking device over time.
-    [Test]
-    [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_CanRecordHistory()
-    {
-        var gamepad1 = InputSystem.AddDevice<Gamepad>();
-        var gamepad2 = InputSystem.AddDevice<Gamepad>();
-
-        using (var history = new InputHistory<Vector2>("<Gamepad>/*stick"))
-        {
-            Assert.That(history.controls,
-                Is.EquivalentTo(
-                    new[] {gamepad1.leftStick, gamepad1.rightStick, gamepad2.leftStick, gamepad2.rightStick}));
-
-            history.Enable();
-
-            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
-            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
-            InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightStick = new Vector2(0.321f, 0.432f)});
-            InputSystem.Update();
-            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
-            InputSystem.Update();
-
-            Assert.That(history.Count, Is.EqualTo(3));
-            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
-            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(Vector2EqualityComparer.Instance));
-            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(Vector2EqualityComparer.Instance));
-        }
     }
 
     [Test]

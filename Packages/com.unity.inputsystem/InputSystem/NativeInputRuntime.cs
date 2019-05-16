@@ -8,7 +8,11 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace UnityEngine.Experimental.Input.LowLevel
+#if !UNITY_2019_2
+// The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
+#pragma warning disable 618
+#endif
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Implements <see cref="IInputRuntime"/> based on <see cref="NativeInputSystem"/>.
@@ -27,9 +31,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
-        public void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* ptr)
         {
-            NativeInputSystem.QueueInputEvent(ptr);
+            NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)

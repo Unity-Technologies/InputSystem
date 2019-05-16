@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Helpers for working with <see cref="SerializedProperty"/> in the editor.

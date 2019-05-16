@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
     /// Scale a float value by a constant factor.

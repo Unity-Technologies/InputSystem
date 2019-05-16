@@ -7,7 +7,7 @@ using System.Reflection;
 using System.ComponentModel;
 #endif
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A table mapping names to types in a case-insensitive mapping.

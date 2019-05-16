@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using UnityEditor;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Keeps a reference to the asset being edited and maintains a copy of the asset object

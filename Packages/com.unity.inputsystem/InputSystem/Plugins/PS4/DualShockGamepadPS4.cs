@@ -1,19 +1,19 @@
 #if UNITY_EDITOR || UNITY_PS4
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
 
 ////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
 
 ////TODO: player ID
 #pragma warning disable 0649
-namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -124,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     {
         public static FourCC Type { get { return new FourCC('P', 'S', 'G', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
         [Flags]
         public enum Flags
@@ -192,7 +192,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     {
         public static FourCC Type { get { return new FourCC('S', 'L', 'I', 'D'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -231,14 +231,20 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
 
     // IMPORTANT: State layout must match with GamepadInputTouchStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 12)]
-    public struct PS4Touch
+    public struct PS4Touch : IInputStateTypeInfo
     {
+        public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+
         [FieldOffset(0)] public int touchId;
         [FieldOffset(4)] public Vector2 position;
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.PS4
+namespace UnityEngine.InputSystem.Plugins.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]

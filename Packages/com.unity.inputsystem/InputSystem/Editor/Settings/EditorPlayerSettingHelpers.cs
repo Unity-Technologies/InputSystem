@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEditor;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal static class EditorPlayerSettingHelpers
     {

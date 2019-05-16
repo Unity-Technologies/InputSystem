@@ -1,10 +1,10 @@
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenStick component
 
-namespace UnityEngine.Experimental.Input.Plugins.OnScreen
+namespace UnityEngine.InputSystem.Plugins.OnScreen
 {
     /// <summary>
     /// A stick control displayed on screen and moved around by touch or other pointer

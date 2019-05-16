@@ -1,6 +1,6 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     // Allows retrieving information about event types from an instance of the type.
     // As structs can always be default instantiated, this allows us to get data on the struct

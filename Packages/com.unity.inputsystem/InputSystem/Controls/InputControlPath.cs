@@ -1,8 +1,8 @@
 using System;
 using System.Text;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow stuff like "/gamepad/**/<button>"
 ////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: rename to `InputPath`?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Functions to working with control path specs (like "/gamepad/*stick").
@@ -26,10 +26,10 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public static class InputControlPath
     {
-        public const string kWildcard = "*";
-        public const string kDoubleWildcard = "**";
+        public const string Wildcard = "*";
+        public const string DoubleWildcard = "**";
 
-        public const char kSeparator = '/';
+        public const char Separator = '/';
 
         public static string Combine(InputControl parent, string path)
         {
@@ -38,8 +38,8 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(path))
                     return string.Empty;
 
-                if (path[0] != kSeparator)
-                    return kSeparator + path;
+                if (path[0] != Separator)
+                    return Separator + path;
 
                 return path;
             }
@@ -145,7 +145,7 @@ namespace UnityEngine.Experimental.Input
                 return parser.current.layout.ToString();
 
             if (parser.current.isWildcard)
-                return kWildcard;
+                return Wildcard;
 
             return null;
         }
@@ -199,7 +199,7 @@ namespace UnityEngine.Experimental.Input
                 return null; // No control component.
 
             if (parser.current.isWildcard)
-                return kWildcard;
+                return Wildcard;
 
             return FindControlLayoutRecursive(ref parser, deviceLayoutName);
         }
@@ -875,9 +875,9 @@ namespace UnityEngine.Experimental.Input
             public Substring name;
             public Substring displayName;
 
-            public bool isWildcard => name == kWildcard;
+            public bool isWildcard => name == Wildcard;
 
-            public bool isDoubleWildcard => name == kDoubleWildcard;
+            public bool isDoubleWildcard => name == DoubleWildcard;
 
             public string ToHumanReadableString()
             {

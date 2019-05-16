@@ -2,7 +2,7 @@
 using System;
 using UnityEditor.IMGUI.Controls;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Extension methods for working with tree views.

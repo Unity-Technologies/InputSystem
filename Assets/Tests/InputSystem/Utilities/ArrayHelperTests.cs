@@ -1,6 +1,6 @@
 using NUnit.Framework;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 internal class ArrayHelperTests
 {

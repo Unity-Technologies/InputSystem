@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
@@ -41,7 +41,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 // if it's coming from a press interaction, send OnXXXDown and OnXXXUp?
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// A wrapper around the input system that takes care of managing input actions
@@ -185,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         /// map. This means that if additional maps are manually enabled and disabled,
         ///
         /// There is one exception to this, however. For any action from the asset that is also referenced
-        /// by an <see cref="UIActionInputModule"/> sitting on the <see cref="GameObject"/> of
+        /// by an <see cref="InputSystemUIInputModule"/> sitting on the <see cref="GameObject"/> of
         /// <see cref="uiEventSystem"/>, no notification will be triggered when the action is fired.
         /// </remarks>
         /// <seealso cref="InputUser.actions"/>
@@ -402,14 +402,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             set => m_Camera = value;
         }
 
-        //nuke?
         /// <summary>
-        /// The event system that should be fed with UI events from the player's inputs.
+        /// UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.
         /// </summary>
-        public EventSystem uiEventSystem
+        public InputSystemUIInputModule uiInputModule
         {
-            get { return m_UIEventSystem; }
-            set { throw new NotImplementedException(); }
+            get { return m_UIInputModule; }
+            set { m_UIInputModule = value; }
         }
 
         /// <summary>
@@ -459,24 +458,24 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
             {
                 var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
                 if (actionMap != null)
+                {
                     actionMap.Enable();
+                    m_EnabledActionMap = actionMap;
+                }
                 else
                     Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
             }
-
             m_InputActive = true;
         }
 
         public void PassivateInput()
         {
-            // Disable all enabled action maps.
-            if (m_Actions != null)
-                m_Actions.Disable();
+            m_EnabledActionMap?.Disable();
 
             m_InputActive = false;
         }
 
-        public void SwitchActions(string mapNameOrId)
+        public void SwitchCurrentActionMap(string mapNameOrId)
         {
             // Must be enabled.
             if (!m_Enabled)
@@ -500,8 +499,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                 return;
             }
 
-            m_Actions.Disable();
-            actionMap.Enable();
+            currentActionMap = actionMap;
         }
 
         public static PlayerInput GetPlayerByIndex(int playerIndex)
@@ -611,8 +609,8 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         [SerializeField] internal InputActionAsset m_Actions;
         [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
-        [Tooltip("UI EventSystem that should receive input from the actions associated with the player. TODO")]
-        [SerializeField] internal EventSystem m_UIEventSystem;
+        [Tooltip("UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.")]
+        [SerializeField] internal InputSystemUIInputModule m_UIInputModule;
         [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
@@ -628,6 +626,19 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         // Value object we use when sending messages via SendMessage() or BroadcastMessage(). Can be ignored
         // by the receiver. We reuse the same object over and over to avoid allocating garbage.
         [NonSerialized] private InputValue m_InputValueObject;
+
+        [NonSerialized] internal InputActionMap m_EnabledActionMap;
+
+        public InputActionMap currentActionMap
+        {
+            get => m_EnabledActionMap;
+            set
+            {
+                m_EnabledActionMap?.Disable();
+                m_EnabledActionMap = value;
+                m_EnabledActionMap?.Enable();
+            }
+        }
 
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
@@ -667,6 +678,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
                     m_Actions = Instantiate(m_Actions);
                     break;
                 }
+
+            if (uiInputModule != null)
+                uiInputModule.actionsAsset = m_Actions;
 
             switch (m_NotificationBehavior)
             {

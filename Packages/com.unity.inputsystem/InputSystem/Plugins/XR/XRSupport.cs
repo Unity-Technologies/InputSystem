@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.Plugins.XR
 {
     static class XRUtilities
     {
@@ -169,6 +169,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithManufacturer("HTC")
                     .WithProduct(@"^(OpenVR Controller\(((Vive. Controller)|(VIVE. Controller)|(Vive Controller)))"));
+            InputSystem.RegisterLayout<KnucklesController>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
+                    .WithManufacturer("Valve")
+                    .WithProduct(@"^(OpenVR Controller\(Knuckles)"));
             InputSystem.RegisterLayout<ViveTracker>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)

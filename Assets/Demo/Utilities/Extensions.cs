@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Plugins.UI;
 
 public static class Extensions
 {
@@ -54,9 +54,9 @@ public static class Extensions
             action(element);
     }
 
-    public static void BindUIActions(this UIActionInputModule uiInputModule, DemoControls.MenuActions menuActions)
+    public static void BindUIActions(this InputSystemUIInputModule uiInputModule, DemoControls.MenuActions menuActions)
     {
-        uiInputModule.move = new InputActionProperty(menuActions.navigate);
-        uiInputModule.leftClick = new InputActionProperty(menuActions.click);
+        uiInputModule.move = InputActionReference.Create(menuActions.navigate);
+        uiInputModule.leftClick = InputActionReference.Create(menuActions.click);
     }
 }

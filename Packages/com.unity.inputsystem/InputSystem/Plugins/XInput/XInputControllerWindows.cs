@@ -1,10 +1,10 @@
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
 {
     // IMPORTANT: State layout is XINPUT_GAMEPAD
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.InputSystem.Plugins.XInput
 {
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
     public class XInputControllerWindows : XInputController

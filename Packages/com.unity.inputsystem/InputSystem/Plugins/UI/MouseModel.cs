@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.UI
+namespace UnityEngine.InputSystem.Plugins.UI
 {
     /// <summary>
     /// A series of flags to determine if a button has been pressed or released since the last time checked.
@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         }
 
         /// <summary>
-        /// An Id representing a unique pointer.  See <see cref="UnityEngine.Experimental.Input.Pointer.pointerId"/> for more details.
+        /// An Id representing a unique pointer.  See <see cref="UnityEngine.InputSystem.Pointer.pointerId"/> for more details.
         /// </summary>
         public int pointerId { get; private set; }
 

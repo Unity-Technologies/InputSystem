@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.Experimental.Input.Plugins.UI
+namespace UnityEngine.InputSystem.Plugins.UI
 {
     /// <summary>
     /// A modified EventSystem class, which allows multiple players to have their own instances of a UI,
@@ -15,7 +15,13 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     public class MultiplayerEventSystem : EventSystem
     {
         [Tooltip("If set, only process mouse events for any game objects which are children of this game object.")]
-        public GameObject playerRoot;
+        [SerializeField] private GameObject m_PlayerRoot;
+
+        public GameObject playerRoot
+        {
+            get => m_PlayerRoot;
+            set => m_PlayerRoot = value;
+        }
 
         protected override void Update()
         {

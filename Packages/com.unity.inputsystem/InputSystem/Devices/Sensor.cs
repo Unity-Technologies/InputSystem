@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: gyro and accelerometer (and potentially other sensors) need adjusting for screen orientation
 
@@ -10,7 +10,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: Is there a better way than having all the sensor classes?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     public struct AccelerometerState : IInputStateTypeInfo
     {
@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     [InputControlLayout(isGenericTypeOfDevice = true)]
     public abstract class Sensor : InputDevice

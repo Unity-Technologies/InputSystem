@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
 
@@ -13,7 +13,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: rename this from "InputActionAsset" to something else that emphasizes the asset aspect less
 ////        and instead emphasizes the map collection aspect more?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// An asset containing action maps and control schemes.
@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable, IInputActionCollection
     {
-        public const string kExtension = "inputactions";
+        public const string Extension = "inputactions";
 
         /// <summary>
         /// True if any action in the asset is currently enabled.

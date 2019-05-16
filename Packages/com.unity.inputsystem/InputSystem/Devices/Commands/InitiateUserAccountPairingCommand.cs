@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Device command to instruct the underlying platform to pair a user account to the targeted device.
@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('P', 'A', 'I', 'R'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             /// <summary>
             /// System does not support application-invoked user pairing.
             /// </summary>
-            ErrorNotSupported = InputDeviceCommand.kGenericFailure,
+            ErrorNotSupported = InputDeviceCommand.GenericFailure,
 
             /// <summary>
             /// There already is a pairing operation in progress and the system does not support
