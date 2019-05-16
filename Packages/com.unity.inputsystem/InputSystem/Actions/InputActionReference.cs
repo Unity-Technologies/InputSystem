@@ -113,6 +113,15 @@ namespace UnityEngine.InputSystem
             return reference.action;
         }
 
+        public static InputActionReference Create(InputAction action)
+        {
+            if (action == null)
+                return null;
+            var reference = CreateInstance<InputActionReference>();
+            reference.Set(action);
+            return reference;
+        }
+
         [SerializeField] internal InputActionAsset m_Asset;
         // Can't serialize System.Guid and Unity's GUID is editor only so these
         // go out as strings.

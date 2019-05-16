@@ -4,12 +4,15 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.3-preview] - TBD
+Due to package verification, the latest version below is the unpublished version and the date is meaningless.
+however, it has to be formatted properly to pass verification tests.
+
+## [0.2.9-preview] - 2020-1-1
 
 ### Added
 
 - Added a `MultiplayerEventSystem` class, which allows you use multiple UI event systems to control different parts of the UI by different players.
-
+- `InputSystemUIInputModule` now lets you specify an `InputActionAsset` in the `actionsAsset` property. If this is set, the inspector will populate all actions from this asset. If you have a `PlayerInput` component on the same game object, referencing the same  `InputActionAsset`, the `PlayerInput` component will keep the actions on the `InputSystemUIInputModule` in synch, allowing easy setup of multiplayer UI systems.
 
 ### Changed
 
@@ -32,13 +35,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
 - Nicer icons for `InputActionAssets` and `InputActions` and for `Button` and generic controls.
 - Change all public API using `IntPtr` to use unsafe pointer types instead.
+- `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
+- Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
 
 ### Fixed
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
 - Fixed scrolling in `UIActionInputModule`.
 - Fixed compiling the input system package in Unity 19.2 with ugui being moved to a package now.
+- In the Input System project settings window, you can no longer add a supported device twice.
 
 #### Actions
 

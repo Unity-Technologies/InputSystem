@@ -15,7 +15,13 @@ namespace UnityEngine.InputSystem.Plugins.UI
     public class MultiplayerEventSystem : EventSystem
     {
         [Tooltip("If set, only process mouse events for any game objects which are children of this game object.")]
-        public GameObject playerRoot;
+        [SerializeField] private GameObject m_PlayerRoot;
+
+        public GameObject playerRoot
+        {
+            get => m_PlayerRoot;
+            set => m_PlayerRoot = value;
+        }
 
         protected override void Update()
         {

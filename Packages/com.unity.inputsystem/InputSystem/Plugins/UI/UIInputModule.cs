@@ -470,17 +470,37 @@ namespace UnityEngine.InputSystem.Plugins.UI
         }
 
         [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
-        public float repeatDelay = 0.5f;
+        [SerializeField]
+        private float m_RepeatDelay = 0.5f;
 
         [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
-        public float repeatRate = 0.1f;
+        [SerializeField]
+        private float m_RepeatRate = 0.1f;
 
         [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
-        [HideInInspector] // Hide this while we still have to figure out what to do with this.
-        public float trackedDeviceDragThresholdMultiplier = 2.0f;
+        // Hide this while we still have to figure out what to do with this.
+        private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
 
         private AxisEventData m_CachedAxisEvent;
         private PointerEventData m_CachedPointerEvent;
         private TrackedPointerEventData m_CachedTrackedPointerEventData;
+
+        public float repeatDelay
+        {
+            get { return m_RepeatDelay; }
+            set { m_RepeatDelay = value; }
+        }
+
+        public float repeatRate
+        {
+            get { return m_RepeatRate; }
+            set { m_RepeatRate = value; }
+        }
+
+        public float trackedDeviceDragThresholdMultiplier
+        {
+            get { return m_TrackedDeviceDragThresholdMultiplier; }
+            set { m_TrackedDeviceDragThresholdMultiplier = value; }
+        }
     }
 }

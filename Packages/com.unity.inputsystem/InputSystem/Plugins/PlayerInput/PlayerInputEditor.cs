@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.UI.Editor;
 using UnityEngine.InputSystem.Plugins.Users;
 using UnityEngine.InputSystem.Utilities;
 
@@ -110,16 +111,24 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             DoHelpCreateAssetUI();
 
             // UI config section.
-            /*
-            var uiProperty = serializedObject.FindProperty("m_UIEventSystem");
+            var uiModuleProperty = serializedObject.FindProperty("m_UIInputModule");
             if (m_UIPropertyText == null)
-                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI", uiProperty.tooltip);
+                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", uiModuleProperty.tooltip);
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(uiProperty, m_UIPropertyText);
-            if (EditorGUI.EndChangeCheck() || !m_UIConnectionInitialized)
-                OnUIConnectionChange();
-            DoHelpSetUpUnityUI();
-            */
+            EditorGUILayout.PropertyField(uiModuleProperty, m_UIPropertyText);
+            if (EditorGUI.EndChangeCheck())
+                serializedObject.ApplyModifiedProperties();
+
+            if (uiModuleProperty.objectReferenceValue != null)
+            {
+                var uiModule = uiModuleProperty.objectReferenceValue as InputSystemUIInputModule;
+                if (actionsProperty.objectReferenceValue != null && uiModule.actionsAsset != actionsProperty.objectReferenceValue)
+                {
+                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using differnet input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
+                    if (GUILayout.Button(m_FixInputModuleText))
+                        InputSystemUIInputModuleEditor.ReassignActions(uiModule, actionsProperty.objectReferenceValue as InputActionAsset);
+                }
+            }
 
             // Camera section.
             var cameraProperty = serializedObject.FindProperty("m_Camera");
@@ -265,24 +274,6 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Separator();
-        }
-
-        private void DoHelpSetUpUnityUI()
-        {
-            if (m_UIIsMissingInputModule)
-            {
-                EditorGUILayout.HelpBox("The EventSystem associated with the given UI Canvas does not have an input module for the "
-                    + "new input system. Click the button below to add it (and remove StandaloneInputModule, if present).", MessageType.Info);
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space();
-                if (GUILayout.Button(m_AddInputModuleText, EditorStyles.miniButton, GUILayout.MaxWidth(120)))
-                {
-                    AddInputModuleToUI();
-                    m_UIIsMissingInputModule = false;
-                }
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.Space();
-            }
         }
 
         private void DoUtilityButtonsUI()
@@ -495,67 +486,11 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             serializedObject.Update();
         }
 
-        ////FIXME: we need to run this refresh if the component is added from outside of our control
-        private void OnUIConnectionChange()
-        {
-            serializedObject.ApplyModifiedProperties();
-            m_UIConnectionInitialized = true;
-
-            ////TODO: need to wire up actions
-
-            // See if event system is missing input module.
-            m_UIIsMissingInputModule = false;
-            var eventSystem = FindUIEventSystem();
-            if (eventSystem != null)
-                m_UIIsMissingInputModule = eventSystem.gameObject.GetComponent<InputSystemUIInputModule>() == null;
-        }
-
-        private void AddInputModuleToUI()
-        {
-            var eventSystem = FindUIEventSystem();
-            Debug.Assert(eventSystem != null);
-            Debug.Assert(eventSystem.GetComponent<InputSystemUIInputModule>() == null);
-            if (eventSystem == null || eventSystem.GetComponent<InputSystemUIInputModule>() != null)
-                return;
-
-            ////REVIEW: undo probably needs to be grouped
-
-            // Add input module for new input system.
-            var go = eventSystem.gameObject;
-            Undo.AddComponent<InputSystemUIInputModule>(go);
-
-            // Remove input module for old input system.
-            var oldInputModule = go.GetComponent<StandaloneInputModule>();
-            if (oldInputModule != null)
-                Undo.DestroyObjectImmediate(oldInputModule);
-
-            m_UIIsMissingInputModule = false;
-        }
-
-        private EventSystem FindUIEventSystem()
-        {
-            var uiProperty = serializedObject.FindProperty("m_UI");
-            if (uiProperty == null || uiProperty.objectReferenceValue == null)
-                return null;
-
-            // Search for event system belonging to canvas.
-            var canvas = (Canvas)uiProperty.objectReferenceValue;
-            var canvasParent = canvas.transform.parent;
-            var allEventSystems = Resources.FindObjectsOfTypeAll<EventSystem>();
-            foreach (var eventSystem in allEventSystems)
-            {
-                if (eventSystem.transform.parent == canvasParent)
-                    return eventSystem;
-            }
-
-            return null;
-        }
-
         [SerializeField] private bool m_EventsGroupUnfolded;
         [SerializeField] private bool[] m_ActionMapEventsUnfolded;
 
         [NonSerialized] private readonly GUIContent m_CreateActionsText = EditorGUIUtility.TrTextContent("Create Actions...");
-        [NonSerialized] private readonly GUIContent m_AddInputModuleText = EditorGUIUtility.TrTextContent("Add UI Input Module");
+        [NonSerialized] private readonly GUIContent m_FixInputModuleText = EditorGUIUtility.TrTextContent("Fix UI Input Module");
         [NonSerialized] private readonly GUIContent m_OpenSettingsText = EditorGUIUtility.TrTextContent("Open Input Settings");
         [NonSerialized] private readonly GUIContent m_OpenDebuggerText = EditorGUIUtility.TrTextContent("Open Input Debugger");
         [NonSerialized] private readonly GUIContent m_EventsGroupText =
@@ -585,8 +520,6 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
-        [NonSerialized] private bool m_UIConnectionInitialized;
-        [NonSerialized] private bool m_UIIsMissingInputModule;
     }
 }
 #endif // UNITY_EDITOR
