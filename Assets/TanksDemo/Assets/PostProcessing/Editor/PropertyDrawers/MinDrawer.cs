@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using MinAttribute = UnityEngine.PostProcessing.MinAttribute;
@@ -28,3 +29,4 @@ namespace UnityEditor.PostProcessing
         }
     }
 }
+#endif

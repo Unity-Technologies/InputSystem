@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Linq.Expressions;
 using UnityEngine.PostProcessing;
@@ -29,3 +30,4 @@ namespace UnityEditor.PostProcessing
         }
     }
 }
+#endif

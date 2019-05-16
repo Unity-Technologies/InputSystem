@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 
 namespace UnityEditor.PostProcessing
@@ -20,3 +21,4 @@ namespace UnityEditor.PostProcessing
         }
     }
 }
+#endif

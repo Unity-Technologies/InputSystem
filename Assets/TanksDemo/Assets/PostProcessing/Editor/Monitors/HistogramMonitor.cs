@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.PostProcessing;
@@ -336,3 +337,4 @@ namespace UnityEditor.PostProcessing
         }
     }
 }
+#endif

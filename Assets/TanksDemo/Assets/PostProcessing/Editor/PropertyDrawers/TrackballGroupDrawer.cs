@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -242,3 +243,4 @@ namespace UnityEditor.PostProcessing
         }
     }
 }
+#endif

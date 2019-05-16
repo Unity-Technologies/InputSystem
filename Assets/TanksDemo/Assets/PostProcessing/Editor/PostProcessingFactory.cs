@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityEditor.ProjectWindowCallback;
@@ -32,3 +33,4 @@ namespace UnityEditor.PostProcessing
         }
     }
 }
+#endif
