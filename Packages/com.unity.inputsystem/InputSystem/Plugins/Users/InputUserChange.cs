@@ -108,9 +108,9 @@ namespace UnityEngine.InputSystem.Plugins.Users
         AccountSelectionInProgress,
 
         /// <summary>
-        /// The user cancelled the account selection process that was initiated.
+        /// The user canceled the account selection process that was initiated.
         /// </summary>
-        AccountSelectionCancelled,
+        AccountSelectionCanceled,
 
         /// <summary>
         /// The user completed the account selection process.

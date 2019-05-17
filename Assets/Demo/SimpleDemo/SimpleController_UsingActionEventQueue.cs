@@ -71,7 +71,7 @@ public class SimpleController_UsingActionQueue : MonoBehaviour
                             m_Charging = true;
                         break;
 
-                    case InputActionPhase.Cancelled:
+                    case InputActionPhase.Canceled:
                         m_Charging = false;
                         break;
                 }

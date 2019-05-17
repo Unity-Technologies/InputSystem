@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (context.timerHasExpired)
             {
-                context.Cancelled();
+                context.Canceled();
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Interactions
                 else
                 {
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
-                    context.Cancelled();
+                    context.Canceled();
                 }
             }
         }
@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_DurationSetting.Initialize("Max Tap Duration",
                 "Time (in seconds) within with a control has to be released again for it to register as a tap. If the control is held "
-                + "for longer than this time, the tap is cancelled.",
+                + "for longer than this time, the tap is canceled.",
                 "Default Tap Time",
                 () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultTapTime);
             m_PressPointSetting.Initialize("Press Point",

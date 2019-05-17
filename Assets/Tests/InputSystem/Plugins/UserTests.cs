@@ -150,7 +150,7 @@ internal class UserTests : InputTestFixture
         var returnUserAccountHandle = 0;
         var returnUserAccountName = "";
         var returnUserAccountId = "";
-        var returnUserAccountSelectionCancelled = false;
+        var returnUserAccountSelectionCanceled = false;
 
         var gamepadId = runtime.AllocateDeviceId();
         var receivedPairingRequest = false;
@@ -171,8 +171,8 @@ internal class UserTests : InputTestFixture
                         result |= (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
                     }
 
-                    if (returnUserAccountSelectionCancelled)
-                        result |= (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled;
+                    if (returnUserAccountSelectionCanceled)
+                        result |= (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled;
                     return result;
                 }
                 if (command->type == InitiateUserAccountPairingCommand.Type)
@@ -258,7 +258,7 @@ internal class UserTests : InputTestFixture
         receivedChanges.Clear();
 
         // Cancel account selection.
-        returnUserAccountSelectionCancelled = true;
+        returnUserAccountSelectionCanceled = true;
 
         InputSystem.QueueConfigChangeEvent(gamepad);
         InputSystem.Update();
@@ -271,7 +271,7 @@ internal class UserTests : InputTestFixture
         Assert.That(receivedPairingRequest, Is.False);
         Assert.That(receivedChanges, Is.EquivalentTo(new[]
         {
-            new UserChange(user, InputUserChange.AccountSelectionCancelled, gamepad)
+            new UserChange(user, InputUserChange.AccountSelectionCanceled, gamepad)
         }));
 
         receivedUserIdRequest = false;
@@ -298,7 +298,7 @@ internal class UserTests : InputTestFixture
         returnUserAccountHandle = 2;
         returnUserAccountName = "OtherUser";
         returnUserAccountId = "OtherId";
-        returnUserAccountSelectionCancelled = false;
+        returnUserAccountSelectionCanceled = false;
 
         InputSystem.QueueConfigChangeEvent(gamepad);
         InputSystem.Update();

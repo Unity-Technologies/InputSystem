@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This array only contains touches that are either in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
         /// or <see cref="PointerPhase.Moved"/> or <see cref="PointerPhase.Stationary"/>, or that have just ended, i.e. moved to
-        /// <see cref="PointerPhase.Ended"/> or <see cref="PointerPhase.Cancelled"/> this frame.
+        /// <see cref="PointerPhase.Ended"/> or <see cref="PointerPhase.Canceled"/> this frame.
         ///
         /// Does not allocate GC memory.
         /// </remarks>
@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem
                     {
                         isActive = true;
                     }
-                    else if (phase == PointerPhase.Ended || phase == PointerPhase.Cancelled)
+                    else if (phase == PointerPhase.Ended || phase == PointerPhase.Canceled)
                     {
                         // Touch has ended but we want to have it on the active list for one frame
                         // before "retiring" the touch again.
@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem
                         if (hadActivityThisFrame.Value)
                         {
                             var previousPhase = phaseControl.ReadValueFromPreviousFrame();
-                            if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Cancelled)
+                            if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Canceled)
                                 isActive = true;
                         }
                     }
@@ -284,7 +284,7 @@ namespace UnityEngine.InputSystem
                 switch (phase)
                 {
                     case PointerPhase.Ended:
-                    case PointerPhase.Cancelled:
+                    case PointerPhase.Canceled:
                         touchStatePtr->phase = PointerPhase.None;
                         touchStatePtr->delta = Vector2.zero;
                         haveChangedState = true;
