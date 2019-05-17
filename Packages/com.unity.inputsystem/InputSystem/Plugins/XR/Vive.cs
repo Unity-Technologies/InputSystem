@@ -99,6 +99,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
     {
         [InputControl(aliases = new[] { "B",  "Primary"})]
         public ButtonControl primaryButton { get; private set; }
+
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
@@ -123,23 +124,12 @@ namespace UnityEngine.InputSystem.Plugins.XR
         public Vector3Control deviceAngularVelocity { get; private set; }
 
 
-<<<<<<< HEAD
-
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            base.FinishSetup(builder);
-                    
-            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
-            primaryButton = builder.GetControl<ButtonControl>("primary");            
-=======
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
 
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");
             primaryButton = builder.GetControl<ButtonControl>("primary");
->>>>>>> develop
             trackpadPressed = builder.GetControl<ButtonControl>("trackpadPressed");
             trackpadTouched = builder.GetControl<ButtonControl>("trackpadTouched");
             trackpad = builder.GetControl<Vector2Control>("trackpad");
