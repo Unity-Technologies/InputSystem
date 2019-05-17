@@ -203,6 +203,9 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -213,6 +216,9 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -429,6 +435,9 @@ namespace UnityEngine.InputSystem
 
             public RebindingOperation WithCancellingThrough(InputControl control)
             {
+                if (control == null)
+                    throw new ArgumentNullException(nameof(control));
+
                 return WithCancellingThrough(control.path);
             }
 

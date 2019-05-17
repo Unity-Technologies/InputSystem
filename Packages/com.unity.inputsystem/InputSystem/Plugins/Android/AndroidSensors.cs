@@ -102,6 +102,9 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
 
         public AndroidSensorState WithData(params float[] data)
         {
+            if (data == null)
+                throw new System.ArgumentNullException(nameof(data));
+
             fixed(float* dataPtr = this.data)
             {
                 for (var i = 0; i < data.Length && i < 16; i++)

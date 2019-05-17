@@ -173,6 +173,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             position = builder.GetControl<Vector2Control>(this, "position");
             delta = builder.GetControl<Vector2Control>(this, "delta");
             tilt = builder.GetControl<Vector2Control>(this, "tilt");
@@ -189,6 +192,9 @@ namespace UnityEngine.InputSystem
 
         protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
             var value = control.ReadValueFromState(statePtr);
             if (Mathf.Approximately(0f, value))
@@ -199,6 +205,9 @@ namespace UnityEngine.InputSystem
 
         protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             ////FIXME: if there's processors on the delta, this is junk
             var oldDelta = control.ReadValueFromState(oldStatePtr);
             var newDelta = control.ReadValueFromState(newStatePtr);

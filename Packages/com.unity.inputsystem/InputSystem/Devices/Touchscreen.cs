@@ -224,6 +224,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             var touchArray = new TouchControl[TouchscreenState.MaxTouches];
 
             for (var i = 0; i < TouchscreenState.MaxTouches; ++i)

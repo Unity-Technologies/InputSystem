@@ -130,6 +130,9 @@ namespace UnityEngine.InputSystem
 
         public override object ProcessAsObject(object value, InputControl control)
         {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             if (!(value is TValue))
                 throw new ArgumentException(
                     $"Expecting value of type '{typeof(TValue).Name}' but got value '{value}' of type '{value.GetType().Name}'",

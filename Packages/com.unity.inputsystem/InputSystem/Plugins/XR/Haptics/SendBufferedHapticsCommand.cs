@@ -32,6 +32,9 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
 
         public static SendBufferedHapticCommand Create(int channel, byte[] rumbleBuffer)
         {
+            if (rumbleBuffer == null)
+                throw new System.ArgumentNullException(nameof(rumbleBuffer));
+
             int rumbleBufferSize = Mathf.Min(kMaxHapticBufferSize, rumbleBuffer.Length);
             SendBufferedHapticCommand newCommand = new SendBufferedHapticCommand
             {

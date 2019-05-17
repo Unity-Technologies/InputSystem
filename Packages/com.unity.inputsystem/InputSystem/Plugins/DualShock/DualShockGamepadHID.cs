@@ -152,6 +152,9 @@ namespace UnityEngine.InputSystem.Plugins.DualShock
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
             rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
             playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");

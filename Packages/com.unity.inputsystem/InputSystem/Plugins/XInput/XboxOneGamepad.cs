@@ -210,6 +210,9 @@ namespace UnityEngine.InputSystem.Plugins.XInput
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");

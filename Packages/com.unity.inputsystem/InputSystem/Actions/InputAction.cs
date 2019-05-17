@@ -590,9 +590,9 @@ namespace UnityEngine.InputSystem
                     return i;
             }
 
-            throw new ArgumentOutOfRangeException(
-                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings",
-                nameof(indexOfBindingOnAction));
+            throw new ArgumentOutOfRangeException(nameof(indexOfBindingOnAction),
+                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings"
+            );
         }
 
         /// <summary>
