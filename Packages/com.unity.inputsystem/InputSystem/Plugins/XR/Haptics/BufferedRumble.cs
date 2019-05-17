@@ -14,9 +14,9 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
             capabilities = command.capabilities;
         }
 
-        public void EnqueueRumble(int channel, byte[] samples)
+        public void EnqueueRumble(byte[] samples)
         {
-            var command = SendBufferedHapticCommand.Create(channel, samples);
+            var command = SendBufferedHapticCommand.Create(samples);
             device.ExecuteCommand(ref command);
         }
     }

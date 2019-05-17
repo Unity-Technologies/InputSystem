@@ -91,14 +91,6 @@ namespace UnityEngine.InputSystem
             control.ReadValueFromStateIntoBuffer(control.currentStatePtr, buffer, bufferSize);
         }
 
-        public static unsafe void ReadDefaultValue(this InputControl control, void* buffer, int bufferSize)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Read the control's default value and return it as an object.
         /// </summary>

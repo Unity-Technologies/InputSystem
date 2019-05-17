@@ -565,11 +565,6 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
             }
         }
 
-        public static InputActionMap[] ConvertInputActionsFromVDF(string vdf)
-        {
-            throw new NotImplementedException();
-        }
-
         public static string GetSteamControllerInputType(InputAction action)
         {
             if (action == null)

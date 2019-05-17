@@ -433,18 +433,6 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
 
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
 
-        public static event Action<PlayerInput> onAdded
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
-
-        public static event Action<PlayerInput> onRemoved
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
-
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
         public static bool isSinglePlayer =>

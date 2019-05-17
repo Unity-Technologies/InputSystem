@@ -903,16 +903,6 @@ namespace UnityEngine.InputSystem
             s_Manager.SetUsage(device, usage);
         }
 
-        public static void AddDeviceUsage(InputDevice device, InternedString usage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
         /// </summary>
@@ -1045,20 +1035,6 @@ namespace UnityEngine.InputSystem
         {
             add => s_Manager.onEvent += value;
             remove => s_Manager.onEvent -= value;
-        }
-
-        /// <summary>
-        /// Like <see cref="onEvent"/> but sends all events that have been received in an update as a single
-        /// buffer rather than each event one by one.
-        /// </summary>
-        /// <remarks>
-        /// The buffer can be modified by a callback receiver. The system will process whatever is left in the
-        /// buffer after callbacks have been invoked.
-        /// </remarks>
-        public static event Action<InputEventBuffer> onEvents
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
         }
 
         ////TODO: need to handle events being queued *during* event processing

@@ -756,7 +756,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             if (attributes.Length == 0)
             {
-                var controlLayout = CreateControlItemFromMember(member, null, layoutName);
+                var controlLayout = CreateControlItemFromMember(member, null);
                 ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                 controlItems.Add(controlLayout);
             }
@@ -764,14 +764,14 @@ namespace UnityEngine.InputSystem.Layouts
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
+                    var controlLayout = CreateControlItemFromMember(member, attribute);
                     ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                     controlItems.Add(controlLayout);
                 }
             }
         }
 
-        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute, string layoutName)
+        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute)
         {
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 

@@ -791,27 +791,6 @@ namespace UnityEngine.InputSystem
             return layouts.Count - countBefore;
         }
 
-        // Processes a path specification that may match more than a single control.
-        // Adds all controls that match to the given list.
-        // Returns true if at least one control was matched.
-        // Must not generate garbage!
-        public bool TryGetControls(string path, List<InputControl> controls)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Return the first match for the given path or null if no control matches.
-        // Must not generate garbage!
-        public InputControl TryGetControl(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        public InputControl GetControl(string path)
-        {
-            throw new NotImplementedException();
-        }
-
         // Adds all controls that match the given path spec to the given list.
         // Returns number of controls added to the list.
         // NOTE: Does not create garbage.

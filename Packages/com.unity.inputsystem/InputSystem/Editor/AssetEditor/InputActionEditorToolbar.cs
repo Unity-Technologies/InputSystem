@@ -349,7 +349,7 @@ namespace UnityEngine.InputSystem.Editor
             get => m_ControlSchemes;
             set
             {
-                m_ControlSchemes = controlSchemes.ToArray();
+                m_ControlSchemes = value.ToArray();
                 m_SelectedSchemeDeviceRequirementNames = null;
             }
         }

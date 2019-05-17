@@ -137,11 +137,6 @@ namespace UnityEngine.InputSystem.LowLevel
             return m_EventPtr->type == otherEventTypeCode;
         }
 
-        public void CopyTo(void* buffer, int bufferSize)
-        {
-            throw new NotImplementedException();
-        }
-
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.
         public InputEventPtr Next()
         {
