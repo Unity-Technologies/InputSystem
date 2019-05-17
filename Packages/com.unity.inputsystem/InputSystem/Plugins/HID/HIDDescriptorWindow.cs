@@ -156,7 +156,6 @@ namespace UnityEngine.InputSystem.Plugins.HID.Editor
                 // Elements.
                 if (device.elements != null)
                 {
-                    var currentReportType = HID.HIDReportType.Unknown;
                     var elementCount = device.elements.Length;
                     var elements = AddChild(item, elementCount + " Elements", ref id);
                     for (var i = 0; i < elementCount; ++i)
