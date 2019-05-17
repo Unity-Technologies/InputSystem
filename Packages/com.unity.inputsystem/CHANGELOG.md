@@ -13,7 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
-## [0.2.9-preview] - 2019-5-17
+## [0.2.10-preview] - 2019-5-17
 
 ### Added
 
