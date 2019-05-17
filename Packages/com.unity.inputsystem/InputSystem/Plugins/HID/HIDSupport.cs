@@ -54,7 +54,12 @@ namespace UnityEngine.InputSystem.HID
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
         /// </summary>
-        public static void Initialize()
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+        public
+#else
+        internal
+#endif
+        static void Initialize()
         {
             s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
 

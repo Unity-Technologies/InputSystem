@@ -16,17 +16,17 @@ public class XboxISX : GamepadISX
 
         m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
-        m_buttonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
+        m_buttonAction.canceled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
         m_buttonAction.Enable();
 
         m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
-        m_dPadAction.cancelled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
+        m_dPadAction.canceled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
         m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", binding: "XInputController*/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
-        m_stickMoveAction.cancelled += callbackContext => StickMove(callbackContext.control as StickControl);
+        m_stickMoveAction.canceled += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }
 

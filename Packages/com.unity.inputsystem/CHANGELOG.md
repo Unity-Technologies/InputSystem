@@ -39,6 +39,7 @@ however, it has to be formatted properly to pass verification tests.
 - Change some public fields into properties.
 - Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
 - Removed `Plugins` from all namespaces.
+- Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
 
 ### Fixed
 

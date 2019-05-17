@@ -345,7 +345,7 @@ namespace UnityEngine.InputSystem
         /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
         /// an enumeration of values (such as <see cref="PointerPhaseControl"/>), there is no meaningful
         /// linear ordering of values (one could derive a linear ordering through the actual enum values but
-        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Cancelled"/>
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Canceled"/>
         /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
         ///
         /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative

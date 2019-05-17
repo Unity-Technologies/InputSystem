@@ -17,7 +17,7 @@ public class IntegerControlActionStatus : MonoBehaviour
     {
         IntegerAction.performed += UpdateInteger;
         IntegerAction.started += UpdateInteger;
-        IntegerAction.cancelled += UpdateInteger;
+        IntegerAction.canceled += UpdateInteger;
         IntegerAction.Enable();
 
         ReadOnlyArray<InputControl> controls = IntegerAction.controls;
@@ -41,7 +41,7 @@ public class IntegerControlActionStatus : MonoBehaviour
         IntegerAction.Disable();
         IntegerAction.performed -= UpdateInteger;
         IntegerAction.started -= UpdateInteger;
-        IntegerAction.cancelled -= UpdateInteger;
+        IntegerAction.canceled -= UpdateInteger;
     }
 
     private void UpdateInteger(InputAction.CallbackContext context)

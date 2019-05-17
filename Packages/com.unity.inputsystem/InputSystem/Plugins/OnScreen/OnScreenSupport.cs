@@ -9,7 +9,12 @@ namespace UnityEngine.InputSystem.OnScreen
     /// mechanisms like <see cref="OnScreenKeyboard"/> or through manually arranged control setups
     /// in the form of <see cref="OnScreenControl">OnScreenControls</see>.
     /// </remarks>
-    public static class OnScreenSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class OnScreenSupport
     {
         public static void Initialize()
         {

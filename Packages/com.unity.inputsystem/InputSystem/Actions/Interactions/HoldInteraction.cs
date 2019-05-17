@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         // Control is no longer actuated and we haven't performed a hold yet,
                         // so cancel.
-                        context.Cancelled();
+                        context.Canceled();
                     }
                     break;
 
@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else
                     {
-                        context.Cancelled();
+                        context.Canceled();
                     }
                     break;
             }

@@ -294,7 +294,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
                         m_Charging = false;
                         break;
 
-                    case InputActionPhase.Cancelled:
+                    case InputActionPhase.Canceled:
                         m_Charging = false;
                         break;
                 }

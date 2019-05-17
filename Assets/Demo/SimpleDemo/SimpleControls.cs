@@ -320,32 +320,32 @@ public class SimpleControls : IInputActionCollection
             {
                 fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
                 fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                fire.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
                 move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
                 move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                move.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
                 look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
                 look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                look.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
                 jump.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
                 jump.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
-                jump.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+                jump.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
             {
                 fire.started += instance.OnFire;
                 fire.performed += instance.OnFire;
-                fire.cancelled += instance.OnFire;
+                fire.canceled += instance.OnFire;
                 move.started += instance.OnMove;
                 move.performed += instance.OnMove;
-                move.cancelled += instance.OnMove;
+                move.canceled += instance.OnMove;
                 look.started += instance.OnLook;
                 look.performed += instance.OnLook;
-                look.cancelled += instance.OnLook;
+                look.canceled += instance.OnLook;
                 jump.started += instance.OnJump;
                 jump.performed += instance.OnJump;
-                jump.cancelled += instance.OnJump;
+                jump.canceled += instance.OnJump;
             }
         }
     }

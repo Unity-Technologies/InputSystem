@@ -711,7 +711,7 @@ namespace UnityEngine.InputSystem.PlayerInput
                             {
                                 ////REVIEW: really wish we had a single callback
                                 action.performed += actionEvent.Invoke;
-                                action.cancelled += actionEvent.Invoke;
+                                action.canceled += actionEvent.Invoke;
                                 action.started += actionEvent.Invoke;
                             }
                             else
@@ -762,7 +762,7 @@ namespace UnityEngine.InputSystem.PlayerInput
                     {
                         ////REVIEW: really wish we had a single callback
                         action.performed -= actionEvent.Invoke;
-                        action.cancelled -= actionEvent.Invoke;
+                        action.canceled -= actionEvent.Invoke;
                         action.started -= actionEvent.Invoke;
                     }
                 }
@@ -781,9 +781,9 @@ namespace UnityEngine.InputSystem.PlayerInput
             if (m_NotificationBehavior == PlayerNotifications.InvokeUnityEvents)
                 return;
 
-            // ATM we only care about `performed` and, in the case of continuous actions, `cancelled`.
+            // ATM we only care about `performed` and, in the case of continuous actions, `canceled`.
             var action = context.action;
-            if (!(context.performed || (context.cancelled && action.continuous)))
+            if (!(context.performed || (context.canceled && action.continuous)))
                 return;
 
             // Find message name for action.

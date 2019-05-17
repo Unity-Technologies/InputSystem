@@ -10,7 +10,12 @@ namespace UnityEngine.InputSystem.Android
     /// Initializes custom android devices.
     /// You can use 'adb shell dumpsys input' from terminal to output information about all input devices.
     /// </summary>
-    public static class AndroidSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    class AndroidSupport
     {
         internal const string kAndroidInterface = "Android";
 

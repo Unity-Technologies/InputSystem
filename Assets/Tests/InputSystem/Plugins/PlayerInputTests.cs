@@ -626,7 +626,7 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCancelled()
+    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCanceled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

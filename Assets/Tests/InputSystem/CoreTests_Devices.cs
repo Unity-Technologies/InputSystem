@@ -2337,16 +2337,16 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
             new TouchState
             {
-                phase = PointerPhase.Cancelled,
+                phase = PointerPhase.Canceled,
                 touchId = 5,
             });
         InputSystem.Update();
 
-        // For one frame, the ended and cancelled touches should stick around on the active touches list
+        // For one frame, the ended and canceled touches should stick around on the active touches list
 
         Assert.That(device.activeTouches.Count, Is.EqualTo(2));
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
-        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Canceled));
 
         // But then they should disappear from the list.
 
@@ -3489,7 +3489,7 @@ partial class CoreTests
     }
 
     #if UNITY_2019_1_OR_NEWER
-    // NOTE: The focus logic will also implicitly take care of cancelling and restarting actions.
+    // NOTE: The focus logic will also implicitly take care of canceling and restarting actions.
     [Test]
     [Category("Devices")]
     public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()

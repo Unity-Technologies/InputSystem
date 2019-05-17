@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.UI
             if (property != null && actionsHooked)
             {
                 property.action.performed -= actionCallback;
-                property.action.cancelled -= actionCallback;
+                property.action.canceled -= actionCallback;
             }
 
             property = newValue;
@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.UI
             if (newValue != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
-                property.action.cancelled += actionCallback;
+                property.action.canceled += actionCallback;
             }
         }
 
@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.UI
             if (property != null && actionsHooked)
             {
                 property.action.performed -= actionCallback;
-                property.action.cancelled -= actionCallback;
+                property.action.canceled -= actionCallback;
             }
 
             property = newValue;
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.UI
             if (newValue != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
-                property.action.cancelled += actionCallback;
+                property.action.canceled += actionCallback;
             }
         }
 
@@ -101,14 +101,14 @@ namespace UnityEngine.InputSystem.UI
                 if (positionAction != null)
                 {
                     positionAction.performed += actionCallback;
-                    positionAction.cancelled += actionCallback;
+                    positionAction.canceled += actionCallback;
                 }
 
                 var phaseAction = m_Phase.action;
                 if (phaseAction != null)
                 {
                     phaseAction.performed += actionCallback;
-                    phaseAction.cancelled += actionCallback;
+                    phaseAction.canceled += actionCallback;
                 }
             }
 
@@ -123,14 +123,14 @@ namespace UnityEngine.InputSystem.UI
                 if (positionAction != null)
                 {
                     positionAction.performed -= actionCallback;
-                    positionAction.cancelled -= actionCallback;
+                    positionAction.canceled -= actionCallback;
                 }
 
                 var phaseAction = m_Phase.action;
                 if (phaseAction != null)
                 {
                     phaseAction.performed -= actionCallback;
-                    phaseAction.cancelled -= actionCallback;
+                    phaseAction.canceled -= actionCallback;
                 }
             }
 
@@ -190,21 +190,21 @@ namespace UnityEngine.InputSystem.UI
                 if (positionAction != null)
                 {
                     positionAction.performed += actionCallback;
-                    positionAction.cancelled += actionCallback;
+                    positionAction.canceled += actionCallback;
                 }
 
                 var orientationAction = m_Orientation.action;
                 if (orientationAction != null)
                 {
                     orientationAction.performed += actionCallback;
-                    orientationAction.cancelled += actionCallback;
+                    orientationAction.canceled += actionCallback;
                 }
 
                 var selectAction = m_Select.action;
                 if (selectAction != null)
                 {
                     selectAction.performed += actionCallback;
-                    selectAction.cancelled += actionCallback;
+                    selectAction.canceled += actionCallback;
                 }
             }
 
@@ -219,21 +219,21 @@ namespace UnityEngine.InputSystem.UI
                 if (positionAction != null)
                 {
                     positionAction.performed -= actionCallback;
-                    positionAction.cancelled -= actionCallback;
+                    positionAction.canceled -= actionCallback;
                 }
 
                 var orientationAction = m_Orientation.action;
                 if (orientationAction != null)
                 {
                     orientationAction.performed -= actionCallback;
-                    orientationAction.cancelled -= actionCallback;
+                    orientationAction.canceled -= actionCallback;
                 }
 
                 var selectAction = m_Orientation.action;
                 if (selectAction != null)
                 {
                     selectAction.performed -= actionCallback;
-                    selectAction.cancelled -= actionCallback;
+                    selectAction.canceled -= actionCallback;
                 }
             }
 
@@ -692,56 +692,56 @@ namespace UnityEngine.InputSystem.UI
             if (pointAction != null)
             {
                 pointAction.performed += m_OnActionDelegate;
-                pointAction.cancelled += m_OnActionDelegate;
+                pointAction.canceled += m_OnActionDelegate;
             }
 
             var moveAction = m_MoveAction?.action;
             if (moveAction != null)
             {
                 moveAction.performed += m_OnActionDelegate;
-                moveAction.cancelled += m_OnActionDelegate;
+                moveAction.canceled += m_OnActionDelegate;
             }
 
             var leftClickAction = m_LeftClickAction?.action;
             if (leftClickAction != null)
             {
                 leftClickAction.performed += m_OnActionDelegate;
-                leftClickAction.cancelled += m_OnActionDelegate;
+                leftClickAction.canceled += m_OnActionDelegate;
             }
 
             var rightClickAction = m_RightClickAction?.action;
             if (rightClickAction != null)
             {
                 rightClickAction.performed += m_OnActionDelegate;
-                rightClickAction.cancelled += m_OnActionDelegate;
+                rightClickAction.canceled += m_OnActionDelegate;
             }
 
             var middleClickAction = m_MiddleClickAction?.action;
             if (middleClickAction != null)
             {
                 middleClickAction.performed += m_OnActionDelegate;
-                middleClickAction.cancelled += m_OnActionDelegate;
+                middleClickAction.canceled += m_OnActionDelegate;
             }
 
             var submitAction = m_SubmitAction?.action;
             if (submitAction != null)
             {
                 submitAction.performed += m_OnActionDelegate;
-                submitAction.cancelled += m_OnActionDelegate;
+                submitAction.canceled += m_OnActionDelegate;
             }
 
             var cancelAction = m_CancelAction?.action;
             if (cancelAction != null)
             {
                 cancelAction.performed += m_OnActionDelegate;
-                cancelAction.cancelled += m_OnActionDelegate;
+                cancelAction.canceled += m_OnActionDelegate;
             }
 
             var scrollAction = m_ScrollWheelAction?.action;
             if (scrollAction != null)
             {
                 scrollAction.performed += m_OnActionDelegate;
-                scrollAction.cancelled += m_OnActionDelegate;
+                scrollAction.canceled += m_OnActionDelegate;
             }
 
             for (var i = 0; i < m_Touches.Count; i++)
@@ -770,56 +770,56 @@ namespace UnityEngine.InputSystem.UI
             if (pointAction != null)
             {
                 pointAction.performed -= m_OnActionDelegate;
-                pointAction.cancelled -= m_OnActionDelegate;
+                pointAction.canceled -= m_OnActionDelegate;
             }
 
             var moveAction = m_MoveAction?.action;
             if (moveAction != null)
             {
                 moveAction.performed -= m_OnActionDelegate;
-                moveAction.cancelled -= m_OnActionDelegate;
+                moveAction.canceled -= m_OnActionDelegate;
             }
 
             var leftClickAction = m_LeftClickAction?.action;
             if (leftClickAction != null)
             {
                 leftClickAction.performed -= m_OnActionDelegate;
-                leftClickAction.cancelled -= m_OnActionDelegate;
+                leftClickAction.canceled -= m_OnActionDelegate;
             }
 
             var rightClickAction = m_RightClickAction?.action;
             if (rightClickAction != null)
             {
                 rightClickAction.performed -= m_OnActionDelegate;
-                rightClickAction.cancelled -= m_OnActionDelegate;
+                rightClickAction.canceled -= m_OnActionDelegate;
             }
 
             var middleClickAction = m_MiddleClickAction?.action;
             if (middleClickAction != null)
             {
                 middleClickAction.performed -= m_OnActionDelegate;
-                middleClickAction.cancelled -= m_OnActionDelegate;
+                middleClickAction.canceled -= m_OnActionDelegate;
             }
 
             var submitAction = m_SubmitAction?.action;
             if (submitAction != null)
             {
                 submitAction.performed -= m_OnActionDelegate;
-                submitAction.cancelled -= m_OnActionDelegate;
+                submitAction.canceled -= m_OnActionDelegate;
             }
 
             var cancelAction = m_CancelAction?.action;
             if (cancelAction != null)
             {
                 cancelAction.performed -= m_OnActionDelegate;
-                cancelAction.cancelled -= m_OnActionDelegate;
+                cancelAction.canceled -= m_OnActionDelegate;
             }
 
             var scrollAction = m_ScrollWheelAction?.action;
             if (scrollAction != null)
             {
                 scrollAction.performed += m_OnActionDelegate;
-                scrollAction.cancelled += m_OnActionDelegate;
+                scrollAction.canceled += m_OnActionDelegate;
             }
 
             for (var i = 0; i < m_Touches.Count; i++)

@@ -300,9 +300,9 @@ namespace UnityEngine.InputSystem.UI
 
             touchState.CopyTo(eventData);
 
-            if (touchState.selectPhase == PointerPhase.Cancelled)
+            if (touchState.selectPhase == PointerPhase.Canceled)
             {
-                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Cancelled) ? new RaycastResult() : PerformRaycast(eventData);
+                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Canceled) ? new RaycastResult() : PerformRaycast(eventData);
             }
             else
             {
