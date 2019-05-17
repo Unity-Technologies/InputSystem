@@ -6,15 +6,15 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
-using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
+using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
@@ -1442,17 +1442,17 @@ partial class CoreTests
                     {
                         Assert.That(disabled, Is.Null);
                         disabled = true;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
                     if (commandPtr->type == EnableDeviceCommand.Type)
                     {
                         Assert.That(disabled, Is.Null);
                         disabled = false;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -1544,11 +1544,11 @@ partial class CoreTests
                     {
                         Assert.That(wasDisabled, Is.Null);
                         wasDisabled = true;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
                     Assert.Fail("Should not get other IOCTLs");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -1576,11 +1576,11 @@ partial class CoreTests
                     {
                         Assert.That(wasEnabled, Is.Null);
                         wasEnabled = true;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
                     Assert.Fail("Should not get other IOCTLs");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -1608,11 +1608,11 @@ partial class CoreTests
                         Assert.That(receivedQueryEnabledStateCommand, Is.Null);
                         receivedQueryEnabledStateCommand = true;
                         ((QueryEnabledStateCommand*)commandPtr)->isEnabled = queryEnabledStateResult;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
                     Assert.Fail("Should not get other IOCTLs");
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -1700,7 +1700,7 @@ partial class CoreTests
                 }
 
                 Assert.Fail();
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         InputSystem.PauseHaptics();
@@ -1742,7 +1742,7 @@ partial class CoreTests
                 }
 
                 Assert.Fail();
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -2055,7 +2055,7 @@ partial class CoreTests
                         return QueryKeyNameCommand.kSize;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -2091,7 +2091,7 @@ partial class CoreTests
                             return QueryKeyboardLayoutCommand.kMaxNameLength;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -2155,7 +2155,7 @@ partial class CoreTests
                     }
 
                     Assert.Fail();
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -2280,7 +2280,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Touchscreen>();
 
         Assert.That(device.activeTouches.Count, Is.Zero);
-        Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
+        Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.MaxTouches));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState
@@ -2337,16 +2337,16 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
             new TouchState
             {
-                phase = PointerPhase.Cancelled,
+                phase = PointerPhase.Canceled,
                 touchId = 5,
             });
         InputSystem.Update();
 
-        // For one frame, the ended and cancelled touches should stick around on the active touches list
+        // For one frame, the ended and canceled touches should stick around on the active touches list
 
         Assert.That(device.activeTouches.Count, Is.EqualTo(2));
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
-        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Canceled));
 
         // But then they should disappear from the list.
 
@@ -2558,6 +2558,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Property("TimesliceEvents", "Off")]
     public void Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
     {
         // On iOS and probably Android, when you're touching the screen with two fingers. Touches with different ids can come in different order.
@@ -2889,10 +2890,10 @@ partial class CoreTests
                         Assert.That(receivedQueryFrequencyCommand, Is.Null);
                         receivedQueryFrequencyCommand = true;
                         ((QuerySamplingFrequencyCommand*)commandPtr)->frequency = 120.0f;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -2917,10 +2918,10 @@ partial class CoreTests
                     {
                         Assert.That(receivedSetFrequencyCommand, Is.Null);
                         receivedSetFrequencyCommand = true;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;
+                    return InputDeviceCommand.GenericFailure;
                 });
         }
 
@@ -3436,7 +3437,7 @@ partial class CoreTests
             receivedCommandType = commandPtr->type;
 
             // If we don't return null, should be considered handled.
-            return InputDeviceCommand.kGenericFailure;
+            return InputDeviceCommand.GenericFailure;
         };
 
         var receivedRuntimeCommand = false;
@@ -3445,7 +3446,7 @@ partial class CoreTests
             {
                 if (command->type == DualMotorRumbleCommand.Type)
                     receivedRuntimeCommand = true;
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         gamepad.SetMotorSpeeds(1, 1);
@@ -3488,7 +3489,7 @@ partial class CoreTests
     }
 
     #if UNITY_2019_1_OR_NEWER
-    // NOTE: The focus logic will also implicitly take care of cancelling and restarting actions.
+    // NOTE: The focus logic will also implicitly take care of canceling and restarting actions.
     [Test]
     [Category("Devices")]
     public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
@@ -3503,10 +3504,10 @@ partial class CoreTests
                     Assert.That(keyboardDeviceReset, Is.False);
                     keyboardDeviceReset = true;
 
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
 
@@ -3520,10 +3521,10 @@ partial class CoreTests
                     Assert.That(gamepadDeviceReset, Is.False);
                     gamepadDeviceReset = true;
 
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         var pointer = InputSystem.AddDevice<Pointer>();
@@ -3536,10 +3537,10 @@ partial class CoreTests
                     Assert.That(pointerDeviceReset, Is.False);
                     pointerDeviceReset = true;
 
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         runtime.InvokeFocusChanged(true);
@@ -3588,10 +3589,10 @@ partial class CoreTests
                 {
                     Assert.That(receivedIMEEnabledValue, Is.Null);
                     receivedIMEEnabledValue = ((EnableIMECompositionCommand*)commandPtr)->imeEnabled;
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         keyboard.imeEnabled = true;
@@ -3623,10 +3624,10 @@ partial class CoreTests
 
                     var command = *(SetIMECursorPositionCommand*)commandPtr;
                     Assert.AreEqual(Vector2.one, command.position);
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         ////REVIEW: should this require IME to be enabled?

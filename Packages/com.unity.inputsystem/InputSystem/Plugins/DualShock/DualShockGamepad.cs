@@ -1,9 +1,9 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: speaker, touchpad
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock
+namespace UnityEngine.InputSystem.Plugins.DualShock
 {
     /// <summary>
     /// A Sony DualShock controller.

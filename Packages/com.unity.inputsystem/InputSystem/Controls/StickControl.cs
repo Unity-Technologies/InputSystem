@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A two-axis thumbstick control that can act as both a vector and a four-way dpad.
@@ -16,8 +16,9 @@ namespace UnityEngine.Experimental.Input.Controls
     {
         ////REVIEW: should X and Y have "Horizontal" and "Vertical" as long display names and "X" and "Y" as short names?
         // Set min&max on XY axes.
-        [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis")]
-        [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis")]
+        // Also put AxisDeadzones on the axes.
+        [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
+        [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
 
         // Buttons for each of the directions. Allows the stick to function as a dpad.
         // Note that these controls are marked as synthetic as there isn't real buttons for the half-axes

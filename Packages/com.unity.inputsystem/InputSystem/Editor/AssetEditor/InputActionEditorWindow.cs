@@ -17,7 +17,7 @@ using UnityEditor.ShortcutManagement;
 
 ////FIXME: when saving, processor/interaction selection is cleared
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// An editor window to edit .inputactions assets.
@@ -728,7 +728,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.kExtension;
+        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
@@ -755,7 +755,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             "Yes, Delete", "No, Cancel");
                         if (!result)
                         {
-                            // User cancelled. Stop the deletion.
+                            // User canceled. Stop the deletion.
                             return AssetDeleteResult.FailedDelete;
                         }
 

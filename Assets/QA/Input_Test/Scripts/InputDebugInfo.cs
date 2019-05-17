@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 public class InputDebugInfo : MonoBehaviour
 {

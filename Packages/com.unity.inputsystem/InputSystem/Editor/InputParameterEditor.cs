@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: generalize this to something beyond just parameters?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     public abstract class InputParameterEditor
     {
@@ -85,20 +85,28 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         /// <summary>
-        /// Helper for parameters that have global defaults.
+        /// Helper for parameters that have defaults (usually from <see cref="InputSettings"/>).
         /// </summary>
+        /// <remarks>
+        /// Has a bool toggle to switch between default and custom value.
+        /// </remarks>
         internal struct CustomOrDefaultSetting
         {
-            public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue, Action<float> setValue, Func<float> getDefaultValue)
+            public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue,
+                Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true)
             {
                 m_GetValue = getValue;
                 m_SetValue = setValue;
                 m_GetDefaultValue = getDefaultValue;
                 m_ToggleLabel = EditorGUIUtility.TrTextContent("Default",
-                    $"If enabled, the default {label.ToLower()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW).");
+                    defaultComesFromInputSettings
+                    ? $"If enabled, the default {label.ToLower()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW)."
+                    : "If enabled, the default value is used.");
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
-                m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
+                if (defaultComesFromInputSettings)
+                    m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
                 m_UseDefaultValue = Mathf.Approximately(getValue(), 0);
+                m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
                 m_HelpBoxText =
                     EditorGUIUtility.TrTextContent(
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
@@ -126,7 +134,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 m_UseDefaultValue = newUseDefault;
                 EditorGUILayout.EndHorizontal();
-                if (m_UseDefaultValue)
+
+                // If we're using a default from global InputSettings, show info text for that and provide
+                // button to open input settings.
+                if (m_UseDefaultValue && m_DefaultComesFromInputSettings)
                 {
                     EditorGUILayout.HelpBox(m_HelpBoxText);
                     EditorGUILayout.BeginHorizontal();
@@ -141,6 +152,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private Action<float> m_SetValue;
             private Func<float> m_GetDefaultValue;
             private bool m_UseDefaultValue;
+            private bool m_DefaultComesFromInputSettings;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
             private GUIContent m_OpenInputSettingsLabel;

@@ -10,8 +10,6 @@ This is the manual for Unity's new input system.
 * [Quick Start Guide](QuickStartGuide.md)
     * [How Do I...?](HowDoI.md)
     * [Migrate from Old Input System](Migration.md)
-
-
 * [PlayerInput Components](Components.md)
 * [Unity UI Support](UISupport.md)
     * [On-Screen Controls](OnScreen.md)
@@ -19,8 +17,6 @@ This is the manual for Unity's new input system.
 * [Use In Editor UI](UseInEditor.md)
 * [Debugging Input](Debugging.md)
 * [Testing Input](Testing.md)
-
-
 * [Future](Future.md)
 * [Contributing](Contributing.md)
 

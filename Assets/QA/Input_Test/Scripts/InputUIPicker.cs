@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 public class InputUIPicker : MonoBehaviour
 {

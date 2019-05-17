@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.HID;
-using UnityEngine.Experimental.Input.Plugins.PS4;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Plugins.XInput;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.Plugins.PS4;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
 #else
+using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
@@ -48,7 +48,7 @@ using UnityEngine.Networking.PlayerConnection;
 
 ////TODO: release native allocations when exiting
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using NotifyControlValueChangeAction = Action<InputControl, double, InputEventPtr, long>;
     using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
@@ -564,7 +564,7 @@ namespace UnityEngine.Experimental.Input
         /// where more information has to be fetched from the runtime in order to generate a
         /// layout, this allows issuing <see cref="IInputRuntime.DeviceCommand"/> calls for the device.
         /// Note that for devices that are not coming from the runtime (i.e. devices created
-        /// directly in script code), the device ID will be <see cref="InputDevice.kInvalidDeviceId"/>.
+        /// directly in script code), the device ID will be <see cref="InputDevice.InvalidDeviceId"/>.
         /// </remarks>
         /// <example>
         /// <code>
@@ -931,7 +931,7 @@ namespace UnityEngine.Experimental.Input
         /// </code>
         /// </example>
         /// <seealso cref="FindControls{TControl}(string)"/>
-        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.Experimental.Input.InputControlList{TControl})"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.InputSystem.InputControlList{TControl})"/>
         public static InputControlList<InputControl> FindControls(string path)
         {
             return FindControls<InputControl>(path);
@@ -1074,7 +1074,7 @@ namespace UnityEngine.Experimental.Input
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: consider moving these out into extension methods in UnityEngine.Experimental.Input.LowLevel
+        ////REVIEW: consider moving these out into extension methods in UnityEngine.InputSystem.LowLevel
 
         ////TODO: find a more elegant solution for this
         // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
@@ -1185,7 +1185,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.kInvalidDeviceId)
+            if (device.id == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1210,7 +1210,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.kInvalidDeviceId)
+            if (device.id == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1439,7 +1439,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <returns>A new list instance containing all currently enabled actions.</returns>
         /// <remarks>
-        /// To avoid allocations, use <see cref="ListEnabledActions(List{UnityEngine.Experimental.Input.InputAction})"/>.
+        /// To avoid allocations, use <see cref="ListEnabledActions(List{UnityEngine.InputSystem.InputAction})"/>.
         /// </remarks>
         /// <seealso cref="InputAction.enabled"/>
         public static List<InputAction> ListEnabledActions()
@@ -1567,10 +1567,10 @@ namespace UnityEngine.Experimental.Input
             // IL2CPP has a bug that causes the class constructor to not be run when
             // the RuntimeInitializeOnLoadMethod is invoked. So we need an explicit check
             // here until that is fixed (case 1014293).
-#if !UNITY_EDITOR
+            #if !UNITY_EDITOR
             if (s_Manager == null)
                 InitializeInPlayer();
-#endif
+            #endif
         }
 
 #if UNITY_EDITOR
@@ -1704,19 +1704,20 @@ namespace UnityEngine.Experimental.Input
         }
 
 #else
-        private static void InitializeInPlayer()
+        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
         {
+            if (settings == null)
+                settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
+
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            var settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
             s_Manager = new InputManager();
-            s_Manager.Initialize(NativeInputRuntime.instance, settings);
+            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
 #endif
 
-            ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
 #if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
@@ -1741,7 +1742,7 @@ namespace UnityEngine.Experimental.Input
         }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-        internal static void PerformDefaultPluginInitialization()
+        private static void PerformDefaultPluginInitialization()
         {
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE || UNITY_WSA
             XInputSupport.Initialize();
@@ -1800,10 +1801,9 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Return the input system to its default state.
         /// </summary>
-        internal static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
+        private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.Reset");
-            #if UNITY_EDITOR
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -1818,6 +1818,7 @@ namespace UnityEngine.Experimental.Input
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
 
+            #if UNITY_EDITOR
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
@@ -1834,7 +1835,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #else
-            InitializeInPlayer();
+            InitializeInPlayer(runtime, settings);
             #endif
 
             InputUser.ResetGlobals();
@@ -1847,7 +1848,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// NOTE: This also de-allocates data we're keeping in unmanaged memory!
         /// </remarks>
-        internal static void Destroy()
+        private static void Destroy()
         {
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
@@ -1917,7 +1918,7 @@ namespace UnityEngine.Experimental.Input
                 remote = s_Remote,
                 remoteConnection = s_RemoteConnection,
                 managerState = s_Manager.SaveState(),
-                remotingState = s_Remote.SaveState(),
+                remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 #endif

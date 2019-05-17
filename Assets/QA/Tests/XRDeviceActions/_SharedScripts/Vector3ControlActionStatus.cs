@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
 public class Vector3ControlActionStatus : MonoBehaviour
@@ -18,7 +18,7 @@ public class Vector3ControlActionStatus : MonoBehaviour
         vector3Action.Enable();
         vector3Action.performed += UpdateVector3;
         vector3Action.started += UpdateVector3;
-        vector3Action.cancelled += UpdateVector3;
+        vector3Action.canceled += UpdateVector3;
 
         ReadOnlyArray<InputControl> controls = vector3Action.controls;
         for (int i = 0; i < controls.Count; i++)
@@ -41,7 +41,7 @@ public class Vector3ControlActionStatus : MonoBehaviour
         vector3Action.Disable();
         vector3Action.performed -= UpdateVector3;
         vector3Action.started -= UpdateVector3;
-        vector3Action.cancelled -= UpdateVector3;
+        vector3Action.canceled -= UpdateVector3;
     }
 
     private void UpdateVector3(InputAction.CallbackContext context)

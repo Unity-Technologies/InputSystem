@@ -1,9 +1,14 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.iOS
+namespace UnityEngine.InputSystem.Plugins.iOS
 {
-    public static class iOSSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class iOSSupport
     {
         public static void Initialize()
         {

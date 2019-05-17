@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using System;
 
-namespace UnityEngine.Experimental.Input.Plugins.Linux
+namespace UnityEngine.InputSystem.Plugins.Linux
 {
     // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
 #pragma warning disable 0649
@@ -112,12 +112,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
     /// <summary>
     /// A small helper class to aid in initializing and registering SDL devices and layout builders.
     /// </summary>
-    public static class LinuxSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class LinuxSupport
     {
         /// <summary>
         /// The current interface code sent with devices to identify as Linux SDL devices.
         /// </summary>
-        public const string kInterfaceName = "Linux";
+        internal const string kInterfaceName = "Linux";
 
         public static string GetAxisNameFromUsage(SDLAxisUsage usage)
         {

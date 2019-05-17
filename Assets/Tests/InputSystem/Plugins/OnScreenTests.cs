@@ -2,9 +2,9 @@ using NUnit.Framework;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.OnScreen;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.OnScreen;
 using UnityEngine.TestTools.Utils;
 
 internal class OnScreenTests : InputTestFixture

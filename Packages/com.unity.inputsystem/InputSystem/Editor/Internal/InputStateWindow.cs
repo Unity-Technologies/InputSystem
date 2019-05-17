@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: add ability to single-step through events
 
@@ -20,7 +20,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
     internal class InputStateWindow : EditorWindow

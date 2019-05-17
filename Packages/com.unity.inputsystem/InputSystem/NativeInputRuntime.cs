@@ -8,7 +8,11 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace UnityEngine.Experimental.Input.LowLevel
+#if !UNITY_2019_2
+// The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
+#pragma warning disable 618
+#endif
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Implements <see cref="IInputRuntime"/> based on <see cref="NativeInputSystem"/>.
@@ -27,9 +31,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
-        public void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* ptr)
         {
-            NativeInputSystem.QueueInputEvent(ptr);
+            NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
@@ -42,9 +46,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (value != null)
-                // This is 2019.2 (i.e. trunk at this point in time) only while we figure out how to get this
-                // working properly.
-                    #if UNITY_2019_2_OR_NEWER
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
@@ -80,34 +81,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                             eventBufferPtr->sizeInBytes = 0;
                         }
                     };
-                    #else
-                    // 2019.1 has the native API change but we need to fix the code in InputManager first
-                    // before we can fully migrate to the new update code. For now, just manually reset
-                    // the buffer here every time.
-                    NativeInputSystem.onUpdate =
-                        (updateType, eventBufferPtr) =>
-                    {
-                        var buffer = new InputEventBuffer((InputEvent*)eventBufferPtr->eventBuffer,
-                            eventBufferPtr->eventCount,
-                            sizeInBytes: eventBufferPtr->sizeInBytes,
-                            capacityInBytes: eventBufferPtr->capacityInBytes);
-
-                        try
-                        {
-                            value((InputUpdateType)updateType, ref buffer);
-                        }
-                        finally
-                        {
-                            // Need to account for the oddity of before render updates. This all goes
-                            // away once we have the kinks worked out in InputManager.OnUpdate().
-                            if (updateType != NativeInputUpdateType.BeforeRender)
-                            {
-                                eventBufferPtr->eventCount = 0;
-                                eventBufferPtr->sizeInBytes = 0;
-                            }
-                        }
-                    };
-                    #endif
                 else
                     NativeInputSystem.onUpdate = null;
             }

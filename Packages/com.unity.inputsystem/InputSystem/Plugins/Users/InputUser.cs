@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////REVIEW: do we need to handle the case where devices are added to a user that are each associated with a different user account
@@ -14,7 +14,7 @@ using UnityEngine.Profiling;
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
 
 
-namespace UnityEngine.Experimental.Input.Plugins.Users
+namespace UnityEngine.InputSystem.Plugins.Users
 {
     /// <summary>
     /// Represents a specific user/player interacting with one or more devices and input actions.
@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     /// <seealso cref="InputUserChange"/>
     public struct InputUser : IEquatable<InputUser>
     {
-        public const uint kInvalidId = 0;
+        public const uint InvalidId = 0;
 
         /// <summary>
         /// Whether this is a currently active user record in <see cref="all"/>.
@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId)
+                if (m_Id == InvalidId)
                     return false;
 
                 // See if there's a currently active user with the given ID.
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         {
             get
             {
-                if (m_Id == kInvalidId)
+                if (m_Id == InvalidId)
                     throw new InvalidOperationException("Invalid user");
 
                 var userIndex = TryFindUserIndex(m_Id);
@@ -725,7 +725,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             {
                 // If it's in s_AllPairedDevices, there is *some* user that is using the device.
                 // We don't care which one it is here.
-                if (ArrayHelpers.ContainsReferenceTo(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+                if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
                     continue;
 
                 list.Add(device);
@@ -816,7 +816,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// to the user. Instead, pairing is deferred to until after an account selection has been made by the user.
         /// In this case, <see cref="InputUserChange.AccountSelectionInProgress"/> will be signalled through <see cref="onChange"/>
         /// and <see cref="InputUserChange.AccountChanged"/> will be signalled once the user has selected an account or
-        /// <see cref="InputUserChange.AccountSelectionCancelled"/> will be signalled if the user cancels account
+        /// <see cref="InputUserChange.AccountSelectionCanceled"/> will be signalled if the user cancels account
         /// selection. The device will be paired to the user once account selection is complete.
         ///
         /// This behavior is most useful on Xbox and Switch to require the user to choose which account to play with. Note that
@@ -1078,7 +1078,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
 
         private static int TryFindUserIndex(uint userId)
         {
-            Debug.Assert(userId != kInvalidId);
+            Debug.Assert(userId != InvalidId);
 
             for (var i = 0; i < s_AllUserCount; ++i)
             {
@@ -1374,7 +1374,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 // weird for the device to no signal it does not support querying user account, but
                 // just to be safe, we check.
                 if ((s_AllUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
-                    Notify(userIndex, InputUserChange.AccountSelectionCancelled, null);
+                    Notify(userIndex, InputUserChange.AccountSelectionCanceled, null);
 
                 s_AllUserData[userIndex].platformUserAccountHandle = null;
                 s_AllUserData[userIndex].platformUserAccountName = null;
@@ -1392,10 +1392,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                 {
                     // No, still in progress.
                 }
-                else if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled) != 0)
+                else if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled) != 0)
                 {
-                    // Got cancelled.
-                    Notify(userIndex, InputUserChange.AccountSelectionCancelled, device);
+                    // Got canceled.
+                    Notify(userIndex, InputUserChange.AccountSelectionCanceled, device);
                 }
                 else
                 {
@@ -1598,7 +1598,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                         return;
 
                     // See if it's a device not belonging to any user.
-                    if (ArrayHelpers.ContainsReferenceTo(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+                    if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
                     {
                         // No, it's a device already paired to a player so do nothing.
                         return;
@@ -1613,7 +1613,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
                     // while concurrently comparing whatever bits make it through to the default
                     // state buffer.
                     if (device.CheckStateIsAtDefaultIgnoringNoise())
+                    {
+                        Profiler.EndSample();
                         return; // No activity at all.
+                    }
 
                     // Go through controls and for any one that isn't noisy or synthetic, find out
                     // if we have a magnitude greater than zero.

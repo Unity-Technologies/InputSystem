@@ -1,12 +1,12 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor.Lists;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Editor.Lists;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: show parameters for selected interaction or processor inline in list rather than separately underneath list
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Base class for views that show the properties of actions or bindings.
@@ -88,12 +88,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnProcessorsModified()
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
+            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
+            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_InteractionsChanged);
         }
 

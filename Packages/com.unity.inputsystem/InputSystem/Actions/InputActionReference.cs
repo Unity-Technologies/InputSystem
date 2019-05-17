@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
 
+////REVIEW: should this throw if you try to assign an action that is not a singleton?
+
 ////REVIEW: akin to this, also have an InputActionMapReference?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// References a specific <see cref="InputAction">action</see> in an <see cref="InputActionMap">
@@ -109,6 +111,15 @@ namespace UnityEngine.Experimental.Input
         public static implicit operator InputAction(InputActionReference reference)
         {
             return reference.action;
+        }
+
+        public static InputActionReference Create(InputAction action)
+        {
+            if (action == null)
+                return null;
+            var reference = CreateInstance<InputActionReference>();
+            reference.Set(action);
+            return reference;
         }
 
         [SerializeField] internal InputActionAsset m_Asset;

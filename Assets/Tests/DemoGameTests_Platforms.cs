@@ -1,6 +1,6 @@
 using NUnit.Framework;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 // Platform-specific tests for the demo game.
 
@@ -22,10 +22,10 @@ partial class DemoGameTests
                     var queryPairedUser = (QueryPairedUserAccountCommand*)command;
                     queryPairedUser->handle = 1;
                     queryPairedUser->name = "TestUser";
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         Press(xboxGamepad.aButton);
@@ -54,16 +54,16 @@ partial class DemoGameTests
                         var queryPairUserCommand = (QueryPairedUserAccountCommand*)command;
                         queryPairUserCommand->handle = (ulong)returnUserId.Value;
                         queryPairUserCommand->name = returnUserName;
-                        return InputDeviceCommand.kGenericSuccess;
+                        return InputDeviceCommand.GenericSuccess;
                     }
                 }
                 else if (command->type == InitiateUserAccountPairingCommand.Type)
                 {
                     Assert.That(receivedPairingCommand, Is.False);
                     receivedPairingCommand = true;
-                    return InputDeviceCommand.kGenericSuccess;
+                    return InputDeviceCommand.GenericSuccess;
                 }
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         Press(xboxGamepad.aButton);

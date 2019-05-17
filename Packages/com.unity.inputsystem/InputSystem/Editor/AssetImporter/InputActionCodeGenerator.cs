@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
-////TODO: unify the generated events so that performed, cancelled, and started all go into a single event
+////TODO: unify the generated events so that performed, canceled, and started all go into a single event
 
 ////TODO: look up actions and maps by ID rather than by name
 
@@ -25,7 +25,7 @@ using UnityEditor;
 
 ////REVIEW: allow putting *all* of the data from the inputactions asset into the generated class?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Utility to generate code that makes it easier to work with action sets.
@@ -71,8 +71,8 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("using System.Collections;");
             writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine("using UnityEngine;");
-            writer.WriteLine("using UnityEngine.Experimental.Input;");
-            writer.WriteLine("using UnityEngine.Experimental.Input.Utilities;");
+            writer.WriteLine("using UnityEngine.InputSystem;");
+            writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
             writer.WriteLine("");
 
             // Begin namespace.
@@ -109,48 +109,58 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine($"~{options.className}()");
             writer.BeginBlock();
             writer.WriteLine("UnityEngine.Object.Destroy(asset);");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public InputBinding? bindingMask");
             writer.BeginBlock();
             writer.WriteLine("get => asset.bindingMask;");
             writer.WriteLine("set => asset.bindingMask = value;");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public ReadOnlyArray<InputDevice>? devices");
             writer.BeginBlock();
             writer.WriteLine("get => asset.devices;");
             writer.WriteLine("set => asset.devices = value;");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes");
             writer.BeginBlock();
             writer.WriteLine("get => asset.controlSchemes;");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public bool Contains(InputAction action)");
             writer.BeginBlock();
             writer.WriteLine("return asset.Contains(action);");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public IEnumerator<InputAction> GetEnumerator()");
             writer.BeginBlock();
             writer.WriteLine("return asset.GetEnumerator();");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("IEnumerator IEnumerable.GetEnumerator()");
             writer.BeginBlock();
             writer.WriteLine("return GetEnumerator();");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public void Enable()");
             writer.BeginBlock();
             writer.WriteLine("asset.Enable();");
             writer.EndBlock();
+            writer.WriteLine();
+
             writer.WriteLine("public void Disable()");
             writer.BeginBlock();
             writer.WriteLine("asset.Disable();");
@@ -159,6 +169,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Action map accessors.
             foreach (var map in maps)
             {
+                writer.WriteLine();
                 writer.WriteLine($"// {map.name}");
 
                 var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
@@ -222,7 +233,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                     writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                     writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.cancelled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                 }
                 writer.EndBlock();
 
@@ -237,7 +248,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                     writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
                     writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.cancelled += instance.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.canceled += instance.On{actionTypeName};");
                 }
                 writer.EndBlock();
                 writer.EndBlock();
@@ -314,6 +325,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 --indentLevel;
                 WriteIndent();
                 buffer.Append("}\n");
+            }
+
+            public void WriteLine()
+            {
+                buffer.Append('\n');
             }
 
             public void WriteLine(string text)

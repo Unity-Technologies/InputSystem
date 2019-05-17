@@ -7,7 +7,7 @@ using UnityEditor.IMGUI.Controls;
 
 ////REVIEW: would be great to align all "[device]" parts of binding strings neatly in a column
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal abstract class ActionTreeItemBase : TreeViewItem
     {

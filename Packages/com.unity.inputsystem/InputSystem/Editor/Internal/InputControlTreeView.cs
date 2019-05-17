@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Profiling;
 
@@ -13,7 +13,7 @@ using UnityEngine.Profiling;
 
 ////TODO: make controls that have different `value` and `previous` in bold
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Multi-column TreeView that shows control tree of device.
     internal class InputControlTreeView : TreeView
@@ -321,7 +321,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var format = control.m_StateBlock.format;
 
                 object value = null;
-                if (format == InputStateBlock.kTypeBit)
+                if (format == InputStateBlock.FormatBit)
                 {
                     if (control.valueSizeInBytes == 1)
                     {
@@ -332,7 +332,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         value = MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits);
                     }
                 }
-                else if (format == InputStateBlock.kTypeSBit)
+                else if (format == InputStateBlock.FormatSBit)
                 {
                     if (control.valueSizeInBytes == 1)
                     {
@@ -345,31 +345,31 @@ namespace UnityEngine.Experimental.Input.Editor
                         value = fullValue - halfMaxValue;
                     }
                 }
-                else if (format == InputStateBlock.kTypeByte || format == InputStateBlock.kTypeSByte)
+                else if (format == InputStateBlock.FormatByte || format == InputStateBlock.FormatSByte)
                 {
                     value = *ptr;
                 }
-                else if (format == InputStateBlock.kTypeShort)
+                else if (format == InputStateBlock.FormatShort)
                 {
                     value = *(short*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeUShort)
+                else if (format == InputStateBlock.FormatUShort)
                 {
                     value = *(ushort*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeInt)
+                else if (format == InputStateBlock.FormatInt)
                 {
                     value = *(int*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeUInt)
+                else if (format == InputStateBlock.FormatUInt)
                 {
                     value = *(uint*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeFloat)
+                else if (format == InputStateBlock.FormatFloat)
                 {
                     value = *(float*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeDouble)
+                else if (format == InputStateBlock.FormatDouble)
                 {
                     value = *(double*)ptr;
                 }

@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A floating-point 2D vector control composed of two <see cref="AxisControl">AxisControls</see>.
@@ -34,19 +34,22 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public Vector2Control()
         {
-            m_StateBlock.format = InputStateBlock.kTypeVector2;
+            m_StateBlock.format = InputStateBlock.FormatVector2;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             x = builder.GetControl<AxisControl>(this, "x");
             y = builder.GetControl<AxisControl>(this, "y");
+
             base.FinishSetup(builder);
         }
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector2(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr));
+            return new Vector2(
+                x.ReadUnprocessedValueFromState(statePtr),
+                y.ReadUnprocessedValueFromState(statePtr));
         }
 
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)

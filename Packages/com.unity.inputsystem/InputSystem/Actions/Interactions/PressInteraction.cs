@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Interactions
+namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
     /// Performs the action when a control is actuated past the button press point and then does not perform
@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input.Interactions
 
         [Tooltip("Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
-            + "cancelled on release.")]
+            + "canceled on release.")]
         public PressBehavior behavior;
 
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
@@ -58,10 +58,10 @@ namespace UnityEngine.Experimental.Input.Interactions
                             // So go back directly to waiting here.
                             context.Waiting();
                         }
-
                     }
                     else if (isActuated)
                     {
+                        ////REVIEW: should this trigger Started?
                         if (context.continuous)
                             context.PerformedAndStayPerformed();
                         else
@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input.Interactions
         private static readonly GUIContent s_PressBehaviorLabel = EditorGUIUtility.TrTextContent("Trigger Behavior",
             "Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
-            + "cancelled on release.");
+            + "canceled on release.");
     }
     #endif
 }

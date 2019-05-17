@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct QuerySamplingFrequencyCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('S', 'M', 'P', 'L'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

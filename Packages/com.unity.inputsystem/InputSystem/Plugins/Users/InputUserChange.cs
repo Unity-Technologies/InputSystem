@@ -1,10 +1,10 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: how do we handle the case where the OS may (through whatever means) recognize individual real-world users,
 ////        associate a user account with each one, and recognize when a controller is passed from one user to the other?
 ////        (NUI on Xbox probably gives us that scenario)
 
-namespace UnityEngine.Experimental.Input.Plugins.Users
+namespace UnityEngine.InputSystem.Plugins.Users
 {
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputUser"/> occurred.
@@ -108,9 +108,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         AccountSelectionInProgress,
 
         /// <summary>
-        /// The user cancelled the account selection process that was initiated.
+        /// The user canceled the account selection process that was initiated.
         /// </summary>
-        AccountSelectionCancelled,
+        AccountSelectionCanceled,
 
         /// <summary>
         /// The user completed the account selection process.

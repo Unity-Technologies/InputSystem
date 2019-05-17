@@ -1,6 +1,6 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using NUnit.Framework;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 using UnityEngine.Profiling;
 
 ////TODO: write a test that generates a pseudo-random event sequence and runs it through a pseudo-random

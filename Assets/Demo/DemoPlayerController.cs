@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -39,7 +39,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
     /// We feed input from <see cref="controls"/> into this module thus making the player's UI responsive
     /// to the player's devices only.
     /// </remarks>
-    public UIActionInputModule uiActions;
+    public InputSystemUIInputModule uiActions;
 
     /// <summary>
     /// GameObject hierarchy inside <see cref="ui"/> that represents the menu UI.
@@ -294,7 +294,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
                         m_Charging = false;
                         break;
 
-                    case InputActionPhase.Cancelled:
+                    case InputActionPhase.Canceled:
                         m_Charging = false;
                         break;
                 }

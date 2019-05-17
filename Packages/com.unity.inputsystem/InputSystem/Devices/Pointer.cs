@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
@@ -15,7 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
 ////        (if we do this, every touch control has to get this, too)
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state structure for pointer devices.
@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     ////REVIEW: does it really make sense to have this at the pointer level?
     public enum PointerPhase
@@ -82,7 +82,7 @@ namespace UnityEngine.Experimental.Input
         Began,
         Moved,
         Ended,
-        Cancelled,
+        Canceled,
         Stationary,
     }
 

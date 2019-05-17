@@ -1,11 +1,11 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Networking.PlayerConnection;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     // Transports input remoting messages from and to players. Can be used to
     // make input on either side fully available on the other side. I.e. player

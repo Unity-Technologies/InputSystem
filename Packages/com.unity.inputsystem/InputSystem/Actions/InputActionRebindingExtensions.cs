@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 // The way target bindings for overrides are found:
 // - If specified, directly by index (e.g. "apply this override to the third binding in the map")
@@ -17,7 +17,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Extensions to help with dynamically rebinding <see cref="InputAction">actions</see> in
@@ -390,7 +390,7 @@ namespace UnityEngine.Experimental.Input
 
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
-            public bool cancelled => (m_Flags & Flags.Cancelled) != 0;
+            public bool canceled => (m_Flags & Flags.Canceled) != 0;
 
             public double startTime => m_StartTime;
 
@@ -421,15 +421,15 @@ namespace UnityEngine.Experimental.Input
                 throw new NotImplementedException();
             }
 
-            public RebindingOperation WithCancellingThrough(string binding)
+            public RebindingOperation WithCancelingThrough(string binding)
             {
                 m_CancelBinding = binding;
                 return this;
             }
 
-            public RebindingOperation WithCancellingThrough(InputControl control)
+            public RebindingOperation WithCancelingThrough(InputControl control)
             {
-                return WithCancellingThrough(control.path);
+                return WithCancelingThrough(control.path);
             }
 
             public RebindingOperation WithExpectedControlLayout(string layoutName)
@@ -630,7 +630,7 @@ namespace UnityEngine.Experimental.Input
                 HookOnEvent();
 
                 m_Flags |= Flags.Started;
-                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Canceled;
                 m_Flags &= ~Flags.Completed;
 
                 return this;
@@ -850,7 +850,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                if (haveChangedCandidates && !cancelled)
+                if (haveChangedCandidates && !canceled)
                 {
                     // If we have a callback that wants to control matching, leave it to the callback to decide
                     // whether the rebind is complete or not. Otherwise, just complete.
@@ -1014,7 +1014,7 @@ namespace UnityEngine.Experimental.Input
 
             private void OnCancel()
             {
-                m_Flags |= Flags.Cancelled;
+                m_Flags |= Flags.Canceled;
 
                 m_OnCancel?.Invoke(this);
 
@@ -1095,7 +1095,7 @@ namespace UnityEngine.Experimental.Input
             {
                 Started = 1 << 0,
                 Completed = 1 << 1,
-                Cancelled = 1 << 2,
+                Canceled = 1 << 2,
                 OnEventHooked = 1 << 3,
                 OnAfterUpdateHooked = 1 << 4,
                 OverwritePath = 1 << 5,

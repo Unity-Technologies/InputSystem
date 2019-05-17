@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEngine.Profiling;
 
@@ -17,7 +17,7 @@ using UnityEngine.Profiling;
 
 ////TODO: implement support for sorting data by different property collumns (we currently always sort events by ID)
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Multi-column TreeView that shows the events in a trace.
     internal class InputEventTreeView : TreeView

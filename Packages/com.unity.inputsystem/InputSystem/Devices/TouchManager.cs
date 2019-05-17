@@ -2,7 +2,7 @@ using System;
 
 //base this on InputHistory
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Helper to make tracking of touches easier.

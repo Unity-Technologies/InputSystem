@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
 public class IntegerControlActionStatus : MonoBehaviour
@@ -17,7 +17,7 @@ public class IntegerControlActionStatus : MonoBehaviour
     {
         IntegerAction.performed += UpdateInteger;
         IntegerAction.started += UpdateInteger;
-        IntegerAction.cancelled += UpdateInteger;
+        IntegerAction.canceled += UpdateInteger;
         IntegerAction.Enable();
 
         ReadOnlyArray<InputControl> controls = IntegerAction.controls;
@@ -41,7 +41,7 @@ public class IntegerControlActionStatus : MonoBehaviour
         IntegerAction.Disable();
         IntegerAction.performed -= UpdateInteger;
         IntegerAction.started -= UpdateInteger;
-        IntegerAction.cancelled -= UpdateInteger;
+        IntegerAction.canceled -= UpdateInteger;
     }
 
     private void UpdateInteger(InputAction.CallbackContext context)

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: batch append method
 
@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: can we get rid of kBufferSizeUnknown and force size to always be known? (think this would have to wait until
 ////        the native changes have landed in 2018.3)
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A buffer of raw memory holding a sequence of <see cref="InputEvent">input events</see>.
@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </remarks>
     public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable, ICloneable
     {
-        public const long kBufferSizeUnknown = -1;
+        public const long BufferSizeUnknown = -1;
 
         /// <summary>
         /// Total number of events in the buffer.
@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Size of the buffer in bytes.
         /// </summary>
         /// <remarks>
-        /// If the size is not known, returns <see cref="kBufferSizeUnknown"/>.
+        /// If the size is not known, returns <see cref="BufferSizeUnknown"/>.
         ///
         /// Note that the size does not usually correspond to <see cref="eventCount"/> times <c>sizeof(InputEvent)</c>.
         /// <see cref="InputEvent">Input events</see> are variable in size.
@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
                 m_Buffer = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(eventPtr,
                     capacityInBytes > 0 ? capacityInBytes : 0, Allocator.None);
-                m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : kBufferSizeUnknown;
+                m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : BufferSizeUnknown;
                 m_EventCount = eventCount;
                 m_WeOwnTheBuffer = false;
             }
@@ -183,7 +183,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Note that this method does NOT check whether the given pointer points to an actual
         /// event in the buffer. It solely performs a pointer out-of-bounds check.
         ///
-        /// Also note that if the size of the memory buffer is unknown (<see cref="kBufferSizeUnknown"/>,
+        /// Also note that if the size of the memory buffer is unknown (<see cref="BufferSizeUnknown"/>,
         /// only a lower-bounds check is performed.
         /// </remarks>
         public bool Contains(InputEvent* eventPtr)
@@ -198,7 +198,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (eventPtr < bufferPtr)
                 return false;
 
-            if (sizeInBytes != kBufferSizeUnknown && eventPtr >= (byte*)bufferPtr + sizeInBytes)
+            if (sizeInBytes != BufferSizeUnknown && eventPtr >= (byte*)bufferPtr + sizeInBytes)
                 return false;
 
             return true;
@@ -207,7 +207,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public void Reset()
         {
             m_EventCount = 0;
-            if (m_SizeInBytes != kBufferSizeUnknown)
+            if (m_SizeInBytes != BufferSizeUnknown)
                 m_SizeInBytes = 0;
         }
 

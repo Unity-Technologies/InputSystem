@@ -1,10 +1,10 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: get rid of pressPoint and instead deadzone axis buttons
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// An axis that has a trigger point beyond which it is considered to be pressed.
@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public ButtonControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
             m_MinValue = 0f;
             m_MaxValue = 1f;
         }

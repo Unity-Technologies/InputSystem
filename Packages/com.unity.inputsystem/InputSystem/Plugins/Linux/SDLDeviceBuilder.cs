@@ -1,11 +1,11 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.Linux
+namespace UnityEngine.InputSystem.Plugins.Linux
 {
     [Serializable]
     internal class SDLLayoutBuilder
@@ -88,42 +88,42 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 .WithUsages(CommonUsages.Primary2DMotion);
 
             builder.AddControl(stickName + "/x")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Axis")
                 .WithByteOffset(0)
                 .WithSizeInBits((uint)xFeature.size * 8)
                 .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538");
 
             builder.AddControl(stickName + "/y")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Axis")
                 .WithByteOffset(4)
                 .WithSizeInBits((uint)xFeature.size * 8)
                 .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538,invert");
 
             builder.AddControl(stickName + "/up")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert")
                 .WithByteOffset(4)
                 .WithSizeInBits((uint)yFeature.size * 8);
 
             builder.AddControl(stickName + "/down")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538,invert=false")
                 .WithByteOffset(4)
                 .WithSizeInBits((uint)yFeature.size * 8);
 
             builder.AddControl(stickName + "/left")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert")
                 .WithByteOffset(0)
                 .WithSizeInBits((uint)xFeature.size * 8);
 
             builder.AddControl(stickName + "/right")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538")
                 .WithByteOffset(0)
@@ -168,28 +168,28 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                 .WithUsages(CommonUsages.Hatswitch);
 
             builder.AddControl(hatName + "/up")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=0,invert")
                 .WithByteOffset(4)
                 .WithSizeInBits((uint)yFeature.size * 8);
 
             builder.AddControl(hatName + "/down")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
                 .WithByteOffset(4)
                 .WithSizeInBits((uint)yFeature.size * 8);
 
             builder.AddControl(hatName + "/left")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=0,invert")
                 .WithByteOffset(0)
                 .WithSizeInBits((uint)xFeature.size * 8);
 
             builder.AddControl(hatName + "/right")
-                .WithFormat(InputStateBlock.kTypeInt)
+                .WithFormat(InputStateBlock.FormatInt)
                 .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
                 .WithByteOffset(0)
@@ -233,7 +233,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                         var control = builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset((uint)feature.offset)
-                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithFormat(InputStateBlock.FormatInt)
                             .WithParameters(parameters);
 
                         if (IsAxis(feature, SDLAxisUsage.RotateZ))
@@ -257,7 +257,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                                 .WithLayout("Button")
                                 .WithByteOffset((uint)feature.offset)
                                 .WithBitOffset((uint)feature.bit)
-                                .WithFormat(InputStateBlock.kTypeBit);
+                                .WithFormat(InputStateBlock.FormatBit);
                         }
                         break;
                     }
@@ -285,7 +285,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Linux
                         builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset((uint)feature.offset)
-                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithFormat(InputStateBlock.FormatInt)
                             .WithParameters(parameters);
                         break;
                     }

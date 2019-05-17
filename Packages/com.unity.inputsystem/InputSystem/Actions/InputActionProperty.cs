@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A serializable property type that can either reference an action externally defined
@@ -13,6 +13,7 @@ namespace UnityEngine.Experimental.Input
         /// The action held on to by the property.
         /// </summary>
         public InputAction action => m_UseReference ? m_Reference.action : m_Action;
+        public InputActionReference reference => m_UseReference ? m_Reference : null;
 
         public InputActionProperty(InputAction action)
         {

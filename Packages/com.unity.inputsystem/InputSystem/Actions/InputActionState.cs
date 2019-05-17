@@ -4,8 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
@@ -14,9 +14,13 @@ using UnityEngine.Profiling;
 
 ////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)
 
+////REVIEW: should the default interaction be an *explicit* interaction?
+
+////REVIEW: should "pass-through" be an interaction instead of a setting on actions?
+
 ////REVIEW: allow setup where state monitor is enabled but action is disabled?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using InputActionListener = Action<InputAction.CallbackContext>;
 
@@ -419,7 +423,7 @@ namespace UnityEngine.Experimental.Input
                     Debug.Assert(bindingStates[actionState->bindingIndex].interactionCount == 0,
                         "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
 
-                    ChangePhaseOfAction(InputActionPhase.Cancelled, ref actionStates[actionIndex]);
+                    ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
                 }
             }
 
@@ -800,7 +804,7 @@ namespace UnityEngine.Experimental.Input
                 // Trigger the action and go back to its current phase (may be
                 actionStates[actionIndex].time = time;
                 ChangePhaseOfAction(InputActionPhase.Performed, ref actionStates[actionIndex],
-                    phaseAfterPerformedOrCancelled: currentPhase);
+                    phaseAfterPerformedOrCanceled: currentPhase);
             }
 
             // All actions that are currently in the list become the actions we update by default
@@ -1129,6 +1133,14 @@ namespace UnityEngine.Experimental.Input
                 memory.controlMagnitudes[trigger.controlIndex] = trigger.magnitude;
             }
 
+            // Never ignore state changes for actions that aren't currently driven by
+            // anything.
+            if (actionState->controlIndex == kInvalidIndex)
+            {
+                Profiler.EndSample();
+                return false;
+            }
+
             // If the control is actuated *more* than the current level of actuation we recorded for the
             // action, we process the state change normally. If this isn't the control that is already
             // driving the action, it will become the one now.
@@ -1307,7 +1319,7 @@ namespace UnityEngine.Experimental.Input
                     if (trigger.passThrough)
                     {
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                            phaseAfterPerformedOrCancelled: InputActionPhase.Waiting);
+                            phaseAfterPerformedOrCanceled: InputActionPhase.Waiting);
                         break;
                     }
 
@@ -1317,7 +1329,7 @@ namespace UnityEngine.Experimental.Input
                         // Go into started, then perform and then go back to started.
                         ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                            phaseAfterPerformedOrCancelled: InputActionPhase.Started);
+                            phaseAfterPerformedOrCanceled: InputActionPhase.Started);
                     }
 
                     break;
@@ -1328,13 +1340,13 @@ namespace UnityEngine.Experimental.Input
                     if (!IsActuated(ref trigger))
                     {
                         // Control went back to below actuation threshold. Cancel interaction.
-                        ChangePhaseOfAction(InputActionPhase.Cancelled, ref trigger);
+                        ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
                     }
                     else
                     {
                         // Control changed value above magnitude threshold. Perform and remain started.
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                            phaseAfterPerformedOrCancelled: InputActionPhase.Started);
+                            phaseAfterPerformedOrCanceled: InputActionPhase.Started);
                     }
                     break;
                 }
@@ -1455,7 +1467,7 @@ namespace UnityEngine.Experimental.Input
         /// this determines which phase to transition to after the action has been performed. This would usually be
         /// <see cref="InputActionPhase.Waiting"/> (default), <see cref="InputActionPhase.Started"/> (if the action is supposed
         /// to be oscillate between started and performed), or <see cref="InputActionPhase.Performed"/> (if the action is
-        /// supposed to perform over and over again until cancelled).</param>
+        /// supposed to perform over and over again until canceled).</param>
         /// <remarks>
         /// Multiple interactions on the same binding can be started concurrently but the
         /// first interaction that starts will get to drive an action until it either cancels
@@ -1479,12 +1491,12 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount, "Interaction index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
 
-            ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
+            ////TODO: need to make sure that performed and canceled phase changes happen on the *same* binding&control
             ////      as the start of the phase
 
-            var phaseAfterPerformedOrCancelled = InputActionPhase.Waiting;
+            var phaseAfterPerformedOrCanceled = InputActionPhase.Waiting;
             if (newPhase == InputActionPhase.Performed)
-                phaseAfterPerformedOrCancelled = phaseAfterPerformed;
+                phaseAfterPerformedOrCanceled = phaseAfterPerformed;
 
             // Any time an interaction changes phase, we cancel all pending timeouts.
             if (interactionStates[interactionIndex].isTimerRunning)
@@ -1505,11 +1517,11 @@ namespace UnityEngine.Experimental.Input
                 {
                     // We're the first interaction to go to the start phase.
                     ChangePhaseOfAction(newPhase, ref trigger,
-                        phaseAfterPerformedOrCancelled: phaseAfterPerformedOrCancelled);
+                        phaseAfterPerformedOrCanceled: phaseAfterPerformedOrCanceled);
                 }
-                else if (newPhase == InputActionPhase.Cancelled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
+                else if (newPhase == InputActionPhase.Canceled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
-                    // We're cancelling but maybe there's another interaction ready
+                    // We're canceling but maybe there's another interaction ready
                     // to go into start phase.
 
                     ChangePhaseOfAction(newPhase, ref trigger);
@@ -1540,7 +1552,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     // Any other phase change goes to action if we're the interaction driving
                     // the current phase.
-                    ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCancelled);
+                    ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled);
 
                     // We're the interaction driving the action and we performed the action,
                     // so reset any other interaction to waiting state.
@@ -1558,7 +1570,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            // If the interaction performed or cancelled, go back to waiting.
+            // If the interaction performed or canceled, go back to waiting.
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
@@ -1566,7 +1578,7 @@ namespace UnityEngine.Experimental.Input
             {
                 interactionStates[interactionIndex].phase = phaseAfterPerformed;
             }
-            else if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
+            else if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
             {
                 ResetInteractionState(trigger.mapIndex, trigger.bindingIndex, trigger.interactionIndex);
             }
@@ -1578,17 +1590,17 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="newPhase">New phase to transition to.</param>
         /// <param name="trigger">Trigger that caused the change in phase.</param>
-        /// <param name="phaseAfterPerformedOrCancelled"></param>
+        /// <param name="phaseAfterPerformedOrCanceled"></param>
         /// <remarks>
         /// The change in phase is visible to observers, i.e. on the various callbacks and notifications.
         ///
-        /// If <paramref name="newPhase"/> is <see cref="InputActionPhase.Performed"/> or <see cref="InputActionPhase.Cancelled"/>,
-        /// the action will subsequently immediately transition to <paramref name="phaseAfterPerformedOrCancelled"/>
+        /// If <paramref name="newPhase"/> is <see cref="InputActionPhase.Performed"/> or <see cref="InputActionPhase.Canceled"/>,
+        /// the action will subsequently immediately transition to <paramref name="phaseAfterPerformedOrCanceled"/>
         /// (<see cref="InputActionPhase.Waiting"/> by default). This change is not visible to observers, i.e. there won't
         /// be another run through callbacks.
         /// </remarks>
         private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
-            InputActionPhase phaseAfterPerformedOrCancelled = InputActionPhase.Waiting)
+            InputActionPhase phaseAfterPerformedOrCanceled = InputActionPhase.Waiting)
         {
             Debug.Assert(newPhase != InputActionPhase.Disabled, "Should not disable an action using this method");
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount, "Map index out of range");
@@ -1633,12 +1645,12 @@ namespace UnityEngine.Experimental.Input
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
                     if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
                     {
-                        actionState->phase = phaseAfterPerformedOrCancelled;
+                        actionState->phase = phaseAfterPerformedOrCanceled;
 
                         // If the action is continuous and remains in performed or started state, make sure the action
                         // is on the list of continuous actions that we check every update.
-                        if ((phaseAfterPerformedOrCancelled == InputActionPhase.Started ||
-                             phaseAfterPerformedOrCancelled == InputActionPhase.Performed) &&
+                        if ((phaseAfterPerformedOrCanceled == InputActionPhase.Started ||
+                             phaseAfterPerformedOrCanceled == InputActionPhase.Performed) &&
                             actionState->continuous &&
                             !actionState->onContinuousList)
                         {
@@ -1648,12 +1660,12 @@ namespace UnityEngine.Experimental.Input
                     break;
                 }
 
-                case InputActionPhase.Cancelled:
+                case InputActionPhase.Canceled:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCancelled);
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled);
                     if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
                     {
-                        actionState->phase = phaseAfterPerformedOrCancelled;
+                        actionState->phase = phaseAfterPerformedOrCanceled;
 
                         // Remove from list of continuous actions, if necessary.
                         if (actionState->onContinuousList)
@@ -1668,6 +1680,14 @@ namespace UnityEngine.Experimental.Input
                         RemoveContinuousAction(actionIndex);
                     break;
                 }
+            }
+
+            // If we're now waiting, reset control state. This is important for the disambiguation code
+            // to not consider whatever control actuation happened on the action last.
+            if (actionState->phase == InputActionPhase.Waiting)
+            {
+                actionState->controlIndex = kInvalidIndex;
+                actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
             }
         }
 
@@ -1700,8 +1720,8 @@ namespace UnityEngine.Experimental.Input
                     case InputActionPhase.Performed:
                         change = InputActionChange.ActionPerformed;
                         break;
-                    case InputActionPhase.Cancelled:
-                        change = InputActionChange.ActionCancelled;
+                    case InputActionPhase.Canceled:
+                        change = InputActionChange.ActionCanceled;
                         break;
                     default:
                         Debug.Assert(false, "Should not reach here");
@@ -1827,7 +1847,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     case InputActionPhase.Started:
                     case InputActionPhase.Performed:
-                        ChangePhaseOfInteraction(InputActionPhase.Cancelled, ref actionStates[actionIndex]);
+                        ChangePhaseOfInteraction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
                         break;
                 }
             }

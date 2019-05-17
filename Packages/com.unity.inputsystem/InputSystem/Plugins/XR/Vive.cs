@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.Plugins.XR
 {
     [InputControlLayout]
     public class ViveHMD : XRHMD
@@ -97,11 +97,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [InputControlLayout]
     public class KnucklesController : XRControllerWithRumble
     {
- 
         [InputControl(aliases = new[] { "B",  "Primary"})]
         public ButtonControl primaryButton { get; private set; }
-
-        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]        
+        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl trackpadTouched { get; private set; }
@@ -125,6 +123,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control deviceAngularVelocity { get; private set; }
 
 
+<<<<<<< HEAD
 
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -133,6 +132,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");
             primaryButton = builder.GetControl<ButtonControl>("primary");            
+=======
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
+            primaryButton = builder.GetControl<ButtonControl>("primary");
+>>>>>>> develop
             trackpadPressed = builder.GetControl<ButtonControl>("trackpadPressed");
             trackpadTouched = builder.GetControl<ButtonControl>("trackpadTouched");
             trackpad = builder.GetControl<Vector2Control>("trackpad");

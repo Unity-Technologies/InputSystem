@@ -3,12 +3,12 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 
@@ -205,9 +205,6 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        ////NOTE: Unfortunately, this relies on an internal method ATM.
-        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
-
         var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
 
@@ -219,8 +216,13 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, secondState);
         InputSystem.Update();
 
-        Assert.That(device.leftStick.ReadValue(),
-            Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f))));
+        var processedVector = new StickDeadzoneProcessor { min = 0.1f, max = 0.9f }.Process(new Vector2(0.5f, 0.5f));
+        Assert.That(device.leftStick.ReadValue(), Is.EqualTo(processedVector));
+
+        // Deadzoning on the stick axes is independent so we shouldn't see equivalent values on
+        // the axes here.
+        Assert.That(device.leftStick.x.ReadValue(), Is.Not.EqualTo(processedVector.x));
+        Assert.That(device.leftStick.y.ReadValue(), Is.Not.EqualTo(processedVector.y));
     }
 
     [Test]
@@ -264,32 +266,22 @@ partial class CoreTests
     {
         // Deadzone processor with no specified min/max should take default values
         // from InputSettings.
-        const string json = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""extend"" : ""Gamepad"",
-                ""controls"" : [
-                    {
-                        ""name"" : ""leftStick"",
-                        ""processors"" : ""stickDeadzone""
-                    }
-                ]
-            }
-        ";
 
-        InputSystem.RegisterLayout(json);
-        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var processor = device.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        InputSystem.settings.defaultDeadzoneMin = 0.1f;
+        InputSystem.settings.defaultDeadzoneMax = 0.9f;
 
-        Assert.That(processor.minOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMin));
-        Assert.That(processor.maxOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMax));
+        Set(gamepad.leftStick, new Vector2(0.5f, 0.5f));
 
-        InputSystem.settings.defaultDeadzoneMin = InputSystem.settings.defaultDeadzoneMin + 0.1f;
-        InputSystem.settings.defaultDeadzoneMax = InputSystem.settings.defaultDeadzoneMin - 0.1f;
+        Assert.That(gamepad.leftStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor {min = 0.1f, max = 0.9f}.Process(new Vector2(0.5f, 0.5f))));
 
-        Assert.That(processor.minOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMin));
-        Assert.That(processor.maxOrDefault, Is.EqualTo(InputSystem.settings.defaultDeadzoneMax));
+        InputSystem.settings.defaultDeadzoneMin = 0.2f;
+        InputSystem.settings.defaultDeadzoneMax = 0.8f;
+
+        Assert.That(gamepad.leftStick.ReadValue(),
+            Is.EqualTo(new StickDeadzoneProcessor {min = 0.2f, max = 0.8f}.Process(new Vector2(0.5f, 0.5f))));
     }
 
     [Test]

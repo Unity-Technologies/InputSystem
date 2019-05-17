@@ -1,9 +1,9 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: expose euler angle subcontrols?
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     public class QuaternionControl : InputControl<Quaternion>
     {
@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Controls
         public QuaternionControl()
         {
             m_StateBlock.sizeInBits = sizeof(float) * 4 * 8;
-            m_StateBlock.format = InputStateBlock.kTypeQuaternion;
+            m_StateBlock.format = InputStateBlock.FormatQuaternion;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

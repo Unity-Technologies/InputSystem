@@ -1,7 +1,7 @@
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem.Plugins.XR;
 
 public class Handedness : MonoBehaviour
 {

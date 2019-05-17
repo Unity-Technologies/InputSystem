@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: support nested composites
 
@@ -14,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: when we get blittable type constraints, we can probably do away with the pointer-based ReadValue version
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A binding that synthesizes a value from from several component bindings.

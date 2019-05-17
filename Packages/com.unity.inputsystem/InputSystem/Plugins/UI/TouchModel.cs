@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
-namespace UnityEngine.Experimental.Input.Plugins.UI
+namespace UnityEngine.InputSystem.Plugins.UI
 {
     internal struct TouchModel
     {
@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                     if (value == PointerPhase.Began)
                         selectDelta |= ButtonDeltaState.Pressed;
 
-                    if (value == PointerPhase.Ended || value == PointerPhase.Cancelled)
+                    if (value == PointerPhase.Ended || value == PointerPhase.Canceled)
                         selectDelta |= ButtonDeltaState.Released;
 
                     m_SelectPhase = value;
@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             m_Position = deltaPosition = Vector2.zero;
 
-            m_SelectPhase = PointerPhase.Cancelled;
+            m_SelectPhase = PointerPhase.Canceled;
             changedThisFrame = false;
             selectDelta = ButtonDeltaState.NoChange;
 

@@ -1,14 +1,19 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Plugins.Steam
 {
     /// <summary>
     /// Adds support for Steam controllers.
     /// </summary>
-    public static class SteamSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class SteamSupport
     {
         /// <summary>
         /// Wrapper around the Steam controller API.

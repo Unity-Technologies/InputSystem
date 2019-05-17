@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.Users;
 using UnityEngine.TestTools.Utils;
-using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
+using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 [SuppressMessage("ReSharper", "CheckNamespace")]
 internal class UserTests : InputTestFixture
@@ -150,7 +150,7 @@ internal class UserTests : InputTestFixture
         var returnUserAccountHandle = 0;
         var returnUserAccountName = "";
         var returnUserAccountId = "";
-        var returnUserAccountSelectionCancelled = false;
+        var returnUserAccountSelectionCanceled = false;
 
         var gamepadId = runtime.AllocateDeviceId();
         var receivedPairingRequest = false;
@@ -161,7 +161,7 @@ internal class UserTests : InputTestFixture
                 if (command->type == QueryPairedUserAccountCommand.Type)
                 {
                     receivedUserIdRequest = true;
-                    var result = InputDeviceCommand.kGenericSuccess;
+                    var result = InputDeviceCommand.GenericSuccess;
                     if (returnUserAccountHandle != 0)
                     {
                         var queryPairedUser = (QueryPairedUserAccountCommand*)command;
@@ -171,8 +171,8 @@ internal class UserTests : InputTestFixture
                         result |= (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount;
                     }
 
-                    if (returnUserAccountSelectionCancelled)
-                        result |= (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled;
+                    if (returnUserAccountSelectionCanceled)
+                        result |= (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled;
                     return result;
                 }
                 if (command->type == InitiateUserAccountPairingCommand.Type)
@@ -182,7 +182,7 @@ internal class UserTests : InputTestFixture
                     return (long)InitiateUserAccountPairingCommand.Result.SuccessfullyInitiated;
                 }
 
-                return InputDeviceCommand.kGenericFailure;
+                return InputDeviceCommand.GenericFailure;
             });
 
         runtime.ReportNewInputDevice<Gamepad>(gamepadId);
@@ -258,7 +258,7 @@ internal class UserTests : InputTestFixture
         receivedChanges.Clear();
 
         // Cancel account selection.
-        returnUserAccountSelectionCancelled = true;
+        returnUserAccountSelectionCanceled = true;
 
         InputSystem.QueueConfigChangeEvent(gamepad);
         InputSystem.Update();
@@ -271,7 +271,7 @@ internal class UserTests : InputTestFixture
         Assert.That(receivedPairingRequest, Is.False);
         Assert.That(receivedChanges, Is.EquivalentTo(new[]
         {
-            new UserChange(user, InputUserChange.AccountSelectionCancelled, gamepad)
+            new UserChange(user, InputUserChange.AccountSelectionCanceled, gamepad)
         }));
 
         receivedUserIdRequest = false;
@@ -298,7 +298,7 @@ internal class UserTests : InputTestFixture
         returnUserAccountHandle = 2;
         returnUserAccountName = "OtherUser";
         returnUserAccountId = "OtherId";
-        returnUserAccountSelectionCancelled = false;
+        returnUserAccountSelectionCanceled = false;
 
         InputSystem.QueueConfigChangeEvent(gamepad);
         InputSystem.Update();
@@ -550,8 +550,8 @@ internal class UserTests : InputTestFixture
         var user1 = InputUser.PerformPairingWithDevice(gamepad1);
         var user2 = InputUser.PerformPairingWithDevice(gamepad2);
 
-        Assert.That(user1.id, Is.Not.EqualTo(InputUser.kInvalidId));
-        Assert.That(user2.id, Is.Not.EqualTo(InputUser.kInvalidId));
+        Assert.That(user1.id, Is.Not.EqualTo(InputUser.InvalidId));
+        Assert.That(user2.id, Is.Not.EqualTo(InputUser.InvalidId));
         Assert.That(user1.id, Is.Not.EqualTo(user2.id));
 
         user1.UnpairDevicesAndRemoveUser();

@@ -1,7 +1,7 @@
 using System.Collections;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Interactions;
+using UnityEngine.InputSystem.Interactions;
 
 // Using simple actions with callbacks.
 public class SimpleController_UsingActions : MonoBehaviour
@@ -25,8 +25,8 @@ public class SimpleController_UsingActions : MonoBehaviour
     {
         moveAction.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         lookAction.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
-        moveAction.cancelled += ctx => m_Move = Vector2.zero;
-        lookAction.cancelled += ctx => m_Look = Vector2.zero;
+        moveAction.canceled += ctx => m_Move = Vector2.zero;
+        lookAction.canceled += ctx => m_Look = Vector2.zero;
 
         fireAction.performed +=
             ctx =>
@@ -47,7 +47,7 @@ public class SimpleController_UsingActions : MonoBehaviour
             if (ctx.interaction is SlowTapInteraction)
                 m_Charging = true;
         };
-        fireAction.cancelled +=
+        fireAction.canceled +=
             ctx =>
         {
             m_Charging = false;

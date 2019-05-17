@@ -1,18 +1,23 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System.Linq;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Plugins.Android.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Plugins.Android
+namespace UnityEngine.InputSystem.Plugins.Android
 {
     /// <summary>
     /// Initializes custom android devices.
     /// You can use 'adb shell dumpsys input' from terminal to output information about all input devices.
     /// </summary>
-    public static class AndroidSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    class AndroidSupport
     {
-        public const string kAndroidInterface = "Android";
+        internal const string kAndroidInterface = "Android";
 
         public static void Initialize()
         {

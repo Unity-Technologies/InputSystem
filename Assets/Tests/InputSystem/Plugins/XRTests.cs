@@ -4,12 +4,12 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.XR;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.Plugins.XR;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 internal class XRTests : InputTestFixture
 {
@@ -177,7 +177,8 @@ internal class XRTests : InputTestFixture
     [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
     [TestCase("OPenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
-    [TestCase("OpenVR Controller(Knuckles EV3.0 Left) - Left","Valve", typeof(KnucklesController))]
+    [TestCase("OpenVR Controller(Knuckles EV3.0 Left) - Left", "Valve", typeof(KnucklesController))]
+
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
@@ -355,7 +356,7 @@ internal class XRTests : InputTestFixture
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 
-    [InputControlLayout(beforeRender = true)]
+    [InputControlLayout(updateBeforeRender = true)]
     private class TestHMD : InputDevice
     {
         public QuaternionControl quaternion { get; private set; }

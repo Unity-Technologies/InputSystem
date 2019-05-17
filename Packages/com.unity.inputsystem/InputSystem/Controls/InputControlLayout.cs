@@ -4,8 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
@@ -26,7 +26,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
@@ -217,12 +217,12 @@ namespace UnityEngine.Experimental.Input.Layouts
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;
 
-                if (offset != InputStateBlock.kInvalidOffset)
+                if (offset != InputStateBlock.InvalidOffset)
                     result.offset = offset;
                 else
                     result.offset = other.offset;
 
-                if (bit != InputStateBlock.kInvalidOffset)
+                if (bit != InputStateBlock.InvalidOffset)
                     result.bit = bit;
                 else
                     result.bit = other.bit;
@@ -610,7 +610,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 m_Controls = controlLayouts.ToArray(),
                 m_StateFormat = stateFormat,
                 m_Variants = variants,
-                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
+                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRenderInternal,
                 isGenericTypeOfDevice = layoutAttribute?.isGenericTypeOfDevice ?? false,
                 hideInUI = layoutAttribute?.hideInUI ?? false,
                 m_Description = layoutAttribute?.description,
@@ -720,7 +720,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                         for (var i = controlCountBefore; i < controlCountAfter; ++i)
                         {
                             var controlLayout = controlItems[i];
-                            if (controlItems[i].offset != InputStateBlock.kInvalidOffset)
+                            if (controlItems[i].offset != InputStateBlock.InvalidOffset)
                             {
                                 controlLayout.offset += (uint)fieldOffset;
                                 controlItems[i] = controlLayout;
@@ -801,14 +801,14 @@ namespace UnityEngine.Experimental.Input.Layouts
                 variants = attribute.variants;
 
             // Determine offset.
-            var offset = InputStateBlock.kInvalidOffset;
-            if (attribute != null && attribute.offset != InputStateBlock.kInvalidOffset)
+            var offset = InputStateBlock.InvalidOffset;
+            if (attribute != null && attribute.offset != InputStateBlock.InvalidOffset)
                 offset = attribute.offset;
             else if (member is FieldInfo && !isModifyingChildControlByPath)
                 offset = (uint)Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
 
             // Determine bit offset.
-            var bit = InputStateBlock.kInvalidOffset;
+            var bit = InputStateBlock.InvalidOffset;
             if (attribute != null)
                 bit = attribute.bit;
 
@@ -822,7 +822,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             var format = new FourCC();
             if (attribute != null && !string.IsNullOrEmpty(attribute.format))
                 format = new FourCC(attribute.format);
-            else if (!isModifyingChildControlByPath && bit == InputStateBlock.kInvalidOffset)
+            else if (!isModifyingChildControlByPath && bit == InputStateBlock.InvalidOffset)
             {
                 ////REVIEW: this logic makes it hard to inherit settings from the base layout; if we do this stuff,
                 ////        we should probably do it in InputDeviceBuilder and not directly on the layout
@@ -1221,7 +1221,6 @@ namespace UnityEngine.Experimental.Input.Layouts
             public string variant;
             public bool isGenericTypeOfDevice;
             public bool hideInUI;
-            public InputDeviceMatcher.MatcherJson device;
             public ControlItemJson[] controls;
 
             // ReSharper restore MemberCanBePrivate.Local
@@ -1368,8 +1367,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             public ControlItemJson()
             {
-                offset = InputStateBlock.kInvalidOffset;
-                bit = InputStateBlock.kInvalidOffset;
+                offset = InputStateBlock.InvalidOffset;
+                bit = InputStateBlock.InvalidOffset;
             }
 
             public ControlItem ToLayout()

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 ////  (maybe switch m_Array to an InlinedArray and extend InlinedArray to allow having three configs:
 ////  1. firstValue only, 2. firstValue + additionalValues, 3. everything in additionalValues)
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Read-only access to an array or to a slice of an array.
@@ -171,10 +171,16 @@ namespace UnityEngine.Experimental.Input.Utilities
         public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
             where TValue : class
         {
+            return IndexOfReference(array, value) != -1;
+        }
+
+        public static int IndexOfReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : class
+        {
             for (var i = 0; i < array.m_Length; ++i)
                 if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
-                    return true;
-            return false;
+                    return i;
+            return -1;
         }
     }
 }

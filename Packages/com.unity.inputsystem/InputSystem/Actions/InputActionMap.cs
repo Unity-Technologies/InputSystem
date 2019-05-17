@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: given we have the global ActionPerformed callback, do we really need the per-map callback?
 
@@ -10,7 +10,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      (because of the sharing of state between multiple maps in an asset, we'd have to extend that constraint
 ////      to all maps in an asset in order to uphold it properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mapping of <see cref="InputBinding">input bindings</see> to <see cref="InputAction">
@@ -180,7 +180,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <seealso cref="InputAction.started"/>
         /// <seealso cref="InputAction.performed"/>
-        /// <seealso cref="InputAction.cancelled"/>
+        /// <seealso cref="InputAction.canceled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
             add => m_ActionCallbacks.AppendWithCapacity(value);

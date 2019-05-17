@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 ////REVIEW: apparently EventSystem only supports a single "current" module so the approach here probably
 ////        won't fly and we'll have to roll all non-action modules into one big module
 
-namespace UnityEngine.Experimental.Input.Plugins.UI
+namespace UnityEngine.InputSystem.Plugins.UI
 {
     /// <summary>
     /// Base class for <see cref="BaseInputModule">input modules</see> that send
@@ -16,6 +16,17 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
     /// </remarks>
     public abstract class UIInputModule : BaseInputModule
     {
+        public override void ActivateModule()
+        {
+            base.ActivateModule();
+
+            var toSelect = eventSystem.currentSelectedGameObject;
+            if (toSelect == null)
+                toSelect = eventSystem.firstSelectedGameObject;
+
+            eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
+        }
+
         private RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
@@ -48,7 +59,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
             var buttonState = mouseState.leftButton;
             buttonState.CopyTo(eventData);
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            eventData.button = PointerEventData.InputButton.Left;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
 
             ProcessMouseMovement(eventData);
             ProcessMouseScroll(eventData);
@@ -63,8 +76,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             /// Right Mouse Button
             buttonState = mouseState.rightButton;
             buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Right;
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
             ProcessMouseButtonDrag(eventData);
 
             buttonState.CopyFrom(eventData);
@@ -73,14 +87,30 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             /// Middle Mouse Button
             buttonState = mouseState.middleButton;
             buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Middle;
 
-            ProcessMouseButton(buttonState.lastFrameDelta, eventData);
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
             ProcessMouseButtonDrag(eventData);
 
             buttonState.CopyFrom(eventData);
             mouseState.middleButton = buttonState;
 
             mouseState.OnFrameFinished();
+        }
+
+        // if we are using a MultiplayerEventSystem, ignore any transforms
+        // not under the current MultiplayerEventSystem's root.
+        private bool PointerShouldIgnoreTransform(Transform t)
+        {
+            if (eventSystem is MultiplayerEventSystem)
+            {
+                var mes = eventSystem as MultiplayerEventSystem;
+
+                if (mes.playerRoot != null)
+                    if (!t.IsChildOf(mes.playerRoot.transform))
+                        return true;
+            }
+            return false;
         }
 
         private void ProcessMouseMovement(PointerEventData eventData)
@@ -133,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 var t = currentPointerTarget.transform;
 
-                while (t != null && t.gameObject != commonRoot)
+                while (t != null && t.gameObject != commonRoot && !PointerShouldIgnoreTransform(t))
                 {
                     ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
 
@@ -144,9 +174,12 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             }
         }
 
-        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData)
+        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData, bool hasNativeClickCount)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
+
+            if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
+                return;
 
             if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)
             {
@@ -174,10 +207,14 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
                 var time = Time.unscaledTime;
 
-                if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
-                    ++eventData.clickCount;
-                else
-                    eventData.clickCount = 1;
+                if (!hasNativeClickCount)
+                {
+                    const float clickSpeed = 0.3f;
+                    if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
+                        ++eventData.clickCount;
+                    else
+                        eventData.clickCount = 1;
+                }
 
                 eventData.clickTime = time;
 
@@ -263,9 +300,9 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             touchState.CopyTo(eventData);
 
-            if (touchState.selectPhase == PointerPhase.Cancelled)
+            if (touchState.selectPhase == PointerPhase.Canceled)
             {
-                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Cancelled) ? new RaycastResult() : PerformRaycast(eventData);
+                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Canceled) ? new RaycastResult() : PerformRaycast(eventData);
             }
             else
             {
@@ -274,7 +311,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             eventData.button = PointerEventData.InputButton.Left;
 
-            ProcessMouseButton(touchState.selectDelta, eventData);
+            ProcessMouseButton(touchState.selectDelta, eventData, false);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData);
 
@@ -295,7 +332,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             eventData.button = PointerEventData.InputButton.Left;
             eventData.pointerCurrentRaycast = PerformRaycast(eventData);
 
-            ProcessMouseButton(deviceState.selectDelta, eventData);
+            ProcessMouseButton(deviceState.selectDelta, eventData, false);
             ProcessMouseMovement(eventData);
             ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
 
@@ -333,7 +370,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 var moveVector = joystickState.move;
 
                 var moveDirection = MoveDirection.None;
-                if (moveVector.sqrMagnitude > moveDeadzone * moveDeadzone)
+                if (moveVector.sqrMagnitude > 0)
                 {
                     if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
                         moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
@@ -432,23 +469,38 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             return result;
         }
 
-        [Tooltip("The maximum time (in seconds) between two mouse presses for it to be consecutive click.")]
-        public float clickSpeed = 0.3f;
-
-        [Tooltip("The absolute value required by a move action on either axis required to trigger a move event.")]
-        public float moveDeadzone = 0.6f;
-
         [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
-        public float repeatDelay = 0.5f;
+        [SerializeField]
+        private float m_RepeatDelay = 0.5f;
 
         [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
-        public float repeatRate = 0.1f;
+        [SerializeField]
+        private float m_RepeatRate = 0.1f;
 
         [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
-        public float trackedDeviceDragThresholdMultiplier = 2.0f;
+        // Hide this while we still have to figure out what to do with this.
+        private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
 
         private AxisEventData m_CachedAxisEvent;
         private PointerEventData m_CachedPointerEvent;
         private TrackedPointerEventData m_CachedTrackedPointerEventData;
+
+        public float repeatDelay
+        {
+            get { return m_RepeatDelay; }
+            set { m_RepeatDelay = value; }
+        }
+
+        public float repeatRate
+        {
+            get { return m_RepeatRate; }
+            set { m_RepeatRate = value; }
+        }
+
+        public float trackedDeviceDragThresholdMultiplier
+        {
+            get { return m_TrackedDeviceDragThresholdMultiplier; }
+            set { m_TrackedDeviceDragThresholdMultiplier = value; }
+        }
     }
 }

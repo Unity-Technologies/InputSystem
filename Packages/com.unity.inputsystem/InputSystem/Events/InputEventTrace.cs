@@ -1,23 +1,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
 
-////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
-
 ////TODO: Use InputEventBuffer
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     // Helper to simplify recording events. Can record events for a specific device
     // or all events coming in.
     [Serializable]
     public class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
-        public const int kDefaultBufferSize = 1024 * 1024;
+        private const int kDefaultBufferSize = 1024 * 1024;
 
         // Set device to record events for. Set to kInvalidDeviceId by default
         // in which case events from all devices are recorded.
@@ -88,8 +86,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             // Otherwise feel our way forward.
 
-            var nextEvent = new IntPtr(current.data.ToInt64() + current.sizeInBytes);
-            var endOfBuffer = new IntPtr(m_EventBuffer.ToInt64() + m_EventBufferSize);
+            var nextEvent = new IntPtr((Int64)current.data + current.sizeInBytes);
+            var endOfBuffer = new IntPtr((Int64)m_EventBuffer + m_EventBufferSize);
 
             // If we've run into our tail, there's no more events.
             if (nextEvent.ToInt64() == m_EventBufferTail.ToInt64())
@@ -137,7 +135,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [NonSerialized] private int m_ChangeCounter;
         [NonSerialized] private bool m_Enabled;
 
-        [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
+        [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private InlinedArray<Action<InputEventPtr>> m_EventListeners;
 
         // Buffer for storing event trace. Allocated in native so that we can survive a
@@ -167,7 +165,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         private unsafe void OnInputEvent(InputEventPtr inputEvent)
         {
             // Ignore if the event isn't for our device.
-            if (m_DeviceId != InputDevice.kInvalidDeviceId && inputEvent.deviceId != m_DeviceId)
+            if (m_DeviceId != InputDevice.InvalidDeviceId && inputEvent.deviceId != m_DeviceId)
                 return;
 
             // This shouldn't happen but ignore the event if we're not tracing.
@@ -211,7 +209,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     m_EventBufferTail = m_EventBuffer;
                     newTail = new IntPtr(m_EventBuffer.ToInt64() + eventSize);
 
-                    // If the tail overtook both the head and the end of the buffer, 
+                    // If the tail overtook both the head and the end of the buffer,
                     // we need to make sure the head is wrapped around as well.
                     if (newTailOvertakesHead)
                         m_EventBufferHead = m_EventBuffer;
@@ -246,7 +244,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
 
             // Copy data to buffer.
-            UnsafeUtility.MemCpy(buffer.ToPointer(), eventData.ToPointer(), eventSize);
+            UnsafeUtility.MemCpy(buffer.ToPointer(), eventData, eventSize);
             ++m_ChangeCounter;
 
             // Notify listeners.

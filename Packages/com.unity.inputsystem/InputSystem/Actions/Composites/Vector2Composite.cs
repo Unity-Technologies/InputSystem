@@ -1,9 +1,9 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: add support for ramp up/down
 
-namespace UnityEngine.Experimental.Input.Composites
+namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
     /// A 2D planar motion vector computed from an up+down button pair and a left+right
