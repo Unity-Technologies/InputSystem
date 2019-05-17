@@ -5,7 +5,12 @@ namespace UnityEngine.InputSystem.Plugins.DualShock
     /// <summary>
     /// Adds support for PS4 DualShock controllers.
     /// </summary>
-    public static class DualShockSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class DualShockSupport
     {
         public static void Initialize()
         {
