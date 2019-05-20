@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// Handle for a user account in an external API.

@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem
     /// 'slow tap'</see> will put an action into <see cref="Started"/> phase when a button
     /// the action is bound to is pressed. At that point, however, the action still
     /// has to wait for the expiration of a timer in order to make it a 'slow tap'. If
-    /// the button is release before the timer expires, the action will be <see cref="Cancelled"/>
+    /// the button is release before the timer expires, the action will be <see cref="Canceled"/>
     /// whereas if the button is held long enough, the action will be <see cref="Performed"/>.
     /// </remarks>
     public enum InputActionPhase
@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is the phase that an action goes back to once it has been <see cref="Performed"/>
-        /// or <see cref="Cancelled"/>.
+        /// or <see cref="Canceled"/>.
         /// </remarks>
         Waiting,
 
@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem
         /// When the button it is bound to is pressed, the associated action goes into the <see cref="Started"/>
         /// phase. At this point, the interaction does not yet know whether the button press will result in just
         /// a tap or will indeed result in slow tap. If the button is released before the time it takes to
-        /// recognize a slow tap, then the action will go to <see cref="Cancelled"/> and then back to <see cref="Waiting"/>.
+        /// recognize a slow tap, then the action will go to <see cref="Canceled"/> and then back to <see cref="Waiting"/>.
         /// If, however, the button is held long enough for it to qualify as a slow tap, the action will progress
         /// to <see cref="Performed"/> and then go back to <see cref="Waiting"/>.
         ///
@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem
         ///             weaponChargeStartTime = ctx.time;
         ///         }
         ///     }
-        /// fireAction.cancelled +=
+        /// fireAction.canceled +=
         ///     ctx =>
         ///     {
         ///         weaponCharging = false;
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         ///
         /// </summary>
-        /// <seealso cref="InputAction.cancelled"/>
-        Cancelled
+        /// <seealso cref="InputAction.canceled"/>
+        Canceled
     }
 }

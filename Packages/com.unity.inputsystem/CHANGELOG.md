@@ -4,7 +4,24 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.3-preview] - TBD
+Due to package verification, the latest version below is the unpublished version and the date is meaningless.
+however, it has to be formatted properly to pass verification tests.
+
+## [0.3.0-preview] - 2020-1-1
+
+### Fixed
+
+#### Actions
+
+- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+
+### Added
+
+### Changed
+
+- Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
+
+## [0.2.10-preview] - 2019-5-17
 
 ### Added
 
@@ -34,19 +51,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Change all public API using `IntPtr` to use unsafe pointer types instead.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
+- Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
+- Removed `Plugins` from all namespaces.
+- Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
 
 ### Fixed
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
 - Fixed scrolling in `UIActionInputModule`.
 - Fixed compiling the input system package in Unity 19.2 with ugui being moved to a package now.
+- In the Input System project settings window, you can no longer add a supported device twice.
 
 #### Actions
 
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
 - Fixed `Hold` interactions firing immediately before the duration has passed.
 - Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
-- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+- Fixed exception message when calling `CallbackContext.ReadValue<TValue>()` for an action with a composite binding with `TValue` not matching the composite's value type.
 
 ### Added
 

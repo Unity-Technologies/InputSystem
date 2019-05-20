@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Utilities;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.Linux
+namespace UnityEngine.InputSystem.Linux
 {
     [Serializable]
     internal class SDLLayoutBuilder

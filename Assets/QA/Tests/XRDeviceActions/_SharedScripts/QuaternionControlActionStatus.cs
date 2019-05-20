@@ -18,7 +18,7 @@ public class QuaternionControlActionStatus : MonoBehaviour
         quaternionAction.Enable();
         quaternionAction.performed += UpdateQuaternion;
         quaternionAction.started += UpdateQuaternion;
-        quaternionAction.cancelled += UpdateQuaternion;
+        quaternionAction.canceled += UpdateQuaternion;
 
         ReadOnlyArray<InputControl> controls = quaternionAction.controls;
         for (int i = 0; i < controls.Count; i++)
@@ -41,7 +41,7 @@ public class QuaternionControlActionStatus : MonoBehaviour
         quaternionAction.Disable();
         quaternionAction.performed -= UpdateQuaternion;
         quaternionAction.started -= UpdateQuaternion;
-        quaternionAction.cancelled -= UpdateQuaternion;
+        quaternionAction.canceled -= UpdateQuaternion;
     }
 
     private void UpdateQuaternion(InputAction.CallbackContext context)

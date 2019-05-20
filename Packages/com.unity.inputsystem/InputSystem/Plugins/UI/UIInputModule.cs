@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 ////REVIEW: apparently EventSystem only supports a single "current" module so the approach here probably
 ////        won't fly and we'll have to roll all non-action modules into one big module
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// Base class for <see cref="BaseInputModule">input modules</see> that send
@@ -300,9 +300,9 @@ namespace UnityEngine.InputSystem.Plugins.UI
 
             touchState.CopyTo(eventData);
 
-            if (touchState.selectPhase == PointerPhase.Cancelled)
+            if (touchState.selectPhase == PointerPhase.Canceled)
             {
-                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Cancelled) ? new RaycastResult() : PerformRaycast(eventData);
+                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Canceled) ? new RaycastResult() : PerformRaycast(eventData);
             }
             else
             {

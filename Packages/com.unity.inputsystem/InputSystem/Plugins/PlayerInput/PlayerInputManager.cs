@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.PlayerInput
 {
     /// <summary>
     /// Manages joining and leaving of players.

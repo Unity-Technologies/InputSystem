@@ -158,12 +158,12 @@ partial class CoreTests
             var actions = trace.ToArray();
 
             Assert.That(actions.Length, Is.EqualTo(2));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].time, Is.EqualTo(0.234).Within(0.00001));
             Assert.That(actions[0].action, Is.SameAs(action1));
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].interaction, Is.TypeOf<HoldInteraction>());
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[1].time, Is.EqualTo(0.234).Within(0.00001));
             Assert.That(actions[1].action, Is.SameAs(action2));
             Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
@@ -703,8 +703,8 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions.Length, Is.EqualTo(6));
 
-            // map1/action1 should have been cancelled.
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            // map1/action1 should have been canceled.
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].action, Is.SameAs(action1));
             Assert.That(actions[0].ReadValue<Vector2>(),
                 Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1))
@@ -772,16 +772,16 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
 
-            // map2/action3 should have been cancelled.
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            // map2/action3 should have been canceled.
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].action, Is.SameAs(action3));
             Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
             Assert.That(actions[0].interaction, Is.TypeOf<TapInteraction>());
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(runtime.currentTime).Within(0.00001));
 
-            // map3/action3 should have been cancelled.
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            // map3/action3 should have been canceled.
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[1].action, Is.SameAs(action4));
             Assert.That(actions[1].ReadValue<Vector2>,
                 Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)) * new Vector2(1, -1))
@@ -790,8 +790,8 @@ partial class CoreTests
             Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
             Assert.That(actions[1].time, Is.EqualTo(runtime.currentTime).Within(0.00001));
 
-            // map3/action5 should have been cancelled.
-            Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            // map3/action5 should have been canceled.
+            Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[2].action, Is.SameAs(action5));
             Assert.That(actions[2].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
             Assert.That(actions[2].interaction, Is.TypeOf<TapInteraction>());
@@ -1047,12 +1047,12 @@ partial class CoreTests
 
             Assert.That(trace, Is.Empty);
 
-            // Finally, reset the right stick. stickAction should be cancelled.
+            // Finally, reset the right stick. stickAction should be canceled.
             Set(gamepad.rightStick, Vector2.zero);
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
             Assert.That(actions[0].action, Is.SameAs(stickAction));
             Assert.That(actions[0].ReadValue<Vector2>(),
@@ -1096,7 +1096,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.right));
             Assert.That(actions[0].action, Is.SameAs(compositeAction));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
@@ -1136,7 +1136,7 @@ partial class CoreTests
             trace.Clear();
 
             // Press all face buttons and then release them one by one. After the last was released,
-            // buttonAction should be cancelled.
+            // buttonAction should be canceled.
             Press(gamepad.buttonSouth);
             Press(gamepad.buttonNorth);
             Press(gamepad.buttonEast);
@@ -1176,7 +1176,7 @@ partial class CoreTests
             Assert.That(actions[3].control, Is.SameAs(gamepad.buttonNorth));
             Assert.That(actions[3].action, Is.SameAs(buttonAction));
             Assert.That(actions[3].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
-            Assert.That(actions[4].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[4].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[4].control, Is.SameAs(gamepad.buttonNorth));
             Assert.That(actions[4].action, Is.SameAs(buttonAction));
             Assert.That(actions[4].ReadValue<float>(), Is.Zero.Within(0.00001));
@@ -1362,7 +1362,7 @@ partial class CoreTests
 
         var wasStarted = false;
         var wasPerformed = false;
-        var wasCancelled = false;
+        var wasCanceled = false;
 
         map.actionTriggered +=
             ctx =>
@@ -1375,20 +1375,20 @@ partial class CoreTests
                 case InputActionPhase.Started:
                     Assert.That(wasStarted, Is.False);
                     Assert.That(wasPerformed, Is.False);
-                    Assert.That(wasCancelled, Is.False);
+                    Assert.That(wasCanceled, Is.False);
                     wasStarted = true;
                     break;
                 case InputActionPhase.Performed:
                     Assert.That(wasStarted, Is.True);
                     Assert.That(wasPerformed, Is.False);
-                    Assert.That(wasCancelled, Is.False);
+                    Assert.That(wasCanceled, Is.False);
                     wasPerformed = true;
                     break;
-                case InputActionPhase.Cancelled:
+                case InputActionPhase.Canceled:
                     Assert.That(wasStarted, Is.True);
                     Assert.That(wasPerformed, Is.True);
-                    Assert.That(wasCancelled, Is.False);
-                    wasCancelled = true;
+                    Assert.That(wasCanceled, Is.False);
+                    wasCanceled = true;
                     break;
             }
         };
@@ -1399,11 +1399,11 @@ partial class CoreTests
 
         Assert.That(wasStarted, Is.True);
         Assert.That(wasPerformed, Is.True);
-        Assert.That(wasCancelled, Is.False);
+        Assert.That(wasCanceled, Is.False);
 
         Set(gamepad.leftTrigger, 0);
 
-        Assert.That(wasCancelled, Is.True);
+        Assert.That(wasCanceled, Is.True);
     }
 
     [Test]
@@ -1417,11 +1417,11 @@ partial class CoreTests
 
         var receivedStarted = false;
         var receivedPerformed = false;
-        var receivedCancelled = false;
+        var receivedCanceled = false;
 
         action.started += ctx => receivedStarted = true;
         action.performed += ctx => receivedPerformed = true;
-        action.cancelled += ctx => receivedCancelled = true;
+        action.canceled += ctx => receivedCanceled = true;
 
         var receivedChanges = new List<InputActionChange>();
         InputSystem.onActionChange +=
@@ -1435,8 +1435,8 @@ partial class CoreTests
                 case InputActionPhase.Started:
                     Assert.That(receivedStarted, Is.False);
                     break;
-                case InputActionPhase.Cancelled:
-                    Assert.That(receivedCancelled, Is.False);
+                case InputActionPhase.Canceled:
+                    Assert.That(receivedCanceled, Is.False);
                     break;
                 case InputActionPhase.Performed:
                     Assert.That(receivedPerformed, Is.False);
@@ -1454,12 +1454,12 @@ partial class CoreTests
         receivedChanges.Clear();
         receivedStarted = false;
         receivedPerformed = false;
-        receivedCancelled = false;
+        receivedCanceled = false;
 
         Set(gamepad.leftTrigger, 0);
 
         Assert.That(receivedChanges,
-            Is.EquivalentTo(new[] {InputActionChange.ActionCancelled}));
+            Is.EquivalentTo(new[] {InputActionChange.ActionCanceled}));
     }
 
     [Test]
@@ -1618,7 +1618,7 @@ partial class CoreTests
             Assert.That(actions[0].control, Is.EqualTo(gamepad.buttonSouth));
             Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[1].control, Is.EqualTo(gamepad.buttonSouth));
-            Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[2].control, Is.EqualTo(gamepad.buttonSouth));
             // The second start-perform-cancel cycle comes from the fact that we are changing the
             // binding mask. Doing so will cancel all ongoing actions. But because the gamepad button
@@ -1628,13 +1628,13 @@ partial class CoreTests
             Assert.That(actions[3].control, Is.EqualTo(gamepad.buttonSouth));
             Assert.That(actions[4].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[4].control, Is.EqualTo(gamepad.buttonSouth));
-            Assert.That(actions[5].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[5].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[5].control, Is.EqualTo(gamepad.buttonSouth));
             Assert.That(actions[6].phase, Is.EqualTo(InputActionPhase.Started));
             Assert.That(actions[6].control, Is.EqualTo(keyboard.aKey));
             Assert.That(actions[7].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[7].control, Is.EqualTo(keyboard.aKey));
-            Assert.That(actions[8].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[8].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[8].control, Is.EqualTo(keyboard.aKey));
         }
     }
@@ -1889,9 +1889,9 @@ partial class CoreTests
         InputAction startedAction = null;
         InputControl startedControl = null;
 
-        var cancelledReceivedCalls = 0;
-        InputAction cancelledAction = null;
-        InputControl cancelledControl = null;
+        var canceledReceivedCalls = 0;
+        InputAction canceledAction = null;
+        InputControl canceledControl = null;
 
         var action = new InputAction(binding: "<Gamepad>/{primaryAction}", interactions: "hold(duration=0.4)");
         action.performed +=
@@ -1912,14 +1912,14 @@ partial class CoreTests
 
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         };
-        action.cancelled +=
+        action.canceled +=
             ctx =>
         {
-            ++cancelledReceivedCalls;
-            cancelledAction = ctx.action;
-            cancelledControl = ctx.control;
+            ++canceledReceivedCalls;
+            canceledAction = ctx.action;
+            canceledControl = ctx.control;
 
-            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Canceled));
         };
         action.Enable();
 
@@ -1928,7 +1928,7 @@ partial class CoreTests
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
         Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
 
@@ -1939,19 +1939,19 @@ partial class CoreTests
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.EqualTo(1));
-        Assert.That(cancelledAction, Is.SameAs(action));
-        Assert.That(cancelledControl, Is.SameAs(gamepad.buttonSouth));
+        Assert.That(canceledReceivedCalls, Is.EqualTo(1));
+        Assert.That(canceledAction, Is.SameAs(action));
+        Assert.That(canceledControl, Is.SameAs(gamepad.buttonSouth));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
 
-        cancelledReceivedCalls = 0;
+        canceledReceivedCalls = 0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.5);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
         Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
@@ -1963,7 +1963,7 @@ partial class CoreTests
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
         Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
@@ -1973,7 +1973,7 @@ partial class CoreTests
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(performedAction, Is.SameAs(action));
         Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
@@ -2073,7 +2073,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].interaction, Is.TypeOf<MultiTapInteraction>());
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(1.75).Within(0.00001));
@@ -2103,7 +2103,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].interaction, Is.TypeOf<MultiTapInteraction>());
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(4).Within(0.00001));
@@ -2112,7 +2112,7 @@ partial class CoreTests
             trace.Clear();
 
             // Now press and release within tap time. Then press again within delay time but release
-            // only after tap time. Should we started and cancelled.
+            // only after tap time. Should we started and canceled.
             runtime.currentTime = 6;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 4.7);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 4.9);
@@ -2127,7 +2127,7 @@ partial class CoreTests
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(4.7).Within(0.00001));
             Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[1].interaction, Is.TypeOf<MultiTapInteraction>());
             Assert.That(actions[1].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[1].time, Is.EqualTo(5.9).Within(0.00001));
@@ -2786,7 +2786,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].control, Is.SameAs(gamepad1.leftStick));
             Assert.That(actions[0].ReadValue<Vector2>(),
                 Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
@@ -2854,7 +2854,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].control, Is.SameAs(gamepad1.leftStick));
             Assert.That(actions[0].ReadValue<Vector2>(),
                 Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
@@ -3211,7 +3211,7 @@ partial class CoreTests
 
         action.started += ctx => phases.Add(InputActionPhase.Started);
         action.performed += ctx => phases.Add(InputActionPhase.Performed);
-        action.cancelled += ctx => phases.Add(InputActionPhase.Cancelled);
+        action.canceled += ctx => phases.Add(InputActionPhase.Canceled);
 
         // Actuate leftStick below deadzone threshold.
         Set(gamepad.leftStick, new Vector2(0.01f, 0.002f));
@@ -3243,7 +3243,7 @@ partial class CoreTests
         // And go back to default.
         Set(gamepad.leftStick, Vector2.zero);
 
-        Assert.That(phases, Is.EquivalentTo(new[] { InputActionPhase.Cancelled }));
+        Assert.That(phases, Is.EquivalentTo(new[] { InputActionPhase.Canceled }));
     }
 
     [Test]
@@ -3318,7 +3318,7 @@ partial class CoreTests
             // Reset to default state should result in a single cancellation.
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.0001));
             Assert.That(actions[0].time, Is.EqualTo(0.567).Within(0.0001));
             Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
@@ -3394,7 +3394,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].control, Is.SameAs(gamepad.rightTrigger));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
 
@@ -3508,12 +3508,12 @@ partial class CoreTests
                 2.0 + InputSystem.settings.defaultSlowTapTime + 0.0001);
             InputSystem.Update();
 
-            // First tap was started, then cancelled, then slow tap was started, and then performed.
+            // First tap was started, then canceled, then slow tap was started, and then performed.
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(4));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
             Assert.That(actions[0].interaction, Is.TypeOf<TapInteraction>());
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[1].interaction, Is.TypeOf<TapInteraction>());
             Assert.That(actions[2].phase, Is.EqualTo(InputActionPhase.Started));
             Assert.That(actions[2].interaction, Is.TypeOf<SlowTapInteraction>());
@@ -4800,7 +4800,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].control, Is.EqualTo(gamepad.rightTrigger));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
         }
@@ -4849,7 +4849,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
 
             trace.Clear();
@@ -4881,7 +4881,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(4));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.234f).Within(0.00001));
             Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Started));
             Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(-0.123f).Within(0.00001));
@@ -4996,7 +4996,7 @@ partial class CoreTests
 
         Vector2? value = null;
         action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
-        action.cancelled += ctx => { value = ctx.ReadValue<Vector2>(); };
+        action.canceled += ctx => { value = ctx.ReadValue<Vector2>(); };
 
         var pressPoint = gamepad.leftStick.up.pressPointOrDefault;
 
@@ -5136,7 +5136,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0));
 
             trace.Clear();
@@ -5299,7 +5299,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.000001));
         }
     }
@@ -5796,7 +5796,7 @@ partial class CoreTests
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonNorth"));
             Assert.That(rebind.completed, Is.True);
-            Assert.That(rebind.cancelled, Is.False);
+            Assert.That(rebind.canceled, Is.False);
             Assert.That(receivedCompleteCallback, Is.True);
         }
     }
@@ -5831,7 +5831,7 @@ partial class CoreTests
                                Assert.That(receivedCancelCallback, Is.False);
                                receivedCancelCallback = true;
                            })
-                       .WithCancellingThrough(keyboard.escapeKey)
+                       .WithCancelingThrough(keyboard.escapeKey)
                        .Start())
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
@@ -5841,7 +5841,7 @@ partial class CoreTests
             Assert.That(action.bindings[0].path, Is.EqualTo("<Keyboard>/space"));
             Assert.That(action.bindings[0].overridePath, Is.Null);
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.cancelled, Is.True);
+            Assert.That(rebind.canceled, Is.True);
             Assert.That(receivedCancelCallback, Is.True);
         }
     }
@@ -5874,7 +5874,7 @@ partial class CoreTests
             Assert.That(action.bindings[0].path, Is.EqualTo("<Keyboard>/space"));
             Assert.That(action.bindings[0].overridePath, Is.Null);
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.cancelled, Is.True);
+            Assert.That(rebind.canceled, Is.True);
             Assert.That(receivedCancelCallback, Is.True);
         }
     }
@@ -6174,7 +6174,7 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.cancelled, Is.False);
+            Assert.That(rebind.canceled, Is.False);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(action.bindings[0].overridePath, Is.Null);
 
@@ -6183,7 +6183,7 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
-            Assert.That(rebind.cancelled, Is.False);
+            Assert.That(rebind.canceled, Is.False);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
         }
@@ -6543,7 +6543,7 @@ partial class CoreTests
     }
 
     // Optionally, a fixed timeout on the entire operation can be specified. If no relevant input registers
-    // within the given time, the operation is automatically cancelled.
+    // within the given time, the operation is automatically canceled.
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -6743,7 +6743,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
             Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
             Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Started));
@@ -6762,7 +6762,7 @@ partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
             Assert.That(actions[0].control, Is.SameAs(mouse.delta));
         }
