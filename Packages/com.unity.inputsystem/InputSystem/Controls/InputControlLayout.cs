@@ -1732,12 +1732,12 @@ namespace UnityEngine.InputSystem.Layouts
             }
 
             public LayoutNotFoundException(string message, Exception innerException) :
-               base(message, innerException)
+                base(message, innerException)
             {
-
             }
+
             protected LayoutNotFoundException(SerializationInfo info,
-               StreamingContext context) : base(info, context)
+                                              StreamingContext context) : base(info, context)
             {
             }
         }
