@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem
         }
 
         protected unsafe bool OnCarryStateForward(void* statePtr)
-        {          
+        {
             var scrollXChanged = ResetDelta(statePtr, scroll.x);
             var scrollYChanged = ResetDelta(statePtr, scroll.y);
             return scrollXChanged || scrollYChanged || base.OnCarryStateForward(statePtr);
