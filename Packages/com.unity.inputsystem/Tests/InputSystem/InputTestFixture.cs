@@ -168,9 +168,9 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Performed, action, control);
         }
 
-        public ActionConstraint Cancelled(InputAction action, InputControl control = null)
+        public ActionConstraint Canceled(InputAction action, InputControl control = null)
         {
-            return new ActionConstraint(InputActionPhase.Cancelled, action, control);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control);
         }
 
         public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null)
@@ -185,10 +185,10 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction));
         }
 
-        public ActionConstraint Cancelled<TInteraction>(InputAction action, InputControl control = null)
+        public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Cancelled, action, control, interaction: typeof(TInteraction));
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction));
         }
 
         // ReSharper disable once MemberCanBeProtected.Global

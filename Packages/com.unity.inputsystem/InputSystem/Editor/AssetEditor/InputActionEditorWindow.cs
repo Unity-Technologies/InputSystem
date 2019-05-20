@@ -755,7 +755,7 @@ namespace UnityEngine.InputSystem.Editor
                             "Yes, Delete", "No, Cancel");
                         if (!result)
                         {
-                            // User cancelled. Stop the deletion.
+                            // User canceled. Stop the deletion.
                             return AssetDeleteResult.FailedDelete;
                         }
 

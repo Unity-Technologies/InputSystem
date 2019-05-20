@@ -19,7 +19,7 @@ public class Vector2ControlActionStatus : MonoBehaviour
         vector2Action.Enable();
         vector2Action.performed += UpdateVector2;
         vector2Action.started += UpdateVector2;
-        vector2Action.cancelled += UpdateVector2;
+        vector2Action.canceled += UpdateVector2;
 
         ReadOnlyArray<InputControl> controls = vector2Action.controls;
         for (int i = 0; i < controls.Count; i++)
@@ -43,7 +43,7 @@ public class Vector2ControlActionStatus : MonoBehaviour
         vector2Action.Disable();
         vector2Action.performed -= UpdateVector2;
         vector2Action.started -= UpdateVector2;
-        vector2Action.cancelled -= UpdateVector2;
+        vector2Action.canceled -= UpdateVector2;
     }
 
     private void UpdateVector2(InputAction.CallbackContext context)

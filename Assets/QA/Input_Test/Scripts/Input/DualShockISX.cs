@@ -16,22 +16,22 @@ public class DualShockISX : GamepadISX
     {
         //m_discreteButtonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<discreteButton>");
         //m_discreteButtonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
-        //m_discreteButtonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
+        //m_discreteButtonAction.canceled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
         //m_discreteButtonAction.Enable();
 
         m_buttonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
-        m_buttonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
+        m_buttonAction.canceled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
         m_buttonAction.Enable();
 
         m_dPadAction = new InputAction(name: "DualShockDpadAction", binding: "*DualShock*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
-        m_dPadAction.cancelled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
+        m_dPadAction.canceled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
         m_stickMoveAction = new InputAction(name: "DualShockStickMoveAction", binding: "*DualShock*/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
-        m_stickMoveAction.cancelled += callbackContext => StickMove(callbackContext.control as StickControl);
+        m_stickMoveAction.canceled += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }
 

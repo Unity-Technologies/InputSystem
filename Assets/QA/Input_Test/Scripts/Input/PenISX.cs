@@ -46,7 +46,7 @@ public class PenISX : MonoBehaviour
 
         m_penAction = new InputAction(name: "PenButtonAction", binding: "<pen>/<button>");
         m_penAction.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
-        m_penAction.cancelled += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
+        m_penAction.canceled += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
         m_penAction.Enable();
     }
 

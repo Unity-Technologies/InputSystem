@@ -112,7 +112,12 @@ namespace UnityEngine.InputSystem.Plugins.Linux
     /// <summary>
     /// A small helper class to aid in initializing and registering SDL devices and layout builders.
     /// </summary>
-    public static class LinuxSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class LinuxSupport
     {
         /// <summary>
         /// The current interface code sent with devices to identify as Linux SDL devices.
