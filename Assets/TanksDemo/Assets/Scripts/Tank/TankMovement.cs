@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem.PlayerInput;
+using UnityEngine.SceneManagement;
 
 public class TankMovement : MonoBehaviour
 {
@@ -138,5 +139,12 @@ public class TankMovement : MonoBehaviour
     private void OnTurret(InputValue value)
     {
         m_TurnInputValue = value.Get<Vector2>().x;
+    }
+
+    // The callback from the TanksInputActions Player Input asset that is
+    // triggered from the "Pause" action.
+    private void OnPause(InputValue value)
+    {
+        SceneManager.LoadScene("ButtonRemapScreen");
     }
 }

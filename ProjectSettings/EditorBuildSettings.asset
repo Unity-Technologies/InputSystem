@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/TanksDemo/Assets/Scenes/NewInput.unity
     guid: 37961ba4d27bd46428d20c2ffe403dc3
+  - enabled: 1
+    path: Assets/TanksDemo/Assets/Scenes/ButtonRemapScreen.unity
+    guid: 6d897b03f2c393542b51d405e97f9f92
   m_configObjects: {}

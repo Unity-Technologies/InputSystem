@@ -48,6 +48,17 @@
                     "processors": "",
                     "interactions": "Press(behavior=2)",
                     "bindings": []
+                },
+                {
+                    "name": "Pause",
+                    "id": "020abfe6-6083-46ec-9487-3aa2ecb330f3",
+                    "expectedControlLayout": "",
+                    "continuous": false,
+                    "passThrough": false,
+                    "initialStateCheck": false,
+                    "processors": "",
+                    "interactions": "Press(behavior=2)",
+                    "bindings": []
                 }
             ],
             "bindings": [
@@ -95,6 +106,18 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "id": "b334854f-0cd4-4206-ace7-b41c95c0e45a",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false,
                     "modifiers": ""
