@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.UI;
 
 public static class Extensions
 {

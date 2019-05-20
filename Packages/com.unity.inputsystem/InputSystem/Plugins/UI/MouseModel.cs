@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// A series of flags to determine if a button has been pressed or released since the last time checked.

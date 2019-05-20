@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct SendBufferedHapticCommand : IInputDeviceCommandInfo

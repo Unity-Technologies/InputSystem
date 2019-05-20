@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.PlayerInput;
-using UnityEngine.InputSystem.Plugins.UI;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.PlayerInput;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Processors;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
@@ -626,7 +626,7 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCancelled()
+    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCanceled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// A modified EventSystem class, which allows multiple players to have their own instances of a UI,

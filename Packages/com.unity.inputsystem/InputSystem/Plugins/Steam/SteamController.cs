@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
-using UnityEngine.InputSystem.Plugins.Steam.Editor;
+using UnityEngine.InputSystem.Steam.Editor;
 #endif
 
 ////TODO: support action set layers
 
-namespace UnityEngine.InputSystem.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
     /// <summary>
     /// Base class for controllers made available through the Steam controller API.

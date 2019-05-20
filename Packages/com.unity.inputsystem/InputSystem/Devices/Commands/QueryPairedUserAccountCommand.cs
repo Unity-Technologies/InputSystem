@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// The system had been displaying a prompt
             /// </summary>
             /// <seealso cref="InitiateUserAccountPairingCommand"/>
-            UserAccountSelectionCancelled = 1 << 4,
+            UserAccountSelectionCanceled = 1 << 4,
         }
 
         [FieldOffset(0)]

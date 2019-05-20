@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Interactions
                     context.PerformedAndGoBackToWaiting();
                 else
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
-                    context.Cancelled();
+                    context.Canceled();
             }
         }
 
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_DurationSetting.Initialize("Min Tap Duration",
                 "Minimum time (in seconds) that a control has to be held for it to register as a slow tap. If the control is released "
-                + "before this time, the slow tap is cancelled.",
+                + "before this time, the slow tap is canceled.",
                 "Default Slow Tap Time",
                 () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultSlowTapTime);
             m_PressPointSetting.Initialize("Press Point",

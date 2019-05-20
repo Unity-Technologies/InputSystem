@@ -3,7 +3,7 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: speaker, touchpad
 
-namespace UnityEngine.InputSystem.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// A Sony DualShock controller.

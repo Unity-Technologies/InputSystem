@@ -14,7 +14,7 @@ using UnityEngine.Profiling;
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
 
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// Represents a specific user/player interacting with one or more devices and input actions.
@@ -816,7 +816,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// to the user. Instead, pairing is deferred to until after an account selection has been made by the user.
         /// In this case, <see cref="InputUserChange.AccountSelectionInProgress"/> will be signalled through <see cref="onChange"/>
         /// and <see cref="InputUserChange.AccountChanged"/> will be signalled once the user has selected an account or
-        /// <see cref="InputUserChange.AccountSelectionCancelled"/> will be signalled if the user cancels account
+        /// <see cref="InputUserChange.AccountSelectionCanceled"/> will be signalled if the user cancels account
         /// selection. The device will be paired to the user once account selection is complete.
         ///
         /// This behavior is most useful on Xbox and Switch to require the user to choose which account to play with. Note that
@@ -1374,7 +1374,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
                 // weird for the device to no signal it does not support querying user account, but
                 // just to be safe, we check.
                 if ((s_AllUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
-                    Notify(userIndex, InputUserChange.AccountSelectionCancelled, null);
+                    Notify(userIndex, InputUserChange.AccountSelectionCanceled, null);
 
                 s_AllUserData[userIndex].platformUserAccountHandle = null;
                 s_AllUserData[userIndex].platformUserAccountName = null;
@@ -1392,10 +1392,10 @@ namespace UnityEngine.InputSystem.Plugins.Users
                 {
                     // No, still in progress.
                 }
-                else if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled) != 0)
+                else if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled) != 0)
                 {
-                    // Got cancelled.
-                    Notify(userIndex, InputUserChange.AccountSelectionCancelled, device);
+                    // Got canceled.
+                    Notify(userIndex, InputUserChange.AccountSelectionCanceled, device);
                 }
                 else
                 {

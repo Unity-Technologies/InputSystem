@@ -9,7 +9,7 @@ using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: refresh metrics on demand

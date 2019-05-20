@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: set displayNames of the controls according to Xbox controller standards
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
     /// An XInput compatible game controller.

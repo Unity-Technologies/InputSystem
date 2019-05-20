@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.Switch;
-using UnityEngine.InputSystem.Plugins.Switch.LowLevel;
+using UnityEngine.InputSystem.Switch;
+using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Processors;
 
 internal class SwitchTests : InputTestFixture

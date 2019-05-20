@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.WebGL;
-using UnityEngine.InputSystem.Plugins.WebGL.LowLevel;
+using UnityEngine.InputSystem.WebGL;
+using UnityEngine.InputSystem.WebGL.LowLevel;
 
 internal class WebGLTests : InputTestFixture
 {

@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
