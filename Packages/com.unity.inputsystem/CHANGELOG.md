@@ -9,6 +9,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [0.3.0-preview] - 2020-1-1
 
+### Fixed
+
+#### Actions
+
+- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+
 ### Added
 
 ### Changed
