@@ -126,6 +126,12 @@ namespace UnityEngine.InputSystem
 
         public IMECompositionString(string characters)
         {
+            if (string.IsNullOrEmpty(characters))
+            {
+                size = 0;
+                return;
+            }
+
             Debug.Assert(characters.Length < LowLevel.IMECompositionEvent.kIMECharBufferSize);
             size = characters.Length;
             fixed(char* ptr = buffer)

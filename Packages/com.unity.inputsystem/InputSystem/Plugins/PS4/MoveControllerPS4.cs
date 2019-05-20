@@ -231,6 +231,9 @@ namespace UnityEngine.InputSystem.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             selectButton = builder.GetControl<ButtonControl>(this, "select");
             triggerButton = builder.GetControl<ButtonControl>(this, "triggerButton");
             moveButton = builder.GetControl<ButtonControl>(this, "move");

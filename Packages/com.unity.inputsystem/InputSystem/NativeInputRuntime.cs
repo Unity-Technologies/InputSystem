@@ -36,8 +36,12 @@ namespace UnityEngine.InputSystem.LowLevel
             NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "False positive.")]
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
+            if (commandPtr == null)
+                throw new System.ArgumentNullException(nameof(commandPtr));
+
             return NativeInputSystem.IOCTL(deviceId, commandPtr->type, new IntPtr(commandPtr->payloadPtr), commandPtr->payloadSizeInBytes);
         }
 

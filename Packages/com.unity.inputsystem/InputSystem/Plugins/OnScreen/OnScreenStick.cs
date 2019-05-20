@@ -15,11 +15,17 @@ namespace UnityEngine.InputSystem.OnScreen
     {
         public void OnPointerDown(PointerEventData data)
         {
+            if (data == null)
+                throw new System.ArgumentNullException(nameof(data));
+
             RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
         }
 
         public void OnDrag(PointerEventData data)
         {
+            if (data == null)
+                throw new System.ArgumentNullException(nameof(data));
+
             RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out var position);
             var delta = position - m_PointerDownPos;
 

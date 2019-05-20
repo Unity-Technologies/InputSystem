@@ -160,6 +160,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             scroll = builder.GetControl<Vector2Control>(this, "scroll");
             leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
             middleButton = builder.GetControl<ButtonControl>(this, "middleButton");

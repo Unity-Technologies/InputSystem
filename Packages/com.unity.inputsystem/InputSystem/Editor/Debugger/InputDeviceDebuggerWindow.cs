@@ -47,6 +47,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void CreateOrShowExisting(InputDevice device)
         {
+            if (device == null)
+                throw new System.ArgumentNullException(nameof(device));
+
             // See if we have an existing window for the device and if so pop it
             // in front.
             if (s_OpenDebuggerWindows != null)

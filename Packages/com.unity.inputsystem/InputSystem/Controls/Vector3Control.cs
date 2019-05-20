@@ -23,6 +23,9 @@ namespace UnityEngine.InputSystem.Controls
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             x = builder.GetControl<AxisControl>(this, "x");
             y = builder.GetControl<AxisControl>(this, "y");
             z = builder.GetControl<AxisControl>(this, "z");

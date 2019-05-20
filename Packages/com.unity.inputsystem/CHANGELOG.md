@@ -11,6 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Validate all parameters on public APIs.
+
 #### Actions
 
 - Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
