@@ -267,7 +267,7 @@ namespace UnityEngine.InputSystem
         //       sending state to any other device. The code here only presents an alternate path for sending
         //       state to a Touchscreen and have it perform touch allocation internally.
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        protected unsafe bool OnCarryStateForward(void* statePtr)
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
@@ -307,7 +307,12 @@ namespace UnityEngine.InputSystem
             return haveChangedState;
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        {
+            return OnCarryStateForward(statePtr);
+        }
+
+        protected unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             if (stateFormat != TouchState.kFormat)
@@ -367,7 +372,17 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+            ref uint offsetToStoreAt)
+        {
+            return OnReceiveStateWithDifferentFormat(statePtr, stateFormat, stateSize, ref offsetToStoreAt);
+        }
+
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        {
+        }
+
+        protected  unsafe void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 
