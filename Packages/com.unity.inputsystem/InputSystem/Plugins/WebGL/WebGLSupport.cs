@@ -1,7 +1,7 @@
 #if UNITY_WEBGL || UNITY_EDITOR
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.WebGL
+namespace UnityEngine.InputSystem.WebGL
 {
 #if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
     public

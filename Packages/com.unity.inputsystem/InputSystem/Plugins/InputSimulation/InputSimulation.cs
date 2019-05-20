@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Utilities;
 
 //need to figure out what to do about simulation that feeds into other simulation
 
-namespace UnityEngine.InputSystem.Plugins.InputSimulation
+namespace UnityEngine.InputSystem.InputSimulation
 {
     /// <summary>
     /// Simulates input one or more devices from input on one or more other devices.

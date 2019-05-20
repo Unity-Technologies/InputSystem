@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make this survive domain reloads
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// Base class for on-screen controls.

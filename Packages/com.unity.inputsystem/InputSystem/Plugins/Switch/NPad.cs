@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.Switch.LowLevel;
+using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: The Switch controller can be used to point at things; can we somehow help leverage that?
 
-namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
+namespace UnityEngine.InputSystem.Switch.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for Switch NPad controllers.
@@ -325,7 +325,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Switch
+namespace UnityEngine.InputSystem.Switch
 {
     /// <summary>
     /// An NPad controller for Switch, which can be a Joy-Con.

@@ -1,5 +1,5 @@
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.XInput;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Processors;
 
 #if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
 internal class XInputTests : InputTestFixture

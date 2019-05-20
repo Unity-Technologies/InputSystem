@@ -3,7 +3,7 @@ using System;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
     /// <summary>
     /// Adds support for Steam controllers.

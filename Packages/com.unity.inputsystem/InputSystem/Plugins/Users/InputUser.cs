@@ -14,7 +14,7 @@ using UnityEngine.Profiling;
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
 
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// Represents a specific user/player interacting with one or more devices and input actions.

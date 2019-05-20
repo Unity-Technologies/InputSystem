@@ -46,6 +46,7 @@ however, it has to be formatted properly to pass verification tests.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
 - Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
+- Removed `Plugins` from all namespaces.
 - Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
 
 ### Fixed

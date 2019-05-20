@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.iOS
+namespace UnityEngine.InputSystem.iOS
 {
 #if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
     public

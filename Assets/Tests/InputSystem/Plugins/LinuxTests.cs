@@ -3,7 +3,7 @@ using NUnit.Framework;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Plugins.Linux;
+using UnityEngine.InputSystem.Linux;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 

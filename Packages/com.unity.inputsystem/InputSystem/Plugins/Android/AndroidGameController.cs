@@ -3,10 +3,10 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantGamepad)]
     public class AndroidGamepad : Gamepad

@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     /// <summary>
     /// Adds support for PS4 controllers.
