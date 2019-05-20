@@ -4,8 +4,8 @@ using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.PS4;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.PS4;
+using UnityEngine.InputSystem.PS4.LowLevel;
 using UnityEngine.InputSystem.Processors;
 
 public class PS4Tests : InputTestFixture

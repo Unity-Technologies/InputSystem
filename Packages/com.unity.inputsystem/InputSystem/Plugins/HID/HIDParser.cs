@@ -6,7 +6,7 @@ using System.Collections.Generic;
 ////TODO: designator support
 
 #pragma warning disable CS0649
-namespace UnityEngine.InputSystem.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
     /// <summary>
     /// Turns binary HID descriptors into <see cref="HID.HIDDeviceDescriptor"/> instances.

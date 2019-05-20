@@ -1,12 +1,12 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
     public enum AndroidSensorType
     {
@@ -155,7 +155,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
     public class AndroidAccelerometer : Accelerometer

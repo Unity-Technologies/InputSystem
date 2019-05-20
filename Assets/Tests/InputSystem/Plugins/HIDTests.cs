@@ -7,7 +7,7 @@ using System.Threading;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;

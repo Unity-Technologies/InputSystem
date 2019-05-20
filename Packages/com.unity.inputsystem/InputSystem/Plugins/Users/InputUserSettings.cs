@@ -16,7 +16,7 @@ using System;
 
 ////REVIEW: add ability to have per-device (or device layout?) settings?
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// A user profile may alter select aspects of input behavior at runtime.

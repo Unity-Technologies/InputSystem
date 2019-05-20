@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenStick component
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// A stick control displayed on screen and moved around by touch or other pointer

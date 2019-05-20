@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.DualShock.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: figure out sensor formats and add support for acceleration, angularVelocity, and orientation (also add to base layout then)
 
-namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
+namespace UnityEngine.InputSystem.DualShock.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
@@ -138,7 +138,7 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.

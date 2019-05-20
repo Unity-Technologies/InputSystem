@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     /// <summary>
     /// A device command sent to a device to set it's motor rumble amplitude for a set duration.

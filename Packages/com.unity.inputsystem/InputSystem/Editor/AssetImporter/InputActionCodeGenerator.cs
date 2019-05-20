@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
-////TODO: unify the generated events so that performed, cancelled, and started all go into a single event
+////TODO: unify the generated events so that performed, canceled, and started all go into a single event
 
 ////TODO: look up actions and maps by ID rather than by name
 
@@ -236,7 +236,7 @@ namespace UnityEngine.InputSystem.Editor
 
                     writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                     writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.cancelled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                 }
                 writer.EndBlock();
 
@@ -251,7 +251,7 @@ namespace UnityEngine.InputSystem.Editor
 
                     writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
                     writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.cancelled += instance.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.canceled += instance.On{actionTypeName};");
                 }
                 writer.EndBlock();
                 writer.EndBlock();

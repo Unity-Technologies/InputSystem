@@ -540,38 +540,38 @@ public class DemoControls : IInputActionCollection
             {
                 fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
                 fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                fire.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
                 move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
                 move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                move.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
                 look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
                 look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                look.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
                 menu.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
                 menu.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
-                menu.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
+                menu.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMenu;
                 steamEnterMenu.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnSteamEnterMenu;
                 steamEnterMenu.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnSteamEnterMenu;
-                steamEnterMenu.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnSteamEnterMenu;
+                steamEnterMenu.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnSteamEnterMenu;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
             {
                 fire.started += instance.OnFire;
                 fire.performed += instance.OnFire;
-                fire.cancelled += instance.OnFire;
+                fire.canceled += instance.OnFire;
                 move.started += instance.OnMove;
                 move.performed += instance.OnMove;
-                move.cancelled += instance.OnMove;
+                move.canceled += instance.OnMove;
                 look.started += instance.OnLook;
                 look.performed += instance.OnLook;
-                look.cancelled += instance.OnLook;
+                look.canceled += instance.OnLook;
                 menu.started += instance.OnMenu;
                 menu.performed += instance.OnMenu;
-                menu.cancelled += instance.OnMenu;
+                menu.canceled += instance.OnMenu;
                 steamEnterMenu.started += instance.OnSteamEnterMenu;
                 steamEnterMenu.performed += instance.OnSteamEnterMenu;
-                steamEnterMenu.cancelled += instance.OnSteamEnterMenu;
+                steamEnterMenu.canceled += instance.OnSteamEnterMenu;
             }
         }
     }
@@ -612,38 +612,38 @@ public class DemoControls : IInputActionCollection
             {
                 navigate.started -= m_Wrapper.m_MenuActionsCallbackInterface.OnNavigate;
                 navigate.performed -= m_Wrapper.m_MenuActionsCallbackInterface.OnNavigate;
-                navigate.cancelled -= m_Wrapper.m_MenuActionsCallbackInterface.OnNavigate;
+                navigate.canceled -= m_Wrapper.m_MenuActionsCallbackInterface.OnNavigate;
                 click.started -= m_Wrapper.m_MenuActionsCallbackInterface.OnClick;
                 click.performed -= m_Wrapper.m_MenuActionsCallbackInterface.OnClick;
-                click.cancelled -= m_Wrapper.m_MenuActionsCallbackInterface.OnClick;
+                click.canceled -= m_Wrapper.m_MenuActionsCallbackInterface.OnClick;
                 steamExitMenu.started -= m_Wrapper.m_MenuActionsCallbackInterface.OnSteamExitMenu;
                 steamExitMenu.performed -= m_Wrapper.m_MenuActionsCallbackInterface.OnSteamExitMenu;
-                steamExitMenu.cancelled -= m_Wrapper.m_MenuActionsCallbackInterface.OnSteamExitMenu;
+                steamExitMenu.canceled -= m_Wrapper.m_MenuActionsCallbackInterface.OnSteamExitMenu;
                 submit.started -= m_Wrapper.m_MenuActionsCallbackInterface.OnSubmit;
                 submit.performed -= m_Wrapper.m_MenuActionsCallbackInterface.OnSubmit;
-                submit.cancelled -= m_Wrapper.m_MenuActionsCallbackInterface.OnSubmit;
+                submit.canceled -= m_Wrapper.m_MenuActionsCallbackInterface.OnSubmit;
                 point.started -= m_Wrapper.m_MenuActionsCallbackInterface.OnPoint;
                 point.performed -= m_Wrapper.m_MenuActionsCallbackInterface.OnPoint;
-                point.cancelled -= m_Wrapper.m_MenuActionsCallbackInterface.OnPoint;
+                point.canceled -= m_Wrapper.m_MenuActionsCallbackInterface.OnPoint;
             }
             m_Wrapper.m_MenuActionsCallbackInterface = instance;
             if (instance != null)
             {
                 navigate.started += instance.OnNavigate;
                 navigate.performed += instance.OnNavigate;
-                navigate.cancelled += instance.OnNavigate;
+                navigate.canceled += instance.OnNavigate;
                 click.started += instance.OnClick;
                 click.performed += instance.OnClick;
-                click.cancelled += instance.OnClick;
+                click.canceled += instance.OnClick;
                 steamExitMenu.started += instance.OnSteamExitMenu;
                 steamExitMenu.performed += instance.OnSteamExitMenu;
-                steamExitMenu.cancelled += instance.OnSteamExitMenu;
+                steamExitMenu.canceled += instance.OnSteamExitMenu;
                 submit.started += instance.OnSubmit;
                 submit.performed += instance.OnSubmit;
-                submit.cancelled += instance.OnSubmit;
+                submit.canceled += instance.OnSubmit;
                 point.started += instance.OnPoint;
                 point.performed += instance.OnPoint;
-                point.cancelled += instance.OnPoint;
+                point.canceled += instance.OnPoint;
             }
         }
     }

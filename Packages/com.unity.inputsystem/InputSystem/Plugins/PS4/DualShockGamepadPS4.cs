@@ -6,14 +6,14 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.PS4.LowLevel;
 
 ////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
 
 ////TODO: player ID
 #pragma warning disable 0649
-namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -244,7 +244,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]

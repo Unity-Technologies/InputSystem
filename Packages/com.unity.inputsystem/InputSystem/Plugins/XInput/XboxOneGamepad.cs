@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: player ID
 
-namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -185,7 +185,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
     public class XboxOneGamepad : XInputController, IXboxOneRumble

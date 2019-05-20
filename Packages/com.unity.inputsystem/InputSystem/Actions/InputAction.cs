@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
 ////        the system fits together.
 
-////REVIEW: have single delegate instead of separate performed/started/cancelled callbacks?
+////REVIEW: have single delegate instead of separate performed/started/canceled callbacks?
 
 ////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls' and 'bindings')
 
@@ -325,13 +325,13 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Event that is triggered when the action has been <see cref="started"/>
-        /// but then cancelled before being fully <see cref="performed"/>.
+        /// but then canceled before being fully <see cref="performed"/>.
         /// </summary>
-        /// <see cref="InputActionPhase.Cancelled"/>
-        public event Action<CallbackContext> cancelled
+        /// <see cref="InputActionPhase.Canceled"/>
+        public event Action<CallbackContext> canceled
         {
-            add => m_OnCancelled.Append(value);
-            remove => m_OnCancelled.Remove(value);
+            add => m_OnCanceled.Append(value);
+            remove => m_OnCanceled.Remove(value);
         }
 
         /// <summary>
@@ -488,7 +488,7 @@ namespace UnityEngine.InputSystem
 
         // Listeners. No array allocations if only a single listener.
         [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnStarted;
-        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnCancelled;
+        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnCanceled;
         [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
@@ -600,7 +600,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <seealso cref="performed"/>
         /// <seealso cref="started"/>
-        /// <seealso cref="cancelled"/>
+        /// <seealso cref="canceled"/>
         /// <seealso cref="InputActionMap.actionTriggered"/>
         public struct CallbackContext
         {
@@ -626,7 +626,7 @@ namespace UnityEngine.InputSystem
 
             public bool performed => phase == InputActionPhase.Performed;
 
-            public bool cancelled => phase == InputActionPhase.Cancelled;
+            public bool canceled => phase == InputActionPhase.Canceled;
 
             /// <summary>
             /// The action that got triggered.

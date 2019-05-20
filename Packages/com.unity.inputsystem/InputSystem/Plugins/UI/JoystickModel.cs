@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// Represents the state of a joystick in the uGUI system. Keeps track of various book-keeping regarding UI selection, and move and button states.

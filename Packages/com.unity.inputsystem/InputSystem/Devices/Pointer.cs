@@ -82,7 +82,7 @@ namespace UnityEngine.InputSystem
         Began,
         Moved,
         Ended,
-        Cancelled,
+        Canceled,
         Stationary,
     }
 

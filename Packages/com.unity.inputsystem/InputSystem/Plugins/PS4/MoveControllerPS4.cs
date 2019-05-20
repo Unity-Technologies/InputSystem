@@ -6,11 +6,11 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Haptics;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.PS4.LowLevel;
 
 ////TODO: player ID
 
-namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -114,7 +114,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     //Sync to PS4MoveDeviceDefinition in sixaxis.cpp
     [Serializable]
