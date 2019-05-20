@@ -1085,9 +1085,6 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            // Conflict resolution for composites does NOT keep track of which individual control in a composite
-            // triggered last but rather locks on to the first control in the composite.
-            ////REVIEW: do we care enough to want the right control here?
             Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.left));
             Assert.That(actions[0].action, Is.SameAs(compositeAction));
             Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
@@ -1100,7 +1097,6 @@ partial class CoreTests
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
             Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
-            // Same as above. Conflict resolution locks us to first control in composite.
             Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.right));
             Assert.That(actions[0].action, Is.SameAs(compositeAction));
             Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
@@ -5057,7 +5053,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_Vector2Composite_ReportsCorrectControlInCallback()
+    public void Actions_CompositesReportControlThatTriggeredTheCompositeInCallback()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
