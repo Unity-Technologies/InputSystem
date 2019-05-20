@@ -168,8 +168,8 @@ namespace UnityEngine.InputSystem.Utilities
             var field = instanceType.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
-                throw new Exception(
-                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)");
+                throw new ArgumentException(
+                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)", nameof(instance));
 
             ////REVIEW: would be awesome to be able to do this without boxing
             var fieldTypeCode = Type.GetTypeCode(field.FieldType);

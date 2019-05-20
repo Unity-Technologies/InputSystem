@@ -66,10 +66,12 @@ namespace UnityEngine.InputSystem.Steam
         /// </summary>
         public SteamHandle<SteamController> steamControllerHandle { get; internal set; }
 
+        /*
+         * TODO
         public SteamControllerType steamControllerType
         {
             get { throw new NotImplementedException(); }
-        }
+        }*/
 
         /// <summary>
         /// The list of Steam action sets supported by this controller.

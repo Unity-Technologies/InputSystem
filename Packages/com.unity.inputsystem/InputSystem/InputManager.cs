@@ -1141,7 +1141,7 @@ namespace UnityEngine.InputSystem
         public InputDevice TryGetDevice(string nameOrLayout)
         {
             if (string.IsNullOrEmpty(nameOrLayout))
-                throw new ArgumentException("nameOrLayout");
+                throw new ArgumentException("Name is null or empty.", nameof(nameOrLayout));
 
             if (m_DevicesCount == 0)
                 return null;
@@ -1163,7 +1163,7 @@ namespace UnityEngine.InputSystem
         {
             var device = TryGetDevice(nameOrLayout);
             if (device == null)
-                throw new Exception($"Cannot find device with name or layout '{nameOrLayout}'");
+                throw new ArgumentException($"Cannot find device with name or layout '{nameOrLayout}'", nameof(nameOrLayout));
 
             return device;
         }
@@ -1760,7 +1760,7 @@ namespace UnityEngine.InputSystem
                 // but let's make sure.
                 var existingDeviceWithId = TryGetDeviceById(device.id);
                 if (existingDeviceWithId != null)
-                    throw new Exception(
+                    throw new InvalidOperationException(
                         $"Duplicate device ID {device.id} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
             }
             else

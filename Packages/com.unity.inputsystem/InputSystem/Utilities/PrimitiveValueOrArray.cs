@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (!isArray)
                 return primitiveValue.ToString();
 
-            throw new NotImplementedException();
+            return "<Array>";
         }
 
         public static PrimitiveValueOrArray FromString(string value)

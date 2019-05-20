@@ -117,7 +117,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (string.IsNullOrEmpty(m_AssetPath))
-                throw new Exception("Could not determine asset path for " + m_AssetGUID);
+                throw new InvalidOperationException("Could not determine asset path for " + m_AssetGUID);
 
             m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
         }

@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
                 case GamepadButton.DpadRight: index = 15; break;
 
                 default:
-                    throw new InvalidEnumArgumentException("button");
+                    throw new InvalidEnumArgumentException(nameof(button), (int)button, typeof(GamepadButton));
             }
 
             SetValue(NumAxes + index, value);

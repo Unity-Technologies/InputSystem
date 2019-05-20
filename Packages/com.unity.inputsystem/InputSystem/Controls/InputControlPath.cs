@@ -671,7 +671,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(path[indexInPath] == '{');
             ++indexInPath;
             if (indexInPath == pathLength)
-                throw new Exception($"Invalid path spec '{path}'; trailing '{{'");
+                throw new ArgumentException($"Invalid path spec '{path}'; trailing '{{'", nameof(path));
 
             TControl lastMatch = null;
 

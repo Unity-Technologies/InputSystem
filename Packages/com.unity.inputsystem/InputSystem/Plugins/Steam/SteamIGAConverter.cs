@@ -578,16 +578,13 @@ namespace UnityEngine.InputSystem.Steam.Editor
             // Make sure we have an expected control layout.
             var expectedControlLayout = action.expectedControlLayout;
             if (string.IsNullOrEmpty(expectedControlLayout))
-                throw new Exception(string.Format(
-                    "Cannot determine Steam input type for action '{0}' that has no associated expected control layout",
-                    action));
+                throw new ArgumentException($"Cannot determine Steam input type for action '{action}' that has no associated expected control layout",
+                    nameof(action));
 
             // Try to fetch the layout.
             var layout = EditorInputControlLayoutCache.TryGetLayout(expectedControlLayout);
             if (layout == null)
-                throw new Exception(string.Format(
-                    "Cannot determine Steam input type for action '{0}'; cannot find layout '{1}'", action,
-                    expectedControlLayout));
+                throw new ArgumentException($"Cannot determine Steam input type for action '{action}'; cannot find layout '{expectedControlLayout}'", nameof(action));
 
             // Map our supported control types.
             var controlType = layout.type;
@@ -599,9 +596,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 return "StickPadGyro";
 
             // Everything else throws.
-            throw new Exception(string.Format(
-                "Cannot determine Steam input type for action '{0}'; layout '{1}' with control type '{2}' has no known representation in the Steam controller API",
-                action, expectedControlLayout, controlType.Name));
+            throw new ArgumentException($"Cannot determine Steam input type for action '{action}'; layout '{expectedControlLayout}' with control type '{ controlType.Name}' has no known representation in the Steam controller API", nameof(action));
         }
 
         public static Dictionary<string, object> ParseVDF(string vdf)
@@ -629,7 +624,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 ParseKeyValuePair(result);
                 SkipWhitespace();
                 if (position < length)
-                    throw new Exception(string.Format("Parse error at {0} in '{1}'; not expecting any more input", position, vdf));
+                    throw new InvalidOperationException($"Parse error at {position} in '{vdf}'; not expecting any more input");
                 return result;
             }
 
@@ -641,8 +636,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
 
                 SkipWhitespace();
                 if (position == length)
-                    throw new Exception(string.Format("Expecting value or object at position {0} in '{1}'",
-                        position, vdf));
+                    throw new InvalidOperationException($"Expecting value or object at position {position} in '{vdf}'");
 
                 var nextChar = vdf[position];
                 if (nextChar == '"')
@@ -657,8 +651,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 }
                 else
                 {
-                    throw new Exception(string.Format("Expecting value or object at position {0} in '{1}'",
-                        position, vdf));
+                    throw new InvalidOperationException($"Expecting value or object at position {position} in '{vdf}'");
                 }
 
                 return true;
@@ -699,7 +692,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
 
                 SkipWhitespace();
                 if (position == length || vdf[position] != '}')
-                    throw new Exception(string.Format("Expecting '}}' at position {0} in '{1}'", position, vdf));
+                    throw new InvalidOperationException($"Expecting '}}' at position {position} in '{vdf}'");
                 ++position;
 
                 return result;

@@ -461,9 +461,7 @@ namespace UnityEngine.InputSystem
             {
                 var interactionName = InputProcessor.s_Processors.FindNameForType(typeof(TInteraction));
                 if (interactionName.IsEmpty())
-                    throw new ArgumentException(
-                        $"Type '{typeof(TInteraction)}' has not been registered as a processor",
-                        "TInteraction");
+                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a processor");
 
                 return WithInteraction(interactionName);
             }
@@ -500,9 +498,7 @@ namespace UnityEngine.InputSystem
             {
                 var processorName = InputProcessor.s_Processors.FindNameForType(typeof(TProcessor));
                 if (processorName.IsEmpty())
-                    throw new ArgumentException(
-                        $"Type '{typeof(TProcessor)}' has not been registered as a processor",
-                        "TProcessor");
+                    throw new NotSupportedException($"Type '{typeof(TProcessor)}' has not been registered as a processor");
 
                 return WithProcessor(processorName);
             }
