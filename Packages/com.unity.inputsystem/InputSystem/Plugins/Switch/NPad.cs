@@ -287,6 +287,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public const float DefaultFrequencyLow = 160.0f;
         public const float DefaultFrequencyHigh = 320.0f;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32")]
         public enum NPadRumblePostion : byte
         {
             Left = 0x02,
@@ -343,6 +344,7 @@ namespace UnityEngine.InputSystem.Switch
         public QuaternionControl attitude { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32")]
         public enum Orientation : byte
         {
             Vertical,
@@ -350,6 +352,7 @@ namespace UnityEngine.InputSystem.Switch
             Default = Vertical,
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32")]
         public enum NpadId : byte
         {
             No1 = 0x00,

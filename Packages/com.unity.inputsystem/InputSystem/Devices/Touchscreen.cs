@@ -125,7 +125,6 @@ namespace UnityEngine.InputSystem.LowLevel
 
 namespace UnityEngine.InputSystem
 {
-    [Flags]
     public enum TouchFlags
     {
         IndirectTouch

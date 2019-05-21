@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
-        public enum Button
+        private enum Button
         {
             L3 = 1,
             R3 = 2,
