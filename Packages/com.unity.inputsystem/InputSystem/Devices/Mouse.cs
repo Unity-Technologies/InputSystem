@@ -175,7 +175,7 @@ namespace UnityEngine.InputSystem
             return OnCarryStateForward(statePtr);
         }
 
-        protected unsafe bool OnCarryStateForward(void* statePtr)
+        protected unsafe new bool OnCarryStateForward(void* statePtr)
         {
             var scrollXChanged = ResetDelta(statePtr, scroll.x);
             var scrollYChanged = ResetDelta(statePtr, scroll.y);
@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem
             OnBeforeWriteNewState(oldStatePtr, newStatePtr);
         }
 
-        protected unsafe void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        protected unsafe new void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
             ////REVIEW: this sucks for actions; they see each value change but the changes are no longer independent;
             ////        is accumulation really something we want? should we only reset?
