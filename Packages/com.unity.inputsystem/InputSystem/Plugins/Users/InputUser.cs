@@ -1755,7 +1755,7 @@ namespace UnityEngine.InputSystem.Users
         private uint m_Id;
 
         [Flags]
-        public enum UserFlags
+        internal enum UserFlags
         {
             BindToAllDevices = 1 << 0,
 

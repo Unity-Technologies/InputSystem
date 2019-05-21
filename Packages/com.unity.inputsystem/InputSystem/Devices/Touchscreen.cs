@@ -125,6 +125,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
 namespace UnityEngine.InputSystem
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Fix this after landing Touch refactor")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "Fix this after landing Touch refactor")]
     public enum TouchFlags
     {
         IndirectTouch

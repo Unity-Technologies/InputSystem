@@ -126,6 +126,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Don't want to mess with the names of hardware data representations.")]
         [Flags]
         public enum Flags
         {

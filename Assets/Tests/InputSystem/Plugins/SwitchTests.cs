@@ -98,7 +98,7 @@ internal class SwitchTests : InputTestFixture
                         receivedCommand = *((NPadStatusReport*)commandPtr);
                         ((NPadStatusReport*)commandPtr)->npadId = NPad.NpadId.Handheld;
                         ((NPadStatusReport*)commandPtr)->orientation = NPad.Orientation.Vertical;
-                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyle.Handheld;
+                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyles.Handheld;
 
                         ((NPadStatusReport*)commandPtr)->colorLeftMain = ColorToNNColor(Color.red);
                         ((NPadStatusReport*)commandPtr)->colorLeftSub = ColorToNNColor(Color.black);
@@ -119,7 +119,7 @@ internal class SwitchTests : InputTestFixture
         }
         Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
         Assert.That(controller.orientation, Is.EqualTo(NPad.Orientation.Vertical));
-        Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyle.Handheld));
+        Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyles.Handheld));
         Assert.That(controller.leftControllerColor.Main, Is.EqualTo((Color32)Color.red));
         Assert.That(controller.leftControllerColor.Sub, Is.EqualTo((Color32)Color.black));
         Assert.That(controller.rightControllerColor.Main, Is.EqualTo((Color32)Color.cyan));

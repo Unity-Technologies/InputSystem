@@ -23,7 +23,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                inputSources = AndroidInputSources.Gamepad | AndroidInputSources.Joystick,
             }.ToJson()
         });
         var joystick = InputSystem.AddDevice(new InputDeviceDescription
@@ -32,7 +32,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Joystick
+                inputSources = AndroidInputSources.Joystick
             }.ToJson()
         });
 
@@ -50,7 +50,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                inputSources = AndroidInputSources.Gamepad | AndroidInputSources.Joystick,
             }.ToJson()
         });
 
@@ -110,7 +110,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                inputSources = AndroidInputSources.Gamepad | AndroidInputSources.Joystick,
                 motionAxes = new[]
                 {
                     AndroidAxis.Generic1, // Noise
@@ -168,7 +168,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                inputSources = AndroidInputSources.Gamepad | AndroidInputSources.Joystick,
                 motionAxes = new[]
                 {
                     AndroidAxis.Generic1, // Noise
@@ -193,7 +193,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                inputSources = AndroidInputSources.Gamepad | AndroidInputSources.Joystick,
                 // http://www.linux-usb.org/usb.ids
                 vendorId = 0x045e,
                 productId = 0x02dd,
@@ -253,7 +253,7 @@ internal class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                inputSources = AndroidInputSources.Gamepad | AndroidInputSources.Joystick,
                 // http://www.linux-usb.org/usb.ids
                 vendorId = 0x054c,
                 productId = 0x09cc,

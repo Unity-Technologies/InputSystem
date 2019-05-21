@@ -168,7 +168,7 @@ namespace UnityEngine.InputSystem.Android
 
                     // Note: Gamepads have both AndroidInputSource.Gamepad and AndroidInputSource.Joystick in input source, while
                     //       Joysticks don't have AndroidInputSource.Gamepad in their input source
-                    if ((caps.inputSources & AndroidInputSource.Gamepad) != AndroidInputSource.Gamepad)
+                    if ((caps.inputSources & AndroidInputSources.Gamepad) != AndroidInputSources.Gamepad)
                         return "AndroidJoystick";
 
                     if (caps.motionAxes == null)
