@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Composites
         /// What happens to the value of an <see cref="AxisComposite"/> if both <see cref="positive"/>
         /// and <see cref="negative"/> are actuated at the same time.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "False positive: `Wins` is not a plural form.")]
         public enum WhichSideWins
         {
             /// <summary>

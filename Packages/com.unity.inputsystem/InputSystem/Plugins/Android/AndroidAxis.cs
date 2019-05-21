@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
     public enum AndroidAxis
     {
         X = 0,

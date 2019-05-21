@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Enum values mandated by native code")]
         public enum Result
         {
             /// <summary>

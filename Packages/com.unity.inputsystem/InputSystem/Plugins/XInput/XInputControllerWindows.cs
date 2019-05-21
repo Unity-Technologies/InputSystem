@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
             get { return new FourCC('X', 'I', 'N', 'P'); }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
         public enum Button
         {
             DPadUp = 0,
