@@ -71,8 +71,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
-    [Flags]
-    public enum AndroidInputSources
+    public enum AndroidInputSource
     {
         Keyboard = 257,
         Dpad = 513,
@@ -93,7 +92,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         public int vendorId;
         public bool isVirtual;
         public AndroidAxis[] motionAxes;
-        public AndroidInputSources inputSources;
+        public AndroidInputSource inputSources;
 
         public string ToJson()
         {
