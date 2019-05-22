@@ -67,7 +67,6 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     [Serializable]
     public sealed class InputAction : ICloneable, IDisposable
-        ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
     {
         /// <summary>
         /// Name of the action.
