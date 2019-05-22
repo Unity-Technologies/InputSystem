@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.Layouts
         public string stateFormat { get; set; }
 
         ////TODO: rename this to just "usages"; "commonUsages" is such a weird name
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public string[] commonUsages { get; set; }
 
         public string variants { get; set; }

@@ -88,12 +88,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Styles
         {
-            public static GUIStyle header = new GUIStyle("Label");
-
-            static Styles()
-            {
-                header.fontStyle = FontStyle.Bold;
-            }
+            public static readonly GUIStyle header = new GUIStyle("Label").WithFontStyle(FontStyle.Bold);
         }
     }
 }
