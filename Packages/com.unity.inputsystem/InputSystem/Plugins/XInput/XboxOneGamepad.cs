@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
             get { return new FourCC('X', '1', 'G', 'P'); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Values mandated by device")]
         public enum Button
         {
             Menu = 2,
