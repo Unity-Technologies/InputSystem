@@ -1174,7 +1174,7 @@ namespace UnityEngine.InputSystem.Layouts
             foreach (var existing in controlLayouts)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
                     existing.variants == controlItem.variants)
-                    throw new ArgumentException($"Duplicate control '{name}' in layout '{layoutName}'", nameof(layoutName));
+                    throw new InvalidOperationException($"Duplicate control '{name}' in layout '{layoutName}'");
         }
 
         internal static void ParseHeaderFieldsFromJson(string json, out InternedString name,

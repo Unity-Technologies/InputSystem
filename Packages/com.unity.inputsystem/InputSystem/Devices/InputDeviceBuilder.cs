@@ -115,8 +115,8 @@ namespace UnityEngine.InputSystem.Layouts
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new ArgumentException(
-                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!", nameof(path));
+                throw new InvalidOperationException(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -174,8 +174,8 @@ namespace UnityEngine.InputSystem.Layouts
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new ArgumentException(
-                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!", nameof(path));
+                throw new InvalidOperationException(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
 
             return controlOfType;
         }
@@ -235,8 +235,8 @@ namespace UnityEngine.InputSystem.Layouts
                 control = controlObject as InputControl;
                 if (control == null)
                 {
-                    throw new ArgumentException(
-                        $"Type '{layout.type.Name}' referenced by layout '{layout.name}' is not an InputControl", nameof(layout));
+                    throw new InvalidOperationException(
+                        $"Type '{layout.type.Name}' referenced by layout '{layout.name}' is not an InputControl");
                 }
             }
 
@@ -245,8 +245,8 @@ namespace UnityEngine.InputSystem.Layouts
             if (control is InputDevice controlAsDevice)
             {
                 if (parent != null)
-                    throw new ArgumentException(
-                        $"Cannot instantiate device layout '{layout.name}' as child of '{parent.path}'; devices must be added at root", nameof(layout));
+                    throw new InvalidOperationException(
+                        $"Cannot instantiate device layout '{layout.name}' as child of '{parent.path}'; devices must be added at root");
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
@@ -345,8 +345,8 @@ namespace UnityEngine.InputSystem.Layouts
                     // Find the referenced control.
                     var referencedControl = TryGetControl(control, controlLayout.useStateFrom);
                     if (referencedControl == null)
-                        throw new ArgumentException(
-                            $"Cannot find control '{controlLayout.useStateFrom}' referenced in 'useStateFrom' of control '{controlLayout.name}' in layout '{layout.name}'", nameof(layout));
+                        throw new InvalidOperationException(
+                            $"Cannot find control '{controlLayout.useStateFrom}' referenced in 'useStateFrom' of control '{controlLayout.name}' in layout '{layout.name}'");
 
                     // Copy its state settings.
                     child.m_StateBlock = referencedControl.m_StateBlock;
@@ -492,7 +492,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
-                throw new ArgumentException($"Layout has not been set on control '{controlItem.name}' in '{layout.name}'", nameof(layout));
+                throw new InvalidOperationException($"Layout has not been set on control '{controlItem.name}' in '{layout.name}'");
 
             // See if there is an override for the control.
             InputControlLayout.ControlItem? controlOverride = null;
@@ -738,18 +738,18 @@ namespace UnityEngine.InputSystem.Layouts
             // First we need to find the immediate parent from the given path.
             var indexOfSlash = path.LastIndexOf('/');
             if (indexOfSlash == -1)
-                throw new ArgumentException("InsertChildControl has to be called with a slash-separated path", nameof(controlItem));
+                throw new InvalidOperationException("InsertChildControl has to be called with a slash-separated path");
             Debug.Assert(indexOfSlash != 0);
             var immediateParentPath = path.Substring(0, indexOfSlash);
             var immediateParent = InputControlPath.TryFindChild(parent, immediateParentPath);
             if (immediateParent == null)
-                throw new ArgumentException(
-                    $"Cannot find parent '{immediateParentPath}' of control '{controlItem.name}' in layout '{layout.name}'", nameof(layout));
+                throw new InvalidOperationException(
+                    $"Cannot find parent '{immediateParentPath}' of control '{controlItem.name}' in layout '{layout.name}'");
 
             var controlName = path.Substring(indexOfSlash + 1);
             if (controlName.Length == 0)
-                throw new ArgumentException(
-                    $"Path cannot end in '/' (control '{controlItem.name}' in layout '{layout.name}')", nameof(layout));
+                throw new InvalidOperationException(
+                    $"Path cannot end in '/' (control '{controlItem.name}' in layout '{layout.name}')");
 
             // Make room in the device's child array.
             var childStartIndex = immediateParent.m_ChildrenReadOnly.m_StartIndex;
@@ -843,8 +843,8 @@ namespace UnityEngine.InputSystem.Layouts
                 var name = controlItem.processors[n].name;
                 var type = InputProcessor.s_Processors.LookupTypeRegistration(name);
                 if (type == null)
-                    throw new ArgumentException(
-                        $"Cannot find processor '{name}' referenced by control '{controlItem.name}' in layout '{layoutName}'", nameof(controlItem));
+                    throw new InvalidOperationException(
+                        $"Cannot find processor '{name}' referenced by control '{controlItem.name}' in layout '{layoutName}'");
 
                 var processor = Activator.CreateInstance(type);
 
@@ -889,8 +889,8 @@ namespace UnityEngine.InputSystem.Layouts
             // children so make sure we actually have children.
             if (control.m_StateBlock.sizeInBits == 0 && children.Count == 0)
             {
-                throw new ArgumentException(
-                    $"Control '{control.path}' with layout '{control.layout}' has no size set and has no children to compute size from", nameof(control));
+                throw new InvalidOperationException(
+                    $"Control '{control.path}' with layout '{control.layout}' has no size set and has no children to compute size from");
             }
 
             // If there's no children, our job is done.
@@ -911,8 +911,8 @@ namespace UnityEngine.InputSystem.Layouts
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
                 if (childSizeInBits == 0 || childSizeInBits == InputStateBlock.InvalidOffset)
-                    throw new ArgumentException(
-                        $"Child '{child.name}' of '{control.name}' has no size set!", nameof(control));
+                    throw new InvalidOperationException(
+                        $"Child '{child.name}' of '{control.name}' has no size set!");
 
                 // Skip children that don't have fixed offsets.
                 if (child.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset ||

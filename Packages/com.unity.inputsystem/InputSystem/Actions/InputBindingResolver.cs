@@ -574,12 +574,12 @@ namespace UnityEngine.InputSystem
                 // Look up interaction.
                 var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
-                    throw new ArgumentException(
-                        $"No interaction with name '{m_Parameters[i].name}' (mentioned in '{interactionString}') has been registered", nameof(interactionString));
+                    throw new InvalidOperationException(
+                        $"No interaction with name '{m_Parameters[i].name}' (mentioned in '{interactionString}') has been registered");
 
                 // Instantiate it.
                 if (!(Activator.CreateInstance(type) is IInputInteraction interaction))
-                    throw new ArgumentException($"Interaction '{m_Parameters[i].name}' (mentioned in '{interactionString}') is not an IInputInteraction", nameof(interactionString));
+                    throw new InvalidOperationException($"Interaction '{m_Parameters[i].name}' (mentioned in '{interactionString}') is not an IInputInteraction");
 
                 // Pass parameters to it.
                 NamedValue.ApplyAllToObject(interaction, m_Parameters[i].parameters);
@@ -602,13 +602,13 @@ namespace UnityEngine.InputSystem
                 // Look up processor.
                 var type = InputProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
-                    throw new ArgumentException(
-                        $"No processor with name '{m_Parameters[i].name}' (mentioned in '{processorString}') has been registered", nameof(processorString));
+                    throw new InvalidOperationException(
+                        $"No processor with name '{m_Parameters[i].name}' (mentioned in '{processorString}') has been registered");
 
                 // Instantiate it.
                 if (!(Activator.CreateInstance(type) is InputProcessor processor))
-                    throw new ArgumentException(
-                        $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' (mentioned in '{processorString}') is not an InputProcessor", nameof(processorString));
+                    throw new InvalidOperationException(
+                        $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' (mentioned in '{processorString}') is not an InputProcessor");
 
                 // Pass parameters to it.
                 NamedValue.ApplyAllToObject(processor, m_Parameters[i].parameters);
@@ -627,13 +627,13 @@ namespace UnityEngine.InputSystem
             // Look up.
             var type = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParametersParsed.name);
             if (type == null)
-                throw new ArgumentException(
-                    $"No binding composite with name '{nameAndParametersParsed.name}' has been registered", nameof(nameAndParameters));
+                throw new InvalidOperationException(
+                    $"No binding composite with name '{nameAndParametersParsed.name}' has been registered");
 
             // Instantiate.
             if (!(Activator.CreateInstance(type) is InputBindingComposite instance))
-                throw new ArgumentException(
-                    $"Registered type '{type.Name}' used for '{nameAndParametersParsed.name}' is not an InputBindingComposite", nameof(nameAndParameters));
+                throw new InvalidOperationException(
+                    $"Registered type '{type.Name}' used for '{nameAndParametersParsed.name}' is not an InputBindingComposite");
 
             // Set parameters.
             NamedValue.ApplyAllToObject(instance, nameAndParametersParsed.parameters);
@@ -652,16 +652,16 @@ namespace UnityEngine.InputSystem
             var field = type.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
-                throw new ArgumentException(
-                    $"Cannot find public field '{name}' used as parameter of binding composite '{composite}' of type '{type}'", nameof(name));
+                throw new InvalidOperationException(
+                    $"Cannot find public field '{name}' used as parameter of binding composite '{composite}' of type '{type}'");
 
             ////REVIEW: should we wrap part numbers in a struct instead of using int?
 
             // Type-check.
             var fieldType = field.FieldType;
             if (fieldType != typeof(int))
-                throw new ArgumentException(
-                    $"Field '{name}' used as a parameter of binding composite '{composite}' must be of type 'int' but is of type '{type.Name}' instead", nameof(name));
+                throw new InvalidOperationException(
+                    $"Field '{name}' used as a parameter of binding composite '{composite}' must be of type 'int' but is of type '{type.Name}' instead");
 
             ////REVIEW: this create garbage; need a better solution to get to zero garbage during re-resolving
             // See if we've already assigned a part index. This can happen if there are multiple bindings
