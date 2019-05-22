@@ -321,17 +321,17 @@ namespace UnityEngine.InputSystem.XInput
             ExecuteCommand(ref command);
         }
 
-        public void SetMotorSpeeds(float leftMotor, float rightMotor, float leftTriggerMotor, float rightTriggerMotor)
+        public void SetMotorSpeeds(float lowFrequency, float highFrequency, float leftTrigger, float rightTrigger)
         {
             var command = XboxOneGamepadRumbleCommand.Create();
-            command.SetMotorSpeeds(leftMotor, rightMotor, leftTriggerMotor, rightTriggerMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency, leftTrigger, rightTrigger);
 
             ExecuteCommand(ref command);
 
-            m_LeftMotor = leftMotor;
-            m_RightMotor = rightMotor;
-            m_LeftTriggerMotor = leftTriggerMotor;
-            m_RightTriggerMotor = rightTriggerMotor;
+            m_LeftMotor = lowFrequency;
+            m_RightMotor = highFrequency;
+            m_LeftTriggerMotor = leftTrigger;
+            m_RightTriggerMotor = rightTrigger;
         }
 
         private float? m_LeftMotor;
