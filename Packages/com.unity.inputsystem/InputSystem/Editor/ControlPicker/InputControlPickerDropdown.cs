@@ -14,7 +14,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputControlPickerDropdown : AdvancedDropdown
+    internal class InputControlPickerDropdown : AdvancedDropdown, IDisposable
     {
         public InputControlPickerDropdown(
             InputControlPickerState state,
@@ -50,6 +50,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_RebindingOperation?.Dispose();
             m_RebindingOperation = null;
+        }
+
+        public void Dispose()
+        {
+            m_RebindingOperation?.Dispose();
         }
 
         protected override AdvancedDropdownItem BuildRoot()
