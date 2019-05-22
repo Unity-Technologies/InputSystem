@@ -1487,7 +1487,7 @@ namespace UnityEngine.InputSystem.Editor
             public static readonly GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar)
                 .WithAlignment(TextAnchor.MiddleLeft)
                 .WithFontStyle(FontStyle.Bold)
-                .WithPadding(new RectOffset(10,6,0,0));
+                .WithPadding(new RectOffset(10, 6, 0, 0));
         }
     }
 }

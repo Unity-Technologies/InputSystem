@@ -591,7 +591,7 @@ namespace UnityEngine.InputSystem.Editor
                 public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar)
                     .WithAlignment(TextAnchor.MiddleCenter)
                     .WithFontStyle(FontStyle.Bold)
-                    .WithPadding(new RectOffset(10,6,0,0));
+                    .WithPadding(new RectOffset(10, 6, 0, 0));
             }
 
             private class DeviceEntry

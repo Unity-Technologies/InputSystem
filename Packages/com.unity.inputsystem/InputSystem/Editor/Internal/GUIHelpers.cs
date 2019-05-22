@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         public static class Styles
         {
-            public static readonly GUIStyle lineSeparator = new GUIStyle().WithFixedHeight(1).WithMargin(new RectOffset(0,0,2,2));
+            public static readonly GUIStyle lineSeparator = new GUIStyle().WithFixedHeight(1).WithMargin(new RectOffset(0, 0, 2, 2));
         }
 
         private const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
@@ -90,6 +90,7 @@ namespace UnityEngine.InputSystem.Editor
             style.padding = padding;
             return style;
         }
+
         public static GUIStyle WithFixedWidth(this GUIStyle style, int fixedWidth)
         {
             style.fixedWidth = fixedWidth;
