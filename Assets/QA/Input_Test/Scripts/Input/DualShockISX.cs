@@ -44,9 +44,9 @@ public class DualShockISX : GamepadISX
 
     private void OnDisable()
     {
-        m_buttonAction.Disable();
-        m_dPadAction.Disable();
-        m_stickMoveAction.Disable();
+        m_buttonAction?.Disable();
+        m_dPadAction?.Disable();
+        m_stickMoveAction?.Disable();
     }
 
     private void Update()

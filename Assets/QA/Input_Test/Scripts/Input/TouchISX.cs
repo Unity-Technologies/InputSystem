@@ -32,7 +32,7 @@ public class TouchISX : MonoBehaviour
 
     void OnDisable()
     {
-        m_touchAction.Disable();
+        m_touchAction?.Disable();
     }
 
     void Update()

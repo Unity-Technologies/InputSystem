@@ -71,9 +71,9 @@ public class PenISX : MonoBehaviour
 
     private void OnDisable()
     {
-        m_penButtonAction.Disable();
-        m_penVector2Action.Disable();
-        m_penAxisAction.Disable();
+        m_penButtonAction?.Disable();
+        m_penVector2Action?.Disable();
+        m_penAxisAction?.Disable();
     }
 
     // Update is called once per frame

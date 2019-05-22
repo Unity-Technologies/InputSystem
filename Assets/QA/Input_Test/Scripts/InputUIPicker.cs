@@ -1,14 +1,14 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-using System.Collections;
+using UnityEngine.EventSystems;
 
 public class InputUIPicker : MonoBehaviour
 {
-    public Dropdown m_inputPickerDropdown;
+    public Dropdown m_deviceDropdown;
+    public Dropdown m_otherDropdown;
 
-    [Header("Input Gameobject")]
+    [Header("Device Test GameObject")]
     public GameObject m_windowsKeyboardMouse;
     public GameObject m_macKeyboardMouse;
     public GameObject m_controllerDiagram;
@@ -17,6 +17,9 @@ public class InputUIPicker : MonoBehaviour
     public GameObject m_joystick;
     public GameObject m_pen;
     public GameObject m_touch;
+
+    [Header("Other Test GameObject")]
+    public GameObject m_interactions;
 
     //[Header("Input Action")]
     //public InputAction m_switchToKeyboardMouseAction;
@@ -33,15 +36,11 @@ public class InputUIPicker : MonoBehaviour
     {
         SwitchToKeyMouse();
 
-        m_inputPickerDropdown.onValueChanged.RemoveAllListeners();
-        m_inputPickerDropdown.onValueChanged.AddListener(delegate { SwitchToInputMethod(m_inputPickerDropdown); });
+        //m_deviceDropdown.onValueChanged.RemoveAllListeners();
+        //m_otherDropdown.onValueChanged.RemoveAllListeners();
 
-        //m_switchToKeyboardMouseAction.performed += _ => SwitchToInputMethod(0);
-        //m_switchToXboxAction.performed += _ => SwitchToInputMethod(1);
-        //m_switchToGamepadDiagramAction.performed += _ => SwitchToInputMethod(2);
-        //m_switchToJoystickAction.performed += _ => SwitchToInputMethod(3);
-        //m_switchToPenAction.performed += _ => SwitchToInputMethod(4);
-        //m_switchToTouchAction.performed += _ => SwitchToInputMethod(5);
+        //m_deviceDropdown.onValueChanged.AddListener(delegate { SwitchToDeviceTest(m_deviceDropdown.value); });
+        //m_deviceDropdown.onValueChanged.AddListener(delegate { SwitchToOtherTest(m_otherDropdown.value); });
     }
 
     //void OnEnable()
@@ -63,79 +62,90 @@ public class InputUIPicker : MonoBehaviour
     //    m_switchToPenAction.Disable();
     //    m_switchToTouchAction.Disable();
     //}
-
-    // !!!!!TEMPORARY: Before composite input is implemented
+   
     void Update()
     {
+        // !!!!!TEMPORARY: Before composite input is implemented
         if (InputSystem.GetDevice<Keyboard>() == null) return;
 
         Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
         if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
         {
             if (currentKeyboard.digit1Key.isPressed)
-                m_inputPickerDropdown.value = 0;
+                m_deviceDropdown.value = 1;
             else if (currentKeyboard.digit2Key.isPressed)
-                m_inputPickerDropdown.value = 1;
+                m_deviceDropdown.value = 2;
             else if (currentKeyboard.digit3Key.isPressed)
-                m_inputPickerDropdown.value = 2;
+                m_deviceDropdown.value = 3;
             else if (currentKeyboard.digit4Key.isPressed)
-                m_inputPickerDropdown.value = 3;
+                m_deviceDropdown.value = 4;
             else if (currentKeyboard.digit5Key.isPressed)
-                m_inputPickerDropdown.value = 4;
+                m_deviceDropdown.value = 5;
             else if (currentKeyboard.digit6Key.isPressed)
-                m_inputPickerDropdown.value = 5;
+                m_deviceDropdown.value = 6;
             else if (currentKeyboard.digit7Key.isPressed)
-                m_inputPickerDropdown.value = 6;
+                m_deviceDropdown.value = 7;
         }
     }
 
-    private void SwitchToInputMethod(Dropdown picker)
+    public void SwitchToDeviceTest(int value)
     {
-        SwitchToInputMethod(Convert.ToByte(picker.value));
-    }
-
-    private void SwitchToInputMethod(byte inputValue)
-    {
-        // Debug.Log("Switch to Input: " + inputValue);
-        switch (inputValue)
+        switch (value)
         {
             case 1:
-                SwitchToDiagram(m_xboxController);
-                break;
-            case 2:
-                SwitchToDiagram(m_dualShockController);
-                break;
-            case 3:
-                SwitchToDiagram(m_controllerDiagram);
-                break;
-            case 4:
-                SwitchToDiagram(m_joystick);
-                break;
-            case 5:
-                SwitchToDiagram(m_pen);
-                break;
-            case 6:
-                SwitchToDiagram(m_touch);
-                break;
-            case 0:
-            default:
                 SwitchToKeyMouse();
                 break;
+            case 2:
+                SwitchToTestObject(m_xboxController);
+                break;
+            case 3:
+                SwitchToTestObject(m_dualShockController);
+                break;
+            case 4:
+                SwitchToTestObject(m_controllerDiagram);
+                break;
+            case 5:
+                SwitchToTestObject(m_joystick);
+                break;
+            case 6:
+                SwitchToTestObject(m_pen);
+                break;
+            case 7:
+                SwitchToTestObject(m_touch);
+                break;
+            default:
+                break;                
         }
+        m_otherDropdown.value = 0;
+    }
+
+    public void SwitchToOtherTest(int value)
+    {
+        //switch (value)
+        //{
+        //    case 1:
+        //        SwitchToTestObject(m_interactions);
+        //        break;
+        //    default:
+        //        break;
+        //}    
+        if (value == 1)
+            SwitchToTestObject(m_interactions);
+        m_deviceDropdown.value = 0;
     }
 
     private void SwitchToKeyMouse()
     {
 #if (UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX)
-        SwitchToDiagram(m_macKeyboardMouse);
+        SwitchToTestObject(m_macKeyboardMouse);
 #elif (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA)
-        SwitchToDiagram(m_windowsKeyboardMouse);
+        SwitchToTestObject(m_windowsKeyboardMouse);
 #else
-        SwitchToDiagram(m_windowsKeyboardMouse);
+        SwitchToTestObject(m_windowsKeyboardMouse);
 #endif
     }
 
-    private void SwitchToDiagram(GameObject newDiagram)
+    private void SwitchToTestObject(GameObject newDiagram)
     {
         if (m_currentDisplay != newDiagram)
         {

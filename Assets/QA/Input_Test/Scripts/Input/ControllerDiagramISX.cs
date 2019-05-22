@@ -32,9 +32,9 @@ public class ControllerDiagramISX : GamepadISX
 
     private void OnDisable()
     {
-        m_buttonAction.Disable();
-        m_dPadAction.Disable();
-        m_stickMoveAction.Disable();
+        m_buttonAction?.Disable();
+        m_dPadAction?.Disable();
+        m_stickMoveAction?.Disable();
     }
 
     // Callback funtion when a button is pressed. The button can be on a keyboard or mouse
