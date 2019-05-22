@@ -438,7 +438,7 @@ namespace UnityEngine.InputSystem
                 if (control == null)
                     throw new ArgumentNullException(nameof(control));
 
-              return WithCancelingThrough(control.path);
+                return WithCancelingThrough(control.path);
             }
 
             public RebindingOperation WithExpectedControlLayout(string layoutName)
