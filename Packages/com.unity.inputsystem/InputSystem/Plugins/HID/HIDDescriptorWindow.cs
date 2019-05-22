@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: use two columns for treeview and separate name and value
 
-namespace UnityEngine.InputSystem.Plugins.HID.Editor
+namespace UnityEngine.InputSystem.HID.Editor
 {
     /// <summary>
     /// A window that dumps a raw HID descriptor in a tree view.

@@ -66,7 +66,7 @@ public class TouchISX : MonoBehaviour
             case PointerPhase.Moved:
                 UpdateTouchInput(control);
                 break;
-            case PointerPhase.Cancelled:
+            case PointerPhase.Canceled:
             case PointerPhase.Ended:
                 EndTouchInput(control);
                 break;

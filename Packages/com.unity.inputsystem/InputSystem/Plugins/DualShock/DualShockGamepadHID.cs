@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.DualShock.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: figure out sensor formats and add support for acceleration, angularVelocity, and orientation (also add to base layout then)
 
-namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
+namespace UnityEngine.InputSystem.DualShock.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
@@ -88,6 +88,7 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         internal const int kReportId = 5;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Don't want to mess with the names of hardware data representations.")]
         [Flags]
         public enum Flags
         {
@@ -138,7 +139,7 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
@@ -152,6 +153,9 @@ namespace UnityEngine.InputSystem.Plugins.DualShock
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
             rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
             playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");

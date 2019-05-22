@@ -58,8 +58,7 @@ public class PenISX : MonoBehaviour
         m_penAxisAction = new InputAction(name: "PenAxisAction", binding: "<pen>/twist") { passThrough = true };
         m_penAxisAction.AddBinding("<pen>/pressure");
         m_penAxisAction.performed += callbackContext => OnAxisChange(callbackContext.control as AxisControl);
-        m_penAxisAction.Enable();
-        
+        m_penAxisAction.Enable();        
     }
 
     void OnEnable()

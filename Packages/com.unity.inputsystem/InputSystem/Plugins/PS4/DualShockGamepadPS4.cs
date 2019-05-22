@@ -6,14 +6,14 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.PS4.LowLevel;
 
 ////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
 
 ////TODO: player ID
 #pragma warning disable 0649
-namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
-        public enum Button
+        private enum Button
         {
             L3 = 1,
             R3 = 2,
@@ -126,6 +126,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Don't want to mess with the names of hardware data representations.")]
         [Flags]
         public enum Flags
         {
@@ -244,7 +245,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]
@@ -286,6 +287,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             base.FinishSetup(builder);
@@ -535,15 +539,15 @@ namespace UnityEngine.InputSystem.Plugins.PS4
             m_LightBarColor = null;
         }
 
-        public override void SetMotorSpeeds(float largeMotor, float smallMotor)
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             var command = DualShockPS4OuputCommand.Create();
-            command.SetMotorSpeeds(largeMotor, smallMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency);
 
             ExecuteCommand(ref command);
 
-            m_LargeMotor = largeMotor;
-            m_SmallMotor = smallMotor;
+            m_LargeMotor = lowFrequency;
+            m_SmallMotor = highFrequency;
         }
 
         public void ResetOrientation()

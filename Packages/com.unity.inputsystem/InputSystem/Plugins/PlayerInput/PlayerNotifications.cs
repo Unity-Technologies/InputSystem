@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.PlayerInput
 {
     /// <summary>
     /// Determines how the triggering of an action or other input-related events are relayed to other GameObjects.

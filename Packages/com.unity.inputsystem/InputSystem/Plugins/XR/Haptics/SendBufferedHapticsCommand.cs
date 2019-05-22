@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct SendBufferedHapticCommand : IInputDeviceCommandInfo
@@ -32,6 +32,9 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
 
         public static SendBufferedHapticCommand Create(int channel, byte[] rumbleBuffer)
         {
+            if (rumbleBuffer == null)
+                throw new System.ArgumentNullException(nameof(rumbleBuffer));
+
             int rumbleBufferSize = Mathf.Min(kMaxHapticBufferSize, rumbleBuffer.Length);
             SendBufferedHapticCommand newCommand = new SendBufferedHapticCommand
             {

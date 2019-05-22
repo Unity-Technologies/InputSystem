@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.Switch.LowLevel;
+using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: The Switch controller can be used to point at things; can we somehow help leverage that?
 
-namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
+namespace UnityEngine.InputSystem.Switch.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for Switch NPad controllers.
@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]
         public short padding0;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
-        public NPad.NpadStyle styleMask;
+        public NPad.NpadStyles styleMask;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int colorLeftMain;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
@@ -287,6 +287,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         public const float DefaultFrequencyLow = 160.0f;
         public const float DefaultFrequencyHigh = 320.0f;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum NPadRumblePostion : byte
         {
             Left = 0x02,
@@ -325,7 +326,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Switch
+namespace UnityEngine.InputSystem.Switch
 {
     /// <summary>
     /// An NPad controller for Switch, which can be a Joy-Con.
@@ -343,6 +344,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
         public QuaternionControl attitude { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum Orientation : byte
         {
             Vertical,
@@ -350,6 +352,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
             Default = Vertical,
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum NpadId : byte
         {
             No1 = 0x00,
@@ -371,7 +374,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
 
         //each person could play with a different style
         [Flags]
-        public enum NpadStyle
+        public enum NpadStyles
         {
             FullKey = 1 << 0,//separate;or pro controller;only one accel
             Handheld = 1 << 1,//docked to switch
@@ -402,7 +405,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
                 return m_NpadId;
             }
         }
-        public NpadStyle styleMask
+        public NpadStyles styleMask
         {
             get
             {
@@ -432,7 +435,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
 
         private Orientation m_Orientation;
         private NpadId m_NpadId = NpadId.Invalid;
-        private NpadStyle m_StyleMask;
+        private NpadStyles m_StyleMask;
         private JoyConColor m_LeftControllerColor;
         private JoyConColor m_RightControllerColor;
 

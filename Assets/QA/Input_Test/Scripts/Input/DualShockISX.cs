@@ -16,7 +16,7 @@ public class DualShockISX : GamepadISX
     {
         //m_discreteButtonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<discreteButton>");
         //m_discreteButtonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
-        //m_discreteButtonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
+        //m_discreteButtonAction.canceled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
         //m_discreteButtonAction.Enable();
 
         m_buttonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<button>") { passThrough = true }; ;

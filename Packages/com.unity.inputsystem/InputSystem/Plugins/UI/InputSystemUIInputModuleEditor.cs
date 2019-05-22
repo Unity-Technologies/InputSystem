@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.InputSystem.Plugins.UI.Editor
+namespace UnityEngine.InputSystem.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor

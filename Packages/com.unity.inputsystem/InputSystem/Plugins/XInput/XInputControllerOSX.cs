@@ -1,10 +1,10 @@
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // Xbox one controller on OSX. State layout can be found here:
     // https://github.com/360Controller/360Controller/blob/master/360Controller/ControlStruct.h
@@ -195,7 +195,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
         };
     }
 }
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     public class XInputControllerOSX : XInputController

@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 #pragma warning disable CS0649
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     public class TrackedDeviceRaycaster : BaseRaycaster
     {

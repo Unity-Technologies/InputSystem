@@ -15,6 +15,9 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
             var height = 0f;
 
             // Field label.
@@ -41,6 +44,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
             EditorGUI.BeginProperty(position, label, property);
 
             const int kIndent = 16;

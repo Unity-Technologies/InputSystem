@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Plugins.OnScreen;
+using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.TestTools.Utils;
 
 internal class OnScreenTests : InputTestFixture

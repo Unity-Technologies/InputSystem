@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: player ID
 
-namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
             get { return new FourCC('X', '1', 'G', 'P'); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Values mandated by device")]
         public enum Button
         {
             Menu = 2,
@@ -185,7 +186,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
@@ -210,6 +211,9 @@ namespace UnityEngine.InputSystem.Plugins.XInput
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
@@ -321,17 +325,17 @@ namespace UnityEngine.InputSystem.Plugins.XInput
             ExecuteCommand(ref command);
         }
 
-        public void SetMotorSpeeds(float leftMotor, float rightMotor, float leftTriggerMotor, float rightTriggerMotor)
+        public void SetMotorSpeeds(float lowFrequency, float highFrequency, float leftTrigger, float rightTrigger)
         {
             var command = XboxOneGamepadRumbleCommand.Create();
-            command.SetMotorSpeeds(leftMotor, rightMotor, leftTriggerMotor, rightTriggerMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency, leftTrigger, rightTrigger);
 
             ExecuteCommand(ref command);
 
-            m_LeftMotor = leftMotor;
-            m_RightMotor = rightMotor;
-            m_LeftTriggerMotor = leftTriggerMotor;
-            m_RightTriggerMotor = rightTriggerMotor;
+            m_LeftMotor = lowFrequency;
+            m_RightMotor = highFrequency;
+            m_LeftTriggerMotor = leftTrigger;
+            m_RightTriggerMotor = rightTrigger;
         }
 
         private float? m_LeftMotor;

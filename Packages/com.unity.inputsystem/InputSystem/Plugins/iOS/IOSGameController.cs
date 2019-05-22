@@ -2,10 +2,10 @@
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.iOS.LowLevel;
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.iOS.LowLevel
 {
     public enum iOSButton
     {
@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.iOS
+namespace UnityEngine.InputSystem.iOS
 {
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
     public class iOSGameController : Gamepad

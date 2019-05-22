@@ -3,10 +3,10 @@ using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.WebGL.LowLevel;
+using UnityEngine.InputSystem.WebGL.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
+namespace UnityEngine.InputSystem.WebGL.LowLevel
 {
     public unsafe struct WebGLGamepadState : IInputStateTypeInfo
     {
@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.WebGL
+namespace UnityEngine.InputSystem.WebGL
 {
     /// <summary>
     /// Gamepad on WebGL that uses the "standard" mapping.

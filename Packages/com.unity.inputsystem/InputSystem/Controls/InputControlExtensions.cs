@@ -478,6 +478,12 @@ namespace UnityEngine.InputSystem
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
             where TControl : InputControl
         {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+            if (controls == null)
+                throw new ArgumentNullException(nameof(controls));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
             if (parent is TControl parentAsTControl && predicate(parentAsTControl))
                 controls.Add(parentAsTControl);
 

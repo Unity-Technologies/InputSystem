@@ -6,11 +6,11 @@ using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.HID;
-using UnityEngine.InputSystem.Plugins.PS4;
-using UnityEngine.InputSystem.Plugins.Users;
-using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.HID;
+using UnityEngine.InputSystem.PS4;
+using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -86,6 +86,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
@@ -406,6 +409,9 @@ namespace UnityEngine.InputSystem
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
         public static void RegisterControlProcessor(Type type, string name = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1372,6 +1378,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputInteraction"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1404,6 +1413,9 @@ namespace UnityEngine.InputSystem
 
         public static void RegisterBindingComposite(Type type, string name)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1761,35 +1773,35 @@ namespace UnityEngine.InputSystem
             #endif
 
             #if UNITY_EDITOR || UNITY_ANDROID
-            Plugins.Android.AndroidSupport.Initialize();
+            Android.AndroidSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            Plugins.iOS.iOSSupport.Initialize();
+            iOS.iOSSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            Plugins.WebGL.WebGLSupport.Initialize();
+            WebGL.WebGLSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_SWITCH
-            Plugins.Switch.SwitchSupport.Initialize();
+            Switch.SwitchSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
-            Plugins.XR.XRSupport.Initialize();
+            XR.XRSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
-            Plugins.Linux.LinuxSupport.Initialize();
+            Linux.LinuxSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
-            Plugins.OnScreen.OnScreenSupport.Initialize();
+            OnScreen.OnScreenSupport.Initialize();
             #endif
 
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
-            Plugins.Steam.SteamSupport.Initialize();
+            Steam.SteamSupport.Initialize();
             #endif
         }
 

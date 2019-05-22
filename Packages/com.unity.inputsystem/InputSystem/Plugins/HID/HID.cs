@@ -22,7 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
 #pragma warning disable CS0649, CS0219
-namespace UnityEngine.InputSystem.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
     /// <summary>
     /// A generic HID input device.
@@ -1177,7 +1177,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             Trigger = 0xC0,
             WeaponsArm = 0xC1,
             WeaponsSelect = 0xC2,
-            WingFlags = 0xC3,
+            WingFlaps = 0xC3,
             Accelerator = 0xC4,
             Brake = 0xC5,
             Clutch = 0xC6,
