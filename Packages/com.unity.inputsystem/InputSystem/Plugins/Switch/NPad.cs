@@ -184,13 +184,13 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             return Type;
         }
 
-        public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command _command, int _option = 0)
+        public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command command, int option = 0)
         {
             return new NPadControllerSupportCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                command = (int)_command,
-                option = _option,
+                command = (int)command,
+                option = option,
             };
         }
     }
@@ -227,12 +227,12 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public NPad.Orientation orientation;
 
         public FourCC GetTypeStatic() { return Type; }
-        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation _orientation)
+        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation orientation)
         {
             return new NpadDeviceIOCTLSetOrientation
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                orientation = _orientation,
+                orientation = orientation,
             };
         }
     }
@@ -490,9 +490,9 @@ namespace UnityEngine.InputSystem.Switch
         }
 
         // NOTE: This function should be static
-        public long SetOrientationToSingleJoyCon(Orientation _orientation)
+        public long SetOrientationToSingleJoyCon(Orientation orientation)
         {
-            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(_orientation);
+            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(orientation);
 
             return ExecuteCommand(ref supportCommand);
         }

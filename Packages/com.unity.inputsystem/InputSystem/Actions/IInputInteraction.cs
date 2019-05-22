@@ -40,6 +40,7 @@ namespace UnityEngine.InputSystem
     /// Advertising the value type will an interaction type to be filtered out in the UI if the value type
     /// it has is not compatible with the value type expected by the action.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
     public interface IInputInteraction<TValue> : IInputInteraction
         where TValue : struct
     {

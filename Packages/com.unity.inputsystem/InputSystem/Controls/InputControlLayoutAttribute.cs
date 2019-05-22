@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Layouts
     /// Attribute to control layout settings of a type used to generate an <see cref="InputControlLayout"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class InputControlLayoutAttribute : Attribute
+    public sealed class InputControlLayoutAttribute : Attribute
     {
         /// <summary>
         /// Associates a state representation with an input device and drives

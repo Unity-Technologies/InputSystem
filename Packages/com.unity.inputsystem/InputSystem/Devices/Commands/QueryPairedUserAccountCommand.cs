@@ -27,8 +27,6 @@ namespace UnityEngine.InputSystem.LowLevel
         [Flags]
         public enum Result : long
         {
-            NotSupported = 1 << 63, // Same as -1.
-
             // Leave bit #0 unused so as to not lead to possible confusion with GenericSuccess.
 
             /// <summary>
@@ -108,11 +106,10 @@ namespace UnityEngine.InputSystem.LowLevel
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 var length = value.Length;
                 if (length > kMaxIdLength)
-                    throw new ArgumentException(string.Format(
-                        "ID '{0}' exceeds maximum supported length of {2} characters", value, kMaxIdLength));
+                    throw new ArgumentException($"ID '{value}' exceeds maximum supported length of {kMaxIdLength} characters", nameof(value));
 
                 fixed(byte* idBufferPtr = idBuffer)
                 {
@@ -137,8 +134,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     throw new ArgumentNullException("value");
                 var length = value.Length;
                 if (length > kMaxNameLength)
-                    throw new ArgumentException(string.Format(
-                        "Name '{0}' exceeds maximum supported length of {2} characters", value, kMaxNameLength));
+                    throw new ArgumentException($"Name '{value}' exceeds maximum supported length of {kMaxNameLength} characters", nameof(value));
 
                 fixed(byte* nameBufferPtr = nameBuffer)
                 {

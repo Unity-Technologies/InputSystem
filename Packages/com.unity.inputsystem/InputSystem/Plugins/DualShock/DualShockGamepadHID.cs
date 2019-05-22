@@ -88,6 +88,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         internal const int kReportId = 5;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags")]
         [Flags]
         public enum Flags
         {

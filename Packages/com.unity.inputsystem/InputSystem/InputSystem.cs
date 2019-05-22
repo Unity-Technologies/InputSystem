@@ -58,6 +58,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     // Takes care of the singletons we need and presents a sanitized API.
 #if UNITY_EDITOR
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [InitializeOnLoad]
 #endif
     public static class InputSystem

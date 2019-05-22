@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         //This should ideally match line height
-        private Vector2 s_IconSize = new Vector2(13, 13);
+        private static readonly Vector2 s_IconSize = new Vector2(13, 13);
 
         internal Rect m_SearchRect;
         internal Rect m_HeaderRect;

@@ -298,33 +298,22 @@ namespace UnityEngine.InputSystem.HID
             return hidDeviceDescriptor;
         }
 
-        public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
+        public static string UsagePageToString(UsagePage usagePage)
         {
-            const string kVendorDefined = "Vendor-Defined";
+            return (int)usagePage >= 0xFF00 ? "Vendor-Defined" : usagePage.ToString();
+        }
 
-            if ((int)usagePage >= 0xFF00)
-            {
-                usagePageString = kVendorDefined;
-                usageString = kVendorDefined;
-                return true;
-            }
-
-            usagePageString = usagePage.ToString();
-            usageString = null;
-
+        public static string UsageToString(UsagePage usagePage, int usage)
+        {
             switch (usagePage)
             {
                 case UsagePage.GenericDesktop:
-                    usageString = ((GenericDesktop)usage).ToString();
-                    break;
+                    return ((GenericDesktop)usage).ToString();
                 case UsagePage.Simulation:
-                    usageString = ((Simulation)usage).ToString();
-                    break;
+                    return ((Simulation)usage).ToString();
                 default:
-                    return false;
+                    return null;
             }
-
-            return true;
         }
 
         [Serializable]
