@@ -27,6 +27,9 @@ namespace UnityEngine.InputSystem.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -74,6 +77,9 @@ namespace UnityEngine.InputSystem.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             grip = builder.GetControl<AxisControl>("grip");
@@ -126,6 +132,9 @@ namespace UnityEngine.InputSystem.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");
@@ -155,6 +164,9 @@ namespace UnityEngine.InputSystem.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -175,6 +187,9 @@ namespace UnityEngine.InputSystem.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -199,6 +214,9 @@ namespace UnityEngine.InputSystem.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             grip = builder.GetControl<AxisControl>("grip");
             primary = builder.GetControl<ButtonControl>("primary");
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");

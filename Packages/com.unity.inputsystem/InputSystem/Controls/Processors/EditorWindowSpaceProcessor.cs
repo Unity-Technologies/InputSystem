@@ -21,6 +21,9 @@ namespace UnityEngine.InputSystem.Processors
     {
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             // Don't convert to EditorWindowSpace if input is going to game view.
             if (InputEditorUserSettings.lockInputToGameView ||
                 (EditorApplication.isPlaying && Application.isFocused))

@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputSettingsProvider : SettingsProvider
+    internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
         public const string kSettingsPath = "Project/Input System Package";
@@ -35,6 +35,11 @@ namespace UnityEngine.InputSystem.Editor
             s_Instance = this;
 
             InputSystem.onSettingsChange += OnSettingsChange;
+        }
+
+        public void Dispose()
+        {
+            m_SettingsObject?.Dispose();
         }
 
         public override void OnTitleBarGUI()

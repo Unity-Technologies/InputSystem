@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
+    public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
     {
         /// <summary>
         /// Name of the action map.

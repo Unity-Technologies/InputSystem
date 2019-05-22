@@ -135,6 +135,9 @@ namespace UnityEngine.InputSystem
         public InputControlList(IEnumerable<TControl> values, Allocator allocator = Allocator.Persistent)
             : this(allocator)
         {
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+
             foreach (var value in values)
                 Add(value);
         }
@@ -142,6 +145,9 @@ namespace UnityEngine.InputSystem
         public InputControlList(params TControl[] values)
             : this()
         {
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+
             foreach (var value in values)
                 Add(value);
         }
@@ -191,6 +197,9 @@ namespace UnityEngine.InputSystem
 
         public void AddRange(IEnumerable<TControl> list, int count = -1, int destinationIndex = -1)
         {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
             if (count < 0)
                 count = list.Count();
             if (destinationIndex < 0)
@@ -462,6 +471,9 @@ namespace UnityEngine.InputSystem
         public static InputControlList<TControl> ToControlList<TControl>(this IEnumerable<TControl> list)
             where TControl : InputControl
         {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
             var result = new InputControlList<TControl>();
             foreach (var element in list)
                 result.AddRange(list);
@@ -471,6 +483,9 @@ namespace UnityEngine.InputSystem
         public static InputControlList<TControl> ToControlList<TControl>(this IReadOnlyList<TControl> list)
             where TControl : InputControl
         {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
             var result = new InputControlList<TControl>();
             foreach (var element in list)
                 result.AddSlice(list);

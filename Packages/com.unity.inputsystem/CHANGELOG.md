@@ -9,6 +9,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [0.3.0-preview] - 2020-1-1
 
+### Fixed
+
+- Validate all parameters on public APIs.
+
+#### Actions
+
+- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+
 ### Added
 
 ### Changed
@@ -61,6 +69,7 @@ however, it has to be formatted properly to pass verification tests.
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
 - Fixed `Hold` interactions firing immediately before the duration has passed.
 - Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
+- Fixed exception message when calling `CallbackContext.ReadValue<TValue>()` for an action with a composite binding with `TValue` not matching the composite's value type.
 
 ### Added
 

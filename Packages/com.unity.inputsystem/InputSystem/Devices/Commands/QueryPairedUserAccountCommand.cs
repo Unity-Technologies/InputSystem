@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.LowLevel
         ////REVIEW: is this too heavy to allocate on the stack?
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "`Result` matches other command result names")]
         [Flags]
         public enum Result : long
         {

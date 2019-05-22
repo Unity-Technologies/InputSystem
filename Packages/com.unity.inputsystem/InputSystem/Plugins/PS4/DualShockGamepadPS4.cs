@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
-        public enum Button
+        private enum Button
         {
             L3 = 1,
             R3 = 2,
@@ -126,6 +126,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Don't want to mess with the names of hardware data representations.")]
         [Flags]
         public enum Flags
         {
@@ -286,6 +287,9 @@ namespace UnityEngine.InputSystem.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             base.FinishSetup(builder);

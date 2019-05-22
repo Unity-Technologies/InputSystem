@@ -125,6 +125,9 @@ namespace UnityEngine.InputSystem.Layouts
         // Throws if control does not exist.
         public InputControl GetControl(InputControl parent, string path)
         {
+            if (parent == null)
+                throw new System.ArgumentNullException(nameof(parent));
+
             var control = TryGetControl(parent, path);
             if (control == null)
                 throw new Exception($"Cannot find input control '{parent.MakeChildPath(path)}'");
