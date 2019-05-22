@@ -28,7 +28,7 @@ public class InteractionISX : MonoBehaviour
         m_inputAction.Rename(gameObject.name);
         m_inputAction.started += ctx => OnInputStarted(ctx);
         m_inputAction.performed += ctx => OnInputPerformed(ctx);
-        m_inputAction.cancelled += ctx => OnInputCancelled(ctx);
+        m_inputAction.canceled += ctx => OnInputCancelled(ctx);
     }
 
     private void OnEnable()

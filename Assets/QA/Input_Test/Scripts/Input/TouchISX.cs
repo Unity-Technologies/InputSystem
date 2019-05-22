@@ -21,7 +21,7 @@ public class TouchISX : MonoBehaviour
     {
         m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>") { passThrough = true };
         m_touchAction.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
-        m_touchAction.cancelled += callbackContext => EndTouchInput(callbackContext.control as TouchControl);
+        m_touchAction.canceled += callbackContext => EndTouchInput(callbackContext.control as TouchControl);
         m_touchAction.Enable();
     }
 
