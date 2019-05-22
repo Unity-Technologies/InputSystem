@@ -152,9 +152,9 @@ namespace UnityEngine.InputSystem
                 Add(value);
         }
 
-        public void Add(TControl control)
+        public void Add(TControl item)
         {
-            var index = ToIndex(control);
+            var index = ToIndex(item);
             var allocator = m_Allocator != Allocator.Invalid ? m_Allocator : Allocator.Persistent;
             ArrayHelpers.AppendWithCapacity(ref m_Indices, ref m_Count, index, allocator: allocator);
         }
@@ -226,12 +226,12 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool Remove(TControl control)
+        public bool Remove(TControl item)
         {
             if (m_Count == 0)
                 return false;
 
-            var index = ToIndex(control);
+            var index = ToIndex(item);
             for (var i = 0; i < m_Count; ++i)
             {
                 if (m_Indices[i] == index)
@@ -258,12 +258,12 @@ namespace UnityEngine.InputSystem
             throw new NotImplementedException();
         }
 
-        public int IndexOf(TControl control)
+        public int IndexOf(TControl item)
         {
             if (m_Count == 0)
                 return -1;
 
-            var index = ToIndex(control);
+            var index = ToIndex(item);
             var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
 
             for (var i = 0; i < m_Count; ++i)
@@ -283,9 +283,9 @@ namespace UnityEngine.InputSystem
             m_Count = 0;
         }
 
-        public bool Contains(TControl control)
+        public bool Contains(TControl item)
         {
-            return IndexOf(control) != -1;
+            return IndexOf(item) != -1;
         }
 
         public void SwapElements(int index1, int index2)

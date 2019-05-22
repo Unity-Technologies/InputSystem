@@ -46,11 +46,11 @@ namespace UnityEngine.InputSystem
             return m_Reference == other;
         }
 
-        public override bool Equals(object o)
+        public override bool Equals(object obj)
         {
             if (m_UseReference)
-                return Equals(o as InputActionReference);
-            return Equals(o as InputAction);
+                return Equals(obj as InputActionReference);
+            return Equals(obj as InputAction);
         }
 
         public override int GetHashCode()
