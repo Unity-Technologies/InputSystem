@@ -73,9 +73,9 @@ namespace UnityEngine.InputSystem.LowLevel
             return buffer;
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return new FourCC();
+            get { return new FourCC(); }
         }
     }
 }

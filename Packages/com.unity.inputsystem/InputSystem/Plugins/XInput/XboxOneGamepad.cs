@@ -92,9 +92,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public XboxOneGamepadState WithButton(Button button)
@@ -122,9 +122,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public float leftTriggerMotor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)] public float rightTriggerMotor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeeds(float leftMotorLevel, float rightMotorLevel, float leftTriggerMotorLevel, float rightTriggerMotorLevel)
@@ -163,9 +163,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int userId;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public QueryXboxControllerInfo WithGamepadId(ulong id)

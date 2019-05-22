@@ -62,9 +62,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Digital")]
         public ushort displayIndex;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }

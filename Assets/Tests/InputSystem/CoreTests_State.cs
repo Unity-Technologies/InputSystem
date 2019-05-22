@@ -625,9 +625,9 @@ partial class CoreTests
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -914,7 +914,7 @@ partial class CoreTests
     public unsafe void State_CanGetMetrics()
     {
         // Make sure we start out with blank data.
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(metrics.totalEventCount, Is.Zero);
         Assert.That(metrics.totalEventBytes, Is.Zero);
@@ -931,7 +931,7 @@ partial class CoreTests
         var device3 = InputSystem.AddDevice<Mouse>();
         InputSystem.RemoveDevice(device3);
 
-        metrics = InputSystem.GetMetrics();
+        metrics = InputSystem.metrics;
 
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).

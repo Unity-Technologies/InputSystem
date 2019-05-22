@@ -19,9 +19,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -32,9 +32,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -45,9 +45,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -58,9 +58,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -71,9 +71,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }

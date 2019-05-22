@@ -186,7 +186,7 @@ partial class CoreTests
         Assert.That(receivedData, Is.TypeOf<InputAnalytics.ShutdownEventData>());
 
         var shutdownData = (InputAnalytics.ShutdownEventData)receivedData;
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(shutdownData.max_num_devices, Is.EqualTo(metrics.maxNumDevices));
         Assert.That(shutdownData.max_state_size_in_bytes, Is.EqualTo(metrics.maxStateSizeInBytes));

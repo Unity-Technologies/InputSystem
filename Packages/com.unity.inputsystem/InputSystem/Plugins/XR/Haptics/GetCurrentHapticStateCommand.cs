@@ -23,9 +23,9 @@ namespace UnityEngine.InputSystem.XR.Haptics
 
         const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(uint) * 2);
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         [FieldOffset(0)]

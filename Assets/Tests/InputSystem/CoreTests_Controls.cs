@@ -653,9 +653,9 @@ partial class CoreTests
             this.dpad = dpad;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('C', 'U', 'S', 'T');
+            get { return new FourCC('C', 'U', 'S', 'T'); }
         }
     }
 

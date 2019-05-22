@@ -447,9 +447,9 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(7)] public ushort vx;
         [FieldOffset(9)] public short vy;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -977,9 +977,9 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(1)] public ushort x;
         [FieldOffset(3)] public ushort y;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 

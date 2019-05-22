@@ -53,9 +53,9 @@ namespace UnityEngine.InputSystem.LowLevel
             set => phaseId = (ushort)value;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -116,9 +116,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }

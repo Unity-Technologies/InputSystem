@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
+- Replace some `GetXxx` methods in our API with `xxx`  properties.
 
 ## [0.2.10-preview] - 2019-5-17
 

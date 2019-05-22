@@ -583,8 +583,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Get state type code from state struct.
                 if (typeof(IInputStateTypeInfo).IsAssignableFrom(layoutAttribute.stateType))
                 {
-                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType))
-                        .GetFormat();
+                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType)).format;
                 }
             }
             else

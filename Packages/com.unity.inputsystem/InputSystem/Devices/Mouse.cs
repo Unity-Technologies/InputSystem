@@ -69,9 +69,9 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 

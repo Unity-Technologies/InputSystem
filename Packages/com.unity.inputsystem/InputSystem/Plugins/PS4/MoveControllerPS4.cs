@@ -53,9 +53,9 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
         [FieldOffset(20)]
         public Vector3 gyro;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -85,9 +85,9 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 3)] public byte greenColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte blueColor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeed(float motor)

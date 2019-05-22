@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (m_EventPtr == null)
                 return false;
 
-            var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
+            var otherEventTypeCode = new TOtherEvent().typeStatic;
             return m_EventPtr->type == otherEventTypeCode;
         }
 

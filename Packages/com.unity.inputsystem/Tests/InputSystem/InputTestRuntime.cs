@@ -155,7 +155,7 @@ namespace UnityEngine.InputSystem
                 SetDeviceCommandCallback(deviceId,
                     (id, commandPtr) =>
                     {
-                        if (commandPtr->type == result.GetTypeStatic())
+                        if (commandPtr->type == result.typeStatic)
                         {
                             Assert.That(receivedCommand.HasValue, Is.False);
                             receivedCommand = true;
