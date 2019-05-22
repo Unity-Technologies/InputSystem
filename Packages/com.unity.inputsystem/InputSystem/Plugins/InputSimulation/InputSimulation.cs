@@ -26,6 +26,8 @@ namespace UnityEngine.InputSystem.InputSimulation
     /// consumed in the same update.
     /// </remarks>
     ///
+    ///
+    /// TODO: This is currently not implemented. Commented out to avoid having public unimplemented API and many analyzer warnings.
     /*
     public class InputSimulation
     {
