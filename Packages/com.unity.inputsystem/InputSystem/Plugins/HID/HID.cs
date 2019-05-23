@@ -473,7 +473,7 @@ namespace UnityEngine.InputSystem.HID
             UsageModifier = 0x06
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum HIDElementFlags
         {
@@ -507,7 +507,7 @@ namespace UnityEngine.InputSystem.HID
             public int reportId;
             public int reportSizeInBits;
             public int reportOffsetInBits;
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags")]
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
