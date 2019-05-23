@@ -54,6 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags")]
         [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4)]
         ////TODO: give this control a better name
         [InputControl(name = "button", layout = "Button", format = "BIT", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]

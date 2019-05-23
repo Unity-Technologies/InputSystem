@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.XInput
         }
 
         [Flags]
-        public enum CapabilityFlags
+        public enum DeviceCapabilities
         {
             ForceFeedbackSupported = 0x01,
             Wireless = 0x02,
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.XInput
         {
             public DeviceType type;
             public DeviceSubType subType;
-            public CapabilityFlags flags;
+            public DeviceCapabilities capabilities;
         }
     }
 }

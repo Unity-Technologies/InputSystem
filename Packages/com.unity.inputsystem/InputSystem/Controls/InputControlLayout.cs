@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.Layouts
         public struct ControlItem
         {
             [Flags]
-            public enum Flags
+            private enum Flags
             {
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
@@ -116,7 +116,7 @@ namespace UnityEngine.InputSystem.Layouts
             public uint bit;
             public uint sizeInBits;
             public FourCC format;
-            public Flags flags;
+            private Flags flags;
             public int arraySize;
 
             /// <summary>

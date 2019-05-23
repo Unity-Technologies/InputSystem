@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.PlayerInput
     /// can be reimplemented on top of the same API.
     /// </remarks>
     /// <seealso cref="PlayerInputManager"/>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
