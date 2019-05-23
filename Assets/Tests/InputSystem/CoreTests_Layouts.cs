@@ -889,7 +889,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
-            Throws.TypeOf<ArgumentException>().With.Property("Message").Contain("Duplicate control"));
+            Throws.TypeOf<InvalidOperationException>().With.Property("Message").Contain("Duplicate control"));
     }
 
     [Test]
