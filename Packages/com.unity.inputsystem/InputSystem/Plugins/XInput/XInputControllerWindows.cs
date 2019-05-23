@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct XInputControllerWindowsState : IInputStateTypeInfo
     {
-        public static FourCC format
+        public FourCC format
         {
             get { return new FourCC('X', 'I', 'N', 'P'); }
         }
