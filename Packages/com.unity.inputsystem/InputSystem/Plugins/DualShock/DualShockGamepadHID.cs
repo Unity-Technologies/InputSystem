@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         internal const int kReportId = 5;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte reportId;
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public fixed byte unknown1[2];
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte highFrequencyMotorSpeed;
