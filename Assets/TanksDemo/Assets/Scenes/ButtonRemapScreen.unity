@@ -206,7 +206,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: leftTrigger    [GamePad]
+  m_Text: 
 --- !u!222 &17009756
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -370,6 +370,13 @@ MonoBehaviour:
   fireRemapButton: {fileID: 2119408678}
   turretRemapButton: {fileID: 1655994322}
   okButton: {fileID: 1440245653}
+  gasMappingValueText: {fileID: 1967465517}
+  brakeMappingValueText: {fileID: 17009755}
+  fireMappingValueText: {fileID: 951764318}
+  turretMappingValueText: {fileID: 758330978}
+  okButtonMessageText: {fileID: 1811647191}
+  tanksInputActions: {fileID: -944628639613478452, guid: 2960912a48c2ae741891e0507263b631,
+    type: 3}
 --- !u!4 &487546131
 Transform:
   m_ObjectHideFlags: 0
@@ -838,7 +845,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: leftStick       [GamePad]
+  m_Text: 
 --- !u!222 &758330979
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -933,7 +940,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: buttonSouth [GamePad]
+  m_Text: 
 --- !u!222 &951764319
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1862,7 +1869,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: rightTrigger [GamePad]
+  m_Text: 
 --- !u!222 &1967465518
 CanvasRenderer:
   m_ObjectHideFlags: 0

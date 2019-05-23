@@ -64,18 +64,6 @@
             "bindings": [
                 {
                     "name": "",
-                    "id": "3402d297-2726-44c9-8c92-f6563662092e",
-                    "path": "<Gamepad>/rightTrigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Gamepad",
-                    "action": "Gas",
-                    "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
-                },
-                {
-                    "name": "",
                     "id": "055bd3b6-2c9b-46f6-921d-35f5df4130f9",
                     "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
@@ -118,6 +106,18 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "id": "eec34419-056a-4c06-a9ac-157d3d0af038",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Gas",
                     "isComposite": false,
                     "isPartOfComposite": false,
                     "modifiers": ""
