@@ -140,6 +140,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public KeyboardState(params Key[] pressedKeys)
         {
+            if (pressedKeys == null)
+                throw new ArgumentNullException(nameof(pressedKeys));
+
             fixed(byte* keysPtr = keys)
             {
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
@@ -619,6 +622,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             var keyStrings = new[]
             {
                 "space",

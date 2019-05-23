@@ -87,6 +87,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
@@ -407,6 +410,9 @@ namespace UnityEngine.InputSystem
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
         public static void RegisterControlProcessor(Type type, string name = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1373,6 +1379,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputInteraction"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1405,6 +1414,9 @@ namespace UnityEngine.InputSystem
 
         public static void RegisterBindingComposite(Type type, string name)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;

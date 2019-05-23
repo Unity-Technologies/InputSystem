@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
             get { return new FourCC('X', '1', 'G', 'P'); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Values mandated by device")]
         public enum Button
         {
             Menu = 2,
@@ -210,6 +211,9 @@ namespace UnityEngine.InputSystem.XInput
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
@@ -321,17 +325,17 @@ namespace UnityEngine.InputSystem.XInput
             ExecuteCommand(ref command);
         }
 
-        public void SetMotorSpeeds(float leftMotor, float rightMotor, float leftTriggerMotor, float rightTriggerMotor)
+        public void SetMotorSpeeds(float lowFrequency, float highFrequency, float leftTrigger, float rightTrigger)
         {
             var command = XboxOneGamepadRumbleCommand.Create();
-            command.SetMotorSpeeds(leftMotor, rightMotor, leftTriggerMotor, rightTriggerMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency, leftTrigger, rightTrigger);
 
             ExecuteCommand(ref command);
 
-            m_LeftMotor = leftMotor;
-            m_RightMotor = rightMotor;
-            m_LeftTriggerMotor = leftTriggerMotor;
-            m_RightTriggerMotor = rightTriggerMotor;
+            m_LeftMotor = lowFrequency;
+            m_RightMotor = highFrequency;
+            m_LeftTriggerMotor = leftTrigger;
+            m_RightTriggerMotor = rightTrigger;
         }
 
         private float? m_LeftMotor;

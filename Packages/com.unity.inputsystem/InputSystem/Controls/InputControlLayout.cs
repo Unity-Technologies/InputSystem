@@ -943,6 +943,9 @@ namespace UnityEngine.InputSystem.Layouts
         /// </remarks>
         public void MergeLayout(InputControlLayout other)
         {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
             if (m_Variants.IsEmpty())

@@ -43,6 +43,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
         {
+            if (asset == null)
+                throw new System.ArgumentNullException(nameof(asset));
+
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 options.sourceAssetPath = AssetDatabase.GetAssetPath(asset);
             if (string.IsNullOrEmpty(options.className) && !string.IsNullOrEmpty(asset.name))

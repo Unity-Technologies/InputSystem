@@ -1166,7 +1166,7 @@ namespace UnityEngine.InputSystem.HID
             Trigger = 0xC0,
             WeaponsArm = 0xC1,
             WeaponsSelect = 0xC2,
-            WingFlags = 0xC3,
+            WingFlaps = 0xC3,
             Accelerator = 0xC4,
             Brake = 0xC5,
             Clutch = 0xC6,

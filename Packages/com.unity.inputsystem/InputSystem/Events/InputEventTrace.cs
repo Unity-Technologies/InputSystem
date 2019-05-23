@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
     // Helper to simplify recording events. Can record events for a specific device
     // or all events coming in.
     [Serializable]
-    public class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
+    public sealed class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
         private const int kDefaultBufferSize = 1024 * 1024;
 
