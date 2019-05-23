@@ -1,0 +1,20 @@
+code_analyser:
+  name : Code Analyzer
+  agent:
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+  commands:
+    - mkdir tmp
+    - cd tmp
+    - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o Microsoft.CodeQuality.Analyzers.zip
+    - unzip Microsoft.CodeQuality.Analyzers.zip
+    - cd ..
+    - cp csc-analyzer.rsp Assets/csc.rsp
+    - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}    
+  triggers:
+    branches:
+      only:
+        - "/.*/"

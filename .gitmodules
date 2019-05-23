@@ -1,0 +1,3 @@
+[submodule "External/api-analyzers"]
+	path = External/api-analyzers
+	url = https://github.cds.internal.unity3d.com/unity/api-analyzers
