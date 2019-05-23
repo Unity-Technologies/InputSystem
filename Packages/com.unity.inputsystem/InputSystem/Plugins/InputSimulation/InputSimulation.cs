@@ -25,6 +25,10 @@ namespace UnityEngine.InputSystem.InputSimulation
     /// Input simulation is run after each update and output from simulation is
     /// consumed in the same update.
     /// </remarks>
+    ///
+    ///
+    /// TODO: This is currently not implemented. Commented out to avoid having public unimplemented API and many analyzer warnings.
+    /*
     public class InputSimulation
     {
         public struct SimulatedInput
@@ -33,5 +37,5 @@ namespace UnityEngine.InputSystem.InputSimulation
 
             public ReadOnlyArray<InputBinding> outputs => throw new NotImplementedException();
         }
-    }
+    }*/
 }

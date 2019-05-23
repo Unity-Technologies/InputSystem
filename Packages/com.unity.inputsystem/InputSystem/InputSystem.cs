@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem
     /// This is the central hub for the input system.
     /// </summary>
     // Takes care of the singletons we need and presents a sanitized API.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif

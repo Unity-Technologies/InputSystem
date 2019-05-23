@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Layouts
     /// </remarks>
     /// <seealso cref="InputControlLayout"/>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-    public class InputControlAttribute : PropertyAttribute
+    public sealed class InputControlAttribute : PropertyAttribute
     {
         public string layout { get; set; }
         public string variants { get; set; }
