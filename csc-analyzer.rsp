@@ -1,2 +1,0 @@
--analyzer:tmp/analyzers/dotnet/cs/Microsoft.CodeQuality.Analyzers.dll -analyzer:tmp/analyzers/dotnet/cs/Microsoft.CodeQuality.CSharp.Analyzers.dll
--ruleset:InputSystem.ruleset
