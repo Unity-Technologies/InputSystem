@@ -217,6 +217,11 @@ namespace UnityEngine.InputSystem
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
+            return OnCarryStateForward(statePtr);
+        }
+
+        protected unsafe bool OnCarryStateForward(void* statePtr)
+        {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
             return deltaXChanged || deltaYChanged;
@@ -224,11 +229,21 @@ namespace UnityEngine.InputSystem
 
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
+            OnBeforeWriteNewState(oldStatePtr, newStatePtr);
+        }
+
+        protected unsafe void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
         unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            return OnReceiveStateWithDifferentFormat(statePtr, stateFormat, stateSize, ref offsetToStoreAt);
+        }
+
+        protected unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }
