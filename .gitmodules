@@ -1,3 +1,0 @@
-[submodule "External/api-analyzers"]
-	path = CodeAnalyzerTestProject/api-analyzers
-	url = https://github.cds.internal.unity3d.com/unity/api-analyzers
