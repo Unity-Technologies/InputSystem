@@ -4,5 +4,6 @@
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1051" Action="None" />
     <Rule Id="CA1724" Action="None" />
+    <Rule Id="CA1815" Action="None" />
   </Rules>
 </RuleSet>
