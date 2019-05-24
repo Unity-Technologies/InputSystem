@@ -299,7 +299,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public byte positionFlags;
+        public byte positions;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
         public float amplitudeLow;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
@@ -316,7 +316,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             return new NPadDeviceIOCTLOutputCommand()
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                positionFlags = (byte)NPadRumblePostion.None,
+                positions = (byte)NPadRumblePostion.None,
                 amplitudeLow = 0,
                 frequencyLow = DefaultFrequencyLow,
                 amplitudeHigh = 0,
@@ -558,7 +558,7 @@ namespace UnityEngine.InputSystem.Switch
             if (m_leftRumbleValues.Equals(m_rightRumbleValues) && m_leftRumbleValues.HasValues)
             {
                 var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+                cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
                 m_leftRumbleValues.ApplyRumbleValues(ref cmd);
                 ExecuteCommand(ref cmd);
             }
@@ -567,14 +567,14 @@ namespace UnityEngine.InputSystem.Switch
                 if (m_leftRumbleValues.HasValues)
                 {
                     var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+                    cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
                     m_leftRumbleValues.ApplyRumbleValues(ref cmd);
                     ExecuteCommand(ref cmd);
                 }
                 if (m_rightRumbleValues.HasValues)
                 {
                     var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+                    cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
                     m_rightRumbleValues.ApplyRumbleValues(ref cmd);
                     ExecuteCommand(ref cmd);
                 }
@@ -604,7 +604,7 @@ namespace UnityEngine.InputSystem.Switch
             m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
             m_leftRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
@@ -621,7 +621,7 @@ namespace UnityEngine.InputSystem.Switch
             m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
             m_leftRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
@@ -638,7 +638,7 @@ namespace UnityEngine.InputSystem.Switch
             m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
             m_rightRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }

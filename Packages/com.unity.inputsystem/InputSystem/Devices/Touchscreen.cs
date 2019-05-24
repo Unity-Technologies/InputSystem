@@ -45,6 +45,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl][FieldOffset(24)] public Vector2 radius;
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [InputControl(name = "indirectTouch", layout = "Button", bit = (int)TouchFlags.IndirectTouch)][FieldOffset(35)] public sbyte flags;
 
         public PointerPhase phase

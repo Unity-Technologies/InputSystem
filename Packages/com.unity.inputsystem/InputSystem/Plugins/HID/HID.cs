@@ -33,6 +33,7 @@ namespace UnityEngine.InputSystem.HID
     /// match the device to a specific product we know of. Wherever possible we
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     public class HID : InputDevice
     {
         internal const string kHIDInterface = "HID";
@@ -461,6 +462,7 @@ namespace UnityEngine.InputSystem.HID
             UsageModifier = 0x06
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum HIDElementFlags
         {
@@ -494,6 +496,7 @@ namespace UnityEngine.InputSystem.HID
             public int reportId;
             public int reportSizeInBits;
             public int reportOffsetInBits;
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
