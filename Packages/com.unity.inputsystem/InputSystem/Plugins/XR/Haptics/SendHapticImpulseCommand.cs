@@ -27,9 +27,9 @@ namespace UnityEngine.InputSystem.XR.Haptics
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(float)))]
         float duration;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         /// <summary>

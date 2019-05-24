@@ -17,9 +17,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public Vector2 inOutCoordinates;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static QueryEditorWindowCoordinatesCommand Create(Vector2 playerWindowCoordinates)

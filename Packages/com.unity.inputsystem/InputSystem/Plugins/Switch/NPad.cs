@@ -18,9 +18,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 60)]
     public struct NPadInputState : IInputStateTypeInfo
     {
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('N', 'P', 'A', 'D');
+            get { return new FourCC('N', 'P', 'A', 'D'); }
         }
 
         [InputControl(name = "dpad")]
@@ -142,9 +142,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
         public int colorRightSub;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static NPadStatusReport Create()
@@ -179,9 +179,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             kStopSixAxisSensor,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command command, int option = 0)
@@ -204,7 +204,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLShowUI Create()
         {
             return new NpadDeviceIOCTLShowUI
@@ -226,7 +230,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
         public NPad.Orientation orientation;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation orientation)
         {
             return new NpadDeviceIOCTLSetOrientation
@@ -246,7 +254,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLStartSixAxisSensor Create()
         {
             return new NpadDeviceIOCTLStartSixAxisSensor
@@ -265,7 +277,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLStopSixAxisSensor Create()
         {
             return new NpadDeviceIOCTLStopSixAxisSensor
@@ -309,7 +325,10 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
         public float frequencyHigh;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
 
         public static NPadDeviceIOCTLOutputCommand Create()
         {

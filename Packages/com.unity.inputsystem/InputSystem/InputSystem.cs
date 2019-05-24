@@ -1123,7 +1123,7 @@ namespace UnityEngine.InputSystem
                 new StateEvent
             {
                 baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.id, time),
-                stateFormat = state.GetFormat()
+                stateFormat = state.format
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
@@ -1500,9 +1500,10 @@ namespace UnityEngine.InputSystem
         public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
 
         ////REVIEW: restrict metrics to editor and development builds?
-        public static InputMetrics GetMetrics()
+
+        public static InputMetrics metrics
         {
-            return s_Manager.metrics;
+            get { return s_Manager.metrics; }
         }
 
         internal static InputManager s_Manager;

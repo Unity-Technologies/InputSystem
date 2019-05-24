@@ -13,9 +13,9 @@ namespace UnityEngine.InputSystem.XR.Haptics
         const int kMaxHapticBufferSize = 1024;
         const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(int) * 2) + (kMaxHapticBufferSize * sizeof(byte));
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         [FieldOffset(0)]

@@ -109,9 +109,9 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
         [FieldOffset(80)]
         public PS4Touch touch1;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -146,9 +146,9 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte greenColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 5)] public byte blueColor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeeds(float largeMotor, float smallMotor)
@@ -208,9 +208,9 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int userId;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public QueryPS4ControllerInfo WithSlotIndex(int index)
@@ -236,9 +236,10 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     public struct PS4Touch : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
-        public FourCC GetFormat()
+
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         [FieldOffset(0)] public int touchId;
