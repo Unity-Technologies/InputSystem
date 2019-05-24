@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public Vector2 warpPositionInPlayerDisplaySpace;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static WarpMousePositionCommand Create(Vector2 position)

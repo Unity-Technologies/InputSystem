@@ -43,9 +43,9 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
         public fixed float axis[MaxAxes];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public AndroidGameControllerState WithButton(AndroidKeyCode code, bool value = true)

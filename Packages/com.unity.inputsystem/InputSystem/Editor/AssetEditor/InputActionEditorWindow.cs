@@ -738,6 +738,7 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.

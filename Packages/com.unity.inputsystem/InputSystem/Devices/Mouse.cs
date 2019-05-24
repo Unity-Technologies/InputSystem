@@ -69,9 +69,9 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -175,19 +175,26 @@ namespace UnityEngine.InputSystem
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
-            var deltaXChanged = ResetDelta(statePtr, delta.x);
-            var deltaYChanged = ResetDelta(statePtr, delta.y);
+            return OnCarryStateForward(statePtr);
+        }
+
+        protected unsafe new bool OnCarryStateForward(void* statePtr)
+        {
             var scrollXChanged = ResetDelta(statePtr, scroll.x);
             var scrollYChanged = ResetDelta(statePtr, scroll.y);
-            return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
+            return scrollXChanged || scrollYChanged || base.OnCarryStateForward(statePtr);
         }
 
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
+            OnBeforeWriteNewState(oldStatePtr, newStatePtr);
+        }
+
+        protected unsafe new void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        {
             ////REVIEW: this sucks for actions; they see each value change but the changes are no longer independent;
             ////        is accumulation really something we want? should we only reset?
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
+            base.OnBeforeWriteNewState(oldStatePtr, newStatePtr);
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
         }

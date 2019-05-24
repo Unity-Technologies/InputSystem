@@ -936,8 +936,8 @@ namespace UnityEngine.InputSystem.Users
             // If the device supports user account selection but we didn't get one,
             // try to initiate account selection.
             if ((options & InputUserPairingOptions.ForcePlatformUserAccountSelection) != 0 ||
-                (queryUserAccountResult != QueryPairedUserAccountCommand.Result.NotSupported &&
-                 (queryUserAccountResult & QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) == 0 &&
+                (queryUserAccountResult != InputDeviceCommand.GenericFailure &&
+                 (queryUserAccountResult & (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) == 0 &&
                  (options & InputUserPairingOptions.ForceNoPlatformUserAccountSelection) == 0))
             {
                 if (InitiateUserAccountSelectionAtPlatformLevel(device))
@@ -1359,7 +1359,7 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
-        private static QueryPairedUserAccountCommand.Result UpdatePlatformUserAccount(int userIndex, InputDevice device)
+        private static long UpdatePlatformUserAccount(int userIndex, InputDevice device)
         {
             Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount);
 
@@ -1368,7 +1368,7 @@ namespace UnityEngine.InputSystem.Users
                 out var platformUserAccountName, out var platformUserAccountId);
 
             // Nothing much to do if not supported by device.
-            if ((queryResult & QueryPairedUserAccountCommand.Result.NotSupported) != 0)
+            if (queryResult == InputDeviceCommand.GenericFailure)
             {
                 // Check if there's an account selection in progress. There shouldn't be as it's
                 // weird for the device to no signal it does not support querying user account, but
@@ -1388,11 +1388,11 @@ namespace UnityEngine.InputSystem.Users
             {
                 // Yes, there is. See if it is complete.
 
-                if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) != 0)
+                if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) != 0)
                 {
                     // No, still in progress.
                 }
-                else if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled) != 0)
+                else if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled) != 0)
                 {
                     // Got canceled.
                     Notify(userIndex, InputUserChange.AccountSelectionCanceled, device);
@@ -1442,27 +1442,27 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="QueryPairedUserAccountCommand.handle"/>
         /// <seealso cref="QueryPairedUserAccountCommand.name"/>
         /// <seealso cref="QueryPairedUserAccountCommand.id"/>
-        private static QueryPairedUserAccountCommand.Result QueryPairedPlatformUserAccount(InputDevice device,
+        private static long QueryPairedPlatformUserAccount(InputDevice device,
             out InputUserAccountHandle? platformAccountHandle, out string platformAccountName, out string platformAccountId)
         {
             Debug.Assert(device != null);
 
             // Query user account info from backend.
             var queryPairedUser = QueryPairedUserAccountCommand.Create();
-            var result = (QueryPairedUserAccountCommand.Result)device.ExecuteCommand(ref queryPairedUser);
-            if (result == QueryPairedUserAccountCommand.Result.NotSupported)
+            var result = device.ExecuteCommand(ref queryPairedUser);
+            if (result == InputDeviceCommand.GenericFailure)
             {
                 // Not currently paired to user account in backend.
                 platformAccountHandle = null;
                 platformAccountName = null;
                 platformAccountId = null;
-                return QueryPairedUserAccountCommand.Result.NotSupported;
+                return InputDeviceCommand.GenericFailure;
             }
 
             // Success. There is a user account currently paired to the device and we now have the
             // platform's user account details.
 
-            if ((result & QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) != 0)
+            if ((result & (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) != 0)
             {
                 platformAccountHandle =
                     new InputUserAccountHandle(device.description.interfaceName ?? "<Unknown>", queryPairedUser.handle);
@@ -1684,7 +1684,7 @@ namespace UnityEngine.InputSystem.Users
 
                         var userIndex = new InputUser { m_Id = s_OngoingAccountSelections[i].userId }.index;
                         var queryResult = UpdatePlatformUserAccount(userIndex, device);
-                        if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) == 0)
+                        if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) == 0)
                         {
                             wasOngoingAccountSelection = true;
                             s_OngoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);

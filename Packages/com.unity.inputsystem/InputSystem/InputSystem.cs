@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem
     /// This is the central hub for the input system.
     /// </summary>
     // Takes care of the singletons we need and presents a sanitized API.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
@@ -1122,7 +1123,7 @@ namespace UnityEngine.InputSystem
                 new StateEvent
             {
                 baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.id, time),
-                stateFormat = state.GetFormat()
+                stateFormat = state.format
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
@@ -1499,9 +1500,10 @@ namespace UnityEngine.InputSystem
         public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
 
         ////REVIEW: restrict metrics to editor and development builds?
-        public static InputMetrics GetMetrics()
+
+        public static InputMetrics metrics
         {
-            return s_Manager.metrics;
+            get { return s_Manager.metrics; }
         }
 
         internal static InputManager s_Manager;

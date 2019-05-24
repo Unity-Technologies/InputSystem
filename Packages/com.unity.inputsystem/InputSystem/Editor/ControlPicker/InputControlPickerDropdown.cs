@@ -550,12 +550,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Styles
         {
-            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
-
-            static Styles()
-            {
-                waitingForInputLabel.fontSize = 22;
-            }
+            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel").WithFontSize(22);
         }
     }
 }

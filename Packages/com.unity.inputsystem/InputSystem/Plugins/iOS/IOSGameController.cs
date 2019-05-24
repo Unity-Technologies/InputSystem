@@ -72,9 +72,9 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         [InputControl(name = "rightStick", offset = (uint)iOSAxis.RightStickX * sizeof(float) + kAxisOffset)]
         public fixed float axisValues[MaxAxis];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public iOSGameControllerState WithButton(iOSButton button, bool value = true, float rawValue = 1.0f)

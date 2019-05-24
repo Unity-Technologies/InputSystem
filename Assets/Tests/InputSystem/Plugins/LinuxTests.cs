@@ -248,9 +248,9 @@ internal class LinuxTests : InputTestFixture
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('L', 'J', 'O', 'Y');
+            get { return new FourCC('L', 'J', 'O', 'Y'); }
         }
 
         public static readonly string descriptorString =

@@ -48,6 +48,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
         /// <param name="vdf"></param>
         /// <param name="namespaceAndClassName"></param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName)
         {
             if (string.IsNullOrEmpty(vdf))
@@ -365,11 +366,13 @@ namespace UnityEngine.InputSystem.Steam.Editor
             builder.Append(stateStructName);
             builder.Append(" : IInputStateTypeInfo\n");
             builder.Append("{\n");
-            builder.Append("    public FourCC GetFormat()\n");
+            builder.Append("    public FourCC format\n");
             builder.Append("    {\n");
+            builder.Append("        get {\n");
             ////TODO: handle class names that are shorter than 4 characters
             ////TODO: uppercase characters
-            builder.Append(string.Format("        return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
+            builder.Append(string.Format("            return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
+            builder.Append("        }\n");
             builder.Append("    }\n");
             builder.Append("\n");
             var totalButtonCount = 0;
