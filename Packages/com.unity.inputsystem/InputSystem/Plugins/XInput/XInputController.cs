@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.XInput
         {
             public DeviceType type;
             public DeviceSubType subType;
-            public DeviceCapabilities flags;
+            public DeviceCapabilities capabilities;
         }
     }
 }

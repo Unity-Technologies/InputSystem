@@ -48,6 +48,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
         /// <param name="vdf"></param>
         /// <param name="namespaceAndClassName"></param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName)
         {
             if (string.IsNullOrEmpty(vdf))

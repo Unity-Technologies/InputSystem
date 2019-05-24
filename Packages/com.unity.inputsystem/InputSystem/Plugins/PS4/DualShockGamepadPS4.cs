@@ -126,7 +126,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Don't want to mess with the names of hardware data representations.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -138,6 +138,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte largeMotorSpeed;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public byte smallMotorSpeed;
@@ -540,15 +541,15 @@ namespace UnityEngine.InputSystem.PS4
             m_LightBarColor = null;
         }
 
-        public override void SetMotorSpeeds(float largeMotor, float smallMotor)
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             var command = DualShockPS4OuputCommand.Create();
-            command.SetMotorSpeeds(largeMotor, smallMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency);
 
             ExecuteCommand(ref command);
 
-            m_LargeMotor = largeMotor;
-            m_SmallMotor = smallMotor;
+            m_LargeMotor = lowFrequency;
+            m_SmallMotor = highFrequency;
         }
 
         public void ResetOrientation()

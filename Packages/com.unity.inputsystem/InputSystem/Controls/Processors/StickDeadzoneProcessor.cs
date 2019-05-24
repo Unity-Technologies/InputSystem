@@ -23,15 +23,15 @@ namespace UnityEngine.InputSystem.Processors
         private float minOrDefault => min == default ? InputSystem.settings.defaultDeadzoneMin : min;
         private float maxOrDefault => max == default ? InputSystem.settings.defaultDeadzoneMax : max;
 
-        public override Vector2 Process(Vector2 vector, InputControl<Vector2> control = null)
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control = null)
         {
-            var magnitude = vector.magnitude;
+            var magnitude = value.magnitude;
             var newMagnitude = GetDeadZoneAdjustedValue(magnitude);
             if (newMagnitude == 0)
-                vector = Vector2.zero;
+                value = Vector2.zero;
             else
-                vector *= newMagnitude / magnitude;
-            return vector;
+                value *= newMagnitude / magnitude;
+            return value;
         }
 
         private float GetDeadZoneAdjustedValue(float value)

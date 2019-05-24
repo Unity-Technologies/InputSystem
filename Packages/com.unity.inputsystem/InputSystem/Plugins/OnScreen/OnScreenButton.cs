@@ -12,12 +12,12 @@ namespace UnityEngine.InputSystem.OnScreen
     [AddComponentMenu("Input/On-Screen Button")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
-        public void OnPointerUp(PointerEventData data)
+        public void OnPointerUp(PointerEventData eventData)
         {
             SendValueToControl(0.0f);
         }
 
-        public void OnPointerDown(PointerEventData data)
+        public void OnPointerDown(PointerEventData eventData)
         {
             SendValueToControl(1.0f);
         }

@@ -45,6 +45,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl][FieldOffset(24)] public Vector2 radius;
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [InputControl(name = "indirectTouch", layout = "Button", bit = (int)TouchFlags.IndirectTouch)][FieldOffset(35)] public sbyte flags;
 
         public PointerPhase phase
@@ -271,7 +272,7 @@ namespace UnityEngine.InputSystem
         //       sending state to any other device. The code here only presents an alternate path for sending
         //       state to a Touchscreen and have it perform touch allocation internally.
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        protected unsafe new bool OnCarryStateForward(void* statePtr)
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
@@ -311,7 +312,12 @@ namespace UnityEngine.InputSystem
             return haveChangedState;
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        {
+            return OnCarryStateForward(statePtr);
+        }
+
+        protected unsafe new bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt)
         {
             if (stateFormat != TouchState.kFormat)
@@ -371,7 +377,17 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+            ref uint offsetToStoreAt)
+        {
+            return OnReceiveStateWithDifferentFormat(statePtr, stateFormat, stateSize, ref offsetToStoreAt);
+        }
+
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        {
+        }
+
+        protected unsafe new void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
         }
 

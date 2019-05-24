@@ -174,9 +174,8 @@ namespace UnityEngine.InputSystem.HID.Editor
             {
                 var item = AddChild(parent, string.Format("Element {0} ({1})", index, element.reportType), ref id);
 
-                string usagePageString;
-                string usageString;
-                HID.UsageToString(element.usagePage, element.usage, out usagePageString, out usageString);
+                string usagePageString = HID.UsagePageToString(element.usagePage);
+                string usageString = HID.UsageToString(element.usagePage, element.usage);
 
                 AddChild(item, string.Format("Usage Page: 0x{0:X} ({1})", (uint)element.usagePage, usagePageString), ref id);
                 if (usageString != null)

@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputSystem.remoting"/>
     /// \todo Reuse memory allocated for messages instead of allocating separately for each message.
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
-    public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
+    public sealed class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
