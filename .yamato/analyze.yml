@@ -5,16 +5,13 @@ code_analyser:
     image: buildfarm/mac:stable
     flavor: m1.mac
   commands:
-    - mkdir upm-ci~
-    - mkdir upm-ci~/Microsoft.CodeQuality.Analyzers
-    - cd upm-ci~/Microsoft.CodeQuality.Analyzers
+    - mkdir CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
+    - cd CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
     - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o Microsoft.CodeQuality.Analyzers.zip
     - unzip Microsoft.CodeQuality.Analyzers.zip
     - cd ../..
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
-    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1   
-    - upm-ci~/tools/utr/utr --testproject=CodeAnalyzerTestProject --editor-location=.Editor --artifacts_path=upm-ci~/test-results/CodeAnalyzer --suite=editor --stdout-filter=minimal
+    - upm-ci project test --project-path CodeAnalyzerTestProject -u 2019.1
   triggers:
     branches:
       only:
