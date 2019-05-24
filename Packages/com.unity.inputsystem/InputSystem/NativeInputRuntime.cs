@@ -235,7 +235,7 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 if (value == null)
                     EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-                else if (m_FocusChangedMethod == null)
+                else if (m_OnPlayModeChanged == null)
                     EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
                 m_OnPlayModeChanged = value;
             }
@@ -248,7 +248,7 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 if (value == null)
                     EditorApplication.projectChanged -= OnProjectChanged;
-                else if (m_FocusChangedMethod == null)
+                else if (m_OnProjectChanged == null)
                     EditorApplication.projectChanged += OnProjectChanged;
                 m_OnProjectChanged = value;
             }
