@@ -184,6 +184,9 @@ namespace UnityEngine.InputSystem.LowLevel
         public static unsafe long DeviceCommand<TCommand>(this IInputRuntime runtime, int deviceId, ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            if (runtime == null)
+                throw new System.ArgumentNullException(nameof(runtime));
+
             return runtime.DeviceCommand(deviceId, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }
     }

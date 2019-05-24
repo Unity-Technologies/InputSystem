@@ -1040,12 +1040,7 @@ internal class HIDTests : InputTestFixture
     [Category("Utilities")]
     public void Utilities_CanRecognizeVendorDefinedUsages()
     {
-        string usagePage;
-        string usage;
-
-        HID.UsageToString((HID.UsagePage) 0xff01, 0x33, out usagePage, out usage);
-
-        Assert.That(usagePage, Is.EqualTo("Vendor-Defined"));
-        Assert.That(usage, Is.EqualTo("Vendor-Defined"));
+        Assert.That(HID.UsagePageToString((HID.UsagePage) 0xff01), Is.EqualTo("Vendor-Defined"));
+        Assert.That(HID.UsageToString((HID.UsagePage) 0xff01, 0x33), Is.Null);
     }
 }

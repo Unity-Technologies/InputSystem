@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputAction.performed"/>
     /// <seealso cref="InputAction.canceled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public sealed class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>

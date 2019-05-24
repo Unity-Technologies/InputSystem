@@ -30,6 +30,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
             EditorGUI.BeginProperty(rect, label, property);
 
             var pathProperty = property.FindPropertyRelative("m_Path");

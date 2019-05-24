@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow
+    internal class InputActionEditorWindow : EditorWindow, IDisposable
     {
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it or
@@ -714,6 +714,11 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.isDirty = dirty;
         }
 
+        public void Dispose()
+        {
+            m_BindingPropertyView?.Dispose();
+        }
+
         [SerializeField] private TreeViewState m_ActionMapsTreeState;
         [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private InputControlPickerState m_ControlPickerViewState;
@@ -733,6 +738,7 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.

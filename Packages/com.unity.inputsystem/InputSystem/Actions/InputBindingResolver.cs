@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem
 
                         // Skip binding if it is disabled (path is empty string).
                         var path = unresolvedBinding.effectivePath;
-                        if (unresolvedBinding.path == "")
+                        if (string.IsNullOrEmpty(unresolvedBinding.path))
                             continue;
 
                         // Skip binding if it doesn't match with our binding mask (might be empty).

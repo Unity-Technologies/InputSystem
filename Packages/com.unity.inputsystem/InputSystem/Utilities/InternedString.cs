@@ -111,6 +111,16 @@ namespace UnityEngine.InputSystem.Utilities
             return string.Compare(a, b.m_StringLowerCase, StringComparison.OrdinalIgnoreCase) != 0;
         }
 
+        public static bool operator<(InternedString left, InternedString right)
+        {
+            return (string.Compare(left.m_StringLowerCase, right.m_StringLowerCase) < 0);
+        }
+
+        public static bool operator>(InternedString left, InternedString right)
+        {
+            return (string.Compare(left.m_StringLowerCase, right.m_StringLowerCase) > 0);
+        }
+
         public static implicit operator string(InternedString str)
         {
             return str.ToString();

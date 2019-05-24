@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
-        public enum Button
+        private enum Button
         {
             L3 = 1,
             R3 = 2,
@@ -288,6 +288,9 @@ namespace UnityEngine.InputSystem.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             base.FinishSetup(builder);
@@ -537,15 +540,15 @@ namespace UnityEngine.InputSystem.PS4
             m_LightBarColor = null;
         }
 
-        public override void SetMotorSpeeds(float largeMotor, float smallMotor)
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             var command = DualShockPS4OuputCommand.Create();
-            command.SetMotorSpeeds(largeMotor, smallMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency);
 
             ExecuteCommand(ref command);
 
-            m_LargeMotor = largeMotor;
-            m_SmallMotor = smallMotor;
+            m_LargeMotor = lowFrequency;
+            m_SmallMotor = highFrequency;
         }
 
         public void ResetOrientation()

@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Steam
         /// </remarks>
         public bool autoActivateSets { get; set; }
 
-        public SteamController()
+        protected SteamController()
         {
             autoActivateSets = true;
         }

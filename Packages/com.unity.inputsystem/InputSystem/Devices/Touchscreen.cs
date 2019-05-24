@@ -126,8 +126,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
 namespace UnityEngine.InputSystem
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
-    [Flags]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Fix this after landing Touch refactor")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "Fix this after landing Touch refactor")]
     public enum TouchFlags
     {
         IndirectTouch
@@ -226,6 +226,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             var touchArray = new TouchControl[TouchscreenState.MaxTouches];
 
             for (var i = 0; i < TouchscreenState.MaxTouches; ++i)

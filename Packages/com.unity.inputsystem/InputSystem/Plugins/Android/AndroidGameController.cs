@@ -71,7 +71,6 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
-    [Flags]
     public enum AndroidInputSource
     {
         Keyboard = 257,

@@ -130,6 +130,7 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the value has been successfully read from the event, false otherwise.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         /// <seealso cref="ReadUnprocessedValueFromEvent{TValue}(InputControl{TValue},InputEventPtr)"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -158,6 +159,7 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -478,6 +480,12 @@ namespace UnityEngine.InputSystem
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
             where TControl : InputControl
         {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+            if (controls == null)
+                throw new ArgumentNullException(nameof(controls));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
             if (parent is TControl parentAsTControl && predicate(parentAsTControl))
                 controls.Add(parentAsTControl);
 
