@@ -1,7 +1,5 @@
 using UnityEngine.Experimental.Input.LowLevel;
 
-////TODO: get rid of pressPoint and instead deadzone axis buttons
-
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
 namespace UnityEngine.Experimental.Input.Controls
@@ -20,7 +18,8 @@ namespace UnityEngine.Experimental.Input.Controls
     public class ButtonControl : AxisControl
     {
         public float pressPoint;
-        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+
+        internal float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         public ButtonControl()
         {

@@ -383,14 +383,30 @@ namespace UnityEngine.Experimental.Input
 
         public override string ToString()
         {
+            string str;
             if (m_Name == null)
-                return "<Unnamed>";
+                str = "<Unnamed>";
+            else if (m_ActionMap != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionMap.name))
+                str = $"{m_ActionMap.name}/{m_Name}";
+            else
+                str = m_Name;
 
-            ////REVIEW: should we cache this?
-            if (m_ActionMap != null && !isSingletonAction && !String.IsNullOrEmpty(m_ActionMap.name))
-                return $"{m_ActionMap.name}/{m_Name}";
+            var controls = this.controls;
+            if (controls.Count > 0)
+            {
+                str += "[";
+                var isFirst = true;
+                foreach (var control in controls)
+                {
+                    if (!isFirst)
+                        str += ",";
+                    str += control.path;
+                    isFirst = false;
+                }
+                str += "]";
+            }
 
-            return m_Name;
+            return str;
         }
 
         public void Enable()
@@ -729,14 +745,6 @@ namespace UnityEngine.Experimental.Input
             {
                 return m_State?.ReadValueAsObject(bindingIndex, controlIndex);
             }
-
-            ////TODO: really read previous value, not value from last frame
-            /*
-            public TValue ReadPreviousValue<TValue>()
-            {
-                throw new NotImplementedException();
-            }
-            */
 
             public override string ToString()
             {

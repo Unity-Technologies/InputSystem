@@ -10,8 +10,26 @@ using UnityEngine.Profiling;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
-    // Helper to simplify recording events. Can record events for a specific device
-    // or all events coming in.
+    /// <summary>
+    /// Record input events (<see cref="InputEvent"/>) coming in for a specific device (<see cref="InputDevice"/>)
+    /// or coming in on any device.
+    /// </summary>
+    /// <remarks>
+    /// Note that this class allocates unmanaged memory and must be disposed in order to not leak memory.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var trace = new InputEventTrace();
+    /// trace.Enable();
+    ///
+    /// // ...
+    ///
+    /// foreach (var eventPtr in trace)
+    /// {
+    ///     // Do something with event.
+    /// }
+    /// </code>
+    /// </example>
     [Serializable]
     public class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
@@ -120,6 +138,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public void Dispose()
         {
+            Disable();
             Release();
             GC.SuppressFinalize(this);
         }
@@ -152,8 +171,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         private unsafe void Release()
         {
-            Disable();
-
             if (m_EventBuffer != IntPtr.Zero)
                 UnsafeUtility.Free(m_EventBuffer.ToPointer(), Allocator.Persistent);
 

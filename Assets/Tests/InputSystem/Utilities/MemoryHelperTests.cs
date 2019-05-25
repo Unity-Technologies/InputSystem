@@ -152,4 +152,21 @@ internal class MemoryHelperTests
             Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.True);
         }
     }
+
+    [Test]
+    [Category("Utilities")]
+    public void Utilities_CanComputeOverlapBetweenBitRegions()
+    {
+        Assert.That(new MemoryHelpers.BitRegion(1, 0, 8).Overlap(new MemoryHelpers.BitRegion(1, 0, 8)),
+            Is.EqualTo(new MemoryHelpers.BitRegion(1, 0, 8)));
+        Assert.That(new MemoryHelpers.BitRegion(1, 0, 8).Overlap(new MemoryHelpers.BitRegion(2, 0, 8)),
+            Is.EqualTo(default(MemoryHelpers.BitRegion)));
+        Assert.That(new MemoryHelpers.BitRegion(2, 0, 8).Overlap(new MemoryHelpers.BitRegion(1, 0, 8)),
+            Is.EqualTo(default(MemoryHelpers.BitRegion)));
+
+        Assert.That(new MemoryHelpers.BitRegion(12, 3).Overlap(new MemoryHelpers.BitRegion(13, 2)),
+            Is.EqualTo(new MemoryHelpers.BitRegion(13, 2)));
+        Assert.That(new MemoryHelpers.BitRegion(12, 2).Overlap(new MemoryHelpers.BitRegion(13, 2)),
+            Is.EqualTo(new MemoryHelpers.BitRegion(13, 1)));
+    }
 }

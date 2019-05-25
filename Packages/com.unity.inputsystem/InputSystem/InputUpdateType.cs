@@ -33,6 +33,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         Fixed = 1 << 1,
 
+        ////REVIEW: Axe this update type from the public API?
         /// <summary>
         /// Input update that happens right before rendering.
         /// </summary>
@@ -60,14 +61,15 @@ namespace UnityEngine.Experimental.Input
         ////TODO
         Manual = 1 << 4,
 
+        ////REVIEW: kill?
         Default = Dynamic | Fixed | Editor,
     }
 
     internal static class InputUpdate
     {
         public static InputUpdateType s_LastUpdateType;
-        public static uint s_DynamicUpdateCount;
-        public static uint s_FixedUpdateCount;
+        public static uint s_DynamicUpdateStepCount;
+        public static uint s_FixedUpdateStepCount;
         public static uint s_LastUpdateRetainedEventBytes;
         public static uint s_LastUpdateRetainedEventCount;
 
@@ -75,8 +77,8 @@ namespace UnityEngine.Experimental.Input
         public struct SerializedState
         {
             public InputUpdateType lastUpdateType;
-            public uint dynamicUpdateCount;
-            public uint fixedUpdateCount;
+            public uint dynamicUpdateStepCount;
+            public uint fixedUpdateStepCount;
             public uint lastUpdateRetainedEventBytes;
             public uint lastUpdateRetainedEventCount;
         }
@@ -86,8 +88,8 @@ namespace UnityEngine.Experimental.Input
             return new SerializedState
             {
                 lastUpdateType = s_LastUpdateType,
-                dynamicUpdateCount = s_DynamicUpdateCount,
-                fixedUpdateCount = s_FixedUpdateCount,
+                dynamicUpdateStepCount = s_DynamicUpdateStepCount,
+                fixedUpdateStepCount = s_FixedUpdateStepCount,
                 lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
                 lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
@@ -96,8 +98,8 @@ namespace UnityEngine.Experimental.Input
         public static void Restore(SerializedState state)
         {
             s_LastUpdateType = state.lastUpdateType;
-            s_DynamicUpdateCount = state.dynamicUpdateCount;
-            s_FixedUpdateCount = state.fixedUpdateCount;
+            s_DynamicUpdateStepCount = state.dynamicUpdateStepCount;
+            s_FixedUpdateStepCount = state.fixedUpdateStepCount;
             s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
             s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
         }

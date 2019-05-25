@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         // this can't be guaranteed for generic type parameters, they can't be used with pointers.
         // This is why we cannot make InputEventPtr generic or have a generic method that returns
         // a pointer to a specific type of event.
-        private InputEvent* m_EventPtr;
+        private readonly InputEvent* m_EventPtr;
 
         public InputEventPtr(InputEvent* eventPtr)
         {
@@ -32,10 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
         }
 
-        public bool valid
-        {
-            get { return m_EventPtr != null; }
-        }
+        public bool valid => m_EventPtr != null;
 
         public bool handled
         {
@@ -107,7 +104,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double time
         {
-            get { return valid ? m_EventPtr->time : 0.0; }
+            get => valid ? m_EventPtr->time : 0.0;
             set
             {
                 if (!valid)
@@ -118,7 +115,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         internal double internalTime
         {
-            get { return valid ? m_EventPtr->internalTime : 0.0; }
+            get => valid ? m_EventPtr->internalTime : 0.0;
             set
             {
                 if (!valid)
@@ -127,10 +124,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public IntPtr data
-        {
-            get { return new IntPtr(m_EventPtr); }
-        }
+        public IntPtr data => new IntPtr(m_EventPtr);
 
         public InputEvent* ToPointer()
         {
@@ -145,11 +139,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
             return m_EventPtr->type == otherEventTypeCode;
-        }
-
-        public void CopyTo(void* buffer, int bufferSize)
-        {
-            throw new NotImplementedException();
         }
 
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.
@@ -205,6 +194,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return new InputEventPtr(eventPtr);
         }
 
+        ////REVIEW: this also leads to implicit conversion to void*... not sure this is a good idea
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
         {
             return eventPtr.ToPointer();

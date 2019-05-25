@@ -105,7 +105,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Set delegate to call when the application changes focus.
         /// </summary>
         /// <seealso cref="Application.onFocusChanged"/>
-        Action<bool> onFocusChanged { set; }
+        Action<bool> onPlayerFocusChanged { set; }
 
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
@@ -153,8 +153,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
         ScreenOrientation screenOrientation { get; }
-        Vector2 screenSize { get; }
-        int frameCount { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.

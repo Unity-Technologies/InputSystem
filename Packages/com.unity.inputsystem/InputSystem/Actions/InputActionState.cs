@@ -898,10 +898,15 @@ namespace UnityEngine.Experimental.Input
         // Called from InputManager when one of our state change monitors has fired.
         // Tells us the time of the change *according to the state events coming in*.
         // Also tells us which control of the controls we are binding to triggered the
-        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
+        // change and relays the binding index we gave it when we called AddChangeMonitor.
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time,
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
+            #if UNITY_EDITOR
+            if (InputState.currentUpdate == InputUpdateType.Editor)
+                return;
+            #endif
+
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
         }
@@ -3177,7 +3182,8 @@ namespace UnityEngine.Experimental.Input
         {
             DestroyAllActionMapStates();
             for (var i = 0; i < s_GlobalList.length; ++i)
-                s_GlobalList[i].Free();
+                if (s_GlobalList[i].IsAllocated)
+                    s_GlobalList[i].Free();
             s_GlobalList.length = 0;
             s_OnActionChange.Clear();
         }

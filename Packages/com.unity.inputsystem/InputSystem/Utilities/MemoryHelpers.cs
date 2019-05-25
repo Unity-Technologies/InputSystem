@@ -5,12 +5,55 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static unsafe class MemoryHelpers
     {
+        public struct BitRegion
+        {
+            public uint bitOffset;
+            public uint sizeInBits;
+
+            public bool isEmpty => sizeInBits == 0;
+
+            public BitRegion(uint bitOffset, uint sizeInBits)
+            {
+                this.bitOffset = bitOffset;
+                this.sizeInBits = sizeInBits;
+            }
+
+            public BitRegion(uint byteOffset, uint bitOffset, uint sizeInBits)
+            {
+                this.bitOffset = byteOffset * 8 + bitOffset;
+                this.sizeInBits = sizeInBits;
+            }
+
+            public BitRegion Overlap(BitRegion other)
+            {
+                ////REVIEW: too many branches; this can probably be done much smarter
+
+                var thisEnd = bitOffset + sizeInBits;
+                var otherEnd = other.bitOffset + other.sizeInBits;
+
+                if (thisEnd <= other.bitOffset || otherEnd <= bitOffset)
+                    return default;
+
+                var end = Math.Min(thisEnd, otherEnd);
+                var start = Math.Max(bitOffset, other.bitOffset);
+
+                return new BitRegion(start, end - start);
+            }
+        }
+
+        public static bool Compare(void* ptr1, void* ptr2, BitRegion region)
+        {
+            if (region.sizeInBits == 1)
+                return ReadSingleBit(ptr1, region.bitOffset) == ReadSingleBit(ptr2, region.bitOffset);
+            return MemCmpBitRegion(ptr1, ptr2, region.bitOffset, region.sizeInBits);
+        }
+
         public static uint ComputeFollowingByteOffset(uint byteOffset, uint sizeInBits)
         {
             return (uint)(byteOffset + sizeInBits / 8 + (sizeInBits % 8 > 0 ? 1 : 0));
         }
 
-        public static bool MemoryOverlapsBitRegion(uint byteOffset, uint bitOffset, uint sizeInBits, uint memoryOffset,
+        public static bool BitRegionOverlapsMemory(uint byteOffset, uint bitOffset, uint sizeInBits, uint memoryOffset,
             uint memorySizeInBytes)
         {
             if (sizeInBits % 8 == 0 && bitOffset == 0)
@@ -46,7 +89,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             else
             {
                 var byteOffset = bitOffset / 8;
-                bitOffset = bitOffset % 8;
+                bitOffset %= 8;
 
                 if (value)
                     *((byte*)ptr + byteOffset) |= (byte)(1 << (int)bitOffset);
@@ -81,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 // doesn't like much.
 
                 var byteOffset = bitOffset / 8;
-                bitOffset = bitOffset % 8;
+                bitOffset %= 8;
 
                 bits = *((byte*)ptr + byteOffset);
             }

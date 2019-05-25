@@ -31,9 +31,10 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
-    [Property("TimesliceEvents", "Off")]
     public void Remote_EventsAreSentToRemotes()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var remote = new FakeRemote())
@@ -232,6 +233,14 @@ partial class CoreTests
         public void RegisterDisconnection(UnityAction<int> callback)
         {
             m_DisconnectionListeners.AddListener(callback);
+        }
+
+        public void UnregisterConnection(UnityAction<int> callback)
+        {
+        }
+
+        public void UnregisterDisconnection(UnityAction<int> callback)
+        {
         }
 
         public void Receive(Guid messageId, byte[] data)

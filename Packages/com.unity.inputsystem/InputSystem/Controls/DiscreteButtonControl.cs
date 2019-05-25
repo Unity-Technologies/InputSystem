@@ -1,4 +1,6 @@
 using System;
+using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: hide in UI
@@ -41,6 +43,15 @@ namespace UnityEngine.Experimental.Input.Controls
         public int wrapAtValue;
 
         public int nullValue;
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            if (!stateBlock.format.IsIntegerFormat())
+                throw new NotSupportedException(
+                    $"Non-integer format '{stateBlock.format}' is not supported for DiscreteButtonControl '{this}'");
+        }
 
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {

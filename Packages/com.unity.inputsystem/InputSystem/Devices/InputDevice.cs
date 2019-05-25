@@ -204,9 +204,9 @@ namespace UnityEngine.Experimental.Input
             {
                 var updateType = InputUpdate.s_LastUpdateType;
                 if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.BeforeRender)
-                    return m_CurrentDynamicUpdateCount == InputUpdate.s_DynamicUpdateCount;
+                    return m_CurrentDynamicUpdateStepCount == InputUpdate.s_DynamicUpdateStepCount;
                 if (updateType == InputUpdateType.Fixed)
-                    return m_CurrentFixedUpdateCount == InputUpdate.s_FixedUpdateCount;
+                    return m_CurrentFixedUpdateStepCount == InputUpdate.s_FixedUpdateStepCount;
 
                 ////REVIEW: how should this behave in the editor
                 return false;
@@ -279,12 +279,11 @@ namespace UnityEngine.Experimental.Input
         public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
             if (bufferPtr == null)
-                throw new ArgumentNullException("bufferPtr");
+                throw new ArgumentNullException(nameof(bufferPtr));
             if (bufferSize < valueSizeInBytes)
-                throw new ArgumentException(string.Format("Buffer tool small (expected: {0}, actual: {1}",
-                    valueSizeInBytes, bufferSize));
+                throw new ArgumentException($"Buffer too small (expected: {valueSizeInBytes}, actual: {bufferSize}");
 
             var adjustedStatePtr = (byte*)statePtr + m_StateBlock.byteOffset;
             UnsafeUtility.MemCpy(bufferPtr, adjustedStatePtr, m_StateBlock.alignedSizeInBytes);
@@ -293,9 +292,9 @@ namespace UnityEngine.Experimental.Input
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
             if (firstStatePtr == null)
-                throw new ArgumentNullException("firstStatePtr");
+                throw new ArgumentNullException(nameof(firstStatePtr));
             if (secondStatePtr == null)
-                throw new ArgumentNullException("secondStatePtr");
+                throw new ArgumentNullException(nameof(secondStatePtr));
 
             var adjustedFirstStatePtr = (byte*)firstStatePtr + m_StateBlock.byteOffset;
             var adjustedSecondStatePtr = (byte*)firstStatePtr + m_StateBlock.byteOffset;
@@ -345,6 +344,8 @@ namespace UnityEngine.Experimental.Input
         protected virtual void OnRemoved()
         {
         }
+
+        ////TODO: add overridable OnDisable/OnEnable that fire the device commands
 
         ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
@@ -405,8 +406,8 @@ namespace UnityEngine.Experimental.Input
         // The dynamic and fixed update count corresponding to the current
         // front buffers that are active on the device. We use this to know
         // when to flip buffers.
-        internal uint m_CurrentDynamicUpdateCount;
-        internal uint m_CurrentFixedUpdateCount;
+        internal uint m_CurrentDynamicUpdateStepCount;
+        internal uint m_CurrentFixedUpdateStepCount;
 
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.
@@ -433,7 +434,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         internal bool hasControlsWithDefaultState
         {
-            get { return (m_DeviceFlags & DeviceFlags.HasControlsWithDefaultState) == DeviceFlags.HasControlsWithDefaultState; }
+            get => (m_DeviceFlags & DeviceFlags.HasControlsWithDefaultState) == DeviceFlags.HasControlsWithDefaultState;
             set
             {
                 if (value)
@@ -446,7 +447,7 @@ namespace UnityEngine.Experimental.Input
         internal void SetUsage(InternedString usage)
         {
             // Make last entry in m_UsagesForEachControl be our device usage string.
-            var numControlUsages = m_UsageToControl != null ? m_UsageToControl.Length : 0;
+            var numControlUsages = m_UsageToControl?.Length ?? 0;
             Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
             m_UsagesForEachControl[numControlUsages] = usage;
             m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);

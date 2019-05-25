@@ -81,8 +81,8 @@ public class PenISX : MonoBehaviour
         pen_rotation.GetChild(0).localEulerAngles = rotation_adjust + new Vector3(0, twist * -360, 0);
 
         // Update ISX information text UI
-        m_penInfoText.text = pen.phase.ReadValue().ToString() + "\n"
-            + pos.ToString("F0") + "\n"
+        m_penInfoText.text =
+            pos.ToString("F0") + "\n"
             + tilt.ToString("F2") + "\n"
             + twist.ToString("F2");
 

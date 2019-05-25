@@ -3,6 +3,10 @@
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    /// <summary>
+    ///
+    /// </summary>
+    /// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
     public interface IInputStateChangeMonitor
     {
         /// <summary>
@@ -23,7 +27,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <param name="time"></param>
         /// <param name="monitorIndex"></param>
         /// <param name="timerIndex"></param>
-        /// <seealso cref="InputSystem.AddStateChangeMonitorTimeout"/>
+        /// <seealso cref="InputState.AddChangeMonitorTimeout"/>
         void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex);
     }
 }

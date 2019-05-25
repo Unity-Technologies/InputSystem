@@ -2,7 +2,6 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.PlayerLoop;
 
 ////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
 
@@ -220,6 +219,30 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public float tapRadius
+        {
+            get => m_TapRadius;
+            set
+            {
+                if (m_TapRadius == value)
+                    return;
+                m_TapRadius = value;
+                OnChange();
+            }
+        }
+
+        public float multiTapDelayTime
+        {
+            get => m_MultiTapDelayTime;
+            set
+            {
+                if (m_MultiTapDelayTime == value)
+                    return;
+                m_MultiTapDelayTime = value;
+                OnChange();
+            }
+        }
+
         /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
@@ -272,7 +295,7 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] private string[] m_SupportedDevices;
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
-        [SerializeField] private UpdateMode m_UpdateMode;
+        [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdateOnly;
         [Tooltip("Determine when input actions are triggered. This is only relevant if both fixed and dynamic updates are enabled. By default, "
             + "actions are triggered right before fixed updates.")]
         [SerializeField] private ActionUpdateMode m_ActionUpdateMode;
@@ -289,12 +312,9 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] private float m_DefaultButtonPressPoint = 0.1f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
-        //[SerializeField] private float m_DefaultMultiTapMaximumDelay = 0.75f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
-
-        #if UNITY_EDITOR
-        [SerializeField] private bool m_LockInputToGameView;
-        #endif
+        [SerializeField] private float m_TapRadius = 5;
+        [SerializeField] private float m_MultiTapDelayTime = 0.75f;
 
         internal void OnChange()
         {

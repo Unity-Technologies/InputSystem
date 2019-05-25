@@ -25,6 +25,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
 
     public void Update()
     {
+        /*
         var touchscreen = InputSystem.GetDevice<Touchscreen>();
         var averagePosition = Vector3.zero;
 
@@ -70,6 +71,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
         m_AveragePositionMarker.transform.position = averagePosition;
 
         DeleteExtraTouches(touchscreen.activeTouches.Count);
+        */
     }
 
     private void DeleteExtraTouches(int numActiveTouches)

@@ -140,7 +140,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     $"sizeInBytes must be >= sizeof(InputEvent) == {InputEvent.kBaseEventSize} (was {sizeInBytes})",
                     nameof(sizeInBytes));
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(sizeInBytes, InputEvent.kAlignment);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultipleOf(sizeInBytes, InputEvent.kAlignment);
 
             // See if we need to enlarge our buffer.
             var currentCapacity = capacityInBytes;
@@ -245,7 +245,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 var numBytes = currentReadPos->sizeInBytes;
                 if (currentReadPos != currentWritePos)
                     UnsafeUtility.MemMove(currentWritePos, currentReadPos, numBytes);
-                currentWritePos = (InputEvent*)((byte*)currentWritePos + NumberHelpers.AlignToMultiple(numBytes, 4));
+                currentWritePos = (InputEvent*)((byte*)currentWritePos + NumberHelpers.AlignToMultipleOf(numBytes, 4));
                 ++numEventsRetainedInBuffer;
             }
 

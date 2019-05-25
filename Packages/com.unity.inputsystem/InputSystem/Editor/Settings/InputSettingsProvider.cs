@@ -41,7 +41,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
             {
-                GenericMenu menu = new GenericMenu();
+                var menu = new GenericMenu();
                 menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
                 menu.AddSeparator("");
                 for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
@@ -70,7 +70,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 GUILayout.Space(20);
             }
 
-            using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
+            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
                 EditorGUILayout.HelpBox(
                     "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
@@ -95,8 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     //EditorGUILayout.PropertyField(m_ActionUpdateMode);
                 }
 
-                ////TODO: enable when backported
-                //EditorGUILayout.PropertyField(m_TimesliceEvents);
+                EditorGUILayout.PropertyField(m_TimesliceEvents);
 
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
@@ -111,6 +110,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUILayout.PropertyField(m_DefaultTapTime);
                 EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
                 EditorGUILayout.PropertyField(m_DefaultHoldTime);
+                EditorGUILayout.PropertyField(m_TapRadius);
+                EditorGUILayout.PropertyField(m_MultiTapDelayTime);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -230,6 +231,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_DefaultTapTime = m_SettingsObject.FindProperty("m_DefaultTapTime");
             m_DefaultSlowTapTime = m_SettingsObject.FindProperty("m_DefaultSlowTapTime");
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
+            m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
+            m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -322,6 +325,8 @@ namespace UnityEngine.Experimental.Input.Editor
         [NonSerialized] private SerializedProperty m_DefaultTapTime;
         [NonSerialized] private SerializedProperty m_DefaultSlowTapTime;
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
+        [NonSerialized] private SerializedProperty m_TapRadius;
+        [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;

@@ -6,11 +6,53 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3-preview] - TBD
 
+### Added
+
+- Touch support has been reworked and extended.
+  * `Touchscreen.touch[0..9]` are now bindable from the control picker.
+  * `Touchscreen.primaryTouch` is now a separate control which tracks the primary touch on the screen.
+  * The controls `Touchscreen` inherits from `Pointer` (such as `position`, `phase`, and `delta`) are now tied to `Touchscreen.primaryTouch` and allow for `Touchscreen` to function as a generic `Pointer` (like `Mouse` and `Pen`).
+  * `Touchscreen.press` (renamed from `Touchscreen.button`) is now a working, synthetic button that is down whenever at least one finger is on the screen.
+  * Recording of start time and start position has been added to touches.
+    - `TouchControl.startPosition` gives the starting position of the touch.
+    - `TouchControl.startTime` gives the starting time of the touch.
+  * Tap detection has been added to `Touchscreen`.
+    - Tap time (i.e. time within which a press-and-release must be completed for a tap to register) corresponds to `InputSettings.defaultTapTime`.
+    - Tap release must happen within a certain radius of first contact. This is determined by a new setting `InputSettings.tapRadius`.
+    - `TouchControl.tap` is a new button control that triggers then the touch is tapped. Note that this happens instantly when a touch ends. The button will go to 1 and __immediately__ go back to 0. This means that polling the button in `Update`, for example, will never trigger a tap. Either use actions to observe the button or use the `Touch` API from `EnhancedTouch` to poll taps.
+  * `Touchscreen.activeTouches` has been removed. Use `Touch.activeTouches` from the new enhanced touch API instead for more reliable touch tracking.
+  * `Touchscreen.allTouchControls` has been renamed to `Touchscreen.touches`.
+  * A new `EnhancedTouch` plugin has been added which offers an enhanced `Touch` and `Finger` API to reliably track touches and fingers across updates. This obsoletes the need to manually track touch IDs and phases and gives access to individual touch history.
+- Changing state has been decoupled from events. While input events are the primary means by which to trigger state changes, anyone can perform state changes manually now from anywhere.
+    ```
+    InputState.Change(...);
+    ```
+  * This change makes it possible to update state __from__ state and thus synthesize input data from other input coming in.
+- A new API for recording state changes over time has been added.
+    ```
+    var history = new InputStateHistory("<Gamepad>/leftStick");
+    history.StartRecording();
+    
+    //...
+    
+    foreach (var record in history)
+        Debug.Log(record);
+    ```
+
 ### Changed
 
+- `Pointer.phase` has been removed and `PointerPhase` has been renamed to `TouchPhase`. Phases are now specific to touch. `PointerPhaseControl` has been renamed to `TouchPhaseControl`.
+- `Pointer.button` has been renamed to `Pointer.press` and now is a control that indicates whether the pointer is in "press down" state.
+  * For mouse, corresponds to left button press.
+  * For pen, corresponds to tip contact.
+  * For touch, corresponds to primary touch contact (i.e. whether __any__ finger is down).
 - `StickControl.x` and `StickControl.y` are now deadzoned, i.e. have `AxisDeadzone` processors on them. This affects all gamepads and joysticks.
   * __NOTE:__ The deadzoning is __independent__ of the stick. Whereas the stack has a radial deadzones, `x` and `y` have linear deadzones. This means that `leftStick.ReadValue().x` is __not__ necessary equal to `leftStick.x.ReadValue()`.
   * This change also fixes the problem of noise from sticks not getting filtered out and causing devices such as the PS4 controller to constantly make itself `Gamepad.current`.
+- The state change monitor APIs (`IInputStateChangeMonitor` and friends) have been moved out of `InputSystem` into a new static class `InputState` in `UnityEngine.Experimental.Input.LowLevel`.
+  * Rationale: These APIs are fairly low-level and not of general interest so having them out of `InputSystem` reduces the API surface visible to most users.
+- `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onChange`.
+  * Rationale: The other `InputDeviceChange` notifications are low-frequency whereas `StateChanged` is high-frequency. Putting them all on the same callback made adding a callback to `InputSystem.deviceChange` unnecessarily expensive.
 
 ### Fixed
 

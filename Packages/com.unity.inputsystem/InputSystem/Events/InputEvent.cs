@@ -130,6 +130,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        ////FIXME: this API isn't consistent; time seems to be internalTime whereas time property is external time
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
         {
             if (time < 0)
@@ -178,7 +179,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
             Debug.Assert(currentPtr != null);
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultipleOf(currentPtr->sizeInBytes, kAlignment);
             return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
         }
 
@@ -195,7 +196,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Debug.Assert(currentPtr != null);
             Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultipleOf(currentPtr->sizeInBytes, kAlignment);
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
 
             if (!buffer.Contains(nextPtr))

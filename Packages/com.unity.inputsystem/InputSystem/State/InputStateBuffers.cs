@@ -194,7 +194,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             sizePerBuffer = ComputeSizeOfSingleBufferAndOffsetForEachDevice(devices, deviceCount, ref newDeviceOffsets);
             if (sizePerBuffer == 0)
                 return null;
-            sizePerBuffer = NumberHelpers.AlignToMultiple(sizePerBuffer, 4);
+            sizePerBuffer = NumberHelpers.AlignToMultipleOf(sizePerBuffer, 4);
 
             var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) != 0;
             var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) != 0;
@@ -442,7 +442,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             for (var i = 0; i < deviceCount; ++i)
             {
                 var sizeOfDevice = devices[i].m_StateBlock.alignedSizeInBytes;
-                sizeOfDevice = NumberHelpers.AlignToMultiple(sizeOfDevice, 4);
+                sizeOfDevice = NumberHelpers.AlignToMultipleOf(sizeOfDevice, 4);
                 if (sizeOfDevice == 0) // Shouldn't happen as we don't allow empty layouts but make sure we catch this if something slips through.
                     throw new Exception($"Device '{devices[i]}' has a zero-size state buffer");
                 result[i] = sizeInBytes;

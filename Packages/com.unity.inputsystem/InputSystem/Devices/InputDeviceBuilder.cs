@@ -439,7 +439,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                         // Adjust offset, if the control uses explicit offsets.
                         if (control.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
-                            control.m_StateBlock.byteOffset = (uint)n * control.m_StateBlock.alignedSizeInBytes;
+                            control.m_StateBlock.byteOffset += (uint)n * control.m_StateBlock.alignedSizeInBytes;
                     }
                 }
                 else

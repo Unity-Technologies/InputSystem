@@ -150,6 +150,8 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics_ReceivesEventOnShutdown()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
+
         // Add and pump some data so we're getting some meaningful metrics.
         var gamepad = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice<Gamepad>();

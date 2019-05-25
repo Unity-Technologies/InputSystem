@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -6,6 +8,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -133,6 +136,8 @@ partial class CoreTests
     [Category("State")]
     public void State_RunningMultipleFixedUpdates_FlipsDynamicUpdateBuffersOnlyOnFirstUpdate()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
@@ -148,9 +153,11 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
-    [Property("TimesliceEvents", "Off")]
     public void State_RunningNoFixedUpdateInFrame_StillCapturesStateForNextFixedUpdate()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
+        InputSystem.settings.timesliceEvents = false;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
@@ -347,7 +354,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
-    public void State_CanUpdateButtonState()
+    public void State_CanUpdateButtonStateUsingEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -447,6 +454,8 @@ partial class CoreTests
     [Category("State")]
     public void State_CanListenForInputUpdates()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
+
         // Bypass InputManager.ShouldRunUpdate().
         runtime.onShouldRunUpdate = _ => true;
 
@@ -511,9 +520,10 @@ partial class CoreTests
     // system to build its entire machinery but the core mechanism is available to anyone.
     [Test]
     [Category("State")]
-    [Property("TimesliceEvents", "Off")]
     public void State_CanSetUpMonitorsForStateChanges()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var monitorFired = false;
@@ -521,7 +531,7 @@ partial class CoreTests
         double? receivedTime = null;
         InputEventPtr? receivedEventPtr = null;
 
-        var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+        var monitor = InputState.AddChangeMonitor(gamepad.leftStick,
             (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
@@ -584,7 +594,7 @@ partial class CoreTests
         Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
 
         // Remove state monitor and change leftStick again.
-        InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor);
+        InputState.RemoveChangeMonitor(gamepad.leftStick, monitor);
 
         monitorFired = false;
         receivedControl = null;
@@ -596,6 +606,29 @@ partial class CoreTests
 
         Assert.That(monitorFired, Is.False);
     }
+
+    #if UNITY_EDITOR
+    [Test]
+    [Category("State")]
+    public void State_CanSetUpMonitorsForStateChanges_InEditor()
+    {
+        InputSystem.settings.timesliceEvents = false;
+        InputEditorUserSettings.lockInputToGameView = false;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitorFired = false;
+        InputState.AddChangeMonitor(gamepad.leftStick,
+            (control, time, eventPtr, monitorIndex) => monitorFired = true);
+
+        runtime.PlayerFocusLost();
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(monitorFired, Is.True);
+    }
+
+    #endif
 
     struct StateWithMultiBitControl : IInputStateTypeInfo
     {
@@ -652,8 +685,8 @@ partial class CoreTests
             receivedControl = control;
         }
 
-        InputSystem.AddStateChangeMonitor(device["dpad"], Callback);
-        InputSystem.AddStateChangeMonitor(device["data"], Callback);
+        InputState.AddChangeMonitor(device["dpad"], Callback);
+        InputState.AddChangeMonitor(device["data"], Callback);
 
         InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3));
         InputSystem.Update();
@@ -682,14 +715,14 @@ partial class CoreTests
 
         var monitorFired = false;
         long? receivedMonitorIndex = null;
-        var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+        var monitor = InputState.AddChangeMonitor(gamepad.leftStick,
             (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 receivedMonitorIndex = monitorIndex;
             }, kLeftStick);
-        InputSystem.AddStateChangeMonitor(gamepad.rightStick, monitor, kRightStick);
+        InputState.AddChangeMonitor(gamepad.rightStick, monitor, kRightStick);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
         InputSystem.Update();
@@ -706,7 +739,7 @@ partial class CoreTests
         Assert.That(monitorFired);
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
 
-        InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor, kLeftStick);
+        InputState.RemoveChangeMonitor(gamepad.leftStick, monitor, kLeftStick);
 
         monitorFired = false;
         receivedMonitorIndex = null;
@@ -741,7 +774,7 @@ partial class CoreTests
         int? receivedTimerIndex = null;
         InputControl receivedControl = null;
 
-        var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+        var monitor = InputState.AddChangeMonitor(gamepad.leftStick,
             (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
@@ -757,7 +790,7 @@ partial class CoreTests
             });
 
         // Add and immediately expire timeout.
-        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 1234);
         runtime.currentTime += 2;
         InputSystem.Update();
@@ -774,7 +807,7 @@ partial class CoreTests
 
         // Add timeout and perform a state change. Then advance past timeout time
         // and make sure we *DO* get a notification.
-        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
         InputSystem.Update();
@@ -794,9 +827,9 @@ partial class CoreTests
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.
-        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 1423);
-        InputSystem.RemoveStateChangeMonitorTimeout(monitor, timerIndex: 1423);
+        InputState.RemoveChangeMonitorTimeout(monitor, timerIndex: 1423);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
         InputSystem.Update();
 
@@ -815,12 +848,12 @@ partial class CoreTests
         var timeoutFired = false;
 
         IInputStateChangeMonitor monitor = null;
-        monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+        monitor = InputState.AddChangeMonitor(gamepad.leftStick,
             (control, time, eventPtr, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
-                InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor,
+                InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor,
                     runtime.currentTime + 1);
             }, timerExpiredCallback:
             (control, time, monitorIndex, timerIndex) =>
@@ -848,13 +881,13 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.AddStateChangeMonitor(gamepad.buttonWest,
+        InputState.AddChangeMonitor(gamepad.buttonWest,
             (c, d, e, m) => { Debug.Log("ButtonWest"); });
-        InputSystem.AddStateChangeMonitor(gamepad.buttonEast,
+        InputState.AddChangeMonitor(gamepad.buttonEast,
             (control, time, eventPtr, monitorIndex) =>
             {
                 Debug.Log("ButtonEast");
-                InputSystem.AddStateChangeMonitor(gamepad.buttonSouth, (c, t, e, m) => { Debug.Log("ButtonSouth"); });
+                InputState.AddChangeMonitor(gamepad.buttonSouth, (c, t, e, m) => { Debug.Log("ButtonSouth"); });
             });
 
         LogAssert.Expect(LogType.Log, "ButtonEast");
@@ -876,13 +909,13 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var buttonWestMonitor = InputSystem.AddStateChangeMonitor(gamepad.buttonWest,
+        var buttonWestMonitor = InputState.AddChangeMonitor(gamepad.buttonWest,
             (c, d, e, m) => { Debug.Log("ButtonWest"); });
-        InputSystem.AddStateChangeMonitor(gamepad.buttonEast,
+        InputState.AddChangeMonitor(gamepad.buttonEast,
             (control, time, eventPtr, monitorIndex) =>
             {
                 Debug.Log("ButtonEast");
-                InputSystem.RemoveStateChangeMonitor(gamepad.buttonWest, buttonWestMonitor);
+                InputState.RemoveChangeMonitor(gamepad.buttonWest, buttonWestMonitor);
             });
 
         LogAssert.Expect(LogType.Log, "ButtonEast");
@@ -899,7 +932,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.AddStateChangeMonitor(gamepad.buttonWest,
+        InputState.AddChangeMonitor(gamepad.buttonWest,
             (c, d, e, m) => throw new InvalidOperationException("TESTEXCEPTION"));
 
         LogAssert.Expect(LogType.Error, new Regex("Exception.*thrown from state change monitor.*Gamepad.*buttonWest.*"));
@@ -911,8 +944,53 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_CanUpdateStateDirectly()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.onEvent += eventPtr => Assert.Fail("No event should be triggered");
+
+        InputState.Change(gamepad, new GamepadState {leftTrigger = 0.123f});
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanUpdatePartialStateDirectly()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputState.Change(gamepad.leftTrigger, 0.123f);
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_UpdatingStateDirectly_StillTriggersChangeMonitors()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        bool? wasTriggered = null;
+        InputState.AddChangeMonitor(gamepad.leftTrigger,
+            (c, d, e, m) =>
+            {
+                Assert.That(wasTriggered, Is.Null);
+                wasTriggered = true;
+            });
+
+        InputState.Change(gamepad, new GamepadState {leftTrigger = 0.123f});
+
+        Assert.That(wasTriggered, Is.True);
+    }
+
+    [Test]
+    [Category("State")]
     public unsafe void State_CanGetMetrics()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
+
         // Make sure we start out with blank data.
         var metrics = InputSystem.GetMetrics();
 
@@ -936,7 +1014,7 @@ partial class CoreTests
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
         var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
-        var combinedDeviceStateSize = NumberHelpers.AlignToMultiple(
+        var combinedDeviceStateSize = NumberHelpers.AlignToMultipleOf(
             device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
             device3.stateBlock.alignedSizeInBytes, 4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
@@ -966,18 +1044,22 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_FixedUpdatesAreDisabledByDefault()
+    public void State_FixedUpdatesAreDisabledByDefault()
     {
-        Assert.Fail();
+        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly));
+        Assert.That(runtime.onShouldRunUpdate(InputUpdateType.Fixed), Is.False);
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
     }
 
     [Test]
     [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_CannotRunUpdatesThatAreNotEnabled()
+    public void State_CannotRunUpdatesThatAreNotEnabled()
     {
-        Assert.Fail();
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly;
+
+        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic),
+            Throws.ArgumentException.With.Message.Contains("not enabled").And.Message
+                .Contains("Dynamic").And.Message.Contains("ProcessEventsInFixedUpdateOnly"));
     }
 
     [Test]
@@ -988,37 +1070,495 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    // InputHistory helps creating traces of input over time. This is useful, for example, to track
-    // the motion curve of a tracking device over time.
+    // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
+    // the motion curve of a tracking device over time. The API allows to pretty flexibly capture state
+    // and copy it around.
     [Test]
     [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_CanRecordHistory()
+    public void State_CanRecordHistory()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        using (var history = new InputHistory<Vector2>("<Gamepad>/*stick"))
+        using (var history = new InputStateHistory<float>("<Gamepad>/*trigger"))
         {
             Assert.That(history.controls,
                 Is.EquivalentTo(
-                    new[] {gamepad1.leftStick, gamepad1.rightStick, gamepad2.leftStick, gamepad2.rightStick}));
+                    new[] {gamepad1.leftTrigger, gamepad1.rightTrigger, gamepad2.leftTrigger, gamepad2.rightTrigger}));
 
-            history.Enable();
+            history.StartRecording();
 
-            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
-            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
-            InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightStick = new Vector2(0.321f, 0.432f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.123f }, 0.111);
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.234f }, 0.222);
+            InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightTrigger = 0.345f }, 0.333);
             InputSystem.Update();
-            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+            InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.456f }, 0.444);
             InputSystem.Update();
 
-            Assert.That(history.Count, Is.EqualTo(3));
-            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
-            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(Vector2EqualityComparer.Instance));
-            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(Vector2EqualityComparer.Instance));
+            Set(gamepad1.leftStick, new Vector2(0.987f, 0.876f)); // Noise.
+
+            Assert.That(history.Count, Is.EqualTo(4));
+            Assert.That(history[0].ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(history[1].ReadValue(), Is.EqualTo(0.234).Within(0.00001));
+            Assert.That(history[2].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
+            Assert.That(history[3].ReadValue(), Is.EqualTo(0.456).Within(0.00001));
+            Assert.That(history[0].time, Is.EqualTo(0.111));
+            Assert.That(history[1].time, Is.EqualTo(0.222));
+            Assert.That(history[2].time, Is.EqualTo(0.333));
+            Assert.That(history[3].time, Is.EqualTo(0.444));
+            Assert.That(history[0].control, Is.SameAs(gamepad1.leftTrigger));
+            Assert.That(history[1].control, Is.SameAs(gamepad1.leftTrigger));
+            Assert.That(history[2].control, Is.SameAs(gamepad2.rightTrigger));
+            Assert.That(history[3].control, Is.SameAs(gamepad1.leftTrigger));
+            Assert.That(history[0].valid, Is.True);
+            Assert.That(history[1].valid, Is.True);
+            Assert.That(history[2].valid, Is.True);
+            Assert.That(history[3].valid, Is.True);
         }
     }
+
+    [Test]
+    [Category("State")]
+    public void State_CanRecordHistory_AndGetCallbacksWhenNewStateIsRecorded()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.buttonSouth))
+        {
+            var receivedValues = new List<float>();
+            history.onRecordAdded = v => receivedValues.Add(v.ReadValue<float>());
+            history.StartRecording();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+
+            Assert.That(receivedValues, Has.Count.EqualTo(2));
+            Assert.That(receivedValues[0], Is.EqualTo(1));
+            Assert.That(receivedValues[1], Is.Zero);
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public unsafe void State_CanRecordHistory_AndAccessRawMemoryOfRecordedState()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.buttonSouth))
+        {
+            history.StartRecording();
+
+            Press(gamepad.buttonSouth);
+
+            Assert.That(history, Has.Count.EqualTo(1));
+            Assert.That(history[0].GetUnsafeMemoryPtr() != null, Is.True);
+
+            var statePtr = (byte*)history[0].GetUnsafeMemoryPtr() - gamepad.buttonSouth.stateBlock.byteOffset;
+            Assert.That(gamepad.buttonSouth.ReadValueFromState(statePtr), Is.EqualTo(1));
+        }
+    }
+
+    // It can be very useful to be able to store custom data with each history record from the
+    // onRecordAdded callback.
+    [Test]
+    [Category("State")]
+    public unsafe void State_CanRecordHistory_AndStoreAdditionalCustomDataForEachStateChange()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.buttonSouth))
+        {
+            var i = 1;
+            history.extraMemoryPerRecord = sizeof(int);
+            history.onRecordAdded = v => *(int*)v.GetUnsafeExtraMemoryPtr() = i++;
+            history.StartRecording();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+            Assert.That(*(int*)history[0].GetUnsafeExtraMemoryPtr(), Is.EqualTo(1));
+            Assert.That(*(int*)history[1].GetUnsafeExtraMemoryPtr(), Is.EqualTo(2));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanRecordHistory_AndDecideWhichStateChangesGetRecorded()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.onShouldRecordStateChange =
+                (control, time, eventPtr) => ((InputControl<float>)control).ReadValue() > 0.5f;
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.567f);
+            Set(gamepad.leftTrigger, 0.678f);
+            Set(gamepad.leftTrigger, 0);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+            Assert.That(history[0].ReadValue(), Is.EqualTo(0.567).Within(0.00001));
+            Assert.That(history[1].ReadValue(), Is.EqualTo(0.678).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanRecordHistory_AndEnumerateRecords()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.345f);
+            Set(gamepad.leftTrigger, 0.456f);
+
+            var result = history.ToArray<InputStateHistory<float>.Record>();
+            Assert.That(result, Has.Length.EqualTo(4));
+            Assert.That(result[0].ReadValue(), Is.EqualTo(0.123f).Within(0.00001));
+            Assert.That(result[1].ReadValue(), Is.EqualTo(0.234f).Within(0.00001));
+            Assert.That(result[2].ReadValue(), Is.EqualTo(0.345f).Within(0.00001));
+            Assert.That(result[3].ReadValue(), Is.EqualTo(0.456f).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RecordingHistory_OverwritesOldStateWhenBufferIsFull()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.historyDepth = 2;
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+
+            // Keep reference to first record and ensure it becomes invalid.
+            var firstChange = history[0];
+            var secondChange = history[1]; // But this one should stay valid.
+
+            Set(gamepad.leftTrigger, 0.345f);
+
+            var result = history.ToArray<InputStateHistory<float>.Record>();
+            Assert.That(result, Has.Length.EqualTo(2));
+            Assert.That(result[0].ReadValue(), Is.EqualTo(0.234f).Within(0.00001));
+            Assert.That(result[1].ReadValue(), Is.EqualTo(0.345f).Within(0.00001));
+
+            Assert.That(firstChange.valid, Is.False);
+            Assert.That(secondChange.valid, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RecordingHistory_EnsuresControlsMatchedByPathHaveCompatibleValueType()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(() => new InputStateHistory<Vector2>("<Gamepad>/*Trigger"),
+            Throws.ArgumentException.With.Message.Contains("Vector2")
+                .And.With.Message.Contains("float")
+                .And.With.Message.Contains("incompatible"));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RecordingHistory_CanHandleConcurrentFixedAndDynamicUpdates()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
+        InputSystem.settings.timesliceEvents = false;
+
+        // Mouse deltas reset between updates, so they make for a good test case that
+        // surfaces the fact the dynamic and fixed updates run concurrently on each event.
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        using (var history = new InputStateHistory<Vector2>(mouse.delta))
+        {
+            history.StartRecording();
+
+            Set(mouse.delta, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(history, Has.Count.EqualTo(1));
+            Assert.That(history[0].ReadValue(),
+                Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+            Assert.That(history[0].ReadValue(),
+                Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(history[1].ReadValue(), Is.EqualTo(Vector2.zero));
+
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanWriteStateChangesIntoHistoryManually()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            Set(gamepad.leftTrigger, 0.123f); // Should not get recorded.
+
+            history.RecordStateChange(gamepad.leftTrigger, 0.234f);
+            history.RecordStateChange(gamepad.leftTrigger, 0.345f);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+            Assert.That(history[0].ReadValue(), Is.EqualTo(0.234).Within(0.00001));
+            Assert.That(history[1].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanWriteStateChangesIntoHistoryManually_AndAddControlsOnTheFly()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var history = new InputStateHistory<float>())
+        {
+            Assert.That(history.controls, Is.Empty);
+
+            history.RecordStateChange(gamepad.leftTrigger, 0.234f);
+            history.RecordStateChange(gamepad.rightTrigger, 0.345f);
+
+            Assert.That(history.controls, Is.EquivalentTo(new[] {gamepad.leftTrigger, gamepad.rightTrigger}));
+            Assert.That(history[0].control, Is.SameAs(gamepad.leftTrigger));
+            Assert.That(history[1].control, Is.SameAs(gamepad.rightTrigger));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanClearRecordedHistory()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+
+            history.Clear();
+
+            Assert.That(history, Has.Count.Zero);
+
+            Set(gamepad.leftTrigger, 0.345f);
+            Set(gamepad.leftTrigger, 0.456f);
+
+            Assert.That(history, Has.Count.EqualTo(2));
+            Assert.That(history[0].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
+            Assert.That(history[1].ReadValue(), Is.EqualTo(0.456).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanCopyRecordedHistory()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.345f);
+
+            history.AddRecord(history[0]);
+            history[0] = history[1];
+            history[1].CopyFrom(history[2]);
+
+            Assert.That(history[0].ReadValue(), Is.EqualTo(0.234).Within(0.00001));
+            Assert.That(history[1].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
+            Assert.That(history[2].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public unsafe void State_CanCopyRecordedHistory_FromOneHistoryToAnother()
+    {
+        InputSystem.settings.timesliceEvents = false;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history1 = new InputStateHistory<float>(gamepad.leftTrigger))
+        using (var history2 = new InputStateHistory<float>())
+        {
+            history1.extraMemoryPerRecord = sizeof(int);
+            history2.extraMemoryPerRecord = sizeof(int);
+            history1.onRecordAdded = record => *(int*)record.GetUnsafeExtraMemoryPtr() = 123;
+            history1.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f, 0.444f);
+
+            history2.AddRecord(history1[0]);
+
+            Assert.That(history2.Count, Is.EqualTo(1));
+            Assert.That(history2[0].ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(*(int*)history2[0].GetUnsafeExtraMemoryPtr(), Is.EqualTo(123));
+            Assert.That(history2[0].time, Is.EqualTo(0.444).Within(0.00001));
+            Assert.That(history2[0].control, Is.SameAs(gamepad.leftTrigger));
+            Assert.That(history2.controls, Is.EquivalentTo(new[] { gamepad.leftTrigger }));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanTraverseRecordedHistoryStartingWithGivenRecord()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.345f);
+            Set(gamepad.leftTrigger, 0.456f);
+
+            Assert.That(history[1].next.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
+            Assert.That(history[1].previous.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+
+            Assert.That(history[0].previous.valid, Is.False);
+            Assert.That(history[3].next.valid, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanTraverseRecordedHistoryStartingWithGivenRecord_WhenHistoryHasOverwrittenOlderRecords()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.historyDepth = 3;
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.345f);
+            Set(gamepad.leftTrigger, 0.456f);
+
+            Assert.That(history[1].next.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+            Assert.That(history[1].previous.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
+
+            Assert.That(history[0].previous.valid, Is.False);
+            Assert.That(history[2].next.valid, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetIndexFromHistoryRecord()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.historyDepth = 3;
+            history.StartRecording();
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.345f);
+            Set(gamepad.leftTrigger, 0.456f);
+
+            Assert.That(history[0].index, Is.EqualTo(0));
+            Assert.That(history[1].index, Is.EqualTo(1));
+            Assert.That(history[2].index, Is.EqualTo(2));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetHistoryVersion()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+
+            Assert.That(history.version, Is.Zero);
+
+            Set(gamepad.leftTrigger, 0.123f);
+            Set(gamepad.leftTrigger, 0.234f);
+            Set(gamepad.leftTrigger, 0.345f);
+
+            Assert.That(history.version, Is.EqualTo(3));
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetHistoryFromRecord()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+            Set(gamepad.leftTrigger, 0.123f);
+            Assert.That(history[0].owner, Is.SameAs(history));
+        }
+    }
+
+    #if UNITY_EDITOR
+    [Test]
+    [Category("State")]
+    public void State_RecordingHistory_ExcludesEditorInputByDefault()
+    {
+        InputEditorUserSettings.lockInputToGameView = false;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.StartRecording();
+
+            runtime.PlayerFocusLost();
+            Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
+            InputSystem.Update(InputUpdateType.Editor);
+
+            Assert.That(history, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RecordingHistory_CanCaptureEditorInput()
+    {
+        InputEditorUserSettings.lockInputToGameView = false;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
+        {
+            history.updateMask = InputUpdateType.Editor;
+            history.StartRecording();
+
+            runtime.PlayerFocusLost();
+            Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
+            InputSystem.Update(InputUpdateType.Editor);
+
+            Assert.That(history, Has.Count.EqualTo(1));
+            Assert.That(history[0].ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+        }
+    }
+
+    #endif
 
     [Test]
     [Category("State")]

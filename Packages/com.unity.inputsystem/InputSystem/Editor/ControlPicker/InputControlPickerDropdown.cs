@@ -240,17 +240,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     continue;
                 }
 
-                var child = new ControlDropdownItem(parentControl, control.name, control.displayName,
-                    device, usage, searchable);
-                child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
-
-                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
-                    parent.AddChild(child);
-
-                var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
-                if (controlLayout != null)
-                    AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
-                        searchable, child);
+                AddControlItem(parent, parentControl, control, device, usage, searchable);
             }
 
             // Add optional controls for devices.
@@ -260,6 +250,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 var optionalGroup = new AdvancedDropdownItem("Optional Controls");
                 foreach (var optionalControl in optionalControls)
                 {
+                    ////FIXME: this should list children, too
+                    ////FIXME: this should handle arrays, too
                     if (LayoutMatchesExpectedControlLayoutFilter(optionalControl.layout))
                     {
                         var child = new OptionalControlDropdownItem(optionalControl, device, usage);
@@ -275,6 +267,34 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.AddSeparator("Controls Present on More Specific " + deviceName.GetPlural());
                     parent.AddChild(optionalGroup);
                 }
+            }
+        }
+
+        private void AddControlItem(DeviceDropdownItem parent, ControlDropdownItem parentControl,
+            InputControlLayout.ControlItem control, string device, string usage, bool searchable)
+        {
+            if (!LayoutMatchesExpectedControlLayoutFilter(control.layout))
+                return;
+
+            // If it's an array, generate a control entry for each array element.
+            for (var i = 0; i < (control.isArray ? control.arraySize : 1); ++i)
+            {
+                var name = control.isArray ? control.name + i : control.name;
+                var displayName = !string.IsNullOrEmpty(control.displayName)
+                    ? (control.isArray ? control.displayName + i : control.displayName)
+                    : name;
+
+                var child = new ControlDropdownItem(parentControl, name, displayName,
+                    device, usage, searchable);
+                child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
+
+                parent.AddChild(child);
+
+                // Add children.
+                var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
+                if (controlLayout != null)
+                    AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
+                        searchable, child);
             }
         }
 
@@ -383,7 +403,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // NOTE: We go for all types of pointers here, not just mice.
                 .WithControlsExcluding("<Pointer>/position")
                 .WithControlsExcluding("<Pointer>/delta")
-                .WithControlsExcluding("<Pointer>/button")
+                .WithControlsExcluding("<Pointer>/press")
                 .WithControlsExcluding("<Mouse>/leftButton")
                 .WithControlsExcluding("<Mouse>/scroll")
                 .OnPotentialMatch(

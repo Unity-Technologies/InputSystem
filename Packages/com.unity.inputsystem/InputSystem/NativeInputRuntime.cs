@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </summary>
     internal class NativeInputRuntime : IInputRuntime
     {
-        public static NativeInputRuntime instance = new NativeInputRuntime();
+        public static readonly NativeInputRuntime instance = new NativeInputRuntime();
 
         public int AllocateDeviceId()
         {
@@ -169,17 +169,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public Action<bool> onFocusChanged
+        public Action<bool> onPlayerFocusChanged
         {
             set
             {
                 if (value == null)
-                #if UNITY_2019_1_OR_NEWER
                     Application.focusChanged -= OnFocusChanged;
                 else if (m_FocusChangedMethod == null)
                     Application.focusChanged += OnFocusChanged;
-                #endif
-                    m_FocusChangedMethod = value;
+                m_FocusChangedMethod = value;
             }
         }
 
@@ -209,10 +207,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         public ScreenOrientation screenOrientation => Screen.orientation;
-
-        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
-
-        public int frameCount => Time.frameCount;
 
         public bool isInBatchMode => Application.isBatchMode;
 

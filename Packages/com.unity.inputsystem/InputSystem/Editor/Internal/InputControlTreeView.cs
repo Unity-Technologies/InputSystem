@@ -374,7 +374,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     value = *(double*)ptr;
                 }
 
-                // Stringify enum values, for. ex., PointerPhase
+                // Stringify enum values, for. ex., TouchPhase
                 if (value != null && control.valueType.IsEnum)
                 {
                     var intValue = Convert.ToInt32(value);

@@ -12,6 +12,7 @@ using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using TouchPhase = UnityEngine.Experimental.Input.TouchPhase;
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
@@ -546,8 +547,8 @@ internal class UITests : InputTestFixture
         yield return null;
 
         // Move mouse over left child.
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(0, 0), phase = PointerPhase.Began });
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(100, 100), phase = PointerPhase.Moved });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(0, 0), phase = TouchPhase.Began });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(100, 100), phase = TouchPhase.Moved });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -559,7 +560,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         //Drag to new location on left child
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(100, 200), phase = PointerPhase.Moved });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(100, 200), phase = TouchPhase.Moved });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -570,7 +571,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
 
         //Now move children
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Moved });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = TouchPhase.Moved });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -584,7 +585,7 @@ internal class UITests : InputTestFixture
 
 
         //And now release
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Ended });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = TouchPhase.Ended });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
@@ -597,9 +598,9 @@ internal class UITests : InputTestFixture
         rightChildReceiver.Reset();
 
         //Now check for a quick click
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Began });
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Moved });
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Ended });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = TouchPhase.Began });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = TouchPhase.Moved });
+        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = TouchPhase.Ended });
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 

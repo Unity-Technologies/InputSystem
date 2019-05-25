@@ -6,9 +6,16 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
+////REVIEW: should "displayIndex" be called "windowIndex"? or be part of a better thought-out multi-display API altogether?
+
+////REVIEW: add click and clickCount controls directly to Pointer?
+////        (I gave this a look but in my initial try, found it somewhat difficult to add click detection at the Pointer level due
+////        to the extra state it involves)
+
 ////REVIEW: should we put lock state directly on Pointer?
 
 ////REVIEW: should pointer IDs be required to be globally unique across pointing devices?
+////REVIEW: should we create new devices instead of using pointer IDs?
 
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
@@ -42,7 +49,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure", defaultState = "1.0")]
+        [InputControl(layout = "Analog", usage = "Pressure")]
         public float pressure;
 
         [InputControl(layout = "Axis", usage = "Twist")]
@@ -54,10 +61,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4)]
-        ////TODO: give this control a better name
-        [InputControl(name = "button", layout = "Button", format = "BIT", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        public ushort flags;
+        [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
+        public ushort buttons;
 
         [InputControl(layout = "Digital")]
         public ushort displayIndex;
@@ -71,21 +76,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    ////REVIEW: does it really make sense to have this at the pointer level?
-    public enum PointerPhase
-    {
-        /// <summary>
-        /// No activity has been registered on the pointer yet.
-        /// </summary>
-        None,
-
-        Began,
-        Moved,
-        Ended,
-        Cancelled,
-        Stationary,
-    }
-
     /// <summary>
     /// Base class for pointer-style devices moving on a 2D screen.
     /// </summary>
@@ -95,6 +85,9 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
+    /// <seealso cref="Mouse"/>
+    /// <seealso cref="Pen"/>
+    /// <seealso cref="Touchscreen"/>
     [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
@@ -146,11 +139,18 @@ namespace UnityEngine.Experimental.Input
         public AxisControl twist { get; private set; }
 
         public IntegerControl pointerId { get; private set; }
-        public PointerPhaseControl phase { get; private set; }
-        public IntegerControl displayIndex { get; private set; }////TODO: kill this
+        public IntegerControl displayIndex { get; private set; }
 
-        ////TODO: give this a better name; primaryButton?
-        public ButtonControl button { get; private set; }
+        /// <summary>
+        /// Whether the pointer is pressed down.
+        /// </summary>
+        /// <remarks>
+        /// What this means exactly depends on the nature of the pointer. For mice (<see cref="Mouse"/>), it means
+        /// that the left button is pressed. For pens (<see cref="Pen"/>), it means that the pen tip is touching
+        /// the screen/tablet surface. For touchscreens (<see cref="Touchscreen"/>), it means that there is at least
+        /// one finger touching the screen.
+        /// </remarks>
+        public ButtonControl press { get; private set; }
 
         /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
@@ -180,14 +180,15 @@ namespace UnityEngine.Experimental.Input
             pressure = builder.GetControl<AxisControl>(this, "pressure");
             twist = builder.GetControl<AxisControl>(this, "twist");
             pointerId = builder.GetControl<IntegerControl>(this, "pointerId");
-            phase = builder.GetControl<PointerPhaseControl>(this, "phase");
             displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
-            button = builder.GetControl<ButtonControl>(this, "button");
+            press = builder.GetControl<ButtonControl>(this, "press");
 
             base.FinishSetup(builder);
         }
 
-        protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
+        ////REVIEW: the accumulation stuff would be so much faster if we can do it directly in memory and can forgo Read/Write
+
+        protected static unsafe bool Reset(InputControl<float> control, void* statePtr)
         {
             ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
             var value = control.ReadValueFromState(statePtr);
@@ -197,28 +198,29 @@ namespace UnityEngine.Experimental.Input
             return true;
         }
 
-        protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
+        protected static unsafe void Accumulate(InputControl<float> control, void* oldStatePtr, InputEventPtr newState)
         {
-            ////FIXME: if there's processors on the delta, this is junk
-            var oldDelta = control.ReadValueFromState(oldStatePtr);
-            var newDelta = control.ReadValueFromState(newStatePtr);
-            control.WriteValueIntoState(oldDelta + newDelta, newStatePtr);
+            if (!control.ReadUnprocessedValueFromEvent(newState, out var newDelta))
+                return;
+            var oldDelta = control.ReadUnprocessedValueFromState(oldStatePtr);
+            control.WriteValueIntoEvent(oldDelta + newDelta, newState);
         }
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
-            var deltaXChanged = ResetDelta(statePtr, delta.x);
-            var deltaYChanged = ResetDelta(statePtr, delta.y);
+            var deltaXChanged = Reset(delta.x, statePtr);
+            var deltaYChanged = Reset(delta.y, statePtr);
             return deltaXChanged || deltaYChanged;
         }
 
-        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
         {
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
+            Accumulate(delta.x, oldStatePtr, newState);
+            Accumulate(delta.y, oldStatePtr, newState);
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+            ref uint offsetToStoreAt, InputEventPtr eventPtr)
         {
             return false;
         }

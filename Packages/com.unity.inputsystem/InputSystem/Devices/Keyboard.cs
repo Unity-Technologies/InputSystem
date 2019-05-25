@@ -778,6 +778,7 @@ namespace UnityEngine.Experimental.Input
         internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 
+    ////TODO: move into InputExtensions
     public static class KeyboardExtensions
     {
         public static bool IsModifierKey(this Key key)

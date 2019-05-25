@@ -71,7 +71,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
         public int pointerId { get; private set; }
 
-        public PointerPhase selectPhase
+        public TouchPhase selectPhase
         {
             get
             {
@@ -81,10 +81,10 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             {
                 if (m_SelectPhase != value)
                 {
-                    if (value == PointerPhase.Began)
+                    if (value == TouchPhase.Began)
                         selectDelta |= ButtonDeltaState.Pressed;
 
-                    if (value == PointerPhase.Ended || value == PointerPhase.Cancelled)
+                    if (value == TouchPhase.Ended || value == TouchPhase.Cancelled)
                         selectDelta |= ButtonDeltaState.Released;
 
                     m_SelectPhase = value;
@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
 
             m_Position = deltaPosition = Vector2.zero;
 
-            m_SelectPhase = PointerPhase.Cancelled;
+            m_SelectPhase = TouchPhase.Cancelled;
             changedThisFrame = false;
             selectDelta = ButtonDeltaState.NoChange;
 
@@ -185,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
             m_InternalData.hoverTargets = hoverTargets;
         }
 
-        private PointerPhase m_SelectPhase;
+        private TouchPhase m_SelectPhase;
         private Vector2 m_Position;
 
         private InternalData m_InternalData;

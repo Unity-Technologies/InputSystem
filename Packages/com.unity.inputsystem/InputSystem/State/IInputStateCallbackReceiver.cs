@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: simplify this to just two callbacks that hijack OnBeforeUpdate and OnUpdate for the device?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
@@ -36,7 +38,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// device's current state.
         /// </summary>
         /// <param name="oldStatePtr">Pointer to the buffer containing the current state of the device.</param>
-        /// <param name="newStatePtr">Pointer to the buffer containing the new state that has been received for the device.</param>
+        /// <param name="newState"></param>
         /// <remarks>
         /// This method can be used to alter the newly received state before it is written into the
         /// device. Pointer delta controls, for example, should accumulate values from multiple consecutive
@@ -49,8 +51,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// no difference anymore to the old state, state change monitors will not fire and actions will
         /// not get triggered.
         /// </remarks>
-        void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr);
+        void OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState);
 
+        ////REVIEW: why not just leave it entirely up to the device to handle the state write? (now that we have InputState.Change)
         ////TODO: pass pointer to current state
         /// <summary>
         /// Called when a device receives a chunk of state that is tagged with a different format than the
@@ -60,11 +63,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <param name="stateFormat"></param>
         /// <param name="stateSize"></param>
         /// <param name="offsetToStoreAt"></param>
+        /// <param name="eventPtr"></param>
         /// <returns></returns>
         /// <remarks>
         /// This method permits a device to integrate state into its own that is not sent as full-device snapshots
         /// or deltas with specific offsets.
         /// </remarks>
-        bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt);
+        bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt,
+            InputEventPtr eventPtr);
     }
 }

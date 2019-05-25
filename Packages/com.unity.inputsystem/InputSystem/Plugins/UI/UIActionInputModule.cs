@@ -400,7 +400,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
         /// Adds Touch UI responses based the Actions provided.
         /// </summary>
         /// <param name="position">A <see cref="Vector2"/> screen space value that represents the position of the touch.</param>
-        /// <param name="phase">A <see cref="PointerPhase"/> value that represents the current state of the touch event.</param>
+        /// <param name="phase">A <see cref="TouchPhase"/> value that represents the current state of the touch event.</param>
         /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
         public int AddTouch(InputActionProperty position, InputActionProperty phase)
         {
@@ -613,7 +613,7 @@ namespace UnityEngine.Experimental.Input.Plugins.UI
                 }
                 if (action == responder.phase)
                 {
-                    responder.state.selectPhase = context.ReadValue<PointerPhase>();
+                    responder.state.selectPhase = context.ReadValue<TouchPhase>();
                 }
 
                 m_Touches[touchIndex] = responder;

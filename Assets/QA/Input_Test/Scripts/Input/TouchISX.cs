@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using TouchPhase = UnityEngine.Experimental.Input.TouchPhase;
 
 public class TouchISX : MonoBehaviour
 {
@@ -37,17 +38,17 @@ public class TouchISX : MonoBehaviour
     {
         switch (control.phase.ReadValue())
         {
-            case PointerPhase.Began:
+            case TouchPhase.Began:
                 NewTouchInput(control);
                 break;
-            case PointerPhase.Moved:
+            case TouchPhase.Moved:
                 UpdateTouchInput(control);
                 break;
-            case PointerPhase.Cancelled:
-            case PointerPhase.Ended:
+            case TouchPhase.Cancelled:
+            case TouchPhase.Ended:
                 EndTouchInput(control);
                 break;
-            case PointerPhase.Stationary:
+            case TouchPhase.Stationary:
                 break;
             default:
                 break;

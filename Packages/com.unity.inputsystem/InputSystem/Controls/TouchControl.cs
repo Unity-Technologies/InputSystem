@@ -1,10 +1,9 @@
-using System;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
-////TODO: enforce memory layout of TouchControl to be in TouchState.kFormat
+////TODO: enforce memory layout of TouchControl to be that of TouchState (build that into the layout system? "freeze"/final layout?)
 
 namespace UnityEngine.Experimental.Input.Controls
 {
@@ -27,16 +26,33 @@ namespace UnityEngine.Experimental.Input.Controls
         public Vector2Control delta { get; private set; }
         public AxisControl pressure { get; private set; }
         public Vector2Control radius { get; private set; }
-        public PointerPhaseControl phase { get; private set; }
+        public InputControl<TouchPhase> phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }
         public ButtonControl indirectTouch { get; private set; }
+        public ButtonControl tap { get; private set; }
+        public IntegerControl tapCount { get; private set; }
+        public DoubleControl startTime { get; private set; }
+        public Vector2Control startPosition { get; private set; }
+
+        public bool isInProgress
+        {
+            get
+            {
+                switch (phase.ReadValue())
+                {
+                    case TouchPhase.Began:
+                    case TouchPhase.Moved:
+                    case TouchPhase.Stationary:
+                        return true;
+                }
+                return false;
+            }
+        }
 
         public TouchControl()
         {
             m_StateBlock.format = new FourCC('T', 'O', 'U', 'C');
         }
-
-        //needs to enforce layout/format
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -45,9 +61,16 @@ namespace UnityEngine.Experimental.Input.Controls
             delta = builder.GetControl<Vector2Control>(this, "delta");
             pressure = builder.GetControl<AxisControl>(this, "pressure");
             radius = builder.GetControl<Vector2Control>(this, "radius");
-            phase = builder.GetControl<PointerPhaseControl>(this, "phase");
+            phase = builder.GetControl<InputControl<TouchPhase>>(this, "phase");
             displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
             indirectTouch = builder.GetControl<ButtonControl>(this, "indirectTouch");
+            tap = builder.GetControl<ButtonControl>(this, "tap");
+            tapCount = builder.GetControl<IntegerControl>(this, "tapCount");
+            startTime = builder.GetControl<DoubleControl>(this, "startTime");
+            startPosition = builder.GetControl<Vector2Control>(this, "startPosition");
+
+            ////TODO: throw if state layouts of the controls doesn't match TouchState
+
             base.FinishSetup(builder);
         }
 
