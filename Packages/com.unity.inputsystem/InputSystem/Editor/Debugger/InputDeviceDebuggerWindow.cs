@@ -22,7 +22,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add toggle to that switches to displaying raw control values
 
-////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputHistory)
+////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputStateHistory)
 
 ////TODO: show default states of controls
 
@@ -80,6 +80,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_EventTrace?.Dispose();
 
                 InputSystem.onDeviceChange -= OnDeviceChange;
+                InputState.onChange -= OnDeviceStateChange;
             }
         }
 
@@ -111,6 +112,8 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
             EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
             EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
+            if (m_Device is Keyboard)
+                EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -228,7 +231,9 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ControlTree.ExpandAll();
 
             AddToList();
+
             InputSystem.onDeviceChange += OnDeviceChange;
+            InputState.onChange += OnDeviceStateChange;
         }
 
         // We will lose our device on domain reload and then look it back up the first
@@ -277,11 +282,13 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 Repaint();
-
-                // If the state of the device changed, refresh control values in the control tree.
-                if (change == InputDeviceChange.StateChanged)
-                    m_ControlTree?.RefreshControlValues();
             }
+        }
+
+        private void OnDeviceStateChange(InputDevice device)
+        {
+            m_ControlTree?.RefreshControlValues();
+            Repaint();
         }
 
         private static class Styles
