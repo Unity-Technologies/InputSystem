@@ -34,6 +34,9 @@ namespace UnityEngine.InputSystem.HID
         /// </remarks>
         public static unsafe bool ParseReportDescriptor(byte[] buffer, ref HID.HIDDeviceDescriptor deviceDescriptor)
         {
+            if (buffer == null)
+                throw new System.ArgumentNullException(nameof(buffer));
+
             fixed(byte* bufferPtr = buffer)
             {
                 return ParseReportDescriptor(bufferPtr, buffer.Length, ref deviceDescriptor);

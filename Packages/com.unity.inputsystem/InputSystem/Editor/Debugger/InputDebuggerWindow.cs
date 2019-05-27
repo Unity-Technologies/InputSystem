@@ -487,7 +487,7 @@ namespace UnityEngine.InputSystem.Editor
                 settingsItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
 
                 // Metrics.
-                var metrics = InputSystem.GetMetrics();
+                var metrics = InputSystem.metrics;
                 metricsItem = AddChild(root, "Metrics", ref id);
                 AddChild(metricsItem,
                     "Current State Size in Bytes: " + StringHelpers.NicifyMemorySize(metrics.currentStateSizeInBytes),

@@ -82,6 +82,9 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static NamedValue[] ParseMultiple(string parameterString)
         {
+            if (parameterString == null)
+                throw new System.ArgumentNullException(nameof(parameterString));
+
             parameterString = parameterString.Trim();
             if (string.IsNullOrEmpty(parameterString))
                 return null;
@@ -162,6 +165,9 @@ namespace UnityEngine.InputSystem.Utilities
 
         public void ApplyToObject(object instance)
         {
+            if (instance == null)
+                throw new System.ArgumentNullException(nameof(instance));
+
             var instanceType = instance.GetType();
 
             ////REVIEW: what about properties?

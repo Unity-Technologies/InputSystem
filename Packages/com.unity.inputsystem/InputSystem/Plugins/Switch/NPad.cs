@@ -18,9 +18,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 60)]
     public struct NPadInputState : IInputStateTypeInfo
     {
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('N', 'P', 'A', 'D');
+            get { return new FourCC('N', 'P', 'A', 'D'); }
         }
 
         [InputControl(name = "dpad")]
@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]
         public short padding0;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
-        public NPad.NpadStyle styleMask;
+        public NPad.NpadStyles styleMask;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int colorLeftMain;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
@@ -142,9 +142,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
         public int colorRightSub;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static NPadStatusReport Create()
@@ -179,18 +179,18 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             kStopSixAxisSensor,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
-        public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command _command, int _option = 0)
+        public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command command, int option = 0)
         {
             return new NPadControllerSupportCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                command = (int)_command,
-                option = _option,
+                command = (int)command,
+                option = option,
             };
         }
     }
@@ -204,7 +204,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLShowUI Create()
         {
             return new NpadDeviceIOCTLShowUI
@@ -226,13 +230,17 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
         public NPad.Orientation orientation;
 
-        public FourCC GetTypeStatic() { return Type; }
-        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation _orientation)
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
+        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation orientation)
         {
             return new NpadDeviceIOCTLSetOrientation
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                orientation = _orientation,
+                orientation = orientation,
             };
         }
     }
@@ -246,7 +254,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLStartSixAxisSensor Create()
         {
             return new NpadDeviceIOCTLStartSixAxisSensor
@@ -265,7 +277,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLStopSixAxisSensor Create()
         {
             return new NpadDeviceIOCTLStopSixAxisSensor
@@ -287,6 +303,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public const float DefaultFrequencyLow = 160.0f;
         public const float DefaultFrequencyHigh = 320.0f;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum NPadRumblePostion : byte
         {
             Left = 0x02,
@@ -298,7 +315,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public byte positionFlags;
+        public byte positions;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
         public float amplitudeLow;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
@@ -308,14 +325,17 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
         public float frequencyHigh;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
 
         public static NPadDeviceIOCTLOutputCommand Create()
         {
             return new NPadDeviceIOCTLOutputCommand()
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                positionFlags = (byte)NPadRumblePostion.None,
+                positions = (byte)NPadRumblePostion.None,
                 amplitudeLow = 0,
                 frequencyLow = DefaultFrequencyLow,
                 amplitudeHigh = 0,
@@ -343,6 +363,7 @@ namespace UnityEngine.InputSystem.Switch
         public QuaternionControl attitude { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum Orientation : byte
         {
             Vertical,
@@ -350,6 +371,7 @@ namespace UnityEngine.InputSystem.Switch
             Default = Vertical,
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum NpadId : byte
         {
             No1 = 0x00,
@@ -371,7 +393,7 @@ namespace UnityEngine.InputSystem.Switch
 
         //each person could play with a different style
         [Flags]
-        public enum NpadStyle
+        public enum NpadStyles
         {
             FullKey = 1 << 0,//separate;or pro controller;only one accel
             Handheld = 1 << 1,//docked to switch
@@ -402,7 +424,7 @@ namespace UnityEngine.InputSystem.Switch
                 return m_NpadId;
             }
         }
-        public NpadStyle styleMask
+        public NpadStyles styleMask
         {
             get
             {
@@ -432,7 +454,7 @@ namespace UnityEngine.InputSystem.Switch
 
         private Orientation m_Orientation;
         private NpadId m_NpadId = NpadId.Invalid;
-        private NpadStyle m_StyleMask;
+        private NpadStyles m_StyleMask;
         private JoyConColor m_LeftControllerColor;
         private JoyConColor m_RightControllerColor;
 
@@ -490,9 +512,9 @@ namespace UnityEngine.InputSystem.Switch
         }
 
         // NOTE: This function should be static
-        public long SetOrientationToSingleJoyCon(Orientation _orientation)
+        public long SetOrientationToSingleJoyCon(Orientation orientation)
         {
-            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(_orientation);
+            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(orientation);
 
             return ExecuteCommand(ref supportCommand);
         }
@@ -555,7 +577,7 @@ namespace UnityEngine.InputSystem.Switch
             if (m_leftRumbleValues.Equals(m_rightRumbleValues) && m_leftRumbleValues.HasValues)
             {
                 var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+                cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
                 m_leftRumbleValues.ApplyRumbleValues(ref cmd);
                 ExecuteCommand(ref cmd);
             }
@@ -564,14 +586,14 @@ namespace UnityEngine.InputSystem.Switch
                 if (m_leftRumbleValues.HasValues)
                 {
                     var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+                    cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
                     m_leftRumbleValues.ApplyRumbleValues(ref cmd);
                     ExecuteCommand(ref cmd);
                 }
                 if (m_rightRumbleValues.HasValues)
                 {
                     var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+                    cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
                     m_rightRumbleValues.ApplyRumbleValues(ref cmd);
                     ExecuteCommand(ref cmd);
                 }
@@ -601,7 +623,7 @@ namespace UnityEngine.InputSystem.Switch
             m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
             m_leftRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
@@ -618,7 +640,7 @@ namespace UnityEngine.InputSystem.Switch
             m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
             m_leftRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
@@ -635,7 +657,7 @@ namespace UnityEngine.InputSystem.Switch
             m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
             m_rightRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }

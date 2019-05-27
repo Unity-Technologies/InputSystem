@@ -10,11 +10,12 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct XInputControllerWindowsState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
+        public FourCC format
         {
             get { return new FourCC('X', 'I', 'N', 'P'); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
         public enum Button
         {
             DPadUp = 0,
@@ -76,11 +77,6 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
         [FieldOffset(8)] public short rightStickX;
         [FieldOffset(10)] public short rightStickY;
-
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
 
         public XInputControllerWindowsState WithButton(Button button)
         {

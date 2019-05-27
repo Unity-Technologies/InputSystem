@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     /// around for editing.
     /// </summary>
     [Serializable]
-    internal class InputActionAssetManager
+    internal class InputActionAssetManager : IDisposable
     {
         [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
@@ -74,6 +74,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
             }
+        }
+
+        public void Dispose()
+        {
+            m_SerializedObject?.Dispose();
         }
 
         public bool ReInitializeIfAssetHasChanged()

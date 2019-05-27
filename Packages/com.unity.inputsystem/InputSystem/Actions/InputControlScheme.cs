@@ -285,16 +285,6 @@ namespace UnityEngine.InputSystem
             };
         }
 
-        public string ToJson()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static InputControlScheme FromJson(string json)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Equals(InputControlScheme other)
         {
             if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&

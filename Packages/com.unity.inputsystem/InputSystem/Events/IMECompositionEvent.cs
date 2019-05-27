@@ -23,9 +23,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize)]
         public IMECompositionString compositionString;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static IMECompositionEvent Create(int deviceId, string compositionString, double time)
@@ -126,6 +126,12 @@ namespace UnityEngine.InputSystem
 
         public IMECompositionString(string characters)
         {
+            if (string.IsNullOrEmpty(characters))
+            {
+                size = 0;
+                return;
+            }
+
             Debug.Assert(characters.Length < LowLevel.IMECompositionEvent.kIMECharBufferSize);
             size = characters.Length;
             fixed(char* ptr = buffer)

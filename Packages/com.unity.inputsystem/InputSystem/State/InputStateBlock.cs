@@ -223,11 +223,6 @@ namespace UnityEngine.InputSystem.LowLevel
             return value;
         }
 
-        public void WriteInt(void* statePtr, int value)
-        {
-            throw new NotImplementedException();
-        }
-
         public float ReadFloat(void* statePtr)
         {
             Debug.Assert(sizeInBits != 0);
@@ -367,11 +362,6 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 throw new InvalidOperationException($"State format '{format}' is not supported as floating-point format");
             }
-        }
-
-        public PrimitiveValue Read(void* statePtr)
-        {
-            throw new NotImplementedException();
         }
 
         public void Write(void* statePtr, PrimitiveValue value)

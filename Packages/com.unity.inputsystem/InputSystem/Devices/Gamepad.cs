@@ -81,14 +81,17 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public GamepadState(params GamepadButton[] buttons)
             : this()
         {
+            if (buttons == null)
+                throw new System.ArgumentNullException(nameof(buttons));
+
             foreach (var button in buttons)
             {
                 var bit = (uint)1 << (int)button;
@@ -256,6 +259,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             buttonWest = builder.GetControl<ButtonControl>(this, "buttonWest");
             buttonNorth = builder.GetControl<ButtonControl>(this, "buttonNorth");
             buttonSouth = builder.GetControl<ButtonControl>(this, "buttonSouth");

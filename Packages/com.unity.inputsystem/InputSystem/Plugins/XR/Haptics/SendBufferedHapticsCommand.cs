@@ -13,9 +13,9 @@ namespace UnityEngine.InputSystem.XR.Haptics
         const int kMaxHapticBufferSize = 1024;
         const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(int) * 2) + (kMaxHapticBufferSize * sizeof(byte));
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         [FieldOffset(0)]
@@ -30,8 +30,11 @@ namespace UnityEngine.InputSystem.XR.Haptics
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + (sizeof(int) * 2))]
         fixed byte buffer[kMaxHapticBufferSize];
 
-        public static SendBufferedHapticCommand Create(int channel, byte[] rumbleBuffer)
+        public static SendBufferedHapticCommand Create(byte[] rumbleBuffer)
         {
+            if (rumbleBuffer == null)
+                throw new System.ArgumentNullException(nameof(rumbleBuffer));
+
             int rumbleBufferSize = Mathf.Min(kMaxHapticBufferSize, rumbleBuffer.Length);
             SendBufferedHapticCommand newCommand = new SendBufferedHapticCommand
             {

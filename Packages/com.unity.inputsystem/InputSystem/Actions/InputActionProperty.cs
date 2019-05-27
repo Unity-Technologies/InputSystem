@@ -46,11 +46,11 @@ namespace UnityEngine.InputSystem
             return m_Reference == other;
         }
 
-        public override bool Equals(object o)
+        public override bool Equals(object obj)
         {
             if (m_UseReference)
-                return Equals(o as InputActionReference);
-            return Equals(o as InputAction);
+                return Equals(obj as InputActionReference);
+            return Equals(obj as InputAction);
         }
 
         public override int GetHashCode()
@@ -91,6 +91,11 @@ namespace UnityEngine.InputSystem
         }
 
         public static implicit operator InputActionProperty(InputAction action)
+        {
+            return new InputActionProperty(action);
+        }
+
+        public static InputActionProperty ToInputActionProperty(InputAction action)
         {
             return new InputActionProperty(action);
         }

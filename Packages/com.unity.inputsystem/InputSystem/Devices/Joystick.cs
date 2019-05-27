@@ -27,9 +27,9 @@ namespace UnityEngine.InputSystem.LowLevel
             Trigger
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -57,6 +57,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             // Mandatory controls.
             trigger = builder.GetControl<ButtonControl>("{PrimaryTrigger}");
             stick = builder.GetControl<StickControl>("{Primary2DMotion}");

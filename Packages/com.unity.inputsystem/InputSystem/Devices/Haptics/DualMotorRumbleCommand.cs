@@ -19,9 +19,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
         public float highFrequencyMotorSpeed;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static DualMotorRumbleCommand Create(float lowFrequency, float highFrequency)

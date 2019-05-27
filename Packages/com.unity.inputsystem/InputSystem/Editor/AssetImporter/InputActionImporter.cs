@@ -42,6 +42,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            if (ctx == null)
+                throw new System.ArgumentNullException(nameof(ctx));
+
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 

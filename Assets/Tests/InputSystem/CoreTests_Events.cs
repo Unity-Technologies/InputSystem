@@ -188,8 +188,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsManually));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
@@ -221,8 +221,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
@@ -271,8 +271,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
@@ -427,7 +427,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.234f, 0.345f)}, 3);
         InputSystem.Update();
 
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(metrics.averageLagTimePerEvent, Is.EqualTo((9 + 7 + 4 + 0) / 4.0).Within(0.0001));
     }
@@ -651,9 +651,10 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")]
         [FieldOffset(0)] public ushort value;
-        public FourCC GetFormat()
+
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -865,9 +866,9 @@ partial class CoreTests
         public int buttons;
         [InputControl(layout = "Axis")] public float axis2;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('N', 'S', 'T', 'D');
+            get { return new FourCC('N', 'S', 'T', 'D'); }
         }
     }
 
@@ -877,9 +878,9 @@ partial class CoreTests
 
         public CustomNestedDeviceState nested;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('C', 'U', 'S', 'T');
+            get { return new FourCC('C', 'U', 'S', 'T'); }
         }
     }
 
@@ -940,9 +941,9 @@ partial class CoreTests
         public CustomDeviceState baseState;
         public int extra;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return baseState.GetFormat();
+            get { return baseState.format; }
         }
     }
 

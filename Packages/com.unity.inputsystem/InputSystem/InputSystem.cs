@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem
     /// This is the central hub for the input system.
     /// </summary>
     // Takes care of the singletons we need and presents a sanitized API.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
@@ -86,6 +87,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
@@ -406,6 +410,9 @@ namespace UnityEngine.InputSystem
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
         public static void RegisterControlProcessor(Type type, string name = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -903,16 +910,6 @@ namespace UnityEngine.InputSystem
             s_Manager.SetUsage(device, usage);
         }
 
-        public static void AddDeviceUsage(InputDevice device, InternedString usage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
         /// </summary>
@@ -1047,20 +1044,6 @@ namespace UnityEngine.InputSystem
             remove => s_Manager.onEvent -= value;
         }
 
-        /// <summary>
-        /// Like <see cref="onEvent"/> but sends all events that have been received in an update as a single
-        /// buffer rather than each event one by one.
-        /// </summary>
-        /// <remarks>
-        /// The buffer can be modified by a callback receiver. The system will process whatever is left in the
-        /// buffer after callbacks have been invoked.
-        /// </remarks>
-        public static event Action<InputEventBuffer> onEvents
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
-
         ////TODO: need to handle events being queued *during* event processing
 
         public static void QueueEvent(InputEventPtr eventPtr)
@@ -1116,7 +1099,7 @@ namespace UnityEngine.InputSystem
                 new StateEvent
             {
                 baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.id, time),
-                stateFormat = state.GetFormat()
+                stateFormat = state.format
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
@@ -1372,6 +1355,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputInteraction"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1404,6 +1390,9 @@ namespace UnityEngine.InputSystem
 
         public static void RegisterBindingComposite(Type type, string name)
         {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
@@ -1487,9 +1476,10 @@ namespace UnityEngine.InputSystem
         public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
 
         ////REVIEW: restrict metrics to editor and development builds?
-        public static InputMetrics GetMetrics()
+
+        public static InputMetrics metrics
         {
-            return s_Manager.metrics;
+            get { return s_Manager.metrics; }
         }
 
         internal static InputManager s_Manager;

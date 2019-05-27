@@ -111,6 +111,7 @@ namespace UnityEngine.InputSystem
         /// This is where all binding resolution happens for actions. The method walks through the binding array
         /// in <paramref name="map"/> and adds any controls, interactions, processors, and composites as it goes.
         /// </remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         public unsafe void AddActionMap(InputActionMap map)
         {
             Debug.Assert(map != null);
@@ -186,7 +187,7 @@ namespace UnityEngine.InputSystem
 
                         // Skip binding if it is disabled (path is empty string).
                         var path = unresolvedBinding.effectivePath;
-                        if (unresolvedBinding.path == "")
+                        if (string.IsNullOrEmpty(unresolvedBinding.path))
                             continue;
 
                         // Skip binding if it doesn't match with our binding mask (might be empty).
