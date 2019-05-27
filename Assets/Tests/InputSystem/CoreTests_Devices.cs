@@ -1038,9 +1038,9 @@ partial class CoreTests
     {
         public float axis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("PART");
+            get { return new FourCC("PART"); }
         }
     }
 
@@ -1049,9 +1049,9 @@ partial class CoreTests
         [InputControl(layout = "Axis", arraySize = 5)]
         public fixed float axis[5];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("FULL");
+            get { return new FourCC("FULL"); }
         }
     }
 

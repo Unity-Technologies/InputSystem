@@ -3522,6 +3522,8 @@ partial class CoreTests
         }
     }
 
+    /*
+    TODO: Implement WithChild and ChainedWith
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -3700,6 +3702,7 @@ partial class CoreTests
         Assert.That(performed, Has.Count.EqualTo(1));
         Assert.That(performed[0].interaction, Is.TypeOf<SlowTapInteraction>());
     }
+    */
 
     [Test]
     [Category("Actions")]

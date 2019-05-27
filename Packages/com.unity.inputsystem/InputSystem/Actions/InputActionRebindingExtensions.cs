@@ -185,18 +185,6 @@ namespace UnityEngine.InputSystem
             actionMap.LazyResolveBindings();
         }
 
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Add all overrides that have been applied to this action to the given list.
-        // Returns the number of overrides found.
-        public static int GetBindingOverrides(this InputAction action, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
-        }
-
         ////REVIEW: are the IEnumerable variations worth having?
 
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
@@ -244,21 +232,6 @@ namespace UnityEngine.InputSystem
             var bindingCount = actionMap.m_Bindings.Length;
             for (var i = 0; i < bindingCount; ++i)
                 ApplyBindingOverride(actionMap, i, emptyBinding);
-        }
-
-        /// <summary>
-        /// Get all overrides applied to bindings in the given map.
-        /// </summary>
-        /// <param name="actionMap"></param>
-        /// <returns></returns>
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputActionMap actionMap)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int GetBindingOverrides(this InputActionMap actionMap, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
         }
 
         ////REVIEW: how does this system work in combination with actual user overrides
@@ -420,11 +393,6 @@ namespace UnityEngine.InputSystem
                     WithExpectedControlLayout(action.expectedControlLayout);
 
                 return this;
-            }
-
-            public RebindingOperation WithCancelAction(InputAction action)
-            {
-                throw new NotImplementedException();
             }
 
             public RebindingOperation WithCancelingThrough(string binding)

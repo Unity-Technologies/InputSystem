@@ -91,14 +91,6 @@ namespace UnityEngine.InputSystem
             control.ReadValueFromStateIntoBuffer(control.currentStatePtr, buffer, bufferSize);
         }
 
-        public static unsafe void ReadDefaultValue(this InputControl control, void* buffer, int bufferSize)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Read the control's default value and return it as an object.
         /// </summary>
@@ -130,6 +122,7 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the value has been successfully read from the event, false otherwise.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         /// <seealso cref="ReadUnprocessedValueFromEvent{TValue}(InputControl{TValue},InputEventPtr)"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -158,6 +151,7 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {

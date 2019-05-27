@@ -42,9 +42,9 @@ namespace UnityEngine.InputSystem.LowLevel
             ErrorAlreadyInProgress = -2,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static InitiateUserAccountPairingCommand Create()

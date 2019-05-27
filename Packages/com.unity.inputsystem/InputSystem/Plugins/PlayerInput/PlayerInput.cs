@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.PlayerInput
     /// can be reimplemented on top of the same API.
     /// </remarks>
     /// <seealso cref="PlayerInputManager"/>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
@@ -432,18 +433,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         }
 
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
-
-        public static event Action<PlayerInput> onAdded
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
-
-        public static event Action<PlayerInput> onRemoved
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
 
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 

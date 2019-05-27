@@ -58,13 +58,11 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 return m_Buffer.Length;
             }
-            set => throw new NotImplementedException();
         }
 
         public NativeArray<byte> data
         {
             get => m_Buffer;
-            set => throw new NotImplementedException();
         }
 
         public InputEventPtr bufferPtr

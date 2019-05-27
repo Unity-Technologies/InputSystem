@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         /// Open window if someone clicks on an .inputactions asset or an action inside of it or
         /// if someone hits the "Edit Asset" button in the importer inspector.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
@@ -738,10 +739,12 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
                 if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))

@@ -886,7 +886,7 @@ namespace UnityEngine.InputSystem
                     result += "Any";
                 if (!usage.isEmpty)
                 {
-                    if (result != string.Empty)
+                    if (!string.IsNullOrEmpty(result))
                         result += ' ' + ToHumanReadableString(usage);
                     else
                         result += ToHumanReadableString(usage);
@@ -894,7 +894,7 @@ namespace UnityEngine.InputSystem
 
                 if (!layout.isEmpty)
                 {
-                    if (result != string.Empty)
+                    if (!string.IsNullOrEmpty(result))
                         result += ' ' + ToHumanReadableString(layout);
                     else
                         result += ToHumanReadableString(layout);
@@ -902,7 +902,7 @@ namespace UnityEngine.InputSystem
 
                 if (!name.isEmpty && !isWildcard)
                 {
-                    if (result != string.Empty)
+                    if (!string.IsNullOrEmpty(result))
                         result += ' ' + ToHumanReadableString(name);
                     else
                         result += ToHumanReadableString(name);
@@ -911,7 +911,7 @@ namespace UnityEngine.InputSystem
                 if (!displayName.isEmpty)
                 {
                     var str = $"\"{ToHumanReadableString(displayName)}\"";
-                    if (result != string.Empty)
+                    if (!string.IsNullOrEmpty(result))
                         result += ' ' + str;
                     else
                         result += str;

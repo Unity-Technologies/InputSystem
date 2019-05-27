@@ -21,9 +21,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize)]
         public int character;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static unsafe TextEvent* From(InputEventPtr eventPtr)

@@ -53,9 +53,9 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
         [FieldOffset(20)]
         public Vector3 gyro;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -70,6 +70,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -79,15 +80,16 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte motorSpeed;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public byte redColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 3)] public byte greenColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte blueColor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeed(float motor)

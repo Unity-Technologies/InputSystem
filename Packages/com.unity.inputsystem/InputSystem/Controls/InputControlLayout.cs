@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.Layouts
         public struct ControlItem
         {
             [Flags]
-            public enum Flags
+            private enum Flags
             {
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
@@ -116,7 +116,7 @@ namespace UnityEngine.InputSystem.Layouts
             public uint bit;
             public uint sizeInBits;
             public FourCC format;
-            public Flags flags;
+            private Flags flags;
             public int arraySize;
 
             /// <summary>
@@ -583,8 +583,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Get state type code from state struct.
                 if (typeof(IInputStateTypeInfo).IsAssignableFrom(layoutAttribute.stateType))
                 {
-                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType))
-                        .GetFormat();
+                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType)).format;
                 }
             }
             else
@@ -756,7 +755,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             if (attributes.Length == 0)
             {
-                var controlLayout = CreateControlItemFromMember(member, null, layoutName);
+                var controlLayout = CreateControlItemFromMember(member, null);
                 ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                 controlItems.Add(controlLayout);
             }
@@ -764,14 +763,14 @@ namespace UnityEngine.InputSystem.Layouts
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
+                    var controlLayout = CreateControlItemFromMember(member, attribute);
                     ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                     controlItems.Add(controlLayout);
                 }
             }
         }
 
-        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute, string layoutName)
+        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute)
         {
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
