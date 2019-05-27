@@ -5,6 +5,7 @@ code_analyser:
     image: buildfarm/mac:stable
     flavor: m1.mac
   commands:
+    - git submodule update --init
     - mkdir CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
     - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip
     - unzip CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
