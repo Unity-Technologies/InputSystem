@@ -109,21 +109,6 @@ namespace UnityEngine.InputSystem.Steam
             get { return SteamSupport.GetAPIAndRequireItToBeSet().GetCurrentActionSet(steamControllerHandle); }
         }
 
-        public void ActivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateAllSteamActionSetLayers()
-        {
-            throw new NotImplementedException();
-        }
-
         protected abstract void ResolveSteamActions(ISteamControllerAPI api);
 
         protected abstract void Update(ISteamControllerAPI api);

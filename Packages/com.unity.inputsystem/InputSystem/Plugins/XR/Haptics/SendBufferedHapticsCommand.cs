@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + (sizeof(int) * 2))]
         fixed byte buffer[kMaxHapticBufferSize];
 
-        public static SendBufferedHapticCommand Create(int channel, byte[] rumbleBuffer)
+        public static SendBufferedHapticCommand Create(byte[] rumbleBuffer)
         {
             if (rumbleBuffer == null)
                 throw new System.ArgumentNullException(nameof(rumbleBuffer));
