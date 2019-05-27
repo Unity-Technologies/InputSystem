@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.Utilities
                 ++index;
             }
             if (index - nameStart == 0)
-                throw new Exception($"Expecting name at position {nameStart} in '{text}'");
+                throw new ArgumentException($"Expecting name at position {nameStart} in '{text}'", nameof(text));
             var name = text.Substring(nameStart, index - nameStart);
 
             // Skip whitespace.
@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Utilities
                 ++index;
                 var closeParenIndex = text.IndexOf(')', index);
                 if (closeParenIndex == -1)
-                    throw new Exception($"Expecting ')' after '(' at position {index} in '{text}'");
+                    throw new ArgumentException($"Expecting ')' after '(' at position {index} in '{text}'", nameof(text));
 
                 var parameterString = text.Substring(index, closeParenIndex - index);
                 parameters = NamedValue.ParseMultiple(parameterString);

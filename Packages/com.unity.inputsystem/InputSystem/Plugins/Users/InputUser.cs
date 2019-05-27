@@ -215,27 +215,6 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
-        /// <summary>
-        /// By default, bindings on the user's <see cref="actions"/> are restricted to the devices paired
-        /// to the user (<see cref="pairedDevices"/>). If this property is set to true, then actions are not
-        /// restricted to <see cref="pairedDevices"/> but will instead bind to whatever devices in <see cref="InputSystem.devices"/>
-        /// match their bindings.
-        /// </summary>
-        /// <remarks>
-        /// This defaults to false.
-        ///
-        /// Enabling this behavior is useful for implementing automatic control scheme switching that does not
-        /// rely on <see cref="onUnpairedDeviceUsed"/>. Instead of listening for unpaired device activity (which
-        /// can be costly), one can instead hook into <see cref="InputSystem.onActionChange"/> and use
-        /// <see cref="InputActionChange.ActionPerformed"/> to detect when an action was triggered from a device
-        /// not currently paired to the user, in which case <see cref="ActivateControlScheme(InputControlScheme)"/>
-        /// can be used to automatically switch to a different control scheme.
-        /// </remarks>
-        public bool bindToAllDevices
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
 
         /// <summary>
         /// Actions associated with the user.
@@ -300,17 +279,6 @@ namespace UnityEngine.InputSystem.Users
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
         public bool hasMissingRequiredDevices => s_AllUserData[index].controlSchemeMatch.hasMissingRequiredDevices;
-
-        /// <summary>
-        /// Profile settings associated with the user or <c>null</c> if the user has no associated
-        /// profile settings.
-        /// </summary>
-        public InputUserSettings settings
-        {
-            //on get, refresh profile (such as custom bindings); keep dirty flag?
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
 
         /// <summary>
         /// List of all current users.
@@ -1853,6 +1821,7 @@ namespace UnityEngine.InputSystem.Users
                 return 0;
             }
 
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "device", Justification = "Keep this for future implementation")]
             private static InputUserAccountHandle? GetUserAccountHandleForDevice(InputDevice device)
             {
                 ////TODO (need to cache this)

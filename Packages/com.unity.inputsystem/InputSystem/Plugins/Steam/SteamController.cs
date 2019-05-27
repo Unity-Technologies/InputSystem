@@ -66,10 +66,12 @@ namespace UnityEngine.InputSystem.Steam
         /// </summary>
         public SteamHandle<SteamController> steamControllerHandle { get; internal set; }
 
+        /*
+         * TODO
         public SteamControllerType steamControllerType
         {
             get { throw new NotImplementedException(); }
-        }
+        }*/
 
         /// <summary>
         /// The list of Steam action sets supported by this controller.
@@ -107,21 +109,6 @@ namespace UnityEngine.InputSystem.Steam
         public SteamHandle<InputActionMap> currentSteamActionSet
         {
             get { return SteamSupport.GetAPIAndRequireItToBeSet().GetCurrentActionSet(steamControllerHandle); }
-        }
-
-        public void ActivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateAllSteamActionSetLayers()
-        {
-            throw new NotImplementedException();
         }
 
         protected abstract void ResolveSteamActions(ISteamControllerAPI api);

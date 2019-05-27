@@ -926,6 +926,8 @@ internal class UserTests : InputTestFixture
         Assert.Fail();
     }
 
+    /*
+    TODO: implement InputUser.settings
     [Test]
     [Category("Users")]
     [Ignore("TODO")]
@@ -962,7 +964,7 @@ internal class UserTests : InputTestFixture
 
         //Assert.That(receivedPosition, Is.EqualTo(new Vector2());
         Assert.That(receivedDelta, Is.EqualTo(new Vector2(-0.345f, -0.456f)).Using(Vector2EqualityComparer.Instance));
-    }
+    }*/
 
     [Test]
     [Category("Users")]

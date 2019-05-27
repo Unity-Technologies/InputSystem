@@ -125,8 +125,8 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
-                throw new ArgumentOutOfRangeException(
-                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings", "bindingIndex");
+                throw new ArgumentOutOfRangeException(nameof(bindingIndex),
+                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings");
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
@@ -185,18 +185,6 @@ namespace UnityEngine.InputSystem
             actionMap.LazyResolveBindings();
         }
 
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Add all overrides that have been applied to this action to the given list.
-        // Returns the number of overrides found.
-        public static int GetBindingOverrides(this InputAction action, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
-        }
-
         ////REVIEW: are the IEnumerable variations worth having?
 
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
@@ -244,21 +232,6 @@ namespace UnityEngine.InputSystem
             var bindingCount = actionMap.m_Bindings.Length;
             for (var i = 0; i < bindingCount; ++i)
                 ApplyBindingOverride(actionMap, i, emptyBinding);
-        }
-
-        /// <summary>
-        /// Get all overrides applied to bindings in the given map.
-        /// </summary>
-        /// <param name="actionMap"></param>
-        /// <returns></returns>
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputActionMap actionMap)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int GetBindingOverrides(this InputActionMap actionMap, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
         }
 
         ////REVIEW: how does this system work in combination with actual user overrides
@@ -420,11 +393,6 @@ namespace UnityEngine.InputSystem
                     WithExpectedControlLayout(action.expectedControlLayout);
 
                 return this;
-            }
-
-            public RebindingOperation WithCancelAction(InputAction action)
-            {
-                throw new NotImplementedException();
             }
 
             public RebindingOperation WithCancelingThrough(string binding)
@@ -995,7 +963,7 @@ namespace UnityEngine.InputSystem
                             if (m_TargetBindingIndex >= 0)
                             {
                                 if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
-                                    throw new Exception(
+                                    throw new InvalidOperationException(
                                         $"Target binding index {m_TargetBindingIndex} out of range for action '{m_ActionToRebind}' with {m_ActionToRebind.bindings.Count} bindings");
 
                                 m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);

@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->handled = value;
             }
         }
@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->eventId = value;
             }
         }
@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->deviceId = value;
             }
         }
@@ -106,7 +106,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->time = value;
             }
         }
@@ -117,7 +117,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->internalTime = value;
             }
         }
@@ -135,11 +135,6 @@ namespace UnityEngine.InputSystem.LowLevel
 
             var otherEventTypeCode = new TOtherEvent().typeStatic;
             return m_EventPtr->type == otherEventTypeCode;
-        }
-
-        public void CopyTo(void* buffer, int bufferSize)
-        {
-            throw new NotImplementedException();
         }
 
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.

@@ -240,7 +240,7 @@ namespace UnityEngine.InputSystem
             if (builderExpression == null)
                 throw new ArgumentNullException(nameof(builderExpression));
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
+                throw new ArgumentException("Name is null or empty", nameof(name));
 
             // Grab method and (optional) instance from lambda expression.
             var methodCall = builderExpression.Body as MethodCallExpression;
@@ -653,7 +653,7 @@ namespace UnityEngine.InputSystem
         {
             var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
             if (device == null)
-                throw new Exception(
+                throw new InvalidOperationException(
                     $"Layout registered for type '{typeof(TDevice).Name}' did not produce a device of that type; layout probably has been overridden");
             return device;
         }
@@ -910,16 +910,6 @@ namespace UnityEngine.InputSystem
             s_Manager.SetUsage(device, usage);
         }
 
-        public static void AddDeviceUsage(InputDevice device, InternedString usage)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
         /// </summary>
@@ -1052,20 +1042,6 @@ namespace UnityEngine.InputSystem
         {
             add => s_Manager.onEvent += value;
             remove => s_Manager.onEvent -= value;
-        }
-
-        /// <summary>
-        /// Like <see cref="onEvent"/> but sends all events that have been received in an update as a single
-        /// buffer rather than each event one by one.
-        /// </summary>
-        /// <remarks>
-        /// The buffer can be modified by a callback receiver. The system will process whatever is left in the
-        /// buffer after callbacks have been invoked.
-        /// </remarks>
-        public static event Action<InputEventBuffer> onEvents
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
         }
 
         ////TODO: need to handle events being queued *during* event processing

@@ -156,11 +156,10 @@ namespace UnityEngine.InputSystem.HID.Editor
                 // Elements.
                 if (device.elements != null)
                 {
-                    var currentReportType = HID.HIDReportType.Unknown;
                     var elementCount = device.elements.Length;
                     var elements = AddChild(item, elementCount + " Elements", ref id);
                     for (var i = 0; i < elementCount; ++i)
-                        BuildElementItem(i, elements, device.elements[i], ref id, ref currentReportType);
+                        BuildElementItem(i, elements, device.elements[i], ref id);
                 }
                 else
                     AddChild(item, "0 Elements", ref id);
@@ -170,7 +169,7 @@ namespace UnityEngine.InputSystem.HID.Editor
                 return item;
             }
 
-            private TreeViewItem BuildElementItem(int index, TreeViewItem parent, HID.HIDElementDescriptor element, ref int id, ref HID.HIDReportType currentReportType)
+            private TreeViewItem BuildElementItem(int index, TreeViewItem parent, HID.HIDElementDescriptor element, ref int id)
             {
                 var item = AddChild(parent, string.Format("Element {0} ({1})", index, element.reportType), ref id);
 
