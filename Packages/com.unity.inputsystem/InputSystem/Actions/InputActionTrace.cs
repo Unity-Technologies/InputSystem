@@ -87,9 +87,9 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <seealso cref="InputAction.started"/>
     /// <seealso cref="InputAction.performed"/>
-    /// <seealso cref="InputAction.cancelled"/>
+    /// <seealso cref="InputAction.canceled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public sealed class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem
 
             action.performed += m_CallbackDelegate;
             action.started += m_CallbackDelegate;
-            action.cancelled += m_CallbackDelegate;
+            action.canceled += m_CallbackDelegate;
 
             m_SubscribedActions.AppendWithCapacity(action);
         }
@@ -193,7 +193,7 @@ namespace UnityEngine.InputSystem
 
             action.performed -= m_CallbackDelegate;
             action.started -= m_CallbackDelegate;
-            action.cancelled -= m_CallbackDelegate;
+            action.canceled -= m_CallbackDelegate;
 
             var index = m_SubscribedActions.IndexOfReference(action);
             if (index != -1)
@@ -221,7 +221,7 @@ namespace UnityEngine.InputSystem
         /// <param name="context"></param>
         /// <see cref="InputAction.performed"/>
         /// <see cref="InputAction.started"/>
-        /// <see cref="InputAction.cancelled"/>
+        /// <see cref="InputAction.canceled"/>
         /// <see cref="InputActionMap.actionTriggered"/>
         public unsafe void RecordAction(InputAction.CallbackContext context)
         {
@@ -338,7 +338,7 @@ namespace UnityEngine.InputSystem
                 {
                     case InputActionChange.ActionStarted:
                     case InputActionChange.ActionPerformed:
-                    case InputActionChange.ActionCancelled:
+                    case InputActionChange.ActionCanceled:
                         Debug.Assert(actionOrMap is InputAction, "Expected an action");
                         var triggeredAction = (InputAction)actionOrMap;
                         var actionIndex = triggeredAction.m_ActionIndex;

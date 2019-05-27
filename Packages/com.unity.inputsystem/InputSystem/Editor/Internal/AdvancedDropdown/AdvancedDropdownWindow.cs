@@ -557,19 +557,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Styles
         {
-            public static GUIStyle background = "grey_border";
-            public static GUIStyle previewHeader = new GUIStyle(EditorStyles.label);
-            public static GUIStyle previewText = new GUIStyle(EditorStyles.wordWrappedLabel);
-
-            static Styles()
-            {
-                previewText.padding.left += 3;
-                previewText.padding.right += 3;
-                previewHeader.padding.left += 3 - 2;
-                previewHeader.padding.right += 3;
-                previewHeader.padding.top += 3;
-                previewHeader.padding.bottom += 2;
-            }
+            public static readonly GUIStyle background = "grey_border";
+            public static readonly GUIStyle previewHeader = new GUIStyle(EditorStyles.label).WithPadding(new RectOffset(5, 5, 1, 2));
+            public static readonly GUIStyle previewText = new GUIStyle(EditorStyles.wordWrappedLabel).WithPadding(new RectOffset(3, 5, 4, 4));
         }
     }
 }

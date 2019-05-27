@@ -54,6 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4)]
         ////TODO: give this control a better name
         [InputControl(name = "button", layout = "Button", format = "BIT", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
@@ -62,9 +63,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Digital")]
         public ushort displayIndex;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -82,7 +83,7 @@ namespace UnityEngine.InputSystem
         Began,
         Moved,
         Ended,
-        Cancelled,
+        Canceled,
         Stationary,
     }
 
@@ -173,6 +174,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             position = builder.GetControl<Vector2Control>(this, "position");
             delta = builder.GetControl<Vector2Control>(this, "delta");
             tilt = builder.GetControl<Vector2Control>(this, "tilt");
@@ -189,6 +193,9 @@ namespace UnityEngine.InputSystem
 
         protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
             var value = control.ReadValueFromState(statePtr);
             if (Mathf.Approximately(0f, value))
@@ -199,6 +206,9 @@ namespace UnityEngine.InputSystem
 
         protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             ////FIXME: if there's processors on the delta, this is junk
             var oldDelta = control.ReadValueFromState(oldStatePtr);
             var newDelta = control.ReadValueFromState(newStatePtr);
@@ -207,6 +217,11 @@ namespace UnityEngine.InputSystem
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
+            return OnCarryStateForward(statePtr);
+        }
+
+        protected unsafe bool OnCarryStateForward(void* statePtr)
+        {
             var deltaXChanged = ResetDelta(statePtr, delta.x);
             var deltaYChanged = ResetDelta(statePtr, delta.y);
             return deltaXChanged || deltaYChanged;
@@ -214,11 +229,21 @@ namespace UnityEngine.InputSystem
 
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
         {
+            OnBeforeWriteNewState(oldStatePtr, newStatePtr);
+        }
+
+        protected unsafe void OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        {
             AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
             AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
         }
 
         unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            return OnReceiveStateWithDifferentFormat(statePtr, stateFormat, stateSize, ref offsetToStoreAt);
+        }
+
+        protected unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }

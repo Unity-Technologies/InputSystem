@@ -22,7 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
 #pragma warning disable CS0649, CS0219
-namespace UnityEngine.InputSystem.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
     /// <summary>
     /// A generic HID input device.
@@ -33,6 +33,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
     /// match the device to a specific product we know of. Wherever possible we
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     public class HID : InputDevice
     {
         internal const string kHIDInterface = "HID";
@@ -298,33 +299,22 @@ namespace UnityEngine.InputSystem.Plugins.HID
             return hidDeviceDescriptor;
         }
 
-        public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
+        public static string UsagePageToString(UsagePage usagePage)
         {
-            const string kVendorDefined = "Vendor-Defined";
+            return (int)usagePage >= 0xFF00 ? "Vendor-Defined" : usagePage.ToString();
+        }
 
-            if ((int)usagePage >= 0xFF00)
-            {
-                usagePageString = kVendorDefined;
-                usageString = kVendorDefined;
-                return true;
-            }
-
-            usagePageString = usagePage.ToString();
-            usageString = null;
-
+        public static string UsageToString(UsagePage usagePage, int usage)
+        {
             switch (usagePage)
             {
                 case UsagePage.GenericDesktop:
-                    usageString = ((GenericDesktop)usage).ToString();
-                    break;
+                    return ((GenericDesktop)usage).ToString();
                 case UsagePage.Simulation:
-                    usageString = ((Simulation)usage).ToString();
-                    break;
+                    return ((Simulation)usage).ToString();
                 default:
-                    return false;
+                    return null;
             }
-
-            return true;
         }
 
         [Serializable]
@@ -472,6 +462,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             UsageModifier = 0x06
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum HIDElementFlags
         {
@@ -505,6 +496,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             public int reportId;
             public int reportSizeInBits;
             public int reportOffsetInBits;
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
@@ -1177,7 +1169,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             Trigger = 0xC0,
             WeaponsArm = 0xC1,
             WeaponsSelect = 0xC2,
-            WingFlags = 0xC3,
+            WingFlaps = 0xC3,
             Accelerator = 0xC4,
             Brake = 0xC5,
             Clutch = 0xC6,

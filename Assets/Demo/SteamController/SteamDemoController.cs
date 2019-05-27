@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Plugins.Steam;
+using UnityEngine.InputSystem.Steam;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -123,9 +123,9 @@ public class SteamDemoController : SteamController
 }
 public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
 {
-    public FourCC GetFormat()
+    public FourCC format
     {
-        return new FourCC('S', 't', 'e', 'a');
+        get { return new FourCC('S', 't', 'e', 'a'); }
     }
 
     [InputControl(name = "fire", layout = "Button", bit = 0)]

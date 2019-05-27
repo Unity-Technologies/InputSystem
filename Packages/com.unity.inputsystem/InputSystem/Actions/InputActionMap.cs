@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
+    public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
     {
         /// <summary>
         /// Name of the action map.
@@ -180,7 +180,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <seealso cref="InputAction.started"/>
         /// <seealso cref="InputAction.performed"/>
-        /// <seealso cref="InputAction.cancelled"/>
+        /// <seealso cref="InputAction.canceled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
             add => m_ActionCallbacks.AppendWithCapacity(value);

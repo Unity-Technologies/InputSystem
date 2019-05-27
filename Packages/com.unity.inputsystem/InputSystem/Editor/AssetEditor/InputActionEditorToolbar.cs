@@ -588,13 +588,10 @@ namespace UnityEngine.InputSystem.Editor
 
             private static class Styles
             {
-                public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar);
-                static Styles()
-                {
-                    headerLabel.alignment = TextAnchor.MiddleCenter;
-                    headerLabel.fontStyle = FontStyle.Bold;
-                    headerLabel.padding.left = 10;
-                }
+                public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar)
+                    .WithAlignment(TextAnchor.MiddleCenter)
+                    .WithFontStyle(FontStyle.Bold)
+                    .WithPadding(new RectOffset(10, 6, 0, 0));
             }
 
             private class DeviceEntry

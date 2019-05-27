@@ -191,6 +191,9 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -201,6 +204,9 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -310,7 +316,7 @@ namespace UnityEngine.InputSystem
         /// Note that not all types of controls make sense to perform interactive rebinding on. For example, TODO
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
-        public class RebindingOperation : IDisposable
+        public sealed class RebindingOperation : IDisposable
         {
             public const float kDefaultMagnitudeThreshold = 0.2f;
 
@@ -363,7 +369,7 @@ namespace UnityEngine.InputSystem
 
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
-            public bool cancelled => (m_Flags & Flags.Cancelled) != 0;
+            public bool canceled => (m_Flags & Flags.Canceled) != 0;
 
             public double startTime => m_StartTime;
 
@@ -395,9 +401,12 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            public RebindingOperation WithCancellingThrough(InputControl control)
+            public RebindingOperation WithCancelingThrough(InputControl control)
             {
-                return WithCancellingThrough(control.path);
+                if (control == null)
+                    throw new ArgumentNullException(nameof(control));
+
+                return WithCancelingThrough(control.path);
             }
 
             public RebindingOperation WithExpectedControlLayout(string layoutName)
@@ -598,7 +607,7 @@ namespace UnityEngine.InputSystem
                 HookOnEvent();
 
                 m_Flags |= Flags.Started;
-                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Canceled;
                 m_Flags &= ~Flags.Completed;
 
                 return this;
@@ -818,7 +827,7 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                if (haveChangedCandidates && !cancelled)
+                if (haveChangedCandidates && !canceled)
                 {
                     // If we have a callback that wants to control matching, leave it to the callback to decide
                     // whether the rebind is complete or not. Otherwise, just complete.
@@ -982,7 +991,7 @@ namespace UnityEngine.InputSystem
 
             private void OnCancel()
             {
-                m_Flags |= Flags.Cancelled;
+                m_Flags |= Flags.Canceled;
 
                 m_OnCancel?.Invoke(this);
 
@@ -1063,7 +1072,7 @@ namespace UnityEngine.InputSystem
             {
                 Started = 1 << 0,
                 Completed = 1 << 1,
-                Cancelled = 1 << 2,
+                Canceled = 1 << 2,
                 OnEventHooked = 1 << 3,
                 OnAfterUpdateHooked = 1 << 4,
                 OverwritePath = 1 << 5,

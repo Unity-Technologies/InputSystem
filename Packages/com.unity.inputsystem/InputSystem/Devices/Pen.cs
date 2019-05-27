@@ -72,9 +72,9 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -260,6 +260,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             tip = builder.GetControl<ButtonControl>("tip");
             eraser = builder.GetControl<ButtonControl>("eraser");
             firstBarrelButton = builder.GetControl<ButtonControl>("barrel1");

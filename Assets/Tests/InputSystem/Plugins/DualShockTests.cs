@@ -1,16 +1,16 @@
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.DualShock.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 #endif
 
 internal class DualShockTests : InputTestFixture

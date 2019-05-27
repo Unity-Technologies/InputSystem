@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.2.9-preview] - 2020-1-1
+## [0.3.0-preview] - 2020-1-1
+
+### Fixed
+
+- Validate all parameters on public APIs.
+
+#### Actions
+
+- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+
+### Added
+
+### Changed
+
+- Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
+- Replace some `GetXxx` methods in our API with `xxx`  properties.
+
+## [0.2.10-preview] - 2019-5-17
 
 ### Added
 
@@ -38,6 +55,8 @@ however, it has to be formatted properly to pass verification tests.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
 - Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
+- Removed `Plugins` from all namespaces.
+- Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
 
 ### Fixed
 
@@ -51,6 +70,7 @@ however, it has to be formatted properly to pass verification tests.
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
 - Fixed `Hold` interactions firing immediately before the duration has passed.
 - Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
+- Fixed exception message when calling `CallbackContext.ReadValue<TValue>()` for an action with a composite binding with `TValue` not matching the composite's value type.
 
 ### Added
 

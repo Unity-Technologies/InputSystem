@@ -6,14 +6,14 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.PS4.LowLevel;
 
 ////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
 
 ////TODO: player ID
 #pragma warning disable 0649
-namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
-        public enum Button
+        private enum Button
         {
             L3 = 1,
             R3 = 2,
@@ -109,9 +109,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(80)]
         public PS4Touch touch1;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -126,6 +126,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -137,6 +138,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte largeMotorSpeed;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public byte smallMotorSpeed;
@@ -144,9 +146,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte greenColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 5)] public byte blueColor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeeds(float largeMotor, float smallMotor)
@@ -206,9 +208,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int userId;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public QueryPS4ControllerInfo WithSlotIndex(int index)
@@ -234,9 +236,10 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     public struct PS4Touch : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
-        public FourCC GetFormat()
+
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         [FieldOffset(0)] public int touchId;
@@ -244,7 +247,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]
@@ -286,6 +289,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             base.FinishSetup(builder);
@@ -535,15 +541,15 @@ namespace UnityEngine.InputSystem.Plugins.PS4
             m_LightBarColor = null;
         }
 
-        public override void SetMotorSpeeds(float largeMotor, float smallMotor)
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             var command = DualShockPS4OuputCommand.Create();
-            command.SetMotorSpeeds(largeMotor, smallMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency);
 
             ExecuteCommand(ref command);
 
-            m_LargeMotor = largeMotor;
-            m_SmallMotor = smallMotor;
+            m_LargeMotor = lowFrequency;
+            m_SmallMotor = highFrequency;
         }
 
         public void ResetOrientation()

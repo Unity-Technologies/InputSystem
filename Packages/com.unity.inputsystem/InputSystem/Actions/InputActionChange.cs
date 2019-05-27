@@ -45,11 +45,11 @@ namespace UnityEngine.InputSystem
         ActionPerformed,
 
         /// <summary>
-        /// An <see cref="InputAction"/> was cancelled.
+        /// An <see cref="InputAction"/> was canceled.
         /// </summary>
-        /// <seealso cref="InputAction.cancelled"/>
-        /// <seealso cref="InputActionPhase.Cancelled"/>
-        ActionCancelled,
+        /// <seealso cref="InputAction.canceled"/>
+        /// <seealso cref="InputActionPhase.Canceled"/>
+        ActionCanceled,
 
         /// <summary>
         ///

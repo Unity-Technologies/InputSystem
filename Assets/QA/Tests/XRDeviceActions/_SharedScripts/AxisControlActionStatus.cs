@@ -18,7 +18,7 @@ public class AxisControlActionStatus : MonoBehaviour
         axisAction.Enable();
         axisAction.performed += UpdateAxis;
         axisAction.started += UpdateAxis;
-        axisAction.cancelled += UpdateAxis;
+        axisAction.canceled += UpdateAxis;
 
         ReadOnlyArray<InputControl> controls = axisAction.controls;
         for (int i = 0; i < controls.Count; i++)
@@ -41,7 +41,7 @@ public class AxisControlActionStatus : MonoBehaviour
         axisAction.Disable();
         axisAction.performed -= UpdateAxis;
         axisAction.started -= UpdateAxis;
-        axisAction.cancelled -= UpdateAxis;
+        axisAction.canceled -= UpdateAxis;
     }
 
     private void UpdateAxis(InputAction.CallbackContext context)
