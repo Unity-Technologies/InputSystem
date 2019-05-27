@@ -395,7 +395,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            public RebindingOperation WithCancellingThrough(string binding)
+            public RebindingOperation WithCancelingThrough(string binding)
             {
                 m_CancelBinding = binding;
                 return this;
