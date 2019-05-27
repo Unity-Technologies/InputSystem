@@ -56,6 +56,12 @@ namespace PackageTestSuite
                 if (logMessage.StartsWith("Unsupported image when converting from NSImage"))
                     continue;
 
+				// We disable updates in the input system code analyzer project, so we 
+				// don't end up analyzing other packages.
+                if (logMessage.StartsWith("Project manifest update is not allowed on this project."))
+                    continue;
+
+
                 // Ignore render pipeline messages until they are fixed
                 if (logMessage.StartsWith("Package missing for Virtual Reality SDK Oculus.") || logMessage.StartsWith("Shader warning in '") ||
                     logMessage.StartsWith("Package missing for Virtual Reality SDK OpenVR.") || logMessage.Contains("Use Metal API instead.") ||
