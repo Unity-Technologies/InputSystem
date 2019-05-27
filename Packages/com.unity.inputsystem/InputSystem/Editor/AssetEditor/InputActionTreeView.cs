@@ -739,7 +739,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                throw new Exception($"Cannot paste {tag} into {location.item.displayName}");
+                throw new InvalidOperationException($"Cannot paste {tag} into {location.item.displayName}");
             }
 
             // If not given a specific index, we paste onto the end of the array.

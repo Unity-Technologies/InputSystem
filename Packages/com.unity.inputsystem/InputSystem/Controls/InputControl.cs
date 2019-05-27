@@ -877,8 +877,8 @@ namespace UnityEngine.InputSystem
         internal override void AddProcessor(object processor)
         {
             if (!(processor is InputProcessor<TValue> processorOfType))
-                throw new Exception(
-                    $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
+                throw new ArgumentException(
+                    $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'", nameof(processor));
             m_ProcessorStack.Append(processorOfType);
         }
 

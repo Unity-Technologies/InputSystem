@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem
             get
             {
                 if (index >= Count || index < 0)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 fixed(char* ptr = buffer)
                 {

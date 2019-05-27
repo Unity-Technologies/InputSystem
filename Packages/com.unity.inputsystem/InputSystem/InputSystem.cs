@@ -240,7 +240,7 @@ namespace UnityEngine.InputSystem
             if (builderExpression == null)
                 throw new ArgumentNullException(nameof(builderExpression));
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
+                throw new ArgumentException("Name is null or empty", nameof(name));
 
             // Grab method and (optional) instance from lambda expression.
             var methodCall = builderExpression.Body as MethodCallExpression;
@@ -653,7 +653,7 @@ namespace UnityEngine.InputSystem
         {
             var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
             if (device == null)
-                throw new Exception(
+                throw new InvalidOperationException(
                     $"Layout registered for type '{typeof(TDevice).Name}' did not produce a device of that type; layout probably has been overridden");
             return device;
         }

@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else
             {
-                throw new Exception($"State format '{format}' is not supported as integer format");
+                throw new InvalidOperationException($"State format '{format}' is not supported as integer format");
             }
 
             return value;
@@ -305,7 +305,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else
             {
-                throw new Exception($"State format '{format}' is not supported as floating-point format");
+                throw new InvalidOperationException($"State format '{format}' is not supported as floating-point format");
             }
 
             return value;
@@ -360,7 +360,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else
             {
-                throw new Exception($"State format '{format}' is not supported as floating-point format");
+                throw new InvalidOperationException($"State format '{format}' is not supported as floating-point format");
             }
         }
 
