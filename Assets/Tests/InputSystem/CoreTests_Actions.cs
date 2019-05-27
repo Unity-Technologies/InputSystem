@@ -3525,7 +3525,8 @@ partial class CoreTests
             Assert.That(actions[3].interaction, Is.TypeOf<SlowTapInteraction>());
         }
     }
-
+    /*
+    TODO: Implement WithChild and ChainedWith
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -3579,7 +3580,7 @@ partial class CoreTests
         Assert.That(firePerformed, Is.False);
         Assert.That(reloadPerformed, Is.True);
     }
-
+    
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -3631,7 +3632,7 @@ partial class CoreTests
         // Last control in combination is considered the trigger control.
         Assert.That(performed[0].control, Is.SameAs(gamepad.buttonSouth));
     }
-
+    
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -3704,7 +3705,8 @@ partial class CoreTests
         Assert.That(performed, Has.Count.EqualTo(1));
         Assert.That(performed[0].interaction, Is.TypeOf<SlowTapInteraction>());
     }
-
+    */
+    
     [Test]
     [Category("Actions")]
     public void Actions_AddingDeviceWillUpdateControlsOnAction()
