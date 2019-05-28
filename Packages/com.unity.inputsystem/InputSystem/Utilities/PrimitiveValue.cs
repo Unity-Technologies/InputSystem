@@ -634,7 +634,7 @@ namespace UnityEngine.InputSystem.Utilities
         {
             return new PrimitiveValue(value);
         }
-        
+
         public static PrimitiveValue FromBoolean(bool value)
         {
             return new PrimitiveValue(value);
@@ -693,6 +693,6 @@ namespace UnityEngine.InputSystem.Utilities
         public static PrimitiveValue FromDouble(double value)
         {
             return new PrimitiveValue(value);
-        }        
+        }
     }
 }

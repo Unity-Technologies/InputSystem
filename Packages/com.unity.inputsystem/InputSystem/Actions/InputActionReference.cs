@@ -117,7 +117,7 @@ namespace UnityEngine.InputSystem
         {
             return action;
         }
-        
+
         public static InputActionReference Create(InputAction action)
         {
             if (action == null)

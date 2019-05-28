@@ -37,22 +37,22 @@ namespace UnityEngine.InputSystem.Utilities
         {
             return fourCC.m_Code;
         }
-        
+
         public static int ToInt32(FourCC fourCC)
         {
             return fourCC.m_Code;
-        }        
+        }
 
         public static implicit operator FourCC(int i)
         {
             var fourCC = new FourCC {m_Code = i};
             return fourCC;
         }
-        
+
         public static FourCC FromInt32(int i)
         {
             return i;
-        }         
+        }
 
         public override string ToString()
         {
