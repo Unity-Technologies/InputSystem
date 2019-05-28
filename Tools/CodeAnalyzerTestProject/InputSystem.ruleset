@@ -5,9 +5,8 @@
     <Rule Id="CA1051" Action="None" />
     <Rule Id="CA1724" Action="None" />
     <Rule Id="CA1815" Action="None" />
+    <Rule Id="CA1030" Action="None" /> <!-- false positive due to our event property syntax -->    
     <!-- The ones below did not show up in the older version of the analyzer used, so are not fixed or suppressed yet. Review these later. -->
     <Rule Id="CA1801" Action="None" />
-    <Rule Id="CA2225" Action="None" />
-    <Rule Id="CA1030" Action="None" />
   </Rules>
 </RuleSet>
