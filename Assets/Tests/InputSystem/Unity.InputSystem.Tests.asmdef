@@ -3,20 +3,24 @@
     "references": [
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
         "Unity.ugui"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll"
+        "nunit.framework.dll",
+        "Mono.Cecil.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
+    "autoReferenced": true,
+    "defineConstraints": [],
     "versionDefines": []
 }

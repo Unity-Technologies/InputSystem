@@ -6,15 +6,18 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Property = NUnit.Framework.PropertyAttribute;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 partial class CoreTests
 {
@@ -298,7 +301,7 @@ partial class CoreTests
         var setup = new InputDeviceBuilder("CustomGamepad");
         var device = (Gamepad)setup.Finish();
 
-        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
+        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
     }
 
     [Test]
@@ -658,9 +661,9 @@ partial class CoreTests
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -992,7 +995,7 @@ partial class CoreTests
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate;
 
         // Make sure we start out with blank data.
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(metrics.totalEventCount, Is.Zero);
         Assert.That(metrics.totalEventBytes, Is.Zero);
@@ -1009,7 +1012,7 @@ partial class CoreTests
         var device3 = InputSystem.AddDevice<Mouse>();
         InputSystem.RemoveDevice(device3);
 
-        metrics = InputSystem.GetMetrics();
+        metrics = InputSystem.metrics;
 
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).

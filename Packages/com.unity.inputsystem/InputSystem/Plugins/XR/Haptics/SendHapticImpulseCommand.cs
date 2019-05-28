@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     /// <summary>
     /// A device command sent to a device to set it's motor rumble amplitude for a set duration.
@@ -27,9 +27,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(float)))]
         float duration;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         /// <summary>

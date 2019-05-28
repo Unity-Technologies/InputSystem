@@ -4,15 +4,15 @@ using System.Linq;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 #pragma warning disable CS0649
@@ -164,7 +164,7 @@ partial class CoreTests
         var setup = new InputDeviceBuilder("MyDevice");
         var device = (Gamepad)setup.Finish();
 
-        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
+        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
     }
 
     [Test]
@@ -889,7 +889,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
-            Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
+            Throws.TypeOf<InvalidOperationException>().With.Property("Message").Contain("Duplicate control"));
     }
 
     [Test]
@@ -1108,9 +1108,9 @@ partial class CoreTests
         // No float as that is the default format for Axis anyway.
         [InputControl(layout = "Axis")] public double doubleAxis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -1126,19 +1126,19 @@ partial class CoreTests
         InputSystem.RegisterLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
         var setup = new InputDeviceBuilder("Test");
 
-        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
-        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
-        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
-        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeDouble));
+        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
+        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
+        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatDouble));
     }
 
     private unsafe struct StateWithFixedArray : IInputStateTypeInfo
     {
         [InputControl] public fixed float buffer[2];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -1403,7 +1403,7 @@ partial class CoreTests
         var derivedLayout = InputSystem.LoadLayout<DerivedClassModifyingControlFromBaseClass>();
 
         Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
-        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
+        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.FormatShort));
 
         // This is probably somewhat counterintuitive but if there's InputControlAttributes on a property or field,
         // there won't be a control generated automatically from the field or property.
@@ -1497,7 +1497,7 @@ partial class CoreTests
         [InputControl(offset = 4, sizeInBits = 32)]
         public ButtonControl button1;
 
-        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public ButtonControl button2 { get; set; }
     }
 
@@ -1521,7 +1521,7 @@ partial class CoreTests
 
     private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
     {
-        [InputControl(offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public new ButtonControl control;
     }
 
@@ -1847,9 +1847,9 @@ partial class CoreTests
         [InputControl(name = "axis", layout = "Axis", variants = "B")]
         public float axis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -2092,15 +2092,15 @@ partial class CoreTests
 
     ////REVIEW: This one seems like it adds quite a bit of complexity for somewhat minor gain.
     ////        May even be safer to *not* support this as it may inject controls at offsets where you don't expect them.
-    //[InputControl(name = "axis", offset = InputStateBlock.kInvalidOffset)]
+    //[InputControl(name = "axis", offset = InputStateBlock.InvalidOffset)]
     private struct BaseInputState : IInputStateTypeInfo
     {
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("BASE");
+            get { return new FourCC("BASE"); }
         }
     }
 
@@ -2111,9 +2111,9 @@ partial class CoreTests
 
     private struct DerivedInputState : IInputStateTypeInfo
     {
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("DERI");
+            get { return new FourCC("DERI"); }
         }
     }
 

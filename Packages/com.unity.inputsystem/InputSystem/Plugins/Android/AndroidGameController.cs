@@ -2,22 +2,22 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Android.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
     {
-        public const int kMaxAndroidAxes = 48;
-        public const int kMaxAndroidButtons = 220;
+        public const int MaxAxes = 48;
+        public const int MaxButtons = 220;
 
-        public const string kVariantGamepad = "Gamepad";
-        public const string kVariantJoystick = "Joystick";
+        internal const string kVariantGamepad = "Gamepad";
+        internal const string kVariantJoystick = "Joystick";
 
-        public const uint kAxisOffset = sizeof(uint) * (uint)((kMaxAndroidButtons + 31) / 32);
+        internal const uint kAxisOffset = sizeof(uint) * (uint)((MaxButtons + 31) / 32);
 
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "rightShoulder", bit = (uint)AndroidKeyCode.ButtonR1, variants = kVariantGamepad)]
         [InputControl(name = "start", bit = (uint)AndroidKeyCode.ButtonStart, variants = kVariantGamepad)]
         [InputControl(name = "select", bit = (uint)AndroidKeyCode.ButtonSelect, variants = kVariantGamepad)]
-        public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
+        public fixed uint buttons[(MaxButtons + 31) / 32];
 
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Brake * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
@@ -41,11 +41,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variants = kVariantGamepad)]
         [InputControl(name = "rightStick/x", variants = kVariantGamepad)]
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
-        public fixed float axis[kMaxAndroidAxes];
+        public fixed float axis[MaxAxes];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public AndroidGameControllerState WithButton(AndroidKeyCode code, bool value = true)
@@ -71,7 +71,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     }
 
     // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
-    [Flags]
     public enum AndroidInputSource
     {
         Keyboard = 257,
@@ -115,8 +114,56 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
+    /// <summary>
+    /// Most of the gamepads:
+    /// - NVIDIA Controller v01.03/v01.04
+    /// - ELAN PLAYSTATION(R)3 Controller
+    /// - My-Power CO.,LTD. PS(R) Controller Adaptor
+    /// - Sony Interactive Entertainment Wireless
+    /// - (Add more)
+    /// map buttons in the following way:
+    ///  Left Stick -> AXIS_X(0) / AXIS_Y(1)
+    ///  Right Stick -> AXIS_Z (11) / AXIS_RZ(14)
+    ///  Right Thumb -> KEYCODE_BUTTON_THUMBR(107)
+    ///  Left Thumb -> KEYCODE_BUTTON_THUMBL(106)
+    ///  L1 (Left shoulder) -> KEYCODE_BUTTON_L1(102)
+    ///  R1 (Right shoulder) -> KEYCODE_BUTTON_R1(103)
+    ///  L2 (Left trigger) -> AXIS_BRAKE(23)
+    ///  R2 (Right trigger) -> AXIS_GAS(22)
+    ///  X -> KEYCODE_BUTTON_X(99)
+    ///  Y -> KEYCODE_BUTTON_Y(100)
+    ///  B -> KEYCODE_BUTTON_B(97)
+    ///  A -> KEYCODE_BUTTON_A(96)
+    ///  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16) or KEYCODE_DPAD_LEFT(21), KEYCODE_DPAD_RIGHT(22), KEYCODE_DPAD_UP(19), KEYCODE_DPAD_DOWN(20),
+    /// Note: On Nvidia Shield Console, L2/R2 additionally invoke key events for AXIS_LTRIGGER, AXIS_RTRIGGER (in addition to AXIS_BRAKE, AXIS_GAS)
+    ///       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
+    ///       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
+    /// Other exotic gamepads have different mappings
+    ///  Xbox Gamepad (for ex., Microsoft X-Box One pad (Firmware 2015)) mapping (Note mapping: L2/R2/Right Stick)
+    ///  Left Stick -> AXIS_X(0) / AXIS_Y(1)
+    ///  Right Stick -> AXIS_RX (12) / AXIS_RY(13)
+    ///  Right Thumb -> KEYCODE_BUTTON_THUMBR(107)
+    ///  Left Thumb -> KEYCODE_BUTTON_THUMBL(106)
+    ///  L1 (Left shoulder) -> KEYCODE_BUTTON_L1(102)
+    ///  R1 (Right shoulder) -> KEYCODE_BUTTON_R1(103)
+    ///  L2 (Left trigger) -> AXIS_Z(11)
+    ///  R2 (Right trigger) -> AXIS_RZ(14)
+    ///  X -> KEYCODE_BUTTON_X(99)
+    ///  Y -> KEYCODE_BUTTON_Y(100)
+    ///  B -> KEYCODE_BUTTON_B(97)
+    ///  A -> KEYCODE_BUTTON_A(96)
+    ///  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16)
+    /// Some gamepads on Android devices (with same Android number version) might have different mappings
+    ///  For ex., Dualshock, on NVidia Shield Console (OS 8.0) all buttons correctly map according to rules in AndroidGameControllerState
+    ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonL1, rightShoulder -> AndroidKeyCode.ButtonR1, etc
+    ///           But, on Samsung Galaxy S9 (OS 8.0), the mapping is different
+    ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonY, rightShoulder -> AndroidKeyCode.ButtonZ, etc
+    ///  So even though Android version is 8.0 in both cases, Dualshock will only correctly work on NVidia Shield Console
+    ///  It's obvious that this depends on the driver and not Android OS, thus we can only assume Samsung in this case doesn't properly support Dualshock in their drivers
+    ///  While we can do custom mapping for Samsung, we can never now when will they try to update the driver for Dualshock or some other gamepad
+    /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantGamepad)]
     public class AndroidGamepad : Gamepad
     {

@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
     /// If Unity is currently in an <see cref="EditorWindow"/> callback, transforms a 2D coordinate from
@@ -19,17 +19,20 @@ namespace UnityEngine.Experimental.Input.Processors
     /// <seealso cref="Pointer.position"/>
     public class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
-        public override Vector2 Process(Vector2 position, InputControl<Vector2> control)
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             // Don't convert to EditorWindowSpace if input is going to game view.
             if (InputEditorUserSettings.lockInputToGameView ||
                 (EditorApplication.isPlaying && Application.isFocused))
-                return position;
+                return value;
 
-            var command = QueryEditorWindowCoordinatesCommand.Create(position);
+            var command = QueryEditorWindowCoordinatesCommand.Create(value);
             if (control.device.ExecuteCommand(ref command) > 0)
                 return command.inOutCoordinates;
-            return position;
+            return value;
         }
     }
 }

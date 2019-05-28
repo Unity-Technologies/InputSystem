@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Packages/com.unity.inputsystem/InputSystem/InputExtensions.cs.meta
 guid: 2c5f144140b7e48d48eb67d2decae17b
+=======
+guid: 8940f158ce6cd4872a4b255fecf22af0
+>>>>>>> develop:Tools/CodeAnalyzerTestProject/Assets/Tests/CleanConsoleTest.cs.meta
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2

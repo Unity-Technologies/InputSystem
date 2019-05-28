@@ -1,11 +1,10 @@
 using System;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
-
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
 #endif
 
 ////TODO: add pressure support
@@ -18,7 +17,7 @@ using UnityEngine.Experimental.Input.Editor;
 ////        touch input not being visible at the event level -- which leaves Touch and Finger slightly unhappy, for example.
 ////        I think being able to cycle simulated input fully through the event loop would result in a setup that is both simpler and more robust.
 
-namespace UnityEngine.Experimental.Input.Touch
+namespace UnityEngine.InputSystem.Touch
 {
     /// <summary>
     /// Adds a <see cref="Touchscreen"/> with input simulated from other types of <see cref="Pointer"/> devices (e.g. <see cref="Mouse"/>
@@ -34,7 +33,7 @@ namespace UnityEngine.Experimental.Input.Touch
         public Touchscreen simulatedTouchscreen { get; private set; }
 
         public static TouchSimulation instance => s_Instance;
-        
+
         public static void Enable()
         {
             if (instance == null)
@@ -106,7 +105,7 @@ namespace UnityEngine.Experimental.Input.Touch
                 var isPrimary = m_PrimaryTouchIndex == i;
                 var touch = new TouchState
                 {
-                    phase = TouchPhase.Cancelled,
+                    phase = TouchPhase.Canceled,
                     position = m_CurrentPositions[index],
                     touchId = m_Touches[i].touchId,
                 };
@@ -377,19 +376,19 @@ namespace UnityEngine.Experimental.Input.Touch
         [NonSerialized] private int m_PrimaryTouchIndex = -1;
 
         private static TouchSimulation s_Instance;
-        
+
         #if UNITY_EDITOR
         static TouchSimulation()
-        { 
+        {
             // We're a MonoBehaviour so our cctor may get called as part of the MonoBehaviour being
             // create. We don't want to trigger InputSystem initialization from there so delay-execute
             // the code here.
             EditorApplication.delayCall +=
                 () =>
-                {
-                    InputSystem.onSettingsChange += OnSettingsChanged;
-                    OnSettingsChanged();
-                };
+            {
+                InputSystem.onSettingsChange += OnSettingsChanged;
+                OnSettingsChanged();
+            };
         }
 
         private static void OnSettingsChanged()
@@ -399,6 +398,7 @@ namespace UnityEngine.Experimental.Input.Touch
             else
                 Disable();
         }
+
         #endif
 
         /// <summary>

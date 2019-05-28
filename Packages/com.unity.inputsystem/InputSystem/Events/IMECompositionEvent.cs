@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A specialized event that contains the current IME Composition string, if IME is enabled and active.
@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     public unsafe struct IMECompositionEvent : IInputEventTypeInfo
     {
         // These needs to match the native ImeCompositionStringInputEventData settings
-        public const int kIMECharBufferSize = 64;
+        internal const int kIMECharBufferSize = 64;
         public const int Type = 0x494D4553;
 
         [FieldOffset(0)]
@@ -23,9 +23,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize)]
         public IMECompositionString compositionString;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static IMECompositionEvent Create(int deviceId, string compositionString, double time)
@@ -38,7 +38,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + (sizeof(char) * LowLevel.IMECompositionEvent.kIMECharBufferSize))]
     public unsafe struct IMECompositionString : IEnumerable<char>
@@ -109,7 +109,7 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 if (index >= Count || index < 0)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 fixed(char* ptr = buffer)
                 {
@@ -126,6 +126,12 @@ namespace UnityEngine.Experimental.Input
 
         public IMECompositionString(string characters)
         {
+            if (string.IsNullOrEmpty(characters))
+            {
+                size = 0;
+                return;
+            }
+
             Debug.Assert(characters.Length < LowLevel.IMECompositionEvent.kIMECharBufferSize);
             size = characters.Length;
             fixed(char* ptr = buffer)

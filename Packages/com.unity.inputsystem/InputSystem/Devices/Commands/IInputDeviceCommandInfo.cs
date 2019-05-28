@@ -1,9 +1,9 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     public interface IInputDeviceCommandInfo
     {
-        FourCC GetTypeStatic();
+        FourCC typeStatic { get; }
     }
 }

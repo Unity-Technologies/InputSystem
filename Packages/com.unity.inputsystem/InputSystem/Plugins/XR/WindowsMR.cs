@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
     [InputControlLayout]
     public class WMRHMD : XRHMD
@@ -20,6 +20,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -62,6 +65,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             joystick = builder.GetControl<Vector2Control>("joystick");

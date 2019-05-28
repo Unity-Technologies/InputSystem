@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
 ////        the actions-update-when-not-expected problem; plus give us access to easy polling
@@ -19,7 +19,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: protect traces against controls changing configuration (if state layouts change, we're affected)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Records the triggering of actions into a sequence of events that can be replayed at will.
@@ -88,9 +88,9 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     /// <seealso cref="InputAction.started"/>
     /// <seealso cref="InputAction.performed"/>
-    /// <seealso cref="InputAction.cancelled"/>
+    /// <seealso cref="InputAction.canceled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public sealed class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -166,7 +166,7 @@ namespace UnityEngine.Experimental.Input
 
             action.performed += m_CallbackDelegate;
             action.started += m_CallbackDelegate;
-            action.cancelled += m_CallbackDelegate;
+            action.canceled += m_CallbackDelegate;
 
             m_SubscribedActions.AppendWithCapacity(action);
         }
@@ -194,7 +194,7 @@ namespace UnityEngine.Experimental.Input
 
             action.performed -= m_CallbackDelegate;
             action.started -= m_CallbackDelegate;
-            action.cancelled -= m_CallbackDelegate;
+            action.canceled -= m_CallbackDelegate;
 
             var index = m_SubscribedActions.IndexOfReference(action);
             if (index != -1)
@@ -222,7 +222,7 @@ namespace UnityEngine.Experimental.Input
         /// <param name="context"></param>
         /// <see cref="InputAction.performed"/>
         /// <see cref="InputAction.started"/>
-        /// <see cref="InputAction.cancelled"/>
+        /// <see cref="InputAction.canceled"/>
         /// <see cref="InputActionMap.actionTriggered"/>
         public unsafe void RecordAction(InputAction.CallbackContext context)
         {
@@ -358,7 +358,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     case InputActionChange.ActionStarted:
                     case InputActionChange.ActionPerformed:
-                    case InputActionChange.ActionCancelled:
+                    case InputActionChange.ActionCanceled:
                         Debug.Assert(actionOrMap is InputAction, "Expected an action");
                         var triggeredAction = (InputAction)actionOrMap;
                         var actionIndex = triggeredAction.m_ActionIndex;
@@ -509,7 +509,7 @@ namespace UnityEngine.Experimental.Input
             public Enumerator(InputActionTrace trace)
             {
                 m_Trace = trace;
-                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.ToPointer();
+                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.data;
                 m_EventCount = trace.m_EventBuffer.eventCount;
                 m_CurrentEvent = null;
                 m_CurrentIndex = 0;

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Command to re-enable a device that has been disabled with <see cref="DisableDeviceCommand"/>.
@@ -11,14 +11,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('E', 'N', 'B', 'L'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static EnableDeviceCommand Create()

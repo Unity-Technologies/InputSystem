@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
 
@@ -21,7 +21,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: put default gamepad polling frequency here?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Project-wide input settings.
@@ -309,7 +309,7 @@ namespace UnityEngine.Experimental.Input
 
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
-        [SerializeField] private float m_DefaultButtonPressPoint = 0.1f;
+        [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;

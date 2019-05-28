@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 
 internal partial class CoreTests
 {
@@ -173,7 +173,7 @@ internal partial class CoreTests
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonNorth"));
             Assert.That(rebind.completed, Is.True);
-            Assert.That(rebind.cancelled, Is.False);
+            Assert.That(rebind.canceled, Is.False);
             Assert.That(receivedCompleteCallback, Is.True);
         }
     }
@@ -208,7 +208,7 @@ internal partial class CoreTests
                                Assert.That(receivedCancelCallback, Is.False);
                                receivedCancelCallback = true;
                            })
-                       .WithCancellingThrough(keyboard.escapeKey)
+                       .WithCancelingThrough(keyboard.escapeKey)
                        .Start())
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
@@ -218,7 +218,7 @@ internal partial class CoreTests
             Assert.That(action.bindings[0].path, Is.EqualTo("<Keyboard>/space"));
             Assert.That(action.bindings[0].overridePath, Is.Null);
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.cancelled, Is.True);
+            Assert.That(rebind.canceled, Is.True);
             Assert.That(receivedCancelCallback, Is.True);
         }
     }
@@ -251,7 +251,7 @@ internal partial class CoreTests
             Assert.That(action.bindings[0].path, Is.EqualTo("<Keyboard>/space"));
             Assert.That(action.bindings[0].overridePath, Is.Null);
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.cancelled, Is.True);
+            Assert.That(rebind.canceled, Is.True);
             Assert.That(receivedCancelCallback, Is.True);
         }
     }
@@ -551,7 +551,7 @@ internal partial class CoreTests
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.cancelled, Is.False);
+            Assert.That(rebind.canceled, Is.False);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(action.bindings[0].overridePath, Is.Null);
 
@@ -560,7 +560,7 @@ internal partial class CoreTests
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
-            Assert.That(rebind.cancelled, Is.False);
+            Assert.That(rebind.canceled, Is.False);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
         }
@@ -920,7 +920,7 @@ internal partial class CoreTests
     }
 
     // Optionally, a fixed timeout on the entire operation can be specified. If no relevant input registers
-    // within the given time, the operation is automatically cancelled.
+    // within the given time, the operation is automatically canceled.
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]

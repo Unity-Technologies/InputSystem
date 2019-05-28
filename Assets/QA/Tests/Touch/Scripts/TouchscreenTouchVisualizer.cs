@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 public class TouchscreenTouchVisualizer : MonoBehaviour
 {

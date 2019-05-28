@@ -1,10 +1,12 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: allow to restrict state change monitors to specific updates?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     using NotifyControlValueChangeAction = Action<InputControl, double, InputEventPtr, long>;
     using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
@@ -76,15 +78,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public static bool IsIntegerFormat(this FourCC format)
         {
-            return format == InputStateBlock.kTypeBit ||
-                format == InputStateBlock.kTypeInt ||
-                format == InputStateBlock.kTypeByte ||
-                format == InputStateBlock.kTypeShort ||
-                format == InputStateBlock.kTypeSBit ||
-                format == InputStateBlock.kTypeUInt ||
-                format == InputStateBlock.kTypeUShort ||
-                format == InputStateBlock.kTypeLong ||
-                format == InputStateBlock.kTypeULong;
+            return format == InputStateBlock.FormatBit ||
+                format == InputStateBlock.FormatInt ||
+                format == InputStateBlock.FormatByte ||
+                format == InputStateBlock.FormatShort ||
+                format == InputStateBlock.FormatSBit ||
+                format == InputStateBlock.FormatUInt ||
+                format == InputStateBlock.FormatUShort ||
+                format == InputStateBlock.FormatLong ||
+                format == InputStateBlock.FormatULong;
         }
 
         ////REVIEW: should these take an InputUpdateType argument?

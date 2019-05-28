@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: have tooltips on each entry in the picker
 
 ////TODO: find better way to present controls when filtering to specific devices
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputControlPickerDropdown : AdvancedDropdown
+    internal class InputControlPickerDropdown : AdvancedDropdown, IDisposable
     {
         public InputControlPickerDropdown(
             InputControlPickerState state,
@@ -50,6 +50,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_RebindingOperation?.Dispose();
             m_RebindingOperation = null;
+        }
+
+        public void Dispose()
+        {
+            m_RebindingOperation?.Dispose();
         }
 
         protected override AdvancedDropdownItem BuildRoot()
@@ -565,12 +570,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static class Styles
         {
-            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
-
-            static Styles()
-            {
-                waitingForInputLabel.fontSize = 22;
-            }
+            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel").WithFontSize(22);
         }
     }
 }

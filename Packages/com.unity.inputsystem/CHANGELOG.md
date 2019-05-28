@@ -1,10 +1,23 @@
 # Changelog
+
 All notable changes to the input system package will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.3-preview] - TBD
+Due to package verification, the latest version below is the unpublished version and the date is meaningless.
+however, it has to be formatted properly to pass verification tests.
+
+## [0.3.0-preview] - 2020-1-1
+
+### Fixed
+
+- Validate all parameters on public APIs.
+
+#### Actions
+
+- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+- Generated C# wrappers for .inputactions assets are no longer placed in Assets/Assets/ folder on Windows.
 
 ### Added
 
@@ -26,7 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * Touch can be simulated from mouse or pen input now. To enable simulation, call `TouchSimulation.Enable()` or put the `TouchSimulation` MonoBehaviour in your scene. Also, in the input debugger, you can now enable touch simulation from the "Options" dropdown.
 - Changing state has been decoupled from events. While input events are the primary means by which to trigger state changes, anyone can perform state changes manually now from anywhere.
     ```
-    InputState.Change(...);
+    InputState.Change(gamepad.leftStick, new Vector2(123, 234));
     ```
   * This change makes it possible to update state __from__ state and thus synthesize input data from other input coming in.
 - A new API for recording state changes over time has been added.
@@ -42,6 +55,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
+- Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
+- Added getters to all `IInputRuntime` properties.
+- Replace some `GetXxx` methods in our API with `xxx`  properties.
 - `Pointer.phase` has been removed and `PointerPhase` has been renamed to `TouchPhase`. Phases are now specific to touch. `PointerPhaseControl` has been renamed to `TouchPhaseControl`.
 - `Pointer.button` has been renamed to `Pointer.press` and now is a control that indicates whether the pointer is in "press down" state.
   * For mouse, corresponds to left button press.
@@ -55,14 +72,57 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onChange`.
   * Rationale: The other `InputDeviceChange` notifications are low-frequency whereas `StateChanged` is high-frequency. Putting them all on the same callback made adding a callback to `InputSystem.deviceChange` unnecessarily expensive.
 
+## [0.2.10-preview] - 2019-5-17
+
+### Added
+
+- Added a `MultiplayerEventSystem` class, which allows you use multiple UI event systems to control different parts of the UI by different players.
+- `InputSystemUIInputModule` now lets you specify an `InputActionAsset` in the `actionsAsset` property. If this is set, the inspector will populate all actions from this asset. If you have a `PlayerInput` component on the same game object, referencing the same  `InputActionAsset`, the `PlayerInput` component will keep the actions on the `InputSystemUIInputModule` in synch, allowing easy setup of multiplayer UI systems.
+
+### Changed
+
+- Redesigned `UIActionInputModule`
+ * Added a button in the inspector to automatically assign actions from an input action asset based on commonly used action names.
+ * Will now populate actions with useful defaults.
+ * Removed `clickSpeed` property - will use native click counts from the OS where available instead.
+ * Removed `sendEventsWhenInBackground` property.
+ * Hiding `Touches` and `TrackedDevices` until we decide how to handle them.
+ * Remove `moveDeadzone` property as it is made redundant by the action's dead zone.
+ * Removed `UIActionInputModuleEnabler` component, `UIActionInputModule` will now enable itself.
+- Changed default button press point to 0.5.
+- Changed all constants in public API to match Unity naming conventions ("Constant" instead of "kConstant").
+- Changed namespace from `UnityEngine.Experimental.Input` to `UnityEngine.InputSystem`.
+- Generated wrapper code now has nicer formatting.
+- Renamed `UIActionInputModule` to `InputSystemUIInputModule`.
+- Nicer icons for `InputActionAssets` and `InputActions` and for `Button` and generic controls.
+- Change all public API using `IntPtr` to use unsafe pointer types instead.
+- `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
+- Change some public fields into properties.
+- Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
+- Removed `Plugins` from all namespaces.
+- Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
+
 ### Fixed
 
 - Adding devices to "Supported Devices" in input preferences not allowing to select certain device types (like "Gamepad").
+- Fixed scrolling in `UIActionInputModule`.
+- Fixed compiling the input system package in Unity 19.2 with ugui being moved to a package now.
+- In the Input System project settings window, you can no longer add a supported device twice.
 
 #### Actions
 
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
-- Generated C# wrappers for .inputactions assets are no longer placed in Assets/Assets/ folder on Windows.
+- Fixed `Hold` interactions firing immediately before the duration has passed.
+- Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
+- Fixed exception message when calling `CallbackContext.ReadValue<TValue>()` for an action with a composite binding with `TValue` not matching the composite's value type.
+
+### Added
+
+#### Actions
+
+- `PlayerInput` can now handle `.inputactions` assets that have no control schemes.
+  * Will pair __all__ devices mentioned by any of the bindings except if already paired to another player.
+>>>>>>> develop
 
 ## [0.2.8-preview] - 2019-4-23
 

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Specification that can be matched against an <see cref="InputDeviceDescription"/>.
@@ -233,8 +233,12 @@ namespace UnityEngine.Experimental.Input.Layouts
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "False positive.")]
         public bool Equals(InputDeviceMatcher other)
         {
+            if (other == null)
+                return false;
+
             if (m_Patterns == other.m_Patterns)
                 return true;
 

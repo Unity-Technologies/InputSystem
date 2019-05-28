@@ -2,9 +2,9 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Partial state update for an input device.
@@ -43,17 +43,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public InputEventPtr ToEventPtr()
         {
             fixed(DeltaStateEvent * ptr = &this)
             {
                 return new InputEventPtr((InputEvent*)ptr);
             }
-        }
-
-        public FourCC GetTypeStatic()
-        {
-            return Type;
         }
 
         public static DeltaStateEvent* From(InputEventPtr ptr)

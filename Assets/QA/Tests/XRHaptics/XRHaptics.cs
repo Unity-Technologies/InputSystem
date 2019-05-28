@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 
 using UnityEngine.UI;
 

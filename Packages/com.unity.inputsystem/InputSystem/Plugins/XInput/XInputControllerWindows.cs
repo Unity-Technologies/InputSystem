@@ -1,20 +1,21 @@
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.XInput.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout is XINPUT_GAMEPAD
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct XInputControllerWindowsState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
+        public FourCC format
         {
             get { return new FourCC('X', 'I', 'N', 'P'); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
         public enum Button
         {
             DPadUp = 0,
@@ -77,11 +78,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [FieldOffset(8)] public short rightStickX;
         [FieldOffset(10)] public short rightStickY;
 
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
-
         public XInputControllerWindowsState WithButton(Button button)
         {
             buttons |= (ushort)((uint)1 << (int)button);
@@ -90,7 +86,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
     public class XInputControllerWindows : XInputController

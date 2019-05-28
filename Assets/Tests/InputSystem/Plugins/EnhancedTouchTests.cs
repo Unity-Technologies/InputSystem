@@ -5,15 +5,15 @@ using System.Runtime.Remoting;
 using NUnit.Framework;
 using UnityEditor.VersionControl;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Touch;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Touch;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
-using Touch = UnityEngine.Experimental.Input.Touch.Touch;
+using Touch = UnityEngine.InputSystem.Touch.Touch;
 using Property = NUnit.Framework.PropertyAttribute;
-using TouchPhase = UnityEngine.Experimental.Input.TouchPhase;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 ////TODO: taps
 
@@ -349,7 +349,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(Touch.activeFingers[0].touchHistory[2].delta,
             Is.EqualTo(new Vector2()).Using(Vector2EqualityComparer.Instance));
     }
-    
+
     [Test]
     [Category("EnhancedTouch")]
     public void EnhancedTouch_CanCheckForTaps()
@@ -358,9 +358,9 @@ internal class EnhancedTouchTests : InputTestFixture
 
         Assert.That(Touch.activeTouches[0].isTap, Is.False);
         Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(0));
-        
+
         EndTouch(1, new Vector2(123, 234));
-        
+
         Assert.That(Touch.activeTouches[0].isTap, Is.True);
         Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(1));
         Assert.That(Touch.fingers[0].touchHistory, Has.Count.EqualTo(2));
@@ -542,9 +542,9 @@ internal class EnhancedTouchTests : InputTestFixture
     public void EnhancedTouch_RemovingTouchscreenRemovesItsActiveTouches()
     {
         BeginTouch(1, new Vector2(123, 234));
-        
+
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
-        
+
         InputSystem.RemoveDevice(Touchscreen.current);
 
         Assert.That(Touch.activeTouches, Is.Empty);
@@ -869,7 +869,7 @@ internal class EnhancedTouchTests : InputTestFixture
     public void EnhancedTouch_TouchSimulation_ProducesPrimaryTouches()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
-        
+
         TouchSimulation.Enable();
 
         Set(mouse.position, new Vector2(123, 234));
@@ -881,9 +881,9 @@ internal class EnhancedTouchTests : InputTestFixture
             Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.delta.ReadValue(),
             Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
-        
+
         Set(mouse.position, new Vector2(234, 345));
-        
+
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(TouchPhase.Moved));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.position.ReadValue(),

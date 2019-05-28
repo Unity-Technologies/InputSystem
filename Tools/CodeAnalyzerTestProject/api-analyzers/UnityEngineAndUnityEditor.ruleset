@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Ruleset for Unity Code in the UnityEngine and UnityEditor namespaces" Description="Code analysis rules for code published by Unity Technologies." ToolsVersion="15.0">
+  <Include Path="unity.ruleset" Action="Default" />
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1709" Action="None" />
+    <Rule Id="CA1801" Action="None" />
+    <Rule Id="CA1822" Action="None" />
+  </Rules>
+  <Rules AnalyzerId="Microsoft.CodeQuality.Analyzers" RuleNamespace="Microsoft.CodeQuality.Analyzers">
+    <Rule Id="CA1822" Action="None" />
+  </Rules>
+</RuleSet>

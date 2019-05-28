@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: support actions
 
@@ -17,7 +17,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Makes the activity and data of an InputManager observable in message form.
@@ -38,7 +38,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputSystem.remoting"/>
     /// \todo Reuse memory allocated for messages instead of allocating separately for each message.
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
-    public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
+    public sealed class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input
             switch (msg.type)
             {
                 case MessageType.Connect:
-                    ConnectMsg.Process(this, msg);
+                    ConnectMsg.Process(this);
                     break;
                 case MessageType.Disconnect:
                     DisconnectMsg.Process(this, msg);
@@ -158,10 +158,10 @@ namespace UnityEngine.Experimental.Input
                     RemoveDeviceMsg.Process(this, msg);
                     break;
                 case MessageType.StartSending:
-                    StartSendingMsg.Process(this, msg);
+                    StartSendingMsg.Process(this);
                     break;
                 case MessageType.StopSending:
-                    StopSendingMsg.Process(this, msg);
+                    StopSendingMsg.Process(this);
                     break;
             }
         }
@@ -194,11 +194,11 @@ namespace UnityEngine.Experimental.Input
 
         private void SendDevice(InputDevice device)
         {
-            var message = NewDeviceMsg.Create(this, device);
+            var message = NewDeviceMsg.Create(device);
             Send(message);
         }
 
-        private void SendEvent(InputEventPtr eventPtr)
+        private unsafe void SendEvent(InputEventPtr eventPtr)
         {
             if (m_Subscribers == null)
                 return;
@@ -211,7 +211,7 @@ namespace UnityEngine.Experimental.Input
             if (device != null && device.remote)
                 return;
 
-            var message = NewEventsMsg.Create(this, eventPtr.data, 1);
+            var message = NewEventsMsg.Create(eventPtr.data, 1);
             Send(message);
         }
 
@@ -228,13 +228,13 @@ namespace UnityEngine.Experimental.Input
             switch (change)
             {
                 case InputDeviceChange.Added:
-                    msg = NewDeviceMsg.Create(this, device);
+                    msg = NewDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.Removed:
-                    msg = RemoveDeviceMsg.Create(this, device);
+                    msg = RemoveDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.UsageChanged:
-                    msg = ChangeUsageMsg.Create(this, device);
+                    msg = ChangeUsageMsg.Create(device);
                     break;
                 default:
                     return;
@@ -259,7 +259,7 @@ namespace UnityEngine.Experimental.Input
                     msg = message.Value;
                     break;
                 case InputControlLayoutChange.Removed:
-                    msg = RemoveLayoutMsg.Create(this, layout);
+                    msg = RemoveLayoutMsg.Create(layout);
                     break;
                 default:
                     return;
@@ -308,7 +308,7 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            return InputDevice.kInvalidDeviceId;
+            return InputDevice.InvalidDeviceId;
         }
 
         private InputDevice TryGetDeviceByRemoteId(int remoteDeviceId, int senderIndex)
@@ -362,7 +362,7 @@ namespace UnityEngine.Experimental.Input
 
         private static class ConnectMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 if (receiver.sending)
                 {
@@ -375,7 +375,7 @@ namespace UnityEngine.Experimental.Input
 
         private static class StartSendingMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 receiver.StartSending();
             }
@@ -383,7 +383,7 @@ namespace UnityEngine.Experimental.Input
 
         private static class StopSendingMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 receiver.StopSending();
             }
@@ -470,7 +470,7 @@ namespace UnityEngine.Experimental.Input
 
         private static class RemoveLayoutMsg
         {
-            public static Message Create(InputRemoting sender, string layoutName)
+            public static Message Create(string layoutName)
             {
                 var bytes = Encoding.UTF8.GetBytes(layoutName);
                 return new Message
@@ -500,7 +500,7 @@ namespace UnityEngine.Experimental.Input
                 public InputDeviceDescription description;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 Debug.Assert(!device.remote, "Device being sent to remotes should be a local device, not a remote one");
 
@@ -574,7 +574,7 @@ namespace UnityEngine.Experimental.Input
         // Tell remote system there's new input events.
         private static class NewEventsMsg
         {
-            public static unsafe Message Create(InputRemoting sender, IntPtr events, int eventCount)
+            public static unsafe Message Create(InputEvent* events, int eventCount)
             {
                 // Find total size of event buffer we need.
                 var totalSize = 0u;
@@ -590,7 +590,7 @@ namespace UnityEngine.Experimental.Input
                 var data = new byte[totalSize];
                 fixed(byte* dataPtr = data)
                 {
-                    UnsafeUtility.MemCpy(dataPtr, events.ToPointer(), totalSize);
+                    UnsafeUtility.MemCpy(dataPtr, events, totalSize);
                 }
 
                 // Done.
@@ -612,14 +612,14 @@ namespace UnityEngine.Experimental.Input
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
                     var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
 
-                    while (eventPtr.data.ToInt64() < dataEndPtr.ToInt64())
+                    while ((Int64)eventPtr.data < dataEndPtr.ToInt64())
                     {
                         // Patch up device ID to refer to local device and send event.
                         var remoteDeviceId = eventPtr.deviceId;
                         var localDeviceId = receiver.FindLocalDeviceId(remoteDeviceId, senderIndex);
                         eventPtr.deviceId = localDeviceId;
 
-                        if (localDeviceId != InputDevice.kInvalidDeviceId)
+                        if (localDeviceId != InputDevice.InvalidDeviceId)
                         {
                             ////TODO: add API to send events in bulk rather than one by one
                             manager.QueueEvent(eventPtr);
@@ -641,7 +641,7 @@ namespace UnityEngine.Experimental.Input
                 public string[] usages;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 var data = new Data
                 {
@@ -674,7 +674,7 @@ namespace UnityEngine.Experimental.Input
 
         private static class RemoveDeviceMsg
         {
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 return new Message
                 {

@@ -1,8 +1,8 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: simplify this to just two callbacks that hijack OnBeforeUpdate and OnUpdate for the device?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Allows a device to intercept operations performed on its state.

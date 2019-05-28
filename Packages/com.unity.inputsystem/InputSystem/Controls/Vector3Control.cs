@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A floating-point 3D vector control composed of three <see cref="AxisControl">AxisControls</see>.
@@ -18,11 +18,14 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public Vector3Control()
         {
-            m_StateBlock.format = InputStateBlock.kTypeVector3;
+            m_StateBlock.format = InputStateBlock.FormatVector3;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             x = builder.GetControl<AxisControl>(this, "x");
             y = builder.GetControl<AxisControl>(this, "y");
             z = builder.GetControl<AxisControl>(this, "z");

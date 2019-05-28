@@ -4,7 +4,7 @@ using Steamworks;
 ////REVIEW: this should ideally be part of the itself system itself but we can't reference the Steamworks.NET
 ////        API from there; find another packaging solution?
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
     /// <summary>
     /// Implementation of <see cref="ISteamControllerAPI"/> for <see href="https://steamworks.github.io/">

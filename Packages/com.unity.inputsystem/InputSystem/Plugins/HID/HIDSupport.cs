@@ -1,11 +1,12 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.HID.Editor;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.HID.Editor;
 #endif
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
     using ShouldCreateHIDCallback = System.Func<HID.HIDDeviceDescriptor, bool?>;
 
@@ -54,7 +55,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
         /// </summary>
-        public static void Initialize()
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+        public
+#else
+        internal
+#endif
+        static void Initialize()
         {
             s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
 

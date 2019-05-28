@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputAction">input action</see> occurred.
@@ -45,11 +45,11 @@ namespace UnityEngine.Experimental.Input
         ActionPerformed,
 
         /// <summary>
-        /// An <see cref="InputAction"/> was cancelled.
+        /// An <see cref="InputAction"/> was canceled.
         /// </summary>
-        /// <seealso cref="InputAction.cancelled"/>
-        /// <seealso cref="InputActionPhase.Cancelled"/>
-        ActionCancelled,
+        /// <seealso cref="InputAction.canceled"/>
+        /// <seealso cref="InputActionPhase.Canceled"/>
+        ActionCanceled,
 
         /// <summary>
         ///

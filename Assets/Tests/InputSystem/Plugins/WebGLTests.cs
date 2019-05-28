@@ -1,11 +1,11 @@
 #if UNITY_WEBGL || UNITY_EDITOR
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.WebGL;
-using UnityEngine.Experimental.Input.Plugins.WebGL.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.WebGL;
+using UnityEngine.InputSystem.WebGL.LowLevel;
 
 internal class WebGLTests : InputTestFixture
 {

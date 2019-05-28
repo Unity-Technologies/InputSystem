@@ -1,13 +1,13 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: come up with a mechanism to allow (certain) processors to be stateful
 
 ////TODO: cache processors globally; there's no need to instantiate the same processor with the same parameters multiple times
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A processor that conditions/transforms input values.
@@ -130,6 +130,9 @@ namespace UnityEngine.Experimental.Input
 
         public override object ProcessAsObject(object value, InputControl control)
         {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             if (!(value is TValue))
                 throw new ArgumentException(
                     $"Expecting value of type '{typeof(TValue).Name}' but got value '{value}' of type '{value.GetType().Name}'",

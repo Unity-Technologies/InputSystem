@@ -1,5 +1,5 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
 ////        the system fits together.
 
-////REVIEW: have single delegate instead of separate performed/started/cancelled callbacks?
+////REVIEW: have single delegate instead of separate performed/started/canceled callbacks?
 
 ////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls' and 'bindings')
 
@@ -32,7 +32,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: have "Always Enabled" toggle on actions?
 
 // An issue that has come up repeatedly is the request for having a polling-based API that allows actions to be used the same
-// way UnityEngine.Input allows axes to be used. Here's my thoughts. While such an API is a bad fit for how actions operate,
+// way UnityEngine.InputSystem allows axes to be used. Here's my thoughts. While such an API is a bad fit for how actions operate,
 // the request is definitely reasonable and a simple polling-based API could be created in a relatively straightforward way. It'd
 // have to drop some details on the floor and do some aggregation of state, but where someone reaches the limits, there would always
 // be a possible migration to the callback-based API.
@@ -42,7 +42,7 @@ using UnityEngine.Experimental.Input.Utilities;
 // the callbacks is very tedious and requires a lot of duct tape. What if instead the setup was trivial and something you never have
 // to worry about? Would the need for a polling-based API still be there? That's what I would like to find out first.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A named input signal that can flexibly decide which input data to tap.
@@ -66,8 +66,7 @@ namespace UnityEngine.Experimental.Input
     /// Actions are not supported in edit mode.
     /// </remarks>
     [Serializable]
-    public class InputAction : ICloneable, IDisposable
-        ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
+    public sealed class InputAction : ICloneable, IDisposable
     {
         /// <summary>
         /// Name of the action.
@@ -325,13 +324,13 @@ namespace UnityEngine.Experimental.Input
 
         /// <summary>
         /// Event that is triggered when the action has been <see cref="started"/>
-        /// but then cancelled before being fully <see cref="performed"/>.
+        /// but then canceled before being fully <see cref="performed"/>.
         /// </summary>
-        /// <see cref="InputActionPhase.Cancelled"/>
-        public event Action<CallbackContext> cancelled
+        /// <see cref="InputActionPhase.Canceled"/>
+        public event Action<CallbackContext> canceled
         {
-            add => m_OnCancelled.Append(value);
-            remove => m_OnCancelled.Remove(value);
+            add => m_OnCanceled.Append(value);
+            remove => m_OnCanceled.Remove(value);
         }
 
         /// <summary>
@@ -515,7 +514,7 @@ namespace UnityEngine.Experimental.Input
 
         // Listeners. No array allocations if only a single listener.
         [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnStarted;
-        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnCancelled;
+        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnCanceled;
         [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
@@ -617,9 +616,8 @@ namespace UnityEngine.Experimental.Input
                     return i;
             }
 
-            throw new ArgumentOutOfRangeException(
-                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings",
-                nameof(indexOfBindingOnAction));
+            throw new ArgumentOutOfRangeException(nameof(indexOfBindingOnAction),
+                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings");
         }
 
         /// <summary>
@@ -627,7 +625,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <seealso cref="performed"/>
         /// <seealso cref="started"/>
-        /// <seealso cref="cancelled"/>
+        /// <seealso cref="canceled"/>
         /// <seealso cref="InputActionMap.actionTriggered"/>
         public struct CallbackContext
         {
@@ -653,7 +651,7 @@ namespace UnityEngine.Experimental.Input
 
             public bool performed => phase == InputActionPhase.Performed;
 
-            public bool cancelled => phase == InputActionPhase.Cancelled;
+            public bool canceled => phase == InputActionPhase.Canceled;
 
             /// <summary>
             /// The action that got triggered.

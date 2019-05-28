@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using TouchPhase = UnityEngine.Experimental.Input.TouchPhase;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class TouchISX : MonoBehaviour
 {
@@ -19,7 +19,7 @@ public class TouchISX : MonoBehaviour
     {
         m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
         m_touchAction.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
-        m_touchAction.cancelled += callbackContext => TouchInput(callbackContext.control as TouchControl);
+        m_touchAction.canceled += callbackContext => TouchInput(callbackContext.control as TouchControl);
         m_touchAction.Enable();
     }
 
@@ -44,7 +44,7 @@ public class TouchISX : MonoBehaviour
             case TouchPhase.Moved:
                 UpdateTouchInput(control);
                 break;
-            case TouchPhase.Cancelled:
+            case TouchPhase.Canceled:
             case TouchPhase.Ended:
                 EndTouchInput(control);
                 break;

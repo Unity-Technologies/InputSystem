@@ -1,9 +1,9 @@
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Touch
+namespace UnityEngine.InputSystem.Touch
 {
     /// <summary>
     ///
@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Touch
                     DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_OnFingerMove, this, "Touch.onFingerMove");
                     break;
                 case TouchPhase.Ended:
-                case TouchPhase.Cancelled:
+                case TouchPhase.Canceled:
                     DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_OnFingerUp, this, "Touch.onFingerUp");
                     break;
             }

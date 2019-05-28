@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     // Variation of ReadOnlyArray that has the slicing ability but
     // does provide write access. Used only internally.
@@ -54,19 +54,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             get
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 // We allow array to be null as we are patching up ReadWriteArrays in a separate
                 // path in several places.
                 if (m_Array == null)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Array is null");
                 return m_Array[m_StartIndex + index];
             }
             set
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 if (m_Array == null)
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Array is null");
                 m_Array[m_StartIndex + index] = value;
             }
         }

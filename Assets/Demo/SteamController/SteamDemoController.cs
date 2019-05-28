@@ -1,11 +1,11 @@
 // THIS FILE HAS BEEN AUTO-GENERATED
 #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.Steam;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.Steam;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -123,9 +123,9 @@ public class SteamDemoController : SteamController
 }
 public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
 {
-    public FourCC GetFormat()
+    public FourCC format
     {
-        return new FourCC('S', 't', 'e', 'a');
+        get { return new FourCC('S', 't', 'e', 'a'); }
     }
 
     [InputControl(name = "fire", layout = "Button", bit = 0)]

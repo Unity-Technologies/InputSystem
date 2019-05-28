@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Helper when having either a single element or a list of elements. Avoids

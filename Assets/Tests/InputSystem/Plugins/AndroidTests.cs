@@ -1,14 +1,14 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Plugins.Android;
-using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Android;
+using UnityEngine.InputSystem.Android.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
 using UnityEngine.TestTools.Utils;
 
 internal class AndroidTests : InputTestFixture
@@ -237,69 +237,6 @@ internal class AndroidTests : InputTestFixture
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsAndroidSonyDualShock()
-    {
-        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
-                // http://www.linux-usb.org/usb.ids
-                vendorId = 0x054c,
-                productId = 0x09cc,
-                motionAxes = new[]
-                {
-                    AndroidAxis.Rx,
-                    AndroidAxis.Ry,
-                    AndroidAxis.Z,
-                    AndroidAxis.Rz,
-                    AndroidAxis.HatX,
-                    AndroidAxis.HatY
-                }
-            }.ToJson()
-        });
-
-        Assert.That(gamepad.name, Is.EqualTo("AndroidGamepadDualShock"));
-
-        float rxValue = 0.123f;
-        float ryValue = 0.456f;
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-            // Pretend that trigger values for dualshock come from range [-1.0..1.0]
-            // after normalization they will be transformed to range [0.0..1.0]
-                .WithAxis(AndroidAxis.Rx, rxValue * 2.0f - 1.0f)
-                .WithAxis(AndroidAxis.Ry, ryValue * 2.0f - 1.0f)
-                .WithButton(AndroidKeyCode.ButtonA)
-                .WithButton(AndroidKeyCode.ButtonC));
-
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(rxValue).Within(0.000001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(ryValue).Within(0.000001));
-        Assert.That(gamepad.buttonWest.isPressed, Is.True);
-        Assert.That(gamepad.buttonEast.isPressed, Is.True);
-        Assert.That(gamepad.buttonNorth.isPressed, Is.False);
-        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
-
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithButton(AndroidKeyCode.ButtonX)
-                .WithButton(AndroidKeyCode.ButtonB));
-
-        InputSystem.Update();
-
-        Assert.That(gamepad.buttonWest.isPressed, Is.False);
-        Assert.That(gamepad.buttonEast.isPressed, Is.False);
-        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
-        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
     }
 
     [Test]

@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem.Controls;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 ////TODO: must allow running UnityTests which means we have to be able to get per-frame updates yet not receive input from native
@@ -18,7 +18,7 @@ using UnityEngine.Experimental.Input.Editor;
 
 ////REVIEW: always enable event diagnostics in InputTestFixture?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A test fixture for writing tests that use the input system. Can be derived from
@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input
             {
                 Debug.LogError("Failed to set up input system for test " + TestContext.CurrentContext.Test.Name);
                 Debug.LogException(exception);
-                throw exception;
+                throw;
             }
 
             if (InputSystem.devices.Count > 0)
@@ -128,7 +128,7 @@ namespace UnityEngine.Experimental.Input
             {
                 Debug.LogError("Failed to shut down and restore input system after test " + TestContext.CurrentContext.Test.Name);
                 Debug.LogException(exception);
-                throw exception;
+                throw;
             }
         }
 
@@ -178,15 +178,15 @@ namespace UnityEngine.Experimental.Input
             return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time);
         }
 
-        public ActionConstraint Cancelled(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null)
         {
-            return new ActionConstraint(InputActionPhase.Cancelled, action, control, time: time);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time);
         }
 
-        public ActionConstraint Cancelled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
+        public ActionConstraint Canceled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
             where TValue : struct
         {
-            return new ActionConstraint(InputActionPhase.Cancelled, action, control, value, time: time);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, value, time: time);
         }
 
         public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null, double? time = null)
@@ -201,10 +201,10 @@ namespace UnityEngine.Experimental.Input
             return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction), time: time);
         }
 
-        public ActionConstraint Cancelled<TInteraction>(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null, double? time = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Cancelled, action, control, interaction: typeof(TInteraction), time: time);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction), time: time);
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
@@ -321,7 +321,7 @@ namespace UnityEngine.Experimental.Input
         public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Cancelled, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
         public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default, bool queueEventOnly = true,

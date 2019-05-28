@@ -1,12 +1,12 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor.Lists;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Editor.Lists;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: show parameters for selected interaction or processor inline in list rather than separately underneath list
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Base class for views that show the properties of actions or bindings.
@@ -88,12 +88,14 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnProcessorsModified()
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
+            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
+            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_InteractionsChanged);
         }
 
@@ -124,19 +126,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static class Styles
         {
-            public static readonly GUIStyle s_FoldoutBackgroundStyle = new GUIStyle("Label");
+            public static readonly GUIStyle s_FoldoutBackgroundStyle = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(InputActionTreeView.ResourcesPath + "foldoutBackground.png"))
+                .WithBorder(new RectOffset(3, 3, 3, 3))
+                .WithMargin(new RectOffset(1, 1, 3, 3));
             public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout");
-
-            static Styles()
-            {
-                var darkGreyBackgroundWithBorderTexture =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeView.ResourcesPath + "foldoutBackground.png");
-
-                s_FoldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
-                s_FoldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
-                s_FoldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
-            }
         }
     }
 }

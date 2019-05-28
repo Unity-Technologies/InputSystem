@@ -1,10 +1,11 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: ManualThreaded
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "Not consistently used as flags, many using APIs expect only one type to be passed.")]
     [Flags]
     public enum InputUpdateType
     {

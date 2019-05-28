@@ -1,4 +1,4 @@
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
     public class SteamTestFixture
     {

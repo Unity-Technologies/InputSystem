@@ -1,7 +1,9 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Touch;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
 #endif
 
 ////TODO: gesture support
@@ -10,7 +12,7 @@ using UnityEngine.Experimental.Input.Editor;
 
 ////REVIEW: have TouchTap, TouchSwipe, etc. wrapper MonoBehaviours like LeanTouch?
 
-namespace UnityEngine.Experimental.Input.Touch
+namespace UnityEngine.InputSystem.Touch
 {
     [AddComponentMenu("Input/Enhanced Touch Support")]
     public class EnhancedTouchSupport : MonoBehaviour
@@ -43,12 +45,6 @@ namespace UnityEngine.Experimental.Input.Touch
             InputSystem.onBeforeUpdate += Touch.BeginUpdate;
             InputSystem.onSettingsChange += OnSettingsChange;
 
-            // Add toolbar button to any Touchscreen devices to open a window for
-            // visualizing Touch data.
-            #if UNITY_EDITOR
-            InputDeviceDebuggerWindow.onToolbarGUI += OnDeviceToolbarGUI;
-            #endif
-
             SetUpState();
         }
 
@@ -63,10 +59,6 @@ namespace UnityEngine.Experimental.Input.Touch
             InputSystem.onDeviceChange -= OnDeviceChange;
             InputSystem.onBeforeUpdate -= Touch.BeginUpdate;
             InputSystem.onSettingsChange -= OnSettingsChange;
-
-            #if UNITY_EDITOR
-            InputDeviceDebuggerWindow.onToolbarGUI -= OnDeviceToolbarGUI;
-            #endif
 
             TearDownState();
         }
@@ -133,17 +125,5 @@ namespace UnityEngine.Experimental.Input.Touch
             TearDownState();
             SetUpState();
         }
-
-        #if UNITY_EDITOR
-        private static void OnDeviceToolbarGUI(InputDevice device)
-        {
-            if (device is Touchscreen screen &&
-                GUILayout.Button(s_TouchInspectorButton, EditorStyles.toolbarButton))
-            {
-                EditorWindow.GetWindow<TouchInspectorWindow>();
-            }
-        }
-
-        #endif
     }
 }

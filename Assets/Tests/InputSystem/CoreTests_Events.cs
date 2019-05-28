@@ -5,17 +5,17 @@ using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
-using TouchPhase = UnityEngine.Experimental.Input.TouchPhase;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
 partial class CoreTests
@@ -202,8 +202,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsManually));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
@@ -237,8 +237,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
@@ -289,8 +289,8 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
+        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
+            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
@@ -315,7 +315,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.ToPointer());
+            eventPtr => receivedEvents.Add(*eventPtr.data);
 
         // First fixed update should just take everything.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
@@ -403,7 +403,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.ToPointer());
+            eventPtr => receivedEvents.Add(*eventPtr.data);
 
         bool? receivedOnSettingsChange = null;
         InputSystem.onSettingsChange += () => receivedOnSettingsChange = true;
@@ -449,7 +449,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.234f, 0.345f)}, 3);
         InputSystem.Update();
 
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(metrics.averageLagTimePerEvent, Is.EqualTo((9 + 7 + 4 + 0) / 4.0).Within(0.0001));
     }
@@ -642,7 +642,7 @@ partial class CoreTests
         // Device IDs are looked up only *after* the system shows the event to us.
 
         var receivedCalls = 0;
-        var receivedDeviceId = InputDevice.kInvalidDeviceId;
+        var receivedDeviceId = InputDevice.InvalidDeviceId;
         InputSystem.onEvent +=
             eventPtr =>
         {
@@ -716,9 +716,10 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")]
         [FieldOffset(0)] public ushort value;
-        public FourCC GetFormat()
+
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -740,7 +741,7 @@ partial class CoreTests
     // What we do now is to simply align event pointers to 4 byte boundaries as we read and write events.
     [Test]
     [Category("Events")]
-    public void Events_CanHandleStateNotAlignedTo4ByteBoundary()
+    public unsafe void Events_CanHandleStateNotAlignedTo4ByteBoundary()
     {
         Debug.Assert(UnsafeUtility.SizeOf<StateWith2Bytes>() == 2);
 
@@ -753,7 +754,7 @@ partial class CoreTests
             eventPtr =>
         {
             // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
-            Assert.That(eventPtr.data.ToInt64() % 4, Is.EqualTo(0));
+            Assert.That((Int64)eventPtr.data % 4, Is.EqualTo(0));
             Assert.That(eventPtr.sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<StateWith2Bytes>()));
         };
 
@@ -868,8 +869,8 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new GamepadState());
 
         var receivedCalls = 0;
-        var firstId = InputEvent.kInvalidId;
-        var secondId = InputEvent.kInvalidId;
+        var firstId = InputEvent.InvalidId;
+        var secondId = InputEvent.InvalidId;
 
         InputSystem.onEvent +=
             eventPtr =>
@@ -934,9 +935,9 @@ partial class CoreTests
         public int buttons;
         [InputControl(layout = "Axis")] public float axis2;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('N', 'S', 'T', 'D');
+            get { return new FourCC('N', 'S', 'T', 'D'); }
         }
     }
 
@@ -946,9 +947,9 @@ partial class CoreTests
 
         public CustomNestedDeviceState nested;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('C', 'U', 'S', 'T');
+            get { return new FourCC('C', 'U', 'S', 'T'); }
         }
     }
 
@@ -1009,9 +1010,9 @@ partial class CoreTests
         public CustomDeviceState baseState;
         public int extra;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return baseState.GetFormat();
+            get { return baseState.format; }
         }
     }
 
@@ -1102,7 +1103,7 @@ partial class CoreTests
             using (var buffer = new InputEventBuffer(eventPtr, 1))
             {
                 Assert.That(buffer.eventCount, Is.EqualTo(1));
-                Assert.That(buffer.sizeInBytes, Is.EqualTo(InputEventBuffer.kBufferSizeUnknown));
+                Assert.That(buffer.sizeInBytes, Is.EqualTo(InputEventBuffer.BufferSizeUnknown));
                 Assert.That(buffer.capacityInBytes, Is.Zero);
                 Assert.That(buffer.bufferPtr, Is.EqualTo(eventPtr));
 

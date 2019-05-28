@@ -1,12 +1,12 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     public struct PrimitiveValueOrArray
     {
         ////REVIEW: use InlinedArray<PrimitiveValue>?
-        public PrimitiveValue primitiveValue;
-        public object arrayValue;
+        public PrimitiveValue primitiveValue { get; set; }
+        public object arrayValue { get; set; }
 
         public TypeCode valueType => primitiveValue.type;
 
@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (!isArray)
                 return primitiveValue.ToString();
 
-            throw new NotImplementedException();
+            return "<Array>";
         }
 
         public static PrimitiveValueOrArray FromString(string value)

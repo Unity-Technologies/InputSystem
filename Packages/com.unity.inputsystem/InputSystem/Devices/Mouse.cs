@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Combine a single pointer with buttons and a scroll wheel.
@@ -42,11 +42,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         ////FIXME: InputDeviceBuilder will get fooled and set up an incorrect state layout if we don't force this to VEC2; InputControlLayout will
         ////       "infer" USHT as the format which will then end up with a layout where two 4 byte float controls are "packed" into a 16bit sized parent;
         ////       in other words, setting VEC2 here manually should *not* be necessary
-        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kAutomaticOffset)] // Will stay at 0.
+        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
         public ushort buttons;
 
         [InputControl(layout = "Integer")]
@@ -68,9 +68,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mouse input device.
@@ -160,6 +160,9 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             scroll = builder.GetControl<Vector2Control>(this, "scroll");
             leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
             middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
@@ -172,17 +175,26 @@ namespace UnityEngine.Experimental.Input
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
-            var deltaXChanged = Reset(delta.x, statePtr);
-            var deltaYChanged = Reset(delta.y, statePtr);
+            return OnCarryStateForward(statePtr);
+        }
+
+        protected unsafe new bool OnCarryStateForward(void* statePtr)
+        {
             var scrollXChanged = Reset(scroll.x, statePtr);
             var scrollYChanged = Reset(scroll.y, statePtr);
-            return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
+            return scrollXChanged || scrollYChanged || base.OnCarryStateForward(statePtr);
         }
 
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
         {
-            Accumulate(delta.x, oldStatePtr, newState);
-            Accumulate(delta.y, oldStatePtr, newState);
+            OnBeforeWriteNewState(oldStatePtr, newState);
+        }
+
+        protected unsafe new void OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
+        {
+            ////REVIEW: this sucks for actions; they see each value change but the changes are no longer independent;
+            ////        is accumulation really something we want? should we only reset?
+            base.OnBeforeWriteNewState(oldStatePtr, newState);
             Accumulate(scroll.x, oldStatePtr, newState);
             Accumulate(scroll.y, oldStatePtr, newState);
         }

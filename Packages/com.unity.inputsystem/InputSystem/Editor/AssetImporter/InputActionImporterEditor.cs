@@ -1,13 +1,13 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 
 ////TODO: support for multi-editing
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Custom editor that allows modifying importer settings for an <see cref="InputActionImporter"/>.

@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A complete state snapshot for an entire input device.
@@ -52,9 +52,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static int GetEventSizeWithPayload<TState>()
@@ -85,6 +85,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
         /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "1#")]
         public static NativeArray<byte> From(InputDevice device, out InputEventPtr eventPtr,  Allocator allocator = Allocator.Temp)
         {
             if (device == null)

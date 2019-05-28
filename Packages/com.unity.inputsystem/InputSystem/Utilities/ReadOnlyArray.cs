@@ -6,7 +6,7 @@ using System.Collections.Generic;
 ////  (maybe switch m_Array to an InlinedArray and extend InlinedArray to allow having three configs:
 ////  1. firstValue only, 2. firstValue + additionalValues, 3. everything in additionalValues)
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Read-only access to an array or to a slice of an array.
@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             get
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 // We allow array to be null as we are patching up ReadOnlyArrays in a separate
                 // path in several places.
                 if (m_Array == null)
@@ -148,7 +148,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 get
                 {
                     if (m_Index == m_IndexEnd)
-                        throw new IndexOutOfRangeException();
+                        throw new InvalidOperationException("Iterated beyond end");
                     return m_Array[m_Index];
                 }
             }

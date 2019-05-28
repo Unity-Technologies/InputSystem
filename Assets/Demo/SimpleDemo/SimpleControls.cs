@@ -4,8 +4,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
 
 public class SimpleControls : IInputActionCollection
 {
@@ -25,6 +25,7 @@ public class SimpleControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -35,6 +36,7 @@ public class SimpleControls : IInputActionCollection
                     ""expectedControlLayout"": ""Stick"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -45,6 +47,7 @@ public class SimpleControls : IInputActionCollection
                     ""expectedControlLayout"": ""Vector2"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -55,6 +58,7 @@ public class SimpleControls : IInputActionCollection
                     ""expectedControlLayout"": ""Button"",
                     ""continuous"": false,
                     ""passThrough"": false,
+                    ""initialStateCheck"": false,
                     ""processors"": """",
                     ""interactions"": """",
                     ""bindings"": []
@@ -63,182 +67,168 @@ public class SimpleControls : IInputActionCollection
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""b5fe4f63-d7cb-45bf-a319-7696b67ad3a2"",
+                    ""id"": ""09c134e4-92b5-4c1e-9b05-582eb78eb92e"",
                     ""path"": ""*/{PrimaryAction}"",
                     ""interactions"": ""Tap,SlowTap"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""fire"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""729a0cbd-b530-467e-89cd-81adb6d8befa"",
+                    ""id"": ""bf9b1d91-7948-4353-9878-ae277d65f79d"",
                     ""path"": ""<SteamDemoController>/fire"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""fire"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""20df73dd-ac3d-4a07-a0ab-ac67c744dd4c"",
+                    ""id"": ""8f1f45b4-15a0-484c-88ae-29d16ac86cef"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""c45515b2-47e7-4df8-89b2-891e7f0fcf86"",
+                    ""id"": ""f25555b4-378d-4717-b24c-5c5caa7fc5af"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": true,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""73f76ab3-4129-4bf4-8195-0cc5f090d99b"",
+                    ""id"": ""a980a292-d423-4826-b2ae-c8c9338687ff"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""a4e8079a-1c94-4e39-8f66-4a8d5118831a"",
+                    ""id"": ""f6c5fd4d-c98a-4fb6-a4d3-3031ca1513a0"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""a1d3bf07-9cac-48d5-ac4c-ad57c0456c73"",
+                    ""id"": ""72aa1192-e011-4dd9-b982-276906c26c6e"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""4ad9e9cc-d3e7-43c2-b8e1-ee095c55f469"",
+                    ""id"": ""4f219e2e-1f87-4309-ad5f-b02fe3a3785a"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": true,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""431a0c24-8b2e-4757-a812-aa847e5c43f6"",
+                    ""id"": ""d6e54dbd-7201-460e-8911-fa79cad0d147"",
                     ""path"": ""<SteamDemoController>/move"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d7ef2b5a-6d56-4350-8468-623e16b32c33"",
+                    ""id"": ""d68bf4a1-76f4-43e5-84ee-09bb91570c47"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""look"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d7a1e431-c0df-4b9d-8d0c-063b6fc44ec3"",
+                    ""id"": ""d6a0c9f4-5ca6-4d2b-ac91-09a9aec7e735"",
                     ""path"": ""<Pointer>/delta"",
                     ""interactions"": """",
                     ""processors"": ""ScaleVector2(x=2,y=2)"",
                     ""groups"": """",
                     ""action"": ""look"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""aba590ea-411c-49ad-bc23-7ebdede193e5"",
+                    ""id"": ""a8707930-9dd4-492d-bd41-7ff97a2c97c5"",
                     ""path"": ""<SteamDemoController>/look"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""look"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""03b05f2f-0e69-4528-ac71-90b4508e2162"",
+                    ""id"": ""c4e6e8f2-7bfc-45ee-9cae-4e31e3fa2915"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""jump"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
                 },
                 {
                     ""name"": """",
-                    ""id"": ""03d9f9af-0260-4811-a097-fb36783dce08"",
+                    ""id"": ""2b589206-67d1-419f-97c0-478fccd8e6b5"",
                     ""path"": ""<Gamepad>/buttonNorth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""jump"",
-                    ""chainWithPrevious"": false,
                     ""isComposite"": false,
                     ""isPartOfComposite"": false,
                     ""modifiers"": """"
@@ -255,44 +245,54 @@ public class SimpleControls : IInputActionCollection
         m_gameplay_look = m_gameplay.GetAction("look");
         m_gameplay_jump = m_gameplay.GetAction("jump");
     }
+
     ~SimpleControls()
     {
         UnityEngine.Object.Destroy(asset);
     }
+
     public InputBinding? bindingMask
     {
         get => asset.bindingMask;
         set => asset.bindingMask = value;
     }
+
     public ReadOnlyArray<InputDevice>? devices
     {
         get => asset.devices;
         set => asset.devices = value;
     }
+
     public ReadOnlyArray<InputControlScheme> controlSchemes
     {
         get => asset.controlSchemes;
     }
+
     public bool Contains(InputAction action)
     {
         return asset.Contains(action);
     }
+
     public IEnumerator<InputAction> GetEnumerator()
     {
         return asset.GetEnumerator();
     }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+
     public void Enable()
     {
         asset.Enable();
     }
+
     public void Disable()
     {
         asset.Disable();
     }
+
     // gameplay
     private InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
@@ -320,32 +320,32 @@ public class SimpleControls : IInputActionCollection
             {
                 fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
                 fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                fire.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
                 move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
                 move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                move.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
                 look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
                 look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                look.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
                 jump.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
                 jump.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
-                jump.cancelled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+                jump.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
             {
                 fire.started += instance.OnFire;
                 fire.performed += instance.OnFire;
-                fire.cancelled += instance.OnFire;
+                fire.canceled += instance.OnFire;
                 move.started += instance.OnMove;
                 move.performed += instance.OnMove;
-                move.cancelled += instance.OnMove;
+                move.canceled += instance.OnMove;
                 look.started += instance.OnLook;
                 look.performed += instance.OnLook;
-                look.cancelled += instance.OnLook;
+                look.canceled += instance.OnLook;
                 jump.started += instance.OnJump;
                 jump.performed += instance.OnJump;
-                jump.cancelled += instance.OnJump;
+                jump.canceled += instance.OnJump;
             }
         }
     }

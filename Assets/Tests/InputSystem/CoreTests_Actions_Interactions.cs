@@ -1,8 +1,8 @@
 using System.Linq;
 using NUnit.Framework;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.LowLevel;
 
 internal partial class CoreTests
 {
@@ -155,6 +155,9 @@ internal partial class CoreTests
     {
         InputSystem.settings.timesliceEvents = false;
 
+        const int timeOffset = 123;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = timeOffset;
+        runtime.currentTime = 10 + timeOffset;
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
@@ -165,9 +168,9 @@ internal partial class CoreTests
         InputAction startedAction = null;
         InputControl startedControl = null;
 
-        var cancelledReceivedCalls = 0;
-        InputAction cancelledAction = null;
-        InputControl cancelledControl = null;
+        var canceledReceivedCalls = 0;
+        InputAction canceledAction = null;
+        InputControl canceledControl = null;
 
         var action = new InputAction(binding: "<Gamepad>/{primaryAction}", interactions: "hold(duration=0.4)");
         action.performed +=
@@ -188,61 +191,71 @@ internal partial class CoreTests
 
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
         };
-        action.cancelled +=
+        action.canceled +=
             ctx =>
         {
-            ++cancelledReceivedCalls;
-            cancelledAction = ctx.action;
-            cancelledControl = ctx.control;
+            ++canceledReceivedCalls;
+            canceledAction = ctx.action;
+            canceledControl = ctx.control;
 
-            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Canceled));
         };
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 0.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.0);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
         Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
 
         startedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 0.25);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 10.25);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.EqualTo(1));
-        Assert.That(cancelledAction, Is.SameAs(action));
-        Assert.That(cancelledControl, Is.SameAs(gamepad.buttonSouth));
+        Assert.That(canceledReceivedCalls, Is.EqualTo(1));
+        Assert.That(canceledAction, Is.SameAs(action));
+        Assert.That(canceledControl, Is.SameAs(gamepad.buttonSouth));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
 
-        cancelledReceivedCalls = 0;
+        canceledReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 0.5);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.5);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
         Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
 
         startedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 10);
+        runtime.currentTime = 10.75 + timeOffset;
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.Zero);
+        Assert.That(performedReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
+        Assert.That(startedAction, Is.SameAs(action));
+        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+
+        runtime.currentTime = 11 + timeOffset;
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
-        Assert.That(cancelledReceivedCalls, Is.Zero);
+        Assert.That(canceledReceivedCalls, Is.Zero);
         Assert.That(performedAction, Is.SameAs(action));
         Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
     }
 
     [Test]
@@ -341,7 +354,7 @@ internal partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].interaction, Is.TypeOf<MultiTapInteraction>());
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(1.75).Within(0.00001));
@@ -371,7 +384,7 @@ internal partial class CoreTests
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[0].interaction, Is.TypeOf<MultiTapInteraction>());
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(4).Within(0.00001));
@@ -380,7 +393,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Now press and release within tap time. Then press again within delay time but release
-            // only after tap time. Should we started and cancelled.
+            // only after tap time. Should we started and canceled.
             runtime.currentTime = 6;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 4.7);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 4.9);
@@ -395,7 +408,7 @@ internal partial class CoreTests
             Assert.That(actions[0].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[0].time, Is.EqualTo(4.7).Within(0.00001));
             Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Cancelled));
+            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Canceled));
             Assert.That(actions[1].interaction, Is.TypeOf<MultiTapInteraction>());
             Assert.That(actions[1].control, Is.SameAs(gamepad.buttonSouth));
             Assert.That(actions[1].time, Is.EqualTo(5.9).Within(0.00001));

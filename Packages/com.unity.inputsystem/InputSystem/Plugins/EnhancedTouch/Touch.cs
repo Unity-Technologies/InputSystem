@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: recorded times are baked *external* times; reset touch when coming out of play mode
 
 ////REVIEW: record velocity on touches? or add method to very easily get the data?
 
-namespace UnityEngine.Experimental.Input.Touch
+namespace UnityEngine.InputSystem.Touch
 {
     ////REVIEW: make this a struct that acts as a reference?
     /// <summary>
@@ -26,7 +26,7 @@ namespace UnityEngine.Experimental.Input.Touch
     ///
     /// The API makes a distinction between "fingers" and "touches". A touch refers to one contact state change event, i.e. a
     /// finger beginning to touch the screen (<see cref="TouchPhase.Began"/>), moving on the screen (<see cref="TouchPhase.Moved"/>),
-    /// or being lifted off the screen (<see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Cancelled"/>).
+    /// or being lifted off the screen (<see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>).
     /// A finger, on the other hand, always refers to the Nth contact on the screen.
     ///
     /// A Touch instance is a struct which only contains a reference to the actual data which is stored in unmanaged
@@ -440,14 +440,14 @@ namespace UnityEngine.Experimental.Input.Touch
                         var extra = (ExtraDataPerTouchState*)record.GetUnsafeExtraMemoryPtr();
 
                         // Skip if part of an ongoing touch we've already recorded.
-                        if (state.touchId == currentTouchId && !state.phase.IsEndedOrCancelled())
+                        if (state.touchId == currentTouchId && !state.phase.IsEndedOrCanceled())
                             continue;
 
                         // If the touch is older than the current frame and it's a touch that has
                         // ended, we don't need to look further back into the history as anything
                         // coming before that will be equally outdated.
                         var wasUpdatedThisFrame = extra->updateStepCount == updateStepCount;
-                        if (!wasUpdatedThisFrame && state.phase.IsEndedOrCancelled())
+                        if (!wasUpdatedThisFrame && state.phase.IsEndedOrCanceled())
                             break;
 
                         // Make a copy of the touch so that we can modify data like deltas and phase.

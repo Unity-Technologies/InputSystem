@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A custom property drawer for <see cref="InputActionProperty"/>.
@@ -15,6 +15,9 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
             var height = 0f;
 
             // Field label.
@@ -41,6 +44,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
             EditorGUI.BeginProperty(position, label, property);
 
             const int kIndent = 16;
@@ -88,12 +94,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static class Styles
         {
-            public static GUIStyle header = new GUIStyle("Label");
-
-            static Styles()
-            {
-                header.fontStyle = FontStyle.Bold;
-            }
+            public static readonly GUIStyle header = new GUIStyle("Label").WithFontStyle(FontStyle.Bold);
         }
     }
 }

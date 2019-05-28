@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     public struct FourCC : IEquatable<FourCC>
     {
@@ -19,6 +19,9 @@ namespace UnityEngine.Experimental.Input.Utilities
         public FourCC(string str)
             : this()
         {
+            if (str == null)
+                throw new System.ArgumentNullException(nameof(str));
+
             var length = str.Length;
             Debug.Assert(length >= 1 && length <= 4, "FourCC string must be one to four characters long!");
 

@@ -6,7 +6,7 @@ using System;
 ////      (this will probably also be useful for jobs)
 ////      when this is implemented, also allow interning directly from Substrings
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Wraps around a string to allow for faster case-insensitive
@@ -109,6 +109,16 @@ namespace UnityEngine.Experimental.Input.Utilities
         public static bool operator!=(string a, InternedString b)
         {
             return string.Compare(a, b.m_StringLowerCase, StringComparison.OrdinalIgnoreCase) != 0;
+        }
+
+        public static bool operator<(InternedString left, InternedString right)
+        {
+            return (string.Compare(left.m_StringLowerCase, right.m_StringLowerCase) < 0);
+        }
+
+        public static bool operator>(InternedString left, InternedString right)
+        {
+            return (string.Compare(left.m_StringLowerCase, right.m_StringLowerCase) > 0);
         }
 
         public static implicit operator string(InternedString str)

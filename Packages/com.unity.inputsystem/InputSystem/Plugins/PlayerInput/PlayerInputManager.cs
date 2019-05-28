@@ -1,15 +1,15 @@
 using System;
 using UnityEngine.Events;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.PlayerInput
 {
     /// <summary>
     /// Manages joining and leaving of players.
@@ -88,7 +88,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public bool maintainAspectRatioInSplitScreen
         {
             get => m_MaintainAspectRatioInSplitScreen;
-            set { throw new NotImplementedException(); }
         }
 
         /// <summary>
@@ -97,7 +96,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public int fixedNumberOfSplitScreens
         {
             get => m_FixedNumberOfSplitScreens;
-            set { throw new NotImplementedException(); }
         }
 
         /// <summary>
@@ -106,7 +104,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public float splitScreenBorderWidth
         {
             get => m_SplitScreenBorderWidth;
-            set { throw new NotImplementedException(); }
         }
 
         /// <summary>
@@ -122,7 +119,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public Rect splitScreenArea
         {
             get => m_SplitScreenRect;
-            set { throw new NotImplementedException(); }
         }
 
         public int playerCount => PlayerInput.s_AllActivePlayersCount;
@@ -139,7 +135,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         public int maxPlayerCount
         {
             get => m_MaxPlayerCount;
-            set { throw new NotImplementedException(); }
         }
 
         public bool joiningEnabled
@@ -251,27 +246,6 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
         {
             get => m_PlayerPrefab;
             set => m_PlayerPrefab = value;
-        }
-
-        /// <summary>
-        /// Optional delegate that creates players.
-        /// </summary>
-        /// <remarks>
-        /// This can be used in place of <see cref="playerPrefab"/> to take control over how
-        /// player objects are created. If this property is not null, <see cref="playerPrefab"/>
-        /// will be ignored (and can be left at null) and the delegate will be invoked to create
-        /// new players.
-        /// </remarks>
-        public Func<PlayerInput> onCreatePlayer
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public Func<PlayerInput> onDestroyPlayer
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
         }
 
         public static PlayerInputManager instance { get; private set; }

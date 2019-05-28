@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A collection of utility functions for working with arrays.
@@ -347,7 +347,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 ////REVIEW: allow growing array to specific size by inserting at arbitrary index?
                 if (index != 0)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 array = new TValue[1];
                 array[0] = value;

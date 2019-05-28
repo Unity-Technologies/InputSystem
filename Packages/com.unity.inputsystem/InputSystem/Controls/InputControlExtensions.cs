@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: some of the stuff here is really low-level; should we move it into a separate static class inside of .LowLevel?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Various extension methods for <see cref="InputControl"/>. Mostly low-level routines.
@@ -93,14 +93,6 @@ namespace UnityEngine.Experimental.Input
             control.ReadValueFromStateIntoBuffer(control.currentStatePtr, buffer, bufferSize);
         }
 
-        public static unsafe void ReadDefaultValue(this InputControl control, void* buffer, int bufferSize)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Read the control's default value and return it as an object.
         /// </summary>
@@ -132,6 +124,7 @@ namespace UnityEngine.Experimental.Input
         /// <returns>True if the value has been successfully read from the event, false otherwise.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         /// <seealso cref="ReadUnprocessedValueFromEvent{TValue}(InputControl{TValue},InputEventPtr)"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -160,6 +153,7 @@ namespace UnityEngine.Experimental.Input
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -508,6 +502,12 @@ namespace UnityEngine.Experimental.Input
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
             where TControl : InputControl
         {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+            if (controls == null)
+                throw new ArgumentNullException(nameof(controls));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
             if (parent is TControl parentAsTControl && predicate(parentAsTControl))
                 controls.Add(parentAsTControl);
 

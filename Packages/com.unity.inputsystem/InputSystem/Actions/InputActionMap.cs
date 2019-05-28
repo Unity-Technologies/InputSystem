@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: given we have the global ActionPerformed callback, do we really need the per-map callback?
 
@@ -10,7 +10,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      (because of the sharing of state between multiple maps in an asset, we'd have to extend that constraint
 ////      to all maps in an asset in order to uphold it properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mapping of <see cref="InputBinding">input bindings</see> to <see cref="InputAction">
@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
+    public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
     {
         /// <summary>
         /// Name of the action map.
@@ -180,7 +180,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <seealso cref="InputAction.started"/>
         /// <seealso cref="InputAction.performed"/>
-        /// <seealso cref="InputAction.cancelled"/>
+        /// <seealso cref="InputAction.canceled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
             add => m_ActionCallbacks.AppendWithCapacity(value);
@@ -1089,7 +1089,7 @@ namespace UnityEngine.Experimental.Input
                     var jsonAction = actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
-                        throw new Exception($"Action number {i + 1} has no name");
+                        throw new InvalidOperationException($"Action number {i + 1} has no name");
 
                     ////REVIEW: make sure all action names are unique?
 
@@ -1103,7 +1103,7 @@ namespace UnityEngine.Experimental.Input
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
-                            throw new Exception(
+                            throw new InvalidOperationException(
                                 $"Invalid action name '{jsonAction.name}' (missing action name after '/')");
                     }
 
@@ -1167,7 +1167,7 @@ namespace UnityEngine.Experimental.Input
 
                     var mapName = jsonMap.name;
                     if (string.IsNullOrEmpty(mapName))
-                        throw new Exception($"Map number {i + 1} has no name");
+                        throw new InvalidOperationException($"Map number {i + 1} has no name");
 
                     // Try to find existing map.
                     InputActionMap map = null;
@@ -1201,7 +1201,7 @@ namespace UnityEngine.Experimental.Input
                         var jsonAction = jsonMap.actions[n];
 
                         if (string.IsNullOrEmpty(jsonAction.name))
-                            throw new Exception($"Action number {i + 1} in map '{mapName}' has no name");
+                            throw new InvalidOperationException($"Action number {i + 1} in map '{mapName}' has no name");
 
                         // Create action.
                         var action = new InputAction(jsonAction.name)

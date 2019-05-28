@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Interactions;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
 
 // Use action set asset instead of lose InputActions directly on component.
 public class SimpleController_UsingActions_InAsset : MonoBehaviour
@@ -22,7 +22,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     private Rigidbody m_Rigidbody;
 
     private void Start()
-    {		
+    {
         m_Rigidbody = GetComponent<Rigidbody>();
 
         ////FIXME: Solve this properly. ATM, if we have both fixed and dynamic updates enabled, then
@@ -40,11 +40,11 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     public void Awake()
     {
-		controls = new SimpleControls();
+        controls = new SimpleControls();
         controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
-        controls.gameplay.move.cancelled += ctx => m_Move = Vector2.zero;
-        controls.gameplay.look.cancelled += ctx => m_Look = Vector2.zero;
+        controls.gameplay.move.canceled += ctx => m_Move = Vector2.zero;
+        controls.gameplay.look.canceled += ctx => m_Look = Vector2.zero;
 
         controls.gameplay.fire.performed +=
             ctx =>
@@ -65,7 +65,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
             if (ctx.interaction is SlowTapInteraction)
                 m_Charging = true;
         };
-        controls.gameplay.fire.cancelled +=
+        controls.gameplay.fire.canceled +=
             ctx =>
         {
             m_Charging = false;

@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 // The action tree view illustrates one of the weaknesses of Unity's editing model. While operating directly
 // on serialized data does have a number of advantages (the built-in undo system being one of them), making the
@@ -16,7 +16,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////FIXME: context menu cannot be brought up when there's no items in the tree
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A tree view showing action maps, actions, and bindings. This is the core piece around which the various
@@ -739,7 +739,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             else
             {
-                throw new Exception($"Cannot paste {tag} into {location.item.displayName}");
+                throw new InvalidOperationException($"Cannot paste {tag} into {location.item.displayName}");
             }
 
             // If not given a specific index, we paste onto the end of the array.
@@ -1376,7 +1376,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             if (string.IsNullOrEmpty(bindingItem.groups))
                                 return Match.Success;
 
-                            var groups = bindingItem.groups.Split(InputBinding.kSeparator);
+                            var groups = bindingItem.groups.Split(InputBinding.Separator);
                             var bindingGroup = text;
                             return groups.Any(x => x.Equals(bindingGroup, StringComparison.InvariantCultureIgnoreCase))
                                 ? Match.Success
@@ -1473,34 +1473,21 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static class Styles
         {
-            public static readonly GUIStyle text = new GUIStyle("Label");
-            public static readonly GUIStyle selectedText = new GUIStyle("Label");
-            public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label");
-            public static readonly GUIStyle border = new GUIStyle("Label");
-            public static readonly GUIStyle backgroundWithBorder = new GUIStyle("Label");
-            public static readonly GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
-
-            static Styles()
-            {
-                backgroundWithBorder.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
-                backgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
-                backgroundWithBorder.margin = new RectOffset(4, 4, 4, 4);
-
-                backgroundWithoutBorder.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                    ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
-
-                border.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                    ResourcesPath + "actionTreeBackground.png");
-                border.border = new RectOffset(0, 0, 0, 1);
-
-                text.alignment = TextAnchor.MiddleLeft;
-                selectedText.alignment = TextAnchor.MiddleLeft;
-                selectedText.normal.textColor = Color.white;
-
-                columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
-                columnHeaderLabel.fontStyle = FontStyle.Bold;
-                columnHeaderLabel.padding.left = 10;
-            }
+            public static readonly GUIStyle text = new GUIStyle("Label").WithAlignment(TextAnchor.MiddleLeft);
+            public static readonly GUIStyle selectedText = new GUIStyle("Label").WithAlignment(TextAnchor.MiddleLeft).WithNormalTextColor(Color.white);
+            public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackgroundWithoutBorder.png"));
+            public static readonly GUIStyle border = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png"))
+                .WithBorder(new RectOffset(0, 0, 0, 1));
+            public static readonly GUIStyle backgroundWithBorder = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png"))
+                .WithBorder(new RectOffset(3, 3, 3, 3))
+                .WithMargin(new RectOffset(4, 4, 4, 4));
+            public static readonly GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar)
+                .WithAlignment(TextAnchor.MiddleLeft)
+                .WithFontStyle(FontStyle.Bold)
+                .WithPadding(new RectOffset(10, 6, 0, 0));
         }
     }
 }

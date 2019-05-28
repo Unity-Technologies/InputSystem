@@ -2,14 +2,14 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
 
 ////TODO: reordering support for interactions
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
     // presents an interface that allows to automatically construct the path
@@ -30,6 +30,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
             EditorGUI.BeginProperty(rect, label, property);
 
             var pathProperty = property.FindPropertyRelative("m_Path");

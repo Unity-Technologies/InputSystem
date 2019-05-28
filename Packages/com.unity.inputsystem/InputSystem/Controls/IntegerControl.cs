@@ -1,12 +1,14 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Controls
+////TODO: this or the layout system needs to detect when the format isn't supported by the control
+
+namespace UnityEngine.InputSystem.Controls
 {
     public class IntegerControl : InputControl<int>
     {
         public IntegerControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeInt;
+            m_StateBlock.format = InputStateBlock.FormatInt;
         }
 
         public override unsafe int ReadUnprocessedValueFromState(void* statePtr)

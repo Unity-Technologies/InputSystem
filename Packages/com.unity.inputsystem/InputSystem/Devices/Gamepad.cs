@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Haptics;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Haptics;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
@@ -14,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow to be used for mouse simulation
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state layout for gamepads.
@@ -81,14 +81,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public GamepadState(params GamepadButton[] buttons)
             : this()
         {
+            if (buttons == null)
+                throw new System.ArgumentNullException(nameof(buttons));
+
             foreach (var button in buttons)
             {
                 var bit = (uint)1 << (int)button;
@@ -146,7 +149,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
@@ -256,6 +259,9 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             buttonWest = builder.GetControl<ButtonControl>(this, "buttonWest");
             buttonNorth = builder.GetControl<ButtonControl>(this, "buttonNorth");
             buttonSouth = builder.GetControl<ButtonControl>(this, "buttonSouth");

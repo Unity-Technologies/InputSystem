@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: nuke this and force raw pointers on all code using events?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
@@ -27,11 +27,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_EventPtr = eventPtr;
         }
 
-        public InputEventPtr(IntPtr eventPtr)
-            : this((InputEvent*)eventPtr)
-        {
-        }
-
         public bool valid => m_EventPtr != null;
 
         public bool handled
@@ -45,7 +40,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->handled = value;
             }
         }
@@ -61,7 +56,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->eventId = value;
             }
         }
@@ -91,13 +86,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get
             {
                 if (!valid)
-                    return InputDevice.kInvalidDeviceId;
+                    return InputDevice.InvalidDeviceId;
                 return m_EventPtr->deviceId;
             }
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->deviceId = value;
             }
         }
@@ -108,7 +103,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->time = value;
             }
         }
@@ -119,17 +114,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->internalTime = value;
             }
         }
 
-        public IntPtr data => new IntPtr(m_EventPtr);
-
-        public InputEvent* ToPointer()
-        {
-            return m_EventPtr;
-        }
+        public InputEvent* data => m_EventPtr;
 
         public bool IsA<TOtherEvent>()
             where TOtherEvent : struct, IInputEventTypeInfo
@@ -137,7 +127,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (m_EventPtr == null)
                 return false;
 
-            var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
+            var otherEventTypeCode = new TOtherEvent().typeStatic;
             return m_EventPtr->type == otherEventTypeCode;
         }
 
@@ -147,7 +137,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr(new IntPtr(new IntPtr(m_EventPtr).ToInt64() + sizeInBytes));
+            return new InputEventPtr((InputEvent*)((Int64)m_EventPtr + sizeInBytes));
         }
 
         public override string ToString()
@@ -197,7 +187,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         ////REVIEW: this also leads to implicit conversion to void*... not sure this is a good idea
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
         {
-            return eventPtr.ToPointer();
+            return eventPtr.data;
         }
     }
 }

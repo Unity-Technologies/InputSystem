@@ -5,7 +5,7 @@ using UnityEditor;
 
 ////TODO: survive domain reload properly
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     public class InputActionDebuggerWindow : EditorWindow
     {
@@ -13,6 +13,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static void CreateOrShowExisting(InputAction action)
         {
+            if (action == null)
+                throw new System.ArgumentNullException(nameof(action));
+
             // See if we have an existing window for the action and if so pop it in front.
             if (s_OpenDebuggerWindows != null)
             {

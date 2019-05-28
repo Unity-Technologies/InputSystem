@@ -1,12 +1,12 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     public class DoubleControl : InputControl<double>
     {
         public DoubleControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeDouble;
+            m_StateBlock.format = InputStateBlock.FormatDouble;
         }
 
         public override unsafe double ReadUnprocessedValueFromState(void* statePtr)

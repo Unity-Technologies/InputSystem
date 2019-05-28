@@ -1,8 +1,8 @@
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Interactions
+namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
     /// Performs the action if the control is pressed and held for at least the
@@ -75,7 +75,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                     {
                         // Control is no longer actuated and we haven't performed a hold yet,
                         // so cancel.
-                        context.Cancelled();
+                        context.Canceled();
                     }
                     break;
 
@@ -87,7 +87,7 @@ namespace UnityEngine.Experimental.Input.Interactions
                     }
                     else
                     {
-                        context.Cancelled();
+                        context.Canceled();
                     }
                     break;
             }

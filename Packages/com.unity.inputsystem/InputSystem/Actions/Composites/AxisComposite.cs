@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.Experimental.Input.Composites
+namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
     /// A single axis value computed from a "negative" and a "positive" button.
@@ -143,6 +143,7 @@ namespace UnityEngine.Experimental.Input.Composites
         /// What happens to the value of an <see cref="AxisComposite"/> if both <see cref="positive"/>
         /// and <see cref="negative"/> are actuated at the same time.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "False positive: `Wins` is not a plural form.")]
         public enum WhichSideWins
         {
             /// <summary>

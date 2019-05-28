@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A combination of a name and a value assignment for it.
@@ -82,6 +82,9 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static NamedValue[] ParseMultiple(string parameterString)
         {
+            if (parameterString == null)
+                throw new System.ArgumentNullException(nameof(parameterString));
+
             parameterString = parameterString.Trim();
             if (string.IsNullOrEmpty(parameterString))
                 return null;
@@ -162,14 +165,17 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public void ApplyToObject(object instance)
         {
+            if (instance == null)
+                throw new System.ArgumentNullException(nameof(instance));
+
             var instanceType = instance.GetType();
 
             ////REVIEW: what about properties?
             var field = instanceType.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
-                throw new Exception(
-                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)");
+                throw new ArgumentException(
+                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)", nameof(instance));
 
             ////REVIEW: would be awesome to be able to do this without boxing
             var fieldTypeCode = Type.GetTypeCode(field.FieldType);

@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Touch
+namespace UnityEngine.InputSystem.Touch
 {
     public struct TouchHistory : IReadOnlyList<Touch>
     {

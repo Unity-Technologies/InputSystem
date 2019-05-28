@@ -4,18 +4,18 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
 ////TODO: keywords (2019.1+)
 #pragma warning disable CS0414
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputSettingsProvider : SettingsProvider
+    internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
-        public const string kSettingsPath = "Project/Input (NEW)";
+        public const string kSettingsPath = "Project/Input System Package";
 
         public static void Open()
         {
@@ -31,10 +31,15 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputSettingsProvider(string path, SettingsScope scopes)
             : base(path, scopes)
         {
-            label = "Input (NEW)";
+            label = "Input System Package";
             s_Instance = this;
 
             InputSystem.onSettingsChange += OnSettingsChange;
+        }
+
+        public void Dispose()
+        {
+            m_SettingsObject?.Dispose();
         }
 
         public override void OnTitleBarGUI()
@@ -250,10 +255,17 @@ namespace UnityEngine.Experimental.Input.Editor
                         path =>
                         {
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
+                            var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
+                            if (existingIndex != -1)
+                            {
+                                m_SupportedDevices.index = existingIndex;
+                                return;
+                            }
                             var numDevices = supportedDevicesProperty.arraySize;
                             supportedDevicesProperty.InsertArrayElementAtIndex(numDevices);
                             supportedDevicesProperty.GetArrayElementAtIndex(numDevices)
                                 .stringValue = layoutName;
+                            m_SupportedDevices.index = numDevices;
                             Apply();
                         },
                         mode: InputControlPicker.Mode.PickDevice);

@@ -5,11 +5,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: better method for creating display names than InputControlPath.TryGetDeviceLayout
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Toolbar in input action asset editor.
@@ -349,7 +349,7 @@ namespace UnityEngine.Experimental.Input.Editor
             get => m_ControlSchemes;
             set
             {
-                m_ControlSchemes = controlSchemes.ToArray();
+                m_ControlSchemes = value.ToArray();
                 m_SelectedSchemeDeviceRequirementNames = null;
             }
         }
@@ -588,13 +588,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             private static class Styles
             {
-                public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar);
-                static Styles()
-                {
-                    headerLabel.alignment = TextAnchor.MiddleCenter;
-                    headerLabel.fontStyle = FontStyle.Bold;
-                    headerLabel.padding.left = 10;
-                }
+                public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar)
+                    .WithAlignment(TextAnchor.MiddleCenter)
+                    .WithFontStyle(FontStyle.Bold)
+                    .WithPadding(new RectOffset(10, 6, 0, 0));
             }
 
             private class DeviceEntry

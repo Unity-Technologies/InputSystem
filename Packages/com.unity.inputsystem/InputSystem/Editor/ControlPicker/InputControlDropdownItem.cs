@@ -1,17 +1,15 @@
 #if UNITY_EDITOR
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal abstract class InputControlDropdownItem : AdvancedDropdownItem
     {
         protected string m_ControlPath;
         protected string m_Device;
         protected string m_Usage;
-
-        private InputControlDropdownItem m_SearchableElement;
 
         public string controlPath => m_ControlPath;
 
@@ -34,7 +32,7 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(name) {}
     }
 
-    internal class OptionalControlDropdownItem : InputControlDropdownItem
+    internal sealed class OptionalControlDropdownItem : InputControlDropdownItem
     {
         public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalLayout, string deviceControlId, string commonUsage)
             : base(optionalLayout.name)
@@ -46,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    internal class UsageDropdownItem : InputControlDropdownItem
+    internal sealed class UsageDropdownItem : InputControlDropdownItem
     {
         public override string controlPathWithDevice => $"{m_Device}/{{{m_ControlPath}}}";
 
@@ -60,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    internal class DeviceDropdownItem : InputControlDropdownItem
+    internal sealed class DeviceDropdownItem : InputControlDropdownItem
     {
         public DeviceDropdownItem(InputControlLayout layout, string usage = null, bool searchable = true)
             : base(layout.m_DisplayName ?? ObjectNames.NicifyVariableName(layout.name))
@@ -75,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    internal class ControlDropdownItem : InputControlDropdownItem
+    internal sealed class ControlDropdownItem : InputControlDropdownItem
     {
         public ControlDropdownItem(ControlDropdownItem parent, string controlName, string displayName, string device, string usage, bool searchable)
             : base("")

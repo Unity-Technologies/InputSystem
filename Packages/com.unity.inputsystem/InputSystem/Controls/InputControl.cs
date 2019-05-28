@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: should EvaluateMagnitude() be called EvaluateActuation() or something similar?
 
@@ -20,7 +20,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////REVIEW: how do we do stuff like smoothing over time?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A typed and named value in a hierarchy of controls.
@@ -58,7 +58,8 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Characters that may not appear in control names.
         /// </summary>
-        public static string ReservedCharacters = "/;{}[]<>";
+        /// TODO: these are currently not used. Check against these if we think this is useful.
+        // internal const string ReservedCharacters = "/;{}[]<>";
 
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
@@ -344,7 +345,7 @@ namespace UnityEngine.Experimental.Input
         /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
         /// an enumeration of values (such as <see cref="TouchPhaseControl"/>), there is no meaningful
         /// linear ordering of values (one could derive a linear ordering through the actual enum values but
-        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="TouchPhase.Cancelled"/>
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="TouchPhase.Canceled"/>
         /// has a higher or lower "magnitude" as a state of <see cref="TouchPhase.Began"/>).
         ///
         /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
@@ -510,7 +511,7 @@ namespace UnityEngine.Experimental.Input
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
-            m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
+            m_StateBlock.byteOffset = InputStateBlock.InvalidOffset; // Request automatic layout by default.
         }
 
         ////REVIEW: replace InputDeviceBuilder here with an interface?
@@ -876,8 +877,8 @@ namespace UnityEngine.Experimental.Input
         internal override void AddProcessor(object processor)
         {
             if (!(processor is InputProcessor<TValue> processorOfType))
-                throw new Exception(
-                    $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
+                throw new ArgumentException(
+                    $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'", nameof(processor));
             m_ProcessorStack.Append(processorOfType);
         }
 

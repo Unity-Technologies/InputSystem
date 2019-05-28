@@ -6,7 +6,7 @@ using System.Collections.Generic;
 ////TODO: designator support
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
     /// <summary>
     /// Turns binary HID descriptors into <see cref="HID.HIDDeviceDescriptor"/> instances.
@@ -34,6 +34,9 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// </remarks>
         public static unsafe bool ParseReportDescriptor(byte[] buffer, ref HID.HIDDeviceDescriptor deviceDescriptor)
         {
+            if (buffer == null)
+                throw new System.ArgumentNullException(nameof(buffer));
+
             fixed(byte* bufferPtr = buffer)
             {
                 return ParseReportDescriptor(bufferPtr, buffer.Length, ref deviceDescriptor);

@@ -1,11 +1,11 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.iOS;
-using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.iOS;
+using UnityEngine.InputSystem.iOS.LowLevel;
+using UnityEngine.InputSystem.Processors;
 
 internal class iOSTests : InputTestFixture
 {

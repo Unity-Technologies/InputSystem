@@ -1,12 +1,12 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics
     {
@@ -31,8 +31,6 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < devices.Count; ++i)
             {
                 var device = devices[i];
-                if (IsIgnoredDevice(device.description))
-                    continue;
 
                 deviceList.Add(
                     StartupEventData.DeviceInfo.FromDescription(device.description, device.native, device.layout));
@@ -64,10 +62,6 @@ namespace UnityEngine.Experimental.Input
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
-        public static void OnFirstUserInteraction(InputManager manager, double time, InputControl control)
-        {
-        }
-
         public static void OnShutdown(InputManager manager)
         {
             var metrics = manager.metrics;
@@ -83,14 +77,6 @@ namespace UnityEngine.Experimental.Input
 
             manager.m_Runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
-        }
-
-        private static bool IsIgnoredDevice(InputDeviceDescription description)
-        {
-            #if UNITY_STANDALONE_WIN
-            #endif
-
-            return false;
         }
 
         /// <summary>

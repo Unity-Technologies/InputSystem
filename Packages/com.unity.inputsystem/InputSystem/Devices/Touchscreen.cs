@@ -1,9 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
 ////TODO: property that tells whether a Touchscreen is multi-touch capable
@@ -26,8 +26,10 @@ using UnityEngine.Profiling;
 // - Lots of tests to cover all this
 // - Ideally, make touch not depend on hardcoded state format
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Fix this after landing Touch refactor")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "Fix this after landing Touch refactor")]
     [Flags]
     public enum TouchFlags : byte
     {
@@ -51,7 +53,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = 56;
+        internal const int kSizeInBytes = 56;
 
         public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
@@ -109,8 +111,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set => phaseId = (byte)value;
         }
 
-        public bool isNoneEndedOrCancelled => phase == TouchPhase.None || phase == TouchPhase.Ended ||
-        phase == TouchPhase.Cancelled;
+        public bool isNoneEndedOrCanceled => phase == TouchPhase.None || phase == TouchPhase.Ended ||
+        phase == TouchPhase.Canceled;
         public bool isInProgress => phase == TouchPhase.Began || phase == TouchPhase.Moved ||
         phase == TouchPhase.Stationary;
 
@@ -165,9 +167,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public override string ToString()
@@ -188,7 +190,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// This is NOT used by native. Instead, the native runtime always sends individual touches (<see cref="TouchState"/>)
     /// and leaves state management for a touchscreen as a whole to the managed part of the system.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * TouchState.kSizeInBytes)]
+    [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
@@ -201,7 +203,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// than this number, having a larger pool of touch states to work with makes it possible to
         /// track short-lived touches better.
         /// </remarks>
-        public const int kMaxTouches = 10;
+        public const int MaxTouches = 10;
 
         /// <summary>
         /// Data for the touch that is deemed the "primary" touch at the moment.
@@ -232,16 +234,16 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "tapCount", useStateFrom = "primaryTouch/tapCount", layout = "Integer", synthetic = true)]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
         // Touch does not support twist and tilt. These will always be at default value.
-        [InputControl(name = "twist", offset = InputStateBlock.kAutomaticOffset)]
-        [InputControl(name = "tilt", offset = InputStateBlock.kAutomaticOffset)]
+        [InputControl(name = "twist", offset = InputStateBlock.AutomaticOffset)]
+        [InputControl(name = "tilt", offset = InputStateBlock.AutomaticOffset)]
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
         internal const int kTouchDataOffset = TouchState.kSizeInBytes;
 
-        [InputControl(layout = "Touch", name = "touch", arraySize = kMaxTouches)]
+        [InputControl(layout = "Touch", name = "touch", arraySize = MaxTouches)]
         [FieldOffset(kTouchDataOffset)]
-        public fixed byte touchData[kMaxTouches * TouchState.kSizeInBytes];
+        public fixed byte touchData[MaxTouches * TouchState.kSizeInBytes];
 
         public TouchState* primaryTouch
         {
@@ -261,14 +263,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     public enum TouchPhase
     {
@@ -280,7 +282,7 @@ namespace UnityEngine.Experimental.Input
         Began,
         Moved,
         Ended,
-        Cancelled,
+        Canceled,
         Stationary,
     }
 
@@ -322,7 +324,7 @@ namespace UnityEngine.Experimental.Input
         /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
         /// </summary>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries regardless of
+        /// Will always contain <see cref="TouchscreenState.MaxTouches"/> entries regardless of
         /// which touches (if any) are currently in progress.
         /// </remarks>
         public ReadOnlyArray<TouchControl> touches { get; private set; }
@@ -348,6 +350,9 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             tap = builder.GetControl<ButtonControl>(this, "tap");
@@ -402,7 +407,7 @@ namespace UnityEngine.Experimental.Input
         //          not only handle this scenario but also give a generally more flexible and useful touch API
         //          than writing code directly against Touchscreen.
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        protected new unsafe bool OnCarryStateForward(void* statePtr)
         {
             Profiler.BeginSample("TouchCarryStateForward");
 
@@ -448,8 +453,13 @@ namespace UnityEngine.Experimental.Input
 
             return haveChangedState;
         }
-
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+        
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        {
+            return OnCarryStateForward(statePtr);
+        }
+        
+        protected new unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt, InputEventPtr eventPtr)
         {
             if (stateFormat != TouchState.kFormat)
@@ -504,7 +514,7 @@ namespace UnityEngine.Experimental.Input
                         newTouchState->startPosition = currentTouchState[i].startPosition;
 
                         // Detect taps.
-                        var isTap = newTouchState->isNoneEndedOrCancelled &&
+                        var isTap = newTouchState->isNoneEndedOrCanceled &&
                             (eventPtr.time - newTouchState->startTime) <= s_TapTime &&
                             ////REVIEW: this only takes the final delta to start position into account, not the delta over the lifetime of the
                             ////        touch; is this robust enough or do we need to make sure that we never move more than the tap radius
@@ -518,10 +528,10 @@ namespace UnityEngine.Experimental.Input
                         // Update primary touch.
                         if (isPrimaryTouch)
                         {
-                            if (newTouchState->isNoneEndedOrCancelled)
+                            if (newTouchState->isNoneEndedOrCanceled)
                             {
                                 ////REVIEW: also reset tapCounts here when tap delay time has expired on the touch?
-                                
+
                                 newTouchState->isPrimaryTouch = false;
                                 newTouchState->isInheritedPrimaryTouch = false;
 
@@ -595,7 +605,7 @@ namespace UnityEngine.Experimental.Input
                 //       sequence (i.e. touch #N is only ever used if there are indeed #N concurrently touches). However,
                 //       it does mean that we overwrite state aggressively. If you are not using actions or the higher-level
                 //       Touch API, be aware of this!
-                if (currentTouchState->isNoneEndedOrCancelled)
+                if (currentTouchState->isNoneEndedOrCanceled)
                 {
                     offsetToStoreAt = (uint)i * TouchState.kSizeInBytes + TouchscreenState.kTouchDataOffset;
                     newTouchState->delta = Vector2.zero;
@@ -606,7 +616,7 @@ namespace UnityEngine.Experimental.Input
                     newTouchState->tapCount = currentTouchState->tapCount;
 
                     // Make primary touch, if there's none currently.
-                    if (primaryTouchState->isNoneEndedOrCancelled)
+                    if (primaryTouchState->isNoneEndedOrCanceled)
                     {
                         newTouchState->isPrimaryTouch = true;
                         newTouchState->isInheritedPrimaryTouch = false;
@@ -627,7 +637,17 @@ namespace UnityEngine.Experimental.Input
             return false;
         }
 
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
+            ref uint offsetToStoreAt, InputEventPtr eventPtr)
+        {
+            return OnReceiveStateWithDifferentFormat(statePtr, stateFormat, stateSize, ref offsetToStoreAt, eventPtr);
+        }
+
         unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
+        {
+        }
+
+        protected unsafe new void OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
         {
         }
 
@@ -637,7 +657,7 @@ namespace UnityEngine.Experimental.Input
         {
             ////REVIEW: we're updating the entire TouchControl here; we could update just the tap state using a delta event; problem
             ////        is that the tap *down* still needs a full update on the state
-            
+
             // We don't increase tapCount here as we may be sending the tap from the same state to both the TouchControl
             // that got tapped and to primaryTouch.
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 // Print the last keyboard button state as a hex string.
 //

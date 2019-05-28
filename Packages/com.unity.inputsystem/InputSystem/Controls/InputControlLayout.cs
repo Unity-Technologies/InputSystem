@@ -4,8 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using System.Runtime.Serialization;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
@@ -26,7 +27,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
@@ -68,7 +69,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         public struct ControlItem
         {
             [Flags]
-            public enum Flags
+            private enum Flags
             {
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
@@ -116,7 +117,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             public uint bit;
             public uint sizeInBits;
             public FourCC format;
-            public Flags flags;
+            private Flags flags;
             public int arraySize;
 
             /// <summary>
@@ -217,12 +218,12 @@ namespace UnityEngine.Experimental.Input.Layouts
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;
 
-                if (offset != InputStateBlock.kInvalidOffset)
+                if (offset != InputStateBlock.InvalidOffset)
                     result.offset = offset;
                 else
                     result.offset = other.offset;
 
-                if (bit != InputStateBlock.kInvalidOffset)
+                if (bit != InputStateBlock.InvalidOffset)
                     result.bit = bit;
                 else
                     result.bit = other.bit;
@@ -583,8 +584,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 // Get state type code from state struct.
                 if (typeof(IInputStateTypeInfo).IsAssignableFrom(layoutAttribute.stateType))
                 {
-                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType))
-                        .GetFormat();
+                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType)).format;
                 }
             }
             else
@@ -610,7 +610,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 m_Controls = controlLayouts.ToArray(),
                 m_StateFormat = stateFormat,
                 m_Variants = variants,
-                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRender,
+                m_UpdateBeforeRender = layoutAttribute?.updateBeforeRenderInternal,
                 isGenericTypeOfDevice = layoutAttribute?.isGenericTypeOfDevice ?? false,
                 hideInUI = layoutAttribute?.hideInUI ?? false,
                 m_Description = layoutAttribute?.description,
@@ -720,7 +720,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                         for (var i = controlCountBefore; i < controlCountAfter; ++i)
                         {
                             var controlLayout = controlItems[i];
-                            if (controlItems[i].offset != InputStateBlock.kInvalidOffset)
+                            if (controlItems[i].offset != InputStateBlock.InvalidOffset)
                             {
                                 controlLayout.offset += (uint)fieldOffset;
                                 controlItems[i] = controlLayout;
@@ -756,7 +756,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             if (attributes.Length == 0)
             {
-                var controlLayout = CreateControlItemFromMember(member, null, layoutName);
+                var controlLayout = CreateControlItemFromMember(member, null);
                 ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                 controlItems.Add(controlLayout);
             }
@@ -764,14 +764,14 @@ namespace UnityEngine.Experimental.Input.Layouts
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
+                    var controlLayout = CreateControlItemFromMember(member, attribute);
                     ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                     controlItems.Add(controlLayout);
                 }
             }
         }
 
-        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute, string layoutName)
+        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute)
         {
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
@@ -801,14 +801,14 @@ namespace UnityEngine.Experimental.Input.Layouts
                 variants = attribute.variants;
 
             // Determine offset.
-            var offset = InputStateBlock.kInvalidOffset;
-            if (attribute != null && attribute.offset != InputStateBlock.kInvalidOffset)
+            var offset = InputStateBlock.InvalidOffset;
+            if (attribute != null && attribute.offset != InputStateBlock.InvalidOffset)
                 offset = attribute.offset;
             else if (member is FieldInfo && !isModifyingChildControlByPath)
                 offset = (uint)Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
 
             // Determine bit offset.
-            var bit = InputStateBlock.kInvalidOffset;
+            var bit = InputStateBlock.InvalidOffset;
             if (attribute != null)
                 bit = attribute.bit;
 
@@ -822,7 +822,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             var format = new FourCC();
             if (attribute != null && !string.IsNullOrEmpty(attribute.format))
                 format = new FourCC(attribute.format);
-            else if (!isModifyingChildControlByPath && bit == InputStateBlock.kInvalidOffset)
+            else if (!isModifyingChildControlByPath && bit == InputStateBlock.InvalidOffset)
             {
                 ////REVIEW: this logic makes it hard to inherit settings from the base layout; if we do this stuff,
                 ////        we should probably do it in InputDeviceBuilder and not directly on the layout
@@ -950,6 +950,9 @@ namespace UnityEngine.Experimental.Input.Layouts
         /// </remarks>
         public void MergeLayout(InputControlLayout other)
         {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
             if (m_Variants.IsEmpty())
@@ -1180,7 +1183,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             foreach (var existing in controlLayouts)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
                     existing.variants == controlItem.variants)
-                    throw new Exception($"Duplicate control '{name}' in layout '{layoutName}'");
+                    throw new InvalidOperationException($"Duplicate control '{name}' in layout '{layoutName}'");
         }
 
         internal static void ParseHeaderFieldsFromJson(string json, out InternedString name,
@@ -1251,7 +1254,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
-                        throw new Exception($"'{this.type}' used by layout '{name}' is not an InputControl");
+                        throw new InvalidOperationException($"'{this.type}' used by layout '{name}' is not an InputControl");
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
@@ -1285,7 +1288,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     else if (beforeRenderLowerCase == "update")
                         layout.m_UpdateBeforeRender = true;
                     else
-                        throw new Exception($"Invalid beforeRender setting '{beforeRender}'");
+                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
                 }
 
                 // Add common usages.
@@ -1299,7 +1302,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                     foreach (var control in controls)
                     {
                         if (string.IsNullOrEmpty(control.name))
-                            throw new Exception($"Control with no name in layout '{name}");
+                            throw new InvalidOperationException($"Control with no name in layout '{name}");
                         var controlLayout = control.ToLayout();
                         ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layout.name);
                         controlLayouts.Add(controlLayout);
@@ -1374,8 +1377,8 @@ namespace UnityEngine.Experimental.Input.Layouts
 
             public ControlItemJson()
             {
-                offset = InputStateBlock.kInvalidOffset;
-                bit = InputStateBlock.kInvalidOffset;
+                offset = InputStateBlock.InvalidOffset;
+                bit = InputStateBlock.InvalidOffset;
             }
 
             public ControlItem ToLayout()
@@ -1566,9 +1569,9 @@ namespace UnityEngine.Experimental.Input.Layouts
                 {
                     var layoutObject = builder.method.Invoke(builder.instance, null);
                     if (layoutObject == null)
-                        throw new Exception($"Layout builder '{name}' returned null when invoked");
+                        throw new InvalidOperationException($"Layout builder '{name}' returned null when invoked");
                     if (!(layoutObject is InputControlLayout layout))
-                        throw new Exception(
+                        throw new InvalidOperationException(
                             $"Layout builder '{name}' returned '{layoutObject}' which is not an InputControlLayout");
                     return layout;
                 }
@@ -1717,13 +1720,34 @@ namespace UnityEngine.Experimental.Input.Layouts
             public object instance;
         }
 
-        internal class LayoutNotFoundException : Exception
+        public class LayoutNotFoundException : Exception
         {
             public string layout { get; }
-            public LayoutNotFoundException(string name, string message = null)
-                : base(message ?? $"Cannot find control layout '{name}'")
+
+            public LayoutNotFoundException()
+            {
+            }
+
+            public LayoutNotFoundException(string name, string message)
+                : base(message)
             {
                 layout = name;
+            }
+
+            public LayoutNotFoundException(string name)
+                : base($"Cannot find control layout '{name}'")
+            {
+                layout = name;
+            }
+
+            public LayoutNotFoundException(string message, Exception innerException) :
+                base(message, innerException)
+            {
+            }
+
+            protected LayoutNotFoundException(SerializationInfo info,
+                                              StreamingContext context) : base(info, context)
+            {
             }
         }
 

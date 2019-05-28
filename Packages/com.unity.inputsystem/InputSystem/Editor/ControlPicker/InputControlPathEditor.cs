@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Custom editor UI for editing control paths.
@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
     /// greater control is required than is offered by the <see cref="PropertyDrawer"/> mechanism. In particular,
     /// it allows applying additional constraints such as requiring control paths to match ...
     /// </remarks>
-    public class InputControlPathEditor
+    public sealed class InputControlPathEditor : IDisposable
     {
         /// <summary>
         ///
@@ -34,6 +34,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
+        }
+
+        public void Dispose()
+        {
+            m_PickerDropdown?.Dispose();
         }
 
         public void SetControlPathsToMatch(IEnumerable<string> controlPaths)
