@@ -76,6 +76,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            // Force name of asset to be that on the file on disk instead of what may be serialized
+            // as the 'name' property in JSON.
+            asset.name = Path.GetFileNameWithoutExtension(assetPath);
+
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
             var isDarkSkin = EditorGUIUtility.isProSkin;
@@ -147,7 +151,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     className = m_WrapperClassName,
                 };
 
-                if (!wrapperFilePath.ToLower().StartsWith("assets/"))
+                if (!wrapperFilePath.ToLower().StartsWith("assets/") && !wrapperFilePath.ToLower().StartsWith("assets\\"))
                     wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
 
                 var dir = Path.GetDirectoryName(wrapperFilePath);

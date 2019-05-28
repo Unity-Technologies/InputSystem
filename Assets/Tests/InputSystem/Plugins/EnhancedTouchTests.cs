@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting;
 using NUnit.Framework;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Touch;
 using UnityEngine.Experimental.Input.Utilities;
@@ -46,6 +49,8 @@ internal class EnhancedTouchTests : InputTestFixture
         Touch.s_OnFingerDown = new InlinedArray<Action<Finger>>();
         Touch.s_OnFingerUp = new InlinedArray<Action<Finger>>();
         Touch.s_OnFingerMove = new InlinedArray<Action<Finger>>();
+
+        TouchSimulation.Destroy();
 
         base.TearDown();
     }
@@ -344,6 +349,26 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(Touch.activeFingers[0].touchHistory[2].delta,
             Is.EqualTo(new Vector2()).Using(Vector2EqualityComparer.Instance));
     }
+    
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_CanCheckForTaps()
+    {
+        BeginTouch(1, new Vector2(123, 234));
+
+        Assert.That(Touch.activeTouches[0].isTap, Is.False);
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(0));
+        
+        EndTouch(1, new Vector2(123, 234));
+        
+        Assert.That(Touch.activeTouches[0].isTap, Is.True);
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(1));
+        Assert.That(Touch.fingers[0].touchHistory, Has.Count.EqualTo(2));
+        Assert.That(Touch.fingers[0].touchHistory[0].isTap, Is.True);
+        Assert.That(Touch.fingers[0].touchHistory[1].isTap, Is.False);
+        Assert.That(Touch.fingers[0].touchHistory[0].tapCount, Is.EqualTo(1));
+        Assert.That(Touch.fingers[0].touchHistory[1].tapCount, Is.EqualTo(0));
+    }
 
     [Test]
     [Category("EnhancedTouch")]
@@ -514,6 +539,19 @@ internal class EnhancedTouchTests : InputTestFixture
 
     [Test]
     [Category("EnhancedTouch")]
+    public void EnhancedTouch_RemovingTouchscreenRemovesItsActiveTouches()
+    {
+        BeginTouch(1, new Vector2(123, 234));
+        
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        
+        InputSystem.RemoveDevice(Touchscreen.current);
+
+        Assert.That(Touch.activeTouches, Is.Empty);
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
     public void EnhancedTouch_CanGetCurrentTouchFromFinger()
     {
         BeginTouch(1, new Vector2(0.123f, 0.234f));
@@ -656,5 +694,201 @@ internal class EnhancedTouchTests : InputTestFixture
         {
             new Tuple<string, Finger>("Up", Touch.fingers[1])
         }));
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    [Property("EnhancedTouchDisabled", 1)]
+    public void EnhancedTouch_CanEnableAndDisableTouchSimulation()
+    {
+        Assert.That(InputSystem.devices, Has.None.TypeOf<Touchscreen>());
+
+        TouchSimulation.Enable();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
+        Assert.That(TouchSimulation.instance, Is.Not.Null);
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.Not.Null);
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.SameAs(Touchscreen.current));
+
+        TouchSimulation.Disable();
+
+        Assert.That(InputSystem.devices, Has.None.TypeOf<Touchscreen>());
+
+        TouchSimulation.Destroy();
+
+        Assert.That(TouchSimulation.instance, Is.Null);
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    [TestCase("Mouse")]
+    [TestCase("Pen")]
+    [TestCase("Pointer")]
+    public void EnhancedTouch_CanSimulateTouchInputFrom(string layoutName)
+    {
+        var pointer = (Pointer)InputSystem.AddDevice(layoutName);
+
+        TouchSimulation.Enable();
+
+        Set(pointer.position, new Vector2(123, 234));
+        Press(pointer.press);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[0].screenPosition, Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].delta, Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(0));
+        Assert.That(Touch.activeTouches[0].isTap, Is.False);
+
+        Move(pointer.position, new Vector2(234, 345));
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[0].screenPosition, Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].delta, Is.EqualTo(new Vector2(111, 111)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Moved));
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(0));
+        Assert.That(Touch.activeTouches[0].isTap, Is.False);
+
+        Release(pointer.press);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[0].screenPosition, Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].delta, Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Ended));
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(0));
+        Assert.That(Touch.activeTouches[0].isTap, Is.False);
+
+        PressAndRelease(pointer.press);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(2));
+        Assert.That(Touch.activeTouches[0].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[0].screenPosition, Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].delta, Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Ended));
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].isTap, Is.True);
+
+        PressAndRelease(pointer.press);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(3));
+        Assert.That(Touch.activeTouches[0].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[0].screenPosition, Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].delta, Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Ended));
+        Assert.That(Touch.activeTouches[0].tapCount, Is.EqualTo(2));
+        Assert.That(Touch.activeTouches[0].isTap, Is.True);
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_CanSimulateTouchInputFromMultiplePointers()
+    {
+        var pointer1 = InputSystem.AddDevice<Pointer>();
+        var pointer2 = InputSystem.AddDevice<Pointer>();
+
+        TouchSimulation.Enable();
+
+        Set(pointer1.position, new Vector2(123, 234), queueEventOnly: true);
+        Set(pointer2.position, new Vector2(234, 345), queueEventOnly: true);
+        Press(pointer1.press, queueEventOnly: true);
+        Press(pointer2.press, queueEventOnly: true);
+
+        InputSystem.Update();
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(2));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[0].screenPosition, Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].delta, Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
+        Assert.That(Touch.activeTouches[1].touchId, Is.EqualTo(2));
+        Assert.That(Touch.activeTouches[1].screen, Is.SameAs(TouchSimulation.instance.simulatedTouchscreen));
+        Assert.That(Touch.activeTouches[1].screenPosition, Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[1].delta, Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Touch.activeTouches[1].phase, Is.EqualTo(TouchPhase.Began));
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_TouchSimulation_CanAddAndRemovePointerDevices()
+    {
+        TouchSimulation.Enable();
+
+        var pointer = InputSystem.AddDevice<Pointer>();
+        Press(pointer.press);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+
+        InputSystem.RemoveDevice(pointer);
+
+        ////FIXME: This doesn't work yet as TouchSimulation isn't using events and Touch ignores input that isn't from events
+        //Assert.That(Touch.activeTouches, Is.Empty);
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_TouchSimulation_ProducesOneTouchFromEveryNonSyntheticButton()
+    {
+        const string json = @"
+            {
+                ""name"" : ""CustomPointer"",
+                ""extend"" : ""Pointer"",
+                ""controls"" : [
+                    { ""name"" : ""syntheticButton"", ""layout"" : ""Button"", ""synthetic"" : true },
+                    { ""name"" : ""nonSyntheticButton"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = (Pointer)InputSystem.AddDevice("CustomPointer");
+
+        TouchSimulation.Enable();
+
+        Press((ButtonControl)device["nonSyntheticButton"]);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
+
+        Press((ButtonControl)device["syntheticButton"]);
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_TouchSimulation_ProducesPrimaryTouches()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        
+        TouchSimulation.Enable();
+
+        Set(mouse.position, new Vector2(123, 234));
+        Press(mouse.leftButton);
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(TouchPhase.Began));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.position.ReadValue(),
+            Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.delta.ReadValue(),
+            Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        
+        Set(mouse.position, new Vector2(234, 345));
+        
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(TouchPhase.Moved));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.position.ReadValue(),
+            Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.delta.ReadValue(),
+            Is.EqualTo(new Vector2(111, 111)).Using(Vector2EqualityComparer.Instance));
     }
 }

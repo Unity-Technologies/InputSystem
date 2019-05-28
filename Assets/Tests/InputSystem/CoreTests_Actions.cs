@@ -539,6 +539,57 @@ partial class CoreTests
         Press(gamepad.buttonSouth);
 
         Assert.That(action.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0).Within(0.000001));
+
+        // Press and release in same update.
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1).Within(0.000001));
+
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanDetermineIfActionGotTriggeredInUpdate()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        Assert.That(action.triggered, Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(action.triggered, Is.False);
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.True);
+
+        // Press and release in same update.
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.True);
     }
 
     [Test]

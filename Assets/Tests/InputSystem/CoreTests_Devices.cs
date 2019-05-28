@@ -97,6 +97,17 @@ partial class CoreTests
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCreateDevice_AndGiveItACustomName()
+    {
+        var device1 = InputSystem.AddDevice<Gamepad>("TestGamepad");
+        var device2 = InputSystem.AddDevice<Gamepad>("TestGamepad");
+        
+        Assert.That(device1.name, Is.EqualTo("TestGamepad"));
+        Assert.That(device2.name, Is.EqualTo("TestGamepad1"));
+    }
+
     ////TODO: add base score to matchers
     // Sometimes we don't want a device to be picked up by the input system. Forcing
     // it's layout to "None" tells the system that we don't want to instantiate a
@@ -2688,6 +2699,42 @@ partial class CoreTests
         var device = (Touchscreen)InputSystem.AddDevice("CustomTouchscreen");
 
         Assert.That(device.touches, Has.Count.EqualTo(60));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchscreenStateLayoutCorrespondsToStruct()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        Assert.That(device.primaryTouch.stateBlock.byteOffset, Is.Zero);
+        Assert.That(device.touches[0].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset));
+        Assert.That(device.touches[1].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 2));
+        Assert.That(device.touches[2].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 3));
+        Assert.That(device.touches[3].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 4));
+        Assert.That(device.touches[4].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 5));
+        Assert.That(device.touches[5].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 6));
+        Assert.That(device.touches[6].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 7));
+        Assert.That(device.touches[7].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 8));
+        Assert.That(device.touches[8].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 9));
+        Assert.That(device.touches[9].stateBlock.byteOffset, Is.EqualTo(TouchscreenState.kTouchDataOffset * 10));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReadTouchStateFromTouchControl()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        BeginTouch(1, new Vector2(123, 234));
+
+        var touch = device.touches[0].ReadValue();
+
+        Assert.That(touch.touchId, Is.EqualTo(1));
+        Assert.That(touch.phase, Is.EqualTo(TouchPhase.Began));
+        Assert.That(touch.position, Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(touch.startPosition, Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(touch.tapCount, Is.Zero);
     }
 
     [Test]
