@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem
             {
                 Debug.LogError("Failed to set up input system for test " + TestContext.CurrentContext.Test.Name);
                 Debug.LogException(exception);
-                throw exception;
+                throw;
             }
 
             if (InputSystem.devices.Count > 0)
@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem
             {
                 Debug.LogError("Failed to shut down and restore input system after test " + TestContext.CurrentContext.Test.Name);
                 Debug.LogException(exception);
-                throw exception;
+                throw;
             }
         }
 
