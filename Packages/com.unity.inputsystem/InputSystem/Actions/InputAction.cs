@@ -344,6 +344,11 @@ namespace UnityEngine.Experimental.Input
             remove => m_OnPerformed.Remove(value);
         }
 
+        /// <summary>
+        /// Whether the action got triggered in the current update.
+        /// </summary>
+        public bool triggered => throw new NotImplementedException();
+
         // Constructor we use for serialization and for actions that are part
         // of sets.
         internal InputAction()
@@ -431,6 +436,12 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             m_ActionMap.m_State.DisableSingleAction(this);
+        }
+
+        public TValue ReadValue<TValue>()
+            where TValue : struct
+        {
+            throw new NotImplementedException();
         }
 
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
@@ -726,6 +737,8 @@ namespace UnityEngine.Experimental.Input
                     return m_State.GetValueSizeInBytes(bindingIndex, controlIndex);
                 }
             }
+
+            ////TODO: need ability to read as button
 
             public unsafe void ReadValue(void* buffer, int bufferSize)
             {
