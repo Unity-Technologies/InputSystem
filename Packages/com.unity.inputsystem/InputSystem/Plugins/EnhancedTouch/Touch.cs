@@ -52,10 +52,12 @@ namespace UnityEngine.Experimental.Input.Touch
         public Vector2 radius => state.radius;
         public double startTime => state.startTime;
         public double time => m_TouchRecord.time;
-        public Touchscreen screen => throw new NotImplementedException();
+        public Touchscreen screen => finger.screen;
         public Vector2 screenPosition => state.position;
         public Vector2 startScreenPosition => state.startPosition;
         public Vector2 delta => state.delta;
+        public int tapCount => state.tapCount;
+        public bool isTap => state.isTap;
 
         public bool isInProgress
         {
@@ -365,6 +367,9 @@ namespace UnityEngine.Experimental.Input.Touch
                     ArrayHelpers.EraseSliceWithCapacity(ref fingers, ref totalFingerCount, i, touchCount);
                     break;
                 }
+
+                // Force rebuilding of active touches.
+                haveBuiltActiveTouches = false;
             }
 
             public void Destroy()

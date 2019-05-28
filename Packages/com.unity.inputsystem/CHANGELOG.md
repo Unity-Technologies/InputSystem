@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * `Touchscreen.activeTouches` has been removed. Use `Touch.activeTouches` from the new enhanced touch API instead for more reliable touch tracking.
   * `Touchscreen.allTouchControls` has been renamed to `Touchscreen.touches`.
   * A new `EnhancedTouch` plugin has been added which offers an enhanced `Touch` and `Finger` API to reliably track touches and fingers across updates. This obsoletes the need to manually track touch IDs and phases and gives access to individual touch history.
+  * Touch can be simulated from mouse or pen input now. To enable simulation, call `TouchSimulation.Enable()` or put the `TouchSimulation` MonoBehaviour in your scene. Also, in the input debugger, you can now enable touch simulation from the "Options" dropdown.
 - Changing state has been decoupled from events. While input events are the primary means by which to trigger state changes, anyone can perform state changes manually now from anywhere.
     ```
     InputState.Change(...);
@@ -32,9 +33,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     ```
     var history = new InputStateHistory("<Gamepad>/leftStick");
     history.StartRecording();
-    
+
     //...
-    
+
     foreach (var record in history)
         Debug.Log(record);
     ```

@@ -208,28 +208,28 @@ namespace UnityEngine.Experimental.Input
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
-        public void Press(ButtonControl button, double time = -1, double timeOffset = 0)
+        public void Press(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            Set(button, 1, time, timeOffset);
+            Set(button, 1, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
-        public void Release(ButtonControl button, double time = -1, double timeOffset = 0)
+        public void Release(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            Set(button, 0, time, timeOffset);
+            Set(button, 0, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
         // ReSharper disable once MemberCanBePrivate.Global
-        public void PressAndRelease(ButtonControl button, double time = -1, double timeOffset = 0)
+        public void PressAndRelease(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            Press(button, time, timeOffset);
-            Release(button, time, timeOffset);
+            Press(button, time, timeOffset, queueEventOnly: true);  // This one is always just a queue.
+            Release(button, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
-        public void Click(ButtonControl button, double time = -1, double timeOffset = 0)
+        public void Click(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            PressAndRelease(button, time, timeOffset);
+            PressAndRelease(button, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
         /// <summary>

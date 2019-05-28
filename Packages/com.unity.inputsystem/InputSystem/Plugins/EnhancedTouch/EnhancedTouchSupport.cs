@@ -8,6 +8,8 @@ using UnityEngine.Experimental.Input.Editor;
 ////TODO: mouse/touch simulation support
 ////TODO: high-frequency touch support
 
+////REVIEW: have TouchTap, TouchSwipe, etc. wrapper MonoBehaviours like LeanTouch?
+
 namespace UnityEngine.Experimental.Input.Touch
 {
     [AddComponentMenu("Input/Enhanced Touch Support")]

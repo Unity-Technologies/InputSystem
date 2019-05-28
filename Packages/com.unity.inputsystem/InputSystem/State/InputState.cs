@@ -40,6 +40,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         /// <remarks>
         /// Incorporates the given state and triggers all state change monitors as needed.
+        ///
+        /// Note that input state changes performed with this method will not be visible on remotes as they will bypass
+        /// event processing. This can be good or bad depending on your specific usage situation.
         /// </remarks>
         public static unsafe void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default,
             InputEventPtr eventPtr = default)
@@ -60,7 +63,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 (uint)stateSize,
                 eventPtr.valid
                 ? eventPtr.internalTime
-                : InputRuntime.s_Instance.currentTime);
+                : InputRuntime.s_Instance.currentTime,
+                eventPtr: eventPtr);
         }
 
         /// <summary>

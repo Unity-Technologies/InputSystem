@@ -117,7 +117,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public InputEventPtr ToEventPtr()
         {
-            fixed(ActionEvent* ptr = &this)
+            fixed(ActionEvent * ptr = &this)
             {
                 return new InputEventPtr((InputEvent*)ptr);
             }

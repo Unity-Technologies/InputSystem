@@ -927,7 +927,7 @@ namespace UnityEngine.Experimental.Input
 
             // Note that since we go through the normal by-name lookup here, this will
             // still work if the layout from the type was override with a string layout.
-            return AddDevice(layoutName);
+            return AddDevice(layoutName, name);
         }
 
         // Creates a device from the given layout and adds it to the system.
@@ -2665,6 +2665,7 @@ namespace UnityEngine.Experimental.Input
 
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
+            ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
         }

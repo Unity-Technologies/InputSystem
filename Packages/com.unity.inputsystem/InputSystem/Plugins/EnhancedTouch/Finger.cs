@@ -1,4 +1,5 @@
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -90,7 +91,18 @@ namespace UnityEngine.Experimental.Input.Touch
             // We only want to record changes that come from events. We ignore internal state
             // changes that Touchscreen itself generates. This includes the resetting of deltas.
             // NOTE: This means we are ignoring delta resets happening in Touchscreen.
-            return eventPtr.valid;
+            if (!eventPtr.valid)
+                return false;
+
+            var touchControl = (TouchControl)control;
+            var touch = touchControl.ReadValue();
+
+            // Touchscreen will record a button down and button up a TouchControl when a tap occurs.
+            // We only want to record the button down, not the button up.
+            if (touch.phase == TouchPhase.Ended && !touch.isTap && touch.tapCount > 0)
+                return false;
+
+            return true;
         }
 
         private unsafe void OnTouchRecorded(InputStateHistory.Record record)

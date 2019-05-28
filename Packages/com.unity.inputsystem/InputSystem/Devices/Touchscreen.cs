@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         IndirectTouch = 1 << 0,
         PrimaryTouch = 1 << 4,
-        Tapped = 1 << 5,
+        Tap = 1 << 5,
 
         // We use this flag internally to detect the case where the primary touch switches from
         // one finger to another. In this case, we don't want to trigger a release to trigger
@@ -153,15 +153,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public bool isTapped
+        public bool isTap
         {
-            get => (flags & (byte)TouchFlags.Tapped) != 0;
+            get => (flags & (byte)TouchFlags.Tap) != 0;
             set
             {
                 if (value)
-                    flags |= (byte)TouchFlags.Tapped;
+                    flags |= (byte)TouchFlags.Tap;
                 else
-                    flags &= (byte)~TouchFlags.Tapped;
+                    flags &= (byte)~TouchFlags.Tap;
             }
         }
 
@@ -237,7 +237,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
-        internal const int kTouchDataOffset = TouchState.kSizeInBytes + sizeof(int);
+        internal const int kTouchDataOffset = TouchState.kSizeInBytes;
 
         [InputControl(layout = "Touch", name = "touch", arraySize = kMaxTouches)]
         [FieldOffset(kTouchDataOffset)]
@@ -506,6 +506,9 @@ namespace UnityEngine.Experimental.Input
                         // Detect taps.
                         var isTap = newTouchState->isNoneEndedOrCancelled &&
                             (eventPtr.time - newTouchState->startTime) <= s_TapTime &&
+                            ////REVIEW: this only takes the final delta to start position into account, not the delta over the lifetime of the
+                            ////        touch; is this robust enough or do we need to make sure that we never move more than the tap radius
+                            ////        over the entire lifetime of the touch?
                             (newTouchState->position - newTouchState->startPosition).sqrMagnitude <= s_TapRadiusSquared;
                         if (isTap)
                             newTouchState->tapCount = (byte)(currentTouchState[i].tapCount + 1);
@@ -517,6 +520,8 @@ namespace UnityEngine.Experimental.Input
                         {
                             if (newTouchState->isNoneEndedOrCancelled)
                             {
+                                ////REVIEW: also reset tapCounts here when tap delay time has expired on the touch?
+                                
                                 newTouchState->isPrimaryTouch = false;
                                 newTouchState->isInheritedPrimaryTouch = false;
 
@@ -544,10 +549,11 @@ namespace UnityEngine.Experimental.Input
 
                                 if (!haveNewPrimaryTouch)
                                 {
-                                    InputState.Change(primaryTouch, *newTouchState, eventPtr: eventPtr);
                                     // Tap on primary touch is only triggered if the touch never switched fingers.
                                     if (isTap && !isInheritedPrimaryTouch)
                                         TriggerTap(primaryTouch, newTouchState, eventPtr);
+                                    else
+                                        InputState.Change(primaryTouch, *newTouchState, eventPtr: eventPtr);
                                 }
                             }
                             else
@@ -629,15 +635,18 @@ namespace UnityEngine.Experimental.Input
         // in one operation.
         private static unsafe void TriggerTap(TouchControl control, TouchState* state, InputEventPtr eventPtr, bool writeRelease = true)
         {
+            ////REVIEW: we're updating the entire TouchControl here; we could update just the tap state using a delta event; problem
+            ////        is that the tap *down* still needs a full update on the state
+            
             // We don't increase tapCount here as we may be sending the tap from the same state to both the TouchControl
             // that got tapped and to primaryTouch.
 
             // Press.
-            state->isTapped = true;
+            state->isTap = true;
             InputState.Change(control, *state, eventPtr: eventPtr);
 
             // Release.
-            state->isTapped = false;
+            state->isTap = false;
             if (writeRelease)
                 InputState.Change(control, *state, eventPtr: eventPtr);
         }

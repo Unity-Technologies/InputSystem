@@ -22,7 +22,22 @@ namespace UnityEngine.Experimental.Input.Utilities
             return array.Length;
         }
 
-        public static void Clear<TValue>(TValue[] array, ref int count)
+        public static void Clear<TValue>(this TValue[] array)
+        {
+            if (array == null)
+                return;
+
+            Array.Clear(array, 0, array.Length);
+        }
+
+        public static void Clear<TValue>(this TValue[] array, int count)
+        {
+            if (array == null)
+                return;
+            Array.Clear(array, 0, count);
+        }
+
+        public static void Clear<TValue>(this TValue[] array, ref int count)
         {
             if (array == null)
                 return;

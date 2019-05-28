@@ -10,6 +10,7 @@ using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.Experimental.Input.Touch;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: refresh metrics on demand
@@ -216,6 +217,11 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        private static void ToggleTouchSimulation()
+        {
+            InputEditorUserSettings.simulateTouch = !InputEditorUserSettings.simulateTouch;
+        }
+
         private static void EnableRemoteDevices(bool enable = true)
         {
             foreach (var player in EditorConnection.instance.ConnectedPlayers)
@@ -289,6 +295,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     ToggleDiagnosticMode);
                 menu.AddItem(Contents.lockInputToGameViewContent, InputEditorUserSettings.lockInputToGameView,
                     ToggleLockInputToGameView);
+                menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
                 menu.ShowAsContext();
             }
@@ -320,8 +327,13 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIContent optionsContent = new GUIContent("Options");
             public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
+            public static GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
             public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
             public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
+            public static GUIContent openDebugView = new GUIContent("Open Device Debug View");
+            public static GUIContent removeDevice = new GUIContent("Remove Device");
+            public static GUIContent enableDevice = new GUIContent("Enable Device");
+            public static GUIContent disableDevice = new GUIContent("Disable Device");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -350,6 +362,21 @@ namespace UnityEngine.Experimental.Input.Editor
 
             protected override void ContextClickedItem(int id)
             {
+                var item = FindItem(id, rootItem);
+                if (item == null)
+                    return;
+
+                if (item is DeviceItem deviceItem)
+                {
+                    var menu = new GenericMenu();
+                    menu.AddItem(Contents.openDebugView, false, () => InputDeviceDebuggerWindow.CreateOrShowExisting(deviceItem.device));
+                    menu.AddItem(Contents.removeDevice, false, () => InputSystem.RemoveDevice(deviceItem.device));
+                    if (deviceItem.device.enabled)
+                        menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
+                    else
+                        menu.AddItem(Contents.enableDevice, false, () => InputSystem.EnableDevice(deviceItem.device));
+                    menu.ShowAsContext();
+                }
             }
 
             protected override void DoubleClickedItem(int id)

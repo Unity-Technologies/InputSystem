@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
+////REVIEW: is there an opportunity to collapse "press" and "pressure" into one? after all, if there's any pressure, isn't the pointer pressed?
+
 ////REVIEW: should "displayIndex" be called "windowIndex"? or be part of a better thought-out multi-display API altogether?
 
 ////REVIEW: add click and clickCount controls directly to Pointer?

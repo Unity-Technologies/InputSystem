@@ -794,7 +794,7 @@ namespace UnityEngine.Experimental.Input
                         continue;
 
                     // Skip controls that have no effective value change.
-                    // NOTE: This will run the full processor stack and is move involved.
+                    // NOTE: This will run the full processor stack and is more involved.
                     if (!control.HasValueChangeInState(statePtr))
                         continue;
 
