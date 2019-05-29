@@ -34,6 +34,10 @@ namespace UnityEngine.InputSystem.WebGL
             if (string.Compare(description.interfaceName, InterfaceName, StringComparison.InvariantCultureIgnoreCase) != 0)
                 return null;
 
+            // If it was matched by the standard mapping, we don't need to fall back to generating a layout.
+            if (matchedLayout == typeof(WebGLGamepad).Name)
+                return null;
+
             var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
 
             var layout = new WebGLLayoutBuilder {capabilities = WebGLDeviceCapabilities.FromJson(description.capabilities)};
