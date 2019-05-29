@@ -103,5 +103,28 @@ internal class WebGLTests : InputTestFixture
         AssertButtonPress(joystick, new TestJoystickState {button2 = 1.0f}, joystick.TryGetChildControl("Button 2") as ButtonControl);
         AssertButtonPress(joystick, new TestJoystickState {button3 = 1.0f}, joystick.TryGetChildControl("Button 3") as ButtonControl);
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanHaveWebGLJoystickWithBadRegexInName()
+    {
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "WebGL",
+            deviceClass = "Gamepad",
+            product = "Bad(Regex",
+            capabilities = new WebGLDeviceCapabilities
+            {
+                mapping = "",
+                numAxes = 3,
+                numButtons = 3
+            }.ToJson()
+        });
+
+        InputSystem.Update();
+
+        var joystick = InputSystem.GetDevice<WebGLJoystick>();
+        Assert.That(joystick , Is.Not.Null);
+    }
 }
 #endif // UNITY_WEBGL || UNITY_EDITOR
