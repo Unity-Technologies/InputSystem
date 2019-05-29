@@ -1,0 +1,33 @@
+<Dictionary>  
+   <Words>  
+      <Recognized>  
+         <Word>shader</Word>
+         <Word>bitangent</Word>
+         <Word>cubemap</Word>
+         <Word>uv</Word>
+         <Word>Voronoi</Word>
+         <Word>Nand</Word>
+         <Word>Spherize</Word>
+         <Word>x</Word>
+         <Word>y</Word>
+         <Word>a</Word>
+         <Word>b</Word>
+         <Word>normal</Word>
+      </Recognized>  
+      <Deprecated>
+         <Word>foo</Word>
+         <Word>foobar</Word>
+         <Word>bar</Word>
+         <Word>baz</Word>
+      </Deprecated>  
+      <Compound>  
+      </Compound>  
+      <DiscreteExceptions>
+         <Term>uv</Term>
+      </DiscreteExceptions>  
+   </Words>  
+   <Acronyms>  
+      <CasingExceptions>  
+      </CasingExceptions>  
+   </Acronyms>  
+</Dictionary>  

@@ -228,7 +228,7 @@ namespace UnityEngine.InputSystem.Utilities
         public void RemoveAtWithCapacity(int index)
         {
             if (index < 0 || index >= length)
-                throw new IndexOutOfRangeException(nameof(index));
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {

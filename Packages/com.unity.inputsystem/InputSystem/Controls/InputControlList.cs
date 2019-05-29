@@ -179,8 +179,8 @@ namespace UnityEngine.InputSystem
             if (count == 0)
                 return;
             if (sourceIndex + count > list.Count)
-                throw new ArgumentOutOfRangeException(
-                    $"Count of {count} elements starting at index {sourceIndex} exceeds length of list of {list.Count}", "count");
+                throw new ArgumentOutOfRangeException(nameof(count),
+                    $"Count of {count} elements starting at index {sourceIndex} exceeds length of list of {list.Count}");
 
             // Make space in the list.
             if (Capacity < count)

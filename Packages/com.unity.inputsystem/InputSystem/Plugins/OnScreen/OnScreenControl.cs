@@ -163,8 +163,8 @@ namespace UnityEngine.InputSystem.OnScreen
 
             ////TODO: only cast once
             if (!(m_Control is InputControl<TValue> control))
-                throw new Exception(
-                    $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}");
+                throw new ArgumentException(
+                    $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);
