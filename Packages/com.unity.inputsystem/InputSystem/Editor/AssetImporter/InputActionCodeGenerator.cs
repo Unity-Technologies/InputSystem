@@ -369,6 +369,8 @@ namespace UnityEngine.InputSystem.Editor
             if (File.Exists(filePath))
             {
                 var existingCode = File.ReadAllText(filePath);
+                ////TODO: strip whitespace before comparing so that we're not susceptible to the file getting altered
+                ////       by either our formatting tools or by git's auto-crlf conversion
                 if (existingCode == code)
                     return false;
             }

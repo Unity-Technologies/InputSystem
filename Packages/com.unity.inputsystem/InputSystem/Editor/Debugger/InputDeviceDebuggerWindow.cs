@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 
 ////TODO: add commands to event trace (also clickable)
 
@@ -48,7 +49,7 @@ namespace UnityEngine.InputSystem.Editor
         public static void CreateOrShowExisting(InputDevice device)
         {
             if (device == null)
-                throw new System.ArgumentNullException(nameof(device));
+                throw new ArgumentNullException(nameof(device));
 
             // See if we have an existing window for the device and if so pop it
             // in front.
@@ -114,13 +115,19 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Layout", m_Device.layout);
             EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
-            EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
-            EditorGUILayout.LabelField("Product", m_Device.description.product);
-            EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
-            EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
+            if (!string.IsNullOrEmpty(m_Device.description.interfaceName))
+                EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
+            if (!string.IsNullOrEmpty(m_Device.description.product))
+                EditorGUILayout.LabelField("Product", m_Device.description.product);
+            if (!string.IsNullOrEmpty(m_Device.description.manufacturer))
+                EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
+            if (!string.IsNullOrEmpty(m_Device.description.serial))
+                EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
-            EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
-            EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
+            if (!string.IsNullOrEmpty(m_DeviceUsagesString))
+                EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
+            if (!string.IsNullOrEmpty(m_DeviceFlagsString))
+                EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             if (m_Device is Keyboard)
                 EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
             EditorGUILayout.EndVertical();
@@ -131,8 +138,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DrawControlTree()
         {
+            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.Label($"Controls ({updateTypeToShow} State)", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
             // Allow plugins to add toolbar buttons.
@@ -148,25 +157,17 @@ namespace UnityEngine.InputSystem.Editor
 
             GUILayout.EndHorizontal();
 
-            ////TODO: detect if dynamic is disabled and fall back to fixed
-            var updateTypeToShow = EditorApplication.isPlaying ? InputUpdateType.Dynamic : InputUpdateType.Editor;
-
-            try
+            if (m_NeedControlValueRefresh)
             {
-                // Switch to buffers that we want to display in the control tree.
-                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
+                RefreshControlTreeValues();
+                m_NeedControlValueRefresh = false;
+            }
 
-                ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
-                m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
-                var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
-                m_ControlTree.OnGUI(rect);
-                EditorGUILayout.EndScrollView();
-            }
-            finally
-            {
-                // Switch back to editor buffers.
-                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, InputUpdateType.Editor);
-            }
+            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
+            m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
+            var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
+            m_ControlTree.OnGUI(rect);
+            EditorGUILayout.EndScrollView();
         }
 
         private void DrawEventList()
@@ -245,6 +246,16 @@ namespace UnityEngine.InputSystem.Editor
             InputState.onChange += OnDeviceStateChange;
         }
 
+        private void RefreshControlTreeValues()
+        {
+            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+            var currentUpdateType = InputState.currentUpdate;
+
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
+            m_ControlTree.RefreshControlValues();
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
+        }
+
         // We will lose our device on domain reload and then look it back up the first
         // time we hit a repaint after a reload. By that time, the input system should have
         // fully come back to life as well.
@@ -254,6 +265,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private string m_DeviceFlagsString;
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
+        [NonSerialized] private bool m_NeedControlValueRefresh;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -296,6 +308,17 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDeviceStateChange(InputDevice device)
         {
+            ////REVIEW: Ideally we would defer the refresh until we repaint. That way, we would not refresh on every single
+            ////        state change but rather only once for a repaint. However, for some reason, if we move the refresh
+            ////        into OnGUI, something in Unity blows up and takes forever. It seems that we are invalidating some
+            ////        cached material data over and over and over so that OnGUI suddenly becomes crazy expensive.
+
+            ////FIXME: Reading values here means we won't be showing the effect of EditorWindowSpaceProcessor correctly. In the
+            ////       input update, there is no current EditorWindow so no window to be relative to. However, even if we read the
+            ////       values in OnGUI(), the result would always be relative to the debugger window (that'd probably be fine).
+
+            if (InputState.currentUpdate != InputSystem.s_Manager.defaultUpdateType)
+                return;
             m_ControlTree?.RefreshControlValues();
             Repaint();
         }

@@ -55,6 +55,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- The system no longer defaults to supporting __BOTH__ fixed and dynamic update at the same time. Instead, by default, only dynamic updates are enabled. As before, you can change this behavior in the input settings. Choose "Process Events In Both Fixed And Dynamic Update" as "Update Mode" to restore the old behavior for your project.
 - Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
 - Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
 - Added getters to all `IInputRuntime` properties.

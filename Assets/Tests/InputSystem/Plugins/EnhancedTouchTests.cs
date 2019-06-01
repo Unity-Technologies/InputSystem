@@ -19,6 +19,8 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 internal class EnhancedTouchTests : InputTestFixture
 {
+    private TouchSimulation m_OldTouchSimulationInstance;
+
     public override void Setup()
     {
         base.Setup();
@@ -31,6 +33,11 @@ internal class EnhancedTouchTests : InputTestFixture
             InputSystem.AddDevice<Touchscreen>();
             EnhancedTouchSupport.Enable();
         }
+
+        // Make sure we don't run into interference with a TouchSimulation instance that may
+        // already be in place.
+        m_OldTouchSimulationInstance = TouchSimulation.s_Instance;
+        TouchSimulation.s_Instance = null;
     }
 
     public override void TearDown()
@@ -51,6 +58,8 @@ internal class EnhancedTouchTests : InputTestFixture
         Touch.s_OnFingerMove = new InlinedArray<Action<Finger>>();
 
         TouchSimulation.Destroy();
+        TouchSimulation.s_Instance = m_OldTouchSimulationInstance;
+        m_OldTouchSimulationInstance = null;
 
         base.TearDown();
     }
@@ -714,6 +723,11 @@ internal class EnhancedTouchTests : InputTestFixture
 
         Assert.That(InputSystem.devices, Has.None.TypeOf<Touchscreen>());
 
+        // Make sure we can re-enable it.
+        TouchSimulation.Enable();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
+
         TouchSimulation.Destroy();
 
         Assert.That(TouchSimulation.instance, Is.Null);
@@ -875,6 +889,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Set(mouse.position, new Vector2(123, 234));
         Press(mouse.leftButton);
 
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.press.ReadValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(TouchPhase.Began));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.position.ReadValue(),
@@ -884,11 +899,34 @@ internal class EnhancedTouchTests : InputTestFixture
 
         Set(mouse.position, new Vector2(234, 345));
 
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.press.ReadValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(TouchPhase.Moved));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.position.ReadValue(),
             Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.delta.ReadValue(),
             Is.EqualTo(new Vector2(111, 111)).Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.Update();
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.press.ReadValue(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(TouchPhase.Moved));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.position.ReadValue(),
+            Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.delta.ReadValue(),
+            Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+    }
+
+    // This is mostly for domain reloads.
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_TouchSimulation_ReusesSimulatedTouchscreenInstanceIfPresent()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>("Simulated Touchscreen");
+
+        TouchSimulation.Enable();
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.SameAs(device));
     }
 }

@@ -2112,7 +2112,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue)
+        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue, out int controlIndex)
             where TValue : struct, IComparable<TValue>
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
@@ -2123,6 +2123,7 @@ namespace UnityEngine.InputSystem
             var isFirstValue = true;
 
             buttonValue = false;
+            controlIndex = kInvalidIndex;
 
             // Find the binding in the composite that both has the given part number and
             // the greatest value.
@@ -2143,21 +2144,79 @@ namespace UnityEngine.InputSystem
                 var controlStartIndex = bindingStates[index].controlStartIndex;
                 for (var i = 0; i < controlCount; ++i)
                 {
-                    var controlIndex = controlStartIndex + i;
-                    var value = ReadValue<TValue>(index, controlIndex, ignoreComposites: true);
+                    var thisControlIndex = controlStartIndex + i;
+                    var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
+
+                    ////REVIEW: not great that we do ButtonControl typechecks all the time even when they are not necessary
 
                     if (isFirstValue)
                     {
                         result = value;
                         isFirstValue = false;
-                        if (controls[controlIndex] is Controls.ButtonControl)
-                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
+                        controlIndex = thisControlIndex;
+                        if (controls[thisControlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[thisControlIndex]).isPressed;
                     }
                     else if (value.CompareTo(result) > 0)
                     {
                         result = value;
-                        if (controls[controlIndex] is Controls.ButtonControl)
-                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
+                        controlIndex = thisControlIndex;
+                        if (controls[thisControlIndex] is Controls.ButtonControl)
+                            buttonValue = ((Controls.ButtonControl)controls[thisControlIndex]).isPressed;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        internal TValue ReadCompositePartValue<TValue, TComparer>(int bindingIndex, int partNumber, TComparer comparer, out int controlIndex)
+            where TValue : struct
+            where TComparer : IComparer<TValue>
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
+
+            var result = default(TValue);
+            var firstChildBindingIndex = bindingIndex + 1;
+            var isFirstValue = true;
+
+            controlIndex = kInvalidIndex;
+
+            // Find the binding in the composite that both has the given part number and
+            // the greatest value.
+            //
+            // NOTE: It is tempting to go by control magnitudes instead as those are readily available to us (controlMagnitudes)
+            //       and avoids us reading values that we're not going to use. Unfortunately, we can't do that as several controls
+            //       used by a composite may all have been updated with a single event (e.g. WASD on a keyboard will usually see
+            //       just one update that refreshes the entire state of the keyboard). In that case, one of the controls will
+            //       see its state monitor trigger first and in turn trigger processing of the action and composite. Thus only
+            //       that one single control would have its value refreshed in controlMagnitudes whereas the other control magnitudes
+            //       would be stale.
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var thisControlIndex = controlStartIndex + i;
+                    var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
+
+                    ////REVIEW: not great that we do ButtonControl typechecks all the time even when they are not necessary
+
+                    if (isFirstValue)
+                    {
+                        result = value;
+                        controlIndex = thisControlIndex;
+                        isFirstValue = false;
+                    }
+                    else if (comparer.Compare(value, result) > 0)
+                    {
+                        result = value;
+                        controlIndex = thisControlIndex;
                     }
                 }
             }
@@ -3162,15 +3221,18 @@ namespace UnityEngine.InputSystem
             var head = 0;
             for (var i = 0; i < length; ++i)
             {
-                if (s_GlobalList[i].Target != null)
+                var handle = s_GlobalList[i];
+                if (handle.IsAllocated && handle.Target != null)
                 {
                     if (head != i)
-                        s_GlobalList[head] = s_GlobalList[i];
+                        s_GlobalList[head] = handle;
                     ++head;
                 }
                 else
                 {
-                    s_GlobalList[i].Free();
+                    if (handle.IsAllocated)
+                        s_GlobalList[i].Free();
+                    s_GlobalList[i] = default;
                 }
             }
             s_GlobalList.length = head;
@@ -3206,7 +3268,10 @@ namespace UnityEngine.InputSystem
             var stateCount = s_GlobalList.length;
             for (var i = 0; i < stateCount; ++i)
             {
-                var state = (InputActionState)s_GlobalList[i].Target;
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated)
+                    continue;
+                var state = (InputActionState)handle.Target;
                 if (state == null)
                     continue;
 
@@ -3267,14 +3332,17 @@ namespace UnityEngine.InputSystem
 
             for (var i = 0; i < s_GlobalList.length; ++i)
             {
-                var state = (InputActionState)s_GlobalList[i].Target;
-                if (state == null)
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                    s_GlobalList[i].Free();
+                    if (handle.IsAllocated)
+                        s_GlobalList[i].Free();
                     s_GlobalList.RemoveAtWithCapacity(i);
+                    --i;
                     continue;
                 }
+                var state = (InputActionState)handle.Target;
 
                 // If this state is not affected by the addition or removal of the given
                 // device, skip it.
@@ -3298,9 +3366,10 @@ namespace UnityEngine.InputSystem
         {
             for (var i = 0; i < s_GlobalList.length; ++i)
             {
-                var state = (InputActionState)s_GlobalList[i].Target;
-                if (state == null)
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
                     continue;
+                var state = (InputActionState)handle.Target;
 
                 var mapCount = state.totalMapCount;
                 var maps = state.maps;
@@ -3324,15 +3393,17 @@ namespace UnityEngine.InputSystem
             while (s_GlobalList.length > 0)
             {
                 var index = s_GlobalList.length - 1;
-                var state = (InputActionState)s_GlobalList[index].Target;
-                if (state == null)
+                var handle = s_GlobalList[index];
+                if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Already destroyed.
-                    s_GlobalList[index].Free();
+                    if (handle.IsAllocated)
+                        s_GlobalList[index].Free();
                     s_GlobalList.RemoveAtWithCapacity(index);
                     continue;
                 }
 
+                var state = (InputActionState)handle.Target;
                 state.Destroy();
             }
         }

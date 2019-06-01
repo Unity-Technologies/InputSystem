@@ -16,6 +16,11 @@ using UnityEditor;
 ////        to touch input potentially changing multiple times in response to a single pointer event. And the former leads to the simulated
 ////        touch input not being visible at the event level -- which leaves Touch and Finger slightly unhappy, for example.
 ////        I think being able to cycle simulated input fully through the event loop would result in a setup that is both simpler and more robust.
+////        Also, it would allow *disabling* the source devices as long as we don't disable them in the backend, too.
+////        Finally, the fact that we spin off input *from* events here and feed that into InputState.Change() by passing the event along
+////        means that places that make sure we process input only once (e.g. binding composites which will remember the event ID they have
+////        been triggered from) may reject the simulated input when they have already seen the non-simulated input (which may be okay
+////        behavior).
 
 namespace UnityEngine.InputSystem.Touch
 {
@@ -38,7 +43,7 @@ namespace UnityEngine.InputSystem.Touch
         {
             if (instance == null)
             {
-                //find instance
+                ////TODO: find instance
                 var hiddenGO = new GameObject();
                 hiddenGO.SetActive(false);
                 hiddenGO.hideFlags = HideFlags.HideAndDontSave;
@@ -133,6 +138,7 @@ namespace UnityEngine.InputSystem.Touch
 
         protected void InstallStateChangeMonitors(int startIndex = 0)
         {
+            ////REVIEW: just bind to the entire pointer state instead of to individual controls?
             for (var i = startIndex; i < m_NumSources; ++i)
             {
                 var pointer = m_Sources[i];
@@ -340,7 +346,18 @@ namespace UnityEngine.InputSystem.Touch
 
         protected void OnEnable()
         {
-            simulatedTouchscreen = InputSystem.AddDevice<Touchscreen>("Simulated Touchscreen");
+            if (simulatedTouchscreen != null)
+            {
+                if (!simulatedTouchscreen.added)
+                    InputSystem.AddDevice(simulatedTouchscreen);
+            }
+            else
+            {
+                simulatedTouchscreen = InputSystem.GetDevice("Simulated Touchscreen") as Touchscreen;
+                if (simulatedTouchscreen == null)
+                    simulatedTouchscreen = InputSystem.AddDevice<Touchscreen>("Simulated Touchscreen");
+            }
+
             if (m_Touches == null)
                 m_Touches = new SimulatedTouch[simulatedTouchscreen.touches.Count];
 
@@ -375,20 +392,26 @@ namespace UnityEngine.InputSystem.Touch
         [NonSerialized] private int m_LastTouchId;
         [NonSerialized] private int m_PrimaryTouchIndex = -1;
 
-        private static TouchSimulation s_Instance;
+        internal static TouchSimulation s_Instance;
 
         #if UNITY_EDITOR
         static TouchSimulation()
         {
             // We're a MonoBehaviour so our cctor may get called as part of the MonoBehaviour being
-            // create. We don't want to trigger InputSystem initialization from there so delay-execute
+            // created. We don't want to trigger InputSystem initialization from there so delay-execute
             // the code here.
             EditorApplication.delayCall +=
                 () =>
             {
                 InputSystem.onSettingsChange += OnSettingsChanged;
-                OnSettingsChanged();
+                InputSystem.onBeforeUpdate += ReEnableAfterDomainReload;
             };
+        }
+
+        private static void ReEnableAfterDomainReload(InputUpdateType updateType)
+        {
+            OnSettingsChanged();
+            InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
         }
 
         private static void OnSettingsChanged()

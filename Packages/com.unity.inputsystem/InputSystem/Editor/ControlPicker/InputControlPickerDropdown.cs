@@ -278,6 +278,7 @@ namespace UnityEngine.InputSystem.Editor
         private void AddControlItem(DeviceDropdownItem parent, ControlDropdownItem parentControl,
             InputControlLayout.ControlItem control, string device, string usage, bool searchable)
         {
+            ////FIXME: this also filters children out that match the given layout filter
             if (!LayoutMatchesExpectedControlLayoutFilter(control.layout))
                 return;
 

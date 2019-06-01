@@ -27,9 +27,9 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: refresh when unrecognized device pops up
 
 ////TODO: context menu
-////      devices: open debugger window, remove device, disable device
+////      devices: open debugger window, remove device, enable/disable device (DONE)
 ////      layouts: copy as json, remove layout
-////      actions: disable action
+////      actions: enable/disable action (have tree for all disabled actions)
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -791,7 +791,7 @@ namespace UnityEngine.InputSystem.Editor
             private void AddActionItem(TreeViewItem parent, InputAction action, ref int id)
             {
                 // Add item for action.
-                var name = action.ToString();
+                var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
                 if (!action.enabled)
                     name += " (Disabled)";
                 var item = AddChild(parent, name, ref id);

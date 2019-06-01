@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
@@ -13,6 +14,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.Utilitites;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
@@ -4980,6 +4982,75 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
+
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    private class CompositeWithVector2Part : InputBindingComposite<Vector2>
+    {
+        [InputControlAttribute(layout = "Vector2")]
+        public int part;
+
+        public override Vector2 ReadValue(ref InputBindingCompositeContext context)
+        {
+            return context.ReadValue<Vector2, Vector2MagnitudeComparer>(part);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateCompositeWithVector2PartBinding()
+    {
+        InputSystem.RegisterBindingComposite<CompositeWithVector2Part>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("CompositeWithVector2Part")
+            .With("part", "<Gamepad>/leftStick");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+
+            Assert.That(trace,
+                Started(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+                    .AndThen(Performed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))));
+        }
+    }
+
+    private class CompositeAskingForSourceControl : InputBindingComposite<float>
+    {
+        [InputControl(layout = "Button")]
+        public int button;
+
+        public override float ReadValue(ref InputBindingCompositeContext context)
+        {
+            var value = context.ReadValue<float>(button, out var control);
+            Debug.Log(control.path);
+            return value;
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetSourceControlWhenReadingValueFromCompositePart()
+    {
+        InputSystem.RegisterBindingComposite<CompositeAskingForSourceControl>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("CompositeAskingForSourceControl")
+            .With("button", "<Gamepad>/buttonSouth")
+            .With("button", "<Gamepad>/buttonNorth");
+        action.Enable();
+
+        // Need a callback to trigger reading.
+        action.performed += ctx => ctx.ReadValue<float>();
+
+        LogAssert.Expect(LogType.Log, gamepad.buttonNorth.path);
+
+        Press(gamepad.buttonNorth);
 
         LogAssert.NoUnexpectedReceived();
     }

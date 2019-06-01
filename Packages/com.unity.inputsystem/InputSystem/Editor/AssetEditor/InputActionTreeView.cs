@@ -153,6 +153,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
+            ////REVIEW: should we *always* do this? (regardless of whether a control scheme is selected)
             // When filtering by binding group, we tag bindings that are not in any binding group as "{GLOBAL}".
             // This helps when having a specific control scheme selected, to also see the bindings that are active
             // in that control scheme by virtue of not being associated with *any* specific control scheme.

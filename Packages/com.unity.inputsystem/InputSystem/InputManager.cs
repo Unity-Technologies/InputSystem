@@ -933,6 +933,7 @@ namespace UnityEngine.InputSystem
 
         // Add device with a forced ID. Used when creating devices reported to us by native.
         private InputDevice AddDevice(InternedString layout, int deviceId,
+            string deviceName = null,
             InputDeviceDescription deviceDescription = new InputDeviceDescription(),
             InputDevice.DeviceFlags deviceFlags = 0,
             InternedString variants = default)
@@ -944,6 +945,8 @@ namespace UnityEngine.InputSystem
             device.m_Id = deviceId;
             device.m_Description = deviceDescription;
             device.m_DeviceFlags |= deviceFlags;
+            if (!string.IsNullOrEmpty(deviceName))
+                device.m_Name = new InternedString(deviceName);
 
             // Default display name to product name.
             if (!string.IsNullOrEmpty(deviceDescription.product))
@@ -1038,7 +1041,7 @@ namespace UnityEngine.InputSystem
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
-            int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+            string deviceName = null, int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
@@ -1061,7 +1064,7 @@ namespace UnityEngine.InputSystem
                 return null;
             }
 
-            var device = AddDevice(layout, deviceId, description, deviceFlags);
+            var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
             device.m_Description = description;
             Profiler.EndSample();
             return device;
@@ -2160,8 +2163,9 @@ namespace UnityEngine.InputSystem
                 var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
                 if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                 {
-                    AddDevice(m_AvailableDevices[i].description, false, id,
-                        m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                    AddDevice(m_AvailableDevices[i].description, false,
+                        deviceId: id,
+                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                 }
             }
 
@@ -3240,7 +3244,9 @@ namespace UnityEngine.InputSystem
                     // to create a device with the same layout.
                     if (!deviceState.description.empty)
                     {
-                        device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
+                        device = AddDevice(deviceState.description,
+                            deviceName: deviceState.name,
+                            throwIfNoLayoutFound: true,
                             deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
                     }
                     else
@@ -3256,7 +3262,9 @@ namespace UnityEngine.InputSystem
                             continue;
                         }
 
-                        device = AddDevice(layout, deviceState.deviceId,
+                        device = AddDevice(layout,
+                            deviceId: deviceState.deviceId,
+                            deviceName: deviceState.name,
                             deviceFlags: deviceState.flags,
                             variants: new InternedString(deviceState.variants));
                     }

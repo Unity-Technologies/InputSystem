@@ -453,12 +453,12 @@ namespace UnityEngine.InputSystem
 
             return haveChangedState;
         }
-        
+
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
         {
             return OnCarryStateForward(statePtr);
         }
-        
+
         protected new unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt, InputEventPtr eventPtr)
         {

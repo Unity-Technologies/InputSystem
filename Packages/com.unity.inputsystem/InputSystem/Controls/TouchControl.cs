@@ -13,6 +13,8 @@ namespace UnityEngine.InputSystem.Controls
     [InputControlLayout(stateType = typeof(TouchState))]
     public class TouchControl : InputControl<TouchState>
     {
+        public ButtonControl press { get; private set; }
+
         /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
         /// </summary>
@@ -59,6 +61,7 @@ namespace UnityEngine.InputSystem.Controls
             if (builder == null)
                 throw new System.ArgumentNullException(nameof(builder));
 
+            press = builder.GetControl<ButtonControl>(this, "press");
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             delta = builder.GetControl<Vector2Control>(this, "delta");
