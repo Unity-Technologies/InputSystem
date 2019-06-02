@@ -773,7 +773,7 @@ namespace UnityEngine.InputSystem
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
-        protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
+        public unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
 
         protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex());
 

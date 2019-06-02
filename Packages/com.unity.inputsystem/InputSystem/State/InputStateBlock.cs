@@ -221,7 +221,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // setup will throw.
         public uint sizeInBits { get; set; }
 
-        internal uint alignedSizeInBytes => (sizeInBits + 7) >> 3;
+        public uint alignedSizeInBytes => (sizeInBits + 7) >> 3;
 
         public int ReadInt(void* statePtr)
         {
