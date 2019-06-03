@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.HID.Editor;
 #endif
-using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.HID
 {
