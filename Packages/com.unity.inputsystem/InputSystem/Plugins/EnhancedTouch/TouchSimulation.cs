@@ -1,10 +1,10 @@
 using System;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 ////TODO: add pressure support
