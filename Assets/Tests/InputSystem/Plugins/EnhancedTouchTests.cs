@@ -5,13 +5,16 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Touch;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 using Touch = UnityEngine.InputSystem.Touch.Touch;
 using Property = NUnit.Framework.PropertyAttribute;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 internal class EnhancedTouchTests : InputTestFixture
 {
