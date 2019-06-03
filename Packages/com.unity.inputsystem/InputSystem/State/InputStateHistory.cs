@@ -923,16 +923,6 @@ namespace UnityEngine.InputSystem.LowLevel
                     throw new InvalidOperationException("Record is no longer valid");
             }
 
-            public static Record From(InputStateHistory.Record untypedRecord)
-            {
-                untypedRecord.CheckValid();
-                if (!(untypedRecord.owner is InputStateHistory<TValue> typedHistory))
-                    throw new InvalidOperationException(
-                        $"Record is not from an InputStateHistory<{TypeHelpers.GetNiceTypeName(typeof(TValue))}> but from an {untypedRecord.owner.GetType().Name} instead");
-
-                return new Record(typedHistory, untypedRecord.recordIndex, untypedRecord.header);
-            }
-
             public bool Equals(Record other)
             {
                 return ReferenceEquals(m_Owner, other.m_Owner) && m_IndexPlusOne == other.m_IndexPlusOne && m_Version == other.m_Version;

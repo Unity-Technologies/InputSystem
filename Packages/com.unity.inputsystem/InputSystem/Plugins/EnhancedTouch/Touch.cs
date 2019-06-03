@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Touch
     /// A Touch instance is a struct which only contains a reference to the actual data which is stored in unmanaged
     /// memory.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     public struct Touch : IEquatable<Touch>
     {
         // The way this works is that at the core, it simply attaches one InputStateHistory per "<Touchscreen>/touch*"
@@ -320,6 +321,8 @@ namespace UnityEngine.InputSystem.Touch
         //
         // NOTE: Finger instances are per state. This means that you will actually see different Finger instances for
         //       the same finger in two different update types.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+            Justification = "Managed internally")]
         internal struct FingerAndTouchState
         {
             public InputUpdateType updateMask;

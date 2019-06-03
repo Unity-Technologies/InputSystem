@@ -11,6 +11,8 @@ namespace UnityEngine.InputSystem.Touch
     /// <remarks>
     /// Note that in general there is no ability to detect actual physical fingers. This means that a finger
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "Holds on to internally managed memory which should not be disposed by the user.")]
     public class Finger
     {
         // This class stores pretty much all the data that is kept by the enhanced touch system. All

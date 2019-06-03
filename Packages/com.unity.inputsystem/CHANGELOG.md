@@ -67,8 +67,8 @@ however, it has to be formatted properly to pass verification tests.
   * For touch, corresponds to primary touch contact (i.e. whether __any__ finger is down).
 - The state change monitor APIs (`IInputStateChangeMonitor` and friends) have been moved out of `InputSystem` into a new static class `InputState` in `UnityEngine.Experimental.Input.LowLevel`.
   * Rationale: These APIs are fairly low-level and not of general interest so having them out of `InputSystem` reduces the API surface visible to most users.
-- `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onChange`.
-  * Rationale: The other `InputDeviceChange` notifications are low-frequency whereas `StateChanged` is high-frequency. Putting them all on the same callback made adding a callback to `InputSystem.deviceChange` unnecessarily expensive.
+- `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onDeviceStateChange`.
+  * Rationale: The other `InputDeviceChange` notifications are low-frequency whereas `StateChanged` is high-frequency. Putting them all on the same callback made adding a callback to `InputSystem.onDeviceChange` unnecessarily expensive.
 
 ## [0.2.10-preview] - 2019-5-17
 

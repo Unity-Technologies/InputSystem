@@ -346,7 +346,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the action got triggered in the current update.
         /// </summary>
-        public bool triggered => throw new NotImplementedException();
+        internal bool triggered => throw new NotImplementedException();
 
         // Constructor we use for serialization and for actions that are part
         // of sets.
@@ -437,7 +437,7 @@ namespace UnityEngine.InputSystem
             m_ActionMap.m_State.DisableSingleAction(this);
         }
 
-        public TValue ReadValue<TValue>()
+        internal TValue ReadValue<TValue>()
             where TValue : struct
         {
             throw new NotImplementedException();
