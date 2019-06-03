@@ -69,13 +69,6 @@ namespace UnityEngine.InputSystem.LowLevel
                 eventPtr: eventPtr);
         }
 
-        /// <summary>
-        /// Perform a batch of changes one after the other against a single control.
-        /// </summary>
-        public static void BatchChange()
-        {
-        }
-
         public static bool IsIntegerFormat(this FourCC format)
         {
             return format == InputStateBlock.FormatBit ||

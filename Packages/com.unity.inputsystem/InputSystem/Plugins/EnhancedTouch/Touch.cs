@@ -11,7 +11,6 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Touch
 {
-    ////REVIEW: make this a struct that acts as a reference?
     /// <summary>
     /// A high-level representation of a touch which automatically keeps track of a touch
     /// over time.
