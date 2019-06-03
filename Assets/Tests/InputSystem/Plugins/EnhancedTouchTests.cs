@@ -13,8 +13,6 @@ using Touch = UnityEngine.InputSystem.Touch.Touch;
 using Property = NUnit.Framework.PropertyAttribute;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
-////TODO: taps
-
 internal class EnhancedTouchTests : InputTestFixture
 {
     private TouchSimulation m_OldTouchSimulationInstance;

@@ -13,12 +13,7 @@
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll",
         "Mono.Cecil.dll"
-    ],
-    "autoReferenced": false,
-    "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
