@@ -15,7 +15,6 @@ using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
-using UnityEditor;
 #endif
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
@@ -2457,7 +2456,6 @@ namespace UnityEngine.InputSystem
                         uint receivedStateSize;
                         byte* ptrToReceivedState;
                         FourCC receivedStateFormat;
-                        var needToCopyFromBackBuffer = false;
 
                         // Grab state data from event and decide where to copy to and how much to copy.
                         if (currentEventType == StateEvent.Type)
@@ -2865,7 +2863,6 @@ namespace UnityEngine.InputSystem
         {
             var deviceIndex = device.m_DeviceIndex;
             ref var stateBlockOfDevice = ref device.m_StateBlock;
-            var needToCopyFromBackBuffer = false;
 
             ////TODO: limit stateSize and StateOffset by the device's state memory
 

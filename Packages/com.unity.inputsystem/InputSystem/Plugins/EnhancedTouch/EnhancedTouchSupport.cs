@@ -1,10 +1,4 @@
-using UnityEngine.InputSystem.Touch;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 ////TODO: gesture support
 ////TODO: mouse/touch simulation support
@@ -17,13 +11,10 @@ namespace UnityEngine.InputSystem.Touch
     [AddComponentMenu("Input/Enhanced Touch Support")]
     public class EnhancedTouchSupport : MonoBehaviour
     {
-        public static bool enabled => s_Enabled > 0;
+        public new static bool enabled => s_Enabled > 0;
 
         private static int s_Enabled;
         private static InputSettings.UpdateMode s_UpdateMode;
-        #if UNITY_EDITOR
-        private static readonly GUIContent s_TouchInspectorButton = new GUIContent("Touch Inspector");
-        #endif
 
         private void OnEnable()
         {
