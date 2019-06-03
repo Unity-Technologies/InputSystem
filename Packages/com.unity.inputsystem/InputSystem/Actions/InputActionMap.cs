@@ -1089,7 +1089,7 @@ namespace UnityEngine.InputSystem
                     var jsonAction = actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
-                        throw new Exception($"Action number {i + 1} has no name");
+                        throw new InvalidOperationException($"Action number {i + 1} has no name");
 
                     ////REVIEW: make sure all action names are unique?
 
@@ -1103,7 +1103,7 @@ namespace UnityEngine.InputSystem
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
-                            throw new Exception(
+                            throw new InvalidOperationException(
                                 $"Invalid action name '{jsonAction.name}' (missing action name after '/')");
                     }
 
@@ -1167,7 +1167,7 @@ namespace UnityEngine.InputSystem
 
                     var mapName = jsonMap.name;
                     if (string.IsNullOrEmpty(mapName))
-                        throw new Exception($"Map number {i + 1} has no name");
+                        throw new InvalidOperationException($"Map number {i + 1} has no name");
 
                     // Try to find existing map.
                     InputActionMap map = null;
@@ -1201,7 +1201,7 @@ namespace UnityEngine.InputSystem
                         var jsonAction = jsonMap.actions[n];
 
                         if (string.IsNullOrEmpty(jsonAction.name))
-                            throw new Exception($"Action number {i + 1} in map '{mapName}' has no name");
+                            throw new InvalidOperationException($"Action number {i + 1} in map '{mapName}' has no name");
 
                         // Create action.
                         var action = new InputAction(jsonAction.name)

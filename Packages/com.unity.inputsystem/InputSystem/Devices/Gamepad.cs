@@ -81,9 +81,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public GamepadState(params GamepadButton[] buttons)

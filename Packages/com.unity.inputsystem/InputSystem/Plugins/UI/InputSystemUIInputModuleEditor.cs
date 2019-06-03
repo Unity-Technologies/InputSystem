@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             return null;
         }
 
-        static private string[] m_ActionNames = new[]
+        static private readonly string[] s_ActionNames = new[]
         {
             "Point",
             "LeftClick",
@@ -53,10 +53,10 @@ namespace UnityEngine.InputSystem.UI.Editor
 
         public void OnEnable()
         {
-            var numActions = m_ActionNames.Length;
+            var numActions = s_ActionNames.Length;
             m_ReferenceProperties = new SerializedProperty[numActions];
             for (var i = 0; i < numActions; i++)
-                m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}Action");
+                m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{s_ActionNames[i]}Action");
 
             m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
             m_AvailableActionsInAsset = GetAllActionsFromAsset(m_ActionsAsset.objectReferenceValue as InputActionAsset);
@@ -103,14 +103,14 @@ namespace UnityEngine.InputSystem.UI.Editor
                 OnEnable();
             }
 
-            var numActions = m_ActionNames.Length;
+            var numActions = s_ActionNames.Length;
             for (var i = 0; i < numActions; i++)
             {
                 if (m_AvailableActionsInAsset != null)
                 {
                     int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
                     EditorGUI.BeginChangeCheck();
-                    index = EditorGUILayout.Popup(m_ActionNames[i], index, m_AvailableActionsInAssetNames);
+                    index = EditorGUILayout.Popup(s_ActionNames[i], index, m_AvailableActionsInAssetNames);
 
                     if (EditorGUI.EndChangeCheck())
                         m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;

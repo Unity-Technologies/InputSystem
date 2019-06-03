@@ -124,7 +124,7 @@ internal class SteamTests : InputTestFixture
         Assert.That(m_SteamAPI.controllerData[0].actionSetActivations,
             Is.EquivalentTo(new[] {device.gameplaySetHandle}));
 
-        var current = device.GetCurrentSteamActionSet();
+        var current = device.currentSteamActionSet;
 
         Assert.That(current, Is.EqualTo(device.gameplaySetHandle));
     }
@@ -372,9 +372,9 @@ internal class SteamTests : InputTestFixture
         [InputControl(layout = "Stick")]
         public Vector2 look;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'e', 's', 't');
+            get { return new FourCC('T', 'e', 's', 't'); }
         }
     }
 

@@ -123,9 +123,9 @@ public class SteamDemoController : SteamController
 }
 public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
 {
-    public FourCC GetFormat()
+    public FourCC format
     {
-        return new FourCC('S', 't', 'e', 'a');
+        get { return new FourCC('S', 't', 'e', 'a'); }
     }
 
     [InputControl(name = "fire", layout = "Button", bit = 0)]

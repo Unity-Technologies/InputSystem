@@ -79,6 +79,7 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501:AvoidExcessiveInheritance")]
     public class GearVR : OculusStandaloneHMDExtended
     {}
 

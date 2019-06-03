@@ -88,9 +88,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(10)] public short rightStickX;
         [FieldOffset(12)] public short rightStickY;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public XInputControllerOSXState WithButton(Button button)
@@ -169,9 +169,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(5)] public ushort rightStickX;
         [FieldOffset(7)] public ushort rightStickY;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public XInputControllerWirelessOSXState WithButton(Button button)

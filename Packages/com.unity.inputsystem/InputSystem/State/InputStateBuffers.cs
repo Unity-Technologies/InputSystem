@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.LowLevel
 #endif
             }
 
-            throw new Exception("Unrecognized InputUpdateType: " + updateType);
+            throw new ArgumentException("Unrecognized InputUpdateType: " + updateType, nameof(updateType));
         }
 
         internal static void* s_DefaultStateBuffer;
@@ -444,7 +444,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 var sizeOfDevice = devices[i].m_StateBlock.alignedSizeInBytes;
                 sizeOfDevice = NumberHelpers.AlignToMultiple(sizeOfDevice, 4);
                 if (sizeOfDevice == 0) // Shouldn't happen as we don't allow empty layouts but make sure we catch this if something slips through.
-                    throw new Exception($"Device '{devices[i]}' has a zero-size state buffer");
+                    throw new ArgumentException($"Device '{devices[i]}' has a zero-size state buffer", nameof(devices));
                 result[i] = sizeInBytes;
                 sizeInBytes += sizeOfDevice;
             }

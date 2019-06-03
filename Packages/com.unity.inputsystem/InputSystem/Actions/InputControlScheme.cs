@@ -285,16 +285,6 @@ namespace UnityEngine.InputSystem
             };
         }
 
-        public string ToJson()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static InputControlScheme FromJson(string json)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Equals(InputControlScheme other)
         {
             if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
@@ -517,6 +507,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// Links the control that was matched with the respective device requirement.
             /// </remarks>
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Conflicts with UnityEngine.Networking.Match, which is deprecated and will go away.")]
             public struct Match
             {
                 /// <summary>

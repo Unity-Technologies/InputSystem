@@ -299,11 +299,6 @@ namespace UnityEngine.InputSystem
             action.m_Name = newName;
         }
 
-        public static void Rename(this InputActionAsset asset, InputActionMap map)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Add a new control scheme to the given <paramref name="asset"/>.
         /// </summary>
@@ -367,23 +362,6 @@ namespace UnityEngine.InputSystem
                 m_ActionMap = map;
                 m_Action = action;
                 m_BindingIndex = bindingIndex;
-            }
-
-            ////TODO: implement chained bindings and make public
-            internal BindingSyntax ChainedWith(string binding, string interactions = null, string group = null)
-            {
-                throw new NotImplementedException();
-                /*
-                if (m_Action.m_BindingsCount - 1 != m_BindingIndex)
-                    throw new InvalidOperationException(
-                        "Must not add other bindings in-between calling AddBindings() and ChainedWith()");
-
-                var result = m_Action.AddBinding(binding, interactions: interactions, groups: @group);
-                m_Action.m_SingletonActionBindings[m_Action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
-                    InputBinding.Flags.ThisAndPreviousCombine;
-
-                return result;
-                */
             }
 
             public BindingSyntax WithName(string name)
@@ -461,9 +439,7 @@ namespace UnityEngine.InputSystem
             {
                 var interactionName = InputProcessor.s_Processors.FindNameForType(typeof(TInteraction));
                 if (interactionName.IsEmpty())
-                    throw new ArgumentException(
-                        $"Type '{typeof(TInteraction)}' has not been registered as a processor",
-                        "TInteraction");
+                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a processor");
 
                 return WithInteraction(interactionName);
             }
@@ -500,9 +476,7 @@ namespace UnityEngine.InputSystem
             {
                 var processorName = InputProcessor.s_Processors.FindNameForType(typeof(TProcessor));
                 if (processorName.IsEmpty())
-                    throw new ArgumentException(
-                        $"Type '{typeof(TProcessor)}' has not been registered as a processor",
-                        "TProcessor");
+                    throw new NotSupportedException($"Type '{typeof(TProcessor)}' has not been registered as a processor");
 
                 return WithProcessor(processorName);
             }
@@ -540,20 +514,6 @@ namespace UnityEngine.InputSystem
                 // sync up the reference that the action itself has.
                 if (m_ActionMap.m_SingletonAction != null)
                     m_ActionMap.m_SingletonAction.m_SingletonActionBindings = m_ActionMap.m_Bindings;
-            }
-
-            ////REVIEW: do we really want to go this direction?
-            internal BindingSyntax WithChild(string binding, string interactions = null, string groups = null)
-            {
-                /*
-                var child = m_Action != null
-                    ? m_Action.AddBinding(binding, interactions, groups)
-                    : m_ActionMap.AddBinding(binding, interactions, groups);
-                m_ActionMap.m_Bindings[child.m_BindingIndex].flags |= InputBinding.Flags.PushBindingLevel;
-
-                return child;
-                */
-                throw new NotImplementedException();
             }
 
             internal BindingSyntax And => throw new NotImplementedException();
