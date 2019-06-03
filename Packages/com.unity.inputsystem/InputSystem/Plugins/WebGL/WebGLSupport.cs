@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem.WebGL
                 }
 
                 var buttonStartOffset = offset;
-                
+
                 for (var button = 0; button < capabilities.numButtons; button++)
                 {
                     builder.AddControl($"Button {button + 1}")
@@ -142,6 +142,7 @@ namespace UnityEngine.InputSystem.WebGL
                 builder.AddControl("Trigger")
                     .WithLayout("AnyKey")
                     .WithByteOffset(buttonStartOffset)
+                    .WithSynthetic(true)
                     .WithSizeInBits((uint)(32 * capabilities.numButtons))
                     .WithFormat(InputStateBlock.FormatBit);
 
