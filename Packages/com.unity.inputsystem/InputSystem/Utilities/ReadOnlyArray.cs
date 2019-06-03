@@ -82,6 +82,7 @@ namespace UnityEngine.InputSystem.Utilities
             return GetEnumerator();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2225:OperatorOverloadsHaveNamedAlternates", Justification = "`ToXXX` message only really makes sense as static, which is not recommended for generic types.")]
         public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
         {
             return new ReadOnlyArray<TValue>(array);

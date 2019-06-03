@@ -459,6 +459,7 @@ namespace UnityEngine.InputSystem
             return OnCarryStateForward(statePtr);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "Cannot satisfy both CA1801 and CA1033 (the latter requires adding this method)")]
         protected new unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize,
             ref uint offsetToStoreAt, InputEventPtr eventPtr)
         {
@@ -647,7 +648,8 @@ namespace UnityEngine.InputSystem
         {
         }
 
-        protected unsafe new void OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "Cannot satisfy both CA1801 and CA1033 (the latter requires adding this method)")]
+        protected new unsafe void OnBeforeWriteNewState(void* oldStatePtr, InputEventPtr newState)
         {
         }
 

@@ -161,7 +161,7 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             if (ReferenceEquals(null, obj))
                 return false;
-            return obj is InputEventPtr && Equals((InputEventPtr)obj);
+            return obj is InputEventPtr ptr && Equals(ptr);
         }
 
         public override int GetHashCode()
@@ -184,8 +184,18 @@ namespace UnityEngine.InputSystem.LowLevel
             return new InputEventPtr(eventPtr);
         }
 
+        public static InputEventPtr From(InputEvent* eventPtr)
+        {
+            return new InputEventPtr(eventPtr);
+        }
+
         ////REVIEW: this also leads to implicit conversion to void*... not sure this is a good idea
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
+        {
+            return eventPtr.data;
+        }
+
+        public static InputEvent* FromInputEventPtr(InputEventPtr eventPtr)
         {
             return eventPtr.data;
         }

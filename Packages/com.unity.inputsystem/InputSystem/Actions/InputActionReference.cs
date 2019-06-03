@@ -113,6 +113,11 @@ namespace UnityEngine.InputSystem
             return reference?.action;
         }
 
+        public InputAction ToInputAction()
+        {
+            return action;
+        }
+
         public static InputActionReference Create(InputAction action)
         {
             if (action == null)
