@@ -65,9 +65,6 @@ however, it has to be formatted properly to pass verification tests.
   * For mouse, corresponds to left button press.
   * For pen, corresponds to tip contact.
   * For touch, corresponds to primary touch contact (i.e. whether __any__ finger is down).
-- `StickControl.x` and `StickControl.y` are now deadzoned, i.e. have `AxisDeadzone` processors on them. This affects all gamepads and joysticks.
-  * __NOTE:__ The deadzoning is __independent__ of the stick. Whereas the stack has a radial deadzones, `x` and `y` have linear deadzones. This means that `leftStick.ReadValue().x` is __not__ necessary equal to `leftStick.x.ReadValue()`.
-  * This change also fixes the problem of noise from sticks not getting filtered out and causing devices such as the PS4 controller to constantly make itself `Gamepad.current`.
 - The state change monitor APIs (`IInputStateChangeMonitor` and friends) have been moved out of `InputSystem` into a new static class `InputState` in `UnityEngine.Experimental.Input.LowLevel`.
   * Rationale: These APIs are fairly low-level and not of general interest so having them out of `InputSystem` reduces the API surface visible to most users.
 - `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onChange`.
@@ -82,6 +79,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- `StickControl.x` and `StickControl.y` are now deadzoned, i.e. have `AxisDeadzone` processors on them. This affects all gamepads and joysticks.
+  * __NOTE:__ The deadzoning is __independent__ of the stick. Whereas the stack has a radial deadzones, `x` and `y` have linear deadzones. This means that `leftStick.ReadValue().x` is __not__ necessary equal to `leftStick.x.ReadValue()`.
+  * This change also fixes the problem of noise from sticks not getting filtered out and causing devices such as the PS4 controller to constantly make itself `Gamepad.current`.
 - Redesigned `UIActionInputModule`
  * Added a button in the inspector to automatically assign actions from an input action asset based on commonly used action names.
  * Will now populate actions with useful defaults.
@@ -123,7 +123,6 @@ however, it has to be formatted properly to pass verification tests.
 
 - `PlayerInput` can now handle `.inputactions` assets that have no control schemes.
   * Will pair __all__ devices mentioned by any of the bindings except if already paired to another player.
->>>>>>> develop
 
 ## [0.2.8-preview] - 2019-4-23
 
