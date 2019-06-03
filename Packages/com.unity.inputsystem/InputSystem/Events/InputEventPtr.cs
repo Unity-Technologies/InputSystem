@@ -190,7 +190,17 @@ namespace UnityEngine.InputSystem.LowLevel
             return new InputEventPtr(eventPtr);
         }
 
+        public static InputEventPtr From(InputEvent* eventPtr)
+        {
+            return new InputEventPtr(eventPtr);
+        }
+
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
+        {
+            return eventPtr.data;
+        }
+
+        public static InputEvent* FromInputEventPtr(InputEventPtr eventPtr)
         {
             return eventPtr.data;
         }

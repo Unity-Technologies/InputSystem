@@ -243,6 +243,7 @@ namespace UnityEngine.InputSystem
             return OnReceiveStateWithDifferentFormat(statePtr, stateFormat, stateSize, ref offsetToStoreAt);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "Cannot satisfy both CA1801 and CA1033 (the latter requires adding this method)")]
         protected unsafe bool OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;

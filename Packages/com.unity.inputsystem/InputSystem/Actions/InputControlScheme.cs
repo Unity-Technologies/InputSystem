@@ -507,6 +507,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// Links the control that was matched with the respective device requirement.
             /// </remarks>
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Conflicts with UnityEngine.Networking.Match, which is deprecated and will go away.")]
             public struct Match
             {
                 /// <summary>
