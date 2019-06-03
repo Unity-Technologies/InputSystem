@@ -13,9 +13,20 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
     [AddComponentMenu("Input/On-Screen Stick")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
+        
+        public bool relativeMode;
+         
         public void OnPointerDown(PointerEventData data)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
+            if (relativeMode)
+                {
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
+                }
+                else
+                {
+                    m_PointerDownPos = Vector2.zero;
+                    OnDrag(data);
+                }        
         }
 
         public void OnDrag(PointerEventData data)
