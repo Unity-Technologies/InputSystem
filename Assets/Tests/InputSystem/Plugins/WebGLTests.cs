@@ -99,9 +99,10 @@ internal class WebGLTests : InputTestFixture
         Assert.That((joystick.TryGetChildControl("Axis 1") as AxisControl).ReadUnprocessedValue(), Is.EqualTo(0.3).Within(0.0001));
 
         // Test all buttons.
-        AssertButtonPress(joystick, new TestJoystickState {button1 = 1.0f}, joystick.TryGetChildControl("Button 1") as ButtonControl);
-        AssertButtonPress(joystick, new TestJoystickState {button2 = 1.0f}, joystick.TryGetChildControl("Button 2") as ButtonControl);
-        AssertButtonPress(joystick, new TestJoystickState {button3 = 1.0f}, joystick.TryGetChildControl("Button 3") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState {button1 = 1.0f}, joystick.TryGetChildControl("Trigger") as ButtonControl, joystick.TryGetChildControl("Button 1") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState {button2 = 1.0f}, joystick.TryGetChildControl("Trigger") as ButtonControl, joystick.TryGetChildControl("Button 2") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState {button3 = 1.0f}, joystick.TryGetChildControl("Trigger") as ButtonControl, joystick.TryGetChildControl("Button 3") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState ());
     }
 
     [Test]

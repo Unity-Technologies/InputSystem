@@ -2,7 +2,7 @@
 
 namespace UnityEngine.InputSystem.WebGL
 {
-    public class WebGLJoystick : InputDevice
+    public class WebGLJoystick : Joystick
     {
     }
 }

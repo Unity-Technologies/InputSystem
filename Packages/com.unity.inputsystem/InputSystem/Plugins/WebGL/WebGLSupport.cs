@@ -35,14 +35,14 @@ namespace UnityEngine.InputSystem.WebGL
                 return null;
 
             // If it was matched by the standard mapping, we don't need to fall back to generating a layout.
-            if (matchedLayout == typeof(WebGLGamepad).Name)
+            if (!string.IsNullOrEmpty(matchedLayout) && matchedLayout != "Gamepad")
                 return null;
 
             var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
 
             var layout = new WebGLLayoutBuilder {capabilities = WebGLDeviceCapabilities.FromJson(description.capabilities)};
             InputSystem.RegisterLayoutBuilder(() => layout.Build(),
-                description.product, null, deviceMatcher);
+                description.product, "Joystick", deviceMatcher);
 
             return description.product;
         }
@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem.WebGL
                 var builder = new InputControlLayout.Builder
                 {
                     type = typeof(WebGLJoystick),
+                    extendsLayout = "Joystick",
                     stateFormat = new FourCC('H', 'T', 'M', 'L')
                 };
 
@@ -126,6 +127,8 @@ namespace UnityEngine.InputSystem.WebGL
                     offset += 4;
                 }
 
+                var buttonStartOffset = offset;
+                
                 for (var button = 0; button < capabilities.numButtons; button++)
                 {
                     builder.AddControl($"Button {button + 1}")
@@ -135,6 +138,12 @@ namespace UnityEngine.InputSystem.WebGL
                         .WithFormat(InputStateBlock.FormatFloat);
                     offset += 4;
                 }
+
+                builder.AddControl("Trigger")
+                    .WithLayout("AnyKey")
+                    .WithByteOffset(buttonStartOffset)
+                    .WithSizeInBits((uint)(32 * capabilities.numButtons))
+                    .WithFormat(InputStateBlock.FormatBit);
 
                 return builder.Build();
             }
