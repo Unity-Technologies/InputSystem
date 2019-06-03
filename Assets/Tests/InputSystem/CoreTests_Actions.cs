@@ -6464,8 +6464,8 @@ partial class CoreTests
             Assert.That(rebind.candidates, Has.Count.EqualTo(4));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(keyboard.spaceKey));
             Assert.That(rebind.candidates, Has.Exactly(1).SameAs(mouse.leftButton));
-            Assert.That(rebind.candidates[2], Is.SameAs(mouse.button));
-            Assert.That(rebind.candidates[3], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
+            Assert.That(rebind.candidates[3], Is.SameAs(mouse.button));
+            Assert.That(rebind.candidates[2], Is.SameAs(keyboard.anyKey)); // Last place for AnyKey.
         }
     }
 
