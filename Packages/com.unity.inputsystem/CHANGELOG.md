@@ -52,6 +52,7 @@ however, it has to be formatted properly to pass verification tests.
     foreach (var record in history)
         Debug.Log(record);
     ```
+- Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
 
 ### Changed
 
