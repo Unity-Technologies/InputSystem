@@ -57,23 +57,15 @@ public class ButtonRemapScreenController : MonoBehaviour
         okButtonMessageText.text = "Press button/stick for " + name;
 
         var action = playerActionMap.actions[mapIndex];
-        var oldMappingPath = action.bindings[0].path;
-
-        ///REVIEW I could only get this to work by having the rebind add, and delete the old one.
-        /// the behavior of apply override does nto seem to work
-        // Remove the old binding
-        action.ChangeBindingWithPath(oldMappingPath).Erase();
-
-        //remap and add a new binding
-        rebindOperation = action.PerformInteractiveRebinding().WithRebindAddingNewBinding().OnComplete(operation => ButtonRebindCompleted(uiButton)).Start();
+        rebindOperation = action.PerformInteractiveRebinding().OnComplete(operation => ButtonRebindCompleted(uiButton)).Start();
     }
 
     private void ResetButtonMappingTextValues()
     {
-        gasMappingValueText.text = playerActionMap.actions[gasMapIndex].bindings[0].path;
-        brakeMappingValueText.text = playerActionMap.actions[brakeMapIndex].bindings[0].path;
-        fireMappingValueText.text = playerActionMap.actions[fireMapIndex].bindings[0].path;
-        turretMappingValueText.text = playerActionMap.actions[turretMapIndex].bindings[0].path;
+        gasMappingValueText.text = InputControlPath.ToHumanReadableString(playerActionMap.actions[gasMapIndex].bindings[0].ToString());
+        brakeMappingValueText.text = InputControlPath.ToHumanReadableString(playerActionMap.actions[brakeMapIndex].bindings[0].ToString());
+        fireMappingValueText.text = InputControlPath.ToHumanReadableString(playerActionMap.actions[fireMapIndex].bindings[0].ToString());
+        turretMappingValueText.text = InputControlPath.ToHumanReadableString(playerActionMap.actions[turretMapIndex].bindings[0].ToString());
     }
 
     private void ButtonRebindCompleted(Button uiButton)

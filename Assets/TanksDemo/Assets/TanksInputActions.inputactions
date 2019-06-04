@@ -8,7 +8,7 @@
                 {
                     "name": "Gas",
                     "id": "fa57f103-ab70-42f4-8eae-810795ccd5e1",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Axis",
                     "continuous": false,
                     "passThrough": false,
                     "initialStateCheck": false,
@@ -19,7 +19,7 @@
                 {
                     "name": "Brake",
                     "id": "b7baef12-09f9-4ee9-ac23-9543eb6eead3",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Axis",
                     "continuous": false,
                     "passThrough": false,
                     "initialStateCheck": false,
@@ -30,7 +30,7 @@
                 {
                     "name": "Turret",
                     "id": "cdfa0440-2012-4dea-a37a-db07b0d31f6a",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Axis",
                     "continuous": false,
                     "passThrough": false,
                     "initialStateCheck": false,
@@ -41,7 +41,7 @@
                 {
                     "name": "Fire",
                     "id": "0faccb2c-e5c0-4722-97bf-f41bd00884ce",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Button",
                     "continuous": false,
                     "passThrough": false,
                     "initialStateCheck": false,
@@ -52,7 +52,7 @@
                 {
                     "name": "Pause",
                     "id": "020abfe6-6083-46ec-9487-3aa2ecb330f3",
-                    "expectedControlLayout": "",
+                    "expectedControlLayout": "Button",
                     "continuous": false,
                     "passThrough": false,
                     "initialStateCheck": false,
@@ -116,7 +116,7 @@
                     "path": "<Gamepad>/rightTrigger",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Gamepad",
                     "action": "Gas",
                     "isComposite": false,
                     "isPartOfComposite": false,
