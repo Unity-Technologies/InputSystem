@@ -208,7 +208,9 @@ namespace UnityEngine.InputSystem.Touch
         public static int maxHistoryLengthPerFinger
         {
             get => s_HistoryLengthPerFinger;
-            set { throw new NotImplementedException(); }
+
+            ////TODO
+            /*set { throw new NotImplementedException(); }*/
         }
 
         internal Touch(Finger finger, InputStateHistory<TouchState>.Record touchRecord)

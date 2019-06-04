@@ -32,7 +32,7 @@ using UnityEngine.InputSystem.Utilities;
 ////REVIEW: have "Always Enabled" toggle on actions?
 
 // An issue that has come up repeatedly is the request for having a polling-based API that allows actions to be used the same
-// way UnityEngine.InputSystem allows axes to be used. Here's my thoughts. While such an API is a bad fit for how actions operate,
+// way UnityEngine.Input allows axes to be used. Here's my thoughts. While such an API is a bad fit for how actions operate,
 // the request is definitely reasonable and a simple polling-based API could be created in a relatively straightforward way. It'd
 // have to drop some details on the floor and do some aggregation of state, but where someone reaches the limits, there would always
 // be a possible migration to the callback-based API.

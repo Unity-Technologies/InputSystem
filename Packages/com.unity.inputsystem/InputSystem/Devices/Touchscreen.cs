@@ -28,11 +28,9 @@ using UnityEngine.Profiling;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "Fix this after landing Touch refactor")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "Fix this after landing Touch refactor")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "byte to correspond to TouchState layout.")]
     [Flags]
-    public enum TouchFlags : byte
+    internal enum TouchFlags : byte
     {
         // NOTE: Leaving the first 4 bits for native.
 
@@ -307,8 +305,7 @@ namespace UnityEngine.InputSystem
         public IntegerControl tapCount { get; private set; }
 
         /// <summary>
-        /// Syntheti
-        /// Data for the touch that is deemed the "primary" touch at the moment.
+        /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
         /// </summary>
         /// <remarks>
         /// This touch duplicates touch data from whichever touch is deemed the primary touch at the moment.
