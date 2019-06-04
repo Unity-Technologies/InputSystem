@@ -422,6 +422,12 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder WithSynthetic(bool value)
+                {
+                    controls[index].isSynthetic = value;
+                    return this;
+                }
+
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
                     controls[index].sizeInBits = sizeInBits;

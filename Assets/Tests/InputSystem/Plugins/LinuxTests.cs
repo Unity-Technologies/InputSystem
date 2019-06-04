@@ -130,7 +130,6 @@ internal class LinuxTests : InputTestFixture
 
         // Control properties.
         Assert.That(joystick.trigger, Is.SameAs(joystick["Trigger"]));
-        Assert.That(joystick.hat, Is.SameAs(joystick["Hat"]));
         Assert.That(joystick.stick, Is.SameAs(joystick["Stick"]));
         Assert.That(joystick.twist, Is.SameAs(joystick["RotateZ"]));
 
@@ -178,10 +177,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.True);
         Assert.That(joystick.stick.left.isPressed, Is.True);
         Assert.That(joystick.stick.right.isPressed, Is.False);
-        Assert.That(joystick.hat.up.isPressed, Is.True);
-        Assert.That(joystick.hat.down.isPressed, Is.False);
-        Assert.That(joystick.hat.left.isPressed, Is.False);
-        Assert.That(joystick.hat.right.isPressed, Is.True);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.00001));
 
@@ -202,10 +197,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.False);
         Assert.That(joystick.stick.left.isPressed, Is.False);
         Assert.That(joystick.stick.right.isPressed, Is.True);
-        Assert.That(joystick.hat.up.isPressed, Is.False);
-        Assert.That(joystick.hat.down.isPressed, Is.True);
-        Assert.That(joystick.hat.left.isPressed, Is.True);
-        Assert.That(joystick.hat.right.isPressed, Is.False);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(-1).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
 
@@ -218,10 +209,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.False);
         Assert.That(joystick.stick.left.isPressed, Is.False);
         Assert.That(joystick.stick.right.isPressed, Is.False);
-        Assert.That(joystick.hat.up.isPressed, Is.False);
-        Assert.That(joystick.hat.down.isPressed, Is.False);
-        Assert.That(joystick.hat.left.isPressed, Is.False);
-        Assert.That(joystick.hat.right.isPressed, Is.False);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(0).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
     }
