@@ -322,12 +322,13 @@ namespace UnityEngine.InputSystem.Utilities
             if (index < 0 || index >= length)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
+            var numAdditionalValues = length - 1;
             if (index == 0)
             {
                 if (length > 1)
                 {
-                    firstValue = additionalValues[length - 1];
-                    additionalValues[length - 1] = default;
+                    firstValue = additionalValues[numAdditionalValues - 1];
+                    additionalValues[numAdditionalValues - 1] = default;
                 }
                 else
                 {
@@ -338,7 +339,6 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 Debug.Assert(additionalValues != null);
 
-                var numAdditionalValues = length - 1;
                 ArrayHelpers.EraseAtByMovingTail(additionalValues, ref numAdditionalValues, index - 1);
             }
 
