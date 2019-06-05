@@ -12,12 +12,15 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Validate all parameters on public APIs.
+- Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
 
 #### Actions
 
 - Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
 
 ### Added
+
+- Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
 
 ### Changed
 

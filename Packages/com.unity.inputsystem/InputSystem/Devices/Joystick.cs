@@ -9,7 +9,6 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 
-        [InputControl(name = "hat", layout = "Dpad", usage = "Hatswitch")]
         [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
         public int buttons;
 
@@ -51,7 +50,6 @@ namespace UnityEngine.InputSystem
 
         // Optional features. These may be null.
         public AxisControl twist { get; private set; }
-        public DpadControl hat { get; private set; }
 
         public static Joystick current { get; private set; }
 
@@ -66,7 +64,6 @@ namespace UnityEngine.InputSystem
 
             // Optional controls.
             twist = builder.TryGetControl<AxisControl>("{Twist}");
-            hat = builder.TryGetControl<DpadControl>("{Hatswitch}");
 
             base.FinishSetup(builder);
         }
