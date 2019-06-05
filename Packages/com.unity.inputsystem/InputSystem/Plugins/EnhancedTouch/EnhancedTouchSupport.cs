@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: have TouchTap, TouchSwipe, etc. wrapper MonoBehaviours like LeanTouch?
 
-namespace UnityEngine.InputSystem.Touch
+namespace UnityEngine.InputSystem.EnhancedTouch
 {
     [AddComponentMenu("Input/Enhanced Touch Support")]
     public class EnhancedTouchSupport : MonoBehaviour

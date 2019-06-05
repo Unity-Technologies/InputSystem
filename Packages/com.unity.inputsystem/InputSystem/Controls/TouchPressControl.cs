@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Controls
     /// A button that reads its pressed state from <see cref="TouchControl.phase"/>.
     /// </summary>
     [InputControlLayout(hideInUI = true)]
-    internal class TouchPressControl : ButtonControl
+    public class TouchPressControl : ButtonControl
     {
         protected override void FinishSetup(InputDeviceBuilder builder)
         {

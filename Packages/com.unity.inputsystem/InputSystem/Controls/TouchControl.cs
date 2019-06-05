@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Controls
     [InputControlLayout(stateType = typeof(TouchState))]
     public class TouchControl : InputControl<TouchState>
     {
-        public ButtonControl press { get; private set; }
+        public TouchPressControl press { get; private set; }
 
         /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.Controls
         public Vector2Control delta { get; private set; }
         public AxisControl pressure { get; private set; }
         public Vector2Control radius { get; private set; }
-        public InputControl<TouchPhase> phase { get; private set; }
+        public TouchPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }
         public ButtonControl indirectTouch { get; private set; }
         public ButtonControl tap { get; private set; }
@@ -61,13 +61,13 @@ namespace UnityEngine.InputSystem.Controls
             if (builder == null)
                 throw new System.ArgumentNullException(nameof(builder));
 
-            press = builder.GetControl<ButtonControl>(this, "press");
+            press = builder.GetControl<TouchPressControl>(this, "press");
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             delta = builder.GetControl<Vector2Control>(this, "delta");
             pressure = builder.GetControl<AxisControl>(this, "pressure");
             radius = builder.GetControl<Vector2Control>(this, "radius");
-            phase = builder.GetControl<InputControl<TouchPhase>>(this, "phase");
+            phase = builder.GetControl<TouchPhaseControl>(this, "phase");
             displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
             indirectTouch = builder.GetControl<ButtonControl>(this, "indirectTouch");
             tap = builder.GetControl<ButtonControl>(this, "tap");

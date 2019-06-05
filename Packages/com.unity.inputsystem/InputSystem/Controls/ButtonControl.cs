@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Controls
     {
         public float pressPoint;
 
-        internal float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         public ButtonControl()
         {

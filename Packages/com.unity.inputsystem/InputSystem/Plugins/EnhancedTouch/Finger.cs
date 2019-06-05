@@ -3,7 +3,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Touch
+namespace UnityEngine.InputSystem.EnhancedTouch
 {
     /// <summary>
     ///

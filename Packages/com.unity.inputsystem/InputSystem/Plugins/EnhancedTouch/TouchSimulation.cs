@@ -22,7 +22,7 @@ using UnityEngine.InputSystem.Editor;
 ////        been triggered from) may reject the simulated input when they have already seen the non-simulated input (which may be okay
 ////        behavior).
 
-namespace UnityEngine.InputSystem.Touch
+namespace UnityEngine.InputSystem.EnhancedTouch
 {
     /// <summary>
     /// Adds a <see cref="Touchscreen"/> with input simulated from other types of <see cref="Pointer"/> devices (e.g. <see cref="Mouse"/>
@@ -151,7 +151,7 @@ namespace UnityEngine.InputSystem.Touch
                 foreach (var control in pointer.allControls)
                     if (control is ButtonControl button && !button.synthetic)
                     {
-                        InputState.AddChangeMonitor(button, this, buttonIndex << 32 | i);
+                        InputState.AddChangeMonitor(button, this, ((long)buttonIndex << 32) | i);
                         ++buttonIndex;
                     }
             }
@@ -169,13 +169,13 @@ namespace UnityEngine.InputSystem.Touch
                 foreach (var control in pointer.allControls)
                     if (control is ButtonControl button && !button.synthetic)
                     {
-                        InputState.RemoveChangeMonitor(button, this, buttonIndex << 32 | i);
+                        InputState.RemoveChangeMonitor(button, this, ((long)buttonIndex << 32) | i);
                         ++buttonIndex;
                     }
             }
         }
 
-        protected void OnSourceControlChangedValue(InputControl control, double time, InputEventPtr eventPtr, int sourceDeviceAndButtonIndex)
+        protected void OnSourceControlChangedValue(InputControl control, double time, InputEventPtr eventPtr, long sourceDeviceAndButtonIndex)
         {
             var sourceDeviceIndex = sourceDeviceAndButtonIndex & 0xffffffff;
             if (sourceDeviceIndex < 0 && sourceDeviceIndex >= m_NumSources)
@@ -186,7 +186,7 @@ namespace UnityEngine.InputSystem.Touch
 
             if (control is ButtonControl button)
             {
-                var buttonIndex = sourceDeviceAndButtonIndex >> 32;
+                var buttonIndex = (int)(sourceDeviceAndButtonIndex >> 32);
                 var isPressed = button.isPressed;
                 if (isPressed)
                 {
@@ -235,7 +235,8 @@ namespace UnityEngine.InputSystem.Touch
                     // End ongoing touch.
                     for (var i = 0; i < m_Touches.Length; ++i)
                     {
-                        if (m_Touches[i].buttonIndex != buttonIndex && m_Touches[i].touchId != 0)
+                        if (m_Touches[i].buttonIndex != buttonIndex || m_Touches[i].sourceIndex != sourceDeviceIndex ||
+                            m_Touches[i].touchId == 0)
                             continue;
 
                         // Detect taps.
@@ -251,6 +252,8 @@ namespace UnityEngine.InputSystem.Touch
                             position = position,
                             tapCount = (byte)(oldTouch.tapCount + (isTap ? 1 : 0)),
                             isTap = isTap,
+                            startPosition = oldTouch.startPosition,
+                            startTime = oldTouch.startTime,
                         };
 
                         if (m_PrimaryTouchIndex == i)
@@ -293,6 +296,8 @@ namespace UnityEngine.InputSystem.Touch
                         isPrimaryTouch = isPrimary,
                         tapCount = oldTouch.tapCount,
                         isTap = false, // Can't be tap as it's a move.
+                        startPosition = oldTouch.startPosition,
+                        startTime = oldTouch.startTime,
                     };
 
                     if (isPrimary)
@@ -304,7 +309,7 @@ namespace UnityEngine.InputSystem.Touch
 
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
         {
-            OnSourceControlChangedValue(control, time, eventPtr, (int)monitorIndex);
+            OnSourceControlChangedValue(control, time, eventPtr, monitorIndex);
         }
 
         void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)

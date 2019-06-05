@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: record velocity on touches? or add method to very easily get the data?
 
-namespace UnityEngine.InputSystem.Touch
+namespace UnityEngine.InputSystem.EnhancedTouch
 {
     /// <summary>
     /// A high-level representation of a touch which automatically keeps track of a touch

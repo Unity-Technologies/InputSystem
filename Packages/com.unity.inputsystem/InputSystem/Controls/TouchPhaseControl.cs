@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.Controls
 {
     [InputControlLayout(hideInUI = true)]
-    internal class TouchPhaseControl : InputControl<TouchPhase>
+    public class TouchPhaseControl : InputControl<TouchPhase>
     {
         public TouchPhaseControl()
         {

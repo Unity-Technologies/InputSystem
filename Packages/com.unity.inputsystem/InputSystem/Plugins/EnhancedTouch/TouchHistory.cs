@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Touch
+namespace UnityEngine.InputSystem.EnhancedTouch
 {
     public struct TouchHistory : IReadOnlyList<Touch>
     {
