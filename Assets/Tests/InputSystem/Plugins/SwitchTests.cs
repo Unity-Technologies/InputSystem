@@ -1,15 +1,70 @@
-#if UNITY_EDITOR || UNITY_SWITCH
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Switch;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Processors;
 
 internal class SwitchTests : InputTestFixture
 {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsHIDNpad()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            vendorId = 0x57e,
+            productId = 0x2009,
+        };
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            });
+
+        Assert.That(device, Is.TypeOf<NPadHID>());
+        var controller = (NPadHID)device;
+
+        InputSystem.QueueStateEvent(controller,
+            new NPadInputStateHID
+            {
+                leftStickX = 0x1000,
+                leftStickY = 0x1000,
+                rightStickX = 0x7fff,
+                rightStickY = 0xefff,
+            });
+        InputSystem.Update();
+
+        var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = controller.rightStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(Vector2.Distance(controller.leftStick.ReadValue(), leftStickDeadzone.Process(new Vector2(-1.0f, 1.0f))), Is.LessThan(0.0001f));
+        Assert.That(Vector2.Distance(controller.rightStick.ReadValue(), rightStickDeadzone.Process(new Vector2(0.0f, -1.0f))), Is.LessThan(0.0001f));
+
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.A), controller.buttonEast);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.B), controller.buttonSouth);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.X), controller.buttonNorth);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.Y), controller.buttonWest);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.StickL), controller.leftStickButton);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.StickR), controller.rightStickButton);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.L), controller.leftShoulder);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.R), controller.rightShoulder);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.ZL), controller.leftTrigger);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.ZR), controller.rightTrigger);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.Plus), controller.startButton);
+        AssertButtonPress(controller, new NPadInputStateHID().WithButton(NPadInputStateHID.Button.Minus), controller.selectButton);
+    }
+
+#endif
+
+#if UNITY_EDITOR || UNITY_SWITCH
     [Test]
     [Category("Devices")]
     public void Devices_SupportsSwitchNpad()
@@ -22,11 +77,11 @@ internal class SwitchTests : InputTestFixture
                 product = "Wireless Controller",
             });
 
-        Assert.That(device, Is.TypeOf<NPad>());
-        var controller = (NPad)device;
+        Assert.That(device, Is.TypeOf<NPadSwitch>());
+        var controller = (NPadSwitch)device;
 
         InputSystem.QueueStateEvent(controller,
-            new NPadInputState
+            new NPadInputStateSwitch
             {
                 leftStick = new Vector2(0.123f, 0.456f),
                 rightStick = new Vector2(0.789f, 0.987f),
@@ -57,22 +112,22 @@ internal class SwitchTests : InputTestFixture
         Assert.That(controller.angularVelocity.y.ReadValue(), Is.EqualTo(0.555).Within(0.00001));
         Assert.That(controller.angularVelocity.z.ReadValue(), Is.EqualTo(0.666).Within(0.00001));
 
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.A), controller.buttonEast);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.B), controller.buttonSouth);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.X), controller.buttonNorth);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.Y), controller.buttonWest);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.StickL), controller.leftStickButton);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.StickR), controller.rightStickButton);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.L), controller.leftShoulder);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.R), controller.rightShoulder);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.ZL), controller.leftTrigger);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.ZR), controller.rightTrigger);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.Plus), controller.startButton);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.Minus), controller.selectButton);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.LSL), controller.leftSL);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.LSR), controller.leftSR);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.RSL), controller.rightSL);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.RSR), controller.rightSR);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.A), controller.buttonEast);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.B), controller.buttonSouth);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.X), controller.buttonNorth);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.Y), controller.buttonWest);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.StickL), controller.leftStickButton);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.StickR), controller.rightStickButton);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.L), controller.leftShoulder);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.R), controller.rightShoulder);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.ZL), controller.leftTrigger);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.ZR), controller.rightTrigger);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.Plus), controller.startButton);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.Minus), controller.selectButton);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.LSL), controller.leftSL);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.LSR), controller.leftSR);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.RSL), controller.rightSL);
+        AssertButtonPress(controller, new NPadInputStateSwitch().WithButton(NPadInputStateSwitch.Button.RSR), controller.rightSR);
 
         // Sensors should be marked as noisy.
         Assert.That(controller.attitude.noisy, Is.True);
@@ -84,7 +139,7 @@ internal class SwitchTests : InputTestFixture
     [Category("Devices")]
     public unsafe void Devices_CanUpdateStatus()
     {
-        var controller = InputSystem.AddDevice<NPad>();
+        var controller = InputSystem.AddDevice<NPadSwitch>();
 
         NPadStatusReport? receivedCommand = null;
         unsafe
@@ -96,9 +151,9 @@ internal class SwitchTests : InputTestFixture
                     {
                         Assert.That(receivedCommand.HasValue, Is.False);
                         receivedCommand = *((NPadStatusReport*)commandPtr);
-                        ((NPadStatusReport*)commandPtr)->npadId = NPad.NpadId.Handheld;
-                        ((NPadStatusReport*)commandPtr)->orientation = NPad.Orientation.Vertical;
-                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyles.Handheld;
+                        ((NPadStatusReport*)commandPtr)->npadId = NPadSwitch.NpadId.Handheld;
+                        ((NPadStatusReport*)commandPtr)->orientation = NPadSwitch.Orientation.Vertical;
+                        ((NPadStatusReport*)commandPtr)->styleMask = NPadSwitch.NpadStyles.Handheld;
 
                         ((NPadStatusReport*)commandPtr)->colorLeftMain = ColorToNNColor(Color.red);
                         ((NPadStatusReport*)commandPtr)->colorLeftSub = ColorToNNColor(Color.black);
@@ -117,9 +172,9 @@ internal class SwitchTests : InputTestFixture
                     return InputDeviceCommand.GenericFailure;
                 });
         }
-        Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
-        Assert.That(controller.orientation, Is.EqualTo(NPad.Orientation.Vertical));
-        Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyles.Handheld));
+        Assert.That(controller.npadId, Is.EqualTo(NPadSwitch.NpadId.Handheld));
+        Assert.That(controller.orientation, Is.EqualTo(NPadSwitch.Orientation.Vertical));
+        Assert.That(controller.styleMask, Is.EqualTo(NPadSwitch.NpadStyles.Handheld));
         Assert.That(controller.leftControllerColor.Main, Is.EqualTo((Color32)Color.red));
         Assert.That(controller.leftControllerColor.Sub, Is.EqualTo((Color32)Color.black));
         Assert.That(controller.rightControllerColor.Main, Is.EqualTo((Color32)Color.cyan));
@@ -137,7 +192,7 @@ internal class SwitchTests : InputTestFixture
     [Category("Devices")]
     public unsafe void Devices_CanSetControllerOrientation()
     {
-        var controller = InputSystem.AddDevice<NPad>();
+        var controller = InputSystem.AddDevice<NPadSwitch>();
 
         NpadDeviceIOCTLSetOrientation? receivedCommand = null;
         unsafe
@@ -156,23 +211,23 @@ internal class SwitchTests : InputTestFixture
                     return InputDeviceCommand.GenericFailure;
                 });
         }
-        controller.SetOrientationToSingleJoyCon(NPad.Orientation.Horizontal);
+        controller.SetOrientationToSingleJoyCon(NPadSwitch.Orientation.Horizontal);
 
         Assert.That(receivedCommand.HasValue, Is.True);
-        Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPad.Orientation.Horizontal));
+        Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPadSwitch.Orientation.Horizontal));
 
         receivedCommand = null;
-        controller.SetOrientationToSingleJoyCon(NPad.Orientation.Vertical);
+        controller.SetOrientationToSingleJoyCon(NPadSwitch.Orientation.Vertical);
 
         Assert.That(receivedCommand.HasValue, Is.True);
-        Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPad.Orientation.Vertical));
+        Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPadSwitch.Orientation.Vertical));
     }
 
     [Test]
     [Category("Devices")]
     public unsafe void Devices_CanStartSixAxisSensors()
     {
-        var controller = InputSystem.AddDevice<NPad>();
+        var controller = InputSystem.AddDevice<NPadSwitch>();
 
         NpadDeviceIOCTLStartSixAxisSensor? receivedCommand = null;
         unsafe
@@ -200,7 +255,7 @@ internal class SwitchTests : InputTestFixture
     [Category("Devices")]
     public unsafe void Devices_CanStopSixAxisSensors()
     {
-        var controller = InputSystem.AddDevice<NPad>();
+        var controller = InputSystem.AddDevice<NPadSwitch>();
 
         NpadDeviceIOCTLStopSixAxisSensor? receivedCommand = null;
         unsafe
@@ -228,7 +283,7 @@ internal class SwitchTests : InputTestFixture
     [Category("Devices")]
     public unsafe void Devices_CanSetNPadVibrationMotorValues()
     {
-        var controller = InputSystem.AddDevice<NPad>();
+        var controller = InputSystem.AddDevice<NPadSwitch>();
 
         NPadDeviceIOCTLOutputCommand? receivedCommand = null;
         unsafe
@@ -286,5 +341,7 @@ internal class SwitchTests : InputTestFixture
         Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
         Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(345.6f));
     }
+
+#endif
 }
 #endif
