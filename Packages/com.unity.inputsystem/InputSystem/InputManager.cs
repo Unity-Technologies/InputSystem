@@ -235,7 +235,7 @@ namespace UnityEngine.InputSystem
                     m_SettingsChangedListeners.RemoveAtWithCapacity(index);
             }
         }
-        
+
         private bool gameIsPlayingAndHasFocus => InputSystem.gameIsPlayingAndHasFocus();
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
@@ -1442,7 +1442,7 @@ namespace UnityEngine.InputSystem
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
-            
+
             // Register interactions.
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));

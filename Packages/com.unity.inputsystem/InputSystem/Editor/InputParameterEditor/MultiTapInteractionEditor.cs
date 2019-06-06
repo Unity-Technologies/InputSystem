@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Interactions

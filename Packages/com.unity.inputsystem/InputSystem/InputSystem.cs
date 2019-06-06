@@ -1266,7 +1266,7 @@ namespace UnityEngine.InputSystem
 
                 if (s_Manager.m_Settings == value)
                     return;
-                
+
                 onSettingsChanged.Invoke(value);
 
                 s_Manager.settings = value;
@@ -1580,6 +1580,7 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
         }
+
 #endif // UNITY_EDITOR
 
         internal static void RunInitialUpdate()
@@ -1698,7 +1699,7 @@ namespace UnityEngine.InputSystem
                 Object.DestroyImmediate(s_RemoteConnection);
 
             onDestroy.Invoke();
-            
+
             s_Manager = null;
             s_RemoteConnection = null;
             s_Remote = null;
@@ -1754,7 +1755,7 @@ namespace UnityEngine.InputSystem
             });
 
             onSave.Invoke();
-            
+
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
         }
 
@@ -1780,12 +1781,13 @@ namespace UnityEngine.InputSystem
             s_Manager.InstallGlobals();
 
             onRestore.Invoke();
-            
+
             // Get devices that keep global lists (like Gamepad) to re-initialize them
             // by pretending the devices have been added.
             foreach (var device in devices)
                 device.NotifyAdded();
         }
+
 #endif
     }
 }

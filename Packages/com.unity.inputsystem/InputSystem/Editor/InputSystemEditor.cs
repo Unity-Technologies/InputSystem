@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEngine.InputSystem.HID;
@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onDestroy += OnDestroy;
             InputSystem.onSave += OnSave;
             InputSystem.onRestore += OnRestore;
-            InputSystem.gameIsPlayingAndHasFocus = () => 
-                InputSystem.s_Manager.m_Runtime.isInPlayMode && 
-                !InputSystem.s_Manager.m_Runtime.isPaused && 
+            InputSystem.gameIsPlayingAndHasFocus = () =>
+                InputSystem.s_Manager.m_Runtime.isInPlayMode &&
+                !InputSystem.s_Manager.m_Runtime.isPaused &&
                 (InputSystem.s_Manager.m_HasFocus || InputEditorUserSettings.lockInputToGameView);
             InputSystem.addDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
             InitializeInEditor();
@@ -31,8 +31,9 @@ namespace UnityEngine.InputSystem.Editor
             HIDSupportEditor.Initialize();
 #endif
         }
-#endif        
-        
+
+#endif
+
         internal static InputSystemObject s_SystemObject;
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
@@ -121,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
 
             InputSystem.s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             InputSystem.s_Manager.m_Runtime.onProjectChange = OnProjectChange;
-            
+
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
             if (enableRemoting)
@@ -134,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private static void OnDestroy()
-        { 
+        {
             EditorInputControlLayoutCache.Clear();
             InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
@@ -148,7 +149,6 @@ namespace UnityEngine.InputSystem.Editor
                 s_SavedStateStack = new Stack<InputEditorUserSettings.SerializedState>();
 
             s_SavedStateStack.Push(InputEditorUserSettings.s_Settings);
-
         }
 
         private static void OnRestore()
@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey, value, true);
         }
-        
+
         private static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
@@ -207,6 +207,6 @@ namespace UnityEngine.InputSystem.Editor
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
                 InputSystem.settings = newSettings;
             }
-        }        
+        }
     }
 }

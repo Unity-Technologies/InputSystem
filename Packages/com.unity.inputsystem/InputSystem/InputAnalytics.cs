@@ -49,8 +49,8 @@ namespace UnityEngine.InputSystem
             }
 
             data.unrecognized_devices = deviceList.ToArray();
-            
-            
+
+
             /*
              TBD.
              #if UNITY_EDITOR
