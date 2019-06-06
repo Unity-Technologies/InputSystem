@@ -64,28 +64,6 @@ namespace UnityEngine.InputSystem.HID
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
-
-            // Add toolbar button to any devices using the "HID" interface. Opens
-            // a windows to browse the HID descriptor of the device.
-            #if UNITY_EDITOR
-            /*
-            TODO
-            InputDeviceDebuggerWindow.onToolbarGUI +=
-                device =>
-            {
-                if (device.description.interfaceName == HID.kHIDInterface)
-                {
-                    if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
-                    {
-                        HIDDescriptorWindow.CreateOrShowExisting(device.id, device.description);
-                    }
-                }
-            };*/
-            #endif
         }
-
-        #if UNITY_EDITOR
-        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
-        #endif
     }
 }

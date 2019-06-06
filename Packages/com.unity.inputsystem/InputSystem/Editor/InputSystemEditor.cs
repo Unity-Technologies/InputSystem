@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
 
 namespace UnityEngine.InputSystem.Editor
@@ -23,6 +23,15 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.addDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
             InitializeInEditor();
         }
+
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+        internal static void PerformEditorDefaultPluginInitialization()
+        {
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
+            HIDSupportEditor.Initialize();
+#endif
+        }
+#endif        
         
         internal static InputSystemObject s_SystemObject;
 
@@ -53,6 +62,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
                 InputSystem.s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
 
+                Debug.Log("Set Settings 1");
                 // Restore editor settings.
                 InputEditorUserSettings.s_Settings = s_SystemObject.userSettings;
 
@@ -103,10 +113,10 @@ namespace UnityEngine.InputSystem.Editor
             Profiling.Profiler.EndSample();
         }
 
-        private static void OnReset(bool enableRemoting = false, IInputRuntime runtime = null)
+        private static void OnReset(bool enableRemoting, IInputRuntime runtime, InputSettings settings)
         {
             InputSystem.s_Manager = new InputManager();
-            InputSystem.s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, InputSystem.settings);
+            InputSystem.s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
             InputSystem.s_Manager.processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
 
             InputSystem.s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
@@ -119,6 +129,7 @@ namespace UnityEngine.InputSystem.Editor
 
             #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             InputSystem.PerformDefaultPluginInitialization();
+            PerformEditorDefaultPluginInitialization();
             #endif
         }
 

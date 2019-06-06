@@ -1246,7 +1246,7 @@ namespace UnityEngine.InputSystem
         }
 
         internal static event Action<InputSettings> onSettingsChanged;
-        internal static event Action<bool, IInputRuntime> onReset;
+        internal static event Action<bool, IInputRuntime, InputSettings> onReset;
         internal static event Action onDestroy;
         internal static event Action onSave;
         internal static event Action onRestore;
@@ -1671,9 +1671,8 @@ namespace UnityEngine.InputSystem
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
 
-            #if UNITY_EDITOR
-            onReset.Invoke(enableRemoting, runtime);
-            #else
+            onReset.Invoke(enableRemoting, runtime, settings);
+            #if !UNITY_EDITOR
             InitializeInPlayer(runtime, settings);
             #endif
 
