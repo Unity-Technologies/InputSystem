@@ -14,7 +14,6 @@ using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
 #else
 using System.Linq;
@@ -1266,11 +1265,12 @@ namespace UnityEngine.InputSystem
 
                 // In the editor, we keep track of the settings asset through EditorBuildSettings.
                 #if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                // TODO
+                /*if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
                     EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
                         value, true);
-                }
+                }*/
                 #endif
 
                 s_Manager.settings = value;
@@ -1564,12 +1564,15 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR
-        internal static InputSystemObject s_SystemObject;
+        // TODO
+        // internal static InputSystemObject s_SystemObject;
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
             Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
             Reset(runtime: runtime);
+            // TODO
+/*
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
@@ -1579,10 +1582,9 @@ namespace UnityEngine.InputSystem
                 // We're coming back out of a domain reload. We're restoring part of the
                 // InputManager state here but we're still waiting from layout registrations
                 // that happen during domain initialization.
-
                 s_SystemObject = existingSystemObjects[0];
                 s_Manager.RestoreStateWithoutDevices(s_SystemObject.systemState.managerState);
-                InputDebuggerWindow.ReviveAfterDomainReload();
+                //    InputDebuggerWindow.ReviveAfterDomainReload();
 
                 // Restore remoting state.
                 s_RemoteConnection = s_SystemObject.systemState.remoteConnection;
@@ -1595,7 +1597,8 @@ namespace UnityEngine.InputSystem
                 s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
 
                 // Restore editor settings.
-                InputEditorUserSettings.s_Settings = s_SystemObject.systemState.userSettings;
+                // TODO
+//                InputEditorUserSettings.s_Settings = s_SystemObject.systemState.userSettings;
 
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
@@ -1604,7 +1607,6 @@ namespace UnityEngine.InputSystem
             {
                 s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
-
                 // See if we have a remembered settings object.
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
                     out InputSettings settingsAsset))
@@ -1621,10 +1623,8 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            #if UNITY_EDITOR
             Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
                 "InputSettings has lost its native object");
-            #endif
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
@@ -1641,7 +1641,7 @@ namespace UnityEngine.InputSystem
                     EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
             }
             s_SystemObject.newInputBackendsCheckedAsEnabled = true;
-
+*/
             RunInitialUpdate();
 
             Profiling.Profiler.EndSample();
@@ -1649,6 +1649,8 @@ namespace UnityEngine.InputSystem
 
         private static void OnPlayModeChange(PlayModeStateChange change)
         {
+            /*
+             * TODO
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
@@ -1672,14 +1674,15 @@ namespace UnityEngine.InputSystem
                     }
 
                     break;
-            }
+            }*/
         }
 
         private static void OnProjectChange()
         {
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
-            InputSettingsProvider.ForceReload();
+            // TODO
+       //     InputSettingsProvider.ForceReload();
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
@@ -1814,8 +1817,8 @@ namespace UnityEngine.InputSystem
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
-
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+// TODO
+        //    InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
             if (enableRemoting)
                 SetUpRemoting();
@@ -1849,9 +1852,10 @@ namespace UnityEngine.InputSystem
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
             #if UNITY_EDITOR
-            EditorInputControlLayoutCache.Clear();
+            // TODO
+/*            EditorInputControlLayoutCache.Clear();
             InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();*/
             #endif
 
             s_Manager = null;
@@ -1874,7 +1878,8 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputManager.SerializedState managerState;
             [SerializeField] public InputRemoting.SerializedState remotingState;
             #if UNITY_EDITOR
-            [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+            // TODO
+         //   [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
             #endif
             ////REVIEW: preserve InputUser state? (if even possible)
         }
@@ -1910,7 +1915,8 @@ namespace UnityEngine.InputSystem
                 managerState = s_Manager.SaveState(),
                 remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
-                userSettings = InputEditorUserSettings.s_Settings,
+                // TODO
+                //userSettings = InputEditorUserSettings.s_Settings,
                 #endif
             });
 
@@ -1939,7 +1945,8 @@ namespace UnityEngine.InputSystem
             s_Manager.InstallGlobals();
 
             #if UNITY_EDITOR
-            InputEditorUserSettings.s_Settings = state.userSettings;
+            // TODO
+            //InputEditorUserSettings.s_Settings = state.userSettings;
             #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them

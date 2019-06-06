@@ -24,7 +24,8 @@ namespace UnityEngine.InputSystem
             systemState.remoteConnection = InputSystem.s_RemoteConnection;
             systemState.managerState = InputSystem.s_Manager.SaveState();
             systemState.remotingState = InputSystem.s_Remote.SaveState();
-            systemState.userSettings = InputEditorUserSettings.s_Settings;
+            // ToDo
+         //   systemState.userSettings = InputEditorUserSettings.s_Settings;
         }
 
         public void OnAfterDeserialize()

@@ -2,10 +2,6 @@ using System;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.LowLevel;
 
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif
-
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>

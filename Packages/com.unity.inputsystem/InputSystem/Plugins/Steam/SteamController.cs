@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using UnityEngine.InputSystem.Utilities;
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Steam.Editor;
-#endif
 
 ////TODO: support action set layers
 

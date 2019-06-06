@@ -148,7 +148,7 @@ partial class CoreTests
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
     }
-
+/* TODO
     [Test]
     [Category("Editor")]
     public void Editor_DomainReload_FirstPlayerLoopUpdateCausesDevicesToBeRecreated()
@@ -170,7 +170,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
     }
-
+*/
     [Test]
     [Category("Editor")]
     [Ignore("TODO")]

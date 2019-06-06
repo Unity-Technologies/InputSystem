@@ -13,10 +13,10 @@ using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEditor;
-#endif
+#endif*/
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
 
@@ -237,8 +237,11 @@ namespace UnityEngine.InputSystem
         }
 
         private bool gameIsPlayingAndHasFocus =>
+
 #if UNITY_EDITOR
-                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+            // Todo
+//                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+            true;
 #else
             true;
 #endif
@@ -727,8 +730,9 @@ namespace UnityEngine.InputSystem
             // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
             // even if not supported as devices in the game.
             #if UNITY_EDITOR
-            if (InputEditorUserSettings.addDevicesNotSupportedByProject)
-                return true;
+            // Todo
+//            if (InputEditorUserSettings.addDevicesNotSupportedByProject)
+  //              return true;
             #endif
 
             var supportedDevices = m_Settings.supportedDevices;
@@ -1451,7 +1455,8 @@ namespace UnityEngine.InputSystem
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 
             #if UNITY_EDITOR
-            processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
+            // Todo
+            //processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
             // Register interactions.

@@ -3,7 +3,6 @@
 using System;
 using System.Linq;
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.UI.Editor
 {

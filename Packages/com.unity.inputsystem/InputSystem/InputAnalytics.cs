@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Layouts;
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif
 
 namespace UnityEngine.InputSystem
 {
@@ -52,11 +49,15 @@ namespace UnityEngine.InputSystem
             }
 
             data.unrecognized_devices = deviceList.ToArray();
-
-            #if UNITY_EDITOR
+            
+            
+            /*
+             TBD.
+             #if UNITY_EDITOR
             data.new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
             data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
             #endif
+            */
 
             manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
