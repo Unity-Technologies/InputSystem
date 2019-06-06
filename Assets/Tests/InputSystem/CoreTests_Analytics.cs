@@ -108,6 +108,7 @@ partial class CoreTests
         Assert.That(numReceivedCalls, Is.EqualTo(1));
     }
 
+    /* TBD
     #if UNITY_EDITOR
     [Test]
     [Category("Analytics")]
@@ -145,6 +146,7 @@ partial class CoreTests
     }
 
     #endif
+    */
 
     [Test]
     [Category("Analytics")]
