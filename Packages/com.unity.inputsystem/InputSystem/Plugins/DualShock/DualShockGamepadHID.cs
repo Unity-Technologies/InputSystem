@@ -12,10 +12,10 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.DualShock.LowLevel
 {
     /// <summary>
-    /// Structure of HID input reports for PS4 DualShock controllers.
+    /// Structure of HID input reports for PS4 DualShock 4 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct DualShockHIDInputReport : IInputStateTypeInfo
+    public struct DualShock4HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
 
@@ -76,6 +76,68 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
             get { return new FourCC('H', 'I', 'D'); }
         }
     }
+    
+    /// <summary>
+    /// Structure of HID input reports for PS3 DualShock 3 controllers.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 32)]
+    public struct DualShock3HIDInputReport : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte reportId;
+
+        [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
+        [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+        [FieldOffset(6)] public byte leftStickX;
+        [FieldOffset(7)] public byte leftStickY;
+
+        [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
+        [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+        [FieldOffset(8)] public byte rightStickX;
+        [FieldOffset(9)] public byte rightStickY;
+
+        [InputControl(name = "select", displayName = "Share", bit = 0)]
+        [InputControl(name = "leftStickPress", bit = 1)]
+        [InputControl(name = "rightStickPress", bit = 2)]
+        [InputControl(name = "start", displayName = "Options", bit = 3)]
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4)]
+        [InputControl(name = "dpad/up", bit = 4)]
+        [InputControl(name = "dpad/right", bit = 5)]
+        [InputControl(name = "dpad/down", bit = 6)]
+        [InputControl(name = "dpad/left", bit = 7)]
+        [FieldOffset(2)] public byte buttons1;
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 0)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 1)]
+        [InputControl(name = "leftShoulder", bit = 2)]
+        [InputControl(name = "rightShoulder", bit = 3)]
+        [InputControl(name = "buttonNorth", displayName = "Triangle", bit = 4)]
+        [InputControl(name = "buttonEast", displayName = "Circle", bit = 5)]
+        [InputControl(name = "buttonSouth", displayName = "Cross", bit = 6)]
+        [InputControl(name = "buttonWest", displayName = "Square", bit = 7)]
+        [FieldOffset(3)] public byte buttons2;
+
+        [InputControl(name = "systemButton", layout = "Button", displayName = "System", bit = 0)]
+        [FieldOffset(4)] public byte buttons3;
+
+        [InputControl(name = "leftTrigger", format = "BYTE")]
+        [FieldOffset(18)] public byte leftTrigger;
+        [InputControl(name = "rightTrigger", format = "BYTE")]
+        [FieldOffset(19)] public byte rightTrigger;
+        
+        public FourCC format
+        {
+            get { return new FourCC('H', 'I', 'D'); }
+        }
+    }    
 
     /// <summary>
     /// PS4 output report sent as command to HID backend.
@@ -145,8 +207,8 @@ namespace UnityEngine.InputSystem.DualShock
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputControlLayout(stateType = typeof(DualShockHIDInputReport), hideInUI = true)]
-    public class DualShockGamepadHID : DualShockGamepad
+    [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true)]
+    public class DualShock4GamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; private set; }
         public ButtonControl rightTriggerButton { get; private set; }
@@ -235,6 +297,87 @@ namespace UnityEngine.InputSystem.DualShock
         private float? m_HighFrequenceyMotorSpeed;
         private Color? m_LightBarColor;
     }
+    
+    [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true)]
+    public class DualShock3GamepadHID : DualShockGamepad
+    {
+        public ButtonControl leftTriggerButton { get; private set; }
+        public ButtonControl rightTriggerButton { get; private set; }
+        public ButtonControl playStationButton { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
+            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
+            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
+            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
+
+            base.FinishSetup(builder);
+        }
+
+        public override void PauseHaptics()
+        {
+            if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
+                return;
+
+            var command = DualShockHIDOutputReport.Create();
+            command.SetMotorSpeeds(0f, 0f);
+            ////REVIEW: when pausing&resuming haptics, you probably don't want the lightbar color to change
+            if (m_LightBarColor.HasValue)
+                command.SetColor(Color.black);
+
+            ExecuteCommand(ref command);
+        }
+
+        public override void ResetHaptics()
+        {
+            if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
+                return;
+
+            var command = DualShockHIDOutputReport.Create();
+            command.SetMotorSpeeds(0f, 0f);
+            if (m_LightBarColor.HasValue)
+                command.SetColor(Color.black);
+
+            ExecuteCommand(ref command);
+
+            m_HighFrequenceyMotorSpeed = null;
+            m_LowFrequencyMotorSpeed = null;
+            m_LightBarColor = null;
+        }
+
+        public override void ResumeHaptics()
+        {
+            if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
+                return;
+
+            var command = DualShockHIDOutputReport.Create();
+
+            if (m_LowFrequencyMotorSpeed.HasValue || m_HighFrequenceyMotorSpeed.HasValue)
+                command.SetMotorSpeeds(m_LowFrequencyMotorSpeed.Value, m_HighFrequenceyMotorSpeed.Value);
+            if (m_LightBarColor.HasValue)
+                command.SetColor(m_LightBarColor.Value);
+
+            ExecuteCommand(ref command);
+        }
+
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
+        {
+            var command = DualShockHIDOutputReport.Create();
+            command.SetMotorSpeeds(lowFrequency, highFrequency);
+
+            ExecuteCommand(ref command);
+
+            m_LowFrequencyMotorSpeed = lowFrequency;
+            m_HighFrequenceyMotorSpeed = highFrequency;
+        }
+
+        private float? m_LowFrequencyMotorSpeed;
+        private float? m_HighFrequenceyMotorSpeed;
+        private Color? m_LightBarColor;
+    } 
 }
 
 // PS4 HID structures:
