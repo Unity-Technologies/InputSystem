@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE || UNITY_WSA
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -761,7 +761,7 @@ namespace UnityEngine.InputSystem.Switch
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
     [InputControlLayout(stateType = typeof(NPadInputStateHID), displayName = "Switch Controller (on HID)")]
     public class NPadHID : Gamepad
     {
