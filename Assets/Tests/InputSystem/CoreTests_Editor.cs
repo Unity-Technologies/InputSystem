@@ -148,7 +148,7 @@ partial class CoreTests
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
     }
-/* TODO
+
     [Test]
     [Category("Editor")]
     public void Editor_DomainReload_FirstPlayerLoopUpdateCausesDevicesToBeRecreated()
@@ -159,18 +159,18 @@ partial class CoreTests
         // have no proper way of simulating domain reloads ATM. So we directly call various
         // internal methods here in a sequence similar to what we'd get during a domain reload.
 
-        InputSystem.s_SystemObject.OnBeforeSerialize();
+        InputSystemEditor.s_SystemObject.OnBeforeSerialize();
         runtime.onPlayModeChanged(PlayModeStateChange.ExitingEditMode);
         runtime.isInPlayMode = false;
-        InputSystem.s_SystemObject = null;
-        InputSystem.InitializeInEditor(runtime);
+        InputSystemEditor.s_SystemObject = null;
+        InputSystemEditor.InitializeInEditor(runtime);
         runtime.isInPlayMode = true;
         runtime.onPlayModeChanged(PlayModeStateChange.EnteredPlayMode);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
     }
-*/
+
     [Test]
     [Category("Editor")]
     [Ignore("TODO")]

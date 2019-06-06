@@ -12,10 +12,11 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     internal class InputSystemObject : ScriptableObject, ISerializationCallbackReceiver
     {
-        [SerializeField] public InputSystem.State systemState;
+        [SerializeField] public InputSystem.State systemState; 
+        [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
         [SerializeField] public bool newInputBackendsCheckedAsEnabled;
         [SerializeField] public string settings;
-
+        
         public void OnBeforeSerialize()
         {
             // Save current system state.
@@ -24,10 +25,9 @@ namespace UnityEngine.InputSystem
             systemState.remoteConnection = InputSystem.s_RemoteConnection;
             systemState.managerState = InputSystem.s_Manager.SaveState();
             systemState.remotingState = InputSystem.s_Remote.SaveState();
-            // ToDo
-         //   systemState.userSettings = InputEditorUserSettings.s_Settings;
+            userSettings = InputEditorUserSettings.s_Settings;
         }
-
+        
         public void OnAfterDeserialize()
         {
         }
