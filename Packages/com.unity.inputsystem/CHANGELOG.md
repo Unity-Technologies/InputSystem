@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
 - Added getters to all `IInputRuntime` properties.
 - Replace some `GetXxx` methods in our API with `xxx`  properties.
+- InputSystem Editor code is now built to a separate assembly.
 
 ## [0.2.10-preview] - 2019-5-17
 
