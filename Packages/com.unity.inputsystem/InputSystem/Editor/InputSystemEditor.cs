@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
                 // that happen during domain initialization.
                 s_SystemObject = existingSystemObjects[0];
                 InputSystem.s_Manager.RestoreStateWithoutDevices(s_SystemObject.systemState.managerState);
-                //    InputDebuggerWindow.ReviveAfterDomainReload();
+                InputDebuggerWindow.ReviveAfterDomainReload();
 
                 // Restore remoting state.
                 InputSystem.s_RemoteConnection = s_SystemObject.systemState.remoteConnection;
@@ -63,7 +63,6 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
                 InputSystem.s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
 
-                Debug.Log("Set Settings 1");
                 // Restore editor settings.
                 InputEditorUserSettings.s_Settings = s_SystemObject.userSettings;
 
@@ -195,7 +194,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
-            // TODOInputSettingsProvider.ForceReload();
+            InputSettingsProvider.ForceReload();
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
