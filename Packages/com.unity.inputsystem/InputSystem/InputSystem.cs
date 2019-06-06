@@ -1250,6 +1250,8 @@ namespace UnityEngine.InputSystem
         internal static event Action onDestroy;
         internal static event Action onSave;
         internal static event Action onRestore;
+        internal static Func<bool> gameIsPlayingAndHasFocus = () => true;
+        internal static Func<bool> addDevicesNotSupportedByProject = () => true;
         #endregion
 
         #region Settings

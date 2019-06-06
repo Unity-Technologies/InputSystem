@@ -235,16 +235,8 @@ namespace UnityEngine.InputSystem
                     m_SettingsChangedListeners.RemoveAtWithCapacity(index);
             }
         }
-
-        private bool gameIsPlayingAndHasFocus =>
-
-#if UNITY_EDITOR
-            // Todo
-//                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
-            true;
-#else
-            true;
-#endif
+        
+        private bool gameIsPlayingAndHasFocus => InputSystem.gameIsPlayingAndHasFocus();
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
@@ -729,11 +721,8 @@ namespace UnityEngine.InputSystem
             // all available devices to be added regardless of what "Supported Devices" says. This
             // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
             // even if not supported as devices in the game.
-            #if UNITY_EDITOR
-            // Todo
-//            if (InputEditorUserSettings.addDevicesNotSupportedByProject)
-  //              return true;
-            #endif
+            if (InputSystem.addDevicesNotSupportedByProject())
+                return true;
 
             var supportedDevices = m_Settings.supportedDevices;
             if (supportedDevices.Count == 0)
@@ -1453,12 +1442,7 @@ namespace UnityEngine.InputSystem
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
-
-            #if UNITY_EDITOR
-            // Todo
-            //processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
-            #endif
-
+            
             // Register interactions.
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
@@ -1573,7 +1557,7 @@ namespace UnityEngine.InputSystem
         private InlinedArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
-        private bool m_HasFocus;
+        internal bool m_HasFocus;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;

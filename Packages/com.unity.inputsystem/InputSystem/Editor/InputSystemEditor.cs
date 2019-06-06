@@ -2,6 +2,7 @@
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Processors;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -15,6 +16,11 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onDestroy += OnDestroy;
             InputSystem.onSave += OnSave;
             InputSystem.onRestore += OnRestore;
+            InputSystem.gameIsPlayingAndHasFocus = () => 
+                InputSystem.s_Manager.m_Runtime.isInPlayMode && 
+                !InputSystem.s_Manager.m_Runtime.isPaused && 
+                (InputSystem.s_Manager.m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+            InputSystem.addDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
             InitializeInEditor();
         }
         
@@ -101,6 +107,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             InputSystem.s_Manager = new InputManager();
             InputSystem.s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, InputSystem.settings);
+            InputSystem.s_Manager.processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
 
             InputSystem.s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             InputSystem.s_Manager.m_Runtime.onProjectChange = OnProjectChange;
