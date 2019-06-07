@@ -1267,7 +1267,7 @@ namespace UnityEngine.InputSystem
                 if (s_Manager.m_Settings == value)
                     return;
 
-                onSettingsChanged.Invoke(value);
+                onSettingsChanged?.Invoke(value);
 
                 s_Manager.settings = value;
             }
@@ -1672,7 +1672,7 @@ namespace UnityEngine.InputSystem
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
 
-            onReset.Invoke(enableRemoting, runtime, settings);
+            onReset?.Invoke(enableRemoting, runtime, settings);
             #if !UNITY_EDITOR
             InitializeInPlayer(runtime, settings);
             #endif
@@ -1698,7 +1698,7 @@ namespace UnityEngine.InputSystem
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
 
-            onDestroy.Invoke();
+            onDestroy?.Invoke();
 
             s_Manager = null;
             s_RemoteConnection = null;
@@ -1754,7 +1754,7 @@ namespace UnityEngine.InputSystem
                 remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
             });
 
-            onSave.Invoke();
+            onSave?.Invoke();
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
         }
@@ -1780,7 +1780,7 @@ namespace UnityEngine.InputSystem
             s_Manager.InstallRuntime(s_Manager.m_Runtime);
             s_Manager.InstallGlobals();
 
-            onRestore.Invoke();
+            onRestore?.Invoke();
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them
             // by pretending the devices have been added.
