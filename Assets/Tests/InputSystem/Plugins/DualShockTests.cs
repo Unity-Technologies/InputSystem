@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
@@ -16,28 +17,16 @@ using UnityEngine.InputSystem.HID;
 internal class DualShockTests : InputTestFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsDualShock4AsHID()
+    public DualShockGamepad Devices_SupportsDualShockAsHID<TDevice, TState>(TState state)
+        where TDevice : DualShockGamepad
+        where TState : struct, IInputStateTypeInfo
     {
-        var gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
-
+        var gamepad = InputSystem.AddDevice<TDevice>();
         // Dpad has default state value so make sure that one is coming through.
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.QueueStateEvent(gamepad,
-            new DualShock4HIDInputReport
-            {
-                leftStickX = 32,
-                leftStickY = 64,
-                rightStickX = 128,
-                rightStickY = 255,
-                leftTrigger = 20,
-                rightTrigger = 40,
-                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
-                buttons2 = 0xff,
-                buttons3 = 0xff
-            });
+        InputSystem.QueueStateEvent(gamepad, state);
+
         InputSystem.Update();
 
         var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
@@ -73,21 +62,38 @@ internal class DualShockTests : InputTestFixture
         Assert.That(gamepad.rightShoulder.isPressed);
         Assert.That(gamepad.leftStickButton.isPressed);
         Assert.That(gamepad.rightStickButton.isPressed);
-        Assert.That(gamepad.touchpadButton.isPressed);
 
+        return gamepad;
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShock4AsHID()
+    {
+        var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReport>(
+            new DualShock4HIDInputReport
+            {
+                leftStickX = 32,
+                leftStickY = 64,
+                rightStickX = 128,
+                rightStickY = 255,
+                leftTrigger = 20,
+                rightTrigger = 40,
+                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
+                buttons2 = 0xff,
+                buttons3 = 0xff
+            }
+        );
+
+        Assert.That(gamepad.touchpadButton.isPressed);
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShock3AsHID()
     {
-        var gamepad = InputSystem.AddDevice<DualShock3GamepadHID>();
-
-        // Dpad has default state value so make sure that one is coming through.
-        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
-
-        InputSystem.QueueStateEvent(gamepad,
+        Devices_SupportsDualShockAsHID<DualShock3GamepadHID, DualShock3HIDInputReport>(
             new DualShock3HIDInputReport
             {
                 leftStickX = 32,
@@ -99,44 +105,8 @@ internal class DualShockTests : InputTestFixture
                 buttons1 = 0x9f, // High order 4 bits is Dpad
                 buttons2 = 0xff,
                 buttons3 = 0xff
-            });
-        InputSystem.Update();
-
-        var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
-        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
-
-        Assert.That(gamepad.leftStick.ReadValue(),
-            Is.EqualTo(leftStickDeadzone.Process(
-                new Vector2(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f),
-                    -NormalizeProcessor.Normalize(64 / 255.0f, 0f, 1f, 0.5f)))));
-
-        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(
-            new Vector2(NormalizeProcessor.Normalize(128 / 255.0f, 0f, 1f, 0.5f),
-                -NormalizeProcessor.Normalize(255 / 255.0f, 0f, 1f, 0.5f)))));
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(20 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(40 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
-        ////TODO: test button presses individually
-        Assert.That(gamepad.buttonSouth.isPressed);
-        Assert.That(gamepad.buttonEast.isPressed);
-        Assert.That(gamepad.buttonWest.isPressed);
-        Assert.That(gamepad.buttonNorth.isPressed);
-        Assert.That(gamepad.squareButton.isPressed);
-        Assert.That(gamepad.triangleButton.isPressed);
-        Assert.That(gamepad.circleButton.isPressed);
-        Assert.That(gamepad.crossButton.isPressed);
-        Assert.That(gamepad.startButton.isPressed);
-        Assert.That(gamepad.selectButton.isPressed);
-        Assert.That(gamepad.dpad.up.isPressed);
-        Assert.That(gamepad.dpad.down.isPressed, Is.False);
-        Assert.That(gamepad.dpad.left.isPressed);
-        Assert.That(gamepad.dpad.right.isPressed, Is.False);
-        Assert.That(gamepad.leftShoulder.isPressed);
-        Assert.That(gamepad.rightShoulder.isPressed);
-        Assert.That(gamepad.leftStickButton.isPressed);
-        Assert.That(gamepad.rightStickButton.isPressed);
-
-        // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
+            }
+        );
     }
 
     [Test]
