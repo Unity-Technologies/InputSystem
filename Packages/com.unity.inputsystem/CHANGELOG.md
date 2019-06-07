@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
+- Added support for DualShock 3 gamepads on desktops.
 
 ### Changed
 

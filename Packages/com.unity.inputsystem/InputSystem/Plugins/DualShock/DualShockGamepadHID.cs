@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
             get { return new FourCC('H', 'I', 'D'); }
         }
     }
-    
+
     /// <summary>
     /// Structure of HID input reports for PS3 DualShock 3 controllers.
     /// </summary>
@@ -132,12 +132,12 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(18)] public byte leftTrigger;
         [InputControl(name = "rightTrigger", format = "BYTE")]
         [FieldOffset(19)] public byte rightTrigger;
-        
+
         public FourCC format
         {
             get { return new FourCC('H', 'I', 'D'); }
         }
-    }    
+    }
 
     /// <summary>
     /// PS4 output report sent as command to HID backend.
@@ -297,7 +297,7 @@ namespace UnityEngine.InputSystem.DualShock
         private float? m_HighFrequenceyMotorSpeed;
         private Color? m_LightBarColor;
     }
-    
+
     [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true)]
     public class DualShock3GamepadHID : DualShockGamepad
     {
@@ -317,67 +317,8 @@ namespace UnityEngine.InputSystem.DualShock
             base.FinishSetup(builder);
         }
 
-        public override void PauseHaptics()
-        {
-            if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
-                return;
-
-            var command = DualShockHIDOutputReport.Create();
-            command.SetMotorSpeeds(0f, 0f);
-            ////REVIEW: when pausing&resuming haptics, you probably don't want the lightbar color to change
-            if (m_LightBarColor.HasValue)
-                command.SetColor(Color.black);
-
-            ExecuteCommand(ref command);
-        }
-
-        public override void ResetHaptics()
-        {
-            if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
-                return;
-
-            var command = DualShockHIDOutputReport.Create();
-            command.SetMotorSpeeds(0f, 0f);
-            if (m_LightBarColor.HasValue)
-                command.SetColor(Color.black);
-
-            ExecuteCommand(ref command);
-
-            m_HighFrequenceyMotorSpeed = null;
-            m_LowFrequencyMotorSpeed = null;
-            m_LightBarColor = null;
-        }
-
-        public override void ResumeHaptics()
-        {
-            if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue && !m_LightBarColor.HasValue)
-                return;
-
-            var command = DualShockHIDOutputReport.Create();
-
-            if (m_LowFrequencyMotorSpeed.HasValue || m_HighFrequenceyMotorSpeed.HasValue)
-                command.SetMotorSpeeds(m_LowFrequencyMotorSpeed.Value, m_HighFrequenceyMotorSpeed.Value);
-            if (m_LightBarColor.HasValue)
-                command.SetColor(m_LightBarColor.Value);
-
-            ExecuteCommand(ref command);
-        }
-
-        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
-        {
-            var command = DualShockHIDOutputReport.Create();
-            command.SetMotorSpeeds(lowFrequency, highFrequency);
-
-            ExecuteCommand(ref command);
-
-            m_LowFrequencyMotorSpeed = lowFrequency;
-            m_HighFrequenceyMotorSpeed = highFrequency;
-        }
-
-        private float? m_LowFrequencyMotorSpeed;
-        private float? m_HighFrequenceyMotorSpeed;
-        private Color? m_LightBarColor;
-    } 
+        // TODO: see if we can implement rumble support on DualShock 3
+    }
 }
 
 // PS4 HID structures:

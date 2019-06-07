@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.DualShock
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x54C) // Sony Entertainment.
                     .WithCapability("productId", 0x9CC)); // Wireless controller.
-            
+
             // Just to make sure, also set up a matcher that goes by strings so that we cover
             // all bases.
             InputSystem.RegisterLayoutMatcher<DualShock4GamepadHID>(
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.DualShock
                     .WithInterface("HID")
                     .WithManufacturer("Sony.+Entertainment")
                     .WithProduct("Wireless Controller"));
-            
+
             InputSystem.RegisterLayout<DualShock3GamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.DualShock
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithManufacturer("Sony.+Entertainment")
-                    .WithProduct("PLAYSTATION(R)3 Controller"));         
+                    .WithProduct("PLAYSTATION(R)3 Controller"));
             #endif
         }
     }
