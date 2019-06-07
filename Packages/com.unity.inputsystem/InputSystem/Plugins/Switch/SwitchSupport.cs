@@ -16,14 +16,14 @@ namespace UnityEngine.InputSystem.Switch
         public static void Initialize()
         {
         #if UNITY_EDITOR || UNITY_SWITCH
-            InputSystem.RegisterLayout<NPadSwitch>(
+            InputSystem.RegisterLayout<NPad>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("Switch")
                     .WithManufacturer("Nintendo")
                     .WithProduct("Wireless Controller"));
         #endif
         #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
-            InputSystem.RegisterLayout<NPadHID>(
+            InputSystem.RegisterLayout<SwitchProControllerHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x57e) // Nintendo

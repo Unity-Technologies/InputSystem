@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     /// </summary>
     /// <seealso href="http://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/~/joy-con-controller-diagram"/>
     [StructLayout(LayoutKind.Explicit, Size = 60)]
-    public struct NPadInputStateSwitch : IInputStateTypeInfo
+    public struct NPadInputState : IInputStateTypeInfo
     {
         public FourCC format
         {
@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             A = East,
         }
 
-        public NPadInputStateSwitch WithButton(Button button, bool value = true)
+        public NPadInputState WithButton(Button button, bool value = true)
         {
             var bit = (uint)1 << (int)button;
             if (value)
@@ -127,13 +127,13 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public NPadSwitch.NpadId npadId;
+        public NPad.NpadId npadId;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)]
-        public NPadSwitch.Orientation orientation;
+        public NPad.Orientation orientation;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]
         public short padding0;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
-        public NPadSwitch.NpadStyles styleMask;
+        public NPad.NpadStyles styleMask;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int colorLeftMain;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
@@ -229,14 +229,14 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public NPadSwitch.Orientation orientation;
+        public NPad.Orientation orientation;
 
         public FourCC typeStatic
         {
             get { return Type; }
         }
 
-        public static NpadDeviceIOCTLSetOrientation Create(NPadSwitch.Orientation orientation)
+        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation orientation)
         {
             return new NpadDeviceIOCTLSetOrientation
             {
@@ -351,7 +351,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     /// Structure of HID input reports for Switch Pro controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 20)]
-    public struct NPadInputStateHID : IInputStateTypeInfo
+    public struct SwitchProControllerHIDInputState : IInputStateTypeInfo
     {
         public FourCC format => new FourCC('H', 'I', 'D');
 
@@ -422,7 +422,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             A = East,
         }
 
-        public NPadInputStateHID WithButton(Button button, bool value = true)
+        public SwitchProControllerHIDInputState WithButton(Button button, bool value = true)
         {
             var bit = (uint)1 << (int)button;
             if (value)
@@ -448,8 +448,8 @@ namespace UnityEngine.InputSystem.Switch
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
     /// <seealso cref="NPadInputState"/>
-    [InputControlLayout(stateType = typeof(NPadInputStateSwitch), displayName = "Switch Controller (on Switch)")]
-    public class NPadSwitch : Gamepad, INPadRumble
+    [InputControlLayout(stateType = typeof(NPadInputState), displayName = "Switch Controller (on Switch)")]
+    public class NPad : Gamepad, INPadRumble
     {
         public ButtonControl leftSL { get; private set; }
         public ButtonControl leftSR { get; private set; }
@@ -762,8 +762,8 @@ namespace UnityEngine.InputSystem.Switch
 #endif
 
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
-    [InputControlLayout(stateType = typeof(NPadInputStateHID), displayName = "Switch Controller (on HID)")]
-    public class NPadHID : Gamepad
+    [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Controller (on HID)")]
+    public class SwitchProControllerHID : Gamepad
     {
     }
 #endif
