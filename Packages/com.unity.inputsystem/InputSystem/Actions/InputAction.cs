@@ -66,8 +66,7 @@ namespace UnityEngine.InputSystem
     /// Actions are not supported in edit mode.
     /// </remarks>
     [Serializable]
-    public class InputAction : ICloneable, IDisposable
-        ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
+    public sealed class InputAction : ICloneable, IDisposable
     {
         /// <summary>
         /// Name of the action.
@@ -591,8 +590,7 @@ namespace UnityEngine.InputSystem
             }
 
             throw new ArgumentOutOfRangeException(nameof(indexOfBindingOnAction),
-                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings"
-            );
+                $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings");
         }
 
         /// <summary>

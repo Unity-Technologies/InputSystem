@@ -634,5 +634,65 @@ namespace UnityEngine.InputSystem.Utilities
         {
             return new PrimitiveValue(value);
         }
+
+        public static PrimitiveValue FromBoolean(bool value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromChar(char value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromByte(byte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromSByte(sbyte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromInt16(short value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromUInt16(ushort value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromInt32(int value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromUInt32(uint value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromInt64(long value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromUInt64(ulong value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromSingle(float value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromDouble(double value)
+        {
+            return new PrimitiveValue(value);
+        }
     }
 }

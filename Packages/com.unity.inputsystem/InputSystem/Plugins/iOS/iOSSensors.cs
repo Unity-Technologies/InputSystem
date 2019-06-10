@@ -15,9 +15,9 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         [InputControl][FieldOffset(28)] public Vector3 acceleration;
         [InputControl][FieldOffset(40)] public Vector3 rotationRateUnbiased;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }

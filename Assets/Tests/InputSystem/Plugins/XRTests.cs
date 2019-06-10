@@ -569,9 +569,9 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('X', 'R', 'S', '0');
+            get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
 
@@ -705,9 +705,9 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('X', 'R', 'S', '0');
+            get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
 }

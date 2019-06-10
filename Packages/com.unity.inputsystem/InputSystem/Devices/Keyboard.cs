@@ -153,9 +153,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -345,7 +345,7 @@ namespace UnityEngine.InputSystem
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
@@ -362,17 +362,13 @@ namespace UnityEngine.InputSystem
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         /// Setting this to On, will enable the OS-level IME system when the user presses keystrokes.
         ///
-        /// See <see cref="Keyboard.imeCursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
+        /// See <see cref="Keyboard.SetIMECursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
         /// </remarks>
-        public bool imeEnabled
+        public void SetIMEEnabled(bool enabled)
         {
-            set
-            {
-                EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
-                ExecuteCommand(ref command);
-            }
+            EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(enabled);
+            ExecuteCommand(ref command);
         }
-
 
         /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
         /// </summary>
@@ -381,15 +377,12 @@ namespace UnityEngine.InputSystem
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
-        public Vector2 imeCursorPosition
+        public void SetIMECursorPosition(Vector2 position)
         {
-            set
-            {
-                SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
-                ExecuteCommand(ref command);
-            }
+            SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(position);
+            ExecuteCommand(ref command);
         }
 
         /// <summary>
@@ -576,14 +569,14 @@ namespace UnityEngine.InputSystem
         public KeyControl oem5Key => this[Key.OEM5];
 
         /// <summary>
-        /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
+        /// True when IME composition is enabled.  Requires <see cref="Keyboard.SetIMEEnabled"/> to be called to enable IME, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
         ///
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public ButtonControl imeSelected { get; private set; }
 

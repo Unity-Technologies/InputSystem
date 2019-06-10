@@ -72,9 +72,9 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'T', 'M', 'L');
+            get { return new FourCC('H', 'T', 'M', 'L'); }
         }
 
         public WebGLGamepadState WithButton(GamepadButton button, float value = 1)
@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
                 case GamepadButton.DpadRight: index = 15; break;
 
                 default:
-                    throw new InvalidEnumArgumentException("button");
+                    throw new InvalidEnumArgumentException(nameof(button), (int)button, typeof(GamepadButton));
             }
 
             SetValue(NumAxes + index, value);

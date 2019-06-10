@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Validate all parameters on public APIs.
+- Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
 
 #### Actions
 
@@ -19,9 +20,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
+- Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
+
 ### Changed
 
 - Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
+- Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
+- Added getters to all `IInputRuntime` properties.
+- Replace some `GetXxx` methods in our API with `xxx`  properties.
 
 ## [0.2.10-preview] - 2019-5-17
 

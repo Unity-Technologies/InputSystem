@@ -1038,9 +1038,9 @@ partial class CoreTests
     {
         public float axis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("PART");
+            get { return new FourCC("PART"); }
         }
     }
 
@@ -1049,9 +1049,9 @@ partial class CoreTests
         [InputControl(layout = "Axis", arraySize = 5)]
         public fixed float axis[5];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("FULL");
+            get { return new FourCC("FULL"); }
         }
     }
 
@@ -3595,13 +3595,13 @@ partial class CoreTests
                 return InputDeviceCommand.GenericFailure;
             });
 
-        keyboard.imeEnabled = true;
+        keyboard.SetIMEEnabled(true);
 
         Assert.That(receivedIMEEnabledValue, Is.True);
 
         receivedIMEEnabledValue = null;
 
-        keyboard.imeEnabled = false;
+        keyboard.SetIMEEnabled(false);
 
         Assert.That(receivedIMEEnabledValue, Is.False);
     }
@@ -3631,7 +3631,7 @@ partial class CoreTests
             });
 
         ////REVIEW: should this require IME to be enabled?
-        keyboard.imeCursorPosition = Vector2.one;
+        keyboard.SetIMECursorPosition(Vector2.one);
         Assert.That(commandWasSent, Is.True);
     }
 }

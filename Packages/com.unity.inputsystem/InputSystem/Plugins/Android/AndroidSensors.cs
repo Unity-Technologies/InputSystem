@@ -10,6 +10,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 {
     public enum AndroidSensorType
     {
+        None = 0,
         Accelerometer = 1,
         MagneticField = 2,
         Orientation = 3,            // Was deprecated in API 8 https://developer.android.com/reference/android/hardware/Sensor#TYPE_ORIENTATION
@@ -118,9 +119,9 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 

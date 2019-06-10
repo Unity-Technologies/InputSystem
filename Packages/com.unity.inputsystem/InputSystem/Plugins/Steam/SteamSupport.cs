@@ -31,23 +31,6 @@ namespace UnityEngine.InputSystem.Steam
             }
         }
 
-        /// <summary>
-        /// If enabled, if Steam support is in use (i.e. if <see cref="api"/> has been set), then
-        /// any <see cref="Gamepad"/> device that isn't using the <see cref="SteamController.kSteamInterface"/>
-        /// interface will automatically be disabled.
-        /// </summary>
-        /// <remarks>
-        /// Makes sure that input isn't picked up in parallel through both Unity's own gamepad support and
-        /// through Steam's controller support.
-        ///
-        /// Enabled by default.
-        /// </remarks>
-        internal static bool disableNonSteamGamepads
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
         internal static ISteamControllerAPI GetAPIAndRequireItToBeSet()
         {
             if (s_API == null)

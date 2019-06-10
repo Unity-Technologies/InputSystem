@@ -447,9 +447,9 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(7)] public ushort vx;
         [FieldOffset(9)] public short vy;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -977,9 +977,9 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(1)] public ushort x;
         [FieldOffset(3)] public ushort y;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -1040,12 +1040,7 @@ internal class HIDTests : InputTestFixture
     [Category("Utilities")]
     public void Utilities_CanRecognizeVendorDefinedUsages()
     {
-        string usagePage;
-        string usage;
-
-        HID.UsageToString((HID.UsagePage) 0xff01, 0x33, out usagePage, out usage);
-
-        Assert.That(usagePage, Is.EqualTo("Vendor-Defined"));
-        Assert.That(usage, Is.EqualTo("Vendor-Defined"));
+        Assert.That(HID.UsagePageToString((HID.UsagePage) 0xff01), Is.EqualTo("Vendor-Defined"));
+        Assert.That(HID.UsageToString((HID.UsagePage) 0xff01, 0x33), Is.Null);
     }
 }

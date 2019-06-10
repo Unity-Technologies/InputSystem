@@ -22,7 +22,8 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public enum Result : long
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Enum values mandated by native code")]
+        public enum Result
         {
             /// <summary>
             /// User pairing UI has been successfully opened.
@@ -32,7 +33,7 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// System does not support application-invoked user pairing.
             /// </summary>
-            ErrorNotSupported = InputDeviceCommand.GenericFailure,
+            ErrorNotSupported = (int)InputDeviceCommand.GenericFailure,
 
             /// <summary>
             /// There already is a pairing operation in progress and the system does not support
@@ -41,9 +42,9 @@ namespace UnityEngine.InputSystem.LowLevel
             ErrorAlreadyInProgress = -2,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static InitiateUserAccountPairingCommand Create()

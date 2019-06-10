@@ -71,9 +71,9 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         ////TODO: touchpad
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -88,6 +88,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         internal const int kReportId = 5;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -98,6 +99,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte reportId;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public fixed byte unknown1[2];
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte highFrequencyMotorSpeed;
@@ -107,9 +109,9 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public byte blueColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 9)] public fixed byte unknown2[23];
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeeds(float lowFreq, float highFreq)

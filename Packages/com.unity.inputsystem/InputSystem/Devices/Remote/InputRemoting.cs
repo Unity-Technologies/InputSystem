@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputSystem.remoting"/>
     /// \todo Reuse memory allocated for messages instead of allocating separately for each message.
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
-    public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
+    public sealed class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem
             switch (msg.type)
             {
                 case MessageType.Connect:
-                    ConnectMsg.Process(this, msg);
+                    ConnectMsg.Process(this);
                     break;
                 case MessageType.Disconnect:
                     DisconnectMsg.Process(this, msg);
@@ -158,10 +158,10 @@ namespace UnityEngine.InputSystem
                     RemoveDeviceMsg.Process(this, msg);
                     break;
                 case MessageType.StartSending:
-                    StartSendingMsg.Process(this, msg);
+                    StartSendingMsg.Process(this);
                     break;
                 case MessageType.StopSending:
-                    StopSendingMsg.Process(this, msg);
+                    StopSendingMsg.Process(this);
                     break;
             }
         }
@@ -194,7 +194,7 @@ namespace UnityEngine.InputSystem
 
         private void SendDevice(InputDevice device)
         {
-            var message = NewDeviceMsg.Create(this, device);
+            var message = NewDeviceMsg.Create(device);
             Send(message);
         }
 
@@ -211,7 +211,7 @@ namespace UnityEngine.InputSystem
             if (device != null && device.remote)
                 return;
 
-            var message = NewEventsMsg.Create(this, eventPtr.data, 1);
+            var message = NewEventsMsg.Create(eventPtr.data, 1);
             Send(message);
         }
 
@@ -228,13 +228,13 @@ namespace UnityEngine.InputSystem
             switch (change)
             {
                 case InputDeviceChange.Added:
-                    msg = NewDeviceMsg.Create(this, device);
+                    msg = NewDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.Removed:
-                    msg = RemoveDeviceMsg.Create(this, device);
+                    msg = RemoveDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.UsageChanged:
-                    msg = ChangeUsageMsg.Create(this, device);
+                    msg = ChangeUsageMsg.Create(device);
                     break;
                 default:
                     return;
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem
                     msg = message.Value;
                     break;
                 case InputControlLayoutChange.Removed:
-                    msg = RemoveLayoutMsg.Create(this, layout);
+                    msg = RemoveLayoutMsg.Create(layout);
                     break;
                 default:
                     return;
@@ -362,7 +362,7 @@ namespace UnityEngine.InputSystem
 
         private static class ConnectMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 if (receiver.sending)
                 {
@@ -375,7 +375,7 @@ namespace UnityEngine.InputSystem
 
         private static class StartSendingMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 receiver.StartSending();
             }
@@ -383,7 +383,7 @@ namespace UnityEngine.InputSystem
 
         private static class StopSendingMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 receiver.StopSending();
             }
@@ -470,7 +470,7 @@ namespace UnityEngine.InputSystem
 
         private static class RemoveLayoutMsg
         {
-            public static Message Create(InputRemoting sender, string layoutName)
+            public static Message Create(string layoutName)
             {
                 var bytes = Encoding.UTF8.GetBytes(layoutName);
                 return new Message
@@ -500,7 +500,7 @@ namespace UnityEngine.InputSystem
                 public InputDeviceDescription description;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 Debug.Assert(!device.remote, "Device being sent to remotes should be a local device, not a remote one");
 
@@ -574,7 +574,7 @@ namespace UnityEngine.InputSystem
         // Tell remote system there's new input events.
         private static class NewEventsMsg
         {
-            public static unsafe Message Create(InputRemoting sender, InputEvent* events, int eventCount)
+            public static unsafe Message Create(InputEvent* events, int eventCount)
             {
                 // Find total size of event buffer we need.
                 var totalSize = 0u;
@@ -641,7 +641,7 @@ namespace UnityEngine.InputSystem
                 public string[] usages;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 var data = new Data
                 {
@@ -674,7 +674,7 @@ namespace UnityEngine.InputSystem
 
         private static class RemoveDeviceMsg
         {
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 return new Message
                 {
