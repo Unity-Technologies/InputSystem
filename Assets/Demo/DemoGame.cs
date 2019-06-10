@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Plugins.UI;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 #if ENABLE_VR
 using UnityEngine.XR;
@@ -403,12 +403,12 @@ public class DemoGame : MonoBehaviour
                 break;
             }
 
-            // If the user has cancelled account selection, we remove the user if there's no devices
+            // If the user has canceled account selection, we remove the user if there's no devices
             // already paired to it. This usually happens when a player initiates a join on a device on
             // Xbox or Switch, has the account picker come up, but then cancels instead of making an
             // account selection. In this case, we want to cancel the join.
             // NOTE: We are only adding DemoPlayerControllers once device pairing is complete
-            case InputUserChange.AccountSelectionCancelled:
+            case InputUserChange.AccountSelectionCanceled:
             {
                 if (user.pairedDevices.Count == 0)
                 {

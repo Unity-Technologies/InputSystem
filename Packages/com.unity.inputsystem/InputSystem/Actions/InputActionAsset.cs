@@ -427,7 +427,7 @@ namespace UnityEngine.InputSystem
         {
             var index = TryGetControlSchemeIndex(name);
             if (index == -1)
-                throw new Exception($"No control scheme called '{name}' in '{this.name}'");
+                throw new ArgumentException($"No control scheme called '{name}' in '{this.name}'", nameof(name));
             return index;
         }
 

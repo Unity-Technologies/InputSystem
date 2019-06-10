@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
-    public class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
+    public sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
         internal const int kMaxNumEventsInTrace = 64;
 
@@ -47,6 +47,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void CreateOrShowExisting(InputDevice device)
         {
+            if (device == null)
+                throw new System.ArgumentNullException(nameof(device));
+
             // See if we have an existing window for the device and if so pop it
             // in front.
             if (s_OpenDebuggerWindows != null)
@@ -78,9 +81,15 @@ namespace UnityEngine.InputSystem.Editor
                 RemoveFromList();
 
                 m_EventTrace?.Dispose();
+                m_EventTrace = null;
 
                 InputSystem.onDeviceChange -= OnDeviceChange;
             }
+        }
+
+        public void Dispose()
+        {
+            m_EventTrace?.Dispose();
         }
 
         internal void OnGUI()

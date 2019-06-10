@@ -19,17 +19,20 @@ namespace UnityEngine.InputSystem.Processors
     /// <seealso cref="Pointer.position"/>
     public class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
-        public override Vector2 Process(Vector2 position, InputControl<Vector2> control)
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
+            if (control == null)
+                throw new System.ArgumentNullException(nameof(control));
+
             // Don't convert to EditorWindowSpace if input is going to game view.
             if (InputEditorUserSettings.lockInputToGameView ||
                 (EditorApplication.isPlaying && Application.isFocused))
-                return position;
+                return value;
 
-            var command = QueryEditorWindowCoordinatesCommand.Create(position);
+            var command = QueryEditorWindowCoordinatesCommand.Create(value);
             if (control.device.ExecuteCommand(ref command) > 0)
                 return command.inOutCoordinates;
-            return position;
+            return value;
         }
     }
 }

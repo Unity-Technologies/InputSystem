@@ -43,8 +43,8 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
         controls = new SimpleControls();
         controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
         controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
-        controls.gameplay.move.cancelled += ctx => m_Move = Vector2.zero;
-        controls.gameplay.look.cancelled += ctx => m_Look = Vector2.zero;
+        controls.gameplay.move.canceled += ctx => m_Move = Vector2.zero;
+        controls.gameplay.look.canceled += ctx => m_Look = Vector2.zero;
 
         controls.gameplay.fire.performed +=
             ctx =>
@@ -65,7 +65,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
             if (ctx.interaction is SlowTapInteraction)
                 m_Charging = true;
         };
-        controls.gameplay.fire.cancelled +=
+        controls.gameplay.fire.canceled +=
             ctx =>
         {
             m_Charging = false;

@@ -217,15 +217,10 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else
             {
-                throw new Exception($"State format '{format}' is not supported as integer format");
+                throw new InvalidOperationException($"State format '{format}' is not supported as integer format");
             }
 
             return value;
-        }
-
-        public void WriteInt(void* statePtr, int value)
-        {
-            throw new NotImplementedException();
         }
 
         public float ReadFloat(void* statePtr)
@@ -310,7 +305,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else
             {
-                throw new Exception($"State format '{format}' is not supported as floating-point format");
+                throw new InvalidOperationException($"State format '{format}' is not supported as floating-point format");
             }
 
             return value;
@@ -365,13 +360,8 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else
             {
-                throw new Exception($"State format '{format}' is not supported as floating-point format");
+                throw new InvalidOperationException($"State format '{format}' is not supported as floating-point format");
             }
-        }
-
-        public PrimitiveValue Read(void* statePtr)
-        {
-            throw new NotImplementedException();
         }
 
         public void Write(void* statePtr, PrimitiveValue value)

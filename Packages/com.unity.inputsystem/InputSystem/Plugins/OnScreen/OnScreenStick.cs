@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenStick component
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// A stick control displayed on screen and moved around by touch or other pointer
@@ -13,14 +13,20 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
     [AddComponentMenu("Input/On-Screen Stick")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
-        public void OnPointerDown(PointerEventData data)
+        public void OnPointerDown(PointerEventData eventData)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
+            if (eventData == null)
+                throw new System.ArgumentNullException(nameof(eventData));
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), eventData.position, eventData.pressEventCamera, out m_PointerDownPos);
         }
 
-        public void OnDrag(PointerEventData data)
+        public void OnDrag(PointerEventData eventData)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out var position);
+            if (eventData == null)
+                throw new System.ArgumentNullException(nameof(eventData));
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), eventData.position, eventData.pressEventCamera, out var position);
             var delta = position - m_PointerDownPos;
 
             delta = Vector2.ClampMagnitude(delta, movementRange);
@@ -30,7 +36,7 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
             SendValueToControl(newPos);
         }
 
-        public void OnPointerUp(PointerEventData data)
+        public void OnPointerUp(PointerEventData eventData)
         {
             ((RectTransform)transform).anchoredPosition = m_StartPos;
             SendValueToControl(Vector2.zero);

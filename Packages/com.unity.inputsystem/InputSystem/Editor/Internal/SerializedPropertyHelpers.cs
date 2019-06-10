@@ -274,7 +274,7 @@ namespace UnityEngine.InputSystem.Editor
 
                     var childProperty = property.FindPropertyRelative(propertyName);
                     if (childProperty == null)
-                        throw new Exception($"Cannot find property '{propertyName}' in {property}");
+                        throw new ArgumentException($"Cannot find property '{propertyName}' in {property}", nameof(property));
 
                     RestoreFromJson(childProperty, ref parser);
                     parser.ParseToken(',');

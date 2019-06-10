@@ -3,10 +3,10 @@ using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.WebGL.LowLevel;
+using UnityEngine.InputSystem.WebGL.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
+namespace UnityEngine.InputSystem.WebGL.LowLevel
 {
     public unsafe struct WebGLGamepadState : IInputStateTypeInfo
     {
@@ -72,9 +72,9 @@ namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'T', 'M', 'L');
+            get { return new FourCC('H', 'T', 'M', 'L'); }
         }
 
         public WebGLGamepadState WithButton(GamepadButton button, float value = 1)
@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
                 case GamepadButton.DpadRight: index = 15; break;
 
                 default:
-                    throw new InvalidEnumArgumentException("button");
+                    throw new InvalidEnumArgumentException(nameof(button), (int)button, typeof(GamepadButton));
             }
 
             SetValue(NumAxes + index, value);
@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem.Plugins.WebGL.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.WebGL
+namespace UnityEngine.InputSystem.WebGL
 {
     /// <summary>
     /// Gamepad on WebGL that uses the "standard" mapping.

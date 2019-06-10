@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Utilities;
 
 //need to figure out what to do about simulation that feeds into other simulation
 
-namespace UnityEngine.InputSystem.Plugins.InputSimulation
+namespace UnityEngine.InputSystem.InputSimulation
 {
     /// <summary>
     /// Simulates input one or more devices from input on one or more other devices.
@@ -25,6 +25,10 @@ namespace UnityEngine.InputSystem.Plugins.InputSimulation
     /// Input simulation is run after each update and output from simulation is
     /// consumed in the same update.
     /// </remarks>
+    ///
+    ///
+    /// TODO: This is currently not implemented. Commented out to avoid having public unimplemented API and many analyzer warnings.
+    /*
     public class InputSimulation
     {
         public struct SimulatedInput
@@ -33,5 +37,5 @@ namespace UnityEngine.InputSystem.Plugins.InputSimulation
 
             public ReadOnlyArray<InputBinding> outputs => throw new NotImplementedException();
         }
-    }
+    }*/
 }

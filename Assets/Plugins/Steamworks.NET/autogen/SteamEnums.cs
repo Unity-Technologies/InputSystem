@@ -1013,7 +1013,7 @@ namespace Steamworks
         k_EResultPasswordRequiredToKickSession = 49,// You are already logged in elsewhere, this cached credential login has failed.
         k_EResultAlreadyLoggedInElsewhere = 50,     // You are already logged in elsewhere, you must wait
         k_EResultSuspended = 51,                    // Long running operation (content download) suspended/paused
-        k_EResultCancelled = 52,                    // Operation canceled (typically by user: content download)
+        k_EResultCanceled = 52,                    // Operation canceled (typically by user: content download)
         k_EResultDataCorruption = 53,               // Operation canceled because data is ill formed or unrecoverable
         k_EResultDiskFull = 54,                     // Operation canceled - not enough disk space.
         k_EResultRemoteCallFailed = 55,             // an remote call or IPC call failed

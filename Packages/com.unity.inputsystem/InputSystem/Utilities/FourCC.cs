@@ -19,6 +19,9 @@ namespace UnityEngine.InputSystem.Utilities
         public FourCC(string str)
             : this()
         {
+            if (str == null)
+                throw new System.ArgumentNullException(nameof(str));
+
             var length = str.Length;
             Debug.Assert(length >= 1 && length <= 4, "FourCC string must be one to four characters long!");
 
@@ -35,10 +38,20 @@ namespace UnityEngine.InputSystem.Utilities
             return fourCC.m_Code;
         }
 
+        public static int ToInt32(FourCC fourCC)
+        {
+            return fourCC.m_Code;
+        }
+
         public static implicit operator FourCC(int i)
         {
             var fourCC = new FourCC {m_Code = i};
             return fourCC;
+        }
+
+        public static FourCC FromInt32(int i)
+        {
+            return i;
         }
 
         public override string ToString()

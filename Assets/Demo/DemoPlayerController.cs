@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
-using UnityEngine.InputSystem.Plugins.UI;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -294,7 +294,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
                         m_Charging = false;
                         break;
 
-                    case InputActionPhase.Cancelled:
+                    case InputActionPhase.Canceled:
                         m_Charging = false;
                         break;
                 }

@@ -1,8 +1,6 @@
 #if UNITY_WEBGL || UNITY_EDITOR
 
-////TODO
-
-namespace UnityEngine.InputSystem.Plugins.WebGL
+namespace UnityEngine.InputSystem.WebGL
 {
     public class WebGLJoystick : Joystick
     {

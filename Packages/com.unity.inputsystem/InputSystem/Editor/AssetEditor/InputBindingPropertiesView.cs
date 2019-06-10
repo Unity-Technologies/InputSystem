@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
     /// UI for editing properties of an <see cref="InputBinding"/>. Right-most pane in action editor when
     /// binding is selected in middle pane.
     /// </summary>
-    internal class InputBindingPropertiesView : PropertiesViewBase
+    internal class InputBindingPropertiesView : PropertiesViewBase, IDisposable
     {
         public static FourCC k_GroupsChanged => new FourCC("GRPS");
         public static FourCC k_PathChanged => new FourCC("PATH");
@@ -53,6 +53,11 @@ namespace UnityEngine.InputSystem.Editor
                 if (controlPathsToMatch != null)
                     m_ControlPathEditor.SetControlPathsToMatch(controlPathsToMatch);
             }
+        }
+
+        public void Dispose()
+        {
+            m_ControlPathEditor?.Dispose();
         }
 
         protected override void DrawGeneralProperties()

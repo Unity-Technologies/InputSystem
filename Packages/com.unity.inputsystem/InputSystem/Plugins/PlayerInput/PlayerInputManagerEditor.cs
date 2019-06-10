@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Users;
 
-namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
+namespace UnityEngine.InputSystem.PlayerInput.Editor
 {
     /// <summary>
     /// Custom inspector for <see cref="PlayerInputManager"/>.

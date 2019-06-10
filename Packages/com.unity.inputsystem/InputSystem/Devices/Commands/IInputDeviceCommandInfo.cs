@@ -4,6 +4,6 @@ namespace UnityEngine.InputSystem.LowLevel
 {
     public interface IInputDeviceCommandInfo
     {
-        FourCC GetTypeStatic();
+        FourCC typeStatic { get; }
     }
 }

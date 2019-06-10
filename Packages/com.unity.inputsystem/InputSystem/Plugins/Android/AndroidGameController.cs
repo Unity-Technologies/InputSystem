@@ -3,10 +3,10 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
@@ -43,9 +43,9 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
         public fixed float axis[MaxAxes];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public AndroidGameControllerState WithButton(AndroidKeyCode code, bool value = true)
@@ -71,7 +71,6 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 
     // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
-    [Flags]
     public enum AndroidInputSource
     {
         Keyboard = 257,
@@ -115,7 +114,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
     /// <summary>
     /// Most of the gamepads:
