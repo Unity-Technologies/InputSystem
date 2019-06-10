@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
@@ -15,7 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
 ////        (if we do this, every touch control has to get this, too)
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state structure for pointer devices.
@@ -23,10 +23,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', 'T', 'R'); }
-        }
+        public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
         [InputControl(layout = "Digital")]
         public uint pointerId;
@@ -72,7 +69,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     ////REVIEW: does it really make sense to have this at the pointer level?
     public enum PointerPhase
@@ -98,7 +95,7 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(PointerState))]
+    [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -149,7 +146,6 @@ namespace UnityEngine.Experimental.Input
         public AxisControl twist { get; private set; }
 
         public IntegerControl pointerId { get; private set; }
-        ////TODO: find a way which gives values as PointerPhase instead of as int
         public PointerPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }////TODO: kill this
 

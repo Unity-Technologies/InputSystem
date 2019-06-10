@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.Experimental.Input.Composites
+namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
     /// A single axis value computed from a "negative" and a "positive" button.
@@ -63,6 +63,7 @@ namespace UnityEngine.Experimental.Input.Composites
         /// <seealso cref="negative"/>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [Tooltip("Value to return when the negative side is fully actuated.")]
         public float minValue = -1;
 
         /// <summary>
@@ -75,12 +76,16 @@ namespace UnityEngine.Experimental.Input.Composites
         /// <seealso cref="positive"/>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [Tooltip("Value to return when the positive side is fully actuated.")]
         public float maxValue = 1;
 
         /// <summary>
         /// If both the <see cref="positive"/> and <see cref="negative"/> button are actuated, this
         /// determines which value is returned from the composite.
         /// </summary>
+        [Tooltip("If both the positive and negative side are actuated, decides what value to return. 'Neither' (default) means that " +
+            "the resulting value is the midpoint between min and max. 'Positive' means that max will be returned. 'Negative' means that " +
+            "min will be returned.")]
         public WhichSideWins whichSideWins = WhichSideWins.Neither;
 
         public float midPoint => (maxValue + minValue) / 2;
@@ -129,11 +134,9 @@ namespace UnityEngine.Experimental.Input.Composites
                 value = Mathf.Abs(value - midPoint);
                 return NormalizeProcessor.Normalize(value, 0, Mathf.Abs(minValue), 0);
             }
-            else
-            {
-                value = Mathf.Abs(value - midPoint);
-                return NormalizeProcessor.Normalize(value, 0, Mathf.Abs(maxValue), 0);
-            }
+
+            value = Mathf.Abs(value - midPoint);
+            return NormalizeProcessor.Normalize(value, 0, Mathf.Abs(maxValue), 0);
         }
 
         /// <summary>

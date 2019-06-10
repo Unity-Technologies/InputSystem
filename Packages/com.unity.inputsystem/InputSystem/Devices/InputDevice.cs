@@ -1,9 +1,11 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.XR;
+
+////TODO: runtime remapping of usages on a per-device basis
 
 ////TODO: finer-grained control over what devices deliver input while running in background
 ////      (e.g. get gamepad input but do *not* get mouse and keyboard input)
@@ -24,7 +26,7 @@ using UnityEngine.Experimental.Input.Plugins.XR;
 // Ideally, these would *not* be virtual methods on InputDevice but use a different process (which?)
 // for associating responses with devices
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// The root of a control hierarchy.
@@ -38,7 +40,8 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputDevice : InputControl
     {
-        public const int kInvalidDeviceId = 0;
+        public const int InvalidDeviceId = 0;
+        public const int LocalParticipantId = 0;
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
@@ -244,7 +247,8 @@ namespace UnityEngine.Experimental.Input
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
         {
-            m_Id = kInvalidDeviceId;
+            m_Id = InvalidDeviceId;
+            m_ParticipantId = LocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
         }
 
@@ -388,6 +392,7 @@ namespace UnityEngine.Experimental.Input
 
         internal DeviceFlags m_DeviceFlags;
         internal int m_Id;
+        internal int m_ParticipantId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 

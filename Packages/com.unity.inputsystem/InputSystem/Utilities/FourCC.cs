@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     public struct FourCC : IEquatable<FourCC>
     {

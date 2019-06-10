@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A floating-point 3D vector control composed of three <see cref="AxisControl">AxisControls</see>.
@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public Vector3Control()
         {
-            m_StateBlock.format = InputStateBlock.kTypeVector3;
+            m_StateBlock.format = InputStateBlock.FormatVector3;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -26,12 +26,16 @@ namespace UnityEngine.Experimental.Input.Controls
             x = builder.GetControl<AxisControl>(this, "x");
             y = builder.GetControl<AxisControl>(this, "y");
             z = builder.GetControl<AxisControl>(this, "z");
+
             base.FinishSetup(builder);
         }
 
         public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector3(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr), z.ReadValueFromState(statePtr));
+            return new Vector3(
+                x.ReadUnprocessedValueFromState(statePtr),
+                y.ReadUnprocessedValueFromState(statePtr),
+                z.ReadUnprocessedValueFromState(statePtr));
         }
 
         public override unsafe void WriteValueIntoState(Vector3 value, void* statePtr)

@@ -1,8 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
+using UnityEngine.InputSystem.Plugins.Users;
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 {
     /// <summary>
     /// Custom inspector for <see cref="PlayerInputManager"/>.
@@ -10,6 +11,21 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
     [CustomEditor(typeof(PlayerInputManager))]
     internal class PlayerInputManagerEditor : UnityEditor.Editor
     {
+        public void OnEnable()
+        {
+            InputUser.onChange += OnUserChange;
+        }
+
+        public void OnDestroy()
+        {
+            InputUser.onChange -= OnUserChange;
+        }
+
+        private void OnUserChange(InputUser user, InputUserChange change, InputDevice device)
+        {
+            Repaint();
+        }
+
         public override void OnInspectorGUI()
         {
             ////TODO: cache properties
@@ -24,6 +40,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
 
             if (EditorGUI.EndChangeCheck())
                 serializedObject.ApplyModifiedProperties();
+
+            if (EditorApplication.isPlaying)
+                DoDebugUI();
         }
 
         private void DoNotificationSectionUI()
@@ -167,13 +186,38 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
             --EditorGUI.indentLevel;
         }
 
+        private void DoDebugUI()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField(m_DebugLabel, EditorStyles.boldLabel);
+            EditorGUI.BeginDisabledGroup(true);
+
+            var players = PlayerInput.all;
+            if (players.Count == 0)
+            {
+                EditorGUILayout.LabelField("No Players");
+            }
+            else
+            {
+                foreach (var player in players)
+                {
+                    var str = player.gameObject.name;
+                    if (player.splitScreenIndex != -1)
+                        str += $" (Screen #{player.splitScreenIndex})";
+                    EditorGUILayout.LabelField("Player #" + player.playerIndex, str);
+                }
+            }
+            EditorGUI.EndDisabledGroup();
+        }
+
         [SerializeField] private bool m_EventsExpanded;
         [SerializeField] private bool m_MaxPlayerCountEnabled;
         [SerializeField] private bool m_FixedNumberOfSplitScreensEnabled;
 
-        [NonSerialized] private GUIContent m_JoiningGroupLabel = EditorGUIUtility.TrTextContent("Joining");
-        [NonSerialized] private GUIContent m_SplitScreenGroupLabel = EditorGUIUtility.TrTextContent("Split-Screen");
-        [NonSerialized] private GUIContent m_EventsLabel = EditorGUIUtility.TrTextContent("Events");
+        [NonSerialized] private readonly GUIContent m_JoiningGroupLabel = EditorGUIUtility.TrTextContent("Joining");
+        [NonSerialized] private readonly GUIContent m_SplitScreenGroupLabel = EditorGUIUtility.TrTextContent("Split-Screen");
+        [NonSerialized] private readonly GUIContent m_EventsLabel = EditorGUIUtility.TrTextContent("Events");
+        [NonSerialized] private readonly GUIContent m_DebugLabel = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_SendMessagesHelpText;
         [NonSerialized] private GUIContent m_BroadcastMessagesHelpText;
         [NonSerialized] private GUIContent m_AllowingJoiningLabel;
@@ -182,9 +226,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput.Editor
         [NonSerialized] private GUIContent m_SplitScreenAreaLabel;
         [NonSerialized] private GUIContent m_SplitScreenBorderLabel;
         [NonSerialized] private GUIContent m_FixedNumberOfSplitScreensLabel;
-        [NonSerialized] private GUIContent m_EnableMaxPlayerCountLabel =
+        [NonSerialized] private readonly GUIContent m_EnableMaxPlayerCountLabel =
             EditorGUIUtility.TrTextContent("Limit Number of Players", "TODO");
-        [NonSerialized] private GUIContent m_EnableFixedNumberOfSplitScreensLabel =
+        [NonSerialized] private readonly GUIContent m_EnableFixedNumberOfSplitScreensLabel =
             EditorGUIUtility.TrTextContent("Set Fixed Number", "TODO");
     }
 }

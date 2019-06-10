@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct DualMotorRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('R', 'M', 'B', 'L'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;

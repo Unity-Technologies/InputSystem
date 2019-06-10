@@ -1943,7 +1943,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/centerEyePosition
+      m_Path: <Oculus Go>/centerEyePosition
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -2883,7 +2883,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/deviceAngularAcceleration
+      m_Path: <Oculus Go>/deviceAngularAcceleration
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -3102,7 +3102,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/deviceAngularVelocity
+      m_Path: <Oculus Go>/deviceAngularVelocity
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -5082,7 +5082,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/deviceRotation
+      m_Path: <Oculus Go>/deviceRotation
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -5882,7 +5882,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/isTracked
+      m_Path: <Oculus Go>/isTracked
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -6316,7 +6316,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/trackingState
+      m_Path: <Oculus Go>/trackingState
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -7607,7 +7607,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/centerEyeRotation
+      m_Path: <Oculus Go>/centerEyeRotation
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8541,7 +8541,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/deviceAcceleration
+      m_Path: <Oculus Go>/deviceAcceleration
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -8918,7 +8918,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRExtendedHMD>/back
+      m_Path: <GearVR>/back
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -9065,7 +9065,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRExtendedHMD>/touchpad
+      m_Path: <GearVR>/touchpad
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -10270,7 +10270,7 @@ MonoBehaviour:
     m_Id: 
     m_SingletonActionBindings:
     - m_Name: 
-      m_Path: <GearVRSimpleHMD>/devicePosition
+      m_Path: <Oculus Go>/devicePosition
       m_Interactions: 
       m_Processors: 
       m_Groups: 

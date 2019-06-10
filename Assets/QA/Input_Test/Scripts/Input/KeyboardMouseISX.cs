@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class KeyboardMouseISX : MonoBehaviour
 {
@@ -27,21 +27,23 @@ public class KeyboardMouseISX : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>");
+        m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>") { passThrough = true };
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
+        //m_keyboardAction.cancelled += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         m_keyboardAction.Enable();
 
-        m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>");
+        m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>") {passThrough = true};
         m_mouseAction.performed += callbackContext => MouseKeyPress(callbackContext.control.device as Mouse);
+        //m_mouseAction.cancelled += callbackContext => MouseKeyPress(callbackContext.control.device as Mouse);
         m_mouseAction.Enable();
     }
 
     private void OnEnable()
     {
-        if (m_keyboardAction != null) m_keyboardAction.Enable();
-        if (m_mouseAction != null)    m_mouseAction.Enable();
+        m_keyboardAction?.Enable();
+        m_mouseAction?.Enable();
 
-        StartCoroutine("EnableTrackKeyboardInput");
+        StartCoroutine(nameof(EnableTrackKeyboardInput));
     }
 
     private void OnDisable()

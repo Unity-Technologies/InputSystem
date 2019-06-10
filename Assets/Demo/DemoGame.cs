@@ -1,13 +1,15 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
+#if ENABLE_VR
 using UnityEngine.XR;
-using InputDevice = UnityEngine.Experimental.Input.InputDevice;
+#endif
+using InputDevice = UnityEngine.InputSystem.InputDevice;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -38,7 +40,7 @@ public class DemoGame : MonoBehaviour
     public Canvas mainMenuCanvas;
     public Camera mainMenuCamera;
     public GameObject startGameButton;
-    public UIActionInputModule uiInputModule;
+    public InputSystemUIInputModule uiInputModule;
 
     /// <summary>
     /// The possible states that the game can be in as a whole.
@@ -178,7 +180,11 @@ public class DemoGame : MonoBehaviour
         get
         {
             if (!s_VRSupported.HasValue)
+#if ENABLE_VR
                 return XRSettings.enabled;
+#else
+                return false;
+#endif
             return s_VRSupported.Value;
         }
         set { s_VRSupported = value; }
@@ -256,7 +262,8 @@ public class DemoGame : MonoBehaviour
     {
         Debug.Assert(state == State.InMainMenu);
 
-        ////TODO: this should be something that UIActionInputModule can give us without us querying the action directly
+        ////TODO: this should be something that InputSystemUIInputModule can give us without us querying the action directly
+        /*
         // Find out which device clicked the "Start Game" button. We use this to
         // automatically join the player instead of requiring the player who clicked to
         // then issue an explicit join.
@@ -274,6 +281,7 @@ public class DemoGame : MonoBehaviour
         // picker. If the user cancels, we do nothing and just stay in the main menu. If the user
         // picks an account, we end up in OnUserChange().
         InputUser.PerformPairingWithDevice(playerDevice);
+        */
     }
 
     /// <summary>
@@ -591,7 +599,7 @@ public class DemoGame : MonoBehaviour
     private void ShowMainMenu(bool value = true)
     {
         // Enabling or disabling the main menu canvas automatically enables or disables
-        // the actions referenced by the UIActionInputModule sitting on the canvas. We've not
+        // the actions referenced by the InputSystemUIInputModule sitting on the canvas. We've not
         // restricted them by a set of devices or set a binding mask on them so the actions will
         // go and grab whatever devices are present and matching the bindings we have. This means
         // that every local device can be used to drive the main menu.
@@ -668,7 +676,7 @@ public class DemoGame : MonoBehaviour
                 // Start listening for device activity on devices not currently paired to a user.
                 // This is how we detect when a player presses a button to join the game with a specific
                 // device.
-                InputUser.listenForUnpairedDeviceActivity = true;
+                ++InputUser.listenForUnpairedDeviceActivity;
 
                 ////TODO: show "Press button to join" text
                 break;
@@ -685,7 +693,7 @@ public class DemoGame : MonoBehaviour
                 // from devices currently assigned to the player. This is how we detect when the player
                 // is switching from one device to another (and potentially from one control scheme
                 // to another).
-                InputUser.listenForUnpairedDeviceActivity = true;
+                ++InputUser.listenForUnpairedDeviceActivity;
 
                 break;
             }
@@ -711,7 +719,7 @@ public class DemoGame : MonoBehaviour
         // Only in the lobby and in single-player games do we listen for device activity
         // on devices not currently paired to a user.
         if (newState != State.InLobby && newState != State.InSinglePlayerGame)
-            InputUser.listenForUnpairedDeviceActivity = false;
+            --InputUser.listenForUnpairedDeviceActivity;
 
         m_State = newState;
     }

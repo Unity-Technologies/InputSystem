@@ -1,8 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.PlayerLoop;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
 
@@ -22,7 +21,7 @@ using UnityEngine.Experimental.PlayerLoop;
 
 ////REVIEW: put default gamepad polling frequency here?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Project-wide input settings.
@@ -73,38 +72,6 @@ namespace UnityEngine.Experimental.Input
                 if (m_ActionUpdateMode == value)
                     return;
                 m_ActionUpdateMode = value;
-                OnChange();
-            }
-        }
-
-        /// <summary>
-        /// If enabled, input will be collected and processed while the application is running in the background (i.e. when =
-        /// the application does not have focus).
-        /// </summary>
-        /// <remarks>
-        /// This is disabled by default.
-        ///
-        /// Note that it depends both on the platform as well as the specific devices being used what input will actually be collected
-        /// when running in the background. To query the ability of a specific device to collect input while in the background, use
-        /// <see cref="InputDevice.canRunInBackground"/>.
-        ///
-        /// In general, collecting input while running in the background only works on desktop platforms.
-        ///
-        /// Also note that for processing of input to occur, <see cref="UnityEditor.PlayerSettings.runInBackground"/> must be
-        /// enabled, too. The setting here only determines whether input from devices is sourced while the application is in
-        /// the background
-        /// </remarks>
-        /// <seealso cref="UnityEditor.PlayerSettings.runInBackground"/>
-        /// <seealso cref="InputDevice.canRunInBackground"/>
-        /// <seealso cref="Application.focusChanged"/>
-        public bool runInBackground
-        {
-            get => m_RunInBackground;
-            set
-            {
-                if (m_RunInBackground == value)
-                    return;
-                m_RunInBackground = value;
                 OnChange();
             }
         }
@@ -313,13 +280,12 @@ namespace UnityEngine.Experimental.Input
             + "updates are enabled. If enabled, the system will compute a real-time time span corresponding to each update and will process only "
             + "those events that have timestamps within or before that time span.")]
         [SerializeField] private bool m_TimesliceEvents = true;
-        [SerializeField] private bool m_RunInBackground = false;
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
 
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
-        [SerializeField] private float m_DefaultButtonPressPoint = 0.1f;
+        [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         //[SerializeField] private float m_DefaultMultiTapMaximumDelay = 0.75f;

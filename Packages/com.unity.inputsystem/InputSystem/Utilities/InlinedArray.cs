@@ -5,7 +5,7 @@ using System.Linq;
 
 ////REVIEW: what about ignoring 'firstValue' entirely in case length > 1 and putting everything into an array in that case
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Helper to avoid array allocations if there's only a single value in the array.
@@ -246,13 +246,13 @@ namespace UnityEngine.Experimental.Input.Utilities
                     Debug.Assert(length > 2);
                     firstValue = additionalValues[0];
                     var numAdditional = length - 1;
-                    ArrayHelpers.EraseAtWithCapacity(ref additionalValues, ref numAdditional, 0);
+                    ArrayHelpers.EraseAtWithCapacity(additionalValues, ref numAdditional, 0);
                 }
             }
             else
             {
                 var numAdditional = length - 1;
-                ArrayHelpers.EraseAtWithCapacity(ref additionalValues, ref numAdditional, index - 1);
+                ArrayHelpers.EraseAtWithCapacity(additionalValues, ref numAdditional, index - 1);
             }
 
             --length;
@@ -261,7 +261,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void RemoveAt(int index)
         {
             if (index < 0 || index >= length)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
@@ -320,18 +320,18 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void RemoveAtByMovingTailWithCapacity(int index)
         {
             if (index < 0 || index >= length)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
-                if (additionalValues != null)
+                if (length > 1)
                 {
                     firstValue = additionalValues[length - 1];
-                    additionalValues[length - 1] = default(TValue);
+                    additionalValues[length - 1] = default;
                 }
                 else
                 {
-                    firstValue = default(TValue);
+                    firstValue = default;
                 }
             }
             else

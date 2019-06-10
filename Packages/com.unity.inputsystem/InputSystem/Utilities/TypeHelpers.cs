@@ -1,11 +1,31 @@
 using System;
-using System.Linq;
 using System.Reflection;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     internal static class TypeHelpers
     {
+        public static TObject As<TObject>(this System.Object obj)
+        {
+            return (TObject)obj;
+        }
+
+        public static bool IsInt(this TypeCode type)
+        {
+            switch (type)
+            {
+                case TypeCode.Byte: return true;
+                case TypeCode.SByte: return true;
+                case TypeCode.Int16: return true;
+                case TypeCode.Int32: return true;
+                case TypeCode.Int64: return true;
+                case TypeCode.UInt16: return true;
+                case TypeCode.UInt32: return true;
+                case TypeCode.UInt64: return true;
+            }
+            return false;
+        }
+
         public static Type GetValueType(MemberInfo member)
         {
             var field = member as FieldInfo;

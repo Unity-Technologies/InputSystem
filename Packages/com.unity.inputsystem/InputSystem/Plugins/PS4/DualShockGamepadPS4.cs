@@ -1,26 +1,25 @@
 #if UNITY_EDITOR || UNITY_PS4
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+
+////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
 
 ////TODO: player ID
 #pragma warning disable 0649
-namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct DualShockGamepadStatePS4 : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('P', '4', 'G', 'P'); }
-        }
+        public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
         public enum Button
         {
@@ -90,15 +89,15 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        [InputControl(name = "acceleration")]
+        [InputControl(name = "acceleration", noisy = true)]
         [FieldOffset(28)]
         public Vector3 acceleration;
 
-        [InputControl(name = "orientation")]
+        [InputControl(name = "orientation", noisy = true)]
         [FieldOffset(40)]
         public Quaternion orientation;
 
-        [InputControl(name = "angularVelocity")]
+        [InputControl(name = "angularVelocity", noisy = true)]
         [FieldOffset(56)]
         public Vector3 angularVelocity;
 
@@ -125,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     {
         public static FourCC Type { get { return new FourCC('P', 'S', 'G', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
         [Flags]
         public enum Flags
@@ -193,7 +192,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
     {
         public static FourCC Type { get { return new FourCC('S', 'L', 'I', 'D'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -232,23 +231,29 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4.LowLevel
 
     // IMPORTANT: State layout must match with GamepadInputTouchStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 12)]
-    public struct PS4Touch
+    public struct PS4Touch : IInputStateTypeInfo
     {
+        public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+
         [FieldOffset(0)] public int touchId;
         [FieldOffset(4)] public Vector2 position;
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.PS4
+namespace UnityEngine.InputSystem.Plugins.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]
     class PS4InputDeviceDescriptor
     {
-        public uint slotId = 0;
-        public bool isAimController = false;
-        public uint defaultColorId = 0;
-        public uint userId = 0;
+        public uint slotId;
+        public bool isAimController;
+        public uint defaultColorId;
+        public uint userId;
 
         internal string ToJson()
         {
@@ -262,6 +267,7 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
     }
 
     ////TODO: Unify this with general touch support
+    [InputControlLayout(hideInUI = true)]
     public class PS4TouchControl : InputControl<PS4Touch>
     {
         /// <summary>
@@ -301,10 +307,13 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
     }
 
 
-    [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4))]
+    [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4), displayName = "PS4 Controller (on PS4)")]
     public class DualShockGamepadPS4 : DualShockGamepad
     {
-        ////TODO: move up into base
+        public Vector3Control acceleration { get; private set; }
+        public QuaternionControl orientation { get; private set; }
+        public Vector3Control angularVelocity { get; private set; }
+
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
         public new static ReadOnlyArray<DualShockGamepadPS4> all => new ReadOnlyArray<DualShockGamepadPS4>(s_Devices);
@@ -428,6 +437,10 @@ namespace UnityEngine.Experimental.Input.Plugins.PS4
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
+
+            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
+            orientation = builder.GetControl<QuaternionControl>(this, "orientation");
+            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
 
             var touchArray = new PS4TouchControl[2];
 

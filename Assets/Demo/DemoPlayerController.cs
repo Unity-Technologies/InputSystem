@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -13,7 +13,7 @@ using Random = UnityEngine.Random;
 /// <summary>
 /// Controller for a single player in the game.
 /// </summary>
-public class DemoPlayerController : MonoBehaviour, IGameplayActions
+public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
 {
     public const float DelayBetweenBurstProjectiles = 0.1f;
 
@@ -39,7 +39,7 @@ public class DemoPlayerController : MonoBehaviour, IGameplayActions
     /// We feed input from <see cref="controls"/> into this module thus making the player's UI responsive
     /// to the player's devices only.
     /// </remarks>
-    public UIActionInputModule uiActions;
+    public InputSystemUIInputModule uiActions;
 
     /// <summary>
     /// GameObject hierarchy inside <see cref="ui"/> that represents the menu UI.
@@ -192,15 +192,15 @@ public class DemoPlayerController : MonoBehaviour, IGameplayActions
     /// </remarks>
     public void PerformOneTimeInitialization()
     {
-        Debug.Assert(uiActions != null);
-        Debug.Assert(projectilePrefab != null);
-        Debug.Assert(controls != null);
-
         // Each player gets a separate action setup. This makes the state of actions and bindings
         // local to each player and also ensures we're not stepping on the action setup used by
         // DemoGame itself for the main menu (where we are not using control schemes and just blindly
         // bind to whatever devices are available locally).
-        controls.MakePrivateCopyOfActions();
+        controls = new DemoControls();
+
+        Debug.Assert(uiActions != null);
+        Debug.Assert(projectilePrefab != null);
+        Debug.Assert(controls != null);
 
         // Wire our callbacks into gameplay actions. We don't need to do the same
         // for menu actions as it's the UI using those and not us.
@@ -226,7 +226,7 @@ public class DemoPlayerController : MonoBehaviour, IGameplayActions
     /// </remarks>
     public InputControlScheme? SelectControlSchemeBasedOnDevice(InputDevice device)
     {
-        return InputControlScheme.FindControlSchemeForControl(device, controls.asset.controlSchemes);
+        return InputControlScheme.FindControlSchemeForDevice(device, controls.controlSchemes);
     }
 
     public void OnMove(InputAction.CallbackContext context)

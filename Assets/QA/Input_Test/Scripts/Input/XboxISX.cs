@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class XboxISX : GamepadISX
 {
@@ -9,20 +9,24 @@ public class XboxISX : GamepadISX
     public Text m_leftStickText;
     public Text m_rightStickText;
 
+    // Use this for initialization
     void Start()
     {
         //m_stickMaxMove = 0.25f;
 
         m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
+        m_buttonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
         m_buttonAction.Enable();
 
         m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
+        m_dPadAction.cancelled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
-        m_stickMoveAction = new InputAction(name: "StickMoveAction", binding: "XInputController*/<stick>");
+        m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", binding: "XInputController*/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
+        m_stickMoveAction.cancelled += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }
 

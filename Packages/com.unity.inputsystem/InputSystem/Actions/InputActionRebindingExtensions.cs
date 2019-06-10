@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 // The way target bindings for overrides are found:
 // - If specified, directly by index (e.g. "apply this override to the third binding in the map")
@@ -11,9 +11,13 @@ using UnityEngine.Experimental.Input.Utilities;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
+////TODO: allow rebinding by GUIDs now that we have IDs on bindings
+
 ////FIXME: properly work with composites
 
-namespace UnityEngine.Experimental.Input
+////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
+
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Extensions to help with dynamically rebinding <see cref="InputAction">actions</see> in
@@ -36,12 +40,6 @@ namespace UnityEngine.Experimental.Input
 
             ApplyBindingOverride(action, new InputBinding {overridePath = newPath, groups = group, path = path});
         }
-
-        // Apply the given override to the action.
-        //
-        // NOTE: Ignores the action name in the override.
-        // NOTE: Action must be disabled while applying overrides.
-        // NOTE: If there's already an override on the respective binding, replaces the override.
 
         /// <summary>
         ///
@@ -69,35 +67,9 @@ namespace UnityEngine.Experimental.Input
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            // We don't want to hit InputAction.bindings here as this requires setting up per-action
-            // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
-            // repeatedly with an index would thus cause the same data to be computed and thrown away
-            // over and over.
-            // Instead we manually search through the map's bindings to find the right binding index
-            // in the map.
-
-            var actionMap = action.GetOrCreateActionMap();
-            var bindingsInMap = actionMap.m_Bindings;
-            var bindingCountInMap = bindingsInMap?.Length ?? 0;
-            var actionName = action.name;
-
-            var currentBindingIndexOnAction = -1;
-            for (var i = 0; i < bindingCountInMap; ++i)
-            {
-                if (string.Compare(bindingsInMap[i].action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0)
-                    continue;
-
-                ++currentBindingIndexOnAction;
-                if (currentBindingIndexOnAction == bindingIndex)
-                {
-                    bindingOverride.action = actionName;
-                    ApplyBindingOverride(actionMap, i, bindingOverride);
-                    return;
-                }
-            }
-
-            throw new ArgumentOutOfRangeException(
-                $"Binding index {bindingIndex} is out of range for action '{action}' with {currentBindingIndexOnAction} bindings", "bindingIndex");
+            var indexOnMap = action.BindingIndexOnActionToBindingIndexOnMap(bindingIndex);
+            bindingOverride.action = action.name;
+            ApplyBindingOverride(action.GetOrCreateActionMap(), indexOnMap, bindingOverride);
         }
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
@@ -142,7 +114,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             if (matchCount > 0)
-                actionMap.InvalidateResolvedData();
+                actionMap.LazyResolveBindings();
 
             return matchCount;
         }
@@ -151,14 +123,14 @@ namespace UnityEngine.Experimental.Input
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            var bindingsCount = actionMap.m_Bindings != null ? actionMap.m_Bindings.Length : 0;
+            var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
                 throw new ArgumentOutOfRangeException(
                     $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings", "bindingIndex");
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
-            actionMap.InvalidateResolvedData();
+            actionMap.LazyResolveBindings();
         }
 
         public static void RemoveBindingOverride(this InputAction action, InputBinding bindingOverride)
@@ -210,7 +182,7 @@ namespace UnityEngine.Experimental.Input
                 bindings[i].overrideInteractions = null;
             }
 
-            actionMap.InvalidateResolvedData();
+            actionMap.LazyResolveBindings();
         }
 
         public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
@@ -420,14 +392,18 @@ namespace UnityEngine.Experimental.Input
 
             public bool cancelled => (m_Flags & Flags.Cancelled) != 0;
 
+            public double startTime => m_StartTime;
+
+            public float timeout => m_Timeout;
+
             public RebindingOperation WithAction(InputAction action)
             {
                 ThrowIfRebindInProgress();
 
                 if (action == null)
-                    throw new ArgumentNullException("action");
+                    throw new ArgumentNullException(nameof(action));
                 if (action.enabled)
-                    throw new InvalidOperationException(string.Format("Cannot rebind action '{0}' while it is enabled", action));
+                    throw new InvalidOperationException($"Cannot rebind action '{action}' while it is enabled");
 
                 m_ActionToRebind = action;
 
@@ -465,7 +441,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithExpectedControlType(Type type)
             {
                 if (type != null && !typeof(InputControl).IsAssignableFrom(type))
-                    throw new ArgumentException(string.Format("Type '{0}' is not an InputControl", type.Name), "type");
+                    throw new ArgumentException($"Type '{type.Name}' is not an InputControl", "type");
                 m_ControlType = type;
                 return this;
             }
@@ -535,8 +511,8 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
                 if (magnitude < 0)
-                    throw new ArgumentException(string.Format("Magnitude has to be positive but was {0}", magnitude),
-                        "magnitude");
+                    throw new ArgumentException($"Magnitude has to be positive but was {magnitude}",
+                        nameof(magnitude));
                 m_MagnitudeThreshold = magnitude;
                 return this;
             }
@@ -556,7 +532,7 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_IncludePathCount; ++i)
                     if (string.Compare(m_IncludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return this;
@@ -573,11 +549,17 @@ namespace UnityEngine.Experimental.Input
             public RebindingOperation WithControlsExcluding(string path)
             {
                 if (string.IsNullOrEmpty(path))
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_ExcludePathCount; ++i)
                     if (string.Compare(m_ExcludePaths[i], path, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return this;
                 ArrayHelpers.AppendWithCapacity(ref m_ExcludePaths, ref m_ExcludePathCount, path);
+                return this;
+            }
+
+            public RebindingOperation WithTimeout(float timeInSeconds)
+            {
+                m_Timeout = timeInSeconds;
                 return this;
             }
 
@@ -632,21 +614,25 @@ namespace UnityEngine.Experimental.Input
                 // Make sure our configuration is sound.
                 if (m_ActionToRebind != null && m_ActionToRebind.bindings.Count == 0 && (m_Flags & Flags.AddNewBinding) == 0)
                     throw new InvalidOperationException(
-                        string.Format(
-                            "Action '{0}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()",
-                            action));
+                        $"Action '{action}' must have at least one existing binding or must be used with WithRebindingAddNewBinding()");
                 if (m_ActionToRebind == null && m_OnApplyBinding == null)
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
-                if (m_WaitSecondsAfterMatch > 0)
+                m_StartTime = InputRuntime.s_Instance.currentTime;
+
+                if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
                     HookOnAfterUpdate();
                     m_LastMatchTime = -1;
                 }
 
                 HookOnEvent();
+
                 m_Flags |= Flags.Started;
+                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Completed;
+
                 return this;
             }
 
@@ -672,7 +658,7 @@ namespace UnityEngine.Experimental.Input
             public void AddCandidate(InputControl control, float score)
             {
                 if (control == null)
-                    throw new ArgumentNullException("control");
+                    throw new ArgumentNullException(nameof(control));
 
                 // If it's already added, update score.
                 var index = m_Candidates.IndexOf(control);
@@ -694,7 +680,7 @@ namespace UnityEngine.Experimental.Input
             public void RemoveCandidate(InputControl control)
             {
                 if (control == null)
-                    throw new ArgumentNullException("control");
+                    throw new ArgumentNullException(nameof(control));
 
                 var index = m_Candidates.IndexOf(control);
                 if (index == -1)
@@ -702,7 +688,7 @@ namespace UnityEngine.Experimental.Input
 
                 var candidateCount = m_Candidates.Count;
                 m_Candidates.RemoveAt(index);
-                ArrayHelpers.EraseAtWithCapacity(ref m_Scores, ref candidateCount, index);
+                ArrayHelpers.EraseAtWithCapacity(m_Scores, ref candidateCount, index);
             }
 
             public void Dispose()
@@ -765,7 +751,7 @@ namespace UnityEngine.Experimental.Input
                     var control = controls[i];
 
                     // Skip controls that have no state in the event.
-                    var statePtr = (void*)control.GetStatePtrFromStateEvent(eventPtr);
+                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
                     if (statePtr == null)
                         continue;
 
@@ -936,6 +922,15 @@ namespace UnityEngine.Experimental.Input
 
             private void OnAfterUpdate(InputUpdateType updateType)
             {
+                // If we don't have a match yet but we have a timeout and have expired it,
+                // cancel the operation.
+                if (m_LastMatchTime < 0 && m_Timeout > 0 &&
+                    InputRuntime.s_Instance.currentTime - m_StartTime > m_Timeout)
+                {
+                    Cancel();
+                    return;
+                }
+
                 // Sanity check to make sure we're actually waiting for completion.
                 if (m_WaitSecondsAfterMatch <= 0)
                     return;
@@ -1031,6 +1026,7 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.Started;
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
+                m_StartTime = -1;
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
@@ -1045,60 +1041,20 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Based on the chosen control, generate an override path to rebind to.
             /// </summary>
-            /// <param name="control"></param>
-            /// <returns></returns>
             private string GeneratePathForControl(InputControl control)
             {
                 var device = control.device;
-                Debug.Assert(device != control, "Control must not be a device!");
+                Debug.Assert(control != device, "Control must not be a device");
 
-                // Find the topmost child control on the device. A device layout can only
-                // add children that sit directly underneath it (e.g. "leftStick"). Children of children
-                // are indirectly added by other layouts (e.g. "leftStick/x" which is added by "Stick").
-                // To determine which device contributes the control has a whole, we have to be looking
-                // at the topmost child of the device.
-                var topmostChild = control;
-                while (topmostChild.parent != device)
-                    topmostChild = topmostChild.parent;
+                var deviceLayoutName =
+                    InputControlLayout.s_Layouts.FindLayoutThatIntroducesControl(control, m_LayoutCache);
 
-                // Find the layout in the device's base layout chain that first mentions the given control.
-                // If we don't find it, we know it's first defined directly in the layout of the given device,
-                // i.e. it's not an inherited control.
-                var deviceLayoutName = device.m_Layout;
-                var baseLayoutName = deviceLayoutName;
-                while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayoutName, out baseLayoutName))
-                {
-                    var layout = m_LayoutCache.FindOrLoadLayout(baseLayoutName);
-
-                    var controlItem = layout.FindControl(topmostChild.m_Name);
-                    if (controlItem != null)
-                        deviceLayoutName = baseLayoutName;
-                }
-
-                // Create a path with the given device layout
                 if (m_PathBuilder == null)
                     m_PathBuilder = new StringBuilder();
                 else
                     m_PathBuilder.Length = 0;
 
-                m_PathBuilder.Append('<');
-                m_PathBuilder.Append(deviceLayoutName);
-                m_PathBuilder.Append('>');
-
-                // Add usages of device, if any.
-                var deviceUsages = device.usages;
-                for (var i = 0; i < deviceUsages.Count; ++i)
-                {
-                    m_PathBuilder.Append('{');
-                    m_PathBuilder.Append(deviceUsages[i]);
-                    m_PathBuilder.Append('}');
-                }
-
-                m_PathBuilder.Append('/');
-
-                var devicePath = device.path;
-                var controlPath = control.path;
-                m_PathBuilder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
+                control.BuildPath(deviceLayoutName, m_PathBuilder);
 
                 return m_PathBuilder.ToString();
             }
@@ -1118,6 +1074,8 @@ namespace UnityEngine.Experimental.Input
             private float m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
             private float[] m_Scores; // Scores for the controls in m_Candidates.
             private double m_LastMatchTime; // Last input event time we discovered a better match.
+            private double m_StartTime;
+            private float m_Timeout;
             private float m_WaitSecondsAfterMatch;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;

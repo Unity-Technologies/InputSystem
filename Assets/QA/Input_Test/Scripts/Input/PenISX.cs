@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class PenISX : MonoBehaviour
 {
@@ -46,6 +46,7 @@ public class PenISX : MonoBehaviour
 
         m_penAction = new InputAction(name: "PenButtonAction", binding: "<pen>/<button>");
         m_penAction.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
+        m_penAction.cancelled += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
         m_penAction.Enable();
     }
 

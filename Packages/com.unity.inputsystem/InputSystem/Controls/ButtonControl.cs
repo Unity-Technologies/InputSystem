@@ -1,10 +1,10 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: get rid of pressPoint and instead deadzone axis buttons
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// An axis that has a trigger point beyond which it is considered to be pressed.
@@ -20,14 +20,11 @@ namespace UnityEngine.Experimental.Input.Controls
     public class ButtonControl : AxisControl
     {
         public float pressPoint;
-        public float pressPointOrDefault
-        {
-            get { return pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint; }
-        }
+        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         public ButtonControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
             m_MinValue = 0f;
             m_MaxValue = 1f;
         }
@@ -37,19 +34,10 @@ namespace UnityEngine.Experimental.Input.Controls
             return value >= pressPointOrDefault;
         }
 
-        public bool isPressed
-        {
-            get { return IsValueConsideredPressed(ReadValue()); }
-        }
+        public bool isPressed => IsValueConsideredPressed(ReadValue());
 
-        public bool wasPressedThisFrame
-        {
-            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
-        }
+        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
-        public bool wasReleasedThisFrame
-        {
-            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame()); }
-        }
+        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
     }
 }

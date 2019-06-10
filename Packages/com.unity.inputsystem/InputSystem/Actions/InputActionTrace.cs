@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
 ////        the actions-update-when-not-expected problem; plus give us access to easy polling
@@ -18,7 +18,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: protect traces against controls changing configuration (if state layouts change, we're affected)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Records the triggering of actions into a sequence of events that can be replayed at will.
@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputAction.performed"/>
     /// <seealso cref="InputAction.cancelled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable, ICloneable
+    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -98,6 +98,24 @@ namespace UnityEngine.Experimental.Input
         public InputEventBuffer buffer => m_EventBuffer;
 
         public int count => m_EventBuffer.eventCount;
+
+        public InputActionTrace()
+        {
+        }
+
+        public InputActionTrace(InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            SubscribeTo(action);
+        }
+
+        public InputActionTrace(InputActionMap actionMap)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException(nameof(actionMap));
+            SubscribeTo(actionMap);
+        }
 
         /// <summary>
         /// Record any action getting triggered anywhere.
@@ -244,38 +262,30 @@ namespace UnityEngine.Experimental.Input
 
         ~InputActionTrace()
         {
-            Dispose();
+            DisposeInternal();
         }
 
         public void Dispose()
         {
+            UnsubscribeFromAll();
+            DisposeInternal();
+        }
+
+        private void DisposeInternal()
+        {
+            // Nuke clones we made of InputActionMapStates.
+            for (var i = 0; i < m_ActionMapStateClones.length; ++i)
+                m_ActionMapStateClones[i].Dispose();
+
             m_EventBuffer.Dispose();
             m_ActionMapStates.Clear();
+            m_ActionMapStateClones.Clear();
 
             if (m_ActionChangeDelegate != null)
             {
                 InputSystem.onActionChange -= m_ActionChangeDelegate;
                 m_ActionChangeDelegate = null;
             }
-        }
-
-        public InputActionTrace Clone()
-        {
-            var trace = new InputActionTrace
-            {
-                m_EventBuffer = m_EventBuffer.Clone(),
-                m_ActionMapStates = m_ActionMapStates.Clone()
-            };
-
-            if (trace.count > 0)
-                trace.HookOnActionChange();
-
-            return trace;
-        }
-
-        object ICloneable.Clone()
-        {
-            return Clone();
         }
 
         public IEnumerator<ActionEventPtr> GetEnumerator()
@@ -293,7 +303,8 @@ namespace UnityEngine.Experimental.Input
         private InlinedArray<InputAction> m_SubscribedActions;
         private InlinedArray<InputActionMap> m_SubscribedActionMaps;
         private InputEventBuffer m_EventBuffer;
-        private InlinedArray<InputActionMapState> m_ActionMapStates;
+        private InlinedArray<InputActionState> m_ActionMapStates;
+        private InlinedArray<InputActionState> m_ActionMapStateClones;
         private Action<InputAction.CallbackContext> m_CallbackDelegate;
         private Action<object, InputActionChange> m_ActionChangeDelegate;
 
@@ -376,7 +387,9 @@ namespace UnityEngine.Experimental.Input
 
             // Yes, we are so make our own private copy of its current state.
             // NOTE: We do not put these local InputActionMapStates on the global list.
-            m_ActionMapStates[stateIndex] = state.Clone();
+            var clone = state.Clone();
+            m_ActionMapStateClones.Append(clone);
+            m_ActionMapStates[stateIndex] = clone;
         }
 
         /// <summary>
@@ -389,7 +402,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public unsafe struct ActionEventPtr
         {
-            internal InputActionMapState m_State;
+            internal InputActionState m_State;
             internal ActionEvent* m_Ptr;
 
             public InputAction action => m_State.GetActionOrNull(m_Ptr->bindingIndex);
@@ -403,7 +416,7 @@ namespace UnityEngine.Experimental.Input
                 get
                 {
                     var index = m_Ptr->interactionIndex;
-                    if (index == InputActionMapState.kInvalidIndex)
+                    if (index == InputActionState.kInvalidIndex)
                         return null;
 
                     return m_State.interactions[index];
@@ -466,16 +479,16 @@ namespace UnityEngine.Experimental.Input
 
         private unsafe struct Enumerator : IEnumerator<ActionEventPtr>
         {
-            private InputActionTrace m_Trace;
-            private ActionEvent* m_Buffer;
+            private readonly InputActionTrace m_Trace;
+            private readonly ActionEvent* m_Buffer;
+            private readonly int m_EventCount;
             private ActionEvent* m_CurrentEvent;
             private int m_CurrentIndex;
-            private int m_EventCount;
 
             public Enumerator(InputActionTrace trace)
             {
                 m_Trace = trace;
-                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.ToPointer();
+                m_Buffer = (ActionEvent*)trace.m_EventBuffer.bufferPtr.data;
                 m_EventCount = trace.m_EventBuffer.eventCount;
                 m_CurrentEvent = null;
                 m_CurrentIndex = 0;

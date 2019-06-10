@@ -34,9 +34,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
-  },
-  "testables": [
-    "com.unity.inputsystem"
-  ]
+    "com.unity.modules.xr": "1.0.0",
+    "nuget.mono-cecil": "0.1.5-preview"
+  }
 }

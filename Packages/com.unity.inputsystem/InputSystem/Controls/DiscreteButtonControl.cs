@@ -1,7 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Controls
+////TODO: hide in UI
+
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A button that is considered pressed if the underlying state has a value in the specific range.

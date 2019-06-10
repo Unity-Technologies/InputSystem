@@ -1,9 +1,9 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: add support for ramp up/down
 
-namespace UnityEngine.Experimental.Input.Composites
+namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
     /// A 2D planar motion vector computed from an up+down button pair and a left+right
@@ -33,17 +33,10 @@ namespace UnityEngine.Experimental.Input.Composites
 
         public override Vector2 ReadValue(ref InputBindingCompositeContext context)
         {
-            var upValue = context.ReadValue<float>(up);
-            var downValue = context.ReadValue<float>(down);
-            var leftValue = context.ReadValue<float>(left);
-            var rightValue = context.ReadValue<float>(right);
-
-            ////REVIEW: should this respect press points?
-
-            var upIsPressed = upValue > 0;
-            var downIsPressed = downValue > 0;
-            var leftIsPressed = leftValue > 0;
-            var rightIsPressed = rightValue > 0;
+            var upIsPressed = context.ReadValueAsButton(up);
+            var downIsPressed = context.ReadValueAsButton(down);
+            var leftIsPressed = context.ReadValueAsButton(left);
+            var rightIsPressed = context.ReadValueAsButton(right);
 
             return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
         }

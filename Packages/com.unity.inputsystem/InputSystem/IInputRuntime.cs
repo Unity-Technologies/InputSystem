@@ -1,10 +1,14 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////TODO: add API to send events in bulk rather than one by one
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
 
@@ -21,7 +25,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Allocate a new unique device ID.
         /// </summary>
-        /// <returns>A numeric device ID that is not <see cref="InputDevice.kInvalidDeviceId"/>.</returns>
+        /// <returns>A numeric device ID that is not <see cref="InputDevice.InvalidDeviceId"/>.</returns>
         /// <remarks>
         /// Device IDs are managed by the runtime. This method allows creating devices that
         /// can use the same ID system but are not known to the underlying runtime.
@@ -50,7 +54,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Events are copied into an internal buffer. Thus the memory referenced by this method does
         /// not have to persist until the event is processed.
         /// </remarks>
-        void QueueEvent(IntPtr ptr);
+        void QueueEvent(InputEvent* ptr);
 
         //NOTE: This method takes an IntPtr instead of a generic ref type parameter (like InputDevice.ExecuteCommand)
         //      to avoid issues with AOT where generic interface methods can lead to problems. Il2cpp can handle it here
@@ -82,6 +86,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// in the upcoming update.
         /// </remarks>
         Action<InputUpdateType> onBeforeUpdate { set; }
+
+        Func<InputUpdateType, bool> onShouldRunUpdate { set; }
 
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
@@ -133,23 +139,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTime { get; }
 
         /// <summary>
+        /// The current time on the same timeline that input events are delivered on, for the current FixedUpdate.
+        /// </summary>
+        /// <remarks>
+        /// This should be used inside FixedUpdate calls instead of currentTime, as FixedUpdates are simulated at times
+        /// not matching the real time the simulation corresponds to.
+        /// </remarks>
+        double currentTimeForFixedUpdate { get; }
+
+        /// <summary>
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
-
-        /// <summary>
-        /// Frequency at which fixed updates are being run.
-        /// </summary>
-        double fixedUpdateIntervalInSeconds { get; }
-
-        /// <summary>
-        /// Mask that determines which input updates are executed by the runtime.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to turn off unneeded updates (like fixed updates) or turn on updates
-        /// that are disabled by default (like before-render updates).
-        /// </remarks>
-        InputUpdateType updateMask { set; }
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }
@@ -160,6 +161,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
         #if UNITY_ANALYTICS || UNITY_EDITOR
         void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
         void SendAnalyticsEvent(string name, object data);
+        #endif
+
+        bool isInBatchMode { get; }
+
+        #if UNITY_EDITOR
+        Action<PlayModeStateChange> onPlayModeChanged { set; }
+        Action onProjectChange { set; }
+        bool isInPlayMode { get;  }
+        bool isPaused { get; }
         #endif
     }
 

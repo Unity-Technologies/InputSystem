@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: batch append method
 
@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: can we get rid of kBufferSizeUnknown and force size to always be known? (think this would have to wait until
 ////        the native changes have landed in 2018.3)
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A buffer of raw memory holding a sequence of <see cref="InputEvent">input events</see>.
@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </remarks>
     public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable, ICloneable
     {
-        public const long kBufferSizeUnknown = -1;
+        public const long BufferSizeUnknown = -1;
 
         /// <summary>
         /// Total number of events in the buffer.
@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Size of the buffer in bytes.
         /// </summary>
         /// <remarks>
-        /// If the size is not known, returns <see cref="kBufferSizeUnknown"/>.
+        /// If the size is not known, returns <see cref="BufferSizeUnknown"/>.
         ///
         /// Note that the size does not usually correspond to <see cref="eventCount"/> times <c>sizeof(InputEvent)</c>.
         /// <see cref="InputEvent">Input events</see> are variable in size.
@@ -78,9 +78,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             : this()
         {
             if (eventPtr == null && eventCount != 0)
-                throw new ArgumentException("eventPtr is NULL but eventCount is != 0", "eventCount");
+                throw new ArgumentException("eventPtr is NULL but eventCount is != 0", nameof(eventCount));
             if (capacityInBytes != 0 && capacityInBytes < sizeInBytes)
-                throw new ArgumentException(string.Format("capacity({0}) cannot be smaller than size({1})", capacityInBytes, sizeInBytes), "capacityInBytes");
+                throw new ArgumentException($"capacity({capacityInBytes}) cannot be smaller than size({sizeInBytes})",
+                    nameof(capacityInBytes));
 
             if (eventPtr != null)
             {
@@ -89,7 +90,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
                 m_Buffer = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(eventPtr,
                     capacityInBytes > 0 ? capacityInBytes : 0, Allocator.None);
-                m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : kBufferSizeUnknown;
+                m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : BufferSizeUnknown;
                 m_EventCount = eventCount;
                 m_WeOwnTheBuffer = false;
             }
@@ -98,9 +99,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public InputEventBuffer(NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1)
         {
             if (eventCount > 0 && !buffer.IsCreated)
-                throw new ArgumentException("buffer has no data but eventCount is > 0", "eventCount");
+                throw new ArgumentException("buffer has no data but eventCount is > 0", nameof(eventCount));
             if (sizeInBytes > buffer.Length)
-                throw new ArgumentOutOfRangeException("sizeInBytes");
+                throw new ArgumentOutOfRangeException(nameof(sizeInBytes));
 
             m_Buffer = buffer;
             m_WeOwnTheBuffer = false;
@@ -122,7 +123,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public void AppendEvent(InputEvent* eventPtr, int capacityIncrementInBytes = 2048)
         {
             if (eventPtr == null)
-                throw new ArgumentNullException("eventPtr");
+                throw new ArgumentNullException(nameof(eventPtr));
 
             // Allocate space.
             var eventSizeInBytes = eventPtr->sizeInBytes;
@@ -136,9 +137,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             if (sizeInBytes < InputEvent.kBaseEventSize)
                 throw new ArgumentException(
-                    string.Format("sizeInBytes must be >= sizeof(InputEvent) == {0} (was {1})",
-                        InputEvent.kBaseEventSize, sizeInBytes),
-                    "sizeInBytes");
+                    $"sizeInBytes must be >= sizeof(InputEvent) == {InputEvent.kBaseEventSize} (was {sizeInBytes})",
+                    nameof(sizeInBytes));
 
             var alignedSizeInBytes = NumberHelpers.AlignToMultiple(sizeInBytes, InputEvent.kAlignment);
 
@@ -183,7 +183,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Note that this method does NOT check whether the given pointer points to an actual
         /// event in the buffer. It solely performs a pointer out-of-bounds check.
         ///
-        /// Also note that if the size of the memory buffer is unknown (<see cref="kBufferSizeUnknown"/>,
+        /// Also note that if the size of the memory buffer is unknown (<see cref="BufferSizeUnknown"/>,
         /// only a lower-bounds check is performed.
         /// </remarks>
         public bool Contains(InputEvent* eventPtr)
@@ -198,7 +198,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (eventPtr < bufferPtr)
                 return false;
 
-            if (sizeInBytes != kBufferSizeUnknown && eventPtr >= (byte*)bufferPtr + sizeInBytes)
+            if (sizeInBytes != BufferSizeUnknown && eventPtr >= (byte*)bufferPtr + sizeInBytes)
                 return false;
 
             return true;
@@ -207,7 +207,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public void Reset()
         {
             m_EventCount = 0;
-            if (m_SizeInBytes != kBufferSizeUnknown)
+            if (m_SizeInBytes != BufferSizeUnknown)
                 m_SizeInBytes = 0;
         }
 
@@ -301,12 +301,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         private int m_EventCount;
         private bool m_WeOwnTheBuffer; ////FIXME: what we really want is access to NativeArray's allocator label
 
-        internal struct Enumerator : IEnumerator<InputEventPtr>
+        private struct Enumerator : IEnumerator<InputEventPtr>
         {
-            private InputEvent* m_Buffer;
+            private readonly InputEvent* m_Buffer;
+            private readonly int m_EventCount;
             private InputEvent* m_CurrentEvent;
             private int m_CurrentIndex;
-            private int m_EventCount;
 
             public Enumerator(InputEventBuffer buffer)
             {

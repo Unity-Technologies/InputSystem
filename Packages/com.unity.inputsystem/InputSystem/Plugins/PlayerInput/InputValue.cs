@@ -2,7 +2,7 @@ using System;
 
 ////TODO: ToString()
 
-namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.Plugins.PlayerInput
 {
     /// <summary>
     /// Wraps around values provided by input actions.
@@ -38,6 +38,9 @@ namespace UnityEngine.Experimental.Input.Plugins.PlayerInput
 
             return m_Context.Value.ReadValue<TValue>();
         }
+
+        ////TODO: proper message if value type isn't right
+        public bool isPressed => Get<float>() >= InputSystem.settings.defaultButtonPressPoint;
 
         internal InputAction.CallbackContext? m_Context;
     }

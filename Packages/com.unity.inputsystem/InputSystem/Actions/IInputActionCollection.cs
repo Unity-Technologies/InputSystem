@@ -1,11 +1,13 @@
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A collection of <see cref="InputAction">input actions</see>.
+    /// A collection of input actions (<see cref="InputAction"/>).
     /// </summary>
+    /// <seealso cref="InputActionMap"/>
+    /// <seealso cref="InputActionAsset"/>
     public interface IInputActionCollection : IEnumerable<InputAction>
     {
         /// <summary>

@@ -1,17 +1,16 @@
-using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Combine a single pointer with buttons and a scroll wheel.
     /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
-    [StructLayout(LayoutKind.Explicit, Size = 28)]
+    [StructLayout(LayoutKind.Explicit, Size = 30)]
     public struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
@@ -31,7 +30,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true)]
+        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true, usage = "")]
         [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
         [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
@@ -43,17 +42,21 @@ namespace UnityEngine.Experimental.Input.LowLevel
         ////FIXME: InputDeviceBuilder will get fooled and set up an incorrect state layout if we don't force this to VEC2; InputControlLayout will
         ////       "infer" USHT as the format which will then end up with a layout where two 4 byte float controls are "packed" into a 16bit sized parent;
         ////       in other words, setting VEC2 here manually should *not* be necessary
-        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kAutomaticOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kAutomaticOffset)] ////REVIEW: should this make use of None and Moved?
+        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.AutomaticOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
         [InputControl(layout = "Digital")]
         [FieldOffset(26)]
         public ushort displayIndex;
+
+        [InputControl(layout = "Digital")]
+        [FieldOffset(28)]
+        public ushort clickCount;
 
         ////REVIEW: move this and the same methods in other states to extension methods?
         public MouseState WithButton(MouseButton button, bool state = true)
@@ -82,7 +85,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mouse input device.
@@ -93,7 +96,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
-    [InputControlLayout(stateType = typeof(MouseState))]
+    [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
@@ -120,6 +123,7 @@ namespace UnityEngine.Experimental.Input
 
         public ButtonControl backButton { get; private set; }
 
+        public IntegerControl clickCount { get; private set;  }
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
         /// connected to the system.
@@ -162,6 +166,7 @@ namespace UnityEngine.Experimental.Input
             rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
             forwardButton = builder.GetControl<ButtonControl>(this, "forwardButton");
             backButton = builder.GetControl<ButtonControl>(this, "backButton");
+            clickCount = builder.GetControl<IntegerControl>(this, "clickCount");
             base.FinishSetup(builder);
         }
 
@@ -183,45 +188,5 @@ namespace UnityEngine.Experimental.Input
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
             AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
         }
-    }
-
-    //can we have a structure for doing those different simulation parts in a controlled fashion?
-
-    /// <summary>
-    /// Simulate mouse input from touch or gamepad input.
-    /// </summary>
-    public class MouseSimulation
-    {
-        /// <summary>
-        /// Whether to translate touch input into mouse input.
-        /// </summary>
-        public bool useTouchInput
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        /// <summary>
-        /// Whether to translate gamepad and joystick input into mouse input.
-        /// </summary>
-        public bool useControllerInput
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public static MouseSimulation instance => throw new NotImplementedException();
-
-        public void Enable()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Disable()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Mouse m_Mouse;
     }
 }

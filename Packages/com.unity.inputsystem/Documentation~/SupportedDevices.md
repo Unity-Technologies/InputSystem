@@ -17,10 +17,10 @@ The following devices are supported in a way that does not require recognition o
 |Compass|No|No|No|No|Yes|Yes|No|No|No|No|
 |Joystick(3)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|No|
 
-    (1) Tablet support for Mac is planned for 2019.2.
-    (2) Tablet support for UWP is planned for 2019.2.
+    (1) Tablet support for Mac is planned for 2019.3.
+    (2) Tablet support for UWP is planned for 2019.3.
     (3) Joysticks are supported as generic HIDs ...
-    (4) Touchscreen support for Switch is planned for 2019.2.
+    (4) Touchscreen support for Switch is planned for 2019.3.
     (5) The gyro/accelerometer in the PS4 controller is supported but is built
         directly into the gamepad and not represented as a separate Gyroscope
         device.

@@ -8,7 +8,11 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace UnityEngine.Experimental.Input.LowLevel
+#if !UNITY_2019_2
+// The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
+#pragma warning disable 618
+#endif
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Implements <see cref="IInputRuntime"/> based on <see cref="NativeInputSystem"/>.
@@ -24,30 +28,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public void Update(InputUpdateType updateType)
         {
-            if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Dynamic);
-            }
-            if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Fixed);
-            }
-            if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
-            }
-
-            #if UNITY_EDITOR
-            if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Editor);
-            }
-            #endif
+            NativeInputSystem.Update((NativeInputUpdateType)updateType);
         }
 
-        public void QueueEvent(IntPtr ptr)
+        public unsafe void QueueEvent(InputEvent* ptr)
         {
-            NativeInputSystem.QueueInputEvent(ptr);
+            NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
@@ -59,12 +45,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             set
             {
-                ////TODO: This is 2019.2-only right now but the native API change is in the process of getting backported
-                ////      to 2018.3 (and hopefully 2018.2). What changed is that the native side now allows the managed side
-                ////      to mutate the buffer and keep events around from update to update.
-
                 if (value != null)
-                    #if UNITY_2019_2_OR_NEWER
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
@@ -100,14 +81,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                             eventBufferPtr->sizeInBytes = 0;
                         }
                     };
-                    #else
-                    NativeInputSystem.onUpdate =
-                        (updateType, eventCount, eventPtr) =>
-                    {
-                        var buffer = new InputEventBuffer((InputEvent*)eventPtr, eventCount);
-                        value((InputUpdateType)updateType, ref buffer);
-                    };
-                    #endif
                 else
                     NativeInputSystem.onUpdate = null;
             }
@@ -123,6 +96,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     NativeInputSystem.onBeforeUpdate = updateType => value((InputUpdateType)updateType);
                 else
                     NativeInputSystem.onBeforeUpdate = null;
+            }
+        }
+
+        public Func<InputUpdateType, bool> onShouldRunUpdate
+        {
+            set
+            {
+                // This is stupid but the enum prevents us from jacking the delegate in directly.
+                // This means we get a double dispatch here :(
+                if (value != null)
+                    NativeInputSystem.onShouldRunUpdate = updateType => value((InputUpdateType)updateType);
+                else
+                    NativeInputSystem.onShouldRunUpdate = null;
             }
         }
 
@@ -177,14 +163,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double currentTime => NativeInputSystem.currentTime;
 
+        public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
+
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-
-        public double fixedUpdateIntervalInSeconds => Time.fixedDeltaTime;
-
-        public InputUpdateType updateMask
-        {
-            set => NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
-        }
 
         private Action m_ShutdownMethod;
 
@@ -206,7 +187,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public int frameCount => Time.frameCount;
 
-#if UNITY_ANALYTICS || UNITY_EDITOR
+        public bool isInBatchMode => Application.isBatchMode;
+
+        #if UNITY_EDITOR
+
+        public bool isInPlayMode => EditorApplication.isPlaying;
+        public bool isPaused => EditorApplication.isPaused;
+
+        public Action<PlayModeStateChange> onPlayModeChanged
+        {
+            set => EditorApplication.playModeStateChanged += value;
+        }
+
+        public Action onProjectChange
+        {
+            set => EditorApplication.projectChanged += value;
+        }
+
+        #endif // UNITY_EDITOR
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
@@ -227,6 +227,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             #endif
         }
 
-#endif // UNITY_ANALYTICS || UNITY_EDITOR
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

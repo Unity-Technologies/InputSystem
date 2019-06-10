@@ -1,12 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
-////TODO: support for removing bindings
-
-////TODO: rename AddBinding to just AddBinding
-
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Extensions to set up <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">
@@ -22,12 +18,13 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException(nameof(name));
 
             var map = new InputActionMap(name);
+            map.GenerateId();
             asset.AddActionMap(map);
             return map;
         }
 
         public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
-            string interactions = null, string groups = null, string expectedControlLayout = null)
+            string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
             if (map == null)
                 throw new ArgumentNullException(nameof(map));
@@ -41,8 +38,11 @@ namespace UnityEngine.Experimental.Input
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
 
             // Append action to array.
-            var action = new InputAction(name);
-            action.expectedControlLayout = expectedControlLayout;
+            var action = new InputAction(name)
+            {
+                expectedControlLayout = expectedControlLayout
+            };
+            action.GenerateId();
             ArrayHelpers.Append(ref map.m_Actions, action);
             action.m_ActionMap = map;
 
@@ -50,13 +50,26 @@ namespace UnityEngine.Experimental.Input
 
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
-                action.AddBinding(binding, interactions: interactions, groups: groups);
+            {
+                action.AddBinding(binding, interactions: interactions, processors: processors, groups: groups);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(groups))
+                    throw new ArgumentException(
+                        $"No binding path was specified for action '{action}' but groups was specified ('{groups}'); cannot apply groups without binding",
+                        nameof(groups));
+
+                // If no binding has been supplied but there are interactions and processors, they go on the action itself.
+                action.m_Interactions = interactions;
+                action.m_Processors = processors;
+            }
 
             return action;
         }
 
         ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
-        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string groups = null)
+        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
@@ -65,6 +78,7 @@ namespace UnityEngine.Experimental.Input
             {
                 path = path,
                 interactions = interactions,
+                processors = processors,
                 groups = groups
             });
         }
@@ -112,10 +126,12 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
+            ////REVIEW: should this reference actions by ID?
             Debug.Assert(action.m_Name != null || action.isSingletonAction);
-            binding.action = action.m_Name;
+            binding.action = action.name;
 
             var actionMap = action.GetOrCreateActionMap();
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, action, bindingIndex);
         }
@@ -124,7 +140,7 @@ namespace UnityEngine.Experimental.Input
             string interactions = null, string groups = null, string action = null)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", "path");
+                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
 
             return AddBinding(actionMap, new InputBinding
             {
@@ -155,7 +171,7 @@ namespace UnityEngine.Experimental.Input
             if (action == Guid.Empty)
                 return AddBinding(actionMap, path: path, interactions: interactions, groups: groups);
             return AddBinding(actionMap, path: path, interactions: interactions, groups: groups,
-                action: $"{{{action}}}");
+                action: action.ToString());
         }
 
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
@@ -178,6 +194,8 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Composite name cannot be null or empty", nameof(composite));
 
             var actionMap = action.GetOrCreateActionMap();
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
+
             ////REVIEW: use 'name' instead of 'path' field here?
             var binding = new InputBinding {path = composite, interactions = interactions, isComposite = true, action = action.name};
             var bindingIndex = AddBindingInternal(actionMap, binding);
@@ -187,6 +205,10 @@ namespace UnityEngine.Experimental.Input
         private static int AddBindingInternal(InputActionMap map, InputBinding binding)
         {
             Debug.Assert(map != null);
+
+            // Make sure the binding has an ID.
+            if (string.IsNullOrEmpty(binding.m_Id))
+                binding.GenerateId();
 
             // Append to bindings in set.
             var bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
@@ -201,6 +223,49 @@ namespace UnityEngine.Experimental.Input
                 map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
 
             return bindingIndex;
+        }
+
+        public static BindingSyntax ChangeBinding(this InputAction action, int index)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var indexOnMap = action.BindingIndexOnActionToBindingIndexOnMap(index);
+            return new BindingSyntax(action.GetOrCreateActionMap(), action, indexOnMap);
+        }
+
+        public static BindingSyntax ChangeBindingWithId(this InputAction action, string id)
+        {
+            return action.ChangeBinding(new InputBinding {m_Id = id});
+        }
+
+        public static BindingSyntax ChangeBindingWithId(this InputAction action, Guid id)
+        {
+            return action.ChangeBinding(new InputBinding {id = id});
+        }
+
+        public static BindingSyntax ChangeBindingWithGroup(this InputAction action, string group)
+        {
+            return action.ChangeBinding(new InputBinding {groups = group});
+        }
+
+        public static BindingSyntax ChangeBindingWithPath(this InputAction action, string path)
+        {
+            return action.ChangeBinding(new InputBinding {path = path});
+        }
+
+        public static BindingSyntax ChangeBinding(this InputAction action, InputBinding match)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var actionMap = action.GetOrCreateActionMap();
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
+            var bindingIndex = actionMap.FindBinding(match);
+            if (bindingIndex == -1)
+                throw new ArgumentException($"Cannot find binding matching '{match}' in '{action}'", nameof(match));
+
+            return new BindingSyntax(actionMap, action, bindingIndex);
         }
 
         ////TODO: update binding mask if necessary
@@ -227,7 +292,7 @@ namespace UnityEngine.Experimental.Input
 
             // Make sure name isn't already taken in map.
             var actionMap = action.actionMap;
-            if (actionMap != null && actionMap.TryGetAction(newName) != null)
+            if (actionMap?.TryGetAction(newName) != null)
                 throw new InvalidOperationException(
                     $"Cannot rename '{action}' to '{newName}' in map '{actionMap}' as the map already contains an action with that name");
 
@@ -293,9 +358,9 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public struct BindingSyntax
         {
-            internal InputAction m_Action;
-            internal InputActionMap m_ActionMap;
-            internal int m_BindingIndex;
+            private readonly InputActionMap m_ActionMap;
+            private readonly InputAction m_Action;
+            internal readonly int m_BindingIndex;
 
             internal BindingSyntax(InputActionMap map, InputAction action, int bindingIndex)
             {
@@ -304,7 +369,8 @@ namespace UnityEngine.Experimental.Input
                 m_BindingIndex = bindingIndex;
             }
 
-            public BindingSyntax ChainedWith(string binding, string interactions = null, string group = null)
+            ////TODO: implement chained bindings and make public
+            internal BindingSyntax ChainedWith(string binding, string interactions = null, string group = null)
             {
                 throw new NotImplementedException();
                 /*
@@ -320,13 +386,27 @@ namespace UnityEngine.Experimental.Input
                 */
             }
 
+            public BindingSyntax WithName(string name)
+            {
+                m_ActionMap.m_Bindings[m_BindingIndex].name = name;
+                // No need to clear cached data.
+                return this;
+            }
+
+            public BindingSyntax WithPath(string path)
+            {
+                m_ActionMap.m_Bindings[m_BindingIndex].path = path;
+                // No need to clear cached data.
+                return this;
+            }
+
             public BindingSyntax WithGroup(string group)
             {
                 if (string.IsNullOrEmpty(group))
                     throw new ArgumentException("Group name cannot be null or empty", nameof(group));
-                if (group.IndexOf(InputBinding.kSeparator) != -1)
+                if (group.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Group name cannot contain separator character '{InputBinding.kSeparator}'", nameof(group));
+                        $"Group name cannot contain separator character '{InputBinding.Separator}'", nameof(group));
 
                 return WithGroups(group);
             }
@@ -352,9 +432,9 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(interaction))
                     throw new ArgumentException("Interaction cannot be null or empty", nameof(interaction));
-                if (interaction.IndexOf(InputBinding.kSeparator) != -1)
+                if (interaction.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Interaction string cannot contain separator character '{InputBinding.kSeparator}'", nameof(interaction));
+                        $"Interaction string cannot contain separator character '{InputBinding.Separator}'", nameof(interaction));
 
                 return WithInteractions(interaction);
             }
@@ -392,9 +472,9 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(processor))
                     throw new ArgumentException("Processor cannot be null or empty", nameof(processor));
-                if (processor.IndexOf(InputBinding.kSeparator) != -1)
+                if (processor.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Interaction string cannot contain separator character '{InputBinding.kSeparator}'", nameof(processor));
+                        $"Interaction string cannot contain separator character '{InputBinding.Separator}'", nameof(processor));
 
                 return WithProcessors(processor);
             }
@@ -427,7 +507,43 @@ namespace UnityEngine.Experimental.Input
                 return WithProcessor(processorName);
             }
 
-            public BindingSyntax WithChild(string binding, string interactions = null, string groups = null)
+            public BindingSyntax Triggering(InputAction action)
+            {
+                if (action == null)
+                    throw new ArgumentNullException(nameof(action));
+                if (action.isSingletonAction)
+                    throw new ArgumentException(
+                        $"Cannot change the action a binding triggers on singleton action '{action}'", nameof(action));
+                m_ActionMap.m_Bindings[m_BindingIndex].action = action.name;
+                m_ActionMap.ClearPerActionCachedBindingData();
+                return this;
+            }
+
+            public BindingSyntax To(InputBinding binding)
+            {
+                m_ActionMap.m_Bindings[m_BindingIndex] = binding;
+                m_ActionMap.ClearPerActionCachedBindingData();
+
+                // If it's a singleton action, we force the binding to stay with the action.
+                if (m_ActionMap.m_SingletonAction != null)
+                    m_ActionMap.m_Bindings[m_BindingIndex].action = m_Action.name;
+
+                return this;
+            }
+
+            public void Erase()
+            {
+                ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndex);
+                m_ActionMap.ClearPerActionCachedBindingData();
+
+                // We have switched to a different binding array. For singleton actions, we need to
+                // sync up the reference that the action itself has.
+                if (m_ActionMap.m_SingletonAction != null)
+                    m_ActionMap.m_SingletonAction.m_SingletonActionBindings = m_ActionMap.m_Bindings;
+            }
+
+            ////REVIEW: do we really want to go this direction?
+            internal BindingSyntax WithChild(string binding, string interactions = null, string groups = null)
             {
                 /*
                 var child = m_Action != null
@@ -440,22 +556,14 @@ namespace UnityEngine.Experimental.Input
                 throw new NotImplementedException();
             }
 
-            public BindingSyntax Triggering(InputAction action)
-            {
-                if (action == null)
-                    throw new ArgumentNullException(nameof(action));
-                m_ActionMap.m_Bindings[m_BindingIndex].action = action.name;
-                return this;
-            }
-
-            public BindingSyntax And => throw new NotImplementedException();
+            internal BindingSyntax And => throw new NotImplementedException();
         }
 
         public struct CompositeSyntax
         {
-            internal InputAction m_Action;
-            internal InputActionMap m_ActionMap;
-            internal int m_CompositeIndex;
+            private readonly InputAction m_Action;
+            private readonly InputActionMap m_ActionMap;
+            private int m_CompositeIndex;
 
             internal CompositeSyntax(InputActionMap map, InputAction action, int compositeIndex)
             {
@@ -485,8 +593,8 @@ namespace UnityEngine.Experimental.Input
 
         public struct ControlSchemeSyntax
         {
-            private InputActionAsset m_Asset;
-            private int m_ControlSchemeIndex;
+            private readonly InputActionAsset m_Asset;
+            private readonly int m_ControlSchemeIndex;
             private InputControlScheme m_ControlScheme;
 
             internal ControlSchemeSyntax(InputActionAsset asset, int index)

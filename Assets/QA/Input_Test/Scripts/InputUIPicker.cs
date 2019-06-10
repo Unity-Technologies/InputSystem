@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 public class InputUIPicker : MonoBehaviour
 {
@@ -12,17 +12,18 @@ public class InputUIPicker : MonoBehaviour
     public GameObject m_macKeyboardMouse;
     public GameObject m_controllerDiagram;
     public GameObject m_xboxController;
+    public GameObject m_dualShockController;
     public GameObject m_joystick;
     public GameObject m_pen;
     public GameObject m_touch;
 
-    [Header("Input Action")]
-    public InputAction m_switchToKeyboardMouseAction;
-    public InputAction m_switchToXboxAction;
-    public InputAction m_switchToGamepadDiagramAction;
-    public InputAction m_switchToJoystickAction;
-    public InputAction m_switchToPenAction;
-    public InputAction m_switchToTouchAction;
+    //[Header("Input Action")]
+    //public InputAction m_switchToKeyboardMouseAction;
+    //public InputAction m_switchToXboxAction;
+    //public InputAction m_switchToGamepadDiagramAction;
+    //public InputAction m_switchToJoystickAction;
+    //public InputAction m_switchToPenAction;
+    //public InputAction m_switchToTouchAction;
 
     // Current displayed diagram
     private GameObject m_currentDisplay;
@@ -42,25 +43,25 @@ public class InputUIPicker : MonoBehaviour
         //m_switchToTouchAction.performed += _ => SwitchToInputMethod(5);
     }
 
-    void OnEnable()
-    {
-        //m_switchToKeyboardMouseAction.Enable();
-        //m_switchToXboxAction.Enable();
-        //m_switchToGamepadDiagramAction.Enable();
-        //m_switchToJoystickAction.Enable();
-        //m_switchToPenAction.Enable();
-        //m_switchToTouchAction.Enable();
-    }
+    //void OnEnable()
+    //{
+    //    m_switchToKeyboardMouseAction.Enable();
+    //    m_switchToXboxAction.Enable();
+    //    m_switchToGamepadDiagramAction.Enable();
+    //    m_switchToJoystickAction.Enable();
+    //    m_switchToPenAction.Enable();
+    //    m_switchToTouchAction.Enable();
+    //}
 
-    void OnDisable()
-    {
-        m_switchToKeyboardMouseAction.Disable();
-        m_switchToXboxAction.Disable();
-        m_switchToGamepadDiagramAction.Disable();
-        m_switchToJoystickAction.Disable();
-        m_switchToPenAction.Disable();
-        m_switchToTouchAction.Disable();
-    }
+    //void OnDisable()
+    //{
+    //    m_switchToKeyboardMouseAction.Disable();
+    //    m_switchToXboxAction.Disable();
+    //    m_switchToGamepadDiagramAction.Disable();
+    //    m_switchToJoystickAction.Disable();
+    //    m_switchToPenAction.Disable();
+    //    m_switchToTouchAction.Disable();
+    //}
 
     // !!!!!TEMPORARY: Before composite input is implemented
     void Update()
@@ -80,6 +81,10 @@ public class InputUIPicker : MonoBehaviour
                 m_inputPickerDropdown.value = 3;
             else if (currentKeyboard.digit5Key.isPressed)
                 m_inputPickerDropdown.value = 4;
+            else if (currentKeyboard.digit6Key.isPressed)
+                m_inputPickerDropdown.value = 5;
+            else if (currentKeyboard.digit7Key.isPressed)
+                m_inputPickerDropdown.value = 6;
         }
     }
 
@@ -97,15 +102,18 @@ public class InputUIPicker : MonoBehaviour
                 SwitchToDiagram(m_xboxController);
                 break;
             case 2:
-                SwitchToDiagram(m_controllerDiagram);
+                SwitchToDiagram(m_dualShockController);
                 break;
             case 3:
-                SwitchToDiagram(m_joystick);
+                SwitchToDiagram(m_controllerDiagram);
                 break;
             case 4:
-                SwitchToDiagram(m_pen);
+                SwitchToDiagram(m_joystick);
                 break;
             case 5:
+                SwitchToDiagram(m_pen);
+                break;
+            case 6:
                 SwitchToDiagram(m_touch);
                 break;
             case 0:

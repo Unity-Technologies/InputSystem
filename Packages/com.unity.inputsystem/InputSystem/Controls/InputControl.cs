@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: should EvaluateMagnitude() be called EvaluateActuation() or something similar?
 
@@ -19,7 +20,7 @@ using UnityEngine.Experimental.Input.Layouts;
 
 ////REVIEW: how do we do stuff like smoothing over time?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A typed and named value in a hierarchy of controls.
@@ -57,7 +58,8 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Characters that may not appear in control names.
         /// </summary>
-        public static string ReservedCharacters = "/;{}[]<>";
+        /// TODO: these are currently not used. Check against these if we think this is useful.
+        // internal const string ReservedCharacters = "/;{}[]<>";
 
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
@@ -229,7 +231,12 @@ namespace UnityEngine.Experimental.Input
             internal set
             {
                 if (value)
+                {
                     m_ControlFlags |= ControlFlags.IsNoisy;
+                    // Making a control noisy makes all its children noisy.
+                    foreach (var child in children)
+                        child.noisy = true;
+                }
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;
             }
@@ -273,7 +280,7 @@ namespace UnityEngine.Experimental.Input
         /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, i.e. Gamepad.aButton
         /// </code>
         /// </example>
-        /// <exception cref="IndexOutOfRangeException"><paramref name="path"/> cannot be found.</exception>
+        /// <exception cref="KeyNotFoundException"><paramref name="path"/> cannot be found.</exception>
         /// <seealso cref="InputControlPath"/>
         /// <seealso cref="path"/>
         /// <seealso cref="TryGetChildControl"/>
@@ -283,7 +290,7 @@ namespace UnityEngine.Experimental.Input
             {
                 var control = InputControlPath.TryFindChild(this, path);
                 if (control == null)
-                    throw new IndexOutOfRangeException(
+                    throw new KeyNotFoundException(
                         $"Cannot find control '{path}' as child of '{this}'");
                 return control;
             }
@@ -504,7 +511,7 @@ namespace UnityEngine.Experimental.Input
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
-            m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
+            m_StateBlock.byteOffset = InputStateBlock.InvalidOffset; // Request automatic layout by default.
         }
 
         ////REVIEW: replace InputDeviceBuilder here with an interface?
@@ -857,20 +864,19 @@ namespace UnityEngine.Experimental.Input
         {
             if (m_ProcessorStack.length > 0)
             {
-                if (m_ProcessorStack.firstValue is TProcessor)
-                    return (TProcessor)m_ProcessorStack.firstValue;
+                if (m_ProcessorStack.firstValue is TProcessor processor)
+                    return processor;
                 if (m_ProcessorStack.additionalValues != null)
                     for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
-                        if (m_ProcessorStack.additionalValues[i] is TProcessor)
-                            return (TProcessor)m_ProcessorStack.additionalValues[i];
+                        if (m_ProcessorStack.additionalValues[i] is TProcessor result)
+                            return result;
             }
             return default;
         }
 
         internal override void AddProcessor(object processor)
         {
-            var processorOfType = processor as InputProcessor<TValue>;
-            if (processorOfType == null)
+            if (!(processor is InputProcessor<TValue> processorOfType))
                 throw new Exception(
                     $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
             m_ProcessorStack.Append(processorOfType);

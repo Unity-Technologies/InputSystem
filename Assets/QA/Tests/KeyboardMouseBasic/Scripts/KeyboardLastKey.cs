@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 using UnityEngine.UI;
 

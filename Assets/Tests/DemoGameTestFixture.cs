@@ -2,16 +2,16 @@ using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.Steam;
-using UnityEngine.Experimental.Input.Plugins.XInput;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.Plugins.Steam;
+using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.Plugins.XR;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
-using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
+using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 /// <summary>
 /// Fixture to set up tests for <see cref="DemoGame"/>.
@@ -21,7 +21,6 @@ public class DemoGameTestFixture
 {
     public DemoGame game { get; set; }
     public InputTestFixture input { get; set; }
-    public SteamTestFixture steam { get; set; }
     public RuntimePlatform platform { get; private set; }
 
     public Mouse mouse { get; set; }
@@ -225,7 +224,6 @@ public class DemoGameTestFixture
 
         game = null;
         input = null;
-        steam = null;
 
         mouse = null;
         keyboard = null;
@@ -251,18 +249,6 @@ public class DemoGameTestFixture
         var buttonObject = GameObject.Find(button);
         Assert.That(buttonObject != null);
         buttonObject.GetComponent<Button>().onClick.Invoke();
-    }
-
-    public void Trigger(string action, int playerIndex = 0)
-    {
-        // Look up action.
-        var controls = game.players[playerIndex].controls;
-        var actionInstance = controls.asset.FindAction(action);
-        if (actionInstance == null)
-            throw new ArgumentException("action");
-
-        // And trigger it.
-        Trigger(actionInstance);
     }
 
     public void Trigger(InputAction action)

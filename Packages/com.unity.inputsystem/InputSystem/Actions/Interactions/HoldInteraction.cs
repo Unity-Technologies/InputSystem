@@ -1,15 +1,14 @@
 #if UNITY_EDITOR
-using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Interactions
+namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
     /// Performs the action if the control is pressed and held for at least the
     /// set duration (which defaults to <see cref="InputSettings.defaultHoldTime"/>).
     /// </summary>
-    public class HoldInteraction : IInputInteraction<float>
+    public class HoldInteraction : IInputInteraction
     {
         /// <summary>
         /// Duration in seconds that the control must be pressed for the hold to register.

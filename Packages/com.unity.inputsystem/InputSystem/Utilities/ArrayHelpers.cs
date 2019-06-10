@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A collection of utility functions for working with arrays.
@@ -76,26 +76,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             return false;
         }
 
-        public static bool ContainsReferenceTo<TValue>(TValue[] array, TValue value)
+        public static bool ContainsReference<TValue>(TValue[] array, TValue value)
             where TValue : class
         {
             if (array == null)
                 return false;
 
-            return ContainsReferenceTo(array, array.Length, value);
+            return ContainsReference(array, array.Length, value);
         }
 
-        public static bool ContainsReferenceTo<TValue>(TValue[] array, int count, TValue value)
+        public static bool ContainsReference<TValue>(TValue[] array, int count, TValue value)
             where TValue : class
         {
-            if (array == null)
-                return false;
-
-            for (var i = 0; i < count; ++i)
-                if (ReferenceEquals(array[i], value))
-                    return true;
-
-            return false;
+            return IndexOfReference(array, value, count) != -1;
         }
 
         public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
@@ -289,31 +282,31 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int count, TValues values, int capacityIncrement = 10)
+        public static int AppendListWithCapacity<TValue, TValues>(ref TValue[] array, ref int length, TValues values, int capacityIncrement = 10)
             where TValues : IReadOnlyList<TValue>
         {
-            var num = values.Count;
+            var numToAdd = values.Count;
             if (array == null)
             {
-                var size = Math.Max(num, capacityIncrement);
+                var size = Math.Max(numToAdd, capacityIncrement);
                 array = new TValue[size];
-                for (var i = 0; i < num; ++i)
+                for (var i = 0; i < numToAdd; ++i)
                     array[i] = values[i];
-                count += num;
+                length += numToAdd;
                 return 0;
             }
 
             var capacity = array.Length;
-            if (capacity < count + num)
+            if (capacity < length + numToAdd)
             {
-                capacity += Math.Max(num, capacityIncrement);
+                capacity += Math.Max(length + numToAdd, capacityIncrement);
                 Array.Resize(ref array, capacity);
             }
 
-            var index = count;
-            for (var i = 0; i < num; ++i)
-                array[i] = values[i];
-            count += num;
+            var index = length;
+            for (var i = 0; i < numToAdd; ++i)
+                array[index + i] = values[i];
+            length += numToAdd;
 
             return index;
         }
@@ -355,6 +348,15 @@ namespace UnityEngine.Experimental.Input.Utilities
                 Array.Copy(array, index, array, index + 1, oldLength - index);
 
             array[index] = value;
+        }
+
+        public static void PutAtIfNotSet<TValue>(ref TValue[] array, int index, Func<TValue> valueFn)
+        {
+            if (array.LengthSafe() < index + 1)
+                Array.Resize(ref array, index + 1);
+
+            if (EqualityComparer<TValue>.Default.Equals(array[index], default(TValue)))
+                array[index] = valueFn();
         }
 
         // Adds 'count' entries to the array. Returns first index of newly added entries.
@@ -510,7 +512,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             Array.Resize(ref array, length - 1);
         }
 
-        public static void EraseAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index)
+        public static void EraseAtWithCapacity<TValue>(TValue[] array, ref int count, int index)
         {
             Debug.Assert(array != null);
             Debug.Assert(count <= array.Length);
@@ -527,7 +529,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             --count;
         }
 
-        public static unsafe void EraseAtWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int index)
+        public static unsafe void EraseAtWithCapacity<TValue>(NativeArray<TValue> array, ref int count, int index)
             where TValue : struct
         {
             Debug.Assert(array.IsCreated);
@@ -704,12 +706,13 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static void EraseSliceWithCapacity<TValue>(ref TValue[] array, ref int length, int index, int count)
         {
+            // Move elements down.
             if (count < length)
-            {
-                Array.Copy(array, index + count, array, index, length - index - count);
-                for (var i = 0; i < count; ++i)
-                    array[length - i - 1] = default(TValue);
-            }
+                Array.Copy(array, index + count, array, index, count);
+
+            // Erase now vacant slots.
+            for (var i = 0; i < count; ++i)
+                array[length - i - 1] = default;
 
             length -= count;
         }

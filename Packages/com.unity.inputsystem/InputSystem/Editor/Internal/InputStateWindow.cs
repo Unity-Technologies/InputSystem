@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: add ability to single-step through events
 
@@ -20,7 +20,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
     internal class InputStateWindow : EditorWindow
@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Must be an event carrying state.
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be state or delta event", "eventPtr");
+                throw new ArgumentException("Event must be state or delta event", nameof(eventPtr));
 
             // Get state data.
             void* dataPtr;
@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////TODO: support dumping multiple state side-by-side when comparing
-        public void DrawHexDump()
+        private void DrawHexDump()
         {
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 

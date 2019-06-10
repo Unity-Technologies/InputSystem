@@ -1,10 +1,10 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A floating-point axis control.
@@ -23,14 +23,20 @@ namespace UnityEngine.Experimental.Input.Controls
         public float clampMin;
         public float clampMax;
         public float clampConstant;
+        ////REVIEW: why not just roll this into scaleFactor?
         public bool invert; // If true, multiply by -1.
         public bool normalize;
         public float normalizeMin;
         public float normalizeMax;
         public float normalizeZero;
+        ////REVIEW: why not just have a default scaleFactor of 1?
+        public bool scale;
+        public float scaleFactor;
 
         protected float Preprocess(float value)
         {
+            if (scale)
+                value *= scaleFactor;
             if (clampToConstant)
             {
                 if (value < clampMin || value > clampMax)
@@ -47,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Controls
 
         public AxisControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeFloat;
+            m_StateBlock.format = InputStateBlock.FormatFloat;
         }
 
         // Read a floating-point value from the given state. Automatically checks
@@ -79,8 +85,8 @@ namespace UnityEngine.Experimental.Input.Controls
                 return -1;
 
             var value = ReadValueFromState(statePtr);
-            var min = m_MinValue.ToFloat();
-            var max = m_MaxValue.ToFloat();
+            var min = m_MinValue.ToSingle();
+            var max = m_MaxValue.ToSingle();
 
             value = Mathf.Clamp(value, min, max);
 
